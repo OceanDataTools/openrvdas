@@ -1,0 +1,6 @@
+Test with
+
+  python -m unittest
+
+TODO:
+ - Should Readers be generators? Coroutines? https://www.blog.pythonlibrary.org/2014/01/27/python-201-an-intro-to-generators/

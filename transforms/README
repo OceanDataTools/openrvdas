@@ -1,0 +1,3 @@
+NOTE: Certain bits of code, like ComposedReader, assume that all
+transforms are threadsafe and, if they contain any critical sections,
+implement thread-based locks to prevent re-entry-based mischief.
