@@ -55,30 +55,7 @@ class TestComposedReader(unittest.TestCase):
       tmpfilename = self.tmpdirname + '/' + f
       self.tmpfilenames.append(tmpfilename)
       create_file(tmpfilename, SAMPLE_DATA[f])
-    
-  ############################
-  def test_lock_setup(self):
-    readers = []
-    for tmpfilename in self.tmpfilenames:
-      readers.append(TextFileReader(tmpfilename, interval=0.2))
 
-    prefix_1 = PrefixTransform('prefix_1')
-    prefix_2 = PrefixTransform('prefix_2')
-
-    # This should be okay
-    reader = ComposedReader(readers, [prefix_1, prefix_2])
-    self.assertEqual(reader.transform_locks, None)
-
-    # This should be okay
-    reader = ComposedReader(readers, [prefix_1, prefix_2],
-                            thread_lock_transforms=True)
-    self.assertEqual(len(reader.transform_locks), 2)
-
-    # This should not be okay
-    with self.assertRaises(ValueError):
-      reader = ComposedReader(readers, [prefix_1, prefix_2],
-                            thread_lock_transforms=[True])
-    
   ############################
   def test_check_format(self):
 
@@ -102,6 +79,8 @@ class TestComposedReader(unittest.TestCase):
     for tmpfilename in self.tmpfilenames:
       readers.append(TextFileReader(tmpfilename, interval=0.2))
 
+    #readers.append(TextFileReader()) # read from stdin
+      
     prefix_1 = PrefixTransform('prefix_1')
     prefix_2 = PrefixTransform('prefix_2')
 
@@ -134,13 +113,27 @@ class TestComposedReader(unittest.TestCase):
       next_lines = expected_lines.pop(0)
       while next_lines:
         record = reader.read()
-        logging.debug('read: %s; expected one of: %s', record, next_lines)
+        logging.info('read: %s; expected one of: %s', record, next_lines)
         self.assertTrue(record in next_lines)
         if record in next_lines:
           next_lines.remove(record)
     self.assertEqual(None, reader.read())
 
 if __name__ == '__main__':
+  import argparse
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-v', '--verbosity', dest='verbosity',
+                      default=0, action='count',
+                      help='Increase output verbosity')
+  args = parser.parse_args()
+
+  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  logging.basicConfig(format=LOGGING_FORMAT)
+
+  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+  
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
     
