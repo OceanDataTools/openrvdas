@@ -130,17 +130,18 @@ class ComposedReader(Reader):
   # Cycle through reading records from a readers[i] and putting them in queue
   def run_reader(self, index):
     while True:
-      logging.debug('Reader #%d waiting until record needed.', index)
+      logging.debug('    Reader #%d waiting until record needed.', index)
       self.queue_needs_record.wait(READER_TIMEOUT_WAIT)
 
       # If we timed out waiting for someone to need a record, go
       # home. We'll get started up again if needed.
       if not self.queue_needs_record.is_set():
-        logging.debug('Reader #%d timed out - exiting.', index)
+        logging.debug('    Reader #%d timed out - exiting.', index)
         return
         
-      # Else someone needs a record - leap into action!
-
+      # Else someone needs a record - leap into action
+      logging.debug('    Reader #%d waking up - record needed!', index)
+      
       # Guard against re-entry
       with self.reader_locks[index]:
         record = self.readers[index].read()
@@ -148,25 +149,25 @@ class ComposedReader(Reader):
         # If reader returns None, it's done and has no more data for
         # us. Note that it's given us an EOF and exit.
         if record is None:
-          logging.info('Reader #%d returned None, is done', index)
+          logging.info('    Reader #%d returned None, is done', index)
           self.reader_returned_eof[index] = True
           return
         
-      logging.debug('Reader #%d has record, released reader_lock.', index)
+      logging.debug('    Reader #%d has record, released reader_lock.', index)
 
       # Add record to queue and note that an append event has
       # happened.
       with self.queue_lock:
         # No one else can mess with queue while we add record. Once we've
         # added it, set flag to say there's something in the queue.
-        logging.debug('Reader #%d got lock for queue - adding and notifying.',
+        logging.debug('    Reader #%d has queue lock - adding and notifying.',
                       index)
         self.queue.append(record)
         self.queue_has_record.set()
         self.queue_needs_record.clear()
 
       # Now clear of queue_lock
-      logging.debug('Reader #%d released queue_lock - looping', index)
+      logging.debug('    Reader #%d released queue_lock - looping', index)
           
   ############################
   # Apply the transforms in series.
@@ -193,20 +194,22 @@ class ComposedReader(Reader):
     # doing it this way is that we don't tie up queue lock while
     # processing transforms.
     if self.queue:
-        with self.queue_lock:
-          record = self.queue.pop(0)
+      logging.debug('read() - read requested; queue len is %d', len(self.queue))
+      with self.queue_lock:
+        record = self.queue.pop(0)
         return self.apply_transforms(record)
 
     # If here, nothing's in the queue. Note that, if we wanted to be
     # careful to never unnecessarily ask for more records, we should
     # put a lock around this, but the failure mode is somewhat benign:
     # we ask for more records when some are already on the way.
+    logging.debug('read() - read requested and nothing in the queue.')
 
     # Some threads may have timed out while waiting to be called to
     # action; restart them.
     for i in range(len(self.readers)):
       if not self.reader_threads[i] or not self.reader_threads[i].is_alive():
-        logging.info('read() - restarting thread #%d', i)
+        logging.info('read() - starting thread for Reader #%d', i)
         self.reader_returned_eof[i] = False
         thread = threading.Thread(target=self.run_reader, args=(i,))
         self.reader_threads[i] = thread
@@ -220,13 +223,14 @@ class ComposedReader(Reader):
     while False in self.reader_returned_eof:
       logging.debug('read() - waiting for queue lock')
       with self.queue_lock:
-        logging.debug('read() - acquired queue lock')
+        logging.debug('read() - acquired queue lock, queue length is %d',
+                      len(self.queue))
         if self.queue:
           record = self.queue.pop(0)
-          logging.debug('read() - got record, queue length is %d',
-                        len(self.queue))
           if not self.queue:
             self.queue_has_record.clear() # only set/clear inside queue_lock
+
+          logging.debug('read() - got record')
           return self.apply_transforms(record)
         else:
           self.queue_has_record.clear()
