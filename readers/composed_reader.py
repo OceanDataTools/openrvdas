@@ -71,15 +71,15 @@ READER_TIMEOUT_WAIT = 0.25
 ################################################################################
 class ComposedReader(Reader):
   ############################
-  def __init__(self, readers, transforms=None, check_format=False):
+  def __init__(self, readers, transforms=[], check_format=False):
 
     # Make readers a list, even if it's only a single reader.
     self.readers = readers if type(readers) == type([]) else [readers]
-    self.num_readers = len(readers)
+    self.num_readers = len(self.readers)
     
     # Transforms can be empty. But if not empty, make it a list, even
     # if it's only a single transform.
-    if transforms and not type(transforms) == type([]):
+    if not type(transforms) == type([]):
       self.transforms = [transforms]
     else:
       self.transforms = transforms
@@ -169,7 +169,7 @@ class ComposedReader(Reader):
   ############################
   # Apply the transforms in series.
   def apply_transforms(self, record):
-    if record and self.transforms:
+    if record:
       for t in self.transforms:
         record = t.transform(record)
         if not record:
