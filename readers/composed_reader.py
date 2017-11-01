@@ -71,10 +71,7 @@ READER_TIMEOUT_WAIT = 0.25
 ################################################################################
 class ComposedReader(Reader):
   ############################
-  def __init__(self, readers,
-               transforms=None,
-               thread_lock_transforms=None,
-               check_format=False):
+  def __init__(self, readers, transforms=None, check_format=False):
 
     # Make readers a list, even if it's only a single reader.
     self.readers = readers if type(readers) == type([]) else [readers]
