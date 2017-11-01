@@ -84,10 +84,7 @@ class TestComposedReader(unittest.TestCase):
     prefix_1 = PrefixTransform('prefix_1')
     prefix_2 = PrefixTransform('prefix_2')
 
-    # We don't really need to lock these transforms, but just
-    # exercising that bit of code
-    reader = ComposedReader(readers, [prefix_1, prefix_2],
-                            thread_lock_transforms=[True, False])
+    reader = ComposedReader(readers, [prefix_1, prefix_2])
 
     # Clunkly quick way of slicing lines
     i = 0
