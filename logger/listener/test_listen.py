@@ -68,10 +68,11 @@ class TestListener(unittest.TestCase):
               TextFileReader(self.tmpfilenames[1])],
              check_format=True)
 
-    # This should not be - no common reader format
-    with self.assertRaises(ValueError):
-      Listener([TextFileReader(self.tmpfilenames[0]), Reader()],
-                     check_format=True)
+    # No longer raises exception - only logs warning
+    ## This should not be - no common reader format
+    #with self.assertRaises(ValueError):
+    #  Listener([TextFileReader(self.tmpfilenames[0]), Reader()],
+    #                 check_format=True)
 
   ############################
   def test_read_all_write_one(self):
