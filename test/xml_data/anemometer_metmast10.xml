@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:00</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683600</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55769" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:8F:38:93:74:7B</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>00:59:59.221</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:90:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038372C3031352E39302C4E2C2B3334322E30332C2B3031372E32382C30302C0330360D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,087,015.90,N,+342.03,+017.28,00, 06</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:01</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683601</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55770" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:90:3D:70:A3:90</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.240</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:91:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038352C3031352E34312C4E2C2B3334322E30382C2B3031372E33362C30302C0330430D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,085,015.41,N,+342.08,+017.36,00, 0C</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Diagnostic" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55771" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Diagnostic Type="Heartbeat">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:0B:43:95:74</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.044</Time>
+			</Start>
+		</Timestamp>
+	</Diagnostic>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55772" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:91:3D:2F:1A:59</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.239</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:92:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038362C3031352E37372C4E2C2B3334322E30372C2B3031372E33352C30302C0330360D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,086,015.77,N,+342.07,+017.35,00, 06</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:03</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683603</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55773" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:3D:2F:1A:59</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.239</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:93:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038372C3031372E30322C4E2C2B3334322E30332C2B3031372E32382C30302C0330460D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,087,017.02,N,+342.03,+017.28,00, 0F</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:04</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683604</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55774" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:93:3D:2F:1A:59</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.239</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:94:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038362C3031372E39332C4E2C2B3334322E30332C2B3031372E32382C30302C0330360D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,086,017.93,N,+342.03,+017.28,00, 06</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:06</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683606</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55775" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:94:3C:ED:91:22</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.238</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:95:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3039302C3031372E37382C4E2C2B3334322E30342C2B3031372E33302C30302C0330410D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,090,017.78,N,+342.04,+017.30,00, 0A</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55776" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:95:3D:2F:1A:59</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.239</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:96:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038382C3031372E30322C4E2C2B3334322E30392C2B3031372E33382C30302C0330420D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,088,017.02,N,+342.09,+017.38,00, 0B</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55778" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:97:3C:ED:91:22</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.238</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:98:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038332C3031342E39322C4E2C2B3334322E30362C2B3031372E33332C30302C0330450D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,083,014.92,N,+342.06,+017.33,00, 0E</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.122</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="55779" Status="Good" Location="anemometer_metmast" MAC="02-04-A3-42-02-08" IP="10.240.158.122" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="anemometer_metmast" Make="Gill" Model="Wind_observer_II" Serial="1033" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS485" DuplexMode="FullDuplex" Baudrate="9600" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:98:3D:2F:1A:59</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.239</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:99:38:51:EB:44</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.220</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A02422C3038372C3031352E33332C4E2C2B3334322E30352C2B3031372E33312C30302C0330310D</Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">
+ B,087,015.33,N,+342.05,+017.31,00, 01</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>

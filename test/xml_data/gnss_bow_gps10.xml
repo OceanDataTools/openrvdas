@@ -1,0 +1,1554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:00</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683600</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207878" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:8F:CF:9D:B1:3D</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>00:59:59.811</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:8F:F5:81:05:09</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>00:59:59.959</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010000,A,4424.8862,N,12417.1912,W,010.7,357.5,250116,017.4,E*6C
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:00</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683600</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207879" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:8F:FA:E1:46:8C</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>00:59:59.980</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:90:1A:5E:35:21</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.103</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010000,4424.8862,N,12417.1912,W,2,08,1.1,12.3,M,-22.4,M,,*4B
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:00</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683600</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207880" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:90:1F:7C:ED:6D</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.123</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:90:39:DB:22:8E</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.226</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:00</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683600</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207881" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:90:39:DB:22:8E</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.226</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:90:4F:1A:9F:63</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.309</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,357.5,T,340.1,M,010.7,N,0019.9,K*7B
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:01</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683601</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207882" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:90:D0:E5:5F:50</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.816</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:90:F6:C8:B3:1C</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.964</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010001,A,4424.8893,N,12417.1914,W,010.9,354.9,250116,017.4,E*64
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:01</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683601</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207883" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:90:FB:A5:E2:31</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.983</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:91:1B:E7:6C:6B</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.109</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010001,4424.8893,N,12417.1914,W,2,08,1.1,12.2,M,-22.4,M,,*43
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:01</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683601</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207884" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:91:20:C4:9B:80</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.128</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:91:38:D4:FD:B2</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.222</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:01</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683601</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207885" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:91:3E:F9:DA:DA</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.246</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:91:50:A3:D6:AD</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.315</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,354.9,T,337.6,M,010.9,N,0020.2,K*7C
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207886" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:91:C9:78:D4:15</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.787</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:91:EF:5C:27:E1</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.935</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010002,A,4424.8923,N,12417.1916,W,010.4,357.7,250116,017.4,E*6F
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207887" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:91:F4:7A:E0:2D</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.955</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:92:14:39:57:F9</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.079</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010002,4424.8923,N,12417.1916,W,2,08,1.1,11.9,M,-22.4,M,,*40
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207888" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:1B:22:D0:C6</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.106</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:92:31:A9:FB:AE</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.194</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207889" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:36:87:2A:C3</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.213</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:92:49:37:4B:72</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.286</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,357.7,T,340.3,M,010.4,N,0019.2,K*73
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:03</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683603</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207890" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:CC:49:B9:72</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.798</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:92:F2:6E:96:75</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.947</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010003,A,4424.8952,N,12417.1914,W,010.4,006.6,250116,017.4,E*6C
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:03</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683603</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207891" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:F7:8D:4E:C1</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.967</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:93:19:16:87:0E</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.098</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010003,4424.8952,N,12417.1914,W,2,08,1.1,11.4,M,-22.4,M,,*48
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:03</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683603</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207892" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:93:19:16:87:0E</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.098</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:93:34:7A:E1:0B</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.205</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:03</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683603</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207893" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:93:3C:28:F5:7D</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.235</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:93:4C:08:30:CF</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.297</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,006.6,T,349.2,M,010.4,N,0019.2,K*7D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:04</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683604</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207894" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:93:CF:DF:3A:74</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.812</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:93:F5:81:05:09</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.959</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010004,A,4424.8980,N,12417.1905,W,010.1,016.7,250116,017.4,E*61
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:04</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683604</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207895" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:93:FA:E1:46:8C</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.980</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:94:1A:5E:35:21</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.103</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010004,4424.8980,N,12417.1905,W,2,08,1.1,11.0,M,-22.4,M,,*44
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:04</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683604</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207896" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:94:1F:3B:64:36</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.122</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:94:37:CE:D8:D6</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.218</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:04</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683604</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207897" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:94:3F:BE:76:7F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.249</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:94:4F:1A:9F:63</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.309</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,016.7,T,359.3,M,010.1,N,0018.7,K*7C
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:06</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683606</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207898" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:94:D4:7A:E0:52</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.830</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:94:FA:5E:34:1E</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.978</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010005,A,4424.9007,N,12417.1893,W,009.8,019.8,250116,017.4,E*68
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:06</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683606</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207899" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:94:FF:7C:EC:6A</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.998</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:95:1F:BE:76:A4</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.124</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010005,4424.9007,N,12417.1893,W,2,08,1.1,10.8,M,-22.4,M,,*45
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:06</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683606</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207900" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:95:24:9B:A5:B9</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.143</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:95:3E:35:3F:35</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.243</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:06</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683606</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207901" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:95:3E:35:3F:35</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.243</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:95:55:3F:7C:8B</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.333</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,019.8,T,002.4,M,009.8,N,0018.1,K*71
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207902" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:95:CB:02:0B:5F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.793</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:95:F0:E5:5F:2B</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.941</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010006,A,4424.9032,N,12417.1881,W,010.2,017.4,250116,017.4,E*6E
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207903" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:95:F6:04:17:77</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.961</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:96:15:C2:8F:43</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.085</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010006,4424.9032,N,12417.1881,W,2,08,1.1,10.9,M,-22.4,M,,*42
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207904" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:96:1C:AC:08:10</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.112</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:96:32:F1:A9:C1</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.199</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207905" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:96:3A:E1:47:6A</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.230</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:96:4A:C0:82:BC</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.292</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,017.4,T,000.0,M,010.2,N,0018.8,K*7E
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207908" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:96:F8:D4:FC:D4</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.972</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:97:19:DB:22:B3</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.101</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010007,4424.9060,N,12417.1872,W,2,08,1.1,11.1,M,-22.4,M,,*41
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207911" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:97:D1:26:E8:87</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.817</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:97:F7:0A:3C:53</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.965</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010008,A,4424.9089,N,12417.1867,W,010.7,002.9,250116,017.4,E*64
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207912" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:97:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.985</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:98:1B:E7:6C:6B</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.109</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010008,4424.9089,N,12417.1867,W,2,08,1.1,11.5,M,-22.4,M,,*49
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207913" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:98:20:C4:9B:80</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.128</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:98:3A:5E:34:FC</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.228</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207914" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:98:3A:5E:34:FC</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.228</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:98:50:E5:5F:E4</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.316</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,002.9,T,345.5,M,010.7,N,0019.7,K*7B
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207915" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:98:D0:E5:5F:50</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.816</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:98:F6:87:29:E5</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.963</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPRMC,010009,A,4424.9118,N,12417.1865,W,010.6,002.1,250116,017.4,E*67
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207916" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:98:FB:A5:E2:31</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.983</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:99:1B:A5:E3:34</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.108</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGGA,010009,4424.9118,N,12417.1865,W,2,08,1.1,12.0,M,-22.4,M,,*45
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207917" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:99:20:83:12:49</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.127</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:99:39:99:99:57</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.225</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPGSA,A,3,,30,09,16,27,23,,07,05,08,,,1.8,1.1,1.4*3D
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.2">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.104</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="207918" Status="Good" Location="gnss_bow_gps" MAC="02-04-A3-42-02-48" IP="10.240.158.104" FirmwareRev="S1.0.11" Channel="Serial"/>
+	<Device Name="gnss_bow_gps" Make="Combined" Model="Combined" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="FullDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="10" UseEndChar="Yes"/>
+	<Data Type="Serial" PositionInString="0" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:99:39:99:99:57</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.225</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:99:50:62:4D:76</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.314</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin"></Raw>
+		<Calibration>
+			<Date></Date>
+		</Calibration>
+		<Signal Units="ASCII">$GPVTG,002.1,T,344.8,M,010.6,N,0019.7,K*7E
+</Signal>
+		<Physical Units=""/>
+	</Data>
+</OSU_DAS_Record>

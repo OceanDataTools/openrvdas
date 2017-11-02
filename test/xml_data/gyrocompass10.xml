@@ -1,0 +1,798 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:00</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683600</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106468" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:8F:80:41:88:A3</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>00:59:59.501</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:8F:FB:64:58:FA</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>00:59:59.982</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C392E342C542A32320D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,9.4,T*22</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:00</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683600</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106469" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:90:00:83:12:6E</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.002</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:90:7B:A5:E2:C5</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.483</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C392E382C542A32450D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,9.8,T*2E</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:01</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683601</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106470" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:90:80:41:88:A3</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.501</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:90:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:00.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E312C542A31460D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.1,T*1F</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:01</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683601</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106471" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:91:01:47:AE:13</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.005</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:91:7C:28:F5:33</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.485</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E342C542A31410D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.4,T*1A</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106472" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:91:80:C4:9B:11</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.503</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:91:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:01.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E362C542A31380D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.6,T*18</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:02</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683602</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106473" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:00:C4:9B:A5</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.003</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:92:7C:28:F5:33</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.485</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:03</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683603</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106474" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:92:80:C4:9B:11</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.503</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:92:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:02.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:03</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683603</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106475" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:93:00:C4:9B:A5</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.003</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:93:7C:28:F5:33</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.485</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:04</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683604</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106476" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:93:80:C4:9B:11</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.503</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:93:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:03.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:04</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683604</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106477" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:94:00:C4:9B:A5</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.003</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:94:7C:28:F5:33</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.485</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:06</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683606</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106478" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:94:80:C4:9B:11</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.503</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:94:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:04.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106479" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:95:01:47:AE:13</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.005</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:95:7C:28:F5:33</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.485</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106480" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:95:80:C4:9B:11</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.503</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:95:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:05.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E362C542A31380D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.6,T*18</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:07</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683607</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106481" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:96:00:C4:9B:A5</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.003</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:96:7C:6A:7E:6A</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:06.486</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E362C542A31380D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.6,T*18</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106484" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:97:01:06:24:DC</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.004</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:97:7C:6A:7E:6A</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.486</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E362C542A31380D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.6,T*18</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:08</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683608</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106485" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:97:80:C4:9B:11</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.503</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:97:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:07.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E372C542A31390D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.7,T*19</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106486" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:98:00:C4:9B:A5</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.003</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:98:7C:28:F5:33</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.485</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31302E382C542A31360D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,10.8,T*16</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106487" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:98:80:C4:9B:11</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.503</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:98:FC:28:F4:9F</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:08.985</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31312E302C542A31460D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,11.0,T*1F</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
+<?xml version="1.0" encoding="UTF-8"?>
+<OSU_DAS_Record Type="Data" Version="2.0">
+	
+    <SUDS_received>
+        <Timestamp TimeZone="UTC">
+           <Date Format="YYYY-MM-DD">2016-01-25</Date>
+           <Time Format="HH:MM:SS">01:00:09</Time>
+           <Count Units="Seconds" Epoch="1970-01-01 00:00:00 UTC">1453683609</Count>
+        </Timestamp>
+        <ReceivingHost>
+          <Name>centaurus</Name>
+          <IP_address version="IPv4">10.240.158.42</IP_address>
+        </ReceivingHost>
+        <SendingHost> 
+          <IP_address version="IPv4">10.240.158.105</IP_address>
+        </SendingHost>
+    </SUDS_received>
+<Board Index="106488" Status="Good" Location="gyrocompass" MAC="02-04-A3-42-02-06" IP="10.240.158.105" FirmwareRev="S1.0.7" Channel="Serial"/>
+	<Device Name="gyrocompass" Make="Sperry" Model="" Serial="" LocationXYZ="0,0,0"/>
+	<Serial Mode="RS232" DuplexMode="HalfDuplex" Baudrate="4800" SensorType="Generic-Listen" SentenceTimeoutMs="1000" StartDelimiter="36" UseStartChar="No" EndDelimiter="13" UseEndChar="Yes"/>
+	<Data Type="Serial" Status="Good">
+		<Timestamp TimeZone="UTC" Epoch="01-Jan-1970 00:00:00" Sync="Good">
+			<Start>
+				<NTP64b>56:A5:73:99:01:06:24:DC</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.004</Time>
+			</Start>
+			<Finish>
+				<NTP64b>56:A5:73:99:7C:6A:7E:6A</NTP64b>
+				<Date>2016-01-25</Date>
+				<Time>01:00:09.486</Time>
+			</Finish>
+		</Timestamp>
+		<Raw Type="HexBin">0A2448454844542C31312E312C542A31450D</Raw>
+		<Calibration>
+			<Date>None</Date>
+		</Calibration>
+		<Signal Units="ASCII">
+$HEHDT,11.1,T*1E</Signal>
+		<Physical Units="NMEA0183"/>
+	</Data>
+</OSU_DAS_Record>
