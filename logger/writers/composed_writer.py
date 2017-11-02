@@ -73,8 +73,8 @@ class ComposedWriter(Writer):
     # compatible input/output formats.
     input_format = formats.Unknown
     if check_format:
-      raise ValueError('Sorry - ComposedWriter.check_format() not yet '
-                       'implemented!')
+      logging.error('Sorry - ComposedWriter.check_format() not yet '
+                    'implemented!')
       #output_format = self.check_writer_formats()
       #if not output_format:
       #  raise ValueError('ComposedWriter: No common format found '
