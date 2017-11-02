@@ -6,12 +6,13 @@ import tempfile
 import threading
 import time
 import unittest
+import warnings
 
 sys.path.append('.')
 
-from readers.text_file_reader import TextFileReader
-from writers.text_file_writer import TextFileWriter
-from utils import formats
+from logger.readers.text_file_reader import TextFileReader
+from logger.writers.text_file_writer import TextFileWriter
+from logger.utils import formats
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
@@ -59,4 +60,4 @@ class TestTextFileWriter(unittest.TestCase):
       writer.input_format('not a format')
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(warnings='ignore')

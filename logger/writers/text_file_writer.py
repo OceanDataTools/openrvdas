@@ -19,8 +19,8 @@ stdout.
 import sys
 sys.path.append('.')
 
-from utils.formats import Text
-from writers.writer import Writer
+from logger.utils.formats import Text
+from logger.writers.writer import Writer
 
 ################################################################################
 # Write to the specified file. If filename is empty, write to stdout.

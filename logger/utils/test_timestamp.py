@@ -5,7 +5,7 @@ import unittest
 
 sys.path.append('.')
 
-from utils import timestamp
+from logger.utils import timestamp
 
 class TestTimestamp(unittest.TestCase):
 

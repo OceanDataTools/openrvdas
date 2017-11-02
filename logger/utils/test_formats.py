@@ -5,7 +5,7 @@ import unittest
 
 sys.path.append('.')
 
-from utils import formats
+from logger.utils import formats
 
 class TestFormat(unittest.TestCase):
 

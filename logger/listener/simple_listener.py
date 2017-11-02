@@ -7,10 +7,10 @@ import time
 
 sys.path.append('.')
 
-from readers.text_file_reader import TextFileReader
-from transforms.prefix_transform import PrefixTransform
-from transforms.timestamp_transform import TimestampTransform
-from writers.text_file_writer import TextFileWriter
+from logger.readers.text_file_reader import TextFileReader
+from logger.transforms.prefix_transform import PrefixTransform
+from logger.transforms.timestamp_transform import TimestampTransform
+from logger.writers.text_file_writer import TextFileWriter
 
 ################################################################################
 if __name__ == '__main__':

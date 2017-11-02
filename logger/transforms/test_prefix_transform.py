@@ -5,7 +5,7 @@ import unittest
 
 sys.path.append('.')
 
-from transforms.prefix_transform import PrefixTransform
+from logger.transforms.prefix_transform import PrefixTransform
 
 class TestPrefixTransform(unittest.TestCase):
 

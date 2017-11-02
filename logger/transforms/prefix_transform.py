@@ -5,9 +5,9 @@
 import sys
 sys.path.append('.')
 
-from utils import formats
+from logger.utils import formats
 
-from transforms.transform import Transform
+from logger.transforms.transform import Transform
 
 ################################################################################
 # If timestamp_format is not specified, use default format

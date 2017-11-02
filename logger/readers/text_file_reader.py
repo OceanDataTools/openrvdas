@@ -52,8 +52,8 @@ import time
 
 sys.path.append('.')
 
-from readers.reader import StorageReader
-from utils.formats import Text
+from logger.readers.reader import StorageReader
+from logger.utils.formats import Text
 
 ################################################################################
 # Open and read single-line records from one or more text files.

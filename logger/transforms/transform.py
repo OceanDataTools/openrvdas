@@ -10,7 +10,7 @@ input/output formats after the fact.
 import sys
 sys.path.append('.')
 
-from utils import formats
+from logger.utils import formats
 
 ################################################################################
 # Base class Transform about which we know nothing else. By default the

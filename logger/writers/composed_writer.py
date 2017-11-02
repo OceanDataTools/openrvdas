@@ -44,9 +44,9 @@ import threading
 
 sys.path.append('.')
 
-from transforms.transform import Transform
-from writers.writer import Writer
-from utils import formats
+from logger.transforms.transform import Transform
+from logger.writers.writer import Writer
+from logger.utils import formats
 
 ################################################################################
 class ComposedWriter(Writer):

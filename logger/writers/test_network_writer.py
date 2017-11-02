@@ -10,7 +10,7 @@ import warnings
 
 sys.path.append('.')
 
-from writers.network_writer import NetworkWriter
+from logger.writers.network_writer import NetworkWriter
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',

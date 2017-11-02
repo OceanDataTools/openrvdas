@@ -9,11 +9,11 @@ import warnings
 
 sys.path.append('.')
 
-from writers.text_file_writer import TextFileWriter
-from writers.composed_writer import ComposedWriter
-from writers.writer import Writer
-from transforms.prefix_transform import PrefixTransform
-from utils import formats
+from logger.writers.text_file_writer import TextFileWriter
+from logger.writers.composed_writer import ComposedWriter
+from logger.writers.writer import Writer
+from logger.transforms.prefix_transform import PrefixTransform
+from logger.utils import formats
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',

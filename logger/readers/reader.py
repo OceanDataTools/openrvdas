@@ -6,7 +6,7 @@ Abstract base class for data Readers.
 import sys
 sys.path.append('.')
 
-from utils import formats
+from logger.utils import formats
 
 ################################################################################
 # Base class Reader about which we know nothing else. By default the

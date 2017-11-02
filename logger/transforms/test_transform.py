@@ -9,11 +9,11 @@ import unittest
 
 sys.path.append('.')
 
-from transforms.transform import Transform
-from readers.text_file_reader import TextFileReader
-from writers.text_file_writer import TextFileWriter
+from logger.transforms.transform import Transform
+from logger.readers.text_file_reader import TextFileReader
+from logger.writers.text_file_writer import TextFileWriter
 
-from utils import formats
+from logger.utils import formats
 
 class TestTransform(unittest.TestCase):
 

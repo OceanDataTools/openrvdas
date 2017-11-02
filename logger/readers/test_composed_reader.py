@@ -10,11 +10,11 @@ import warnings
 
 sys.path.append('.')
 
-from readers.text_file_reader import TextFileReader
-from readers.composed_reader import ComposedReader
-from readers.reader import Reader
-from transforms.prefix_transform import PrefixTransform
-from utils import formats
+from logger.readers.text_file_reader import TextFileReader
+from logger.readers.composed_reader import ComposedReader
+from logger.readers.reader import Reader
+from logger.transforms.prefix_transform import PrefixTransform
+from logger.utils import formats
 
 SAMPLE_DATA = {
   'f1' : ['f1 line 1',

@@ -59,9 +59,9 @@ import time
 
 sys.path.append('.')
 
-from readers.reader import Reader
-from transforms.transform import Transform
-from utils import formats
+from logger.readers.reader import Reader
+from logger.transforms.transform import Transform
+from logger.utils import formats
 
 # How long to a reader thread should lie dormant before shutting down
 # and counting on getting restarted again if/when needed. We need this

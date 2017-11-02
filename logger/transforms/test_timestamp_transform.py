@@ -5,8 +5,8 @@ import unittest
 
 sys.path.append('.')
 
-from utils import timestamp
-from transforms.timestamp_transform import TimestampTransform
+from logger.utils import timestamp
+from logger.transforms.timestamp_transform import TimestampTransform
 
 class TestTimestampTransform(unittest.TestCase):
 

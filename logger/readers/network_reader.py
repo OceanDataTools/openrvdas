@@ -25,8 +25,8 @@ import sys
 
 sys.path.append('.')
 
-from utils.formats import Text
-from readers.reader import Reader
+from logger.utils.formats import Text
+from logger.readers.reader import Reader
 
 BUFFER_SIZE = 4096
 

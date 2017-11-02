@@ -10,7 +10,7 @@ import warnings
 
 sys.path.append('.')
 
-from readers.network_reader import NetworkReader
+from logger.readers.network_reader import NetworkReader
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',

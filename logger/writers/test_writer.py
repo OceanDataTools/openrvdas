@@ -5,9 +5,9 @@ import unittest
 
 sys.path.append('.')
 
-from utils import formats
-from readers import reader
-from writers import writer
+from logger.utils import formats
+from logger.readers import reader
+from logger.writers import writer
 
 class TestWriter(unittest.TestCase):
 
