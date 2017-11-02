@@ -4,11 +4,11 @@ responses through zero or more Transforms (in series).
 
 Instantiation:
 
-  reader = ComposedReader(readers, transforms=None, check_format=True)
+  reader = ComposedReader(readers, transforms=[], check_format=True)
 
     readers        A single Reader or a list of Readers.
 
-    transforms     A single Transform, a list of Transforms, or None.
+    transforms     A single Transform or list of zero or more Transforms.
 
     check_format   If True, attempt to check that Reader/Transform formats
                    are compatible, and throw a ValueError if they are not.
