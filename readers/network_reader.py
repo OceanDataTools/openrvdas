@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Read text records from a network socket.
+
+  NOTE: tcp is nominally implemented, but DOES NOT WORK!
+
+  reader = NetworkReader(network)
+
+      network      Network address to read, in host:port format (e.g.
+                   'rvdas:6202'). If host is omitted (e.g. ':6202'),
+                   read via UDP on specified port.
+
+  record = reader.read()
+                   Read record
+
+TODO: code won't handle records that are larger than 4K right now,
+which, if we start getting into Toby Martin's Total Metadata Ingestion
+(TMI), may not be enough. We'll need to implement something that will
+aggregate recv()'s and know when it's got an entire record?
+
+"""
+
+import logging
+import socket
+import sys
+
+sys.path.append('.')
+
+from utils.formats import Text
+from readers.reader import Reader
+
+BUFFER_SIZE = 4096
+
+################################################################################
+# Read to the specified file. If filename is empty, read to stdout.
+class NetworkReader(Reader):
+  def __init__(self, network):
+    super().__init__(output_format=Text)
+
+    self.network = network
+    if network.find(':') == -1:
+      raise ValueError('NetworkReader network argument must be in '
+                       '\'host:port\' or \':port\' format. Found "%s"', network)
+    (host, port) = network.split(':')
+    port = int(port)
+
+    # TCP if host is specified
+    if host:
+      self.socket = socket.socket(family=socket.AF_INET,
+                                  type=socket.SOCK_STREAM,
+                                  proto=socket.IPPROTO_TCP)
+      # Should this be bind()?
+      self.socket.connect((host, port))
+      
+    # UDP broadcast if no host specified. Note that there's some
+    # dodginess I don't understand about networks: if '<broadcast>' is
+    # specified, socket tries to send on *all* interfaces. if '' is
+    # specified, it tries to send on *any* interface.
+    else:
+      host = '' # special code for broadcast
+      self.socket = socket.socket(family=socket.AF_INET,
+                                  type=socket.SOCK_DGRAM,
+                                  proto=socket.IPPROTO_UDP)
+      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+      self.socket.bind((host, port))
+
+  ############################
+  def read(self):
+    record = self.socket.recv(BUFFER_SIZE)
+    logging.debug('NetworkReader.read() received %d bytes', len(record))
+    if record:
+      record = record.decode('utf-8')
+    return record
