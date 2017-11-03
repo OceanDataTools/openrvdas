@@ -1,52 +1,92 @@
 #!/usr/bin/env python3
-"""Aggregate passed lines of XML until a complete XML record has been
-seen, then pass it on as a single record. Relies on the simplistic
-heuristic of expecting each new record to begin with '<?xml...', which
-means that we won't recognize the end of a record until we see the
-beginning of the next one.
-
-TODO: Replace by something using xml.sax.xmlreader.IncrementalParser,
-with a custom ContentHandler that remembers the first opening tag we
-see at the start of a record and triggers parsing when is sees the
-corresponding closing tag.
+"""Aggregate passed lines of XML until a complete XML record whose
+outermost element matches 'tag' has been seen, then pass it on as a
+single record.
 
 """
 
 import logging
 import sys
-import threading
+import xml.sax
+
+from threading import Lock
+from xml.sax.handler import ContentHandler
+from xml.sax import make_parser
 
 sys.path.append('.')
 
 from logger.utils import formats
-
 from logger.transforms.transform import Transform
+
+################################################################################
+# Helper class here - XMLHandler.endElement() will get called on
+# closing tags, so we can detect when we've got a closing tag for
+# whatever XML element we're after.
+class XMLHandler(ContentHandler):
+  # Omitting startElement, and characters methods
+  # to store data on a stack during processing
+  ############################
+  def __init__(self, tag):
+    super().__init__()
+    self.tag = tag
+    self.item_list = []
+    self.element_complete = False
+    
+  ############################
+  def complete(self):
+    return self.element_complete
+
+  ############################
+  def reset(self):
+    self.element_complete = False
+
+  ############################
+  def endElement(self, name):
+    if name == self.tag:
+      # Create item from stored data on stack
+      self.element_complete = True
 
 ################################################################################
 class XMLAggregatorTransform(Transform):
   ############################
-  def __init__(self, delimiter='<?xml'):
+  # 'tag' should be the identity of the top-level XML element that
+  # we're expecting to read, e.g. 'OSU_DAS_Record'
+  def __init__(self, tag):
     super().__init__(input_format=formats.Text, output_format=formats.XML)
-    self.delimiter = delimiter
+    self.tag = tag
 
     # Only let one thread touch buffer at a time. Of course, if we're
     # getting interleaved lines from different XML records here, we're
     # screwed anyway.
-    self.buffer_lock = threading.Lock()
+    self.buffer_lock = Lock()
     self.buffer = ''
+
+    self.handler = XMLHandler(tag=tag)
+    self.parser = make_parser(['xml.sax.IncrementalParser'])
+    self.parser.setContentHandler(self.handler)
 
   ############################
   def transform(self, record):
     if record is None:
       return None
-    
-    logging.debug('XMLAggregatorTransform.read() got record: %s', record)  
+
     with self.buffer_lock:
-      if record.find(self.delimiter) > -1:
-        logging.debug('XMLAggregatorTransform.read() got new record delimiter')
-        completed_record = self.buffer
-        self.buffer = record
-        return completed_record
-      else:
-        self.buffer += record + '\n'
-        return None
+      # Feed record to the incremental parser
+      self.buffer += record + '\n'
+      self.parser.feed(record)
+      logging.debug('transform() got line: %s', record)
+
+      # If the record completes and XML record, it will be added to the
+      # queue in self.handler.items() - pop it off and return
+      if self.handler.complete():
+        xml_record = self.buffer
+        self.buffer = ''
+        self.parser.close()
+        self.parser.reset()
+        self.handler.reset()
+        logging.debug('transform() got closing tag: %s', xml_record)
+        return xml_record
+
+    # Otherwise go home emptyhanded
+    return None
+  
