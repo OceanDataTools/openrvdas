@@ -37,12 +37,12 @@ class TestComposedWriter(unittest.TestCase):
     f2_name = self.tmpdirname + '/f2'
 
     # No longer raises exception, just prints warning
-    ## This should fail
-    #with self.assertRaises(ValueError):
-    #  writer = ComposedWriter(transforms=[],
-    #                          writers=[TextFileWriter(f1_name),
-    #                                   TextFileWriter(f2_name)],
-    #                          check_format=True)
+    # This should complain
+    with self.assertLogs(logging.getLogger(), logging.ERROR):
+      writer = ComposedWriter(transforms=[],
+                              writers=[TextFileWriter(f1_name),
+                                       TextFileWriter(f2_name)],
+                              check_format=True)
     
   ############################
   def test_all_files(self):

@@ -61,6 +61,7 @@ from logger.transforms.timestamp_transform import TimestampTransform
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
 from logger.writers.text_file_writer import TextFileWriter
+from logger.writers.logfile_writer import LogfileWriter
 
 ################################################################################
 class Listener:
@@ -110,7 +111,7 @@ if __name__ == '__main__':
                       'Note that wildcards in a filename will be expanded, '
                       'and the resulting files read sequentially. A single '
                       'dash (\'-\') will be interpreted as stdout.')
-
+  
   parser.add_argument('--interval', dest='interval', type=float, default=0,
                       help='Number of seconds between reads')
 
@@ -128,6 +129,11 @@ if __name__ == '__main__':
 
   parser.add_argument('--write_file', dest='write_file', default=None,
                       help='File(s) to write to (empty for stdout)')
+
+  parser.add_argument('--write_logfile', dest='write_logfile', default=None,
+                      help='Filename base to write to. A date string that '
+                      'corresponds to the timestamped date of each record '
+                      'Will be appended to filename, with one file per date.')
 
   parser.add_argument('--write_network', dest='write_network', default=None,
                       help='Network address(es) to write to')
@@ -168,6 +174,8 @@ if __name__ == '__main__':
       if filename == '-':
         filename = None
       writers.append(TextFileWriter(filename=filename))
+  if args.write_logfile:
+    writers.append(LogfileWriter(filebase=args.write_logfile))
   if args.write_network:
     for addr in args.write_network.split(','):
       writers.append(NetworkWriter(addr=addr))
