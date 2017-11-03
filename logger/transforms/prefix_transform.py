@@ -10,7 +10,7 @@ from logger.utils import formats
 from logger.transforms.transform import Transform
 
 ################################################################################
-# If timestamp_format is not specified, use default format
+# Use space as default separator
 class PrefixTransform(Transform):
   def __init__(self, prefix, sep=' '):
     super().__init__(input_format=formats.Text, output_format=formats.Text)
