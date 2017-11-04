@@ -114,7 +114,8 @@ class TestTextFileReader(unittest.TestCase):
       
       time.sleep(0.05) # let the thread get started
 
-      reader = TextFileReader(tmpfilename, refresh_file_spec=True)
+      with self.assertLogs(logging.getLogger(), logging.WARNING):
+        reader = TextFileReader(tmpfilename, refresh_file_spec=True)
       for line in SAMPLE_DATA[target]:
         self.assertEqual(line, reader.read())
 
