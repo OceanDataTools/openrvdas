@@ -56,6 +56,7 @@ from logger.readers.composed_reader import ComposedReader
 from logger.readers.text_file_reader import TextFileReader
 
 from logger.transforms.prefix_transform import PrefixTransform
+from logger.transforms.slice_transform import SliceTransform
 from logger.transforms.timestamp_transform import TimestampTransform
 
 from logger.writers.composed_writer import ComposedWriter
@@ -123,6 +124,15 @@ if __name__ == '__main__':
   parser.add_argument('--prefix', dest='prefix', default='',
                       help='Prefix each record with this string')
 
+  parser.add_argument('--slice', dest='slice', default='', help='Return '
+                      'only the specified (space-separated) fields of a '
+                      'text record. Can be comma-separated integer values '
+                      'and/or ranges, e.g. "1,3,5:7,-1". Note: zero-base '
+                      'indexing, so "1:" means "start at second element.')
+
+  parser.add_argument('--slice_separator', dest='slice_separator', default=' ',
+                      help='Field separator for --slice.')
+
   parser.add_argument('--timestamp', dest='timestamp',
                       action='store_true', default=False,
                       help='Timestamp each record as it is read')
@@ -163,6 +173,8 @@ if __name__ == '__main__':
       readers.append(NetworkReader(addr=addr))
 
   transforms = []
+  if args.slice:
+    transforms.append(SliceTransform(args.slice, args.slice_separator))
   if args.timestamp:
     transforms.append(TimestampTransform())
   if args.prefix:
