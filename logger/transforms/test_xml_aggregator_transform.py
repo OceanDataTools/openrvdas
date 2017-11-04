@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import logging
 import sys
 import unittest
@@ -121,6 +120,7 @@ class TestXMLAggregatorTransform(unittest.TestCase):
                          
 ################################################################################
 if __name__ == '__main__':
+  import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
