@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import json
 import logging
+import re
 import sys
 import tempfile
 import threading
@@ -25,6 +27,22 @@ SAMPLE_JSON = """{
             },
     "gyr1": {"port": "/tmp/tty_gyr1",
              "logfile": "test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1" 
+            }
+}
+"""
+
+BAD_JSON1 = """{
+    # Here's a sample comment on its own line
+    "PCOD": {"port": "/tmp/tty_PCOD",   # Here's a comment at end of line
+             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
+            },
+}
+"""
+
+BAD_JSON2 = """{
+    # Here's a sample comment on its own line
+    "PCOD": {"port": x "/tmp/tty_PCOD",   # Here's a comment at end of line
+             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
             }
 }
 """
@@ -55,6 +73,15 @@ class TestReadJson(unittest.TestCase):
       result = read_json.read_json(tmpfilename)
       self.assertEqual(result['gyr1']['port'], '/tmp/tty_gyr1')
       self.assertEqual(len(result), 4)
+
+  ############################
+  def test_parse_bad_son(self):
+    with self.assertLogs(logging.getLogger(), logging.ERROR):
+      with self.assertRaises(json.decoder.JSONDecodeError):
+        result = read_json.parse_json(BAD_JSON1)
+    with self.assertLogs(logging.getLogger(), logging.ERROR):
+      with self.assertRaises(json.decoder.JSONDecodeError):
+        result = read_json.parse_json(BAD_JSON2)
 
 ################################################################################
 if __name__ == '__main__':
