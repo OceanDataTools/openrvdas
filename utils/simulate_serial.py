@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""Create a virtual serial port and feed stored logfile data to it.
+"""
+import logging
+import subprocess
+import sys
+import threading
+import time
+
+sys.path.append('.')
+
+from logger.readers.logfile_reader import LogfileReader
+from logger.transforms.slice_transform import SliceTransform
+from logger.writers.text_file_writer import TextFileWriter
+
+from utils.read_json import read_json
+
+SOCAT_PATH = '/usr/local/bin/socat'
+
+################################################################################
+class SimSerial:
+  ############################
+  # Takes source file, whether to deliver data at rate indicated by
+  # timestamps, and the standard parameters that a serial port takes.
+  def __init__(self, port, source_file, use_timestamps=True,
+               baudrate=9600, bytesize=8, parity='N', stopbits=1,
+               timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
+               dsrdtr=False, inter_byte_timeout=None, exclusive=None):
+
+    self.source_file = source_file
+    self.use_timestamps = use_timestamps
+    
+    # We'll create two virtual ports: 'port' and 'port_in'; we will write
+    # to port_in and read the values back out from port
+    self.read_port = port
+    self.write_port = port + '_in'
+
+    self.serial_params = {'baudrate': baudrate,
+                          'byteside': bytesize,
+                          'parity': parity,
+                          'stopbits': stopbits,
+                          'timeout': timeout,
+                          'xonxoff': xonxoff,
+                          'rtscts': rtscts,
+                          'write_timeout': write_timeout,
+                          'dsrdtr': dsrdtr,
+                          'inter_byte_timeout': inter_byte_timeout,
+                          'exclusive': exclusive}
+    self.quit = False
+    
+  ############################
+  def run_socat(self):
+    verbose = '-d'
+    write_port_params =   'pty,link=%s,raw,echo=0' % self.write_port
+    read_port_params = 'pty,link=%s,raw,echo=0' % self.read_port
+
+    cmd = [SOCAT_PATH,
+           verbose,
+           #verbose,   # repeating makes it more verbose
+           read_port_params,
+           write_port_params,
+          ]
+    try:
+      # Run socat process using Popen, checking every second or so whether
+      # it's died (poll() != None) or we've gotten a quit signal.
+      logging.info('Calling: %s', ' '.join(cmd))
+      p = subprocess.Popen(cmd)
+      while not self.quit and not p.poll():
+        try:
+          p.wait(1)
+        except subprocess.TimeoutExpired:
+          pass
+  
+    except Exception as e:
+      logging.error('ERROR: socat command: %s', e)
+    logging.info('Finished: %s', ' '.join(cmd))
+    self.quit = True
+
+  ############################
+  def run(self):
+    # Run socat to create virtual port; give it a moment to get started
+    self.socat_thread = threading.Thread(target=self.run_socat)
+    self.socat_thread.start()
+    time.sleep(0.2)
+
+    self.reader = LogfileReader(filebase=self.source_file,
+                                use_timestamps=self.use_timestamps)
+    self.strip = SliceTransform('1:') # strip off the first field)
+    self.writer = TextFileWriter(self.write_port)
+    
+    while not self.quit:
+      record = self.reader.read() # get the next record
+      logging.debug('SimSerial got: %s', record)
+      if record is None:
+        break
+      record = self.strip.transform(record)  # strip the timestamp
+      if record: 
+        logging.debug('SimSerial writing: %s', record)
+        self.writer.write(record)   # and write it to the virtual port
+
+    # If we're here, we got None from our input, and are done. Signal
+    # for run_socat to exit
+    self.quit = True
+
+################################################################################
+if __name__ == '__main__':
+  import argparse
+  parser = argparse.ArgumentParser()
+
+  parser.add_argument('--config', dest='config', default=None,
+                      help='Config file of JSON specs for port-file mappings.')
+  
+  parser.add_argument('--logfile', dest='logfile',
+                      help='Log file to read from.')
+
+  parser.add_argument('--port', dest='port', help='Virtual serial port to open')
+  parser.add_argument('--baud', dest='baud', type=int,
+                      help='Baud rate for port.')
+
+  parser.add_argument('-v', '--verbosity', dest='verbosity',
+                      default=0, action='count',
+                      help='Increase output verbosity')
+  args = parser.parse_args()
+
+  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  logging.basicConfig(format=LOGGING_FORMAT)
+
+  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+
+  # Okay - get to work here
+
+  if args.config:
+    configs = read_json(args.config)
+    logging.info('Read configs: %s', configs)
+    thread_list = []
+    for inst in configs:
+      config = configs[inst]
+      sim = SimSerial(port=config['port'], source_file=config['logfile'])
+      sim_thread = threading.Thread(target=sim.run)
+      sim_thread.start()
+      thread_list.append(sim_thread)
+
+  # If no config file, just a simple, single serial port
+  else:
+    sim_serial = SimSerial(port=args.port, baudrate=args.baud,
+                           source_file=args.logfile)
+    sim_serial.run()
+    
