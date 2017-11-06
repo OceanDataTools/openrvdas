@@ -63,7 +63,7 @@ class TestSimulateSerial(unittest.TestCase):
       f.write(SAMPLE_DATA)
 
   ############################
-  def test_explicit(self):
+  def test_use_timestamps(self):
     port = PORT.replace('%DIR%', self.tmpdirname)
     sim = SimSerial(port=port, source_file=self.logfile_filename)
     sim_thread = threading.Thread(target=sim.run)
@@ -76,23 +76,41 @@ class TestSimulateSerial(unittest.TestCase):
     
     # Then read from serial port
     s = serial.Serial(port=port)
+    last_read = time.time() - 0.15
     for line in SAMPLE_DATA.split('\n'):
       data = slice.transform(line)
       record = s.readline().strip().decode('utf-8')
+      now = time.time()
+      logging.debug('time diff %f', now - last_read)
+      self.assertAlmostEqual(now - last_read, 0.26, places=1)
       self.assertEqual(data, record)
+      last_read = now
 
-  """
   ############################
-  def test_config(self):
-    configs = read_json.read_json(self.config_filename)
-    for config in configs:
-      sim = SimSerial(config=config)
-      sim_thread = threading.Thread(target=sim.run)
-      sim_thread.start()
+  def test_fast(self):
+    port = PORT.replace('%DIR%', self.tmpdirname)
+    sim = SimSerial(port=port, source_file=self.logfile_filename,
+                    use_timestamps=False)
+    sim_thread = threading.Thread(target=sim.run)
+    sim_thread.start()
 
-    # And read from the simulated port
-    pass
-  """
+    # Give it a moment to get started
+    time.sleep(0.1)
+
+    slice = SliceTransform('1:')  # we'll want to strip out timestamp
+    
+    # Then read from serial port
+    s = serial.Serial(port=port)
+    last_read = time.time() + 0.1
+    for line in SAMPLE_DATA.split('\n'):
+      data = slice.transform(line)
+      record = s.readline().strip().decode('utf-8')
+      now = time.time()
+      logging.debug('time diff %f', now - last_read)
+      self.assertLess(now - last_read, 0.01)
+      self.assertEqual(data, record)
+      last_read = now
+      
 
 ################################################################################
 if __name__ == '__main__':
