@@ -70,6 +70,7 @@ class SimSerial:
           p.wait(1)
         except subprocess.TimeoutExpired:
           pass
+      p.terminate()
   
     except Exception as e:
       logging.error('ERROR: socat command: %s', e)
