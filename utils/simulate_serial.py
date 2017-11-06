@@ -64,18 +64,24 @@ class SimSerial:
       # Run socat process using Popen, checking every second or so whether
       # it's died (poll() != None) or we've gotten a quit signal.
       logging.info('Calling: %s', ' '.join(cmd))
-      p = subprocess.Popen(cmd)
-      while not self.quit and not p.poll():
+      socat_process = subprocess.Popen(cmd)
+      while not self.quit and not socat_process.poll():
         try:
-          p.wait(1)
+          socat_process.wait(1)
         except subprocess.TimeoutExpired:
           pass
-      p.terminate()
   
     except Exception as e:
       logging.error('ERROR: socat command: %s', e)
+
+    # If here, process has terminated, or we've seen self.quit. We
+    # want both to be true: if we've terminated, set self.quit so that
+    # 'run' loop can exit. If self.quit, terminate process.
+    if self.quit:
+      socat_process.kill()
+    else:
+      self.quit = True
     logging.info('Finished: %s', ' '.join(cmd))
-    self.quit = True
 
   ############################
   def run(self):
