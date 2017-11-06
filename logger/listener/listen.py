@@ -53,6 +53,8 @@ import time
 sys.path.append('.')
 
 from logger.readers.composed_reader import ComposedReader
+from logger.readers.network_reader import NetworkReader
+from logger.readers.serial_reader import SerialReader
 from logger.readers.text_file_reader import TextFileReader
 
 from logger.transforms.prefix_transform import PrefixTransform
@@ -112,7 +114,13 @@ if __name__ == '__main__':
                       'Note that wildcards in a filename will be expanded, '
                       'and the resulting files read sequentially. A single '
                       'dash (\'-\') will be interpreted as stdout.')
-  
+
+  parser.add_argument('--serial', dest='serial', default=None,
+                      help='Comma-separated serial port spec containing at '
+                      'least port=[port], but also optionally baudrate, '
+                      'timeout, max_bytes and/or other SerialReader '
+                      'parameters.')
+
   parser.add_argument('--interval', dest='interval', type=float, default=0,
                       help='Number of seconds between reads')
 
@@ -172,6 +180,16 @@ if __name__ == '__main__':
     for addr in args.network.split(','):
       readers.append(NetworkReader(addr=addr))
 
+  # SerialReader is a little more complicated than other readers
+  # because it can take so many parameters. Use the kwargs trick to
+  # pass them all in.
+  if args.serial:
+    kwargs = {}
+    for pair in args.serial.split(','):
+      (key, value) = pair.split('=')
+      kwargs[key] = value
+    readers.append(SerialReader(**kwargs))
+  
   transforms = []
   if args.slice:
     transforms.append(SliceTransform(args.slice, args.slice_separator))
