@@ -53,6 +53,7 @@ import time
 sys.path.append('.')
 
 from logger.readers.composed_reader import ComposedReader
+from logger.readers.logfile_reader import LogfileReader
 from logger.readers.network_reader import NetworkReader
 from logger.readers.serial_reader import SerialReader
 from logger.readers.text_file_reader import TextFileReader
@@ -90,7 +91,7 @@ class Listener:
   # component readers have returned EOF.
   def run(self):
     record = ''
-    while not self.quit() and record is not None:
+    while not self.quit_signalled and record is not None:
       record = self.reader.read()
       self.last_read = time.time()
       
@@ -115,6 +116,17 @@ if __name__ == '__main__':
                       'and the resulting files read sequentially. A single '
                       'dash (\'-\') will be interpreted as stdout.')
 
+  parser.add_argument('--logfile', dest='logfile', default=None,
+                      help='Comma-separated logfile base filenames to read '
+                      'from in parallel. Logfile dates will be added '
+                      'automatically.')
+
+  parser.add_argument('--logfile_use_timestamps', dest='logfile_use_timestamps',
+                      action='store_true', default=False,
+                      help='Make LogfileReaders deliver records at intervals '
+                      'corresponding to the intervals indicated by the stored '
+                      'record timestamps.')
+
   parser.add_argument('--serial', dest='serial', default=None,
                       help='Comma-separated serial port spec containing at '
                       'least port=[port], but also optionally baudrate, '
@@ -129,6 +141,11 @@ if __name__ == '__main__':
                       'exit after reading file EOF; continue to check for '
                       'additional input.')
 
+  parser.add_argument('--refresh_file_spec', dest='refresh_file_spec',
+                      action='store_true', default=False, help='When at EOF '
+                      'and --tail is specified, check for new matching files '
+                      'that may have appeared since our last attempt to read.')
+  
   parser.add_argument('--prefix', dest='prefix', default='',
                       help='Prefix each record with this string')
 
@@ -175,10 +192,17 @@ if __name__ == '__main__':
   readers = []
   if args.file:
     for filename in args.file.split(','):
-      readers.append(TextFileReader(file_spec=filename, tail=args.tail))
+      readers.append(TextFileReader(file_spec=filename,
+                                    tail=args.tail,
+                                    refresh_file_spec=args.refresh_file_spec))
   if args.network:
     for addr in args.network.split(','):
-      readers.append(NetworkReader(addr=addr))
+      readers.append(NetworkReader(network=addr))
+  if args.logfile:
+    for filebase in args.logfile.split(','):
+      readers.append(LogfileReader(filebase=filebase,
+                                   use_timestamps=args.logfile_use_timestamps,
+                                   refresh_file_spec=args.refresh_file_spec))
 
   # SerialReader is a little more complicated than other readers
   # because it can take so many parameters. Use the kwargs trick to
@@ -208,7 +232,7 @@ if __name__ == '__main__':
     writers.append(LogfileWriter(filebase=args.write_logfile))
   if args.write_network:
     for addr in args.write_network.split(','):
-      writers.append(NetworkWriter(addr=addr))
+      writers.append(NetworkWriter(network=addr))
 
   listener = Listener(readers, transforms, writers,
                       interval=args.interval,

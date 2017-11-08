@@ -33,10 +33,11 @@ BUFFER_SIZE = 4096
 ################################################################################
 # Read to the specified file. If filename is empty, read to stdout.
 class NetworkReader(Reader):
-  def __init__(self, network):
+  def __init__(self, network, buffer_size=BUFFER_SIZE):
     super().__init__(output_format=Text)
 
     self.network = network
+    self.buffer_size = buffer_size
     if network.find(':') == -1:
       raise ValueError('NetworkReader network argument must be in '
                        '\'host:port\' or \':port\' format. Found "%s"', network)
@@ -66,7 +67,7 @@ class NetworkReader(Reader):
 
   ############################
   def read(self):
-    record = self.socket.recv(BUFFER_SIZE)
+    record = self.socket.recv(self.buffer_size)
     logging.debug('NetworkReader.read() received %d bytes', len(record))
     if record:
       record = record.decode('utf-8')
