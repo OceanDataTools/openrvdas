@@ -59,6 +59,7 @@ from logger.readers.serial_reader import SerialReader
 from logger.readers.text_file_reader import TextFileReader
 
 from logger.transforms.prefix_transform import PrefixTransform
+from logger.transforms.regex_filter_transform import RegexFilterTransform
 from logger.transforms.slice_transform import SliceTransform
 from logger.transforms.timestamp_transform import TimestampTransform
 
@@ -146,9 +147,12 @@ if __name__ == '__main__':
                       'and --tail is specified, check for new matching files '
                       'that may have appeared since our last attempt to read.')
   
+  parser.add_argument('--regex_filter', dest='regex_filter', default='',
+                      help='Only pass records containing this regex.')
+
   parser.add_argument('--prefix', dest='prefix', default='',
                       help='Prefix each record with this string')
-
+  
   parser.add_argument('--slice', dest='slice', default='', help='Return '
                       'only the specified (space-separated) fields of a '
                       'text record. Can be comma-separated integer values '
@@ -215,6 +219,8 @@ if __name__ == '__main__':
     readers.append(SerialReader(**kwargs))
   
   transforms = []
+  if args.regex_filter:
+    transforms.append(RegexFilterTransform(args.regex_filter))
   if args.slice:
     transforms.append(SliceTransform(args.slice, args.slice_separator))
   if args.timestamp:
