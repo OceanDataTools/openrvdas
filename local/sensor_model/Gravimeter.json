@@ -1,0 +1,11 @@
+# A particular model of sensor, in this case, a generic Gravimeter.
+{
+    "Gravimeter": {
+        "format": "%d:%d %d",
+	"fields": [
+	    ["CounterUnits", "int"],
+	    ["GravityValueMg", "int"],
+	    ["GravityError", "int"]
+	]
+    }
+}

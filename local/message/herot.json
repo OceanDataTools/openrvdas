@@ -1,0 +1,10 @@
+{
+    # Rate of turn
+    "$HEROT": {
+	"format": "%f,A*%s",
+	"fields": [
+	    ["RateOfTurn", "float"],
+	    ["Checksum", "str"]
+	]		   
+    }
+}

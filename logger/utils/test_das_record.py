@@ -13,7 +13,8 @@ from logger.utils import timestamp
 
 JSON_IN = """{
   "timestamp": 1510265335,
-  "instrument": "gyr1",
+  "data_id": "gyr1",
+  "message_type": "",
   "fields": {
     "GYR_Heading": 314.15,
     "GYR_Acc": 0.11
@@ -33,18 +34,18 @@ class TestDASRecord(unittest.TestCase):
     dr = DASRecord()
     self.assertAlmostEqual(dr.timestamp, timestamp.timestamp(), 2)
     self.assertAlmostEqual(dr.timestamp, timestamp.timestamp(), 2)
-    self.assertEqual(dr.instrument, None)
+    self.assertEqual(dr.data_id, None)
     self.assertEqual(dr.fields, {})
     self.assertEqual(dr.metadata, {})
 
   def test_json(self):
     dr = DASRecord(json=JSON_IN)
     self.assertEqual(dr.timestamp, 1510265335)
-    self.assertEqual(dr.instrument, 'gyr1')
+    self.assertEqual(dr.data_id, 'gyr1')
     self.assertEqual(dr.fields['GYR_Heading'], 314.15)
     self.assertEqual(dr.metadata['status'], 'good')
 
-    self.assertEqual(json.loads(dr.as_json()), json.loads(JSON_IN))
+    self.assertDictEqual(json.loads(dr.as_json()), json.loads(JSON_IN))
 
 ################################################################################
 if __name__ == '__main__':

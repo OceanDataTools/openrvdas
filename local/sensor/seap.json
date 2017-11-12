@@ -1,0 +1,18 @@
+{
+    # data_id
+    "seap": {
+        "name": "seap",
+        "model": "Seapath200",    # references a definition in sensor_model/
+        "fields": {               # references fields in messages/Seapath200
+	    "HorizQual": "Seap200HorizQual",
+	    "HeightQual": "Seap200HeightQual",
+	    "HeadingQual": "Seap200HeadingQual",
+	    "RollPitchQual": "Seap200RollPitchQual",
+	    "GyroCal": "Seap200GyroCal",
+	    "GyroOffset": "Seap200GyroOffset",
+	    "Roll": "Seap200Roll",
+	    "Pitch": "Seap200Pitch",
+	    "Heading": "Seap200Heading"
+         }
+    }
+}
