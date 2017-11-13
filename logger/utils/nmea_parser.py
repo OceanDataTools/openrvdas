@@ -145,8 +145,8 @@ class NMEAParser:
     # message_type fields).
     values = scanf.scanf(format, message)
     if not values:
-      raise ValueError('%s: message format "%s" does not match message: %s'
-                       % (sensor_model_name, format, message))
+      raise ValueError('%s: %s message format "%s" does not match message: %s'
+                       % (sensor_model_name, message_type, format, message))
 
     # Did we get the right number of values?
     if not len(values) == len(fields):
@@ -163,6 +163,8 @@ class NMEAParser:
     
   ############################
   def convert(self, value, data_type):
+    if value is '':
+      return None
     if not data_type:
       return value
     elif data_type == 'int':
