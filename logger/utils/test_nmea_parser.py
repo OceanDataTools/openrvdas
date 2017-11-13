@@ -91,7 +91,7 @@ class TestNMEAParser(unittest.TestCase):
     logging.debug('\n\nMessages: %s', pprint.pformat(p.messages))
     logging.debug('\n\nSensor Models: %s', pprint.pformat(p.sensor_models))
     logging.debug('\n\nMessages: %s', pprint.pformat(p.sensors))
-    """
+
     for line in GYR1_RECORDS:
       logging.debug('line: %s', line)
       record = p.parse_record(line)
@@ -105,7 +105,7 @@ class TestNMEAParser(unittest.TestCase):
       logging.debug('line: %s', line)
       record = p.parse_record(line)
       logging.debug('record: %s', str(record))
-    """
+
     for line in S330_RECORDS:
       logging.debug('line: %s', line)
       record = p.parse_record(line)
