@@ -1,0 +1,14 @@
+# From http://www.gpsinformation.org/dale/nmea.htm
+#
+#
+{
+    # $INHDT,head,T*csum term
+    # $INHDT,235.98,T*00
+    "$INHDT": {
+        "format": "%f,T*%s",
+        "fields": [
+            ["Heading", "float"],
+            ["Checksum", "str"]
+        ]
+    }
+}

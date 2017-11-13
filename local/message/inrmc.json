@@ -1,0 +1,23 @@
+# From http://www.gpsinformation.org/dale/nmea.htm
+#
+#
+{
+    # $INRMC,000001.16,A,3934.833674,S,03727.698164,W,10.8,230.21,070814,18.5,W,A*06
+    # $INRMC,time,A,lat,S,lon,W,sog,cog_true,date,mag_var,W,A*csum
+    "$INRMC": {
+        "format": "%f,A,%f,%s,%f,%s,%f,%f,%d,%f,%s,A*%s",
+        "fields": [
+            ["GPSTime", "float"],
+            ["Latitude", "float"],
+            ["NorS", "str"],
+            ["Longitude", "float"],
+            ["EorW", "str"],
+            ["Speed", "float"],
+            ["CourseTrue", "float"],
+            ["GPSDate", "int"],
+            ["MagneticVar", "float"],
+            ["MagneticVarEorW", "str"],
+            ["Checksum", "str"]
+        ]
+    }
+}

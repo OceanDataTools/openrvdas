@@ -1,0 +1,26 @@
+# From http://www.gpsinformation.org/dale/nmea.htm
+#
+#
+{
+    # $GPGGA,235959.92,3934.831152,S,03727.694551,W,1,11,0.9,-5.30,M,,M,,*6F
+    "$GPGGA": {
+        # Notes: we want to match strs to empty strings, but scanf
+        # seems to insist that %s matches non-empty? I thought it did not
+        "format": "%f,%f,%s,%f,%s,%d,%d,%f,%f,M,%s,M,%s,%s*%s",
+        "fields": [
+            ["GPSTime", "float"],
+            ["Latitude", "float"],
+            ["NorS", "str"],
+            ["Longitude", "float"],
+            ["EorW", "str"],
+            ["FixQuality", "int"],
+            ["NumSats", "int"],
+            ["HDOP", "float"],  # Horizontal Dilution of Position
+            ["AltitudeAboveSeaLevel", "float"],
+            ["GeoidHeight", "float"],
+            ["LastDGPSUpdate", "float"],
+            ["DGPSStationID", "float"],               
+            ["Checksum", "str"]
+        ]
+    }
+}
