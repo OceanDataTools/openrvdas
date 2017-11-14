@@ -7,8 +7,8 @@
     "$GPHDT": {
         "format": "%f,T*%s",
         "fields": [
-            ["Heading", "float"],
-            ["Checksum", "str"]
+            "Heading",
+            "Checksum"
         ]
     }
 }

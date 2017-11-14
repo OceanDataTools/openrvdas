@@ -11,7 +11,9 @@ import sys
 
 sys.path.append('.')
 
-from utils import read_json, scanf
+# We use a tweaked version of scanf that allows empty fields for %s,
+# %d and %f, returning '' for empty %s and None for empty %d and %f
+from utils import read_json, scanf_zero
 from logger.utils.das_record import DASRecord
 from logger.utils.timestamp import timestamp
 
@@ -143,7 +145,7 @@ class NMEAParser:
     # Here, we should have format and fields both defined - try scanf
     # on our message (or what's left of it after parsing off
     # message_type fields).
-    values = scanf.scanf(format, message)
+    values = scanf_zero.scanf_zero(format, message)
     if not values:
       raise ValueError('%s: %s message format "%s" does not match message: %s'
                        % (sensor_model_name, message_type, format, message))
@@ -157,8 +159,13 @@ class NMEAParser:
     # If still okay, map values to their field names and data types
     field_values = {}
     for i in range(len(values)):
-      (name, data_type) = fields[i]
-      field_values[name] = self.convert(values[i], data_type)
+      # Old style, with [name, type] pair - means we need to convert
+      if type(fields[i]) is list:
+        (name, data_type) = fields[i]
+        field_values[name] = self.convert(values[i], data_type)
+      # New style, we trust it's already in the right format
+      else:
+        field_values[fields[i]] = values[i]
     return (field_values, message_type)
     
   ############################

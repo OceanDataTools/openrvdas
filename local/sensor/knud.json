@@ -1,0 +1,18 @@
+{
+    # data_id
+    "knud": {
+        "name": "knud",
+        "model": "Knudsen",
+          "fields": {
+              "LFInUse": "KnudLFInUse",
+              "LFDepth": "KnudLFDepth",
+              "LFValidFlag": "KnudLFValidFlag",
+              "HFInUse": "KnudHFInUse",
+              "HFDepth": "KnudHFDepth",
+              "HFValidFlag": "KnudHFValidFlag",
+              "SoundVelocity": "KnudSoundVelocity",
+              "Latitude": "KnudLatitude",
+              "Longitude": "KnudLongitude"
+          }
+    }
+}

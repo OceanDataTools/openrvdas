@@ -7,13 +7,13 @@
     "$GPGLL": {
         "format": "%f,%s,%f,%s,%f,%s*%s",
         "fields": [
-            ["Latitude", "float"],
-            ["NorS", "str"],
-            ["Longitude", "float"],
-            ["EorW", "str"],
-            ["FixTime", "float"],
-            ["Mode", "str"],
-            ["Checksum", "str"]
+            "Latitude",
+            "NorS",
+            "Longitude",
+            "EorW",
+            "FixTime",
+            "Mode",
+            "Checksum"
         ]
     }
 }

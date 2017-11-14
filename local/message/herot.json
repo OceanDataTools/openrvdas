@@ -3,8 +3,8 @@
     "$HEROT": {
 	"format": "%f,A*%s",
 	"fields": [
-	    ["RateOfTurn", "float"],
-	    ["Checksum", "str"]
+	    "RateOfTurn",
+	    "Checksum"
 	]		   
     }
 }
