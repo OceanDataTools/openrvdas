@@ -5,12 +5,14 @@
     # $INZDA,time,day,month,year,,*csum term
     # $INZDA,002706.69,07,08,2014,,*62
     "$INZDA": {
-        "format": "%f,%d,%d,%d,,*%s",
+        "format": "%f,%d,%d,%d,%s,%s*%s",
         "fields": [
             ["GPSTime", "float"],
             ["GPSDay", "int"],
             ["GPSMonth", "int"],
             ["GPSYear", "int"],
+            ["LocalHours", "int"],
+            ["LocalZone", "int"],
             ["Checksum", "str"]
         ]
     }

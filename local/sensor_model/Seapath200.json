@@ -1,4 +1,3 @@
-# At the moment, only $PSXN has a message definition in message/
 {
     "Seapath200": {
 	"messages": ["$GPGGA", "$GPHDT", "$GPVTG", "$GPZDA", "$PSXN"]

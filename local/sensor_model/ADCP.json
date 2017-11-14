@@ -1,0 +1,6 @@
+# A particular model of sensor.
+{
+    "ADCP": {
+	"messages": ["$PUHAW"]
+    }
+}

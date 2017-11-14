@@ -1,0 +1,6 @@
+{
+    "TrimbleGPS": {
+	"messages": ["$GPGGA", "$GPHDT", "$GPVTG", "$GPGLL",
+                     "$GPRMC", "$GPZDA", "$PSXN"]
+    }
+}
