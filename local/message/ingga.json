@@ -6,19 +6,19 @@
     "$INGGA": {
         "format": "%f,%f,%s,%f,%s,%d,%d,%f,%f,M,%s,M,%s,%s*%s",
         "fields": [
-            ["GPSTime", "float"],
-            ["Latitude", "float"],
-            ["NorS", "str"],
-            ["Longitude", "float"],
-            ["EorW", "str"],
-            ["FixQuality", "int"],
-            ["NumSats", "int"],
-            ["HDOP", "float"],  # Horizontal Dilution of Position
-            ["AltitudeAboveSeaLevel", "float"],
-            ["GeoidHeight", "float"],
-            ["LastDGPSUpdate", "float"],
-            ["DGPSStationID", "float"],               
-            ["Checksum", "str"]
+            "GPSTime",
+            "Latitude",
+            "NorS",
+            "Longitude",
+            "EorW",
+            "FixQuality",
+            "NumSats",
+            "HDOP",  # Horizontal Dilution of Position
+            "AltitudeAboveSeaLevel",
+            "GeoidHeight",
+            "LastDGPSUpdate",
+            "DGPSStationID",               
+            "Checksum"
         ]
     }
 }

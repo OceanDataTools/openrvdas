@@ -3,9 +3,9 @@
     "Gravimeter": {
         "format": "%d:%d %d",
 	"fields": [
-	    ["CounterUnits", "int"],
-	    ["GravityValueMg", "int"],
-	    ["GravityError", "int"]
+	    "CounterUnits",
+	    "GravityValueMg",
+	    "GravityError"
 	]
     }
 }

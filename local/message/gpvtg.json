@@ -5,14 +5,14 @@
     # $GPVTG,course,T,,M,speed,N,,K,mode*csum term
     # $GPVTG,228.53,T,,M,11.1,N,,K,A*2C
     "$GPVTG": {
-        "format": "%f,T,%s,M,%f,N,%s,K,%s*%s",
+        "format": "%f,T,%f,M,%f,N,%f,K,%s*%s",
         "fields": [
-            ["CourseTrue", "float"],
-            ["CourseMag", "float"],
-            ["SpeedKt", "float"],
-            ["SpeedKM", "float"],
-            ["Mode", "str"],
-            ["Checksum", "str"]
+            "CourseTrue",
+            "CourseMag",
+            "SpeedKt",
+            "SpeedKM",
+            "Mode",
+            "Checksum"
         ]
     }
 }

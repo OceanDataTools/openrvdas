@@ -49,7 +49,7 @@ import sys
 
 __version__ = '1.4.1'
 
-__all__ = ["scanf", 'extractdata', 'scanf_translate', 'scanf_compile']
+__all__ = ["scanf_zero", 'extractdata', 'scanf_translate', 'scanf_compile']
 
 
 DEBUG = False
@@ -64,26 +64,26 @@ scanf_translate = [
     ("%c", "(.)", lambda x:x),
     ("%\*c", "(?:.)", None),
 
-    ("%(\d)c", "(.{%s})", lambda x:x),
-    ("%\*(\d)c", "(?:.{%s})", None),
+    ("%(\d)c", "(.{%s}|[Nn][Aa][Nn])", lambda x:x),
+    ("%\*(\d)c", "(?:.{%s}|[Nn][Aa][Nn])", None),
 
-    ("%(\d)[di]", "([+-]?\d{%s})", int),
-    ("%\*(\d)[di]", "(?:[+-]?\d{%s})", None),
+    ("%(\d)[di]", "([+-]?\d{%s}|[Nn][Aa][Nn])", int),
+    ("%\*(\d)[di]", "(?:[+-]?\d{%s}|[Nn][Aa][Nn])", None),
 
-    ("%[di]", "([+-]?\d+)", int),
-    ("%\*[di]", "(?:[+-]?\d+)", None),
+    ("%[di]", "([+-]?\d*|[Nn][Aa][Nn])", int),
+    ("%\*[di]", "(?:[+-]?\d*|[Nn][Aa][Nn])", None),
 
-    ("%u", "(\d+)", int),
-    ("%\*u", "(?:\d+)", None),
+    ("%u", "(\d*|[Nn][Aa][Nn])", int),
+    ("%\*u", "(?:\d*|[Nn][Aa][Nn])", None),
 
-    ("%[fgeE]", "([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)", float),
-    ("%\*[fgeE]", "(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)", None),
+    ("%[fgeE]", "([-+]?(?:\d*(?:\.\d*)?|\.\d*)(?:[eE][-+]?\d*)?|[Nn][Aa][Nn])", float),
+    ("%\*[fgeE]", "(?:[-+]?(?:\d*(?:\.\d*)?|\.\d*)(?:[eE][-+]?\d*)?|[Nn][Aa][Nn])", None),
 
     ("%s", "(\S*)", lambda x:x),
     ("%\*s", "(?:\S*)", None),
 
-    ("%([xX])", "(0%s[\dA-Za-f]+)", lambda x:int(x, 16)),
-    ("%\*([xX])", "(?:0%s[\dA-Za-f]+)", None),
+    ("%([xX])", "(0%s[\dA-Za-f]*)", lambda x:int(x, 16)),
+    ("%\*([xX])", "(?:0%s[\dA-Za-f]*)", None),
 
     ("%o", "(0[0-7]*)", lambda x:int(x, 8)),
     ("%\*o", "(?:0[0-7]*)", None),
@@ -148,7 +148,7 @@ def scanf_compile(format, collapseWhitespace=True):
 
 
 
-def scanf(format, s=None, collapseWhitespace=True):
+def scanf_zero(format, s=None, collapseWhitespace=True):
     """
     scanf supports the following formats:
       %c        One character
@@ -171,6 +171,15 @@ def scanf(format, s=None, collapseWhitespace=True):
     or None if the format does not match.
     """
 
+    def make_cast(cast_type, value):
+        if cast_type is int or cast_type is float:
+            if not value:
+                return None
+            if value == 'NAN' or value == 'Nan':
+                return None
+            
+        return cast_type(value)
+        
     if s == None: s = sys.stdin
     if hasattr(s, "readline"): s = s.readline()
 
@@ -179,7 +188,8 @@ def scanf(format, s=None, collapseWhitespace=True):
     found = format_re.search(s)
     if found:
         groups = found.groups()
-        return tuple([casts[i](groups[i]) for i in range(len(groups))])
+        matches = []
+        return tuple([make_cast(casts[i], groups[i]) for i in range(len(groups))])
 
 
 

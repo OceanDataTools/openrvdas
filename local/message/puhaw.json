@@ -3,10 +3,10 @@
     "$PUHAW": {
 	"format": "%s,%f,%f,%f",
 	"fields": [
-	    ["UVH", "str"],
-	    ["EastVelocity", "float"],
-	    ["NorthVelocity", "float"],
-	    ["Heading", "float"]
+	    "UVH",
+	    "EastVelocity",
+	    "NorthVelocity",
+	    "Heading"
 	]
     }
 }

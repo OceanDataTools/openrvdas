@@ -7,17 +7,17 @@
     "$INRMC": {
         "format": "%f,A,%f,%s,%f,%s,%f,%f,%d,%f,%s,A*%s",
         "fields": [
-            ["GPSTime", "float"],
-            ["Latitude", "float"],
-            ["NorS", "str"],
-            ["Longitude", "float"],
-            ["EorW", "str"],
-            ["Speed", "float"],
-            ["CourseTrue", "float"],
-            ["GPSDate", "int"],
-            ["MagneticVar", "float"],
-            ["MagneticVarEorW", "str"],
-            ["Checksum", "str"]
+            "GPSTime",
+            "Latitude",
+            "NorS",
+            "Longitude",
+            "EorW",
+            "Speed",
+            "CourseTrue",
+            "GPSDate",
+            "MagneticVar",
+            "MagneticVarEorW",
+            "Checksum"
         ]
     }
 }
