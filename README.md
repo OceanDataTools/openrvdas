@@ -1,4 +1,4 @@
-# RVDAS
+# OpenRVDAS
 
 ##Synopsis
 
@@ -78,7 +78,7 @@ from the project's home directory.
 
 Documentation (also still incomplete) for the code is available online
 in a shared Google Doc folder via the shortcut url
-http://tinyurl.com/rvdas-docs.
+http://tinyurl.com/openrvdas-docs.
 
 ##Tests
 
