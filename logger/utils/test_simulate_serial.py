@@ -13,8 +13,8 @@ sys.path.append('.')
 
 from logger.transforms.slice_transform import SliceTransform
 
-from utils import read_json
-from utils.simulate_serial import SimSerial
+from logger.utils import read_json
+from logger.utils.simulate_serial import SimSerial
 
 
 PORT = '%DIR%/tty_gyr1'

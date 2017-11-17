@@ -13,7 +13,7 @@ from logger.readers.logfile_reader import LogfileReader
 from logger.transforms.slice_transform import SliceTransform
 from logger.writers.text_file_writer import TextFileWriter
 
-from utils.read_json import read_json
+from logger.utils.read_json import read_json
 
 SOCAT_PATH = '/usr/local/bin/socat'
 

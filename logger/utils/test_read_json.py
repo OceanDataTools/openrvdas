@@ -11,7 +11,7 @@ import warnings
 
 sys.path.append('.')
 
-from utils import read_json
+from logger.utils import read_json
 
 
 SAMPLE_JSON = """{

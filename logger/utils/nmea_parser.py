@@ -11,7 +11,7 @@ import re
 import sys
 
 sys.path.append('.')
-from utils import read_json
+from logger.utils import read_json
 from logger.utils.das_record import DASRecord
 from logger.utils.timestamp import timestamp
 

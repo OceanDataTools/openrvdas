@@ -15,7 +15,7 @@ If timestamp is not specified, the instance will use the current time.
 import json
 import pprint
 
-from utils.read_json import parse_json
+from logger.utils.read_json import parse_json
 from logger.utils.timestamp import timestamp as timestamp_method
 
 ################################################################################
