@@ -131,6 +131,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ##Additional Licenses
-
-We are grateful for the scanf.py code by Josh Burnett made available
-under the MIT license: https://github.com/joshburnett/scanf
