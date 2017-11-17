@@ -1,10 +1,9 @@
 {
     # Heading
     "$HEHDT": {
-	"format": "%f,T*%s",
 	"fields": [
-	    "TrueHeading",
-	    "Checksum"
+	    ["HeadingTrue", "float"],
+            ["TrueConst", "str"]
 	]
     }
 }

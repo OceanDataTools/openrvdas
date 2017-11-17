@@ -2,6 +2,9 @@
 # $HEHDT and $HEROT messages.
 {
     "Gyroscope": {
-	"messages": ["$HEHDT", "$HEROT"]
+	"messages": {
+            "$HEHDT": "$HEHDT",
+            "$HEROT": "$HEROT"
+        }
     }
 }

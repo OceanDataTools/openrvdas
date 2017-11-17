@@ -7,19 +7,23 @@ TODO: should we just
 
 import glob
 import logging
+import re
 import sys
 
 sys.path.append('.')
-
-# We use a tweaked version of scanf that allows empty fields for %s,
-# %d and %f, returning '' for empty %s and None for empty %d and %f
-from utils import read_json, scanf_zero
+from utils import read_json
 from logger.utils.das_record import DASRecord
 from logger.utils.timestamp import timestamp
 
 MESSAGE_PATH = 'local/message/*.json'
 SENSOR_PATH = 'local/sensor/*.json'
 SENSOR_MODEL_PATH = 'local/sensor_model/*.json'
+
+RAW_FIELDS_RE   = '(?P<raw_fields>[^*]+)'
+CHECKSUM_RE  = '(?:\*(?P<checksum>[0-9A-F]{2}))?'
+
+NMEA_RE = re.compile(RAW_FIELDS_RE + CHECKSUM_RE)
+
 
 ################################################################################
 class NMEAParser:
@@ -40,13 +44,14 @@ class NMEAParser:
       logging.error('Record is not NMEA string: "%s"', nmea_record)
       return None
     try:
-      (data_id, raw_ts, message) = nmea_record.split(sep=' ', maxsplit=2)
+      (data_id, raw_ts, message) = nmea_record.strip().split(sep=' ', maxsplit=2)
       ts = timestamp(raw_ts)
     except ValueError:
       logging.error('Record not in <data_id> <timestamp> <NMEA> format: "%s"',
                     nmea_record)
       return None
-    
+
+    # Figure out what kind of message we're expecting, based on data_id
     sensor = self.sensors.get(data_id, None)
     if not sensor:
       logging.error('Unrecognized data_id ("%s") in record: %s',
@@ -60,8 +65,8 @@ class NMEAParser:
 
     # If something goes wrong during parsing, we'll get a ValueError
     try:
-      (raw_fields, message_type) = self.parse_nmea(sensor_model_name=model_name,
-                                                   message=message)
+      (fields, message_type) = self.parse_nmea(sensor_model_name=model_name,
+                                               message=message)
     except ValueError as e:
       logging.error(str(e))
       return None
@@ -72,100 +77,120 @@ class NMEAParser:
       logging.error('No "fields" definition found for sensor %s', data_id)
       return None
     
-    fields = {}
-    for field_name in raw_fields:
+    named_fields = {}
+    for field_name in fields:
       var_name = sensor_fields.get(field_name, None)
       if var_name:
-        fields[var_name] = raw_fields[field_name]
+        named_fields[var_name] = fields[field_name]
 
     return DASRecord(data_id=data_id, message_type=message_type,
-                     timestamp=ts, fields=fields)
+                     timestamp=ts, fields=named_fields)
 
   ############################
-  # Parse a raw NMEA message
+  # Parse a raw NMEA message; raise ValueError if there are problems
   def parse_nmea(self, sensor_model_name, message):
+    # Break the message into an optional message_type, the aggregated
+    # raw fields and an optional checksum.
+    match = NMEA_RE.match(message)
+    if not match:
+      raise ValueError('Can\'t parse NMEA record: "%s"' % nmea_record)
+
+    # Parse out the optional checksum from the raw fields. The first
+    # field may be a message type, but we'll deal with that later.
+    raw_fields = match.group('raw_fields')
+    checksum = match.group('checksum')
+
+    logging.debug('Parsed "%s"', message)
+    logging.debug('raw_fields "%s"', raw_fields)
+    logging.debug('checksum "%s"', checksum)
+    
+    # Proper NMEA uses commas to delimit fields, but some serial
+    # instruments use spaces or other characters (Gravimeter, for
+    # example, uses both spaces and ':'). Look up sensor model and see
+    # if we have a non-default delimiter defined.
     sensor_model = self.sensor_models.get(sensor_model_name, None)
     if not sensor_model:
-      logging.error('No sensor_model found matching "%s"' % sensor_model_name)
-      return None
+      raise ValueError('No sensor_model  matching "%s"' % sensor_model_name)
 
-    # Get the message type and format. By default (if sensor only
-    # emits one type of message), there is no "messages" field, and
-    # message type is empty.
+    field_delimiter = sensor_model.get('field_delimiter', ',')
+    fields = re.split(field_delimiter, raw_fields)
+    logging.debug('fields "%s"', fields)
+
+    # We need to find what fields are defined by this sensor model. If
+    # the top-level sensor_model definition has 'fields', then it's
+    # easy, and we're done.
     message_type = ''
-    sensor_messages = sensor_model.get('messages', None)
+    definition_base = sensor_model
 
-    # If our sensor_model doesn't contain a 'messages' field, then the
-    # model itself contains the message definition in terms of a
-    # 'format' and 'fields' definition.
-    if not sensor_messages:
-      message_def = sensor_model
+    # If we don't have 'fields' defined at the top level, it means
+    # that this sensor can emit multiple types of messages, which we
+    # expect to find under a 'messages' key. We will count on the
+    # first element of our field list to tell us which of those
+    # messages we've got.
+    while not 'fields' in definition_base:
+      logging.debug('Iterating with message_type "%s", looking for messages '
+                    'in definition_base: %s', message_type, definition_base)
 
-    # Otherwise, we need to look up the appropriate message to get
-    # format and fields.
-    else:
-      #  Split off the first element of our message, which
-      # should match one of the message types our sensor model knows
-      # about.
-      (message_type, message) = message.split(sep=',', maxsplit=1)
-      if not message_type in sensor_messages:
-        raise ValueError('Message type "%s" does not match any message type '
-                         'for sensor model %s' % (message_type,
-                                                  sensor_model_name))
+      # If there's no 'fields', there ought to be a 'messages'
+      sensor_messages = definition_base.get('messages', None)
+      if not sensor_messages:
+        raise ValueError('Sensor model %s must have either "fields" or '
+                         '"messages" definition.' % sensor_model_name)
 
-      message_def = self.messages.get(message_type, None)
-      if not message_def:
-        raise ValueError('Record message type "%s" does not match any known '
-                         'message type: %s' % (message_type, message))
+      # We count on the first field in the field list to tell us which
+      # message out of our dictionary of messages we actually have.
+      element = fields.pop(0)
+      message_type = message_type + '-' + element if message_type else element
+        
+      definition = sensor_messages.get(element, None) 
+      if not definition:
+        raise ValueError('Message "%s" is not one defined by model %s (%s)'
+                         % (message_type, sensor_model_name, sensor_messages))
 
-      # If this message_def itself contains a 'message' field, then
-      # we've got sub-message types, e.g. $PSXN,23. So iteratively
-      # split off the next element, tack it onto the message_type, and
-      # figure out which sub-message type we have.
-      while message_def.get('messages', None):
-        (message_type_element, message) = message.split(sep=',', maxsplit=1)
-        message_type += '-' + message_type_element
+      # The value of the 'definition' can be one of two things: 1) a
+      # string referring us to a message definition in self.messages,
+      # or 2) a dictionary that contains the message definition. Note
+      # that the message definition may either directly contain a
+      # 'fields' key or may have a 'messages' key defining
+      # sub-message_types, requiring us to iterate.
 
-        message_def = message_def['messages'].get(message_type_element, None)
-        if not message_def:
-          raise ValueError('Record message type "%s" does not match any known '
-                           'message type: %s' % (message_type, message))
-          
-    # If we've fallen out here, our message_def should no longer
-    # have a 'messages' field, but should have 'format' and
-    # 'fields', uh, fields defined.
-    format = message_def.get('format', None)
-    if not format:
-      raise ValueError('Model %s has neither "messages" nor "format" defined'
-                       % sensor_model_name)        
-    fields = message_def.get('fields', None)
-    if not fields:
-      raise ValueError('Model %s has format but no fields' % sensor_model_name)
+      # If it's a str, it's a reference into the definitions we've
+      # previously loaded into self.messages. Look it up, make that
+      # our new definition_base and loop.
+      if type(definition) is str:
+        definition_base = self.messages.get(definition, None)
+        logging.debug('Definition is reference to message "%s"; loaded: %s',
+                      definition, definition_base)
+        if not definition_base:
+          raise ValueError('Message definition "%s" (%s) not found for %s'
+                         % (definition, message_type, sensor_model_name))
 
-    # Here, we should have format and fields both defined - try scanf
-    # on our message (or what's left of it after parsing off
-    # message_type fields).
-    values = scanf_zero.scanf_zero(format, message)
-    if not values:
-      raise ValueError('%s: %s message format "%s" does not match message: %s'
-                       % (sensor_model_name, message_type, format, message))
+      # If 'definition' is a dict, make that our new definition_base,
+      # tack the element onto our message_type and iterate.
+      elif type(definition) is dict:
+        definition_base = definition
 
-    # Did we get the right number of values?
-    if not len(values) == len(fields):
-      raise ValueError('Number of values (%d) does not match number of fields '
-                       '(%d): %s != %s' % (len(values), len(fields),
-                                           values, fields))
-    
-    # If still okay, map values to their field names and data types
-    field_values = {}
-    for i in range(len(values)):
-      # Old style, with [name, type] pair - means we need to convert
-      if type(fields[i]) is list:
-        (name, data_type) = fields[i]
-        field_values[name] = self.convert(values[i], data_type)
-      # New style, we trust it's already in the right format
+      # If definition is neither dict nor str, something's wrong
       else:
-        field_values[fields[i]] = values[i]
+        raise ValueError('Bad definition for %s (%s)'
+                         % (message_type, sensor_model_name))
+
+    # End of while loop. If we're here, we darned well ought to have
+    # field_definitions in our definition_base. Get them and make sure
+    # they line up with the number of fields we have left.
+    field_definitions = definition_base.get('fields')    
+    if len(fields) != len(field_definitions):
+      raise ValueError('Sensor model "%s": %s # of fields (%s) != '
+                       '# field definitions (%s): "%s" != "%s"' % (
+                         sensor_model_name, message_type,
+                         len(fields), len(field_definitions),
+                         fields, [f[0] for f in field_definitions]))
+      
+    # If still okay, map field values to their definitions
+    field_values = {}
+    for i in range(len(fields)):
+      (name, data_type) = field_definitions[i]
+      field_values[name] = self.convert(fields[i], data_type)
     return (field_values, message_type)
     
   ############################

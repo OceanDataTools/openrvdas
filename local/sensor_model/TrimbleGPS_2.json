@@ -1,11 +1,13 @@
 {
-    "TrimbleGPS": {
+    # Some unknown, different model of Trimble GPS that emits slightly
+    # different messages than TrimbleGPS
+    "TrimbleGPS_2": {
 	"messages": {
             # Fields that follow normal conventions. Map to name they bear
             # in the messages dictionary.
             "$GPGGA": "$GPGGA",
             "$GPHDT": "$GPHDT",
-            "$GPGLL": "$GPGLL",
+            "$GPRMC": "$GPRMC",
             "$PSXN":  "$PSXN",
 
             # Fields that diverge from conventions. Override here.
@@ -25,23 +27,15 @@
                     # Trimble omits Mode?
                 ]
             },
-
-            # $GPRMC,000001.16,A,3934.833674,S,03727.698164,W,10.8,230.21,070814,18.5,W*06
-            # $GPRMC,time,A,lat,S,lon,W,sog,cog_true,date,mag_var,W*csum
-            "$GPRMC": {
+            # $GPGLL,3934.8390,S,03727.7066,W,000004.125,A*30
+            # $GPGLL,lat,S,lon,W,fix_time,A*csum
+            "$GPGLL": {
                 "fields": [
-                    ["GPSTime", "float"],
-                    ["GPSStatus", "str"],
                     ["Latitude", "float"],
                     ["NorS", "str"],
                     ["Longitude", "float"],
-                    ["EorW", "str"],
-                    ["Speed", "float"],
-                    ["CourseTrue", "float"],
-                    ["GPSDate", "str"],
-                    ["MagneticVar", "float"],
-                    ["MagneticVarEorW", "str"]
-                    # Trimble omits Mode?
+                    ["EorW", "str"]
+                    # Missing FixTime and Mode?
                 ]
             },
 
@@ -53,9 +47,7 @@
                     ["GPSDay", "int"],
                     ["GPSMonth", "int"],
                     ["GPSYear", "int"],
-                    ["LocalHours", "int"],
-                    ["LocalZone", "str"],
-                    ["Empty", "str"]   # Trimble adds an extra comma?
+                    ["LocalZone", "str"]
                 ]
             }
         }

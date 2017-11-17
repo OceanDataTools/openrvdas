@@ -13,6 +13,7 @@ If timestamp is not specified, the instance will use the current time.
 """
 
 import json
+import pprint
 
 from utils.read_json import parse_json
 from logger.utils.timestamp import timestamp as timestamp_method
@@ -53,5 +54,7 @@ class DASRecord:
     return ('{\'data_id\': \'%s\', \'message_type\': \'%s\', '
             '\'timestamp\': %f, \'fields\':%s, \'metadata\': %s }'
             % (self.data_id, self.message_type, 
-               self.timestamp, self.fields, self.metadata))
+               self.timestamp,
+               pprint.pformat(self.fields),
+               pprint.pformat(self.metadata)))
   

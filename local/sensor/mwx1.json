@@ -1,8 +1,8 @@
 {
     # data_id
-    "gp02": {
-        "name": "gp02",
-        "model": "TrimbleGPS_2",
+    "mwx1": {
+        "name": "mwx1",
+        "model": "MastWx",
         "fields": {
             # $PSXN
             "HorizQual": "GP02HorizQual",

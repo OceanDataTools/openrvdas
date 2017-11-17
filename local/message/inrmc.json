@@ -5,19 +5,20 @@
     # $INRMC,000001.16,A,3934.833674,S,03727.698164,W,10.8,230.21,070814,18.5,W,A*06
     # $INRMC,time,A,lat,S,lon,W,sog,cog_true,date,mag_var,W,A*csum
     "$INRMC": {
-        "format": "%f,A,%f,%s,%f,%s,%f,%f,%d,%f,%s,A*%s",
+        #"format": "%f,A,%f,%s,%f,%s,%f,%f,%d,%f,%s,A*%s",
         "fields": [
-            "GPSTime",
-            "Latitude",
-            "NorS",
-            "Longitude",
-            "EorW",
-            "Speed",
-            "CourseTrue",
-            "GPSDate",
-            "MagneticVar",
-            "MagneticVarEorW",
-            "Checksum"
+            ["GPSTime", "float"],
+            ["GPSStatus", "str"],
+            ["Latitude", "float"],
+            ["NorS", "str"],
+            ["Longitude", "float"],
+            ["EorW", "str"],
+            ["Speed", "float"],
+            ["CourseTrue", "float"],
+            ["GPSDate", "str"],
+            ["MagneticVar", "float"],
+            ["MagneticVarEorW", "str"],
+            ["Mode", "str"]
         ]
     }
 }

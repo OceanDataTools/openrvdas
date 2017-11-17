@@ -13,7 +13,7 @@
             "GyroOffset": "Seap200GyroOffset",
             "Roll": "Seap200Roll",
             "Pitch": "Seap200Pitch",
-            "Heading": "Seap200Heading",
+            "HeadingTrue": "Seap200HeadingTrue",
 
             # $GPGGA
             "GPSTime": "Seap200GPSTime",
@@ -24,12 +24,12 @@
             "FixQuality": "Seap200FixQuality",
             "NumSats": "Seap200NumSats",
             "HDOP": "Seap200HDOP",
-            "AltitudeAboveSeaLevel": "Seap200Alt",
+            "AntennaHeight": "Seap200Alt",
             #"LastDGPSUpdate": "",
             #"DGPSStationID": "",
 
             # $GPHDT
-            "Heading": "Seap200Heading",
+            "HeadingTrue": "Seap200HeadingTrue",
 
             # $GPVTG
             "CourseTrue": "Seap200COGT",

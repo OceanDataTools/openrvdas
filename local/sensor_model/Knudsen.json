@@ -2,11 +2,16 @@
 {
     "Knudsen": {
         # 3.5kHz,5139.94,0,,,,1500,-39.587550,-37.472355
-	"format": "%s,%f,%d,%s,%f,%d,%f,%f,%f",
 	"fields": [
-            "LFInUse", "LFDepth", "LFValidFlag",
-            "HFInUse", "HFDepth", "HFValidFlag",
-            "SoundVelocity", "Latitude", "Longitude"
+            ["LFInUse", "str"],
+            ["LFDepth", "float"],
+            ["LFValidFlag", "int"],
+            ["HFInUse", "str"],
+            ["HFDepth", "float"],
+            ["HFValidFlag", "int"],
+            ["SoundVelocity", "float"],
+            ["Latitude", "float"],
+            ["Longitude", "float"]
 	]
     }
 }

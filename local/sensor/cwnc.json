@@ -1,0 +1,15 @@
+{
+    # data_id
+    "cwnc": {
+        "name": "cwnc",
+        "model": "Winch",
+        "fields": {
+            #"LanID": "CWNCLanID",
+            "Time": "CWNCTime",
+            "Name": "CWNCName",
+            "Tension": "CWNCTension",
+            "Speed": "CWNCSpeed",
+            "Payout": "CWNCPayout"
+         }
+    }
+}

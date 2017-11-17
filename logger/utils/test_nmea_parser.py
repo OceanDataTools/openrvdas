@@ -110,8 +110,6 @@ eng1 2017-11-04:05:12:26.314885 12.26 19.70 507.5 566.8 238.4 -751.9 0 0 NAN NAN
 eng1 2017-11-04:05:12:26.567011 12.25 19.70 507.5 572.8 239.1 -751.9 0 0 NAN NAN -11.5 -7.4
 eng1 2017-11-04:05:12:26.819316 12.25 19.70 507.5 573.8 240.1 -751.9 0 0 NAN NAN -11.5 -7.4
 eng1 2017-11-04:05:12:27.072111 12.25 19.70 507.5 571.4 240.2 -751.9 0 0 NAN NAN -11.5 -7.4
-eng1 2017-11-04:05:12:27.327319 12.25 19.70 507.5 565.2 239.7 -751.9 0 0 NAN NAN -11.5 -7.4
-eng1 2017-11-04:05:12:27.581764 12.25 19.70 507.5 574.4 239.9 -751.9 0 0 NAN NAN -11.5 -7.4
 eng1 2017-11-04:05:12:27.832683 12.25 19.70 507.5 574.1 239.7 -751.9 0 0 NAN NAN -11.5 -7.4
 eng1 2017-11-04:05:12:28.085470 12.25 19.70 287.1 567.3 239.6 -751.9 0 0 NAN NAN -11.5 -7.4
 eng1 2017-11-04:05:12:28.335733 12.25 19.70 507.5 566.0 239.5 -751.9 0 0 NAN NAN -11.5 -7.4""".split('\n')
@@ -122,17 +120,57 @@ knud 2017-11-04:05:15:43.500259 3.5kHz,5189.04,0,,,,1500,-39.837049,-37.847935
 knud 2017-11-04:05:15:43.753747 3.5kHz,5200.02,0,,,,1500,-39.837358,-37.848386
 knud 2017-11-04:05:15:44.005004 3.5kHz,5187.60,0,,,,1500,-39.837664,-37.848836
 knud 2017-11-04:05:15:44.260347 3.5kHz,5196.97,1,,,,1500,-39.837938,-37.849228
-knud 2017-11-04:05:15:44.515649 3.5kHz,5187.75,0,,,,1500,-39.838243,-37.849672
-knud 2017-11-04:05:15:44.770491 3.5kHz,5196.64,0,,,,1500,-39.838544,-37.850118
-knud 2017-11-04:05:15:45.021048 3.5kHz,5197.32,0,,,,1500,-39.838852,-37.850564
-knud 2017-11-04:05:15:45.276249 3.5kHz,5197.03,0,,,,1500,-39.839154,-37.851016
-knud 2017-11-04:05:15:45.531616 3.5kHz,5196.31,0,,,,1500,-39.839419,-37.851429
-knud 2017-11-04:05:15:45.786891 3.5kHz,5196.86,0,,,,1500,-39.839719,-37.851894
-knud 2017-11-04:05:15:46.042208 3.5kHz,5186.39,0,,,,1500,-39.840014,-37.852360
-knud 2017-11-04:05:15:46.297525 3.5kHz,5195.38,0,,,,1500,-39.840306,-37.852828
-knud 2017-11-04:05:15:46.552824 3.5kHz,5184.87,0,,,,1500,-39.840605,-37.853298
-knud 2017-11-04:05:15:46.803109 3.5kHz,5185.53,0,,,,1500,-39.840907,-37.853764
 knud 2017-11-04:05:15:47.058222 3.5kHz,5185.91,0,,,,1500,-39.841175,-37.854183""".split('\n')
+
+CWNC_RECORDS = """cwnc 2017-11-04:05:12:19.207411 01RD,2014-08-07T00:26:52.402,UPPER WF,-104.,-0000000,-05689.4,3323
+cwnc 2017-11-04:05:12:19.457563 01RD,2014-08-07T00:26:52.453,UPPER WF,-104.,-0000000,-05689.4,3329
+cwnc 2017-11-04:05:12:19.712122 01RD,2014-08-07T00:26:52.503,UPPER WF,-104.,-0000000,-05689.4,3325
+cwnc 2017-11-04:05:12:19.967423 01RD,2014-08-07T00:26:52.553,UPPER WF,-104.,-0000000,-05689.4,3330
+cwnc 2017-11-04:05:12:20.219647 01RD,2014-08-07T00:26:52.603,UPPER WF,-104.,-0000000,-05689.4,3326
+cwnc 2017-11-04:05:12:20.472403 01RD,2014-08-07T00:26:52.654,UPPER WF,-104.,-0000000,-05689.4,3332
+cwnc 2017-11-04:05:12:20.725199 01RD,2014-08-07T00:26:52.704,UPPER WF,-105.,-0000000,-05689.4,3329
+cwnc 2017-11-04:05:12:20.977554 01RD,2014-08-07T00:26:52.754,UPPER WF,-105.,-0000000,-05689.4,3334""".split('\n')
+
+PGUV_RECORDS = """pguv 2017-11-04:05:12:19.420136 080614 165956 .00024 3.576E-4 6.554E-4 -1.517E-3 1.099E-2 -5.338E-4 6.442E-8 5.456E-4 46.561 17.924
+pguv 2017-11-04:05:12:19.671521 080614 170002 .00024 4.004E-4 6.677E-4 -1.522E-3 1.132E-2 -3.735E-4 6.365E-8 5.533E-4 46.584 17.924
+pguv 2017-11-04:05:12:19.926825 080614 170003 .000238 3.843E-4 7.217E-4 -1.523E-3 1.086E-2 -4.86E-4 6.303E-8 5.53E-4 46.587 17.924
+pguv 2017-11-04:05:12:20.177497 080614 170005 .00024 3.903E-4 7.116E-4 -1.501E-3 1.109E-2 -3.606E-4 6.337E-8 5.629E-4 46.591 17.924
+pguv 2017-11-04:05:12:20.431905 080614 170006 .000238 4.234E-4 6.854E-4 -1.537E-3 1.103E-2 -3.102E-4 6.331E-8 5.596E-4 46.598 17.924
+pguv 2017-11-04:05:12:20.687152 080614 170008 .00024 3.949E-4 7.126E-4 -1.556E-3 1.127E-2 -3.994E-4 6.285E-8 5.67E-4 46.6 17.924""".split('\n')
+
+SVP1_RECORDS = """svp1 2017-11-04:05:12:20.245906  1611.31 
+svp1 2017-11-04:05:12:20.501188  1611.44 
+svp1 2017-11-04:05:12:20.754590  1611.44 
+svp1 2017-11-04:05:12:21.006557  1611.31 
+svp1 2017-11-04:05:12:21.261809  1611.31 
+svp1 2017-11-04:05:12:21.517091  1611.31 
+svp1 2017-11-04:05:12:21.772475  1611.44 
+svp1 2017-11-04:05:12:22.022673  1611.31""".split('\n')
+
+TSG1_RECORDS = """tsg1 2017-11-04:05:12:19.511621  14.7989,  4.30728,  35.3236, 1506.416
+tsg1 2017-11-04:05:12:19.764312  14.7996,  4.30722,  35.3225, 1506.417
+tsg1 2017-11-04:05:12:20.018848  14.7987,  4.30718,  35.3229, 1506.414
+tsg1 2017-11-04:05:12:20.269114  14.7989,  4.30714,  35.3223, 1506.414
+tsg1 2017-11-04:05:12:20.524465  14.7986,  4.30709,  35.3222, 1506.413""".split('\n')
+
+HDAS_RECORDS = """hdas 2017-11-04:05:12:19.747736 12.16954 16.81086 198.6207 3877.931 -1 30.5 47 34.5 40 
+hdas 2017-11-04:05:12:20.002331 12.16395 16.81086 182.069 3877.242 -1 30.5 47 34.5 40 
+hdas 2017-11-04:05:12:20.257642 12.16954 16.81086 189.6552 3875.862 -1 30.5 46.5 34.5 40""".split('\n')
+
+MBDP_RECORDS = """mbdp 2017-11-04:05:12:26.085076 $KIDPT,5130.92,7.10,12000.0*79
+mbdp 2017-11-04:05:12:26.340356 $KIDPT,5138.18,6.91,12000.0*7b
+mbdp 2017-11-04:05:12:26.593493 $KIDPT,5154.69,7.04,12000.0*7a
+mbdp 2017-11-04:05:12:26.845608 $KIDPT,5131.65,6.91,12000.0*78
+mbdp 2017-11-04:05:12:27.098566 $KIDPT,5126.80,7.32,12000.0*7d""".split('\n')
+
+PCO2_RECORDS = """pco2 2017-11-04:05:12:20.269115 2014218.99930	 2579.13	   33.99	 1018.14	   45.93	  349.65	  345.74	   14.69	   14.73	    0.00	  Equil
+pco2 2017-11-04:05:12:20.524470 2014219.00188	 2822.79	   34.02	 1018.13	   59.47	  397.63	  393.14	   14.79	   14.84	    1.00	  Atmos
+pco2 2017-11-04:05:12:20.779866 2014219.00447	 2824.64	   34.04	 1018.52	   59.39	  398.00	  393.65	   14.83	   14.86	    1.00	  Atmos""".split('\n')
+
+RTMP_RECORDS = """rtmp 2017-11-04:05:12:22.023266 14.6480
+rtmp 2017-11-04:05:12:22.273528 14.6472
+rtmp 2017-11-04:05:12:22.526939 14.6459
+rtmp 2017-11-04:05:12:22.780126 14.6453""".split('\n')
 
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
   time.sleep(pre_sleep_interval)
@@ -160,22 +198,30 @@ class TestNMEAParser(unittest.TestCase):
     logging.debug('\n\nMessages: %s', pprint.pformat(p.sensors))
 
     for records in [
-        #GYR1_RECORDS,
-        #GRV1_RECORDS,
-        #SEAP_RECORDS,
-        #S330_RECORDS,
-        #PCOD_RECORDS,
-        #GP02_RECORDS,
-        #ADCP_RECORDS,
+        GYR1_RECORDS,
+        GRV1_RECORDS,
+        SEAP_RECORDS,
+        S330_RECORDS,
+        PCOD_RECORDS,
+        GP02_RECORDS,
+        ADCP_RECORDS,
         ENG1_RECORDS,
-        KNUD_RECORDS
+        KNUD_RECORDS,
+        CWNC_RECORDS,
+        PGUV_RECORDS,
+        SVP1_RECORDS,
+        TSG1_RECORDS,
+        HDAS_RECORDS,
+        MBDP_RECORDS,
+        PCO2_RECORDS,
+        RTMP_RECORDS,
         ]:
       for line in records:
         logging.info('line: %s', line)
         record = p.parse_record(line)
         logging.info('record: %s', str(record))
 
-############################
+  ############################
   def test_parse_records(self):
     p = NMEAParser()
 
@@ -183,7 +229,7 @@ class TestNMEAParser(unittest.TestCase):
     self.assertEqual(r.data_id, 'gyr1')
     self.assertEqual(r.message_type, '$HEHDT')
     self.assertAlmostEqual(r.timestamp, 1510275606.739)
-    self.assertDictEqual(r.fields, {'Gyro1TrueHeading': 143.7})
+    self.assertDictEqual(r.fields, {'Gyro1HeadingTrue': 143.7})
 
     r = p.parse_record(GRV1_RECORDS[0])
     self.assertEqual(r.data_id, 'grv1')
@@ -212,17 +258,17 @@ class TestNMEAParser(unittest.TestCase):
     self.assertEqual(r.message_type, '$PSXN-23')
     self.assertAlmostEqual(r.timestamp, 1509778839.802690)
     self.assertEqual(r.fields, {'Seap200Roll': -1.47,
-                                'Seap200Heading': 235.77,
+                                'Seap200HeadingTrue': 235.77,
                                 'Seap200Pitch': 0.01})
 
-############################
+  ############################
   def test_parse_nmea(self):
     p = NMEAParser()
     
     (nmea, msg_type) = p.parse_nmea('Gyroscope', GYR1_RECORDS[0].split(' ')[2])
     logging.info('NMEA: %s: %s', msg_type, nmea)
     self.assertEqual(msg_type, '$HEHDT')
-    self.assertDictEqual(nmea, {'Checksum': '2E', 'TrueHeading': 143.7})
+    self.assertDictEqual(nmea, {'HeadingTrue': 143.7, 'TrueConst': 'T'})
 
     (nmea, msg_type) = p.parse_nmea('Gravimeter',
                                     GRV1_RECORDS[0].split(' ', maxsplit=2)[2])
@@ -234,22 +280,20 @@ class TestNMEAParser(unittest.TestCase):
     logging.info('NMEA: %s: %s', msg_type, nmea)
     self.assertEqual(msg_type, '$PSXN-20')
     self.assertDictEqual(nmea, {'HeightQual': 0, 'RollPitchQual': 0,
-                                'HorizQual': 1, 'HeadingQual': 0,
-                                'Checksum': '3A'})
+                                'HorizQual': 1, 'HeadingQual': 0})
 
     (nmea, msg_type) = p.parse_nmea('Seapath200', SEAP_RECORDS[1].split(' ')[2])
     logging.info('NMEA: %s: %s', msg_type, nmea)
     self.assertEqual(msg_type, '$PSXN-22')
-    self.assertDictEqual(nmea, {'GyroCal': 0.44, 'GyroOffset': 0.74,
-                                'Checksum': '3A'})
+    self.assertDictEqual(nmea, {'GyroCal': 0.44, 'GyroOffset': 0.74})
 
     (nmea, msg_type) = p.parse_nmea('Seapath200', SEAP_RECORDS[2].split(' ')[2])
     logging.info('NMEA: %s: %s', msg_type, nmea)
     self.assertEqual(msg_type, '$PSXN-23')
-    self.assertDictEqual(nmea, {'Roll': -1.47, 'Heading': 235.77,
-                                'Pitch': 0.01, 'Heave': -0.38,
-                                'Checksum': '34'})
-    
+    self.assertDictEqual(nmea, {'Roll': -1.47, 'HeadingTrue': 235.77,
+                                'Pitch': 0.01, 'Heave': -0.38})
+
+  
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -259,7 +303,7 @@ if __name__ == '__main__':
                       help='Increase output verbosity')
   args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   logging.basicConfig(format=LOGGING_FORMAT)
 
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}

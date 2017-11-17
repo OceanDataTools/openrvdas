@@ -5,14 +5,17 @@
     # $INVTG,course,T,,M,speed,N,,K,mode*csum term
     # $INVTG,228.53,T,,M,11.1,N,,K,A*2C
     "$INVTG": {
-        "format": "%f,T,%f,M,%f,N,%f,K,%s*%s",
+        #"format": "%f,T,%f,M,%f,N,%f,K,%s*%s",
         "fields": [
-            "CourseTrue",
-            "CourseMag",
-            "SpeedKt",
-            "SpeedKM",
-            "Mode",
-            "Checksum"
+            ["CourseTrue", "float"],
+            ["CourseTrue_T", "str"],
+            ["CourseMag", "float"],
+            ["CourseMag_M", "str"],
+            ["SpeedKt", "float"],
+            ["SpeedKt_N", "str"],
+            ["SpeedKM", "float"],
+            ["SpeedKM_K", "str"],
+            ["Mode", "str"]
         ]
     }
 }

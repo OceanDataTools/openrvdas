@@ -20,21 +20,21 @@
 {
     "Engineering": {
         # 12.25 19.70 507.5 573.8 239.1 -751.9 0 0 NAN NAN -11.5 -7.4
-        "format": "%f %f %f %f %f %f %f %f %f %f %f %f",
+        "field_delimiter": " ",  # non-standard - uses space as delimiter
 	"fields": [
-	    "PowerVoltage",
-	    "CaseTemp",
-	    "Pump1Flow",
-	    "Pump2Flow",
-	    "Pump3Flow",
-	    "SeisAirPressure",
-	    "PIRRes",
-	    "PIRmvOut",
-	    "Unknown1",
-	    "Unknown2",
-	    "Freezer1C", 
-	    "Freezer2C"
-	    #"Freezer3C"
+	    ["PowerVoltage", "float"],
+	    ["CaseTemp", "float"],
+	    ["Pump1Flow", "float"],
+	    ["Pump2Flow", "float"],
+	    ["Pump3Flow", "float"],
+	    ["SeisAirPressure", "float"],
+	    ["PIRRes", "float"],
+	    ["PIRmvOut", "float"],
+	    ["Unknown1", "float"],
+	    ["Unknown2", "float"],
+	    ["Freezer1C", "float"], 
+	    ["Freezer2C", "float"]
+	    #["Freezer3C", "float"]
 	]
     }
 }

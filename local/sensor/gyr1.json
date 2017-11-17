@@ -4,7 +4,7 @@
         "name": "gyr1",
         "model": "Gyroscope",    # references a definition in sensor_model/
         "fields": {               # references definitions in message/
-            "TrueHeading": "Gyro1TrueHeading",
+            "HeadingTrue": "Gyro1HeadingTrue",
             "RateOfTurn": "Gyro1RateOfTurn"
          }
     }

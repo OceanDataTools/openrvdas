@@ -5,15 +5,14 @@
     # $GPGLL,3934.8390,S,03727.7066,W,000004.125,A*30
     # $GPGLL,lat,S,lon,W,fix_time,A*csum
     "$GPGLL": {
-        "format": "%f,%s,%f,%s,%f,%s*%s",
+        #"format": "%f,%s,%f,%s,%f,%s*%s",
         "fields": [
-            "Latitude",
-            "NorS",
-            "Longitude",
-            "EorW",
-            "FixTime",
-            "Mode",
-            "Checksum"
+            ["Latitude", "float"],
+            ["NorS", "str"],
+            ["Longitude", "float"],
+            ["EorW", "str"],
+            ["FixTime", "float"],
+            ["Mode", "str"]
         ]
     }
 }

@@ -13,7 +13,7 @@
             "GyroOffset": "S330GyroOffset",
             "Roll": "S330Roll",
             "Pitch": "S330Pitch",
-            "Heading": "S330Heading",
+            "HeadingTrue": "S330HeadingTrue",
 
             # $INGGA
             "GPSTime": "S330GPSTime",
@@ -24,12 +24,12 @@
             "FixQuality": "S330FixQuality",
             "NumSats": "S330NumSats",
             "HDOP": "S330HDOP",
-            "AltitudeAboveSeaLevel": "S330Alt",
+            "AntennaHeight": "S330AntennaHeight",
             #"LastDGPSUpdate": "",
             #"DGPSStationID": "",
 
             # $INHDT
-            "Heading": "S330Heading",
+            "HeadingTrue": "S330HeadingTrue",
 
             # $INRMC
             "GPSTime": "S330GPSTime",

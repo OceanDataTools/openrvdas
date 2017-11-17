@@ -5,15 +5,13 @@
     # $GPZDA,time,day,month,year,,*csum term
     # $GPZDA,002706.69,07,08,2014,,*62
     "$GPZDA": {
-        "format": "%f,%d,%d,%d,%s,%s*%s",
         "fields": [
-            "GPSTime",
-            "GPSDay",
-            "GPSMonth",
-            "GPSYear",
-            "LocalHours",
-            "LocalZone",
-            "Checksum"
+            ["GPSTime", "float"],
+            ["GPSDay", "int"],
+            ["GPSMonth", "int"],
+            ["GPSYear", "int"],
+            ["LocalHours", "int"],
+            ["LocalZone", "str"]
         ]
     }
 }

@@ -5,10 +5,10 @@
     # $GPHDT,head,T*csum term
     # $GPHDT,235.98,T*00
     "$GPHDT": {
-        "format": "%f,T*%s",
+        #"format": "%f,T*%s",
         "fields": [
-            "Heading",
-            "Checksum"
+            ["HeadingTrue", "float"],
+            ["Heading_T", "str"]
         ]
     }
 }

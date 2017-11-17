@@ -5,33 +5,30 @@
 	"messages": {
             # $PSXN,20,horiz-qual,hgt-qual,head-qual,rp-qual*csum term
 	    "20": {
-		"format": "%d,%d,%d,%d*%s",
+		#"format": "%d,%d,%d,%d*%s",
 		"fields": [
-		    "HorizQual",
-		    "HeightQual",
-		    "HeadingQual",
-		    "RollPitchQual",
-		    "Checksum"
+		    ["HorizQual", "int"],
+		    ["HeightQual", "int"],
+		    ["HeadingQual", "int"],
+		    ["RollPitchQual", "int"]
 		]
 	    },	    
             # $PSXN,22,gyro-calib,gyro-offs*csum term	    
 	    "22": {
-		"format": "%f,%f*%s",
+		#"format": "%f,%f*%s",
 		"fields": [
-		    "GyroCal",
-		    "GyroOffset",
-		    "Checksum"
+		    ["GyroCal", "float"],
+		    ["GyroOffset", "float"]
 		]
 	    },
 	    # $PSXN,23,roll,pitch,head,heave*csum term
 	    "23": {
-		"format": "%f,%f,%f,%f*%s",
+		#"format": "%f,%f,%f,%f*%s",
 		"fields": [
-		    "Roll",
-		    "Pitch",
-		    "Heading",
-		    "Heave",
-		    "Checksum"
+		    ["Roll", "float"],
+		    ["Pitch", "float"],
+		    ["HeadingTrue", "float"],
+		    ["Heave", "float"]
 		]
 	    }
 	}
