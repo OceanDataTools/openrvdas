@@ -93,7 +93,7 @@ class SimSerial:
     self.reader = LogfileReader(filebase=self.source_file,
                                 use_timestamps=self.use_timestamps)
     self.strip = SliceTransform('1:') # strip off the first field)
-    self.writer = TextFileWriter(self.write_port)
+    self.writer = TextFileWriter(self.write_port, truncate=True)
     
     while not self.quit:
       record = self.reader.read() # get the next record
