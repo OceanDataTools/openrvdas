@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 """Tools for parsing.
-
-TODO: should we just 
 """
 
 import glob
@@ -15,22 +13,21 @@ from logger.utils import read_json
 from logger.utils.das_record import DASRecord
 from logger.utils.timestamp import timestamp
 
-MESSAGE_PATH = 'local/message/*.json'
-SENSOR_PATH = 'local/sensor/*.json'
-SENSOR_MODEL_PATH = 'local/sensor_model/*.json'
+DEFAULT_MESSAGE_PATH = 'local/message/*.json'
+DEFAULT_SENSOR_PATH = 'local/sensor/*.json'
+DEFAULT_SENSOR_MODEL_PATH = 'local/sensor_model/*.json'
 
 RAW_FIELDS_RE   = '(?P<raw_fields>[^*]+)'
 CHECKSUM_RE  = '(?:\*(?P<checksum>[0-9A-F]{2}))?'
-
 NMEA_RE = re.compile(RAW_FIELDS_RE + CHECKSUM_RE)
 
 
 ################################################################################
 class NMEAParser:
   ############################
-  def __init__(self, message_path=MESSAGE_PATH,
-               sensor_path=SENSOR_PATH,
-               sensor_model_path=SENSOR_MODEL_PATH):
+  def __init__(self, message_path=DEFAULT_MESSAGE_PATH,
+               sensor_path=DEFAULT_SENSOR_PATH,
+               sensor_model_path=DEFAULT_SENSOR_MODEL_PATH):
     self.messages = self.read_definitions(message_path)
     self.sensor_models = self.read_definitions(sensor_model_path)
     self.sensors = self.read_definitions(sensor_path)
