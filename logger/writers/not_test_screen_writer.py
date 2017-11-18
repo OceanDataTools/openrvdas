@@ -64,7 +64,7 @@ seap 2017-11-04:05:12:30.107463 $GPZDA,000005.91,07,08,2014,,*63
 seap 2017-11-04:05:12:30.362874 $GPGGA,000005.91,3934.843045,S,03727.713132,W,1,11,0.9,-6.32,M,,M,,*64""".split('\n')
 
 
-class DoNotTestScreenWriter(unittest.TestCase):
+class TestScreenWriter(unittest.TestCase):
   ############################
   def test_default_parser(self):
     p = NMEAParser()
