@@ -33,10 +33,11 @@ from logger.transforms.transform import Transform
 ################################################################################
 # 
 class QCFilterTransform(Transform):
-  def __init__(self, bounds):
+  def __init__(self, bounds, message=None):
     super().__init__(input_format=formats.Python_Record,
                      output_format=formats.Text)
 
+    self.message = message
     self.bounds = {}
     for condition in bounds.split(','):
       try:
@@ -55,25 +56,34 @@ class QCFilterTransform(Transform):
     if not record:
       return None
 
-    if not type(record) is DASRecord:
-      return('Improper format record: %s' % str(record))
-
     errors = []
-    for bound in self.bounds:
-      if not bound in record.fields:
-        continue
-      value = record.fields.get(bound)
-      (lower, upper) = self.bounds[bound]
-      if type(value) is not int and type(value) is not float:
-        errors.append('%s: non-numeric value: "%s"' % (bound, value))
-        continue
-      
-      if lower is not None and value < lower:
-        errors.append('%s: %g < lower bound %g' % (bound, value, lower))
-      if upper is not None and value > upper:
-        errors.append('%s: %g > upper bound %g' % (bound, value, upper))
 
-    # If we've had any errors; append them into a string and return
-    if errors:
+    if not type(record) is DASRecord:
+      errors.append('Improper format record: %s' % str(record))
+
+    else:
+      for bound in self.bounds:
+        if not bound in record.fields:
+          continue
+        value = record.fields.get(bound)
+        (lower, upper) = self.bounds[bound]
+        if type(value) is not int and type(value) is not float:
+          errors.append('%s: non-numeric value: "%s"' % (bound, value))
+          continue
+
+        if lower is not None and value < lower:
+          errors.append('%s: %g < lower bound %g' % (bound, value, lower))
+        if upper is not None and value > upper:
+          errors.append('%s: %g > upper bound %g' % (bound, value, upper))
+
+    # If no errors, return None. Otherwise either return the specified
+    # message (if we've been given one), or the joined string of
+    # specific failures.
+    if not errors:
+      return None
+
+    if self.message:
+      return self.message
+    else:
       return '; '.join(errors)
-    return None
+

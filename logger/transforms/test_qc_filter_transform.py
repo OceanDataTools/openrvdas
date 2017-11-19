@@ -44,7 +44,7 @@ class TestQCFilterTransform(unittest.TestCase):
 
   ############################
   def test_error(self):
-    p = ParseNMEATransform()    
+    p = ParseNMEATransform()
     q = QCFilterTransform(bounds='KnudLFDepth:0:6000,KnudHFDepth:0:5000')
 
     record = 'knud 2017-11-04:05:12:21.981359'
@@ -55,6 +55,16 @@ class TestQCFilterTransform(unittest.TestCase):
     self.assertEqual(q.transform(record),
                      'KnudHFDepth: non-numeric value: "None"')
 
+  
+  ############################
+  def test_message(self):
+    p = ParseNMEATransform()
+    q = QCFilterTransform(bounds='KnudLFDepth:0:6000,KnudHFDepth:0:5000',
+                          message='The sky is falling!')
+
+    record = 'knud 2017-11-04:05:12:21.981359'
+    self.assertEqual(q.transform(record), 'The sky is falling!')
+    
 ################################################################################
 if __name__ == '__main__':
   import argparse
