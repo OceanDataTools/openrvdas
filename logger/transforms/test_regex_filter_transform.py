@@ -2,6 +2,7 @@
 
 import sys
 import unittest
+import warnings
 
 sys.path.append('.')
 
@@ -32,4 +33,18 @@ class TestRegexFilterTransform(unittest.TestCase):
     #self.assertEqual(transform.transform('foo'), 'prefix\tfoo')
 
 if __name__ == '__main__':
-  unittest.main()
+  import argparse
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-v', '--verbosity', dest='verbosity',
+                      default=0, action='count',
+                      help='Increase output verbosity')
+  args = parser.parse_args()
+
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+  logging.basicConfig(format=LOGGING_FORMAT)
+
+  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+  
+  unittest.main(warnings='ignore')
