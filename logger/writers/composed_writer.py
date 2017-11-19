@@ -73,13 +73,11 @@ class ComposedWriter(Writer):
     # compatible input/output formats.
     input_format = formats.Unknown
     if check_format:
-      logging.error('Sorry - ComposedWriter.check_format() not yet '
-                    'implemented!')
-      #output_format = self.check_writer_formats()
-      #if not output_format:
-      #  raise ValueError('ComposedWriter: No common format found '
-      #                   'for passed writers: %s' % [r.output_format()
-      #                                               for r in self.writers])
+      input_format = self.check_writer_formats()
+      if not input_format:
+        raise ValueError('ComposedWriter: No common format found '
+                         'for passed transforms (%s) and writers (%s)'
+                         % (self.transforms, self.writers))
     super().__init__(input_format=input_format)
 
 
@@ -124,27 +122,43 @@ class ComposedWriter(Writer):
 
   ############################
   # Check that Writer outputs are compatible with each other and with
-  # Transform inputs. Throw an exception if not.
+  # Transform inputs. Return None if not.
   def check_writer_formats(self):
-    # Find the lowest common format among writers
-    lowest_common = self.writers[0].output_format()
-    for writer in self.writers:
-       lowest_common = writer.output_format().common(lowest_common)
-       if not lowest_common:
-         return None
-  
-    logging.debug('Lowest common format for writers is "%s"', lowest_common)
-    if not self.transforms:
-      return lowest_common
-    
-    # Now check the transforms in series - output of each is input of
-    # next one.
-    for transform in self.transforms:
-      if not transform.input_format().can_accept(lowest_common):
+    # Begin with output format of first transform and work way to end;
+    # the output of each is input of next one.
+    for i in range(1, len(self.transforms)):
+      transform_input = self.transforms[i].input_format()
+      previous_output = self.transforms[i-1].output_format()
+      if not transform_input.can_accept(previous_output):
         logging.error('Transform %s can not accept input format %s',
-                      transform, lowest_common)
+                      self.transform[i], previous_output)
         return None
-      lowest_common = transform.output_format()
 
-    # Our final format is the lowest common format from last transform
+    # Make sure that all the writers can accept the output of the last
+    # transform.
+    if self.transforms:
+      transform_output = self.transforms[-1].output_format()
+      for writer in self.writers:
+        if not writer.input_format().can_accept(transform_output):
+          logging.error('Writer %s can not accept input format %s',
+                        writer, transform_output)
+          return None
+
+    # Finally, return the input_format that we can take.
+    if self.transforms:
+      return self.transforms[0].input_format()
+
+    # If no transform, our input_format is the lowest common format of
+    # our writers. If no writers, then we've got nothing - right?
+    if not self.writers:
+      logging.error('ComposedWriter has no transforms or writers?!?')
+      return None
+
+    lowest_common = self.writers[0].input_format()
+    for writer in self.writers:
+       lowest_common = writer.input_format().common(lowest_common)
+       if not lowest_common:
+         logging.error('No common input format among writers')         
+         return None
     return lowest_common
+

@@ -247,7 +247,7 @@ class ComposedReader(Reader):
 
   ############################
   # Check that Reader outputs are compatible with each other and with
-  # Transform inputs. Throw an exception if not.
+  # Transform inputs. Return None if not.
   def check_reader_formats(self):
     # Find the lowest common format among readers
     lowest_common = self.readers[0].output_format()

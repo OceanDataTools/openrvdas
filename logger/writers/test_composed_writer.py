@@ -13,6 +13,7 @@ from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.writer import Writer
 from logger.transforms.prefix_transform import PrefixTransform
+from logger.transforms.parse_nmea_transform import ParseNMEATransform
 from logger.utils import formats
 
 SAMPLE_DATA = ['f1 line 1',
@@ -36,14 +37,20 @@ class TestComposedWriter(unittest.TestCase):
     f1_name = self.tmpdirname + '/f1'
     f2_name = self.tmpdirname + '/f2'
 
-    # No longer raises exception, just prints warning
-    # This should complain
+    # This should be okay
+    writer = ComposedWriter(transforms=[PrefixTransform('prefix')],
+                            writers=[TextFileWriter(f1_name),
+                                     TextFileWriter(f2_name)],
+                            check_format=True)
+
+    # Should raise an error if formats are not compatible
     with self.assertLogs(logging.getLogger(), logging.ERROR):
-      writer = ComposedWriter(transforms=[],
-                              writers=[TextFileWriter(f1_name),
-                                       TextFileWriter(f2_name)],
-                              check_format=True)
-    
+      with self.assertRaises(ValueError):
+        writer = ComposedWriter(transforms=[ParseNMEATransform()],
+                                writers=[TextFileWriter(f1_name),
+                                         TextFileWriter(f2_name)],
+                                check_format=True)
+
   ############################
   def test_all_files(self):
 
@@ -89,7 +96,7 @@ class TestComposedWriter(unittest.TestCase):
       self.assertEqual('p2 p1 ' + line, f1_line)
       self.assertEqual('p2 p1 ' + line, f2_line)
 
-    
+################################################################################
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
@@ -98,7 +105,7 @@ if __name__ == '__main__':
                       help='Increase output verbosity')
   args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   logging.basicConfig(format=LOGGING_FORMAT)
 
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}

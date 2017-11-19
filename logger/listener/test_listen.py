@@ -66,9 +66,10 @@ class TestListener(unittest.TestCase):
     # This should be okay - for now it warns us that check_format
     # is not implemented for ComposedWriter
     with self.assertLogs(logging.getLogger(), logging.WARNING):
-      Listener([TextFileReader(self.tmpfilenames[0]),
-                TextFileReader(self.tmpfilenames[1])],
-               check_format=True)
+      with self.assertRaises(ValueError):
+        Listener([TextFileReader(self.tmpfilenames[0]),
+                  TextFileReader(self.tmpfilenames[1])],
+                 check_format=True)
 
     # No longer raises exception - only logs warning
     ## This should not be - no common reader format
