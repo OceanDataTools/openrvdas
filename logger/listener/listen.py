@@ -60,13 +60,16 @@ from logger.readers.text_file_reader import TextFileReader
 
 from logger.transforms.prefix_transform import PrefixTransform
 from logger.transforms.regex_filter_transform import RegexFilterTransform
+from logger.transforms.qc_filter_transform import QCFilterTransform
 from logger.transforms.slice_transform import SliceTransform
 from logger.transforms.timestamp_transform import TimestampTransform
+from logger.transforms.parse_nmea_transform import ParseNMEATransform
 
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
 from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.logfile_writer import LogfileWriter
+from logger.writers.record_screen_writer import RecordScreenWriter
 
 ################################################################################
 class Listener:
@@ -159,13 +162,13 @@ if __name__ == '__main__':
 
   ############################
   # Transforms
-  parser.add_argument('--transform_regex_filter', dest='regex_filter',
-                      default='',
-                      help='Only pass records containing this regex.')
-
   parser.add_argument('--transform_prefix', dest='prefix', default='',
                       help='Prefix each record with this string')
   
+  parser.add_argument('--transform_timestamp', dest='timestamp',
+                      action='store_true', default=False,
+                      help='Timestamp each record as it is read')
+
   parser.add_argument('--transform_slice', dest='slice', default='',
                       help='Return only the specified (space-separated) '
                       'fields of a text record. Can be comma-separated '
@@ -176,9 +179,19 @@ if __name__ == '__main__':
   parser.add_argument('--slice_separator', dest='slice_separator', default=' ',
                       help='Field separator for --slice.')
 
-  parser.add_argument('--transform_timestamp', dest='timestamp',
+  parser.add_argument('--transform_regex_filter', dest='regex_filter',
+                      default='',
+                      help='Only pass records containing this regex.')
+
+  parser.add_argument('--transform_qc_filter', dest='qc_filter',
+                      default='', help='Pass nothing unless the fields in the '
+                      'received DASRecord exceed comma-separated '
+                      '<field_name>:<lower>:<upper> bounds.')
+
+  parser.add_argument('--transform_parse_nmea', dest='parse_nmea',
                       action='store_true', default=False,
-                      help='Timestamp each record as it is read')
+                      help='Convert tagged, timestamped NMEA records into '
+                      'Python DASRecords.')
 
   ############################
   # Writers
@@ -193,6 +206,11 @@ if __name__ == '__main__':
   parser.add_argument('--write_network', dest='write_network', default=None,
                       help='Network address(es) to write to')
 
+  parser.add_argument('--write_record_screen', dest='write_record_screen',
+                      action='store_true', default=False,
+                      help='Display the most current DASRecord field values '
+                      'on the terminal.')
+  
   ############################
   # Miscellaneous args
   parser.add_argument('--check_format', dest='check_format',
@@ -317,14 +335,18 @@ if __name__ == '__main__':
 
     ##########################
     # Transforms
-    if new_args.regex_filter:
-      transforms.append(RegexFilterTransform(new_args.regex_filter))
     if new_args.slice:
       transforms.append(SliceTransform(args.slice, new_args.slice_separator))
     if new_args.timestamp:
       transforms.append(TimestampTransform())
     if new_args.prefix:
       transforms.append(PrefixTransform(new_args.prefix))
+    if new_args.regex_filter:
+      transforms.append(RegexFilterTransform(new_args.regex_filter))
+    if new_args.qc_filter:
+      transforms.append(QCFilterTransform(new_args.qc_filter))
+    if new_args.parse_nmea:
+      transforms.append(ParseNMEATransform())
 
     ##########################
     # Writers
@@ -338,6 +360,8 @@ if __name__ == '__main__':
     if new_args.write_network:
       for addr in new_args.write_network.split(','):
         writers.append(NetworkWriter(network=addr))
+    if new_args.write_record_screen:
+      writers.append(RecordScreenWriter())
 
   ############################
   # Create and run listener

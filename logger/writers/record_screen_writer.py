@@ -14,7 +14,7 @@ from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
 ################################################################################
-class ScreenWriter(Writer):
+class RecordScreenWriter(Writer):
   def __init__(self):
     super().__init__(input_format=Python_Record)
 
