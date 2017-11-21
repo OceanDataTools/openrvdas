@@ -15,12 +15,13 @@ from logger.transforms.transform import Transform
 ################################################################################
 # If timestamp_format is not specified, use default format
 class ParseNMEATransform(Transform):
-  def __init__(self,
+  def __init__(self, json=False,
                message_path=nmea_parser.DEFAULT_MESSAGE_PATH,
                sensor_path=nmea_parser.DEFAULT_SENSOR_PATH,
                sensor_model_path=nmea_parser.DEFAULT_SENSOR_MODEL_PATH):
     super().__init__(input_format=formats.NMEA,
                      output_format=formats.Python_Record)
+    self.json = json
     self.parser = nmea_parser.NMEAParser(message_path, sensor_path,
                                          sensor_model_path)
   
@@ -29,4 +30,9 @@ class ParseNMEATransform(Transform):
   def transform(self, record):
     if record is None:
       return None
-    return self.parser.parse_record(record)
+    result = self.parser.parse_record(record)
+    if not result:
+      return None
+    if self.json:
+      return result.as_json()
+    return result

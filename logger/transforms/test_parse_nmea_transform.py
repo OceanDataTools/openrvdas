@@ -48,8 +48,17 @@ RECORDS = [
              'GUVTime': 170008}, 'metadata': {} }
   ]
 
+JSON = [
+  '{"data_id": "gyr1", "message_type": "$HEROT", "timestamp": 1510275607.737, "fields": {"Gyro1RateOfTurn": 2.9}, "metadata": {}}',
+  '{"data_id": "grv1", "message_type": "", "timestamp": 1510275608.572, "fields": {"Grav1ValueMg": 24303, "Grav1Error": 0}, "metadata": {}}',
+  '{"data_id": "seap", "message_type": "$GPGGA", "timestamp": 1509778833.174207, "fields": {"Seap200GPSTime": 2706.69, "Seap200Lat": 3938.13836, "Seap200NorS": "S", "Seap200Lon": 3732.638933, "Seap200EorW": "W", "Seap200FixQuality": 1, "Seap200NumSats": 9, "Seap200HDOP": 1.0, "Seap200Alt": -4.9}, "metadata": {}}',
+  '{"data_id": "pguv", "message_type": "", "timestamp": 1509772340.687152, "fields": {"GUVDate": 80614, "GUVTime": 170008, "GUVGroundVoltage": 0.00024, "GUVIrradiance320": 0.0003949, "GUVIrradiance340": 0.0007126, "GUVIrradiance313": -0.001556, "GUVIrradiance305": 0.01127, "GUVIrradiance380": -0.0003994, "GUVIrradiance40": 6.285e-08, "GUVIrradiance395": 0.000567, "GUVTemp": 46.6, "GUVInputVoltage": 17.924}, "metadata": {}}'
+  ]
+
+################################################################################
 class TestParseNMEATransform(unittest.TestCase):
 
+  ############################
   def test_default(self):
     transform = ParseNMEATransform()
     self.assertIsNone(transform.transform(None))
@@ -66,8 +75,21 @@ class TestParseNMEATransform(unittest.TestCase):
       self.assertEqual(record['timestamp'], result.timestamp)
       self.assertDictEqual(record['fields'], result.fields)
       self.assertDictEqual(record['metadata'], result.metadata)
-      
 
+  ############################
+  def test_json(self):
+    transform = ParseNMEATransform(json=True)
+    self.assertIsNone(transform.transform(None))
+
+    for i in range(len(LINES)):
+      line = LINES[i]
+      record = RECORDS[i]
+      logging.debug('line: %s', line)
+      result = transform.transform(line)
+      logging.debug('result: %s', result)
+      self.assertEqual(result, JSON[i])
+
+################################################################################
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
