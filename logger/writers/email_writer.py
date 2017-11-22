@@ -1,29 +1,4 @@
 #!/usr/bin/env python3
-"""Write text records to a file. If no filename is specified, write to
-stdout.
-
-  writer = EmailWriter(to, from=None, subject=None, max_freq=3*60)
-
-      to           Comma-separated list of email addresses
-
-      sender       Identity of sender; default is <user>@<hostname>
-                   if omitted
-
-      subject      Optional custom subject line; default is start of record
-
-      max_freq     maximum frequency, in seconds between messages, with which
-                   to send email. Default is 3 minutes.
-
-
-  writer.write(record)
-
-                   Send record (and all previously queued but not sent)
-                   records as an email message.
-
-NOTE: Of course, you'll need to make sure your machine has SMTP
-configured and running if you wish to send email anywhere other than
-localhost.
-"""
 
 import getpass
 import smtplib
@@ -40,9 +15,24 @@ from logger.utils.formats import Text
 from logger.writers.writer import Writer
 
 ################################################################################
-# Send the record as an email message.
 class EmailWriter(Writer):
+  """Send the record as an email message."""
   def __init__(self, to, sender=None, subject=None, max_freq=3*60):
+    """
+    to           Comma-separated list of email addresses
+
+    sender       Identity of sender; default is <user>@<hostname>
+                 if omitted
+
+    subject      Optional custom subject line; default is start of record
+
+    max_freq     maximum frequency, in seconds between messages, with which
+                 to send email. Default is 3 minutes.
+
+    NOTE: Of course, you'll need to make sure your machine has SMTP
+    configured and running if you wish to send email anywhere other than
+    localhost.
+    """
     super().__init__(input_format=Text)
 
     if not sender:
@@ -60,6 +50,8 @@ class EmailWriter(Writer):
 
   ############################
   def send_email(self, sleep=0):
+    """Internal: Send record (and all previously queued but not sent) records
+    as an email message."""
     time.sleep(sleep)
 
     # Grab messages from queue
@@ -98,6 +90,7 @@ class EmailWriter(Writer):
     
   ############################
   def write(self, record):
+    """Send record as email, or queue to send if have already sent recently."""
     if not record:
       return
     

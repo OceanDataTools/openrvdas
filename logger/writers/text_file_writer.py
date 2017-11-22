@@ -1,20 +1,4 @@
 #!/usr/bin/env python3
-"""Write text records to a file. If no filename is specified, write to
-stdout.
-
-  writer = TextFileWriter(filename=None, flush=True, truncate=False)
-
-      filename     Name of file to write to. If None, write to stdout
-
-      flush        If True (default), flush after every write() call
-
-      truncate     If True, truncate file before beginning to write
-
-
-  writer.write(record)
-
-                   Write out record, appending a newline at end  
-"""
 
 import sys
 sys.path.append('.')
@@ -23,9 +7,19 @@ from logger.utils.formats import Text
 from logger.writers.writer import Writer
 
 ################################################################################
-# Write to the specified file. If filename is empty, write to stdout.
 class TextFileWriter(Writer):
+  """Write to the specified file. If filename is empty, write to stdout."""
   def __init__(self, filename=None, flush=True, truncate=False):
+    """
+    Write text records to a file. If no filename is specified, write to
+    stdout.
+
+    filename     Name of file to write to. If None, write to stdout
+
+    flush        If True (default), flush after every write() call
+
+    truncate     If True, truncate file before beginning to write
+    """
     super().__init__(input_format=Text)
 
     if filename:
@@ -41,6 +35,8 @@ class TextFileWriter(Writer):
 
   ############################
   def write(self, record):
-    self.file.write(record + '\n')
+    """ Write out record, appending a newline at end."""
+    if record is not None:
+      self.file.write(record + '\n')
     if self.flush:
       self.file.flush()

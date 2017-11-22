@@ -32,9 +32,10 @@ from datetime import datetime, timezone
 DATE_FORMAT = '%Y-%m-%d'    # Gregorian
 TIME_FORMAT = '%Y-%m-%d:%H:%M:%S.%f'  # Gregorian
 
-# Return numeric timestamp for a passed time_str. If no time_str is
-# passed, return timestamp for now.
+################################################################################
 def timestamp(time_str=None, time_zone=timezone.utc, time_format=TIME_FORMAT):
+  """Return numeric timestamp for a passed time_str. If no time_str is
+  passed, return timestamp for now."""
   if time_str is None:
     return datetime.now(time_zone).timestamp()
 
@@ -43,14 +44,16 @@ def timestamp(time_str=None, time_zone=timezone.utc, time_format=TIME_FORMAT):
   time_obj = datetime.strptime(time_str, time_format).replace(tzinfo=time_zone)
   return time_obj.timestamp()
 
-# Given a timestamp, return a string representing that time. If no
-# timestamp is given, return the string for now.
+################################################################################
 def time_str(timestamp=None, time_zone=timezone.utc, time_format=TIME_FORMAT):
+  """Given a timestamp, return a string representing that time. If no
+  timestamp is given, return the string for now."""
   if timestamp is None:
     timestamp = datetime.now(time_zone).timestamp()
   return datetime.fromtimestamp(timestamp, time_zone).strftime(time_format)
 
-# Given a timestamp, return a string representing that date. If no
-# timestamp is given, return the string for today.
+################################################################################
 def date_str(timestamp=None, time_zone=timezone.utc, date_format=DATE_FORMAT):
+  """Given a timestamp, return a string representing that date. If no
+  timestamp is given, return the string for today."""
   return time_str(timestamp, time_zone, date_format)

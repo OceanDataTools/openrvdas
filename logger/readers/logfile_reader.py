@@ -1,10 +1,30 @@
 #!/usr/bin/env python3
-"""Read lines from one or more text files. Sequentially open all
-files that match the file_spec.
 
-  reader = LogfileReader(file_spec, tail, refresh_file_spec)
+import glob
+import logging
+import sys
+import time
 
-    file_spec    Possibly wildcarded string speficying files to be opened.
+sys.path.append('.')
+
+from logger.readers.reader import TimestampedReader
+from logger.readers.text_file_reader import TextFileReader
+from logger.utils.formats import Text
+from logger.utils import timestamp
+
+################################################################################
+# Open and read single-line records from one or more text files.
+class LogfileReader(TimestampedReader):
+  """
+  Read lines from one or more text files. Sequentially open all
+  files that match the file_spec.
+  """
+  ############################
+  def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
+               retry_interval=0.1, interval=0, use_timestamps=False,
+               date_format=timestamp.DATE_FORMAT):
+    """
+    filebase     Possibly wildcarded string specifying files to be opened.
                  Special case: if file_spec is None, read from stdin.
 
     tail         If False, return None upon reaching end of last file; if
@@ -25,45 +45,10 @@ files that match the file_spec.
                  How long to sleep between returning records. In general
                  this should be zero except for debugging purposes.
 
-Note that the order in which files are opened will probably be in
-alphanumeric by filename, but this is not strictly enforced and
-depends on how glob returns them.
-
-   record = reader.read()
-
-Will return the next line in the file(s), or None if there are no more
-records (as opposed to '' if the next record is a blank line). To test
-EOF you'll need to test
-
-  if record is None:
-    no more records...
-
-rather than simply
-
-  if not record:
-    could be EOF or simply an empty next line
-
-"""
-
-import glob
-import logging
-import sys
-import time
-
-sys.path.append('.')
-
-from logger.readers.reader import TimestampedReader
-from logger.readers.text_file_reader import TextFileReader
-from logger.utils.formats import Text
-from logger.utils import timestamp
-
-################################################################################
-# Open and read single-line records from one or more text files.
-class LogfileReader(TimestampedReader):
-  ############################
-  def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
-               retry_interval=0.1, interval=0, use_timestamps=False,
-               date_format=timestamp.DATE_FORMAT):
+    Note that the order in which files are opened will probably be in
+    alphanumeric by filename, but this is not strictly enforced and
+    depends on how glob returns them.
+    """
     super().__init__(output_format=Text)
 
     if interval and use_timestamps:
@@ -92,8 +77,20 @@ class LogfileReader(TimestampedReader):
                                  interval=interval)
     
   ############################
-  # Get the next line from logfile. Return None if no more records
   def read(self):
+    """
+    Return the next line in the file(s), or None if there are no more
+    records (as opposed to '' if the next record is a blank line). To test
+    EOF you'll need to test
+
+      if record is None:
+        no more records...
+
+    rather than simply
+
+      if not record:
+        could be EOF or simply an empty next line
+    """
     record = self.reader.read()
     if not record:
       return None

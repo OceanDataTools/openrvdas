@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""Aggregate passed lines of XML until a complete XML record whose
-outermost element matches 'tag' has been seen, then pass it on as a
-single record.
-
-"""
 
 import logging
 import sys
@@ -19,39 +14,16 @@ from logger.utils import formats
 from logger.transforms.transform import Transform
 
 ################################################################################
-# Helper class here - XMLHandler.endElement() will get called on
-# closing tags, so we can detect when we've got a closing tag for
-# whatever XML element we're after.
-class XMLHandler(ContentHandler):
-  # Omitting startElement, and characters methods
-  # to store data on a stack during processing
-  ############################
-  def __init__(self, tag):
-    super().__init__()
-    self.tag = tag
-    self.item_list = []
-    self.element_complete = False
-    
-  ############################
-  def complete(self):
-    return self.element_complete
-
-  ############################
-  def reset(self):
-    self.element_complete = False
-
-  ############################
-  def endElement(self, name):
-    if name == self.tag:
-      # Create item from stored data on stack
-      self.element_complete = True
-
-################################################################################
 class XMLAggregatorTransform(Transform):
+  """Aggregate passed lines of XML until a complete XML record whose
+  outermost element matches 'tag' has been seen, then pass it on as a
+  single record."""
   ############################
-  # 'tag' should be the identity of the top-level XML element that
-  # we're expecting to read, e.g. 'OSU_DAS_Record'
   def __init__(self, tag):
+    """
+    'tag' should be the identity of the top-level XML element that
+    we're expecting to read, e.g. 'OSU_DAS_Record'.
+    """
     super().__init__(input_format=formats.Text, output_format=formats.XML)
     self.tag = tag
 
@@ -67,6 +39,7 @@ class XMLAggregatorTransform(Transform):
 
   ############################
   def transform(self, record):
+    """Aggregate, returning None until we're done, then return record."""
     if record is None:
       return None
 
@@ -89,4 +62,33 @@ class XMLAggregatorTransform(Transform):
 
     # Otherwise go home emptyhanded
     return None
+
+################################################################################
+class XMLHandler(ContentHandler):
+  """
+  Helper class here - XMLHandler.endElement() will get called on
+  closing tags, so we can detect when we've got a closing tag for
+  whatever XML element we're after. We're omitting startElement, 
+  and characters methods to store data on a stack during processing.
+  """
+  ############################
+  def __init__(self, tag):
+    super().__init__()
+    self.tag = tag
+    self.item_list = []
+    self.element_complete = False
+    
+  ############################
+  def complete(self):
+    return self.element_complete
+
+  ############################
+  def reset(self):
+    self.element_complete = False
+
+  ############################
+  def endElement(self, name):
+    if name == self.tag:
+      # Create item from stored data on stack
+      self.element_complete = True
   

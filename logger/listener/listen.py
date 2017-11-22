@@ -1,42 +1,7 @@
 #!/usr/bin/env python3
-"""Listener is a simple, yet relatively self-contained class that
-takes a list of one or more Readers, a list of zero or more
-Transforms, and a list of zero or more Writers. It calls the Readers
-(in parallel) to acquire records, passes those records through the
-Transforms (in series), and sends the resulting records to the Writers
-(in parallel).
-
-It can be run as a standalone script (try 'listen.py --help' for
-details), as well as being used as a class:
-
-    listener = Listener(readers, transforms=[], writers=[],
-                        interval=0, check_format=False)
-
-    readers        A single Reader or a list of Readers.
-
-    transforms     A single Transform or a list of zero or more Transforms
-
-    writers        A single Writer or a list of zero or more Writers
-
-    interval       How long to sleep before reading sequential records
-
-    check_format   If True, attempt to check that Reader/Transform/Writer
-                   formats are compatible, and throw a ValueError if they
-                   are not. If check_format is False (the default) the
-                   output_format() of the whole reader will be
-                   formats.Unknown.
-Sample use:
-
-  listener = Listener(readers=[NetworkReader(':6221'),
-                               NetworkReader(':6223')],
-                      transforms=[TimestampTransform()],
-                      writers=[TextFileWriter('/logs/network_recs'),
-                               TextFileWriter(None)],
-                      interval=0.2)
-  listener.run()
-
-Calling listener.quit() from another thread will cause the run() loop
-to exit.
+"""Contains the Listener class and a __main__ that instantiates the
+class and can be run as a standalone script (try 'listen.py --help'
+for details).
 
 NOTE: for fun, run listen.py as an Ouroboros script, feeding it on its
 own output:
@@ -73,9 +38,47 @@ from logger.writers.record_screen_writer import RecordScreenWriter
 
 ################################################################################
 class Listener:
+  """Listener is a simple, yet relatively self-contained class that
+  takes a list of one or more Readers, a list of zero or more
+  Transforms, and a list of zero or more Writers. It calls the Readers
+  (in parallel) to acquire records, passes those records through the
+  Transforms (in series), and sends the resulting records to the Writers
+  (in parallel).
+
+  """
   ############################
   def __init__(self, readers, transforms=[], writers=[],
                interval=0, check_format=False):
+    """
+    listener = Listener(readers, transforms=[], writers=[],
+                        interval=0, check_format=False)
+
+    readers        A single Reader or a list of Readers.
+
+    transforms     A single Transform or a list of zero or more Transforms
+
+    writers        A single Writer or a list of zero or more Writers
+
+    interval       How long to sleep before reading sequential records
+
+    check_format   If True, attempt to check that Reader/Transform/Writer
+                   formats are compatible, and throw a ValueError if they
+                   are not. If check_format is False (the default) the
+                   output_format() of the whole reader will be
+                   formats.Unknown.
+    Sample use:
+
+    listener = Listener(readers=[NetworkReader(':6221'),
+                                 NetworkReader(':6223')],
+                        transforms=[TimestampTransform()],
+                        writers=[TextFileWriter('/logs/network_recs'),
+                                 TextFileWriter(None)],
+                        interval=0.2)
+    listener.run()
+
+    Calling listener.quit() from another thread will cause the run() loop
+    to exit.
+    """
     self.reader = ComposedReader(readers=readers, check_format=check_format)
     self.writer = ComposedWriter(transforms=transforms, writers=writers,
                                  check_format=check_format)
@@ -86,14 +89,19 @@ class Listener:
 
   ############################
   def quit(self):
+    """
+    Signal 'quit' to all the readers.
+    """
     self.quit_signalled = True
     logging.debug('Listener.quit() called')
     
   ############################
-  # Read/transform/write until either quit() is called in a separate
-  # thread, or ComposedReader returns None, indicating that all its
-  # component readers have returned EOF.
   def run(self):
+    """
+    Read/transform/write until either quit() is called in a separate
+    thread, or ComposedReader returns None, indicating that all its
+    component readers have returned EOF.
+    """
     record = ''
     while not self.quit_signalled and record is not None:
       record = self.reader.read()

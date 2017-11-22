@@ -1,23 +1,4 @@
 #!/usr/bin/env python3
-"""Read text records from a network socket.
-
-  NOTE: tcp is nominally implemented, but DOES NOT WORK!
-
-  reader = NetworkReader(network)
-
-      network      Network address to read, in host:port format (e.g.
-                   'rvdas:6202'). If host is omitted (e.g. ':6202'),
-                   read via UDP on specified port.
-
-  record = reader.read()
-                   Read record
-
-TODO: code won't handle records that are larger than 4K right now,
-which, if we start getting into Toby Martin's Total Metadata Ingestion
-(TMI), may not be enough. We'll need to implement something that will
-aggregate recv()'s and know when it's got an entire record?
-
-"""
 
 import logging
 import socket
@@ -33,7 +14,24 @@ BUFFER_SIZE = 4096
 ################################################################################
 # Read to the specified file. If filename is empty, read to stdout.
 class NetworkReader(Reader):
+  """
+  Read text records from a network socket.
+
+  NOTE: tcp is nominally implemented, but DOES NOT WORK!
+
+  TODO: code won't handle records that are larger than 4K right now,
+  which, if we start getting into Toby Martin's Total Metadata Ingestion
+  (TMI), may not be enough. We'll need to implement something that will
+  aggregate recv()'s and know when it's got an entire record?
+  """
+  ############################
   def __init__(self, network, buffer_size=BUFFER_SIZE):
+    """
+
+    network      Network address to read, in host:port format (e.g.
+                 'rvdas:6202'). If host is omitted (e.g. ':6202'),
+                 read via UDP on specified port.
+    """
     super().__init__(output_format=Text)
 
     self.network = network
@@ -67,6 +65,9 @@ class NetworkReader(Reader):
 
   ############################
   def read(self):
+    """
+    Read the next network packet.
+    """
     record = self.socket.recv(self.buffer_size)
     logging.debug('NetworkReader.read() received %d bytes', len(record))
     if record:

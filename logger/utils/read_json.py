@@ -8,6 +8,7 @@ import sys
 
 ################################################################################
 def strip(json_str):
+  """Strip #-prefixed comments from a JSON string."""
   lines = []
   for line in json_str.split('\n'):
     pos = line.find('#')
@@ -17,8 +18,8 @@ def strip(json_str):
   return '\n'.join(lines)
 
 ################################################################################
-# Parse JSON string and pretty-print a diagnostic if something's broken
 def parse_json(json_str, strip_comments=True):
+  """Parse JSON string and pretty-print a diagnostic if something's broken"""
   if strip_comments:
     json_str = strip(json_str)
   try:
@@ -45,6 +46,7 @@ def parse_json(json_str, strip_comments=True):
 
 ################################################################################
 def read_json(json_file, strip_comments=True):
+  """Read JSON definition from filename."""
   with open(json_file, 'r') as f:
     json_str = f.read()
   return parse_json(json_str, strip_comments)

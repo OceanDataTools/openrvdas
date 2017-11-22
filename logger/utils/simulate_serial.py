@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""Create a virtual serial port and feed stored logfile data to it.
-"""
 import logging
 import subprocess
 import sys
@@ -19,14 +17,14 @@ SOCAT_PATH = '/usr/local/bin/socat'
 
 ################################################################################
 class SimSerial:
+  """Create a virtual serial port and feed stored logfile data to it."""
   ############################
-  # Takes source file, whether to deliver data at rate indicated by
-  # timestamps, and the standard parameters that a serial port takes.
   def __init__(self, port, source_file, use_timestamps=True,
                baudrate=9600, bytesize=8, parity='N', stopbits=1,
                timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
                dsrdtr=False, inter_byte_timeout=None, exclusive=None):
-
+    """Takes source file, whether to deliver data at rate indicated by
+    timestamps, and the standard parameters that a serial port takes."""
     self.source_file = source_file
     self.use_timestamps = use_timestamps
     
@@ -50,6 +48,7 @@ class SimSerial:
     
   ############################
   def run_socat(self):
+    """Internal: run the actual command."""
     verbose = '-d'
     write_port_params =   'pty,link=%s,raw,echo=0' % self.write_port
     read_port_params = 'pty,link=%s,raw,echo=0' % self.read_port
@@ -85,7 +84,8 @@ class SimSerial:
 
   ############################
   def run(self):
-    # Run socat to create virtual port; give it a moment to get started
+    """Internal: Run socat to create virtual port; give it a moment
+    to get started."""
     self.socat_thread = threading.Thread(target=self.run_socat)
     self.socat_thread.start()
     time.sleep(0.2)

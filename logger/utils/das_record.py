@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
 
-"""DASRecord is a structured representation of the field names and
-values (and metadata) contained in a sensor record.
-
-If a json string is passed, it is parsed into a dictionary and its
-values for timestamp, fields and metadata are copied in. Otherwise,
-the DASRecord object is initialized with the passed-in values for
-instrument, timestamp, fields (a dictionary of fieldname-value pairs)
-and metadata.
-
-If timestamp is not specified, the instance will use the current time.
-"""
-
 import json
 import pprint
 
@@ -20,9 +8,21 @@ from logger.utils.timestamp import timestamp as timestamp_method
 
 ################################################################################
 class DASRecord:
+  """DASRecord is a structured representation of the field names and
+  values (and metadata) contained in a sensor record.
+  """
   ############################
   def __init__(self, json=None, data_id=None, message_type=None,
                timestamp=0, fields={}, metadata={}):
+    """
+    If a json string is passed, it is parsed into a dictionary and its
+    values for timestamp, fields and metadata are copied in. Otherwise,
+    the DASRecord object is initialized with the passed-in values for
+    instrument, timestamp, fields (a dictionary of fieldname-value pairs)
+    and metadata.
+
+    If timestamp is not specified, the instance will use the current time.
+    """
     if json:
       parsed = parse_json(json)
       self.data_id = parsed.get('data_id', None)
@@ -40,6 +40,7 @@ class DASRecord:
 
   ############################
   def as_json(self):
+    """Return DASRecord as a JSON string."""
     json_dict = {
       'data_id': self.data_id,
       'message_type': self.message_type,

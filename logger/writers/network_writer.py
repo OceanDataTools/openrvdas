@@ -1,19 +1,4 @@
 #!/usr/bin/env python3
-"""Write text records to a network socket.
-
-  NOTE: tcp is nominally implemented, but DOES NOT WORK!
-
-  writer = NetworkWriter(network, num_retry=2)
-
-      network      Network address to write, in host:port format (e.g.
-                   'rvdas:6202'). If host is omitted (e.g. ':6202'),
-                   broadcast via UDP on specified port.
-
-      num_retry    Number of times to retry if write fails.
-
-  writer.write(record)
-                   Write out record
-"""
 
 import logging
 import socket
@@ -25,9 +10,21 @@ from logger.utils.formats import Text
 from logger.writers.writer import Writer
 
 ################################################################################
-# Write to the specified file. If filename is empty, write to stdout.
 class NetworkWriter(Writer):
+  """Write to network."""
   def __init__(self, network, num_retry=2):
+    """
+    Write text records to a network socket.
+
+    NOTE: tcp is nominally implemented, but DOES NOT WORK!
+
+    network      Network address to write, in host:port format (e.g.
+                 'rvdas:6202'). If host is omitted (e.g. ':6202'),
+                 broadcast via UDP on specified port.
+
+    num_retry    Number of times to retry if write fails.
+    """
+
     super().__init__(input_format=Text)
 
     if network.find(':') == -1:
@@ -62,6 +59,7 @@ class NetworkWriter(Writer):
 
   ############################
   def write(self, record):
+    """Write the record to the network."""
     num_tries = 0
     bytes_sent = 0
     rec_len = len(record)

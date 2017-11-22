@@ -1,42 +1,4 @@
 #!/usr/bin/env python3
-"""Apply zero or more Transforms (in series) to passed records, then
-write them (in parallel threads) using the specified Writers.
-
-Instantiation:
-
-  writer = ComposedWriter(transforms=None, writers, check_format=True)
-
-    transforms     A single Transform, a list of Transforms, or None.
-
-    writers        A single Writer or a list of Writers.
-
-    NOT IMPLEMENTED YET:
-    check_format   If True, attempt to check that Transform/Writer formats
-                   are compatible, and throw a ValueError if they are not.
-                   If check_format is False (the default) the output_format()
-                   of the whole reader will be formats.Unknown.
-Use:
-
-  writer.write(record)
-
-Sample:
-
-  writer = ComposedWriter(transforms=[TimestampTransform(),
-                                      PrefixTransform('gyr1')],
-                          writers=[NetworkWriter(':6221'),
-                                   LogfileWriter('/logs/gyr1')],
-                          check_format=True)
-                          
-NOTE: we make the rash assumption that transforms are thread-safe,
-that is, that no mischief or corrupted internal state will result if
-more than one thread calls a transform at the same time. To be
-thread-safe, a transform must protect any changes to its internal
-state with a non-re-entrant thread lock, as described in the threading
-module. We do *not* make this assumption of our writers, and impose a
-lock to prevent a writer's write() method from being called a second
-time if the first has not yet completed.
-
-"""
 
 import logging
 import sys
@@ -52,7 +14,37 @@ from logger.utils import formats
 class ComposedWriter(Writer):
   ############################
   def __init__(self, transforms=[], writers=[], check_format=False):
+    """
+    Apply zero or more Transforms (in series) to passed records, then
+    write them (in parallel threads) using the specified Writers.
 
+
+    transforms     A single Transform, a list of Transforms, or None.
+
+    writers        A single Writer or a list of Writers.
+
+    check_format   If True, attempt to check that Transform/Writer formats
+                   are compatible, and throw a ValueError if they are not.
+                   If check_format is False (the default) the output_format()
+                   of the whole reader will be formats.Unknown.
+
+    Example:
+
+    writer = ComposedWriter(transforms=[TimestampTransform(),
+                                        PrefixTransform('gyr1')],
+                            writers=[NetworkWriter(':6221'),
+                                     LogfileWriter('/logs/gyr1')],
+                            check_format=True)
+
+    NOTE: we make the rash assumption that transforms are thread-safe,
+    that is, that no mischief or corrupted internal state will result if
+    more than one thread calls a transform at the same time. To be
+    thread-safe, a transform must protect any changes to its internal
+    state with a non-re-entrant thread lock, as described in the threading
+    module. We do *not* make this assumption of our writers, and impose a
+    lock to prevent a writer's write() method from being called a second
+    time if the first has not yet completed.
+    """
     # Make transforms a list if it's not. Even if it's only one transform.
     if not type(transforms) == type([]):
       self.transforms = [transforms]
@@ -82,14 +74,15 @@ class ComposedWriter(Writer):
 
 
   ############################
-  # Grab the appropriate lock and call the appropriate write() method
   def run_writer(self, index, record):
+    """Internal: grab the appropriate lock and call the appropriate
+    write() method."""
     with self.writer_lock[index]:
       self.writers[index].write(record)
           
   ############################
-  # Apply the transforms in series.
   def apply_transforms(self, record):
+    """Internal: apply the transforms in series."""
     if record:
       for t in self.transforms:
         record = t.transform(record)
@@ -98,8 +91,8 @@ class ComposedWriter(Writer):
     return record
 
   ############################
-  # Transform the passed record and dispatch it to writers.
   def write(self, record):
+    """Transform the passed record and dispatch it to writers."""
     # Transforms run in series
     record = self.apply_transforms(record)
     if record is None:
@@ -121,9 +114,10 @@ class ComposedWriter(Writer):
       threading.Thread(target=self.run_writer, args=(i, record)).start()
 
   ############################
-  # Check that Writer outputs are compatible with each other and with
-  # Transform inputs. Return None if not.
   def check_writer_formats(self):
+    """Check that Writer outputs are compatible with each other and with
+    Transform inputs. Return None if not."""
+
     # Begin with output format of first transform and work way to end;
     # the output of each is input of next one.
     for i in range(1, len(self.transforms)):

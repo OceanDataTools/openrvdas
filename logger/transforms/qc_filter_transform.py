@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
-"""Return None unless values in passed DASRecord are out of bounds, in
-which case return a warning message.
-
-  transform = QCFilterTransform(bounds)
-
-where bounds is a comma-separated list of conditions of the format
-
-  <field_name>:<lower_bound>:<upper_bound>
-
-Either <lower_bound> or <upper_bound> may be empty.
-
-Transform formats:
-  input_format:  Python_Record
-  output_format: Text
-
+"""
 TODO: option to initialize with a message to be output in case of failure.
 
 TODO: option to intialize with a flag saying whether records will be
@@ -33,7 +19,20 @@ from logger.transforms.transform import Transform
 ################################################################################
 # 
 class QCFilterTransform(Transform):
+  """
+  Transform that returns None unless values in passed DASRecord are out of
+  bounds, in which case return a warning message."""
   def __init__(self, bounds, message=None):
+    """
+    bounds   A comma-separated list of conditions of the format
+
+                <field_name>:<lower_bound>:<upper_bound>
+
+             Either <lower_bound> or <upper_bound> may be empty.
+
+    message  Optional string to be output instead of default when bounds
+             are violated
+    """
     super().__init__(input_format=formats.Python_Record,
                      output_format=formats.Text)
 
@@ -51,8 +50,8 @@ class QCFilterTransform(Transform):
                          'Found "%s" instead.' % condition)
 
   ############################
-  # Does record violate any bounds?
   def transform(self, record):
+    """Does record violate any bounds?"""
     if not record:
       return None
 

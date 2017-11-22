@@ -1,9 +1,25 @@
 #!/usr/bin/env python3
-"""Read lines from one or more text files. Sequentially open all
-files that match the file_spec.
 
-  reader = TextFileReader(file_spec, tail, refresh_file_spec)
+import glob
+import logging
+import sys
+import time
 
+sys.path.append('.')
+
+from logger.readers.reader import StorageReader
+from logger.utils.formats import Text
+
+################################################################################
+# Open and read single-line records from one or more text files.
+class TextFileReader(StorageReader):
+  """Read lines from one or more text files. Sequentially open all
+  files that match the file_spec.
+  """
+  ############################
+  def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
+               retry_interval=0.1, interval=0):
+    """
     file_spec    Possibly wildcarded string speficying files to be opened.
                  Special case: if file_spec is None, read from stdin.
 
@@ -25,42 +41,11 @@ files that match the file_spec.
                  How long to sleep between returning records. In general
                  this should be zero except for debugging purposes.
 
-Note that the order in which files are opened will probably be in
-alphanumeric by filename, but this is not strictly enforced and
-depends on how glob returns them.
+    Note that the order in which files are opened will probably be in
+    alphanumeric by filename, but this is not strictly enforced and
+    depends on how glob returns them.
+    """
 
-   record = reader.read()
-
-Will return the next line in the file(s), or None if there are no more
-records (as opposed to '' if the next record is a blank line). To test
-EOF you'll need to test
-
-  if record is None:
-    no more records...
-
-rather than simply
-
-  if not record:
-    could be EOF or simply an empty next line
-
-"""
-
-import glob
-import logging
-import sys
-import time
-
-sys.path.append('.')
-
-from logger.readers.reader import StorageReader
-from logger.utils.formats import Text
-
-################################################################################
-# Open and read single-line records from one or more text files.
-class TextFileReader(StorageReader):
-  ############################
-  def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-               retry_interval=0.1, interval=0):
     super().__init__(output_format=Text)
 
     self.file_spec = file_spec
@@ -89,10 +74,11 @@ class TextFileReader(StorageReader):
     self.current_file = None
 
   ############################
-  # Open and assign the next unused file to self.current_file if we
-  # can find one. Return None (and don't mess with current_file) if we
-  # can't find a next one.
   def get_next_file(self):
+    """Internal - Open and assign the next unused file to
+    self.current_file if we can find one. Return None (and don't mess
+    with current_file) if we can't find a next one.
+    """
     # If no more unused files, but refresh_file_spec is specified, see
     # if more files have shown up
     if not self.unused_file_list and self.refresh_file_spec:
@@ -115,9 +101,18 @@ class TextFileReader(StorageReader):
     return None
     
   ############################
-  # Get the next line of text. Return None if there are no more records
   def read(self):
+    """Get the next line of text. Return None if there are no more
+    records.  To test EOF you'll need to test
 
+      if record is None:
+        no more records...
+
+    rather than simply
+
+      if not record:
+        could be EOF or simply an empty next line
+    """
     if self.interval:
       now = time.time()
       sleep_time = max(0, self.interval - (now - self.last_read))

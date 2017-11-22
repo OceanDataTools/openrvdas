@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""Write DASRecords to terminal screen in some survivable
-format. Mostly intended for debugging.
-"""
 
 import logging
 import shutil
@@ -15,6 +12,8 @@ from logger.writers.writer import Writer
 
 ################################################################################
 class RecordScreenWriter(Writer):
+  """Write DASRecords to terminal screen in some survivable
+  format. Mostly intended for debugging."""
   def __init__(self):
     super().__init__(input_format=Python_Record)
 

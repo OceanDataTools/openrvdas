@@ -33,8 +33,8 @@ class NMEAParser:
     self.sensors = self.read_definitions(sensor_path)
 
   ############################
-  # Receive an id-prefixed, timestamped NMEA record
   def parse_record(self, nmea_record):
+    """Receive an id-prefixed, timestamped NMEA record."""
     if not nmea_record:
       return None
     if not type(nmea_record) == type(''):
@@ -84,8 +84,8 @@ class NMEAParser:
                      timestamp=ts, fields=named_fields)
 
   ############################
-  # Parse a raw NMEA message; raise ValueError if there are problems
   def parse_nmea(self, sensor_model_name, message):
+    """Parse a raw NMEA message; raise ValueError if there are problems."""
     # Break the message into an optional message_type, the aggregated
     # raw fields and an optional checksum.
     match = NMEA_RE.match(message)

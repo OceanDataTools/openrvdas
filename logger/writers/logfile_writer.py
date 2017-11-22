@@ -1,26 +1,4 @@
 #!/usr/bin/env python3
-"""Write timestamped text records to file. Base filename will have
-date appended, in keeping with R2R format recommendations
-(http://www.rvdata.us/operators/directory). When timestamped date on
-records rolls over to next day, create new file with new date suffix.
-
-  writer = LogfileWriter(filebase, flush=True,
-                         date_format=DATE_FORMAT)
-
-      filebase     Base name of file to write to. Will have record date
-                   appended, e.g.
-
-      flush        If True (default), flush after every write() call
-
-      date_fomat   A strftime-compatible string, such as '%Y-%m-%d'; defaults
-                   to whatever's defined in utils.timestamps.DATE_FORMAT.
-
-
-  writer.write(record)
-
-                   Write out record
-
-"""
 
 import logging
 import sys
@@ -32,11 +10,25 @@ from logger.writers.writer import Writer
 from logger.writers.text_file_writer import TextFileWriter
 
 ################################################################################
-# Write to the specified file. If filename is empty, write to stdout.
 class LogfileWriter(Writer):
+  """Write to the specified file. If filename is empty, write to stdout."""
   def __init__(self, filebase=None, flush=True,
                time_format=timestamp.TIME_FORMAT,
                date_format=timestamp.DATE_FORMAT):
+    """
+    Write timestamped text records to file. Base filename will have
+    date appended, in keeping with R2R format recommendations
+    (http://www.rvdata.us/operators/directory). When timestamped date on
+    records rolls over to next day, create new file with new date suffix.
+
+    filebase     Base name of file to write to. Will have record date
+                 appended, e.g.
+
+    flush        If True (default), flush after every write() call
+
+    date_fomat   A strftime-compatible string, such as '%Y-%m-%d'; defaults
+                 to whatever's defined in utils.timestamps.DATE_FORMAT.
+    """
     super().__init__(input_format=Text)
 
     self.filebase = filebase
@@ -49,8 +41,8 @@ class LogfileWriter(Writer):
     self.writer = None
 
   ############################
-  # Note: Assume record begins with a timestamp string
   def write(self, record):
+    """Note: Assume record begins with a timestamp string."""
     if record is None:
       return
     
