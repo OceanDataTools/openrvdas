@@ -5,7 +5,7 @@
 This project is a set of Python scripts implementing a data
 acquisition system for research vessels and other scientific
 installations. It allows reading data records (from serial ports and
-network-aware sensors), then processing and storing those records
+network-aware sensors), then processing and storing those records.
 
 The code is designed to be modular and extensible, relying on simple
 composition of Readers, Transforms and Writers to achieve the needed
@@ -73,6 +73,15 @@ and run
 
 from the project's home directory.
 
+Serial port functionality will require the pyserial.py package, which
+may be installed using pip3:
+
+  pip3 install pyserial
+
+To test the system using the simulate_serial.py utility, you will also
+need the 'socat' command installed on your system. See the 'OpenRVDAS
+Introductin to Loggers' document http://tinyurl.com/openrvdas-docs for
+more information.
 
 ##API Reference
 
