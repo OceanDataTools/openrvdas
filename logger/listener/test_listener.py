@@ -17,7 +17,7 @@ from logger.transforms.prefix_transform import PrefixTransform
 from logger.writers.text_file_writer import TextFileWriter
 from logger.utils import formats
 
-from logger.listener.listen import Listener
+from logger.listener.listener import Listener
 
 SAMPLE_DATA = {
   'f1' : ['f1 line 1',
@@ -35,12 +35,11 @@ SAMPLE_DATA = {
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
   time.sleep(pre_sleep_interval)
   logging.info('creating file "%s"', filename)
-  f = open(filename, 'w')
-  for line in lines:
-    time.sleep(interval)
-    f.write(line + '\n')
-    f.flush()
-  f.close()
+  with open(filename, 'w') as f:
+    for line in lines:
+      time.sleep(interval)
+      f.write(line + '\n')
+      f.flush()
 
 ################################################################################
 class TestListener(unittest.TestCase):
@@ -93,8 +92,9 @@ class TestListener(unittest.TestCase):
     listener.run()
 
     out_lines = []
-    for line in open(outfilename, 'r').readlines():
-      out_lines.append(line.rstrip())
+    with  open(outfilename, 'r') as f:
+      for line in f.readlines():
+        out_lines.append(line.rstrip())
     out_lines.sort()
     
     source_lines = []
@@ -119,9 +119,10 @@ class TestListener(unittest.TestCase):
 
     for ofn in outfilenames:
       line_num = 0
-      for line in open(ofn, 'r').readlines():
-        self.assertEqual(SAMPLE_DATA['f1'][line_num], line.rstrip())
-        line_num += 1
+      with open(ofn, 'r') as f:
+        for line in f.readlines():
+          self.assertEqual(SAMPLE_DATA['f1'][line_num], line.rstrip())
+          line_num += 1
 
 ################################################################################
 if __name__ == '__main__':
