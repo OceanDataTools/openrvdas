@@ -33,7 +33,7 @@ class XMLAggregatorTransform(Transform):
     self.buffer_lock = Lock()
     self.buffer = ''
 
-    self.handler = XMLHandler(tag=tag)
+    self.handler = _XMLHandler(tag=tag)
     self.parser = make_parser(['xml.sax.IncrementalParser'])
     self.parser.setContentHandler(self.handler)
 
@@ -64,9 +64,9 @@ class XMLAggregatorTransform(Transform):
     return None
 
 ################################################################################
-class XMLHandler(ContentHandler):
+class _XMLHandler(ContentHandler):
   """
-  Helper class here - XMLHandler.endElement() will get called on
+  Helper class here - _XMLHandler.endElement() will get called on
   closing tags, so we can detect when we've got a closing tag for
   whatever XML element we're after. We're omitting startElement, 
   and characters methods to store data on a stack during processing.

@@ -65,7 +65,7 @@ class ComposedWriter(Writer):
     # compatible input/output formats.
     input_format = formats.Unknown
     if check_format:
-      input_format = self.check_writer_formats()
+      input_format = self._check_writer_formats()
       if not input_format:
         raise ValueError('ComposedWriter: No common format found '
                          'for passed transforms (%s) and writers (%s)'
@@ -74,7 +74,7 @@ class ComposedWriter(Writer):
 
 
   ############################
-  def run_writer(self, index, record):
+  def _run_writer(self, index, record):
     """Internal: grab the appropriate lock and call the appropriate
     write() method."""
     with self.writer_lock[index]:
@@ -111,10 +111,10 @@ class ComposedWriter(Writer):
 
     # Fire record off to write() requests for each writer.
     for i in range(len(self.writers)):
-      threading.Thread(target=self.run_writer, args=(i, record)).start()
+      threading.Thread(target=self._run_writer, args=(i, record)).start()
 
   ############################
-  def check_writer_formats(self):
+  def _check_writer_formats(self):
     """Check that Writer outputs are compatible with each other and with
     Transform inputs. Return None if not."""
 

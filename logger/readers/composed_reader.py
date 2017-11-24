@@ -89,7 +89,7 @@ class ComposedReader(Reader):
     # compatible input/output formats.
     output_format = formats.Unknown
     if check_format:
-      output_format = self.check_reader_formats()
+      output_format = self._check_reader_formats()
       if not output_format:
         raise ValueError('ComposedReader: No common output format found '
                          'for passed readers: %s' % [r.output_format()
@@ -132,7 +132,7 @@ class ComposedReader(Reader):
     # If we only have one reader, there's no point making things
     # complicated. Just read, transform, return.
     if len(self.readers) == 1:
-      return self.apply_transforms(self.readers[0].read())
+      return self._apply_transforms(self.readers[0].read())
 
     # Do we have anything in the queue? Note: safe to check outside of
     # lock, because we're the only method that actually *removes*
@@ -144,7 +144,7 @@ class ComposedReader(Reader):
       logging.debug('read() - read requested; queue len is %d', len(self.queue))
       with self.queue_lock:
         record = self.queue.pop(0)
-        return self.apply_transforms(record)
+        return self._apply_transforms(record)
 
     # If here, nothing's in the queue. Note that, if we wanted to be
     # careful to never unnecessarily ask for more records, we should
@@ -158,7 +158,7 @@ class ComposedReader(Reader):
       if not self.reader_threads[i] or not self.reader_threads[i].is_alive():
         logging.info('read() - starting thread for Reader #%d', i)
         self.reader_returned_eof[i] = False
-        thread = threading.Thread(target=self.run_reader, args=(i,))
+        thread = threading.Thread(target=self._run_reader, args=(i,))
         self.reader_threads[i] = thread
         thread.start()
 
@@ -178,7 +178,7 @@ class ComposedReader(Reader):
             self.queue_has_record.clear() # only set/clear inside queue_lock
 
           logging.debug('read() - got record')
-          return self.apply_transforms(record)
+          return self._apply_transforms(record)
         else:
           self.queue_has_record.clear()
   
@@ -196,7 +196,7 @@ class ComposedReader(Reader):
     return None
 
   ############################
-  def run_reader(self, index):
+  def _run_reader(self, index):
     """
     Cycle through reading records from a readers[i] and putting them in queue.
     """
@@ -241,7 +241,7 @@ class ComposedReader(Reader):
       logging.debug('    Reader #%d released queue_lock - looping', index)
           
   ############################
-  def apply_transforms(self, record):
+  def _apply_transforms(self, record):
     """
     Apply the transforms in series.
     """
@@ -253,7 +253,7 @@ class ComposedReader(Reader):
     return record
 
   ############################
-  def check_reader_formats(self):
+  def _check_reader_formats(self):
     """
     Check that Reader outputs are compatible with each other and with
     Transform inputs. Return None if not.

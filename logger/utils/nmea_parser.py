@@ -28,9 +28,9 @@ class NMEAParser:
   def __init__(self, message_path=DEFAULT_MESSAGE_PATH,
                sensor_path=DEFAULT_SENSOR_PATH,
                sensor_model_path=DEFAULT_SENSOR_MODEL_PATH):
-    self.messages = self.read_definitions(message_path)
-    self.sensor_models = self.read_definitions(sensor_model_path)
-    self.sensors = self.read_definitions(sensor_path)
+    self.messages = self._read_definitions(message_path)
+    self.sensor_models = self._read_definitions(sensor_model_path)
+    self.sensors = self._read_definitions(sensor_path)
 
   ############################
   def parse_record(self, nmea_record):
@@ -187,11 +187,11 @@ class NMEAParser:
     field_values = {}
     for i in range(len(fields)):
       (name, data_type) = field_definitions[i]
-      field_values[name] = self.convert(fields[i], data_type)
+      field_values[name] = self._convert(fields[i], data_type)
     return (field_values, message_type)
     
   ############################
-  def convert(self, value, data_type):
+  def _convert(self, value, data_type):
     if value is '':
       return None
     if not data_type:
@@ -206,7 +206,7 @@ class NMEAParser:
       raise ValueError('Unknown data type in field definition: "%s"'%data_type)
 
   ############################
-  def read_definitions(self, json_path):
+  def _read_definitions(self, json_path):
     definitions = {}
     for filename in glob.glob(json_path):
       new_defs = read_json.read_json(filename)

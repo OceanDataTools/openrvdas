@@ -60,7 +60,7 @@ class TimeoutReader(Reader):
     self.none_is_okay=none_is_okay
 
   ############################
-  def handler(self, signum, frame):
+  def _handler(self, signum, frame):
     """If timeout fires, raise our custom exception"""
     logging.info('Read operation timed out')
     raise ReaderTimeout
@@ -72,7 +72,7 @@ class TimeoutReader(Reader):
     # Set the handler that will provide the needed interrupt, raising
     # the (ever-obscure) StopIterationError if we exceed the timeout.
     # TODO: should we create 
-    signal.signal(signal.SIGALRM, self.handler)
+    signal.signal(signal.SIGALRM, self._handler)
     last_read = time.time()
     
     while True:

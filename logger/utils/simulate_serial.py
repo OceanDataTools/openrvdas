@@ -47,7 +47,7 @@ class SimSerial:
     self.quit = False
     
   ############################
-  def run_socat(self):
+  def _run_socat(self):
     """Internal: run the actual command."""
     verbose = '-d'
     write_port_params =   'pty,link=%s,raw,echo=0' % self.write_port
@@ -84,9 +84,9 @@ class SimSerial:
 
   ############################
   def run(self):
-    """Internal: Run socat to create virtual port; give it a moment
-    to get started."""
-    self.socat_thread = threading.Thread(target=self.run_socat)
+    """Create the virtual port with socat and start feeding it records from
+    the designated logfile."""
+    self.socat_thread = threading.Thread(target=self._run_socat)
     self.socat_thread.start()
     time.sleep(0.2)
 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     for inst in configs:
       config = configs[inst]
       sim = SimSerial(port=config['port'], source_file=config['logfile'])
-      sim_thread = threading.Thread(target=sim.run)
+      sim_thread = threading.Thread(target=sim._run)
       sim_thread.start()
       thread_list.append(sim_thread)
 

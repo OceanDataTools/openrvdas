@@ -7,7 +7,7 @@ import re
 import sys
 
 ################################################################################
-def strip(json_str):
+def _strip(json_str):
   """Strip #-prefixed comments from a JSON string."""
   lines = []
   for line in json_str.split('\n'):
@@ -21,7 +21,7 @@ def strip(json_str):
 def parse_json(json_str, strip_comments=True):
   """Parse JSON string and pretty-print a diagnostic if something's broken"""
   if strip_comments:
-    json_str = strip(json_str)
+    json_str = _strip(json_str)
   try:
     return json.loads(json_str)
   except json.decoder.JSONDecodeError as e:

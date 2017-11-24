@@ -49,7 +49,7 @@ class EmailWriter(Writer):
     self.last_send = 0
 
   ############################
-  def send_email(self, sleep=0):
+  def _send_email(self, sleep=0):
     """Internal: Send record (and all previously queued but not sent) records
     as an email message."""
     time.sleep(sleep)
@@ -104,4 +104,4 @@ class EmailWriter(Writer):
 
     # Start up a separate thread so we can go ahead and return while
     # it possibly sleeps and waits.
-    threading.Thread(target=self.send_email, args=(time_to_sleep,)).start()
+    threading.Thread(target=self._send_email, args=(time_to_sleep,)).start()

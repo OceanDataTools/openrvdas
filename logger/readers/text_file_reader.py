@@ -74,7 +74,7 @@ class TextFileReader(StorageReader):
     self.current_file = None
 
   ############################
-  def get_next_file(self):
+  def _get_next_file(self):
     """Internal - Open and assign the next unused file to
     self.current_file if we can find one. Return None (and don't mess
     with current_file) if we can't find a next one.
@@ -122,9 +122,9 @@ class TextFileReader(StorageReader):
       
     record = None
     while not record:
-      # If we've got a current file, or if get_next_file() gets one
+      # If we've got a current file, or if _get_next_file() gets one
       # for us, try to read a record.
-      if self.current_file or self.get_next_file():
+      if self.current_file or self._get_next_file():
         record = self.current_file.readline()
         if record:
           self.last_read = time.time()
@@ -134,7 +134,7 @@ class TextFileReader(StorageReader):
 
         # No record: our current_file has reached EOF. See if more
         # files we should try to read.
-        if self.get_next_file():
+        if self._get_next_file():
           # Found a new file to read - loop again right away
           continue
 
