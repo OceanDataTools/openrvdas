@@ -136,155 +136,6 @@ class ListenerFromConfigFile(ListenerFromConfig):
     config = read_json.read_json(config_file)
     super().__init__(config)
 
-
-################################################################################
-class ListenerFromArgs(Listener):
-  """Helper class for instantiating a Listener object from command
-  line arguments."""
-  ############################
-  def __init__(self, parser):
-    """Create Listener from argument list."""
-
-    ############################
-    # Where we'll store our components
-    readers = []
-    transforms = []
-    writers = []
-
-    ############################
-    # Parse args out. We do this in a rather non-standard way to use the
-    # order of args on the command line to determine the order of our
-    # transforms. Specifically: break command line up into sections that
-    # end with the next '-'-prefixed argument (excluding the empty
-    # argument '-'), and process those sections sequentially, adding
-    # them to the 'args' namespace as we go.
-    #
-    # So
-    #
-    #    listen.py  -v 1 2 3 -w -x - -y 4 5 -z
-    #
-    # will be processed in five chunks:
-    #
-    #    ['-v', '1', '2', '3']
-    #    ['-w']
-    #    ['-x', '-']
-    #    ['-y', '4', '5']
-    #    ['-z']
-    #
-    #
-    # Functionally, it means that
-    #
-    #    --transform_a <params_a> --transform_b <params_b>
-    #
-    # will push transform_a into the transform list before transform_b,
-    # (meaning it will be applied to records first), while
-    #
-    #    --transform_b <params_b> --transform_a <params_a>
-    #
-    # will do the opposite. It also means that repeating a transform on
-    # the command line will apply it twice. Repetitions of readers or
-    # writers will create multiple instances but, since readers and
-    # writers are applied in parallel, ordering is irrelevant.
-
-    arg_start = arg_end = 1   # start at beginning of args, minus script name;
-    all_args = None           # initial namespace is empty
-
-    # Loop while we have args left
-    while arg_end <= len(sys.argv):
-
-      arg_start = arg_end
-      arg_end += 1
-
-      # Get everything up to, but not including, the next arg beginning with '-'
-      while arg_end < len(sys.argv):
-        next_arg = sys.argv[arg_end]
-        if next_arg.find('-') == 0 and next_arg != '-':
-          break
-        arg_end += 1
-
-      # We have our next set of arguments - parse them
-      arg_list = sys.argv[arg_start:arg_end]
-      logging.debug('next set of command line arguments: %s', arg_list)
-
-      # These are just the new values
-      new_args = parser.parse_args(arg_list)
-
-      # We also want to accumulate old arguments so that we have access
-      # to flags that have been previously set.
-      all_args = parser.parse_args(arg_list, all_args)
-
-      logging.debug('namespace of all command-line args so far: %s', all_args)
-
-      ##########################
-      # Now go through new_args and see what they want us to do. Draw
-      # on all_args for the previously-set options that a reader,
-      # transform or writer might need.
-
-      ##########################
-      # Readers
-      if new_args.file:
-        for filename in new_args.file.split(','):
-          readers.append(TextFileReader(
-            file_spec=filename, tail=all_args.tail,
-            refresh_file_spec=all_args.refresh_file_spec))
-
-      if new_args.network:
-        for addr in new_args.network.split(','):
-          readers.append(NetworkReader(network=addr))
-
-      if new_args.logfile:
-        for filebase in new_args.logfile.split(','):
-          readers.append(LogfileReader(
-            filebase=filebase, use_timestamps=all_args.logfile_use_timestamps,
-            refresh_file_spec=all_args.refresh_file_spec))
-
-      # SerialReader is a little more complicated than other readers
-      # because it can take so many parameters. Use the kwargs trick to
-      # pass them all in.
-      if new_args.serial:
-        kwargs = {}
-        for pair in new_args.serial.split(','):
-          (key, value) = pair.split('=')
-          kwargs[key] = value
-        readers.append(SerialReader(**kwargs))
-
-      ##########################
-      # Transforms
-      if new_args.slice:
-        transforms.append(SliceTransform(new_args.slice,
-                                         all_args.slice_separator))
-      if new_args.timestamp:
-        transforms.append(TimestampTransform())
-      if new_args.prefix:
-        transforms.append(PrefixTransform(new_args.prefix))
-      if new_args.regex_filter:
-        transforms.append(RegexFilterTransform(new_args.regex_filter))
-      if new_args.qc_filter:
-        transforms.append(QCFilterTransform(new_args.qc_filter))
-      if new_args.parse_nmea:
-        transforms.append(ParseNMEATransform())
-
-      ##########################
-      # Writers
-      if new_args.write_file:
-        for filename in new_args.write_file.split(','):
-          if filename == '-':
-            filename = None
-          writers.append(TextFileWriter(filename=filename))
-      if new_args.write_logfile:
-        writers.append(LogfileWriter(filebase=new_args.write_logfile))
-      if new_args.write_network:
-        for addr in new_args.write_network.split(','):
-          writers.append(NetworkWriter(network=addr))
-      if new_args.write_record_screen:
-        writers.append(RecordScreenWriter())
-    
-
-    # Call our superclass Listener to create the actual instance
-    super().__init__(readers=readers, transforms=transforms, writers=writers,
-                      interval=all_args.interval,
-                      check_format=all_args.check_format)
-
 ################################################################################
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(
@@ -439,6 +290,147 @@ if __name__ == '__main__':
 
   # If not --config, go parse all those crazy command line arguments manually
   else:
-    listener = ListenerFromArgs(parser) 
+    ############################
+    # Where we'll store our components
+    readers = []
+    transforms = []
+    writers = []
 
+    ############################
+    # Parse args out. We do this in a rather non-standard way to use the
+    # order of args on the command line to determine the order of our
+    # transforms. Specifically: break command line up into sections that
+    # end with the next '-'-prefixed argument (excluding the empty
+    # argument '-'), and process those sections sequentially, adding
+    # them to the 'args' namespace as we go.
+    #
+    # So
+    #
+    #    listen.py  -v 1 2 3 -w -x - -y 4 5 -z
+    #
+    # will be processed in five chunks:
+    #
+    #    ['-v', '1', '2', '3']
+    #    ['-w']
+    #    ['-x', '-']
+    #    ['-y', '4', '5']
+    #    ['-z']
+    #
+    #
+    # Functionally, it means that
+    #
+    #    --transform_a <params_a> --transform_b <params_b>
+    #
+    # will push transform_a into the transform list before transform_b,
+    # (meaning it will be applied to records first), while
+    #
+    #    --transform_b <params_b> --transform_a <params_a>
+    #
+    # will do the opposite. It also means that repeating a transform on
+    # the command line will apply it twice. Repetitions of readers or
+    # writers will create multiple instances but, since readers and
+    # writers are applied in parallel, ordering is irrelevant.
+
+    arg_start = arg_end = 1   # start at beginning of args, minus script name;
+    all_args = None           # initial namespace is empty
+
+    # Loop while we have args left
+    while arg_end <= len(sys.argv):
+
+      arg_start = arg_end
+      arg_end += 1
+
+      # Get everything up to, but not including, the next arg beginning with '-'
+      while arg_end < len(sys.argv):
+        next_arg = sys.argv[arg_end]
+        if next_arg.find('-') == 0 and next_arg != '-':
+          break
+        arg_end += 1
+
+      # We have our next set of arguments - parse them
+      arg_list = sys.argv[arg_start:arg_end]
+      logging.debug('next set of command line arguments: %s', arg_list)
+
+      # These are just the new values
+      new_args = parser.parse_args(arg_list)
+
+      # We also want to accumulate old arguments so that we have access
+      # to flags that have been previously set.
+      all_args = parser.parse_args(arg_list, all_args)
+
+      logging.debug('namespace of all command-line args so far: %s', all_args)
+
+      ##########################
+      # Now go through new_args and see what they want us to do. Draw
+      # on all_args for the previously-set options that a reader,
+      # transform or writer might need.
+
+      ##########################
+      # Readers
+      if new_args.file:
+        for filename in new_args.file.split(','):
+          readers.append(TextFileReader(
+            file_spec=filename, tail=all_args.tail,
+            refresh_file_spec=all_args.refresh_file_spec))
+
+      if new_args.network:
+        for addr in new_args.network.split(','):
+          readers.append(NetworkReader(network=addr))
+
+      if new_args.logfile:
+        for filebase in new_args.logfile.split(','):
+          readers.append(LogfileReader(
+            filebase=filebase, use_timestamps=all_args.logfile_use_timestamps,
+            refresh_file_spec=all_args.refresh_file_spec))
+
+      # SerialReader is a little more complicated than other readers
+      # because it can take so many parameters. Use the kwargs trick to
+      # pass them all in.
+      if new_args.serial:
+        kwargs = {}
+        for pair in new_args.serial.split(','):
+          (key, value) = pair.split('=')
+          kwargs[key] = value
+        readers.append(SerialReader(**kwargs))
+
+      ##########################
+      # Transforms
+      if new_args.slice:
+        transforms.append(SliceTransform(new_args.slice,
+                                         all_args.slice_separator))
+      if new_args.timestamp:
+        transforms.append(TimestampTransform())
+      if new_args.prefix:
+        transforms.append(PrefixTransform(new_args.prefix))
+      if new_args.regex_filter:
+        transforms.append(RegexFilterTransform(new_args.regex_filter))
+      if new_args.qc_filter:
+        transforms.append(QCFilterTransform(new_args.qc_filter))
+      if new_args.parse_nmea:
+        transforms.append(ParseNMEATransform())
+
+      ##########################
+      # Writers
+      if new_args.write_file:
+        for filename in new_args.write_file.split(','):
+          if filename == '-':
+            filename = None
+          writers.append(TextFileWriter(filename=filename))
+      if new_args.write_logfile:
+        writers.append(LogfileWriter(filebase=new_args.write_logfile))
+      if new_args.write_network:
+        for addr in new_args.write_network.split(','):
+          writers.append(NetworkWriter(network=addr))
+      if new_args.write_record_screen:
+        writers.append(RecordScreenWriter())
+
+    ##########################
+    # Now that we've got our readers, transforms and writers defined,
+    # create the Listener.
+    listener = Listener(readers=readers, transforms=transforms, writers=writers,
+                        interval=all_args.interval,
+                        check_format=all_args.check_format)
+
+  ############################
+  # Whichever way we created the listener, run it.
   listener.run()
