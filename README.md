@@ -62,6 +62,12 @@ Because of this, instead of a system, we have focused on designing and
 building an architecture that allows easy assembly of small, modular
 components into whatever system is needed in a given situation.
 
+DISCLAIMER: THIS CODE IS EXPERIMENTAL AND STILL IN THE *VERY* EARLY
+STAGES OF DEVELOPMENT. IT SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON,
+ESPECIALLY NOT IN ANY APPLICATION WHERE ITS FAILURE COULD RESULT IN
+INJURY, LOSS OF LIFE, PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS
+WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
+
 ##Installation
 
 Note that the code itself is still very much under development. The
@@ -80,8 +86,8 @@ may be installed using pip3:
 
 To test the system using the simulate_serial.py utility, you will also
 need the 'socat' command installed on your system. See the 'OpenRVDAS
-Introductin to Loggers' document http://tinyurl.com/openrvdas-docs for
-more information.
+Introduction to Loggers' document http://tinyurl.com/openrvdas-docs
+for more information.
 
 ##API Reference
 
