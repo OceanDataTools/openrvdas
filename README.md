@@ -26,9 +26,9 @@ In addition, a simple listen.py script provides access to the most
 commonly used Readers, Transforms and Writers from the command line,
 e.g.
 
-listen.py --serial port=/dev/ttyr15,baudrate=9600 \
-    --timestamp --prefix knud \
-    --write_logfile /data/logs/current/knud
+  listen.py --serial port=/dev/ttyr15,baudrate=9600 \\
+      --timestamp --prefix knud \\
+      --write_logfile /data/logs/current/knud
 
 ##Code Example
 
