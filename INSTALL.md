@@ -34,6 +34,12 @@ may be installed using pip3.  Open a terminal window :
   pip3 install pyserial
 ```
 
+#### Socat
+To test the system using the simulate_serial.py utility, you will also need the 'socat' command installed on your system.  To install socat, type the following in a terminal window:
+```
+sudo apt-get install socat
+```
+
 #### Git
 Git is used to download the OpenRVDAS source code repository.  Install Git by typing the following in a terminal window:
 ```
@@ -54,7 +60,7 @@ git clone https://github.com/davidpablocohn/openrvdas.git
 Full unit tests for the code base may be run from the project home
 directory by running
 ```
-cd <project dir>
+cd ~/openrvdas
 python3 -m unittest discover
 ```
 
@@ -68,9 +74,4 @@ the test: a single '-v' sets logging level to "info"; a second -v sets
 it to "debug".
 ```
     logger/readers/test_network_reader.py -v -v
-```
-
-To test the system using the simulate_serial.py utility, you will also need the 'socat' command installed on your system.  To install socat, type the following in a terminal window:
-```
-sudo apt-get install socat
 ```
