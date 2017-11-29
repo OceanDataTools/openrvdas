@@ -52,7 +52,7 @@ ESPECIALLY NOT IN ANY APPLICATION WHERE ITS FAILURE COULD RESULT IN
 INJURY, LOSS OF LIFE, PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS
 WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
 
-## Defining a custom logger
+## Data logging
 
 ### Writing a custom logging script
 Individual logging modules can be composed using a few lines of
