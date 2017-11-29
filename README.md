@@ -54,7 +54,7 @@ WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
 
 ## Installation
 
-Please refer to [INSTALL.md]<INSTALL.md> for details on how to install OpenRVDAS
+Please refer to [INSTALL.md](./INSTALL.md) for details on how to install OpenRVDAS
 
 ## Data logging
 
