@@ -13,8 +13,6 @@ from logger.writers.text_file_writer import TextFileWriter
 
 from logger.utils.read_json import read_json
 
-SOCAT_PATH = '/usr/local/bin/socat'
-
 ################################################################################
 class SimSerial:
   """Create a virtual serial port and feed stored logfile data to it."""
@@ -53,7 +51,8 @@ class SimSerial:
     write_port_params =   'pty,link=%s,raw,echo=0' % self.write_port
     read_port_params = 'pty,link=%s,raw,echo=0' % self.read_port
 
-    cmd = [SOCAT_PATH,
+    cmd = ['/usr/bin/env',
+           'socat',
            verbose,
            #verbose,   # repeating makes it more verbose
            read_port_params,
@@ -145,13 +144,18 @@ if __name__ == '__main__':
     for inst in configs:
       config = configs[inst]
       sim = SimSerial(port=config['port'], source_file=config['logfile'])
-      sim_thread = threading.Thread(target=sim._run)
+      sim_thread = threading.Thread(target=sim.run)
       sim_thread.start()
       thread_list.append(sim_thread)
 
   # If no config file, just a simple, single serial port
-  else:
+  elif args.logfile and args.port:
     sim_serial = SimSerial(port=args.port, baudrate=args.baud,
                            source_file=args.logfile)
     sim_serial.run()
+
+  # Otherwise, we don't have enough information to run
+  else:
+    parser.error('Either --config or both --logfile and --port must '
+                 'be specified')
     
