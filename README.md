@@ -90,52 +90,6 @@ For full details on the use of listen.py, run:
   logger/listener/listen.py --help
 ```
 
-## Installation
-
-Note that OpenRVDAS is still very much under development. The
-core logging functionality only relies on Python 3 (tested on Python
-3.5 and above). You should be able to simply unpack the distribution
-and run*
-
-```
-  logging/listener/listen.py --help
-```
-
-from the project's home directory.
-
-Serial port functionality will require the pyserial.py package, which
-may be installed using pip3:
-
-```
-  pip3 install pyserial
-```
-
-To test the system using the simulate_serial.py utility, you will also
-need the 'socat' command installed on your system. See the 'OpenRVDAS
-Introduction to Loggers' document <http://tinyurl.com/openrvdas-docs>
-for more information.
-
-## Tests
-
-Full unit tests for the code base may be run from the project home
-directory by running
-```
-    python3 -m unittest discover
-```
-Tests may be run on a directory by directory basis with
-```
-    python3 -m unittest discover logger.readers
-```
-for example, to test all code in logger/readers.
-
-Specific unit tests may be run individually, as well:
-```
-    logger/readers/test_network_reader.py -v -v
-```
-Many (but not yet all) accept -v flags to increase the verbosity of
-the test: a single '-v' sets logging level to "info"; a second -v sets
-it to "debug".
-
 ## Contributing
 
 Please contact David Pablo Cohn (*david dot cohn at gmail dot com*) - to discuss
