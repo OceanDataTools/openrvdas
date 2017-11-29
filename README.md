@@ -1,18 +1,63 @@
 # OpenRVDAS
 
-## Synopsis
+## Overview
 
-This project is a set of Python scripts implementing a data
-acquisition system (DAS) for research vessels and other scientific
-installations. It allows for reading data records (from serial ports 
-and network-aware sensors), processing those data records and 
-streaming the original records or a modified version of the orignial 
-record to a destination (file, network port, database, etc).
+Open Research Vessel Data Acquisition System (OpenRVDAS) is a 
+software framework used for building custom data acquisition 
+systems (DAS).  OpenRVDAS target audiences are oceanographic 
+research vessels operators and other operators of other science-
+related platforms that have the need to record streaming data. 
+OpenRVDAS is capable of reading data records from serial ports and 
+network-aware sensors, optionally modifying those data records and 
+streaming either the original or modified version of the data 
+stream to a destination such as afile, network port, database, etc.
 
-The code is designed to be modular and extensible, relying on simple
+OpenRVDAS is designed to be modular and extensible, relying on simple
 composition of Readers, Transforms and Writers to achieve the needed
-functionality. Individual modules can be composed using a few lines of
+datalogging functionality.
+
+## Motivation
+
+The primary purpose of an oceanographic research vessel is to gather
+data from sensors. Oceanographic research vessels carry a combination 
+of oceanographic, meteorological and other specialized sensors. Some 
+of the more complex sensors (i.e. ADCP, Multibeam, imaging systems) 
+include specialized DAS systems tailored to that particlular sensor 
+system.  The rest of the more simplistic sensors will stream data 
+values over a network port or serial connection.
+
+At present there are limited options for oceanographic research 
+vessel operators requiring a tool to record data from simplistic 
+streaming sensors. This task is commonly referred to as underway data
+logging.  Most research vessel operators rely on closed-source, 
+solutions (i.e. SCS, WinFrog) or on dated datalogging systems (i.e. 
+dsLog, LDS) for underway data logging.  Both options provide limited 
+support mechanisms, thus bugs are slow to be resolved and feature 
+requests are slow to be implemented.
+
+OpenRVDAS hopes to provide an alternative underway data logging 
+solution that is defined, developed and maintained by the global
+oceanographic research community.
+
+OpenRVDAS recognizes that each ship is different, that each ship has a
+unique set of sensors and that each ship has a unique way of operating.  
+With this understanding, OpenRVDAS does not try provide a turn-key, one-
+size-fits-all solution but instead provides research vessel operators 
+with a modular and extendable toolset for developing and deploying a custom
+underway datalogging solution tailored to the vessel's individual needs.
+
+DISCLAIMER: THIS CODE IS EXPERIMENTAL AND STILL IN THE *VERY* EARLY
+STAGES OF DEVELOPMENT. IT SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON,
+ESPECIALLY NOT IN ANY APPLICATION WHERE ITS FAILURE COULD RESULT IN
+INJURY, LOSS OF LIFE, PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS
+WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
+
+## Defining a custom logger
+
+### Writing a custom logging script
+Individual logging modules can be composed using a few lines of
 Python, e.g.
+
 ```
     reader = SerialReader(port='/dev/ttyr15', baudrate=9600)
     timestamp_transform = TimestampTransform()
@@ -25,8 +70,13 @@ Python, e.g.
       writer.write_record(out_record)
 ```
 
-### listen.py
-A simple listen.py script is included to provide access to the most
+#### Full API Reference
+Documentation (also still incomplete) for the code is available online
+in a shared Google Doc folder via the shortcut url
+<http://tinyurl.com/openrvdas-docs>.
+
+### Logging with listen.py
+The listen.py script is included to provide access to the most
 commonly used Readers, Transforms and Writers from the command line,
 e.g.
 ```
@@ -39,43 +89,6 @@ For full details on the use of listen.py, run:
 ```
   logger/listener/listen.py --help
 ```
-
-## Motivation
-
-The primary purpose of an oceanographic research vessel is to gather
-accurate and timely scientific data wherever it travels. 
-Oceanographic research vessels carry a combination of oceanographic,
-meteorological and other specialized sensors. Some of the more
-complex sensors (i.e. ADCP, Multibeam, imaging systems) include 
-specialized DAS systems tailored to that particlular sensor system.  
-The rest of the more simplistic sensors will stream real-time values 
-over a network port or serial connection.
-
-At present there are limited options for research vessel operators
-requiring the means to record data from the before mentioned
-simplistic sensors.  This is commonly referred to as underway data
-logging.  Most research vessel operators rely on closed-source, 
-Windows-based solutions (i.e. SCS, WinFrog) or on dated Linux-
-based systems (i.e. dsLog, LDS) for underway data logging.  Both 
-options have limited support mechanisms, thus bugs are slow to 
-be resolved and feature requests are slow to be implemented.
-
-OpenRVDAS hopes to provide an alternative underway data logging 
-solution that is defined, developed and maintained by the global
-oceanographic research community
-
-OpenRVDAS recongizes that each ship is different, that each ship has a 
-unique set of sensors and a unique way of operating.  With this 
-understanding, OpenRVDAS doesn't not provide a turn-key, one-size-fits-
-all solution but instead provides research vessel operators with a 
-modular and extendable toolset for developing and deploying a custom
-underway datalogging solution tailored to the vessel's individual needs.
-
-DISCLAIMER: THIS CODE IS EXPERIMENTAL AND STILL IN THE *VERY* EARLY
-STAGES OF DEVELOPMENT. IT SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON,
-ESPECIALLY NOT IN ANY APPLICATION WHERE ITS FAILURE COULD RESULT IN
-INJURY, LOSS OF LIFE, PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS
-WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
 
 ## Installation
 
@@ -102,12 +115,6 @@ need the 'socat' command installed on your system. See the 'OpenRVDAS
 Introduction to Loggers' document <http://tinyurl.com/openrvdas-docs>
 for more information.
 
-## API Reference
-
-Documentation (also still incomplete) for the code is available online
-in a shared Google Doc folder via the shortcut url
-<http://tinyurl.com/openrvdas-docs>.
-
 ## Tests
 
 Full unit tests for the code base may be run from the project home
@@ -129,9 +136,9 @@ Many (but not yet all) accept -v flags to increase the verbosity of
 the test: a single '-v' sets logging level to "info"; a second -v sets
 it to "debug".
 
-## Contributors
+## Contributing
 
-Please contact David Pablo Cohn <david.cohn@gmail.com> - to discuss
+Please contact David Pablo Cohn (*david dot cohn at gmail dot com*) - to discuss
 opportunities for participating in code development.
 
 ## License
