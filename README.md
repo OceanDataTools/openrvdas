@@ -1,17 +1,19 @@
 # OpenRVDAS
 
-##Synopsis
+## Synopsis
 
 This project is a set of Python scripts implementing a data
-acquisition system for research vessels and other scientific
-installations. It allows reading data records (from serial ports and
-network-aware sensors), then processing and storing those records.
+acquisition system (DAS) for research vessels and other scientific
+installations. It allows for reading data records (from serial ports 
+and network-aware sensors), processing those data records and 
+streaming the original records or a modified version of the orignial 
+record to a destination (file, network port, database, etc).
 
 The code is designed to be modular and extensible, relying on simple
 composition of Readers, Transforms and Writers to achieve the needed
 functionality. Individual modules can be composed using a few lines of
 Python, e.g.
-
+```
     reader = SerialReader(port='/dev/ttyr15', baudrate=9600)
     timestamp_transform = TimestampTransform()
     prefix_transform = PrefixTransform(prefix=‘knud’)
@@ -21,8 +23,10 @@ Python, e.g.
       ts_record = timestamp_transform.transform(in_record)
       out_record = prefix_transform.transform(ts_record)
       writer.write_record(out_record)
+```
 
-In addition, a simple listen.py script provides access to the most
+### listen.py
+A simple listen.py script is included to provide access to the most
 commonly used Readers, Transforms and Writers from the command line,
 e.g.
 ```
@@ -30,37 +34,42 @@ e.g.
       --timestamp --prefix knud \
       --write_logfile /data/logs/current/knud
 ```
-##Code Example
-
-See synopsis above, and run
+#### More information on listen.py
+For full details on the use of listen.py, run:
 ```
   logger/listener/listen.py --help
 ```
-for full help on the listener script.
 
-##Motivation
+## Motivation
 
-One of the primary values a research vessel offers is the opportunity
-to gather accurate and timely scientific data wherever it
-travels. Most ships carry some combination of oceanographic,
-meteorological and other sensors and operate a system for storing,
-processing, analyzing and displaying the data they produce.
+The primary purpose of an oceanographic research vessel is to gather
+accurate and timely scientific data wherever it travels. 
+Oceanographic research vessels carry a combination of oceanographic,
+meteorological and other specialized sensors. Some of the more
+complex sensors (i.e. ADCP, Multibeam, imaging systems) include 
+specialized DAS systems tailored to that particlular sensor system.  
+The rest of the more simplistic sensors will stream real-time values 
+over a network port or serial connection.
 
-At present there are limited options for a ship wishing to operate
-such a system, and most either rely on a closed-source Windows-based
-solution (SCS) or on custom-crafted versions of software dating from
-the 1990's (dsLog, LDS). This limited choice means that expertise is
-wasted in maintaining fragmented code, or stifled while waiting for a
-monolithic system to implement feature requests.
+At present there are limited options for research vessel operators
+requiring the means to record data from the before mentioned
+simplistic sensors.  This is commonly referred to as underway data
+logging.  Most research vessel operators rely on closed-source, 
+Windows-based solutions (i.e. SCS, WinFrog) or on dated Linux-
+based systems (i.e. dsLog, LDS) for underway data logging.  Both 
+options have limited support mechanisms, thus bugs are slow to 
+be resolved and feature requests are slow to be implemented.
 
-Every ship will have different requirements, so no single system can
-hope to accommodate everyone's needs. In addition, those requirements
-will change from mission to mission and year to year, so no fixed
-system will be optimal for any length of time.
+OpenRVDAS hopes to provide an alternative underway data logging 
+solution that is defined, developed and maintained by the global
+oceanographic research community
 
-Because of this, instead of a system, we have focused on designing and
-building an architecture that allows easy assembly of small, modular
-components into whatever system is needed in a given situation.
+OpenRVDAS recongizes that each ship is different, that each ship has a 
+unique set of sensors and a unique way of operating.  With this 
+understanding, OpenRVDAS doesn't not provide a turn-key, one-size-fits-
+all solution but instead provides research vessel operators with a 
+modular and extendable toolset for developing and deploying a custom
+underway datalogging solution tailored to the vessel's individual needs.
 
 DISCLAIMER: THIS CODE IS EXPERIMENTAL AND STILL IN THE *VERY* EARLY
 STAGES OF DEVELOPMENT. IT SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON,
@@ -68,60 +77,64 @@ ESPECIALLY NOT IN ANY APPLICATION WHERE ITS FAILURE COULD RESULT IN
 INJURY, LOSS OF LIFE, PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS
 WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
 
-##Installation
+## Installation
 
-Note that the code itself is still very much under development. The
+Note that OpenRVDAS is still very much under development. The
 core logging functionality only relies on Python 3 (tested on Python
 3.5 and above). You should be able to simply unpack the distribution
-and run
+and run*
 
+```
   logging/listener/listen.py --help
+```
 
 from the project's home directory.
 
 Serial port functionality will require the pyserial.py package, which
 may be installed using pip3:
 
+```
   pip3 install pyserial
+```
 
 To test the system using the simulate_serial.py utility, you will also
 need the 'socat' command installed on your system. See the 'OpenRVDAS
-Introduction to Loggers' document http://tinyurl.com/openrvdas-docs
+Introduction to Loggers' document <http://tinyurl.com/openrvdas-docs>
 for more information.
 
-##API Reference
+## API Reference
 
 Documentation (also still incomplete) for the code is available online
 in a shared Google Doc folder via the shortcut url
-http://tinyurl.com/openrvdas-docs.
+<http://tinyurl.com/openrvdas-docs>.
 
-##Tests
+## Tests
 
 Full unit tests for the code base may be run from the project home
 directory by running
-
+```
     python3 -m unittest discover
-
+```
 Tests may be run on a directory by directory basis with
-
+```
     python3 -m unittest discover logger.readers
-
+```
 for example, to test all code in logger/readers.
 
 Specific unit tests may be run individually, as well:
-
+```
     logger/readers/test_network_reader.py -v -v
-
+```
 Many (but not yet all) accept -v flags to increase the verbosity of
 the test: a single '-v' sets logging level to "info"; a second -v sets
 it to "debug".
 
-##Contributors
+## Contributors
 
 Please contact David Pablo Cohn <david.cohn@gmail.com> - to discuss
 opportunities for participating in code development.
 
-##License
+## License
 
 This code is made available under the MIT license:
 
@@ -145,4 +158,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-##Additional Licenses
+## Additional Licenses
