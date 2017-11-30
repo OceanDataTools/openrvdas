@@ -1,5 +1,5 @@
 
-# Open Research Vessel Data Acquistion System v0
+# OpenRVDAS
 
 ## Installation Guide
 At the time of this writing OpenRVDAS was built and tested against the Ubuntu 16.04.3 LTS operating system. It may be possible to build against other linux-based operating systems however for the purposes of this guide the instructions will assume Ubuntu 16.04.3 LTS is used.
