@@ -43,6 +43,11 @@ class SimSerial:
                           'inter_byte_timeout': inter_byte_timeout,
                           'exclusive': exclusive}
     self.quit = False
+
+    # Finally, check that our needed 'socat' actually exists
+    if not subprocess.run(['which', 'socat'], stdout=subprocess.PIPE).stdout:
+      raise NameError('Executable "socat" not found on path. Please refer '
+                      'to installation guide to install socat.')
     
   ############################
   def _run_socat(self):

@@ -144,7 +144,10 @@ class TestSerialReader(unittest.TestCase):
     for line in SAMPLE_TIMEOUT:
       record = s.read()
       logging.debug('data: %s, read: %s', line, record)
-      self.assertEqual(line, record)
+      self.assertEqual(line, record, msg='Note: this is a time-sensitive '
+                       'test that can fail non-deterministically. If the '
+                       'test fails, try running from the command line, e.g. '
+                       'as "logger/readers/test_serial_reader.py"')
 
 ################################################################################
 if __name__ == '__main__':

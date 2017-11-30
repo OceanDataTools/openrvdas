@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import signal
 import socket
 import sys
 import threading
@@ -15,6 +16,11 @@ from logger.readers.network_reader import NetworkReader
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
+
+##############################
+class ReaderTimeout(StopIteration):
+  """A custom exception we can raise when we hit timeout."""
+  pass
 
 ############################
 def write_network(addr, data, interval=0, delay=0):
@@ -42,6 +48,11 @@ def write_network(addr, data, interval=0, delay=0):
     
 ################################################################################
 class TestNetworkReader(unittest.TestCase):
+  ############################
+  def _handler(self, signum, frame):
+    """If timeout fires, raise our custom exception"""
+    logging.info('Read operation timed out')
+    raise ReaderTimeout
 
   ############################
   def test_udp(self):
@@ -49,11 +60,19 @@ class TestNetworkReader(unittest.TestCase):
     reader = NetworkReader(addr)
     
     threading.Thread(target=write_network(addr, SAMPLE_DATA, 0.1)).start()
-  
-    for line in SAMPLE_DATA:
-      logging.debug('NetworkReader reading...')
-      self.assertEqual(line, reader.read())
 
+    # Set timeout we can catch if things are taking too long
+    signal.signal(signal.SIGALRM, self._handler)    
+    signal.alarm(3)
+    try:
+      for line in SAMPLE_DATA:
+        logging.debug('NetworkReader reading...')
+        self.assertEqual(line, reader.read())
+    except ReaderTimeout:
+      self.assertTrue(False, 'NetworkReader timed out in test - is port '
+                      '%s open?' % addr)
+    signal.alarm(0)
+    
 ################################################################################
 if __name__ == '__main__':
   import argparse

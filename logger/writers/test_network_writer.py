@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import signal
 import socket
 import sys
 import threading
@@ -15,9 +16,20 @@ from logger.writers.network_writer import NetworkWriter
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
-    
+
+##############################
+class ReaderTimeout(StopIteration):
+  """A custom exception we can raise when we hit timeout."""
+  pass
+
 ################################################################################
 class TestNetworkWriter(unittest.TestCase):
+  ############################
+  def _handler(self, signum, frame):
+    """If timeout fires, raise our custom exception"""
+    logging.info('Read operation timed out')
+    raise ReaderTimeout
+
   ############################
   # Actually run the NetworkWriter in internal method
   def write_network(self, addr, data, interval=0, delay=0):
@@ -43,13 +55,21 @@ class TestNetworkWriter(unittest.TestCase):
     threading.Thread(target=self.write_network,
                      args=(addr, SAMPLE_DATA, 0.1)).start()
 
-    # Check that we get the lines we expect from it
-    for line in SAMPLE_DATA:
-      record = sock.recv(4096)
-      if record:
-        record = record.decode('utf-8')
-      self.assertEqual(line, record)
-
+    # Set timeout we can catch if things are taking too long
+    signal.signal(signal.SIGALRM, self._handler)    
+    signal.alarm(3)
+    try:
+      # Check that we get the lines we expect from it
+      for line in SAMPLE_DATA:
+        record = sock.recv(4096)
+        if record:
+          record = record.decode('utf-8')
+        self.assertEqual(line, record)
+    except ReaderTimeout:
+      self.assertTrue(False, 'NetworkReader timed out in test - is port '
+                      '%s open?' % addr)
+    signal.alarm(0)
+    
 ################################################################################
 if __name__ == '__main__':
   import argparse

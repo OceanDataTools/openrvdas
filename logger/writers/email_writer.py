@@ -87,7 +87,7 @@ class EmailWriter(Writer):
     s = smtplib.SMTP('localhost')
     s.send_message(msg)
     s.quit()
-    
+
   ############################
   def write(self, record):
     """Send record as email, or queue to send if have already sent recently."""

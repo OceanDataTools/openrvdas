@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""This is a *very* crude test of email functionality, and leaves a
-stray email message in the user's /var/mail box. Ugly, ugly. Sorry!
+"""
+DISABLED FOR NOW.
 
+This is a *very* crude test of email functionality, and leaves a
+stray email message in the user's /var/mail box. Ugly, ugly. Sorry!
 """
 
 import getpass
@@ -24,6 +26,8 @@ from logger.writers.email_writer import EmailWriter
 class TestEmailWriter(unittest.TestCase):
 
   ############################
+  @unittest.skip('This writer is rarely used, and the SMTP setup causes '
+                 'problems in a lot of installations, so lets not run it')
   def test_write(self):
     user = getpass.getuser()
     hostname = socket.gethostname()
@@ -34,11 +38,15 @@ class TestEmailWriter(unittest.TestCase):
     message_id = random.randint(0,10000000)
     test_message = ('EmailWriter unittest test message. ID %d' % message_id)
 
-    writer.write(test_message)
+    try:
+      writer.write(test_message)
 
-    # Give time for message to arrive
-    time.sleep(10)
-
+      # Give time for message to arrive
+      time.sleep(10)
+    except OSError as e:
+      self.assertTrue(False, 'EmailWriter failed - SMTP may not be configured: '
+                      '%s' % str(e))
+      
     # Now invoke crazy mbox foo to see if the message made it
     mbox = mailbox.mbox('/var/mail/{}'.format(user))
     mbox.lock()
