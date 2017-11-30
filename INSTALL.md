@@ -57,8 +57,10 @@ git clone https://github.com/davidpablocohn/openrvdas.git
 
 ### Post-install Testing
 
+***NOTE: These test currently fail when using these installation instructions.  This is being addressed***
+
 Full unit tests for the code base may be run from the project home
-directory by running
+directory by running:
 ```
 cd ~/openrvdas
 python3 -m unittest discover
