@@ -54,7 +54,11 @@ class NetworkWriter(Writer):
                                   type=socket.SOCK_DGRAM,
                                   proto=socket.IPPROTO_UDP)
       self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+      try: # Raspbian doesn't recognize SO_REUSEPORT
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+      except AttributeError:
+        logging.warning('Unable to set socket REUSEPORT; system may not support it.')
+
       self.socket.connect((host, port))
 
   ############################
