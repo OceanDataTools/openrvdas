@@ -2,15 +2,14 @@
 
 ## Overview
 
-Open Research Vessel Data Acquisition System (OpenRVDAS) is a 
-software framework used for building custom data acquisition 
-systems (DAS).  OpenRVDAS target audiences are oceanographic 
-research vessels operators and other operators of other science-
-related platforms that have the need to record streaming data. 
-OpenRVDAS is capable of reading data records from serial ports and 
-network-aware sensors, optionally modifying those data records and 
-streaming either the original or modified version of the data 
-stream to a destination such as afile, network port, database, etc.
+The Open Research Vessel Data Acquisition System (OpenRVDAS) is a
+software framework used for building custom data acquisition systems
+(DAS).  OpenRVDAS target audiences are oceanographic research vessel
+operators and operators of other science-related platforms that have
+the need to record streaming data.  OpenRVDAS is capable of reading
+data records from serial ports and network-aware sensors, optionally
+modifying those data records and streaming either the result to one or
+more destinations, including logfiles, network ports, databases, etc.
 
 OpenRVDAS is designed to be modular and extensible, relying on simple
 composition of Readers, Transforms and Writers to achieve the needed
@@ -19,32 +18,32 @@ datalogging functionality.
 ## Motivation
 
 The primary purpose of an oceanographic research vessel is to gather
-data from sensors. Oceanographic research vessels carry a combination 
-of oceanographic, meteorological and other specialized sensors. Some 
-of the more complex sensors (i.e. ADCP, Multibeam, imaging systems) 
-include specialized DAS systems tailored to that particlular sensor 
-system.  The rest of the more simplistic sensors will stream data 
-values over a network port or serial connection.
+data from sensors. Oceanographic research vessels carry a combination
+of oceanographic, meteorological and other specialized sensors. Some
+of the more complex sensors (i.e. ADCP, Multibeam, imaging systems)
+include specialized data acquisition systems tailored to the
+particlular sensor. Many simpler sensors, however, can simply stream
+data values over a network port or serial connection.
 
-At present there are limited options for oceanographic research 
-vessel operators requiring a tool to record data from simplistic 
-streaming sensors. This task is commonly referred to as underway data
-logging.  Most research vessel operators rely on closed-source, 
-solutions (i.e. SCS, WinFrog) or on dated datalogging systems (i.e. 
-dsLog, LDS) for underway data logging.  Both options provide limited 
-support mechanisms, thus bugs are slow to be resolved and feature 
-requests are slow to be implemented.
+At present there are limited options for operators wishing to store
+and display data from these simple sensors. This task is commonly
+referred to as underway data logging.  Most research vessel operators
+rely on closed-source, solutions (i.e. SCS, WinFrog) or on dated
+datalogging systems (i.e.  dsLog, LDS) for underway data logging.
+Both options provide limited support mechanisms, thus bugs are slow to
+be resolved and feature requests are slow to be implemented.
 
 OpenRVDAS hopes to provide an alternative underway data logging 
 solution that is defined, developed and maintained by the global
 oceanographic research community.
 
 OpenRVDAS recognizes that each ship is different, that each ship has a
-unique set of sensors and that each ship has a unique way of operating.  
-With this understanding, OpenRVDAS does not try provide a turn-key, one-
-size-fits-all solution but instead provides research vessel operators 
-with a modular and extendable toolset for developing and deploying a custom
-underway datalogging solution tailored to the vessel's individual needs.
+unique set of sensors and that each ship has a unique way of
+operating.  With this understanding, OpenRVDAS does not try provide a
+turn-key, one- size-fits-all solution but instead provides research
+vessel operators with a modular and extensible toolset for developing
+and deploying a custom underway datalogging solution tailored to the
+vessel's individual needs.
 
 DISCLAIMER: THIS CODE IS EXPERIMENTAL AND STILL IN THE *VERY* EARLY
 STAGES OF DEVELOPMENT. IT SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON,

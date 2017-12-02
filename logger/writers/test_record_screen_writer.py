@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-"""NOTE: THIS ISN'T ACTUALLY A UNITTEST!
-
-It can be run manually to visually verify that the ScreenWriter is
-doing what we think it should be doing, but it only causes a mess if
-run as part of the test suite.
-
-"""
+"""Test that can be run manually to visually verify that the
+ScreenWriter is doing what we think it should be doing. But it only
+causes a mess if run as part of the test suite."""
 import logging
 import sys
 import time
@@ -66,6 +62,10 @@ seap 2017-11-04:05:12:30.362874 $GPGGA,000005.91,3934.843045,S,03727.713132,W,1,
 
 class TestRecordScreenWriter(unittest.TestCase):
   ############################
+  @unittest.skipUnless(__name__ == '__main__',
+                       'This test can be run manually to verify screen action '
+                       'but will wreak havoc on the terminal if run as part of '
+                       'a normal test suite.')
   def test_default_parser(self):
     p = NMEAParser()
     t = RecordScreenWriter()
