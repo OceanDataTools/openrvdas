@@ -112,7 +112,7 @@ class TestSimulateSerial(unittest.TestCase):
       record = s.readline().strip().decode('utf-8')
       now = time.time()
       logging.debug('time diff %f', now - last_read)
-      self.assertLess(now - last_read, 0.01)
+      self.assertLess(now - last_read, 0.02)
       self.assertEqual(data, record)
       last_read = now
       

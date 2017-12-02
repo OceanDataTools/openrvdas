@@ -48,7 +48,11 @@ class TestNetworkWriter(unittest.TestCase):
     port = int(port)
     sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+    try: # Raspbian doesn't recognize SO_REUSEPORT
+      sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+    except AttributeError:
+      logging.warning('Unable to set socket REUSEPORT; system may not support it.')
+
     sock.bind((host, port))
 
     # Start the writer
@@ -79,7 +83,7 @@ if __name__ == '__main__':
                       help='Increase output verbosity')
   args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   logging.basicConfig(format=LOGGING_FORMAT)
 
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
