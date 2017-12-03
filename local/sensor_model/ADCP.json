@@ -1,4 +1,4 @@
-# A particular model of sensor.
+// A particular model of sensor.
 {
     "ADCP": {
 	"messages": {

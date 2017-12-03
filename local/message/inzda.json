@@ -1,11 +1,11 @@
-# From http://www.gpsinformation.org/dale/nmea.htm
-#
-#
+// From http://www.gpsinformation.org/dale/nmea.htm
+//
+//
 {
-    # $INZDA,time,day,month,year,,*csum term
-    # $INZDA,002706.69,07,08,2014,,*62
+    // $INZDA,time,day,month,year,,*csum term
+    // $INZDA,002706.69,07,08,2014,,*62
     "$INZDA": {
-        #"format": "%f,%d,%d,%d,%s,%s*%s",
+        //"format": "%f,%d,%d,%d,%s,%s*%s",
         "fields": [
             ["GPSTime", "float"],
             ["GPSDay", "int"],

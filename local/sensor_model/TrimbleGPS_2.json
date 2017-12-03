@@ -1,19 +1,19 @@
 {
-    # Some unknown, different model of Trimble GPS that emits slightly
-    # different messages than TrimbleGPS
+    // Some unknown, different model of Trimble GPS that emits slightly
+    // different messages than TrimbleGPS
     "TrimbleGPS_2": {
 	"messages": {
-            # Fields that follow normal conventions. Map to name they bear
-            # in the messages dictionary.
+            // Fields that follow normal conventions. Map to name they bear
+            // in the messages dictionary.
             "$GPGGA": "$GPGGA",
             "$GPHDT": "$GPHDT",
             "$GPRMC": "$GPRMC",
             "$PSXN":  "$PSXN",
 
-            # Fields that diverge from conventions. Override here.
+            // Fields that diverge from conventions. Override here.
 
-            # $GPVTG,course,T,,M,speed,N,,K,mode*csum term
-            # $GPVTG,228.53,T,,M,11.1,N,,K,A*2C
+            // $GPVTG,course,T,,M,speed,N,,K,mode*csum term
+            // $GPVTG,228.53,T,,M,11.1,N,,K,A*2C
             "$GPVTG": {
                 "fields": [
                     ["CourseTrue", "float"],
@@ -24,23 +24,23 @@
                     ["SpeedKt_N", "str"],
                     ["SpeedKM", "float"],
                     ["SpeedKM_K", "str"]
-                    # Trimble omits Mode?
+                    // Trimble omits Mode?
                 ]
             },
-            # $GPGLL,3934.8390,S,03727.7066,W,000004.125,A*30
-            # $GPGLL,lat,S,lon,W,fix_time,A*csum
+            // $GPGLL,3934.8390,S,03727.7066,W,000004.125,A*30
+            // $GPGLL,lat,S,lon,W,fix_time,A*csum
             "$GPGLL": {
                 "fields": [
                     ["Latitude", "float"],
                     ["NorS", "str"],
                     ["Longitude", "float"],
                     ["EorW", "str"]
-                    # Missing FixTime and Mode?
+                    // Missing FixTime and Mode?
                 ]
             },
 
-            # $GPZDA,time,day,month,year,,*csum term
-            # $GPZDA,002706.69,07,08,2014,,*62
+            // $GPZDA,time,day,month,year,,*csum term
+            // $GPZDA,002706.69,07,08,2014,,*62
             "$GPZDA": {
                 "fields": [
                     ["GPSTime", "float"],

@@ -1,7 +1,7 @@
-# A particular model of sensor.
+// A particular model of sensor.
 {
     "Knudsen": {
-        # 3.5kHz,5139.94,0,,,,1500,-39.587550,-37.472355
+        // 3.5kHz,5139.94,0,,,,1500,-39.587550,-37.472355
 	"fields": [
             ["LFInUse", "str"],
             ["LFDepth", "float"],

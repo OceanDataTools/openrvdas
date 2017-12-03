@@ -15,8 +15,8 @@ from logger.utils import read_json
 
 
 SAMPLE_JSON = """{
-    # Here's a sample comment on its own line
-    "PCOD": {"port": "/tmp/tty_PCOD",   # Here's a comment at end of line
+    // Here's a sample comment on its own line
+    "PCOD": {"port": "/tmp/tty_PCOD",   // Here's a comment at end of line
              "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
             },
     "cwnc": {"port": "/tmp/tty_cwnc",
@@ -32,16 +32,16 @@ SAMPLE_JSON = """{
 """
 
 BAD_JSON1 = """{
-    # Here's a sample comment on its own line
-    "PCOD": {"port": "/tmp/tty_PCOD",   # Here's a comment at end of line
+    // Here's a sample comment on its own line
+    "PCOD": {"port": "/tmp/tty_PCOD",   // Here's a comment at end of line
              "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
             },
 }
 """
 
 BAD_JSON2 = """{
-    # Here's a sample comment on its own line
-    "PCOD": {"port": x "/tmp/tty_PCOD",   # Here's a comment at end of line
+    // Here's a sample comment on its own line
+    "PCOD": {"port": x "/tmp/tty_PCOD",   // Here's a comment at end of line
              "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
             }
 }
@@ -75,7 +75,7 @@ class TestReadJson(unittest.TestCase):
       self.assertEqual(len(result), 4)
 
   ############################
-  def test_parse_bad_son(self):
+  def test_parse_bad_json(self):
     with self.assertLogs(logging.getLogger(), logging.ERROR):
       with self.assertRaises(json.decoder.JSONDecodeError):
         result = read_json.parse_json(BAD_JSON1)

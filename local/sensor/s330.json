@@ -1,10 +1,10 @@
 {
-    # data_id
+    // data_id
     "s330": {
         "name": "s330",
         "model": "Seapath330",
         "fields": {
-            # $PSXN
+            // $PSXN
             "HorizQual": "S330HorizQual",
             "HeightQual": "S330HeightQual",
             "HeadingQual": "S330HeadingQual",
@@ -15,7 +15,7 @@
             "Pitch": "S330Pitch",
             "HeadingTrue": "S330HeadingTrue",
 
-            # $INGGA
+            // $INGGA
             "GPSTime": "S330GPSTime",
             "Latitude": "S330Lat",
             "NorS": "S330NorS",
@@ -25,13 +25,13 @@
             "NumSats": "S330NumSats",
             "HDOP": "S330HDOP",
             "AntennaHeight": "S330AntennaHeight",
-            #"LastDGPSUpdate": "",
-            #"DGPSStationID": "",
+            //"LastDGPSUpdate": "",
+            //"DGPSStationID": "",
 
-            # $INHDT
+            // $INHDT
             "HeadingTrue": "S330HeadingTrue",
 
-            # $INRMC
+            // $INRMC
             "GPSTime": "S330GPSTime",
             "Latitude": "S330Lat",
             "NorS": "S330NorS",
@@ -43,13 +43,13 @@
             "MagneticVar": "S330MagVar",
             "MagneticVarEorW": "S330MagVarEorW",
 
-            # $INVTG
+            // $INVTG
             "CourseTrue": "S330COGT",
             "CourseMag": "S330COGM",
             "SpeedKt": "S330SOGKt",
             "SpeedKm": "S330SOGKm",
 
-            # $INZDA
+            // $INZDA
             "GPSTime": "S330GPSTime",
             "GPSDay": "S330GPSDay",
             "GPSMonth": "S330GPSMonth",

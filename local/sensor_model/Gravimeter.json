@@ -1,7 +1,7 @@
-# A particular model of sensor, in this case, a generic Gravimeter.
+// A particular model of sensor, in this case, a generic Gravimeter.
 {
     "Gravimeter": {
-        "field_delimiter": "[ :]",  # uses both spaces and colon. Sigh.
+        "field_delimiter": "[ :]",  // uses both spaces and colon. Sigh.
 	"fields": [
 	    ["CounterUnits", "int"],
 	    ["GravityValueMg", "int"],

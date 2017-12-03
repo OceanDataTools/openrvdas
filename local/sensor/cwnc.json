@@ -1,10 +1,10 @@
 {
-    # data_id
+    // data_id
     "cwnc": {
         "name": "cwnc",
         "model": "Winch",
         "fields": {
-            #"LanID": "CWNCLanID",
+            //"LanID": "CWNCLanID",
             "Time": "CWNCTime",
             "Name": "CWNCName",
             "Tension": "CWNCTension",

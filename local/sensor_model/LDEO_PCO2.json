@@ -1,6 +1,6 @@
 {
     "LDEO_PCO2": {
-        "field_delimiter": "\\s+",  # uses tabs *and* spaces. Gack.
+        "field_delimiter": "\\s+",  // uses tabs *and* spaces. Gack.
         "fields": [
             ["TIME", "float"],
 	    ["Voltage", "float"],

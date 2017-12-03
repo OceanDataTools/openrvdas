@@ -1,10 +1,10 @@
 {
-    # data_id
+    // data_id
     "PCOD": {
         "name": "PCOD",
         "model": "TrimbleGPS",
         "fields": {
-            # $PSXN
+            // $PSXN
             "HorizQual": "PCODHorizQual",
             "HeightQual": "PCODHeightQual",
             "HeadingQual": "PCODHeadingQual",
@@ -15,7 +15,7 @@
             "Pitch": "PCODPitch",
             "Heading": "PCODHeading",
 
-            # $GPGGA
+            // $GPGGA
             "GPSTime": "PCODGPSTime",
             "Latitude": "PCODLat",
             "NorS": "PCODNorS",
@@ -25,13 +25,13 @@
             "NumSats": "PCODNumSats",
             "HDOP": "PCODHDOP",
             "AltitudeAboveSeaLevel": "PCODAlt",
-            #"LastDGPSUpdate": "",
-            #"DGPSStationID": "",
+            //"LastDGPSUpdate": "",
+            //"DGPSStationID": "",
 
-            # $GPHDT
+            // $GPHDT
             "Heading": "PCODHeading",
 
-            # $GPRMC
+            // $GPRMC
             "GPSTime": "PCODGPSTime",
             "Latitude": "PCODLat",
             "NorS": "PCODNorS",
@@ -43,13 +43,13 @@
             "MagneticVar": "PCODMagVar",
             "MagneticVarEorW": "PCODMagVarEorW",
 
-            # $GPVTG
+            // $GPVTG
             "CourseTrue": "PCODCOGT",
             "CourseMag": "PCODCOGM",
             "SpeedKt": "PCODSOGKt",
             "SpeedKm": "PCODSOGKm",
 
-            # $GPZDA
+            // $GPZDA
             "GPSTime": "PCODGPSTime",
             "GPSDay": "PCODGPSDay",
             "GPSMonth": "PCODGPSMonth",

@@ -1,9 +1,9 @@
 {
-    # data_id
+    // data_id
     "grv1": {
         "name": "grv1",
-        "model": "Gravimeter",    # references a definition in sensor_model/
-        "fields": {               # references definitions in message/
+        "model": "Gravimeter",    // references a definition in sensor_model/
+        "fields": {               // references definitions in message/
             "GravityValueMg": "Grav1ValueMg",
             "GravityError": "Grav1Error"
          }

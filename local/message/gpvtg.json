@@ -1,9 +1,9 @@
-# From http://www.gpsinformation.org/dale/nmea.htm
-#
-#
+// From http://www.gpsinformation.org/dale/nmea.htm
+//
+//
 {
-    # $GPVTG,course,T,,M,speed,N,,K,mode*csum term
-    # $GPVTG,228.53,T,,M,11.1,N,,K,A*2C
+    // $GPVTG,course,T,,M,speed,N,,K,mode*csum term
+    // $GPVTG,228.53,T,,M,11.1,N,,K,A*2C
     "$GPVTG": {
         "fields": [
             ["CourseTrue", "float"],

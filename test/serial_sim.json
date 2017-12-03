@@ -1,6 +1,6 @@
-# This file contains sample JSON definitions that can be read in by
-# utils/simulate_serial.py to create a set of simulated serial ports and
-# feed them with data from the corresponding logfile.
+// This file contains sample JSON definitions that can be read in by
+// utils/simulate_serial.py to create a set of simulated serial ports and
+// feed them with data from the corresponding logfile.
 {
     "PCOD": {"port": "/tmp/tty_PCOD",
 	     "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 

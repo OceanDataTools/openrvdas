@@ -1,5 +1,5 @@
 {
-    # data_id
+    // data_id
     "rtmp": {
         "name": "rtmp",
         "model": "RTMP",

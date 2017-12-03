@@ -8,10 +8,10 @@ import sys
 
 ################################################################################
 def _strip(json_str):
-  """Strip #-prefixed comments from a JSON string."""
+  """Strip //-prefixed comments from a JSON string."""
   lines = []
   for line in json_str.split('\n'):
-    pos = line.find('#')
+    pos = line.find('//')
     if pos > -1:
       line = line[:pos]
     lines.append(line)

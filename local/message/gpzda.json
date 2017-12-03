@@ -1,9 +1,9 @@
-# From http://www.gpsinformation.org/dale/nmea.htm
-#
-#
+// From http://www.gpsinformation.org/dale/nmea.htm
+//
+//
 {
-    # $GPZDA,time,day,month,year,,*csum term
-    # $GPZDA,002706.69,07,08,2014,,*62
+    // $GPZDA,time,day,month,year,,*csum term
+    // $GPZDA,002706.69,07,08,2014,,*62
     "$GPZDA": {
         "fields": [
             ["GPSTime", "float"],

@@ -1,10 +1,10 @@
 {
-    # data_id
+    // data_id
     "mwx1": {
         "name": "mwx1",
         "model": "MastWx",
         "fields": {
-            # $PSXN
+            // $PSXN
             "HorizQual": "GP02HorizQual",
             "HeightQual": "GP02HeightQual",
             "HeadingQual": "GP02HeadingQual",
@@ -15,7 +15,7 @@
             "Pitch": "GP02Pitch",
             "Heading": "GP02Heading",
 
-            # $GPGGA
+            // $GPGGA
             "GPSTime": "GP02GPSTime",
             "Latitude": "GP02Lat",
             "NorS": "GP02NorS",
@@ -25,19 +25,19 @@
             "NumSats": "GP02NumSats",
             "HDOP": "GP02HDOP",
             "AntennaHeight": "GP02AntennaHeight",
-            #"LastDGPSUpdate": "",
-            #"DGPSStationID": "",
+            //"LastDGPSUpdate": "",
+            //"DGPSStationID": "",
 
-            # $GPHDT
+            // $GPHDT
             "Heading": "GP02Heading",
 
-            # $GPVTG
+            // $GPVTG
             "CourseTrue": "GP02COGT",
             "CourseMag": "GP02COGM",
             "SpeedKt": "GP02SOGKt",
             "SpeedKm": "GP02SOGKm",
 
-            # $GPZDA
+            // $GPZDA
             "GPSTime": "GP02GPSTime",
             "GPSDay": "GP02GPSDay",
             "GPSMonth": "GP02GPSMonth",

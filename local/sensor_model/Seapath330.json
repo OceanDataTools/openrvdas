@@ -1,8 +1,8 @@
 {
     "Seapath330": {
 	"messages": {
-            "$INGGA": "$GPGGA",  # Reuse the $GP... definitions
-            "$INHDT": "$GPHDT",  # Is there actually any difference?
+            "$INGGA": "$GPGGA",  // Reuse the $GP... definitions
+            "$INHDT": "$GPHDT",  // Is there actually any difference?
             "$INVTG": "$GPVTG",
             "$INRMC": "$GPRMC",
             "$INZDA": "$GPZDA",

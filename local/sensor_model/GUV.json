@@ -1,6 +1,6 @@
 {
     "GUV": {
-        "field_delimiter": " ",  # space-separated fields
+        "field_delimiter": " ",  // space-separated fields
 	"fields": [
 	    ["Date", "int"],
 	    ["Time", "int"],

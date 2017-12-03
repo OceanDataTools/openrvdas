@@ -1,5 +1,5 @@
 {
-    # Heading
+    // Heading
     "$HEHDT": {
 	"fields": [
 	    ["HeadingTrue", "float"],
