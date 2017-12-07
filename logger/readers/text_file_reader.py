@@ -64,7 +64,7 @@ class TextFileReader(StorageReader):
       return
 
     # Which files will we use, which haven't we used yet?
-    self.unused_file_list = glob.glob(file_spec)
+    self.unused_file_list = sorted(glob.glob(file_spec))
     if not self.unused_file_list:
       logging.warning('TextFileReader: file_spec "%s" matches no files',
                       file_spec)
@@ -82,7 +82,7 @@ class TextFileReader(StorageReader):
     # If no more unused files, but refresh_file_spec is specified, see
     # if more files have shown up
     if not self.unused_file_list and self.refresh_file_spec:
-      matching_files = glob.glob(self.file_spec)
+      matching_files = sorted(glob.glob(self.file_spec))
       self.unused_file_list = [f for f in matching_files
                                if not f in self.used_file_list]
       logging.info('TextFileReader found %d new files matching spec "%s": %s',
