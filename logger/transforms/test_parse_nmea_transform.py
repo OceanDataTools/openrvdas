@@ -4,6 +4,7 @@ import logging
 import sys
 import unittest
 import warnings
+import json
 
 sys.path.append('.')
 
@@ -55,6 +56,16 @@ JSON = [
   '{"data_id": "pguv", "message_type": "", "timestamp": 1509772340.687152, "fields": {"GUVDate": 80614, "GUVTime": 170008, "GUVGroundVoltage": 0.00024, "GUVIrradiance320": 0.0003949, "GUVIrradiance340": 0.0007126, "GUVIrradiance313": -0.001556, "GUVIrradiance305": 0.01127, "GUVIrradiance380": -0.0003994, "GUVIrradiance40": 6.285e-08, "GUVIrradiance395": 0.000567, "GUVTemp": 46.6, "GUVInputVoltage": 17.924}, "metadata": {}}'
   ]
 
+
+############################
+def ordered(obj):
+    if isinstance(obj, dict):
+        return sorted((k, ordered(v)) for k, v in obj.items())
+    if isinstance(obj, list):
+        return sorted(ordered(x) for x in obj)
+    else:
+        return obj
+
 ################################################################################
 class TestParseNMEATransform(unittest.TestCase):
 
@@ -87,7 +98,9 @@ class TestParseNMEATransform(unittest.TestCase):
       logging.debug('line: %s', line)
       result = transform.transform(line)
       logging.debug('result: %s', result)
-      self.assertEqual(result, JSON[i])
+
+      self.assertEqual(ordered(json.loads(result)), ordered(json.loads(JSON[i])))
+      #self.assertEqual(result,JSON[i])
 
 ################################################################################
 if __name__ == '__main__':
