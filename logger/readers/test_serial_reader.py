@@ -135,7 +135,7 @@ class TestSerialReader(unittest.TestCase):
     sim_thread.start()
 
     # Give it a moment to get started
-    time.sleep(0.1)
+    time.sleep(0.05)
 
     slice = SliceTransform('1:')  # we'll want to strip out timestamp
     

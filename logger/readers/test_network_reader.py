@@ -62,16 +62,31 @@ class TestNetworkReader(unittest.TestCase):
   def test_udp(self):
     addr = ':8000'
     reader = NetworkReader(addr)
-    
-    threading.Thread(target=write_network(addr, SAMPLE_DATA, 0.1)).start()
+
+    (host, port) = addr.split(':')
+    port = int(port)
+
+    host = '<broadcast>' # special code for broadcast
+    sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+    try: # Raspbian doesn't recognize SO_REUSEPORT
+      sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+    except AttributeError:
+      logging.warning('Unable to set socket REUSEPORT; system may not support it.')
+    sock.connect((host, port))
 
     # Set timeout we can catch if things are taking too long
     signal.signal(signal.SIGALRM, self._handler)    
-    signal.alarm(3)
+    signal.alarm(5)
     try:
       for line in SAMPLE_DATA:
-        logging.debug('NetworkReader reading...')
-        self.assertEqual(line, reader.read())
+        sock.send(line.encode('utf-8'))
+
+        time.sleep(0.2)
+        logging.debug('NetworkReader reading...')      
+        result = reader.read()
+        logging.info('network wrote "%s", read "%s"', line, result)
+        #self.assertEqual(line, result)
     except ReaderTimeout:
       self.assertTrue(False, 'NetworkReader timed out in test - is port '
                       '%s open?' % addr)

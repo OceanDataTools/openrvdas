@@ -4,6 +4,7 @@ import logging
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import warnings
 
@@ -65,10 +66,11 @@ class TestComposedWriter(unittest.TestCase):
     
     for line in SAMPLE_DATA:
       writer.write(line)
-
+      time.sleep(0.1)
       f1_line = f1.readline().rstrip()
       f2_line = f2.readline().rstrip()
 
+      logging.info('wrote: "%s", f1: "%s", f2: "%s"', line, f1_line, f2_line)
       self.assertEqual(line, f1_line)
       self.assertEqual(line, f2_line)
 
@@ -89,10 +91,11 @@ class TestComposedWriter(unittest.TestCase):
     
     for line in SAMPLE_DATA:
       writer.write(line)
-
+      time.sleep(0.1)
       f1_line = f1.readline().rstrip()
       f2_line = f2.readline().rstrip()
 
+      logging.info('wrote: "%s", f1: "%s", f2: "%s"', line, f1_line, f2_line)
       self.assertEqual('p2 p1 ' + line, f1_line)
       self.assertEqual('p2 p1 ' + line, f2_line)
 
