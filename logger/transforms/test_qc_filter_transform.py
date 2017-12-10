@@ -39,8 +39,9 @@ class TestQCFilterTransform(unittest.TestCase):
                       'Grav1ValueMg: 23013 > upper bound 23000')
 
     record = p.transform('grv1 2017-11-04:05:12:21.273413 01:023013 03')
-    self.assertEqual(q.transform(record),
-                     'Grav1ValueMg: 23013 > upper bound 23000; Grav1Error: 3 > upper bound 2')
+
+    self.assertEqual(q.transform(record).split(';').sort(),
+                     'Grav1ValueMg: 23013 > upper bound 23000; Grav1Error: 3 > upper bound 2'.split(';').sort())
 
   ############################
   def test_error(self):
