@@ -79,14 +79,21 @@ class Listener:
     component readers have returned EOF.
     """
     record = ''
-    while not self.quit_signalled and record is not None:
-      record = self.reader.read()
-      self.last_read = time.time()
+    try:
+      while not self.quit_signalled and record is not None:
+        record = self.reader.read()
+        self.last_read = time.time()
       
-      logging.debug('ComposedReader read: "%s"', record)
-      if record:
-        self.writer.write(record)
+        logging.debug('ComposedReader read: "%s"', record)
+        if record:
+          self.writer.write(record)
 
-      if self.interval:
-        time_to_sleep = self.interval - (time.time() - self.last_read)
-        time.sleep(max(time_to_sleep, 0))
+        if self.interval:
+          time_to_sleep = self.interval - (time.time() - self.last_read)
+          time.sleep(max(time_to_sleep, 0))
+
+    # Exit in an orderly fashion if someone hits Ctl-C
+    except KeyboardInterrupt:
+      logging.warning('Listener %s received KeyboardInterrupt - exiting.',
+                      self.name or '')
+

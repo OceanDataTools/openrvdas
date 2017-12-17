@@ -312,4 +312,5 @@ if __name__ == '__main__':
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
   config_json = read_json(args.config)
-  pprint.pprint(BuildConfig.expand_config(config_json))
+  expanded_config = BuildConfig.expand_config(config_json)
+  print(json.dumps(expanded_config, indent=4))

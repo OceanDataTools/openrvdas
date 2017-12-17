@@ -110,8 +110,9 @@
         // What port the UDP network writers should read/write
         "%UDP_PORT%": ":6224",
 
-        // All instruments
-        "%INST%": ["gyr1", "mwx1", "s330", "eng1", "rtmp"],
+        // All instruments - these vars are expanded in the generic
+        // templates.
+        "%INST%": ["knud", "gyr1", "mwx1", "s330", "eng1", "rtmp"],
 
         // Instruments that should run while in port
         "%PORT_INST%": ["gyr1", "mwx1", "s330", "eng1"],
@@ -135,7 +136,11 @@
         "underway": {
             "%UW_INST%": "%UW_INST%_SERIAL_LOGGER",
             "%PORT_INST%": "%PORT_INST%_SERIAL_LOGGER"
-        }
+        },
+        // Underway, everything's in default mode of running/saving.
+        "underway_no_network": {
+            "%INST%": "%INST%_SERIAL_LOGGER_NO_NETWORK"
+        }        
     },
 
     // By default, we should be in mode "off"
@@ -198,6 +203,20 @@
             "writers": "%INST%_NETWORK_WRITER"
         },
         
+        // Read from serial, write to network and logfile
+        "%INST%_SERIAL_LOGGER_NO_NETWORK": {
+            "name": "%INST%->net/file",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {"class": "TimestampTransform"},
+            "writers": "%INST%_LOGFILE_WRITER"
+        },
+
         // Read from network, write to logfile
         "%INST%_NETWORK_LOGGER": {
             "name": "%INST%->file",
