@@ -55,6 +55,7 @@ import sys
 sys.path.append('.')
 
 from logger.utils.read_json import read_json
+from logger.listener.listen import ListenerFromConfig
 
 ################################################################################
 class BuildConfig:
@@ -178,7 +179,7 @@ class BuildConfig:
     else:
       logging.debug('Testing "%s" against %s', str(struct), list(reps.keys()))
       if struct in reps:
-        logging.info('Replacing "%s" with "%s"', str(struct), str(reps[struct]))
+        logging.debug('Replacing "%s" with "%s"', str(struct), str(reps[struct]))
         return reps[struct]
       else:
         return struct
@@ -294,11 +295,42 @@ class BuildConfig:
     return new_config
 
 ################################################################################
+def validate_config(config):
+
+  modes = config.get('modes', None)
+  if not modes:
+    logging.error('No modes found in configuration')
+
+  default_mode = config.get('default_mode', None)
+  if default_mode:
+    if not default_mode in modes:
+      logging.error('Default mode "%s" not found in modes: %s',
+                    default_mode, modes)
+  else:
+    logging.warning('No default mode found in configuration')
+
+  # Go through each logger in each mode and see if we can instantiate it
+  for mode_name, loggers in modes.items():
+    logging.info('Validating mode: %s', mode_name)
+    for logger, logger_spec in loggers.items():
+      logging.info('    Validating logger: %s:%s', mode_name, logger)
+      try:
+        listener = ListenerFromConfig(logger_spec)
+      except KeyboardInterrupt:
+        return
+      except Exception as e:
+        logging.error('Error validating %s in mode %s: %s',
+                      logger, mode_name, str(e))
+
+################################################################################
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store',
                       help='Name of config file to load and expand')
+  parser.add_argument('--validate', dest='validate', action='store_true',
+                      help='Verify that the output is a fully-formed cruise '
+                      'configuration')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
                       help='Increase output verbosity')
@@ -313,4 +345,8 @@ if __name__ == '__main__':
 
   config_json = read_json(args.config)
   expanded_config = BuildConfig.expand_config(config_json)
+
+  if args.validate:
+    validate_config(expanded_config)
+
   print(json.dumps(expanded_config, indent=4))
