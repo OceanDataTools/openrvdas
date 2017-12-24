@@ -48,6 +48,9 @@ publish, distribute, sublicense, and/or sell...""".split('\n')
 class TestLoggerRunner(unittest.TestCase):
   ############################
   def setUp(self):
+    # To suppress resource warnings about unclosed files
+    warnings.simplefilter("ignore", ResourceWarning)
+
     # Create a file
     self.temp_dir = tempfile.TemporaryDirectory()
     self.temp_dir_name = self.temp_dir.name
@@ -87,7 +90,7 @@ class TestLoggerRunner(unittest.TestCase):
     runner.set_mode('on')  
     self.assertEqual(runner.mode, "on")
 
-    time.sleep(0.5)
+    time.sleep(0.6)
 
     reader = TextFileReader(self.dest_name)
     for line in SAMPLE_DATA:
