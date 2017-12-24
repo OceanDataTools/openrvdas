@@ -39,6 +39,7 @@ own output:
 """
 import argparse
 import logging
+import re
 import sys
 import time
 
@@ -259,7 +260,7 @@ if __name__ == '__main__':
 
   ############################
   # Set up logging before we do any other argument parsing (so that we
-  # can log problems with argument parsing. 
+  # can log problems with argument parsing.)
   parsed_args = parser.parse_args() 
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   logging.basicConfig(format=LOGGING_FORMAT)
@@ -301,19 +302,20 @@ if __name__ == '__main__':
     # order of args on the command line to determine the order of our
     # transforms. Specifically: break command line up into sections that
     # end with the next '-'-prefixed argument (excluding the empty
-    # argument '-'), and process those sections sequentially, adding
+    # argument '-' and arguments starting with a negative number),
+    # and process those sections sequentially, adding
     # them to the 'args' namespace as we go.
     #
     # So
     #
-    #    listen.py  -v 1 2 3 -w -x - -y 4 5 -z
+    #    listen.py  -v 1 2 3 -w -x - -y -4 -1,1 -z
     #
     # will be processed in five chunks:
     #
     #    ['-v', '1', '2', '3']
     #    ['-w']
     #    ['-x', '-']
-    #    ['-y', '4', '5']
+    #    ['-y', '-4', '-1,1']
     #    ['-z']
     #
     #
@@ -341,10 +343,12 @@ if __name__ == '__main__':
       arg_end += 1
 
       # Get everything up to, but not including, the next arg beginning with '-'
+      # that isn't a plain '-' or something numeric.
       while arg_end < len(sys.argv):
         next_arg = sys.argv[arg_end]
-        if next_arg.find('-') == 0 and next_arg != '-':
-          break
+        if next_arg.find('-') == 0:
+          if next_arg != '-' and not re.match('-\d', next_arg):
+            break
         arg_end += 1
 
       # We have our next set of arguments - parse them
