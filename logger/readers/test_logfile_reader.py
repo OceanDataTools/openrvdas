@@ -27,6 +27,11 @@ SAMPLE_DATA = """2017-11-04:05:12:19.441672 3.5kHz,5360.54,1,,,,1500,-39.580717,
 2017-11-04:05:12:22.232898 3.5kHz,5146.45,0,,,,1500,-39.583854,-37.466634
 2017-11-04:05:12:22.486203 3.5kHz,4517.82,0,,,,1500,-39.584130,-37.467078"""
 
+SAMPLE_DATA_2 = """2017-11-05:01:11:11.111111 3.5kHz,5139.14,0,,,,1500,-39.582731,-37.464887
+2017-11-05:02:22:22.222222 3.5kHz,5142.55,0,,,,1500,-39.582984,-37.465285
+2017-11-05:03:33:33.333333 3.5kHz,4505.91,1,,,,1500,-39.583272,-37.465733
+2017-11-05:04:44:44.444444 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183"""
+
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
   time.sleep(pre_sleep_interval)
   logging.info('creating file "%s"', filename)
@@ -47,7 +52,7 @@ class TestLogfileReader(unittest.TestCase):
   def test_basic(self):
     with tempfile.TemporaryDirectory() as tmpdirname:
       logging.info('created temporary directory "%s"', tmpdirname)
-      tmpfilename = tmpdirname + '/mylog-2017-02-02'
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
       sample_lines = SAMPLE_DATA.split('\n')
       create_file(tmpfilename, sample_lines)
 
@@ -60,7 +65,7 @@ class TestLogfileReader(unittest.TestCase):
   def test_use_timestamp(self):
     with tempfile.TemporaryDirectory() as tmpdirname:
       logging.info('created temporary directory "%s"', tmpdirname)
-      tmpfilename = tmpdirname + '/mylog-2017-02-02'
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
       sample_lines = SAMPLE_DATA.split('\n')
       create_file(tmpfilename, sample_lines)
 
@@ -73,11 +78,11 @@ class TestLogfileReader(unittest.TestCase):
   def test_use_timestamps(self):
     with tempfile.TemporaryDirectory() as tmpdirname:
       logging.info('created temporary directory "%s"', tmpdirname)
-      tmpfilename = tmpdirname + '/mylog-2017-02-02'
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
       sample_lines = SAMPLE_DATA.split('\n')
       create_file(tmpfilename, sample_lines)
 
-      # Logs timestamps were created artificially with ~0.25 intervals
+      # Log timestamps were created artificially with ~0.25 intervals
       interval = 0.25
       reader = LogfileReader(tmpfilename, use_timestamps=True)
       then = 0
@@ -95,7 +100,7 @@ class TestLogfileReader(unittest.TestCase):
   def test_interval(self):
     with tempfile.TemporaryDirectory() as tmpdirname:
       logging.info('created temporary directory "%s"', tmpdirname)
-      tmpfilename = tmpdirname + '/mylog-2017-02-02'
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
       sample_lines = SAMPLE_DATA.split('\n')
       create_file(tmpfilename, sample_lines)
 
@@ -152,6 +157,152 @@ class TestLogfileReader(unittest.TestCase):
       reader = LogfileReader(tmpfilename, tail=True)
       for line in sample_lines:
         self.assertEqual(line, reader.read())
+
+  ############################
+  def test_start_time(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
+      sample_lines = SAMPLE_DATA.split('\n')
+      create_file(tmpfilename, sample_lines)
+
+      start_time = '2017-11-04:05:12:20.205345'
+      reader = LogfileReader(tmpfilename, start_time=start_time)
+
+      # The first 3 lines should be skipped.
+      for i, line in enumerate(sample_lines):
+        if i >= 3:
+          self.assertEqual(line, reader.read())
+
+      self.assertEqual(None, reader.read())
+
+  ############################
+  def test_end_time(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
+      sample_lines = SAMPLE_DATA.split('\n')
+      create_file(tmpfilename, sample_lines)
+
+      end_time = '2017-11-04:05:12:21.981359'
+      reader = LogfileReader(tmpfilename, end_time=end_time)
+
+      # The first 10 lines should be read...
+      for i, line in enumerate(sample_lines):
+        if i == 10:
+          break
+        self.assertEqual(line, reader.read())
+
+      # ... and no more.
+      self.assertEqual(None, reader.read())
+
+  ############################
+  def test_start_and_end_time(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
+      sample_lines = SAMPLE_DATA.split('\n')
+      create_file(tmpfilename, sample_lines)
+
+      start_time = '2017-11-04:05:12:20.200000'
+      end_time = '2017-11-04:05:12:21.800000'
+      reader = LogfileReader(tmpfilename, start_time=start_time,
+                             end_time=end_time)
+
+      # Only lines 3 through 10 should be read...
+      for i, line in enumerate(sample_lines):
+        if i >= 3:
+          if i == 10:
+            break
+          self.assertEqual(line, reader.read())
+
+      # ... and no more.
+      self.assertEqual(None, reader.read())
+
+  ############################
+  def test_use_timestamps_and_time_range(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
+      sample_lines = SAMPLE_DATA.split('\n')
+      create_file(tmpfilename, sample_lines)
+
+      # Log timestamps were created artificially with ~0.25 intervals
+      interval = 0.25
+      start_time = '2017-11-04:05:12:20.200000'
+      end_time = '2017-11-04:05:12:21.800000'
+      reader = LogfileReader(tmpfilename, use_timestamps=True,
+                             start_time=start_time, end_time=end_time)
+
+      # Only lines 3 through 10 should be read and they should appear
+      # ~0.25 sec apart.
+      then = 0
+      for i, line in enumerate(sample_lines):
+        if i >= 3:
+          if i == 10:
+            break
+          self.assertEqual(line, reader.read())
+          now = time.time()
+          if then:
+            self.assertAlmostEqual(now-then, interval, places=1)
+          then = now
+
+      # Check that no lines after line 10 are read.
+      self.assertEqual(None, reader.read())
+
+  ############################
+  def test_interval_and_time_range(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      tmpfilename = tmpdirname + '/mylog-2017-11-04'
+      sample_lines = SAMPLE_DATA.split('\n')
+      create_file(tmpfilename, sample_lines)
+
+      interval = 0.05
+      start_time = '2017-11-04:05:12:20.200000'
+      end_time = '2017-11-04:05:12:21.800000'
+      reader = LogfileReader(tmpfilename, interval=interval,
+                             start_time=start_time, end_time=end_time)
+
+      # Only lines 3 through 10 should be read and they should appear
+      # ~0.05 sec apart.
+      then = 0
+      for i, line in enumerate(sample_lines):
+        if i >= 3:
+          if i == 10:
+            break
+          self.assertEqual(line, reader.read())
+          now = time.time()
+          if then:
+            self.assertAlmostEqual(now-then, interval, delta=0.01)
+          then = now
+
+      # Check that no lines after line 10 are read.
+      self.assertEqual(None, reader.read())
+
+  ############################
+  def test_time_range_with_two_files(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      tmpfilebase = tmpdirname + '/mylog-'
+      tmpfilename_1 = tmpfilebase + '2017-11-04'
+      sample_lines_1 = SAMPLE_DATA.split('\n')
+      create_file(tmpfilename_1, sample_lines_1)
+      tmpfilename_2 = tmpfilebase + '2017-11-05'
+      sample_lines_2 = SAMPLE_DATA_2.split('\n')
+      create_file(tmpfilename_2, sample_lines_2)
+
+      start_time = '2017-11-04:05:12:20.200000'
+      end_time = '2017-11-05:03:33:33.333333'
+      reader = LogfileReader(tmpfilebase, start_time=start_time, end_time=end_time)
+
+      expected_lines = sample_lines_1[3:] + sample_lines_2[:2]
+
+      for line in expected_lines:
+        self.assertEqual(line, reader.read())
+
+      # Check that no other lines are read.
+      self.assertEqual(None, reader.read())
 
 ################################################################################
 if __name__ == '__main__':

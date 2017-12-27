@@ -20,7 +20,7 @@ class TextFileReader(StorageReader):
   def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
                retry_interval=0.1, interval=0):
     """
-    file_spec    Possibly wildcarded string speficying files to be opened.
+    file_spec    Possibly wildcarded string specifying files to be opened.
                  Special case: if file_spec is None, read from stdin.
 
     tail         If False, return None upon reaching end of last file; if
