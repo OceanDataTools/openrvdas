@@ -80,8 +80,10 @@ class NMEAParser:
       if var_name:
         named_fields[var_name] = fields[field_name]
 
-    return DASRecord(data_id=data_id, message_type=message_type,
-                     timestamp=ts, fields=named_fields)
+    record = DASRecord(data_id=data_id, message_type=message_type,
+                       timestamp=ts, fields=named_fields)
+    logging.debug('created DASRecord: %s', str(record))
+    return record
 
   ############################
   def parse_nmea(self, sensor_model_name, message):
