@@ -1,47 +1,56 @@
 {
     "MastWx": {
-	"messages": ["$GPGGA", "$GPHDT", "$GPVTG", "$GPGLL",
-                     "$GPRMC", "$GPZDA", "$PSXN"],
-
-        // Trimble seems to have weird non-standard bits, so override here
-        "definitions": {
-            // VTG is missing mode string
-            // $GPVTG,course,T,,M,speed,N,,K,mode*csum term
-            // $GPVTG,228.53,T,,M,11.1,N,,K,A*2C
-            "$GPVTG": {
+        // Not really NMEA, but output as NBP data from mast weather
+	"messages": {
+            // MET,voltage,enclosure_rel_humid,air_temp,air_humid,par,psp,pir_thermo,pir_case,pir_dome,baro
+            // MET,12.1,-39,-6.07,77.4,178.0729,0.809536,-0.1235019,268.1754,267.9648,970.7878
+            
+            "MET": {
+                //"format": "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f"
                 "fields": [
-                    ["CourseTrue", "float"],
-                    ["CourseTrue_T", "str"],
-                    ["CourseMag", "float"],
-                    ["CourseMag_M", "str"],
-                    ["SpeedKt", "float"],
-                    ["SpeedKt_N", "str"],
-                    ["SpeedKM", "float"],
-                    ["SpeedKM_K", "str"]
-                    // Trimble omits Mode?
+                    ["PowerVolt", "float"],
+                    ["EncRelHumid", "float"],
+                    ["AirTemp", "float"],
+                    ["AirRelHumid", "float"],
+                    ["PAR", "float"],
+                    ["PSP", "float"],
+                    ["PIRThermo", "float"],
+                    ["PIRCaseTemp", "float"],
+                    ["PIRDomeTemp", "float"],
+                    ["Barometer", "float"]
                 ]
             },
-            // $GPGLL,3934.8390,S,03727.7066,W,000004.125,A*30
-            // $GPGLL,lat,S,lon,W,fix_time,A*csum
-            "$GPGLL": {
+            
+            // PUS,const,port_rel_wind,port_rel_speed,const,sound_speed,sonic_temp,status,checksum
+            // PUS,A,037,014.36,M,+325.38,-010.29,60,0F
+            
+            "PUS": {
+                //"format": "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f"
                 "fields": [
-                    ["Latitude", "float"],
-                    ["NorS", "str"],
-                    ["Longitude", "float"],
-                    ["EorW", "str"]
-                    // Missing FixTime and Mode?
+                    ["ConstA", "str"],
+                    ["PortRelWindDir", "float"],
+                    ["PortRelWindSpeed", "float"],
+                    ["ConstM", "str"],
+                    ["SoundSpeed", "float"],
+                    ["SonicTemp", "float"],
+                    ["Status", "int"],
+                    ["Checksum", "str"]
                 ]
             },
-
-            // $GPZDA,time,day,month,year,,*csum term
-            // $GPZDA,002706.69,07,08,2014,,*62
-            "$GPZDA": {
+            // SUS,const,stbd_rel_wind,stbd_rel_speed,const,sound_speed,sonic_temp,status,checksum
+            // SUS,A,037,014.36,M,+325.38,-010.29,60,0F
+            
+            "SUS": {
+                //"format": "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f"
                 "fields": [
-                    ["GPSTime", "float"],
-                    ["GPSDay", "int"],
-                    ["GPSMonth", "int"],
-                    ["GPSYear", "int"],
-                    ["LocalZone", "str"]
+                    ["ConstA", "str"],
+                    ["StbdRelWindDir", "float"],
+                    ["StbdRelWindSpeed", "float"],
+                    ["ConstM", "str"],
+                    ["SoundSpeed", "float"],
+                    ["SonicTemp", "float"],
+                    ["Status", "int"],
+                    ["Checksum", "str"]
                 ]
             }
         }
