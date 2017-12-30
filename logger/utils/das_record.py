@@ -58,4 +58,13 @@ class DASRecord:
                self.timestamp,
                pprint.pformat(self.fields),
                pprint.pformat(self.metadata)))
-  
+
+  ############################
+  def __eq__(self, other):
+    return (self.data_id == other.data_id and
+            self.message_type == other.message_type and
+            self.timestamp == other.timestamp and
+            self.fields == other.fields and
+            self.metadata == other.metadata)
+
+
