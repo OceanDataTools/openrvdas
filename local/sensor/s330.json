@@ -44,8 +44,8 @@
             "MagneticVarEorW": "S330MagVarEorW",
 
             // $INVTG
-            "CourseTrue": "S330COGT",
-            "CourseMag": "S330COGM",
+            "CourseTrue": "S330CourseTrue",
+            "CourseMag": "S330CourseMag",
             "SpeedKt": "S330SOGKt",
             "SpeedKm": "S330SOGKm",
 
