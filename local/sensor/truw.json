@@ -1,0 +1,13 @@
+// Derived sensor for true winds
+{
+    // data_id
+    "truw": {
+        "name": "truw",
+        "model": "TrueWinds",    // references a definition in sensor_model/
+        "fields": {               // references definitions in message/
+            "TrueWindDir": "TrueWindDir",
+            "TrueWindSpeed": "TrueWindSpeed",
+            "ApparentWindDir": "ApparentWindDir"
+         }
+    }
+}

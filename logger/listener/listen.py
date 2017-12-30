@@ -57,6 +57,7 @@ from logger.transforms.qc_filter_transform import QCFilterTransform
 from logger.transforms.slice_transform import SliceTransform
 from logger.transforms.timestamp_transform import TimestampTransform
 from logger.transforms.parse_nmea_transform import ParseNMEATransform
+from logger.transforms.true_winds_transform import TrueWindsTransform
 
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter

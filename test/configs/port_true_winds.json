@@ -1,0 +1,81 @@
+// A sample file for logger/listener/listen.py to generate derived true winds
+// for port-side sensor.
+//
+// Get wind data from mwx1, nav data from s330
+////
+// To run, first set up the sample serial port simulator:
+//
+//    logger/utils/simulate_serial.py --config test/serial_sim.json -v
+//
+// Then in a separate terminal window, type:
+//
+//    logger/listener/listen.py --config_file test/configs/port_true_winds.json
+//
+// Dictionary key/value pairs are used as keyword arguments for creating a
+// Listener. The keys "reader", "transform" and "writer" are special-cased to
+// indicate that the respective entities should be instantiated (recursively,
+// if necessary).
+{
+    // Multiple readers, enclosed in a list.
+    "readers": [
+        // Read the MastWx serial data, timestamp and prefix it
+        { "class": "ComposedReader",
+          "kwargs": {
+              "readers": {
+                  "class": "SerialReader",
+                  "kwargs": { "port": "/tmp/tty_mwx1" }
+              },
+              "transforms": [
+                  { "class": "TimestampTransform" },
+                  { "class": "PrefixTransform",
+                    "kwargs": { "prefix": "mwx1" }
+                  }
+              ]
+          }         
+        },
+        // Read the Seapath330 serial data, timestamp and prefix it
+        { "class": "ComposedReader",
+          "kwargs": {
+              "readers": {
+                  "class": "SerialReader",
+                  "kwargs": { "port": "/tmp/tty_s330" }
+              },
+              "transforms": [
+                  { "class": "TimestampTransform" },
+                  { "class": "PrefixTransform",
+                      "kwargs": { "prefix": "s330" }
+                  }
+              ]
+          }
+        }
+    ],
+
+    // For transforms, first parse the NMEA records we get into
+    // DASRecords, then pipe them to the TrueWindsTransform, telling
+    // it to output as NMEA-style.
+    "transforms": [
+        { "class": "ParseNMEATransform" },
+        { "class": "TrueWindsTransform",
+          "kwargs": {   // initialization kwargs
+              "data_id": "trup",
+              "course_fields": "S330CourseTrue",
+              "speed_fields": "S330Speed",
+              "heading_fields": "S330HeadingTrue",
+              "wind_dir_fields": "MwxPortRelWindDir",
+              "wind_speed_fields": "MwxPortRelWindSpeed",
+              "convert_speed_factor": 0.5144,
+              "output_nmea": true
+          }
+        }
+    ],
+    
+    // Only a single writer, not enclosed in a list, to demonstrate/test
+    // that lists are only needed if we've got multiple components.
+    "writers": {
+        "class": "TextFileWriter",
+        "kwargs": {
+            // initialization kwargs
+            // no filename, so write to stdout
+        }
+    }
+}
