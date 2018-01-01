@@ -131,5 +131,235 @@ class TestTextFileReader(unittest.TestCase):
     with self.assertRaises(TypeError):
       reader.output_format('not a format')
 
+  ############################
+  # Check some simple cases, forward movement only.
+  def test_seek_forward(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      self.assertEqual(2, reader.seek(2, 'start'))
+      self.assertEqual(expected_lines[2], reader.read())
+      self.assertEqual(expected_lines[3], reader.read())
+      self.assertEqual(9, reader.seek(0, 'end'))
+      self.assertEqual(None, reader.read())
+      self.assertEqual(1, reader.seek(1, 'start'))
+      self.assertEqual(expected_lines[1], reader.read())
+      self.assertEqual(3, reader.seek(1, 'current'))
+      self.assertEqual(expected_lines[3], reader.read())
+      self.assertEqual(4, reader.seek(0, 'current'))
+      self.assertEqual(expected_lines[4], reader.read())
+      self.assertEqual(7, reader.seek(2, 'current'))
+      self.assertEqual(expected_lines[7], reader.read())
+      self.assertEqual(expected_lines[8], reader.read())
+      self.assertEqual(None, reader.read())
+
+  ############################
+  # Check special cases for origin.
+  def test_seek_origin(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      with self.assertRaises(ValueError):
+        reader.seek(0, 'xyz')
+
+      # Move to middle of file (so current position isn't start or end).
+      reader.seek(4, 'start')
+
+      # Check that seek with no origin is relative to the current location.
+      self.assertEqual(6, reader.seek(2))
+      self.assertEqual(expected_lines[6], reader.read())
+
+  ############################
+  # Check seek with offset < 0 and origin = 'current'
+  def test_seek_current_negative_offset(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      for i in range(5):
+        reader.read()
+
+      self.assertEqual(3, reader.seek(-2, 'current'))
+      self.assertEqual(expected_lines[3], reader.read())
+
+      # Now try a bigger offset, so we have to go back a couple files.
+      reader.seek(8, 'start')
+      self.assertEqual(2, reader.seek(-6, 'current'))
+      self.assertEqual(expected_lines[2], reader.read())
+
+  ############################
+  # Check seek with offset < 0 and origin = 'end'
+  def test_seek_end_negative_offset(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      self.assertEqual(7, reader.seek(-2, 'end'))
+      self.assertEqual(expected_lines[7], reader.read())
+      self.assertEqual(9, reader.seek(0, 'end'))
+      self.assertEqual(None, reader.read())
+
+      # Now try a bigger offset, so we have to go back a couple files.
+      self.assertEqual(2, reader.seek(-7, 'end'))
+      self.assertEqual(expected_lines[2], reader.read())
+
+  ############################
+  # Check that seek with negative offset larger than current position
+  # results in a ValueError.
+  def test_seek_before_beginning(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      with self.assertRaises(ValueError):
+        reader.seek(-1, 'current')
+
+      with self.assertRaises(ValueError):
+        reader.seek(-10, 'end')
+
+      # check seek still works for in-bounds value
+      self.assertEqual(2, reader.seek(-7, 'end'))
+      self.assertEqual(expected_lines[2], reader.read())
+
+  ############################
+  # Check that after an error due to a seek beyond the beginning,
+  # the state is unchanged, i.e. read() returns the record it would
+  # have before the seek.
+  def test_seek_position_unchanged_after_error(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      reader.seek(5, 'start')
+      with self.assertRaises(ValueError):
+        reader.seek(-8, 'current')
+      self.assertEqual(expected_lines[5], reader.read())
+
+      reader.seek(2, 'start')
+      with self.assertRaises(ValueError):
+        reader.seek(-1, 'start')
+      self.assertEqual(expected_lines[2], reader.read())
+
+      reader.seek(7, 'start')
+      with self.assertRaises(ValueError):
+        reader.seek(-10, 'end')
+      self.assertEqual(expected_lines[7], reader.read())
+
+  ############################
+  # Check a sequence of seeks of different types.
+  def test_seek_multiple(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      self.assertEqual(8, reader.seek(8, 'start'))
+      self.assertEqual(expected_lines[8], reader.read())
+      self.assertEqual(5, reader.seek(-4, 'current'))
+      self.assertEqual(expected_lines[5], reader.read())
+      self.assertEqual(7, reader.seek(-2, 'end'))
+      self.assertEqual(expected_lines[7], reader.read())
+      self.assertEqual(expected_lines[8], reader.read())
+      self.assertEqual(None, reader.read())
+      self.assertEqual(2, reader.seek(-7, 'end'))
+      self.assertEqual(expected_lines[2], reader.read())
+      self.assertEqual(8, reader.seek(5, 'current'))
+      self.assertEqual(expected_lines[8], reader.read())
+
+  ############################
+  # Check that read_range() returns the expected list of records
+  # for various values of start and stop.
+  def test_read_range(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      self.assertEqual(expected_lines[1:4], reader.read_range(1, 4))
+      self.assertEqual(expected_lines[0:9], reader.read_range(0, 9))
+      self.assertEqual(expected_lines[2:3], reader.read_range(start=2, stop=3))
+      self.assertEqual(expected_lines[2:], reader.read_range(start=2))
+      self.assertEqual(expected_lines[:3], reader.read_range(stop=3))
+      self.assertEqual(expected_lines[2:], reader.read_range(start=2, stop=40))
+
+  ############################
+  # Check that after calling read_range(), the next read() returns
+  # the first record after the range.
+  def test_position_after_read_range(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      reader.read_range(1, 6)
+      self.assertEqual(expected_lines[6], reader.read())
+
+      reader.read_range(0, 4)
+      self.assertEqual(expected_lines[4], reader.read())
+
+      reader.read_range(7, 9)
+      self.assertEqual(None, reader.read())
+
+  ############################
+  # Check that after reading some records, read_range() still works.
+  def test_read_range_after_read(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      expected_lines = []
+      for f in sorted(SAMPLE_DATA):
+        create_file(tmpdirname + '/' + f, SAMPLE_DATA[f])
+        expected_lines.extend(SAMPLE_DATA[f])
+
+      reader = TextFileReader(tmpdirname + '/f*')
+
+      for i in range(5):
+        reader.read()
+
+      self.assertEqual(expected_lines[1:4], reader.read_range(1, 4))
+
 if __name__ == '__main__':
     unittest.main()
