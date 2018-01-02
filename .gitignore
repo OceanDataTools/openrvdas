@@ -6,3 +6,5 @@ __pycache__
 
 *~
 *.bak
+
+db.sqlite3
