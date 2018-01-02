@@ -73,6 +73,10 @@ class TextFileReader(StorageReader):
     # The file we're currently using
     self.current_file = None
 
+    self.pos = 0
+    self.start_pos = {}
+    self.end_pos = {}
+
   ############################
   def _get_next_file(self):
     """Internal - Open and assign the next unused file to
@@ -91,15 +95,21 @@ class TextFileReader(StorageReader):
 
     # Are there any more files? If so, get the next one and open it
     if self.unused_file_list:
+      # First, save the record count for the file we're about to close.
+      if self.used_file_list:
+        prev_filename = self.used_file_list[-1]
+        self.end_pos[prev_filename] = self.pos
+
       next_filename = self.unused_file_list.pop(0)
       logging.info('TextFileReader opening next file "%s"', next_filename)
+      self.start_pos[next_filename] = self.pos
       self.current_file = open(next_filename, 'r')
       self.used_file_list.append(next_filename)
       return self.current_file
 
     # If here, we've found no unused next file. Give up
     return None
-    
+
   ############################
   def read(self):
     """Get the next line of text. Return None if there are no more
@@ -130,6 +140,7 @@ class TextFileReader(StorageReader):
           self.last_read = time.time()
           record = record.rstrip('\n')
           logging.debug('TextFileReader got record "%s"', record)
+          self.pos += 1
           return record
 
         # No record: our current_file has reached EOF. See if more
@@ -147,3 +158,150 @@ class TextFileReader(StorageReader):
       logging.debug('TextFileReader - tail/refresh specified, so sleeping '
                     '%f seconds before trying again', self.retry_interval)
       time.sleep(self.retry_interval)
+
+  ############################
+  # Current behavior is to just go to the end if we run out of records,
+  # as io.IOBase.seek() does.
+  # QUESTION: To really behave like seek(), we'd have to keep track of self.pos
+  # beyond the end of the file, e.g. seek(100, 'start') would always return
+  # 100, even if there are < 100 records. Is this what we want?
+  def _seek_forward_from_current(self, offset=0):
+    if offset == 0:
+      return
+    if offset < 0:
+      return self._seek_back_from_current(offset)
+    i = 0
+    while i < offset:
+      if self.current_file or self._get_next_file():
+        if self.current_file.readline():
+          i += 1
+          self.pos += 1
+        else:
+          if self._get_next_file() is None:
+            break
+    # TODO: take advantage of self.start_pos and self.end_pos if we've
+    # already processed later files.
+
+  ############################
+  def _seek_back_from_current(self, offset=0):
+    if offset == 0:
+      return
+    if offset > 0:
+      return self._seek_forward_from_current(offset)
+    target = self.pos + offset
+    if target < 0:
+      raise ValueError("Can't back up past earliest record")
+
+    # Find the right file.
+    current_filename = self.used_file_list[-1]
+    while target < self.start_pos[current_filename]:
+      self.unused_file_list.insert(0, current_filename)
+      self.used_file_list.pop()
+      current_filename = self.used_file_list[-1]
+
+    self.current_file = open(current_filename, 'r')
+
+    # TODO: implement backwards search within the file
+    for _ in range(target - self.start_pos[current_filename]):
+      self.current_file.readline()
+    self.pos = target
+
+  ############################
+  def _save_state(self):
+    state = {
+      'used_file_list': self.used_file_list[:],
+      'unused_file_list': self.unused_file_list[:],
+      'pos': self.pos
+    }
+    if self.current_file:
+      state['current_filename'] = self.used_file_list[-1]
+      state['current_file_pos'] = self.current_file.tell()
+    return state
+
+  ############################
+  def _restore_state(self, state):
+    self.used_file_list = state['used_file_list']
+    self.unused_file_list = state['unused_file_list']
+    if 'current_filename' in state:
+      self.current_file = open(state['current_filename'], 'r')
+      self.current_file.seek(state['current_file_pos'])
+    else:
+      self.current_file = None
+    self.pos = state['pos']
+
+  ############################
+  # Behavior is intended to mimic file seek() behavior but with
+  # respect to records: 'offset' means number of records, and origin
+  # is either 'start', 'current' or 'end'.
+  def seek(self, offset=0, origin='current'):
+    original_state = self._save_state()
+
+    try:
+      if origin == 'start':
+        if offset < 0:
+          raise ValueError("Can't back up past earliest record")
+        self.used_file_list = []
+        self.unused_file_list = sorted(glob.glob(self.file_spec))
+        self.current_file = None
+        self.pos = 0
+        self._seek_forward_from_current(offset)
+
+      elif origin == 'current':
+        if offset >= 0:
+          self._seek_forward_from_current(offset)
+        else:
+          self._seek_back_from_current(offset)
+
+      elif origin == 'end':
+        # Have to count lines in all files that haven't been processed yet.
+        # TODO: take self.refresh_file_spec into account
+        file_list = sorted(glob.glob(self.file_spec))
+        pos = 0
+        for filename in file_list:
+          if filename in self.end_pos:
+            pos = self.end_pos[filename]
+          else:
+            self.start_pos[filename] = pos
+
+            # TODO: this can be made faster, if needed
+            with open(filename) as f:
+              for n, _ in enumerate(f, 1):
+                pass
+
+            pos += n
+            self.end_pos[filename] = pos
+
+        self.used_file_list = file_list
+        self.unused_file_list = []
+        self.current_file = None
+        self.pos = pos
+        self._seek_back_from_current(offset)
+
+      else:
+        raise ValueError('Unknown origin value: "%s"' % origin)
+
+    except:
+      self._restore_state(original_state)
+      raise
+
+    return self.pos
+
+  ############################
+  def read_range(self, start=None, stop=None):
+    """
+    Read a range of records beginning with record number start, and ending
+    *before* record number stop.
+    """
+    if start is None:
+      start = 0
+    if stop is None:
+      stop = sys.maxsize
+    self.seek(start, 'start')
+    records = []
+    for _ in range(stop - start):
+      record = self.read()
+      if record is None:
+        break
+      records.append(record)
+    return records
+
