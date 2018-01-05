@@ -207,7 +207,9 @@ class TestTrueWindsTransform(unittest.TestCase):
         self.assertEqual(result.data_id, 'truw')
         self.assertEqual(result.message_type, None)
         self.assertEqual(result.timestamp, expected['timestamp'])
-        self.assertDictEqual(result.fields, expected['fields'])
+        self.assertAlmostEqual(result.fields['ApparentWindDir'], expected['fields']['ApparentWindDir'], delta=0.00001)
+        self.assertAlmostEqual(result.fields['TrueWindDir'], expected['fields']['TrueWindDir'], delta=0.00001)
+        self.assertAlmostEqual(result.fields['TrueWindSpeed'], expected['fields']['TrueWindSpeed'], delta=0.00001)
         self.assertDictEqual(result.metadata, expected['metadata'])
       else:
         self.assertIsNone(result)
