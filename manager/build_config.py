@@ -275,23 +275,24 @@ class BuildConfig:
           "writers": "%INST%_LOGFILE_WRITER"
         }
       }
-    """
-    modes = config.get('modes', {})
-    if not modes:
-      logging.warning('No "modes" key found in config, nothing to expand')
-      return config
-    
+    """    
     # First, expand the templates without variables, then expand modes
     # using the vars and expanded templates
     vars = config.get('vars', {})
     templates = config.get('templates', {})
-
     expanded_templates =  self.expand_template(vars, templates, templates)
-    new_modes = self.expand_template(vars, modes, expanded_templates)
-    
-    # Now create a copy of the config dict and swap in expanded modes
+
+    # Create a copy of the config dict and swap in expanded bits
     new_config = config           
-    new_config['modes'] = new_modes
+
+    cruise = config.get('cruise', {})
+    if cruise:
+      new_config['cruise'] = self.expand_template(vars, cruise,
+                                                  expanded_templates)
+    modes = config.get('modes', {})
+    if modes:
+      new_config['modes'] = self.expand_template(vars, modes,
+                                                 expanded_templates)
     return new_config
 
 ################################################################################

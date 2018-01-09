@@ -103,6 +103,8 @@
     "vars": {
         // Cruise ID
         "%CRUISE%" : "NBP1700",
+        "%START_DATE%" : "2017-01-01",
+        "%END_DATE%" : "2017-02-01",
 
         // Where logfiles should be written
         "%LOGFILE_BASE%": "/tmp/log/%CRUISE%",
@@ -120,7 +122,13 @@
         // Additional underway instruments
         "%UW_INST%": ["knud", "rtmp"]
     },
-        
+
+    "cruise": {
+        "id": "%CRUISE%",
+        "start": "%START_DATE%",
+        "end": "%END_DATE%"
+    },
+
     ////////////////////////////////////////////////////////
     // Three different cruise modes: off, port, underway
     "modes": {

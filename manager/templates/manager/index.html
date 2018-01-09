@@ -1,0 +1,242 @@
+{# {% extends 'base.html' %} #}
+
+<style>
+h1, p, div {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+
+button, input {
+  align:center;
+  valign:bottom;
+  font: inherit;
+  display: inline-block;
+}
+
+select, option, input, form { 
+  font: inherit;
+  font-family: arial, sans-serif;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+
+td {
+  border: 1px solid #dddddd;
+  text-align: left;
+  valign: middle;
+  padding: 4px;
+  min-width: 50px;
+}
+th {
+  border: 1px solid #dddddd;
+  background-color: #aaaaaa;
+  text-align: left;
+  padding: 4px;
+}
+
+tr:nth-child(even) {
+    background-color: #eeeeee;
+}
+</style>
+
+{% load static %}
+
+{% block content %}
+
+{# ######################################################################## #}
+{# If user is authenticated, allow to switch modes. Else just show mode     #}
+{% if cruise %}
+<title>{{ cruise.id }}</title>
+<h1>{{ cruise.id }}</h1>
+<hr>
+{% if user.is_authenticated %}
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <p>Mode:
+  <select name="select_mode" id="select_mode" onchange="highlight_select()">
+    {% for mode in modes %}
+    <option
+       {% if mode == current_mode %}
+       selected
+       {% endif %}>
+        {{ mode.name }}
+    </option> 
+    {% endfor %}
+  </select>  
+  <button type="submit">Change mode</button></p>
+</form>
+{% else %}
+<p>Mode: <b>{{ cruise.current_mode }}</b></p>
+{% endif %}
+
+{# ######################################################################## #}
+{# Draw the loggers and their current configurations.                       #}
+<hr>
+<table>
+  <tr><th>logger</th><th colspan=3>configuration</th></tr>
+  {% for logger, config in loggers.items %}
+  <tr id={{ logger }}_row >
+    <td>{{ logger }}</td>
+    <td>{{ config.name }}</td>
+    <td>{% if config.enabled %}enabled{% endif %}</td>
+    <td>
+      {% if user.is_authenticated and config.name %}
+        <button type="submit" onclick="edit_config('{{ logger }}')">
+          Edit
+        </button>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>      
+{% else %}
+<title>No configuration loaded</title>
+<h1>No configuration loaded</h1>
+Choose and load configuration below<p>
+{% endif %}
+
+{# ######################################################################## #}
+{# Status bar                                                               #}
+<p>Last update: <span id="time_str">no connection</span></p>
+
+<hr>
+{% if cruise %}
+  <p>Current configuration: {{ cruise.config_filename }}</a></p>
+{% else %}
+  <p>No current configuration</p>
+{% endif %}
+
+{# ######################################################################## #}
+{# If user is authenticated, allow to load a new config.                    #}
+{% if user.is_authenticated %}
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <input type="file" name="config_file">
+  <button type="submit"
+          {# onclick="return confirm('Are you sure you want to replace the current configuration?)" #}
+          >Load configuration file</button>
+</form>
+{% endif %}
+
+{% if errors %}
+<p>Error parsing config file: {{ config_error }}</p>
+{% endif %}
+<p>
+  {% if user.is_authenticated %}
+  User: {{ user }}
+  <a href="../logout">Log out</a>
+  {% else %}
+  <a href="../login">Log in</a>  
+  {% endif %}
+</p>
+
+{# ######################################################################## #}
+{# Start of Javascript                                                      #}
+<script type="text/javascript">
+  if (! "WebSocket" in window) {
+    alert("Warning: websockets not supported by your Browser!");
+  }
+  var ws;
+
+  // Set timer to retry websocket connection if it closes. Interval is
+  // turned off in ws.onopen() if/when we succeed.
+  var retry_interval = 3000;
+  var retry_websocket_connection;
+  
+  // Try connecting right off the bat
+  connect_websocket();
+
+  ///////////////////////////////
+  function connect_websocket() {
+    console.log("Trying to reconnect to websocket_status_server");
+    ws = new WebSocket("ws://{{ websocket_status_server }}");
+    
+    ws.onopen = function() {
+      // We've succeeded in opening - don't try anymore
+      console.log("Connected - clearing retry interval");
+      clearTimeout(retry_websocket_connection);
+
+      // Web Socket is connected, send data using send()
+      ws.send("Message to send");
+      console.log("Message is sent...");
+    };
+
+    ws.onclose = function() { 
+      // websocket is closed.
+      console.log("Connection is closed...");
+
+      // Set up an alarm to sleep, then try re-opening websocket
+      console.log("Setting timer to reconnect");
+      retry_websocket_connection = setTimeout(connect_websocket,
+                                              retry_interval);
+    };
+
+    ws.onmessage = function (received_message) { 
+      process_message(JSON.parse(received_message.data));
+    };
+  };
+  
+  window.onbeforeunload = function(event) {
+    console.log("Closing websocket");
+    ws.close();
+  };
+
+  function send(message) {
+    console.log("Sending message '" + message + "'");
+    ws.send(message);
+    console.log("Sent!");
+  };
+
+  function process_message(message) {
+    //console.log("received: " + String(message));
+    //for (var m_key in message) {
+    //  console.log("   " + m_key + ": " + message[m_key]);
+    //}
+    // Fill in the values we've received
+    document.getElementById("time_str").innerHTML = message.time_str;
+
+    var status = message.status;
+
+    if (status) {
+      for (var logger_name in status.loggers) {
+        //console.log('processing status for ' + logger_name);
+        var values = status.loggers[logger_name];
+        var desired = values['desired_config'];
+        var current = values['current_config'];
+        var enabled = values['enabled'];
+        var row = document.getElementById(logger_name + "_row")
+
+        if (!row) { console.log("Couldn't find row for " + logger_name) }
+  
+        if (current && enabled) {
+          row.style.backgroundColor = "green";
+        } else {
+          row.style.backgroundColor = "#eeeeee";
+        }
+        if (desired != current) {
+          console.log("Got change for " + logger_name);
+          row.style.backgroundColor = "yellow";
+        }
+      }
+    }
+  };
+
+  ///////////////////////////////
+  // Highlight the color of the mode select option when it has
+  // been changed, but before it's committed.
+  function highlight_select(logger_name) {
+    document.getElementById("select_mode").style.backgroundColor="yellow";
+  }  
+
+  ///////////////////////////////
+  function edit_config(logger_name) {
+    console.log('Edit request for ' + logger_name);
+    loggers = "{{ loggers }}";
+    console.log('Loggers: ' + loggers);
+  }  
+</script>
+
+{% endblock %}
