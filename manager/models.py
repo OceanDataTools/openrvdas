@@ -11,7 +11,8 @@ from django.db import models
 ##############################
 class Logger(models.Model):
   name = models.CharField(max_length=256, blank=True)
-  cruise = models.ForeignKey('Cruise', blank=True, null=True)
+  cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
+                             blank=True, null=True)
 
   def __str__(self):
     return self.name
@@ -19,8 +20,10 @@ class Logger(models.Model):
 ##############################
 class Config(models.Model):
   name = models.CharField(max_length=256, blank=True)
-  logger = models.ForeignKey('Logger', blank=True, null=True)
-  mode = models.ForeignKey('Mode', blank=True, null=True)
+  logger = models.ForeignKey('Logger', on_delete=models.CASCADE,
+                             blank=True, null=True)
+  mode = models.ForeignKey('Mode', on_delete=models.CASCADE,
+                           blank=True, null=True)
   config_json = models.TextField('configuration string')
 
   # If this config is disabled, don't run it, even when mode
@@ -33,7 +36,8 @@ class Config(models.Model):
 ##############################
 class Mode(models.Model):
   name = models.CharField(max_length=256, blank=True)
-  cruise = models.ForeignKey('Cruise', blank=True, null=True)
+  cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
+                             blank=True, null=True)
 
   def __str__(self):
     return self.name
@@ -48,9 +52,11 @@ class Cruise(models.Model):
   config_filename = models.CharField(max_length=256, blank=True, null=True)
   config_text = models.TextField(blank=True, null=True)
   
-  current_mode = models.ForeignKey('Mode', blank=True, null=True,
+  current_mode = models.ForeignKey('Mode', on_delete=models.SET_NULL,
+                                   blank=True, null=True,
                                    related_name='cruise_current_mode')
-  default_mode = models.ForeignKey('Mode', blank=True, null=True,
+  default_mode = models.ForeignKey('Mode', on_delete=models.SET_NULL,
+                                   blank=True, null=True,
                                    related_name='cruise_default_mode')
   def modes(self):
     return Mode.objects.filter(cruise=self)
@@ -61,7 +67,8 @@ class Cruise(models.Model):
 ##############################
 # Which is our current cruise? Since when?
 class CurrentCruise(models.Model):
-  cruise = models.ForeignKey('Cruise')
+  cruise = models.ForeignKey('Cruise', on_delete=models.SET_NULL,
+                             blank=True, null=True)
   as_of = models.DateTimeField(auto_now_add=True)
 
   def __str__(self):
@@ -70,8 +77,8 @@ class CurrentCruise(models.Model):
 ##############################
 # What mode is cruise in? Since when?
 class CruiseState(models.Model):
-  cruise = models.ForeignKey('Cruise')
-  current_mode = models.ForeignKey('Mode')
+  cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE)
+  current_mode = models.ForeignKey('Mode', on_delete=models.CASCADE)
   started = models.DateTimeField(auto_now_add=True)
 
   def __str__(self):
@@ -81,7 +88,7 @@ class CruiseState(models.Model):
 # Do we want this config running? Is it? If so, since when, and what's its pid?
 # If run state doesn't align with current mode, then highlight in interface
 class ConfigState(models.Model):
-  config = models.ForeignKey('Config')
+  config = models.ForeignKey('Config', on_delete=models.CASCADE)
   running = models.BooleanField()
   desired = models.BooleanField()
   process_id = models.IntegerField(default=0, blank=True)
