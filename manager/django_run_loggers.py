@@ -27,6 +27,7 @@ sample config references and feed simulated data through them.)
 """
 
 import argparse
+import asyncio
 import logging
 import multiprocessing
 import os
@@ -35,6 +36,10 @@ import signal
 import sys
 import time
 import threading
+import websockets
+
+from datetime import datetime
+from json import dumps as json_dumps
 
 sys.path.append('.')
 
@@ -47,6 +52,8 @@ from manager.models import ConfigState, CruiseState, CurrentCruise
 
 from logger.utils.read_json import parse_json
 from logger.listener.listen import ListenerFromConfig
+
+from gui.settings import WEBSOCKET_HOST, WEBSOCKET_PORT
 
 run_logging = logging.getLogger(__name__)
 
@@ -112,28 +119,23 @@ class DjangoLoggerRunner:
     # Get config corresponding to current mode for each logger
     logger_status = {}
     for logger in Logger.objects.all():
+      logger_status = {}
       
-      # What config do we want logger to be in?
-      try:
-        desired_config = Config.objects.get(logger=logger, mode=current_mode)
-        logger_status = {
-          'desired_config': desired_config.name,
-          'desired_config_json': desired_config.config_json,
-          'enabled': desired_config.enabled
-        }
-        logging.info('desired_config for %s is %s',
-                     logger.name, desired_config.name)
-      except Config.DoesNotExist:
-        desired_config = None
-        logger_status = {}
-        logging.info('no config for %s', logger.name)
-
       # What config is logger currently in (as far as we know)?
       current_config = self.configs.get(logger, None)
       if current_config:
         logger_status['current_config'] = current_config.name
-        logger_status['enabled'] = current_config.enabled
+        logger_status['current_enabled'] = current_config.enabled
 
+      # What config do we want logger to be in?
+      try:
+        desired_config = Config.objects.get(logger=logger, mode=current_mode)
+        logger_status['desired_config'] = desired_config.name
+        logger_status['desired_config_json']= desired_config.config_json
+        logger_status['desired_enabled'] = desired_config.enabled
+      except Config.DoesNotExist:
+        desired_config = None
+      
       # We've assembled all the information we need for status. Stash it
       status['loggers'][logger.name] = logger_status
 
@@ -142,7 +144,7 @@ class DjangoLoggerRunner:
       # None.
       if halt:
         desired_config = None
-      
+
       # Isn't running and shouldn't be running. Nothing to do here
       if current_config is None and desired_config is None:
         continue
@@ -151,12 +153,12 @@ class DjangoLoggerRunner:
       # process is running, all is right with the world; skip to next.
       process = self.processes.get(logger)
       if current_config == desired_config:
-        if current_config.enabled and process.is_alive():          
+        if desired_config.enabled and process and process.is_alive():
           continue
 
         # Two possibilities here: process is not alive, or config is
         # not enabled. If process is not alive, complain.
-        if not process.is_alive():
+        if desired_config.enabled and (not process or not process.is_alive()):
           warning = 'Process for "%s" unexpectedly dead!' % logger
           run_logging.warning(warning)
           status['loggers'][logger.name]['warnings'] = warning
@@ -172,7 +174,7 @@ class DjangoLoggerRunner:
 
       # Start up a new process in the desired_config
       self.configs[logger] = desired_config
-      if desired_config:
+      if desired_config and desired_config.enabled:
         run_logging.info('Starting up new process for %s', logger)
         self.processes[logger] = self._start_logger(desired_config)
 
@@ -224,10 +226,78 @@ class DjangoLoggerRunner:
     self._check_loggers({})
 
 ################################################################################
+
+# JSON encoding status of all the loggers, and a lock to prevent anyone from
+# messing with it while we're updating.
+status = None
+status_lock = threading.Lock()
+
+# The error/warning logger we're going to use for the uh, loggers we run
+run_logging = logging.getLogger(__name__)
+
+################################################################################
+def run_loggers(interval):
+  global status
+  
+  runner = DjangoLoggerRunner(interval)
+
+  try:
+    while not runner.quit_flag:
+      logging.info('Checking loggers')
+      local_status = runner.check_loggers()
+      with status_lock:
+        status =  local_status
+        
+      # Nap a little while
+      time.sleep(interval)
+  except KeyboardInterrupt:
+    logging.warning('LoggerRunner received keyboard interrupt - '
+                    'trying to shut down nicely.')
+
+  # Ask the loggers to all halt
+  status = runner.check_loggers(halt=True)
+    
+################################################################################
+@asyncio.coroutine
+async def serve_status(websocket, path):
+  global status
+  
+  previous_status = None
+  while True:
+    time_str = datetime.utcnow().strftime(TIME_FORMAT)
+
+    values = {
+      'time_str': time_str,
+    }
+
+    # If status has changed, send new status
+    with status_lock:
+      if not status == previous_status:
+        logging.warning('Logger status has changed')
+        previous_status = status
+        values['status'] = status
+
+    send_message = json_dumps(values)
+    
+    logging.info('sending: %s', send_message)
+    await websocket.send(send_message)
+
+    await asyncio.sleep(1)
+
+################################################################################
 if __name__ == '__main__':
   import argparse
+
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--host', dest='host', action='store',
+                      default=WEBSOCKET_HOST,
+                      help='Hostname for status server.')
+  parser.add_argument('--port', dest='port', action='store', type=int,
+                      default=WEBSOCKET_PORT,
+                      help='Port for status server.')
+
   parser.add_argument('--interval', dest='interval', action='store',
-                      type=int, default=1,
+                      type=float, default=1,
                       help='How many seconds to sleep between logger checks.')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
@@ -237,6 +307,8 @@ if __name__ == '__main__':
                       help='Increase output verbosity of component loggers')
   args = parser.parse_args()
 
+  # Set up logging levels for both ourselves and for the loggers we
+  # start running
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 
   logging.basicConfig(format=LOGGING_FORMAT)
@@ -251,5 +323,22 @@ if __name__ == '__main__':
   args.logger_verbosity = min(args.logger_verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.logger_verbosity])
 
-  runner = DjangoLoggerRunner(interval=args.interval)
-  runner.run()
+  # Start the DjangoLoggerRunner in a separate thread. It will grab
+  # desired configs from the Django database, try to run loggers in
+  # those configs, and return a status that the serve_status routine
+  # can pass to web pages.
+  logging.warning('starting run_loggers thread')
+  threading.Thread(target=run_loggers, args=(args.interval,)).start()
+  
+  # Start the status server
+  logging.warning('opening: %s:%d/status', args.host, args.port)
+  start_server = websockets.serve(serve_status, args.host, args.port)
+
+  loop = asyncio.get_event_loop()
+  loop.run_until_complete(start_server)
+
+  try:
+    loop.run_forever()
+  except KeyboardInterrupt:
+    logging.warning('Status server received keyboard interrupt - '
+                    'trying to shut down nicely.')

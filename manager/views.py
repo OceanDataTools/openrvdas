@@ -92,4 +92,32 @@ def index(request):
 
   # Render what we've ended up with
   return render(request, 'manager/index.html', template_vars)
-  
+
+################################################################################
+def edit_config(request, config_id):
+
+  ############################
+  # If we've gotten a POST request
+  if request.method == 'POST':
+    logging.warning('Got POST: %s', request.POST)
+    config_id = request.POST.get('config_id', None)
+    config = Config.objects.get(pk=config_id)
+     
+    enabled_text = request.POST.get('enabled', None)
+    if not enabled_text in ['enabled', 'disabled']:
+      raise ValueError('Got bad "enabled" value: "%s"', enabled_text)
+    enabled = enabled_text == 'enabled'
+
+    config.enabled = enabled
+    config.save()
+     
+    # Close window once we've done our processing
+    return HttpResponse('<script>window.close()</script>')
+
+  try:
+    config = Config.objects.get(pk=config_id)
+  except Config.DoesNotExist:
+    return HttpResponse('No config with id %s' % config_id)
+
+  return render(request, 'manager/edit_config.html', {'config': config})
+

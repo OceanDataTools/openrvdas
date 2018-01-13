@@ -1,7 +1,12 @@
 {# {% extends 'base.html' %} #}
 
 <style>
-h1, p, div {
+h1 {
+  font-size: 150%;
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+p, div {
   font-family: arial, sans-serif;
   border-collapse: collapse;
 }
@@ -50,7 +55,7 @@ tr:nth-child(even) {
 {# If user is authenticated, allow to switch modes. Else just show mode     #}
 {% if cruise %}
 <title>{{ cruise.id }}</title>
-<h1>{{ cruise.id }}</h1>
+<h1>{{ cruise.id }} Cruise Management</h1>
 <hr>
 {% if user.is_authenticated %}
 <form method="post" enctype="multipart/form-data">
@@ -81,10 +86,12 @@ tr:nth-child(even) {
   <tr id={{ logger }}_row >
     <td>{{ logger }}</td>
     <td>{{ config.name }}</td>
-    <td>{% if config.enabled %}enabled{% endif %}</td>
+    <td id="{{ config.name }}_enabled"></td>
     <td>
       {% if user.is_authenticated and config.name %}
-        <button type="submit" onclick="edit_config('{{ logger }}')">
+      <button type="submit"
+              onclick="window.open('edit_config/{{ config.pk }}', '_blank', 'location=yes,height=240,width=320,scrollbars=yes,status=yes');">
+
           Edit
         </button>
       {% endif %}
@@ -160,8 +167,8 @@ Choose and load configuration below<p>
       clearTimeout(retry_websocket_connection);
 
       // Web Socket is connected, send data using send()
-      ws.send("Message to send");
-      console.log("Message is sent...");
+      //ws.send("Message to send");
+      //console.log("Message is sent...");
     };
 
     ws.onclose = function() { 
@@ -206,10 +213,17 @@ Choose and load configuration below<p>
         var values = status.loggers[logger_name];
         var desired = values['desired_config'];
         var current = values['current_config'];
-        var enabled = values['enabled'];
+        var enabled = values['current_enabled'];
         var row = document.getElementById(logger_name + "_row")
 
         if (!row) { console.log("Couldn't find row for " + logger_name) }
+
+        var enabled_td = document.getElementById(current + "_enabled");
+        if (enabled) {
+          enabled_td.innerHTML = "enabled";
+        } else {
+          enabled_td.innerHTML = "";
+        }
   
         if (current && enabled) {
           row.style.backgroundColor = "green";
@@ -234,8 +248,8 @@ Choose and load configuration below<p>
   ///////////////////////////////
   function edit_config(logger_name) {
     console.log('Edit request for ' + logger_name);
-    loggers = "{{ loggers }}";
-    console.log('Loggers: ' + loggers);
+    //loggers = "{{ loggers }}";
+    //console.log('Loggers: ' + loggers);
   }  
 </script>
 

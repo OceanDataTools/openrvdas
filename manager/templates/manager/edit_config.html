@@ -1,0 +1,49 @@
+{# {% extends 'base.html' %} #}
+
+<style>
+h1 {
+  font-size: 150%;
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+p, div, td {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+
+button, input, radio {
+  align:center;
+  valign:bottom;
+  font: inherit;
+  display: inline-block;
+}
+</style>
+{% load static %}
+
+{% block content %}
+<title>Edit {{ config.name }}</title>
+<h1>Edit {{ config.name }}</h1>
+<hr>
+  
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <input type="hidden" name="config_id" value={{ config.pk }}>
+  <input type="radio" name="enabled"
+         value="enabled"
+         {% if config.enabled %}checked{% endif %}>Enabled
+  <input type="radio" name="enabled"
+         value="disabled"
+         {% if not config.enabled %}checked{% endif %}>Disabled
+  <hr>
+  <table>
+    <tr>
+      <td>
+        <button type="submit">Save</button>
+      </td>
+      <td>
+        <button type="submit" onclick="window.close();">Cancel</button>
+      </td>
+    </tr>
+  </table>
+</form>
+{% endblock %}
