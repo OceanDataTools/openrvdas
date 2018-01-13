@@ -6,6 +6,10 @@ Typical use:
   # Create an expanded configuration
   manager/build_config.py --config test/configs/sample_cruise.json > config.json
 
+  # If this is your first time using the test server, run
+  ./manage.py makemigrations manager
+  ./manage.py migrate
+
   # Run the Django test server
   ./manage.py runserver localhost:8000
 
@@ -15,7 +19,7 @@ Typical use:
 
   # In a separate terminal run this script to monitor the Django db and
   # run loggers as indicated.
-  manager/run_loggers_db.py -v
+  manager/django_run_loggers_db.py -v
 
 (To get this to work using the sample config sample_cruise.json above,
 sample_cruise.json, you'll also need to run
