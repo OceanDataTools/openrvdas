@@ -31,6 +31,8 @@ from datetime import datetime, timezone
 
 DATE_FORMAT = '%Y-%m-%d'    # Gregorian
 TIME_FORMAT = '%Y-%m-%d:%H:%M:%S.%f'  # Gregorian
+MIN = datetime.min.timestamp()
+MAX = datetime.max.timestamp()
 
 ################################################################################
 def timestamp(time_str=None, time_zone=timezone.utc, time_format=TIME_FORMAT):
