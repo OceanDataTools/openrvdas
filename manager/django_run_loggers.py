@@ -91,6 +91,7 @@ class DjangoLoggerRunner:
     # Map logger name to config and to the process running it
     self.configs = {}
     self.processes = {}
+    self.errors = {}
 
     self.interval = interval
     self.quit_flag = False
@@ -130,12 +131,12 @@ class DjangoLoggerRunner:
       if current_config:
         logger_status['current_config'] = current_config.name
         logger_status['current_enabled'] = current_config.enabled
+        logger_status['current_error'] = self.errors[current_config.name]
 
       # What config do we want logger to be in?
       try:
         desired_config = Config.objects.get(logger=logger, mode=current_mode)
         logger_status['desired_config'] = desired_config.name
-        logger_status['desired_config_json']= desired_config.config_json
         logger_status['desired_enabled'] = desired_config.enabled
       except Config.DoesNotExist:
         desired_config = None
@@ -196,38 +197,28 @@ class DjangoLoggerRunner:
     """Create a new process running a Listener/Logger using the passed
     config, and return the Process object."""
 
-    config_dict = parse_json(config.config_json)
-    run_logging.debug('Starting config:\n%s', pprint.pformat(config))
-    listener = ListenerFromConfig(config_dict)
-    proc = multiprocessing.Process(target=listener.run)
-    proc.start()
-    return proc
+    # Zero out any error before we try (again)
+    self.errors[config.name] = None
+    
+    try:
+      config_dict = parse_json(config.config_json)
+      run_logging.debug('Starting config:\n%s', pprint.pformat(config))
+      listener = ListenerFromConfig(config_dict)
 
-  ############################
-  def run(self):
-    """Start up all the loggers using the configuration specified in
-    the current mode, loop and keep checking them."""
+      proc = multiprocessing.Process(target=listener.run)
+      proc.start()
+      return proc
 
-    while not self.quit_flag:
+    # If something went wrong. If it was a KeyboardInterrupt, pass it
+    # along, otherwise stash error and return None
+    except Exception as e:
+      if e is KeyboardInterrupt:
+        self.quit()
+        raise e
+      logging.warning('Config %s got exception: %s', config.name, str(e))
+      self.errors[config.name] = str(e)
 
-      with self.mode_change_lock:
-        # Dict of configs for loggers we're *supposed* to be running
-        desired_configs = self.configuration.get('modes').get(self.mode)
-
-      run_logging.info('Checking logger states against mode "%s"', self.mode)
-      self._check_loggers(desired_configs)
-
-      run_logging.debug('Sleeping %s seconds...', self.interval)
-      time.sleep(self.interval)
-
-      if self.interactive:
-        self._get_new_mode()
-
-    # If here, we've dropped out of the "while not quit" loop. Launch
-    # a new (empty) desired configuration in which nothing is running
-    # prior to exiting.
-    run_logging.info('Received quit request - shutting loggers down.')
-    self._check_loggers({})
+    return None
 
 ################################################################################
 

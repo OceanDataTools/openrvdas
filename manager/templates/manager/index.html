@@ -1,142 +1,93 @@
-{# {% extends 'base.html' %} #}
-
-<style>
-h1 {
-  font-size: 150%;
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-}
-p, div {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-}
-
-button, input {
-  align:center;
-  valign:bottom;
-  font: inherit;
-  display: inline-block;
-}
-
-select, option, input, form { 
-  font: inherit;
-  font-family: arial, sans-serif;
-}
-
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-}
-
-td {
-  border: 1px solid #dddddd;
-  text-align: left;
-  valign: middle;
-  padding: 4px;
-  min-width: 50px;
-}
-th {
-  border: 1px solid #dddddd;
-  background-color: #aaaaaa;
-  text-align: left;
-  padding: 4px;
-}
-
-tr:nth-child(even) {
-    background-color: #eeeeee;
-}
-</style>
-
-{% load static %}
+{% extends 'manager/base.html' %}
 
 {% block content %}
 
-{# ######################################################################## #}
-{# If user is authenticated, allow to switch modes. Else just show mode     #}
 {% if cruise %}
-<title>{{ cruise.id }}</title>
-<h1>{{ cruise.id }} Cruise Management</h1>
-<hr>
-{% if user.is_authenticated %}
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  <p>Mode:
-  <select name="select_mode" id="select_mode" onchange="highlight_select()">
-    {% for mode in modes %}
-    <option
-       {% if mode == current_mode %}
-       selected
-       {% endif %}>
-        {{ mode.name }}
-    </option> 
+  <title>{{ cruise.id }}</title>
+  <h1>{{ cruise.id }} Cruise Management</h1>
+  {# ######################################################################## #}
+  {# Draw the loggers and their current configurations.                       #}
+  <p>Last update: <span id="time_str">no connection - is server running?</span></p>
+  <hr>
+  <table>
+    <tr><th>logger</th><th colspan=3>configuration</th></tr>
+    {% for logger, config in loggers.items %}
+    <tr id={{ logger }}_row >
+      <td>{{ logger }}</td>
+      <td>{{ config.name }}</td>
+      <td id="{{ config.name }}_enabled"></td>
+      <td>
+        {% if user.is_authenticated and config.name %}
+          <button type="submit"
+            onclick="window.open('edit_config/{{ config.pk }}', '_blank', 'location=yes,height=240,width=320,scrollbars=yes,status=yes');">
+            Edit
+          </button>
+        {% endif %}
+      </td>
+      <td style="min-width:0px;padding:0px;border: 0px" id="{{ config.name }}_error"></td>
+    </tr>
     {% endfor %}
-  </select>  
-  <button type="submit">Change mode</button></p>
-</form>
+  </table>      
+
+  {# ######################################################################## #}
+  {# If user is authenticated, allow to switch modes. Else just show mode     #}
+  <hr>
+  {% if user.is_authenticated %}
+    <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>Mode:
+    <select name="select_mode" id="select_mode" onchange="highlight_select()">
+      {% for mode in modes %}
+      <option
+         {% if mode == current_mode %}
+         selected
+         {% endif %}>
+          {{ mode.name }}
+      </option> 
+      {% endfor %}
+    </select>  
+    <button type="submit">Change mode</button></p>
+    </form>
+  {% else %}
+    <p>Mode: <b>{{ cruise.current_mode }}</b></p>
+  {% endif %}
 {% else %}
-<p>Mode: <b>{{ cruise.current_mode }}</b></p>
+  <title>No configuration loaded</title>
+  <h1>No configuration loaded</h1>
 {% endif %}
 
-{# ######################################################################## #}
-{# Draw the loggers and their current configurations.                       #}
-<hr>
-<table>
-  <tr><th>logger</th><th colspan=3>configuration</th></tr>
-  {% for logger, config in loggers.items %}
-  <tr id={{ logger }}_row >
-    <td>{{ logger }}</td>
-    <td>{{ config.name }}</td>
-    <td id="{{ config.name }}_enabled"></td>
-    <td>
-      {% if user.is_authenticated and config.name %}
-      <button type="submit"
-              onclick="window.open('edit_config/{{ config.pk }}', '_blank', 'location=yes,height=240,width=320,scrollbars=yes,status=yes');">
-
-          Edit
-        </button>
-      {% endif %}
-    </td>
-  </tr>
-  {% endfor %}
-</table>      
-{% else %}
-<title>No configuration loaded</title>
-<h1>No configuration loaded</h1>
-Choose and load configuration below<p>
-{% endif %}
 
 {# ######################################################################## #}
 {# Status bar                                                               #}
-<p>Last update: <span id="time_str">no connection</span></p>
+<table><tr>
+  {% if cruise %}
+  <td>Current configuration: {{ cruise.config_filename }}</a></td>
+  {% endif %}
+  {% if user.is_authenticated %}
+  <td><form>
+    {% csrf_token %}
+    <button type="submit"
+          onclick="window.open('load_config', '_blank', 'location=yes,height=140,width=450,scrollbars=yes,status=yes');">
+      Load configuration file
+    </button>
+  </form></td>
+  {% endif %}
+</tr></table>
 
-<hr>
-{% if cruise %}
-  <p>Current configuration: {{ cruise.config_filename }}</a></p>
-{% else %}
-  <p>No current configuration</p>
-{% endif %}
+
 
 {# ######################################################################## #}
-{# If user is authenticated, allow to load a new config.                    #}
-{% if user.is_authenticated %}
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  <input type="file" name="config_file">
-  <button type="submit"
-          {# onclick="return confirm('Are you sure you want to replace the current configuration?)" #}
-          >Load configuration file</button>
-</form>
-{% endif %}
-
+{# Display any errorst                                                      #}
 {% if errors %}
-<p>Error parsing config file: {{ config_error }}</p>
+  <p>Error parsing config file: {{ config_error }}</p>
 {% endif %}
-<p>
+  <hr>
+  <p>
   {% if user.is_authenticated %}
-  User: {{ user }}
+  Logged in as <b>{{ user }}.</b>
   <a href="../logout">Log out</a>
   {% else %}
-  <a href="../login">Log in</a>  
+  <a href="../login"><b>Log in</b></a> to edit configurations or mode
   {% endif %}
 </p>
 
@@ -214,21 +165,28 @@ Choose and load configuration below<p>
         var desired = values['desired_config'];
         var current = values['current_config'];
         var enabled = values['current_enabled'];
+        var error = values['current_error'];
         var row = document.getElementById(logger_name + "_row")
 
         if (!row) { console.log("Couldn't find row for " + logger_name) }
 
-        var enabled_td = document.getElementById(current + "_enabled");
-        if (enabled) {
-          enabled_td.innerHTML = "enabled";
-        } else {
-          enabled_td.innerHTML = "";
-        }
-  
-        if (current && enabled) {
-          row.style.backgroundColor = "green";
-        } else {
-          row.style.backgroundColor = "#eeeeee";
+        if (current) {
+          var enabled_td = document.getElementById(current + "_enabled");
+          if (enabled) {
+            enabled_td.innerHTML = "enabled";
+          } else {
+            enabled_td.innerHTML = "";
+          }
+
+          document.getElementById(current + "_error").innerHTML = error;
+ 
+          if (enabled && !error) {
+            row.style.backgroundColor = "green";
+          } else if (error) {
+            row.style.backgroundColor = "red";
+          } else {
+            row.style.backgroundColor = "#eeeeee";
+          }
         }
         if (desired != current) {
           console.log("Got change for " + logger_name);
@@ -253,4 +211,4 @@ Choose and load configuration below<p>
   }  
 </script>
 
-{% endblock %}
+{% endblock content %}

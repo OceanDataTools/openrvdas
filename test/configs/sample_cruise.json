@@ -213,7 +213,7 @@
         
         // Read from serial, write to network and logfile
         "%INST%_SERIAL_LOGGER_NO_NETWORK": {
-            "name": "%INST%->net/file",
+            "name": "%INST%->file",
             "readers": {
                 "class": "SerialReader",
                 "kwargs": {

@@ -121,3 +121,40 @@ def edit_config(request, config_id):
 
   return render(request, 'manager/edit_config.html', {'config': config})
 
+################################################################################
+def load_config(request):
+
+  # If not a POST, just draw the page
+  if not request.method == 'POST':
+    return render(request, 'manager/load_config.html', {})
+
+  # If POST, we've expect there to be a file to process
+  else:
+    logging.warning('Got POST: %s', request.POST)
+    errors = []
+
+    # Did we get a configuration file?
+    if request.FILES.get('config_file', None):
+
+      config_file = request.FILES['config_file']
+      config_contents = config_file.read() 
+      logging.warning('Uploading file "%s"...', config_file.name)
+
+      try:
+        config = parse_json(config_contents.decode('utf-8'))
+        errors += load_config_to_models(config, config_file.name)
+      except JSONDecodeError as e:
+        errors.append(str(e))
+
+      # If no errors, close window - we're done.
+      if not errors:
+        return HttpResponse('<script>window.close()</script>')
+
+    else:
+      errors.append('No configuration file selected')
+
+    # If here, there were errors
+    return render(request, 'manager/load_config.html',
+                  {'errors': ';'.join(errors)})
+
+  
