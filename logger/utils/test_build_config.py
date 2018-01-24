@@ -8,7 +8,7 @@ import warnings
 
 sys.path.append('.')
 
-from manager.build_config import BuildConfig
+from logger.utils.build_config import BuildConfig
 
 SAMPLE = {
     'PCOD': {'port': '/tmp/tty_PCOD', 'interval': 5.3 },

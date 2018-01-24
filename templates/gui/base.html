@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+    <style>
+      h1 {
+      font-size: 150%;
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      }
+      h2 {
+      font-size: 110%;
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      }
+      p, div {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      }
+      
+      button, input {
+      align:center;
+      valign:bottom;
+      font: inherit;
+      display: inline-block;
+      }
+      
+      select, option, input, form { 
+      font: inherit;
+      font-family: arial, sans-serif;
+      }
+      
+      table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      }
+      
+      td {
+      white-space: nowrap;
+      border: 1px solid #dddddd;
+      text-align: left;
+      valign: middle;
+      padding: 4px;
+      min-width: 50px;
+      }
+      th {
+      border: 1px solid #dddddd;
+      background-color: #aaaaaa;
+      text-align: left;
+      padding: 4px;
+      }
+      
+      tr:nth-child(even) {
+      background-color: #eeeeee;
+      }
+    </style>
+    
+
+    <title>{% block title %}OpenRVDAS Cruise Management{% endblock %}</title>
+    
+  </head>
+  
+  <body>
+    <div id="content">
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

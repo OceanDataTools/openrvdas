@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'manager',
+    'gui',
 ]
 
 MIDDLEWARE = [
@@ -59,7 +59,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'gui.urls'
 
-LOGIN_REDIRECT_URL = '../manager/'
+LOGIN_REDIRECT_URL = '../'
 
 TEMPLATES = [
     {

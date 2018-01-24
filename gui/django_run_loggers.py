@@ -4,7 +4,7 @@
 Typical use:
 
   # Create an expanded configuration
-  manager/build_config.py --config test/configs/sample_cruise.json > config.json
+  logger/utils/build_config.py --config test/configs/sample_cruise.json > config.json
 
   # If this is your first time using the test server, run
   ./manage.py makemigrations manager
@@ -19,7 +19,7 @@ Typical use:
 
   # In a separate terminal run this script to monitor the Django db and
   # run loggers as indicated.
-  manager/django_run_loggers_db.py -v
+  logger/utils/django_run_loggers_db.py -v
 
 (To get this to work using the sample config sample_cruise.json above,
 sample_cruise.json, you'll also need to run
@@ -51,8 +51,8 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
 django.setup()
 
-from manager.models import Logger, Config, Mode, Cruise
-from manager.models import ConfigState, CruiseState, CurrentCruise
+from gui.models import Logger, Config, Mode, Cruise
+from gui.models import ConfigState, CruiseState, CurrentCruise
 
 from logger.utils.read_json import parse_json
 from logger.listener.listen import ListenerFromConfig

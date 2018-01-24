@@ -13,7 +13,7 @@ sys.path.append('.')
 
 from logger.readers.text_file_reader import TextFileReader
 from logger.writers.text_file_writer import TextFileWriter
-from manager.run_loggers import LoggerRunner
+from logger.utils.run_loggers import LoggerRunner
 
 CONFIG = {
   "modes": {

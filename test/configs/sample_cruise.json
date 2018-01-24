@@ -3,7 +3,7 @@
 // Sample use:
 //
 //   from logger.utils.read_json import read_json
-//   from manager.build_config import BuildConfig
+//   from logger.utils.build_config import BuildConfig
 //
 //   raw_config = read_json('test/configs/sample_cruise.json')
 //   config = BuildConfig.expand_config(raw_config)

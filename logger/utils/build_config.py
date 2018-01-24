@@ -6,7 +6,7 @@ Typical use would be something like this:
 import pprint
 import threading
 
-from manager.build_config import BuildConfig
+from logger.utils.build_config import BuildConfig
 from logger.utils.read_json import read_json
 from logger.listener.listen import ListenerFromConfig
 

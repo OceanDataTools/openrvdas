@@ -17,11 +17,15 @@ from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
 
+from . import views
+
 urlpatterns = [
   path('admin/', admin.site.urls),
   path('login/', auth_views.login, name='login'),
   path('logout/', auth_views.logout,
-      {'next_page': '../manager'}, name='logout'),
+      {'next_page': '../'}, name='logout'),
 
-  path('manager/', include('manager.urls')),
+  path('load_config', views.load_config, name='load_config'),
+  path('edit_config/<str:config_id>', views.edit_config, name='edit_config'),
+  path('', views.index, name='index'),
 ]

@@ -91,7 +91,7 @@ def index(request):
     template_vars['errors'] = ', '.join(errors),
 
   # Render what we've ended up with
-  return render(request, 'manager/index.html', template_vars)
+  return render(request, 'gui/index.html', template_vars)
 
 ################################################################################
 def edit_config(request, config_id):
@@ -119,14 +119,14 @@ def edit_config(request, config_id):
   except Config.DoesNotExist:
     return HttpResponse('No config with id %s' % config_id)
 
-  return render(request, 'manager/edit_config.html', {'config': config})
+  return render(request, 'gui/edit_config.html', {'config': config})
 
 ################################################################################
 def load_config(request):
 
   # If not a POST, just draw the page
   if not request.method == 'POST':
-    return render(request, 'manager/load_config.html', {})
+    return render(request, 'gui/load_config.html', {})
 
   # If POST, we've expect there to be a file to process
   else:
@@ -154,7 +154,7 @@ def load_config(request):
       errors.append('No configuration file selected')
 
     # If here, there were errors
-    return render(request, 'manager/load_config.html',
+    return render(request, 'gui/load_config.html',
                   {'errors': ';'.join(errors)})
 
   

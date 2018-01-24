@@ -4,10 +4,10 @@
 Typical use:
 
   # Create an expanded configuration
-  manager/build_config.py --config test/configs/sample_cruise.json > config.json
+  logger/utils/build_config.py --config test/configs/sample_cruise.json > config.json
 
   # Run the loggers from the "underway" mode of that configuration
-  manager/run_loggers.py --config config.json --mode underway -v
+  logger/utils/run_loggers.py --config config.json --mode underway -v
 
 (To get this to work using the sample config sample_cruise.json above,
 sample_cruise.json, you'll also need to run
@@ -21,7 +21,7 @@ You can also run with the --interactive flag, in which case you can,
 at any point, type the name of a mode into the terminal window the
 controller will switch to that mode:
 
-  manager/run_loggers.py --config config.json --interactive
+  logger/utils/run_loggers.py --config config.json --interactive
 
 At the moment, --interactive is a bit messy, as user input is liable
 to be interspersed with logging output, making it difficult to see the
@@ -40,7 +40,7 @@ import threading
 
 sys.path.append('.')
 
-from manager.build_config import BuildConfig
+from logger.utils.build_config import BuildConfig
 from logger.utils.read_json import read_json
 from logger.listener.listen import ListenerFromConfig
 
