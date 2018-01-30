@@ -54,6 +54,21 @@ def index(request):
       current_mode = new_mode
       cruise.current_mode = new_mode
       cruise.save()
+
+      # First, clear out desired state of all loggers so we can start
+      # fresh. There is undoubtedly a clever way we can combine this
+      # with the following loop, but for now, cleanliness is more
+      # important than efficiency.
+      for logger in Logger.objects.all():
+        logger.desired_config = None
+        logger.save()
+
+      # Now update all the logger.current_config assignments to reflect
+      # current mode.
+      for config in Config.objects.filter(mode=new_mode):
+        logger = config.logger
+        logger.desired_config = config
+        logger.save()
       
     # Else unknown post
     else:
@@ -73,14 +88,12 @@ def index(request):
   # Get config corresponding to current mode for each logger
   loggers = {}
   for logger in Logger.objects.all():
-    try:
-      config = Config.objects.get(logger=logger, mode=current_mode)
-      logging.warning('config for %s is %s', logger.name, config.name)
-    except Config.DoesNotExist:
-      config = None
+    desired_config = logger.desired_config or None
+    if logger.desired_config:
+      logging.warning('config for %s is %s', logger.name, desired_config.name)
+    else:
       logging.warning('no config for %s', logger.name)
-      
-    loggers[logger.name] = config
+    loggers[logger.name] = desired_config or None
 
   template_vars['cruise'] = cruise
   template_vars['modes'] = modes
@@ -94,36 +107,46 @@ def index(request):
   return render(request, 'gui/index.html', template_vars)
 
 ################################################################################
-def edit_config(request, config_id):
-
+def edit_config(request, logger_name):
+  logger = Logger.objects.get(name=logger_name)
+  
   ############################
   # If we've gotten a POST request
   if request.method == 'POST':
-    logging.warning('Got POST: %s', request.POST)
-    config_id = request.POST.get('config_id', None)
-    config = Config.objects.get(pk=config_id)
-     
-    enabled_text = request.POST.get('enabled', None)
-    if not enabled_text in ['enabled', 'disabled']:
-      raise ValueError('Got bad "enabled" value: "%s"', enabled_text)
-    enabled = enabled_text == 'enabled'
+    config_id = request.POST['select_config']
+    if not config_id:
+      desired_config = None
+      logging.warning('Selected null config for %s', logger_name)
+    else:
+      desired_config = Config.objects.get(id=config_id)
+      logging.warning('Selected config "%s" for %s',
+                      desired_config.name, logger_name)
 
-    config.enabled = enabled
-    config.save()
-     
+      enabled_text = request.POST.get('enabled', None)
+      if not enabled_text in ['enabled', 'disabled']:
+        raise ValueError('Got bad "enabled" value: "%s"', enabled_text)
+      enabled = enabled_text == 'enabled'
+      desired_config.enabled = enabled
+      desired_config.save()
+
+    # Set the config to be its logger's desired_config
+    logger.desired_config = desired_config
+    logger.save()
+    
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 
-  try:
-    config = Config.objects.get(pk=config_id)
-  except Config.DoesNotExist:
-    return HttpResponse('No config with id %s' % config_id)
+  logger = Logger.objects.get(name=logger_name)
+  all_configs = Config.objects.filter(logger=logger)
+  logger_mode_config = get_logger_mode_config(logger)
 
-  return render(request, 'gui/edit_config.html', {'config': config})
+  return render(request, 'gui/edit_config.html',
+                {'logger': logger,
+                 'logger_mode_config': logger_mode_config,
+                 'all_configs': all_configs})
 
 ################################################################################
 def load_config(request):
-
   # If not a POST, just draw the page
   if not request.method == 'POST':
     return render(request, 'gui/load_config.html', {})
@@ -157,4 +180,16 @@ def load_config(request):
     return render(request, 'gui/load_config.html',
                   {'errors': ';'.join(errors)})
 
-  
+# By default, what config should logger have in current mode?
+def get_logger_mode_config(logger):
+  try:
+    cruise = CurrentCruise.objects.latest('as_of').cruise
+    mode = cruise.current_mode
+    return Config.objects.get(logger=logger, mode=mode)
+  except CurrentCruise.DoesNotExist:
+    logging.warning('CurrentCruise does not exist')
+    return None
+  except Config.DoesNotExist:
+    logging.warning('No config matching logger %s in mode %s', logger, mode)
+    return None
+

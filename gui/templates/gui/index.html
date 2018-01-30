@@ -12,19 +12,17 @@
   <table>
     <tr><th>logger</th><th colspan=3>configuration</th></tr>
     {% for logger, config in loggers.items %}
-    <tr id={{ logger }}_row >
-      <td>{{ logger }}</td>
-      <td>{{ config.name }}</td>
-      <td id="{{ config.name }}_enabled"></td>
-      <td>
-        {% if user.is_authenticated and config.name %}
-          <button type="submit"
-            onclick="window.open('edit_config/{{ config.pk }}', '_blank', 'location=yes,height=240,width=320,scrollbars=yes,status=yes');">
-            Edit
+    <tr id="{{ logger }}_row">
+      <td id="{{ logger }}_td">{{ logger }}</td>
+      <td id="{{ logger }}_config_td">
+        {% if user.is_authenticated %}
+          <button id="{{ logger }}_config_button" type="submit"
+            onclick="window.open('edit_config/{{ logger }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');">
           </button>
         {% endif %}
       </td>
-      <td style="min-width:0px;padding:0px;border: 0px" id="{{ config.name }}_error"></td>
+      <td id="{{ logger }}_enabled_td"></td>
+      <td style="min-width:0px;padding:0px;border: 0px" id="{{ logger }}_error"></td>
     </tr>
     {% endfor %}
   </table>      
@@ -38,7 +36,7 @@
     <p>Mode:
     <select name="select_mode" id="select_mode" onchange="highlight_select()">
       {% for mode in modes %}
-      <option
+      <option id="mode_{{ mode }}"
          {% if mode == current_mode %}
          selected
          {% endif %}>
@@ -157,40 +155,60 @@
     document.getElementById("time_str").innerHTML = message.time_str;
 
     var status = message.status;
-
     if (status) {
+      // Update mode
+      document.getElementById("select_mode").value = status.current_mode;
+
       for (var logger_name in status.loggers) {
         //console.log('processing status for ' + logger_name);
         var values = status.loggers[logger_name];
-        var desired = values['desired_config'];
-        var current = values['current_config'];
-        var enabled = values['current_enabled'];
-        var error = values['current_error'];
-        var row = document.getElementById(logger_name + "_row")
+        var desired = values['desired_config'] || "";
+        var current = values['current_config'] || "";
+        var mode_match = values['mode_match'] || "";
+        var enabled = values['current_enabled'] || "";
+        var error = values['current_error'] || "";
 
+        var row = document.getElementById(logger_name + "_row")
+        var config_td = document.getElementById(logger_name + "_config_td");
+        var config_button = document.getElementById(logger_name + "_config_button");
+        var enabled_td = document.getElementById(logger_name + "_enabled_td");
+        var error_td = document.getElementById(logger_name + "_error");
+  
         if (!row) { console.log("Couldn't find row for " + logger_name) }
 
         if (current) {
-          var enabled_td = document.getElementById(current + "_enabled");
-          if (enabled) {
-            enabled_td.innerHTML = "enabled";
-          } else {
-            enabled_td.innerHTML = "";
-          }
+          config_button.innerHTML = current;
+        } else {
+          config_button.innerHTML = "--None--";
+        }
 
-          document.getElementById(current + "_error").innerHTML = error;
- 
-          if (enabled && !error) {
-            row.style.backgroundColor = "green";
-          } else if (error) {
-            row.style.backgroundColor = "red";
+        if (enabled) {
+          enabled_td.innerHTML = "enabled";
+        } else {
+          enabled_td.innerHTML = "";
+        }
+
+        if (!current && !desired) {
+          row.style.backgroundColor = "#eeeeee";
+        } else if (current == desired) {
+          if (enabled) {
+            row.style.backgroundColor = "green";         
           } else {
             row.style.backgroundColor = "#eeeeee";
           }
+        // If current config is not equal to desired
+        } else if (error) {
+          row.style.backgroundColor = "red";
+        } else {
+            row.style.backgroundColor = "yellow";  
         }
-        if (desired != current) {
-          console.log("Got change for " + logger_name);
-          row.style.backgroundColor = "yellow";
+
+        // If the current_config doesn't match the default config
+        // for the current mode, flag the config as different
+        if (current && !mode_match) {
+          config_td.style.backgroundColor = "yellow";
+        } else {
+          config_td.style.backgroundColor = row.style.backgroundColor;
         }
       }
     }

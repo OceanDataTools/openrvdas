@@ -3,19 +3,41 @@
 {% load static %}
 
 {% block content %}
-<title>Edit {{ config.name }}</title>
-<h1>Edit {{ config.name }}</h1>
+<title>Edit {{ logger }} configuration</title>
+<h1>Edit {{ logger }} configuration</h1>
 <hr>
-  
+
 <form method="post" enctype="multipart/form-data">
   {% csrf_token %}
-  <input type="hidden" name="config_id" value={{ config.pk }}>
-  <input type="radio" name="enabled"
+
+  Select config: <select name="select_config" id="select_config"
+          onchange="update_select()">
+    <option value="">
+      --None--
+      {% if not logger_mode_config %}
+        [default]
+      {% endif %}
+
+    </option>
+    {% for config in all_configs %}
+    <option value="{{ config.id }}"
+    
+       {% if config.name == logger.desired_config.name %}
+       selected
+       {% endif %}>
+      {{ config.name }}
+      {% if config.name == logger_mode_config.name %}
+        [default]
+      {% endif %}
+      </option>
+    {% endfor %}
+  </select>
+  <input type="radio" id="config_enabled" name="enabled"
          value="enabled"
-         {% if config.enabled %}checked{% endif %}>Enabled
-  <input type="radio" name="enabled"
+         {% if logger.desired_config.enabled %}checked{% endif %}>Enabled
+  <input type="radio" id="config_disabled" name="enabled"
          value="disabled"
-         {% if not config.enabled %}checked{% endif %}>Disabled
+         {% if not logger.desired_config.enabled %}checked{% endif %}>Disabled
   <hr>
   <table>
     <tr>
@@ -28,4 +50,31 @@
     </tr>
   </table>
 </form>
+
+<script>
+// Create the config_id -> enabled map so we can efficiently update
+// the radio buttons on the fly when different configs are selected.  
+var config_enabled = {};
+{% for config in all_configs %}
+  config_enabled[{{ config.id }}] = ("{{ config.enabled }}" == "True");
+{% endfor %}
+
+// Highlight if the selection isn't the currently saved one and set the
+// Enabled/disabled radio button accordingly  
+function update_select() {
+  var sel = document.getElementById("select_config");
+  var selected_value = sel.options[sel.selectedIndex].value;
+  if (selected_value == {{ logger.desired_config.id }}) {
+    sel.style.backgroundColor="white";
+  } else {
+    sel.style.backgroundColor="yellow";
+  }
+
+  if (config_enabled[selected_value]) {
+    document.getElementById("config_enabled").checked = true;
+  } else {
+    document.getElementById("config_disabled").checked = true;
+  }
+}
+</script>
 {% endblock %}

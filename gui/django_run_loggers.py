@@ -126,20 +126,25 @@ class DjangoLoggerRunner:
     for logger in Logger.objects.all():
       logger_status = {}
       
+      # What config do we want logger to be in?
+      desired_config = logger.desired_config
+      if logger.desired_config:
+        logger_status['desired_config'] = desired_config.name
+        logger_status['desired_enabled'] = desired_config.enabled
+      else:
+        logger_status['desired_config'] = None
+        logger_status['desired_enabled'] = False
+
       # What config is logger currently in (as far as we know)?
       current_config = self.configs.get(logger, None)
       if current_config:
         logger_status['current_config'] = current_config.name
         logger_status['current_enabled'] = current_config.enabled
-        logger_status['current_error'] = self.errors[current_config.name]
+        logger_status['current_error'] = self.errors.get(current_config.name, '')
 
-      # What config do we want logger to be in?
-      try:
-        desired_config = Config.objects.get(logger=logger, mode=current_mode)
-        logger_status['desired_config'] = desired_config.name
-        logger_status['desired_enabled'] = desired_config.enabled
-      except Config.DoesNotExist:
-        desired_config = None
+      # Is the current_config the same as the config of our current mode?
+      mode_match =  current_config and current_config.mode == current_mode
+      logger_status['mode_match'] = mode_match
       
       # We've assembled all the information we need for status. Stash it
       status['loggers'][logger.name] = logger_status
@@ -269,6 +274,7 @@ async def serve_status(websocket, path):
     with status_lock:
       if not status == previous_status:
         logging.warning('Logger status has changed')
+        logging.info('New status: %s', pprint.pformat(status))
         previous_status = status
         values['status'] = status
 

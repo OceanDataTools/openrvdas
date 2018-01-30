@@ -26,6 +26,6 @@ urlpatterns = [
       {'next_page': '../'}, name='logout'),
 
   path('load_config', views.load_config, name='load_config'),
-  path('edit_config/<str:config_id>', views.edit_config, name='edit_config'),
+  path('edit_config/<str:logger_name>', views.edit_config, name='edit_config'),
   path('', views.index, name='index'),
 ]
