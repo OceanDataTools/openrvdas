@@ -7,7 +7,13 @@
   <h1>{{ cruise.id }} Cruise Management</h1>
   {# ######################################################################## #}
   {# Draw the loggers and their current configurations.                       #}
-  <p>Last update: <span id="time_str">no connection - is server running?</span></p>
+  <table>
+    <tr id="time_row">
+      <td>Last update:</td><td id="time_td">no connection - is server running?</td>
+    <tr id="time_warning_row" style="display:none;">
+      <td>Now:</td><td id="time_warning_td"</td>
+    </tr>
+  </table>
   <hr>
   <table>
     <tr><th>logger</th><th colspan=3>configuration</th></tr>
@@ -19,6 +25,9 @@
           <button id="{{ logger }}_config_button" type="submit"
             onclick="window.open('edit_config/{{ logger }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');">
           </button>
+        {% else %}
+          <span id="{{ logger }}_config_button">
+          </span>
         {% endif %}
       </td>
       <td id="{{ logger }}_enabled_td"></td>
@@ -47,7 +56,7 @@
     <button type="submit">Change mode</button></p>
     </form>
   {% else %}
-    <p>Mode: <b>{{ cruise.current_mode }}</b></p>
+    <p>Mode: <b><span id="mode_name">{{ cruise.current_mode }}</span></b></p>
   {% endif %}
 {% else %}
   <title>No configuration loaded</title>
@@ -58,11 +67,13 @@
 {# ######################################################################## #}
 {# Status bar                                                               #}
 <table><tr>
-  {% if cruise %}
-  <td>Current configuration: {{ cruise.config_filename }}</a></td>
-  {% endif %}
-  {% if user.is_authenticated %}
-  <td><form>
+    {% if cruise %}
+  <td style="border: 0px;">
+    Current configuration: {{ cruise.config_filename }}</a></td>
+{% endif %}
+{% if user.is_authenticated %}
+<td style="border: 0px;">
+  <form>
     {% csrf_token %}
     <button type="submit"
           onclick="window.open('load_config', '_blank', 'location=yes,height=140,width=450,scrollbars=yes,status=yes');">
@@ -72,14 +83,13 @@
   {% endif %}
 </tr></table>
 
-
-
 {# ######################################################################## #}
 {# Display any errorst                                                      #}
 {% if errors %}
   <p>Error parsing config file: {{ config_error }}</p>
 {% endif %}
   <hr>
+
   <p>
   {% if user.is_authenticated %}
   Logged in as <b>{{ user }}.</b>
@@ -87,7 +97,11 @@
   {% else %}
   <a href="../login"><b>Log in</b></a> to edit configurations or mode
   {% endif %}
-</p>
+  </p>
+  <hr>
+<p style="font-size:70%">
+  <a href="https://github.com/davidpablocohn/openrvdas/blob/master/README.md">
+    OpenRVDAS (c)2018 David Pablo Cohn</a></p>
 
 {# ######################################################################## #}
 {# Start of Javascript                                                      #}
@@ -146,19 +160,40 @@
     console.log("Sent!");
   };
 
+  // If no update in 5 seconds, change background color to red
+  var TIMEOUT_INTERVAL = 5000;
+  function flag_timeout() {
+    document.getElementById("time_row").style.backgroundColor = "orangered";
+    document.getElementById("time_warning_td").innerHTML = Date();
+    document.getElementById("time_warning_row").style.display = "";
+  }
+  var timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
+
   function process_message(message) {
-    //console.log("received: " + String(message));
-    //for (var m_key in message) {
-    //  console.log("   " + m_key + ": " + message[m_key]);
-    //}
     // Fill in the values we've received
-    document.getElementById("time_str").innerHTML = message.time_str;
+
+    // Update time string and reset timeout timer
+    document.getElementById("time_td").innerHTML = Date();
+    document.getElementById("time_warning_row").style.display = "none";
+    document.getElementById("time_row").style.backgroundColor = "white";
+
+    //document.getElementById("time_str").innerHTML = message.time_str;
+
+    //time_str.style.backgroundColor = "white";
+
+    clearInterval(timeout_timer);
+    timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
 
     var status = message.status;
     if (status) {
-      // Update mode
-      document.getElementById("select_mode").value = status.current_mode;
-
+      // Update mode - "select_mode" only defined if user is authenticated;
+      // otherwise we should have "mode_name"
+      var select_mode = document.getElementById("select_mode");
+      if (select_mode) {
+        select_mode.value = status.current_mode;
+      } else {
+        document.getElementById("mode_name").innerHTML = status.current_mode;
+      }
       for (var logger_name in status.loggers) {
         //console.log('processing status for ' + logger_name);
         var values = status.loggers[logger_name];
@@ -183,22 +218,22 @@
         }
 
         if (enabled) {
-          enabled_td.innerHTML = "enabled";
-        } else {
           enabled_td.innerHTML = "";
+        } else {
+          enabled_td.innerHTML = "disabled";
         }
 
         if (!current && !desired) {
-          row.style.backgroundColor = "#eeeeee";
+          row.style.backgroundColor = "lightgray";
         } else if (current == desired) {
           if (enabled) {
-            row.style.backgroundColor = "green";         
+            row.style.backgroundColor = "lightgreen";         
           } else {
-            row.style.backgroundColor = "#eeeeee";
+            row.style.backgroundColor = "lightgray";
           }
         // If current config is not equal to desired
         } else if (error) {
-          row.style.backgroundColor = "red";
+          row.style.backgroundColor = "orangered";
         } else {
             row.style.backgroundColor = "yellow";  
         }
@@ -209,6 +244,16 @@
           config_td.style.backgroundColor = "yellow";
         } else {
           config_td.style.backgroundColor = row.style.backgroundColor;
+        }
+
+        // Finally, do we have an error reported for this logger?
+        error_td.innerHTML = error;
+        if (error) {
+          row.style.backgroundColor = "orangered";
+          config_td.style.backgroundColor = "orangered";
+          error_td.style.backgroundColor = "orangered";
+        } else {
+          error_td.style.backgroundColor = row.style.backgroundColor;
         }
       }
     }
