@@ -1,12 +1,11 @@
 import logging
+import multiprocessing
 import sys
 
 from json import JSONDecodeError
 
 from django.shortcuts import render
 from django.http import HttpResponse
-
-#from django.conf import settings
 
 sys.path.append('.')
 
@@ -19,8 +18,16 @@ from logger.utils.read_json import parse_json
 
 from gui.settings import WEBSOCKET_STATUS_SERVER
 
+from gui.django_run_loggers import LoggerServer
+
+# A global pointing to the process running a DjangoLoggerRunner instance
+logger_server = None
+logger_server_proc = None
+
 ################################################################################
 def index(request):
+  global logger_server
+  global logger_server_proc
 
   template_vars = {}
   template_vars['is_superuser'] = True
@@ -70,6 +77,39 @@ def index(request):
         logger.desired_config = config
         logger.save()
       
+    # Did we get a server start/stop selection?
+    elif request.POST.get('server', None):
+      desired_server_state = request.POST.get('server')
+      if desired_server_state == 'start':
+        if logger_server:
+          logging.warning('Got "start server" but server is non-empty!')
+        if logger_server_proc and logger_server_proc.is_alive():
+          logging.warning('Got "start server" but server is alive!')
+          logger_server_proc.terminate()
+
+        logging.warning('Starting LoggerServer')
+        logger_server = LoggerServer()
+        context = multiprocessing.get_context('fork')
+        logger_server_proc = context.Process(name='LoggerServer',
+                                             target=logger_server.start)
+        logger_server_proc.start()
+
+      elif desired_server_state == 'stop':
+        if not logger_server:
+          logging.warning('Got "stop server" but server is empty!')
+        elif not logger_server_proc or not logger_server_proc.is_alive():
+          logging.warning('Got "stop server" but server is not alive!')
+        else:
+          logging.info('Killing LoggerServer')
+          logger_server_proc.terminate()
+
+        # Regardless of whether things went bad, zero out server and proc
+        logger_server = None
+        logger_server_proc = None
+
+      else:
+        logging.error('Unknown desired server state: %s', desired_server_state)
+
     # Else unknown post
     else:
       logging.warning('Unknown POST request: %s', request.POST)
@@ -99,7 +139,8 @@ def index(request):
   template_vars['modes'] = modes
   template_vars['current_mode'] = current_mode
   template_vars['loggers'] = loggers
-  
+  template_vars['server_running'] = logger_server is not None
+
   if errors:
     template_vars['errors'] = ', '.join(errors),
 

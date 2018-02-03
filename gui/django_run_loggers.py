@@ -226,64 +226,90 @@ class DjangoLoggerRunner:
     return None
 
 ################################################################################
+class LoggerServer:
+  ############################
+  def __init__(self, interval=0.5, host=WEBSOCKET_HOST, port=WEBSOCKET_PORT):
 
-# JSON encoding status of all the loggers, and a lock to prevent anyone from
-# messing with it while we're updating.
-status = None
-status_lock = threading.Lock()
-
-# The error/warning logger we're going to use for the uh, loggers we run
-run_logging = logging.getLogger(__name__)
-
-################################################################################
-def run_loggers(interval):
-  global status
-  
-  runner = DjangoLoggerRunner(interval)
-
-  try:
-    while not runner.quit_flag:
-      logging.info('Checking loggers')
-      local_status = runner.check_loggers()
-      with status_lock:
-        status =  local_status
-        
-      # Nap a little while
-      time.sleep(interval)
-  except KeyboardInterrupt:
-    logging.warning('LoggerRunner received keyboard interrupt - '
-                    'trying to shut down nicely.')
-
-  # Ask the loggers to all halt
-  status = runner.check_loggers(halt=True)
+    self.interval = interval
+    self.host = host
+    self.port = port
+    self.runner = DjangoLoggerRunner(interval)
     
-################################################################################
-@asyncio.coroutine
-async def serve_status(websocket, path):
-  global status
-  
-  previous_status = None
-  while True:
-    time_str = datetime.utcnow().strftime(TIME_FORMAT)
+    # JSON encoding status of all the loggers, and a lock to prevent
+    # anyone from messing with it while we're updating.
+    self.status = None
+    self.status_lock = threading.Lock()
 
-    values = {
-      'time_str': time_str,
-    }
+    # The error/warning logger we're going to use for the uh, loggers we run
+    self.run_logging = logging.getLogger(__name__)
 
-    # If status has changed, send new status
-    with status_lock:
-      if not status == previous_status:
-        logging.warning('Logger status has changed')
-        logging.info('New status: %s', pprint.pformat(status))
-        previous_status = status
-        values['status'] = status
-
-    send_message = json_dumps(values)
+  ############################
+  def start(self):
+    """Start the DjangoLoggerRunner in a separate thread. It will grab
+    desired configs from the Django database, try to run loggers in
+    those configs, and return a status that the serve_status routine
+    can pass to web pages."""
     
-    logging.info('sending: %s', send_message)
-    await websocket.send(send_message)
+    logging.warning('starting run_loggers thread')
+    threading.Thread(target=self._run_loggers).start()
 
-    await asyncio.sleep(1)
+    # Start the status server
+    logging.warning('opening: %s:%d/status', self.host, self.port)
+    start_server = websockets.serve(self._serve_status, self.host, self.port)
+
+    loop = asyncio.get_event_loop()
+    #loop = asyncio.new_event_loop()
+    loop.run_until_complete(start_server)
+
+    try:
+      loop.run_forever()
+    except KeyboardInterrupt:
+      logging.warning('Status server received keyboard interrupt - '
+                      'trying to shut down nicely.')
+
+  ############################
+  def _run_loggers(self):  
+
+    try:
+      while not self.runner.quit_flag:
+        logging.info('Checking loggers')
+        local_status = self.runner.check_loggers()
+        with self.status_lock:
+          self.status =  local_status
+
+        # Nap a little while
+        time.sleep(self.interval)
+    except KeyboardInterrupt:
+      logging.warning('LoggerRunner received keyboard interrupt - '
+                      'trying to shut down nicely.')
+
+    # Ask the loggers to all halt
+    self.status = self.runner.check_loggers(halt=True)
+
+  ############################
+  @asyncio.coroutine
+  async def _serve_status(self, websocket, path):
+    previous_status = None
+    while True:
+      time_str = datetime.utcnow().strftime(TIME_FORMAT)
+
+      values = {
+        'time_str': time_str,
+      }
+
+      # If status has changed, send new status
+      with self.status_lock:
+        if not self.status == previous_status:
+          logging.warning('Logger status has changed')
+          logging.info('New status: %s', pprint.pformat(self.status))
+          previous_status = self.status
+          values['status'] = self.status
+
+      send_message = json_dumps(values)
+
+      logging.info('sending: %s', send_message)
+      await websocket.send(send_message)
+      await asyncio.sleep(self.interval)
 
 ################################################################################
 if __name__ == '__main__':
@@ -324,22 +350,6 @@ if __name__ == '__main__':
   args.logger_verbosity = min(args.logger_verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.logger_verbosity])
 
-  # Start the DjangoLoggerRunner in a separate thread. It will grab
-  # desired configs from the Django database, try to run loggers in
-  # those configs, and return a status that the serve_status routine
-  # can pass to web pages.
-  logging.warning('starting run_loggers thread')
-  threading.Thread(target=run_loggers, args=(args.interval,)).start()
+  server = LoggerServer(args.interval, args.host, args.port)
+  server.start()
   
-  # Start the status server
-  logging.warning('opening: %s:%d/status', args.host, args.port)
-  start_server = websockets.serve(serve_status, args.host, args.port)
-
-  loop = asyncio.get_event_loop()
-  loop.run_until_complete(start_server)
-
-  try:
-    loop.run_forever()
-  except KeyboardInterrupt:
-    logging.warning('Status server received keyboard interrupt - '
-                    'trying to shut down nicely.')

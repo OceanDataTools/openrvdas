@@ -83,8 +83,33 @@
   {% endif %}
 </tr></table>
 
+{% comment %}
 {# ######################################################################## #}
-{# Display any errorst                                                      #}
+{# Start/stop django_run_loggers                                            #}
+{% if user.is_authenticated %}
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {% if server_running %}
+  <button type="submit" name="server" value="stop" style="background-color:indianred">
+    Stop server
+  </button>
+  {% else %}
+  <button type="submit" name="server" value="start" style="background-color:lightgreen">
+    Start server
+  </button>
+  {% endif %}
+</form>
+{% else %}
+  {% if server_running %}
+    Server running
+  {% else %}
+    Server not running
+  {% endif %}
+{% endif %}
+{% endcomment %}
+
+{# ######################################################################## #}
+{# Display any errors                                                       #}
 {% if errors %}
   <p>Error parsing config file: {{ config_error }}</p>
 {% endif %}
@@ -98,10 +123,6 @@
   <a href="../login"><b>Log in</b></a> to edit configurations or mode
   {% endif %}
   </p>
-  <hr>
-<p style="font-size:70%">
-  <a href="https://github.com/davidpablocohn/openrvdas/blob/master/README.md">
-    OpenRVDAS (c)2018 David Pablo Cohn</a></p>
 
 {# ######################################################################## #}
 {# Start of Javascript                                                      #}
