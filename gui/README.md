@@ -90,7 +90,7 @@ yellow.
 The sample configurations use UDP broadcasts to port 6224 for network
 writes and subdirectories under /tmp/log/NBP1700/ for file writes. You can run a listener on the port using
 ```
-  python3 logger/listener/listen.py --network :6224 -v
+  python3 logger/listener/listen.py --network :6224 --write_file -
 ```
 to listen to the appropriate port, or
 ```
