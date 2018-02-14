@@ -46,6 +46,6 @@ class TextFileWriter(Writer):
   def write(self, record):
     """ Write out record, appending a newline at end."""
     if record is not None:
-      self.file.write(record + '\n')
+      self.file.write(str(record) + '\n')
     if self.flush:
       self.file.flush()
