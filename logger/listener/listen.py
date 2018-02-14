@@ -50,6 +50,7 @@ from logger.readers.logfile_reader import LogfileReader
 from logger.readers.network_reader import NetworkReader
 from logger.readers.serial_reader import SerialReader
 from logger.readers.text_file_reader import TextFileReader
+from logger.readers.timeout_reader import TimeoutReader
 
 from logger.transforms.prefix_transform import PrefixTransform
 from logger.transforms.regex_filter_transform import RegexFilterTransform
@@ -84,8 +85,10 @@ class ListenerFromConfig(Listener):
     kwargs = {}
     for key, value in config_json.items():
 
-      # Declaration of readers, transforms and writers
-      if key in ['readers', 'transforms', 'writers']:
+      # Declaration of readers, transforms and writers. Note that the
+      # singular "reader" is a special case for TimeoutReader that
+      # takes a single reader.
+      if key in ['reader', 'readers', 'transforms', 'writers']:
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords

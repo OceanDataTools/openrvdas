@@ -2,6 +2,12 @@
 //
 // Sample use:
 //
+//   logger/utils/build_config \
+//      --config test/config/sample_cruise.json > cruise.json
+//   logger/utils/run_loggers.py --config cruise.json --mode underway
+//
+// Programmatically, you can load the definition as
+//
 //   from logger.utils.read_json import read_json
 //   from logger.utils.build_config import BuildConfig
 //
@@ -120,7 +126,9 @@
         "%PORT_INST%": ["gyr1", "mwx1", "s330", "eng1"],
 
         // Additional underway instruments
-        "%UW_INST%": ["knud", "rtmp"]
+        "%UW_INST%": ["knud", "rtmp"],
+
+        "%QC_LIMITS%": "CWNCTension:-150:10000,CWNCPayout:-6000:100000,EngPowerVoltage:11:13"
     },
 
     "cruise": {
@@ -143,9 +151,10 @@
         // Underway, everything's in default mode of running/saving.
         "underway": {
             "%UW_INST%": "%UW_INST%_SERIAL_LOGGER",
-            "%PORT_INST%": "%PORT_INST%_SERIAL_LOGGER"
+            "%PORT_INST%": "%PORT_INST%_SERIAL_LOGGER",
+            "qc_logger": "%QC_LOGGER%"
         },
-        // Underway, everything's in default mode of running/saving.
+        // Underway, but with no network
         "underway_no_network": {
             "%INST%": "%INST%_SERIAL_LOGGER_NO_NETWORK"
         }        
@@ -237,6 +246,26 @@
             },
             "transforms": {"class": "TimestampTransform"},
             "writers": "%INST%_LOGFILE_WRITER"
+        },
+        // Read from network, parse and look for broken bounds; write
+        // to stdout if they're exceeded
+        "%QC_LOGGER%": {
+            "name": "qc_logger",
+            "readers":  {
+                "class": "NetworkReader",
+                "kwargs": { "network": "%UDP_PORT%" }
+            },
+            "transforms": [
+                {"class": "ParseNMEATransform"},
+                {
+                    "class": "QCFilterTransform",
+                    "kwargs": {
+                        "bounds": "%QC_LIMITS%"
+                    }
+                }
+            ],
+            "writers": {"class": "TextFileWriter"}
         }
     }
+    
 }
