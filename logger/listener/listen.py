@@ -58,6 +58,7 @@ from logger.transforms.qc_filter_transform import QCFilterTransform
 from logger.transforms.slice_transform import SliceTransform
 from logger.transforms.timestamp_transform import TimestampTransform
 from logger.transforms.parse_nmea_transform import ParseNMEATransform
+from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform
 from logger.transforms.true_winds_transform import TrueWindsTransform
 
 from logger.writers.composed_writer import ComposedWriter
@@ -233,6 +234,12 @@ if __name__ == '__main__':
                       action='store_true', default=False,
                       help='Convert tagged, timestamped NMEA records into '
                       'Python DASRecords.')
+
+  parser.add_argument('--transform_aggregate_xml', dest='aggregate_xml',
+                      default='', help='Aggregate records of XML until a '
+                      'completed XML record whose outer element matches '
+                      'the specified tag has been seen, then pass it along '
+                      'as a single record.')
 
   ############################
   # Writers
@@ -416,6 +423,8 @@ if __name__ == '__main__':
         transforms.append(QCFilterTransform(new_args.qc_filter))
       if new_args.parse_nmea:
         transforms.append(ParseNMEATransform())
+      if new_args.aggregate_xml:
+        transforms.append(XMLAggregatorTransform(new_args.aggregate_xml))
 
       ##########################
       # Writers
