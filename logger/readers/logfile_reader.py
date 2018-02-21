@@ -22,6 +22,7 @@ class LogfileReader(TimestampedReader):
   ############################
   def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
                retry_interval=0.1, interval=0, use_timestamps=False,
+               time_format=timestamp.TIME_FORMAT,
                date_format=timestamp.DATE_FORMAT):
     """
     filebase     Possibly wildcarded string specifying files to be opened.
@@ -57,12 +58,18 @@ class LogfileReader(TimestampedReader):
     self.filebase = filebase
     self.use_timestamps = use_timestamps
     self.date_format = date_format
+    self.time_format = time_format
+    self.tail = tail
+    self.refresh_file_spec = refresh_file_spec
 
 
     # If use_timestamps, we need to keep track of our last_read to
     # know how long to sleep
     self.last_timestamp = 0
     self.last_read = 0
+
+    self._first_msec_timestamp = None
+    self.prev_record = None
 
     # If they give us a filebase, add wildcard to match its suffixes;
     # otherwise, we'll pass on the empty string to TextFileReader so
@@ -98,16 +105,23 @@ class LogfileReader(TimestampedReader):
     # NOTE: It feels like we should check here that the reader's
     # current file really does match our logfile name format...
 
+    if self.use_timestamps:
+      # Get timestamp off record
+      time_str = record.split(' ', 1)[0]
+      ts = timestamp.timestamp(time_str, time_format=self.time_format)
+
     # If we're not trying to return records in intervals that match
     # their original intervals, we're done - just return it.
     if not self.use_timestamps:
+      self.prev_record = record
+      # We need this in case the next call is seek_time() or read_time_range().
+      # This is less expensive than parsing every timestamp and keeping
+      # self.last_timestamp, but an alternative might be to implement
+      # read_previous(), which would be expensive but which could be called
+      # only when actually needed.
       return record
 
-    # Get timestamp off record
-    time_str = record.split(' ', 1)[0]
-    ts = timestamp.timestamp(time_str)
     desired_interval = ts - self.last_timestamp
-    
     now = timestamp.timestamp()
     actual_interval = now - self.last_read
     logging.debug('Desired interval %f, actual %f; sleeping %f',
@@ -118,5 +132,154 @@ class LogfileReader(TimestampedReader):
     self.last_timestamp = ts
     self.last_read = timestamp.timestamp()
 
+    self.prev_record = record
     return record
 
+  ############################
+  def _read_until(self, desired_time_msec):
+    while True:
+      record = self.reader.read()
+      if record is None:
+        return
+      self.prev_record = record
+      if self._get_msec_timestamp(record) >= desired_time_msec:
+        self.reader.seek(-1, 'current')
+        return
+
+  ############################
+  def _reset(self):
+    self.reader.seek(0, 'start')
+
+  ############################
+  def _get_msec_timestamp(self, record):
+    time_str = record.split(' ', 1)[0]
+    return timestamp.timestamp(time_str, time_format=self.time_format) * 1000
+
+  ############################
+  def _peek_msec(self):
+    record = self.reader.read()
+    if record is None:
+      return None
+    self.reader.seek(-1, 'current')
+    return self._get_msec_timestamp(record)
+
+  ############################
+  # Note: this will change the file position if necessary, and should not be used
+  # except where that behavior is appropriate.
+  def _get_first_msec_timestamp(self):
+    if self._first_msec_timestamp is None:
+      self._reset()
+      record = self.reader.read()
+      if record is None:
+        return None
+      self._first_msec_timestamp = self._get_msec_timestamp(record)
+    return self._first_msec_timestamp
+
+  ############################
+  def seek_time(self, offset=0, origin='current'):
+    """
+    Behavior is intended to mimic file seek() behavior but with
+    respect to timestamps.
+    After calling this, the next record read will be the first record
+    whose timestamp is the same as or later than the requested time;
+    if no such record is found, it will read to the end.
+    Exception: if the records are not in exact chronological order, 
+    records appearing before the current record but with a later 
+    timestamp might be missed.
+
+    Args:
+      offset: offset in msec relative to origin
+      origin: 'start', 'current' or 'end'
+
+    Returns:
+      Requested time in msec, i.e. timestamp of (T0 + offset),
+      where T0 = timestamp(first record) if origin = 'start' 
+               = timestamp(next record) if origin = 'current' and next record is not None
+               = timestamp(last record) if origin = 'current' and next record is None
+               = timestamp(last record) if origin = 'end' 
+      Returns None if no timestamps were found
+    """
+    if self.filebase is None:
+      raise ValueError('seek_time() not allowed on stdin')
+
+    # TODO: Maybe these are OK, as long as 'end' is defined as the point where 
+    # read() returns None for the first time.
+    if self.tail and origin == 'end':
+      raise ValueError('tail=True incompatible with origin == "end"')
+    if self.refresh_file_spec and origin == 'end':
+      raise ValueError('refresh_file_spec=True incompatible with origin == "end"')
+
+    if origin == 'start':
+      if offset < 0:
+        raise ValueError("Can't back up past earliest record")
+      first_timestamp = self._get_first_msec_timestamp()
+      if first_timestamp is None:
+        return None
+      desired_time = first_timestamp + offset
+      if self.prev_record is None:
+        self._reset()
+      else:
+        prev_timestamp = self._get_msec_timestamp(self.prev_record)
+        if prev_timestamp >= desired_time:
+          self._reset()
+      self._read_until(desired_time) 
+      return desired_time
+
+    elif origin == 'current':
+      next_timestamp = self._peek_msec()
+      curr_timestamp = next_timestamp or self._get_msec_timestamp(self.prev_record)
+      if curr_timestamp is None:
+        return None
+      desired_time = curr_timestamp + offset
+      if offset == 0:
+        return desired_time
+      if offset < 0:
+        self._reset()
+      self._read_until(desired_time)
+      return desired_time
+  
+    elif origin == 'end':
+      while self.read() is not None:
+        pass
+      if self.prev_record is None:
+        return None
+      end_timestamp = self._get_msec_timestamp(self.prev_record)
+      desired_time = end_timestamp + offset
+      if offset < 0:
+        self._reset()
+        self._read_until(desired_time) 
+      return desired_time
+
+    else:
+      raise ValueError('Unknown origin value: "%s"' % origin)
+
+  ############################
+  # Read a range of records beginning with timestamp start
+  # milliseconds, and ending *before* timestamp stop milliseconds.
+  def read_time_range(self, start=None, stop=None):
+    if self.filebase is None:
+      raise ValueError('read_time_range() not allowed on stdin')
+
+    # TODO: Is this needed? stop=None would be OK unless records are
+    # being written faster than they're being read.
+    if stop is None:
+      if self.tail:
+        raise ValueError('tail=True incompatible with stop=None')
+      if self.refresh_file_spec:
+        raise ValueError('refresh_file_spec=True incompatible with stop=None')
+
+    if start is None:
+      starting_offset = 0
+    else:
+      starting_offset = start - self._get_first_msec_timestamp()
+
+    self.seek_time(starting_offset, 'start')
+    records = []
+    while True:
+      record = self.read()
+      if record is None:
+        break
+      if stop and self._get_msec_timestamp(record) >= stop:
+        break
+      records.append(record)
+    return records

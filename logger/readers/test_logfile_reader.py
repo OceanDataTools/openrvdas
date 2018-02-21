@@ -11,9 +11,10 @@ import warnings
 sys.path.append('.')
 
 from logger.readers.logfile_reader import LogfileReader
-from logger.utils import formats
+from logger.utils import formats, timestamp
 
-SAMPLE_DATA = """2017-11-04:05:12:19.441672 3.5kHz,5360.54,1,,,,1500,-39.580717,-37.461886
+SAMPLE_DATA = """\
+2017-11-04:05:12:19.441672 3.5kHz,5360.54,1,,,,1500,-39.580717,-37.461886
 2017-11-04:05:12:19.694789 3.5kHz,4569.66,1,,,,1500,-39.581014,-37.462332
 2017-11-04:05:12:19.950082 3.5kHz,5123.88,1,,,,1500,-39.581264,-37.462718
 2017-11-04:05:12:20.205345 3.5kHz,5140.06,0,,,,1500,-39.581545,-37.463151
@@ -26,6 +27,31 @@ SAMPLE_DATA = """2017-11-04:05:12:19.441672 3.5kHz,5360.54,1,,,,1500,-39.580717,
 2017-11-04:05:12:21.981359 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183
 2017-11-04:05:12:22.232898 3.5kHz,5146.45,0,,,,1500,-39.583854,-37.466634
 2017-11-04:05:12:22.486203 3.5kHz,4517.82,0,,,,1500,-39.584130,-37.467078"""
+
+# Same as above, but timeshifted and split into two days.
+SAMPLE_DATA_2 = {
+  '2017-11-04': [
+    '2017-11-04:23:59:59.441672 3.5kHz,5360.54,1,,,,1500,-39.580717,-37.461886',
+    '2017-11-04:23:59:59.694789 3.5kHz,4569.66,1,,,,1500,-39.581014,-37.462332',
+    '2017-11-04:23:59:59.950082 3.5kHz,5123.88,1,,,,1500,-39.581264,-37.462718'
+  ],
+  '2017-11-05': [
+    '2017-11-05:00:00:00.205345 3.5kHz,5140.06,0,,,,1500,-39.581545,-37.463151',
+    '2017-11-05:00:00:00.460595 3.5kHz,5131.30,1,,,,1500,-39.581835,-37.463586',
+    '2017-11-05:00:00:00.715024 3.5kHz,5170.92,1,,,,1500,-39.582138,-37.464015',
+    '2017-11-05:00:00:00.965842 3.5kHz,5137.89,0,,,,1500,-39.582438,-37.464450',
+    '2017-11-05:00:00:01.218870 3.5kHz,5139.14,0,,,,1500,-39.582731,-37.464887',
+    '2017-11-05:00:00:01.470677 3.5kHz,5142.55,0,,,,1500,-39.582984,-37.465285',
+    '2017-11-05:00:00:01.726024 3.5kHz,4505.91,1,,,,1500,-39.583272,-37.465733',
+    '2017-11-05:00:00:01.981359 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183',
+    '2017-11-05:00:00:02.232898 3.5kHz,5146.45,0,,,,1500,-39.583854,-37.466634',
+    '2017-11-05:00:00:02.486203 3.5kHz,4517.82,0,,,,1500,-39.584130,-37.467078'
+  ]
+}
+
+def get_msec_timestamp(record):
+  time_str = record.split(' ', 1)[0]
+  return timestamp.timestamp(time_str, time_format=timestamp.TIME_FORMAT) * 1000
 
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
   time.sleep(pre_sleep_interval)
@@ -152,6 +178,131 @@ class TestLogfileReader(unittest.TestCase):
       reader = LogfileReader(tmpfilename, tail=True)
       for line in sample_lines:
         self.assertEqual(line, reader.read())
+
+  ############################
+  def test_basic_seek(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      filebase = tmpdirname + '/mylog-'
+      sample_lines = []
+      for f in sorted(SAMPLE_DATA_2):
+        create_file(filebase + f, SAMPLE_DATA_2[f])
+        sample_lines.extend(SAMPLE_DATA_2[f])
+      START_TIMESTAMP = get_msec_timestamp(sample_lines[0])
+      END_TIMESTAMP   = get_msec_timestamp(sample_lines[-1])
+
+      reader = LogfileReader(filebase)
+      self.assertEqual(START_TIMESTAMP, reader.seek_time(0, 'start'))
+      self.assertEqual(sample_lines[0], reader.read())
+      self.assertEqual(START_TIMESTAMP + 1000, reader.seek_time(1000, 'start'))
+      self.assertEqual(sample_lines[4], reader.read())
+      self.assertEqual(sample_lines[5], reader.read())
+      self.assertEqual(END_TIMESTAMP, reader.seek_time(0, 'end'))
+      self.assertEqual(None, reader.read())
+
+  ############################
+  def test_seek_current(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      filebase = tmpdirname + '/mylog-'
+      sample_lines = []
+      for f in sorted(SAMPLE_DATA_2):
+        create_file(filebase + f, SAMPLE_DATA_2[f])
+        sample_lines.extend(SAMPLE_DATA_2[f])
+      START_TIMESTAMP = get_msec_timestamp(sample_lines[0])
+      END_TIMESTAMP   = get_msec_timestamp(sample_lines[-1])
+
+      reader = LogfileReader(filebase)
+      self.assertEqual(START_TIMESTAMP, reader.seek_time(0, 'current'))
+      self.assertEqual(START_TIMESTAMP + 1000, reader.seek_time(1000, 'current'))
+
+      # the first record with t >= START_TIMESTAMP + 1000 (= 1509840000441.672) is sample_lines[4]
+      timestamp_of_expected_next_record = get_msec_timestamp(sample_lines[4]) # 1509840000460.595 
+      self.assertEqual(timestamp_of_expected_next_record, reader.seek_time(0, 'current'))
+      self.assertEqual(timestamp_of_expected_next_record - 500, reader.seek_time(-500, 'current'))
+
+      # now the expected next record is sample_lines[3], since it's the first one with
+      # t > timestamp_of_expected_next_record - 500 (= 1509839999960.595)
+      self.assertEqual(sample_lines[3], reader.read())
+      self.assertEqual(sample_lines[4], reader.read())
+
+      # now seek to a time later than the last timestamp: check that the returned
+      # time is the requested time, and that a subsequent read() returns None
+      timestamp_of_expected_next_record = get_msec_timestamp(sample_lines[5])
+      self.assertEqual(timestamp_of_expected_next_record + 10000, reader.seek_time(10000, 'current'))
+      self.assertEqual(None, reader.read())
+
+      # check that 'current' time is now END_TIMESTAMP (= 1509840002486.203)
+      self.assertEqual(END_TIMESTAMP, reader.seek_time(0, 'current'))
+
+      # go back one second (to 1509840001486.203)
+      # next record should be sample_lines[9] (t = 1509840001726.024)
+      self.assertEqual(END_TIMESTAMP - 1000, reader.seek_time(-1000, 'current'))
+      self.assertEqual(sample_lines[9], reader.read())
+
+  ############################
+  def test_seek_after_reading_to_end(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      filebase = tmpdirname + '/mylog-'
+      sample_lines = []
+      for f in sorted(SAMPLE_DATA_2):
+        create_file(filebase + f, SAMPLE_DATA_2[f])
+        sample_lines.extend(SAMPLE_DATA_2[f])
+      START_TIMESTAMP = get_msec_timestamp(sample_lines[0])
+      END_TIMESTAMP   = get_msec_timestamp(sample_lines[-1])
+
+      reader = LogfileReader(filebase)
+      while reader.read() is not None:
+        pass
+      self.assertEqual(END_TIMESTAMP, reader.seek_time(0, 'current'))
+      self.assertEqual(None, reader.read())
+      self.assertEqual(END_TIMESTAMP, reader.seek_time(0, 'end'))
+      self.assertEqual(None, reader.read())
+      self.assertEqual(END_TIMESTAMP - 1000, reader.seek_time(-1000, 'current'))
+      self.assertEqual(sample_lines[9], reader.read())
+      while reader.read() is not None:
+        pass
+      self.assertEqual(END_TIMESTAMP - 1000, reader.seek_time(-1000, 'end'))
+      self.assertEqual(sample_lines[9], reader.read())
+
+  ############################
+  def test_read_time_range(self):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      logging.info('created temporary directory "%s"', tmpdirname)
+      filebase = tmpdirname + '/mylog-'
+      sample_lines = []
+      for f in sorted(SAMPLE_DATA_2):
+        create_file(filebase + f, SAMPLE_DATA_2[f])
+        sample_lines.extend(SAMPLE_DATA_2[f])
+      START_TIMESTAMP = get_msec_timestamp(sample_lines[0])
+      END_TIMESTAMP   = get_msec_timestamp(sample_lines[-1])
+
+      reader = LogfileReader(filebase)
+      records = reader.read_time_range(START_TIMESTAMP, END_TIMESTAMP)
+      self.assertEqual(records, sample_lines[:-1])
+      records = reader.read_time_range(START_TIMESTAMP, END_TIMESTAMP + .01)
+      self.assertEqual(records, sample_lines)
+      records = reader.read_time_range(START_TIMESTAMP + 1, END_TIMESTAMP)
+      self.assertEqual(records, sample_lines[1:-1])
+      records = reader.read_time_range(START_TIMESTAMP + 1, END_TIMESTAMP + 1)
+      self.assertEqual(records, sample_lines[1:])
+      records = reader.read_time_range(START_TIMESTAMP + .001, None)
+      self.assertEqual(records, sample_lines[1:])
+      records = reader.read_time_range(None, END_TIMESTAMP)
+      self.assertEqual(records, sample_lines[:-1])
+      records = reader.read_time_range(None, None)
+      self.assertEqual(records, sample_lines)
+      records = reader.read_time_range(START_TIMESTAMP, START_TIMESTAMP)
+      self.assertEqual(records, [])
+      records = reader.read_time_range(START_TIMESTAMP + 1000, None)
+      self.assertEqual(records, sample_lines[4:])
+      records = reader.read_time_range(START_TIMESTAMP + 1000, END_TIMESTAMP - 1000)
+      self.assertEqual(records, sample_lines[4:9])
+      records = reader.read_time_range(START_TIMESTAMP + 1000, START_TIMESTAMP + 500)
+      self.assertEqual(records, [])
+      with self.assertRaises(ValueError):
+        records = reader.read_time_range(START_TIMESTAMP - 1, END_TIMESTAMP)
 
 ################################################################################
 if __name__ == '__main__':
