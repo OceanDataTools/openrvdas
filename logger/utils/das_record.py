@@ -13,7 +13,7 @@ class DASRecord:
   """
   ############################
   def __init__(self, json=None, data_id=None, message_type=None,
-               timestamp=0, fields={}, metadata={}):
+               timestamp=0, fields=None, metadata=None):
     """
     If a json string is passed, it is parsed into a dictionary and its
     values for timestamp, fields and metadata are copied in. Otherwise,
@@ -35,8 +35,14 @@ class DASRecord:
       self.data_id = data_id
       self.message_type = message_type
       self.timestamp = timestamp or timestamp_method()
-      self.fields = fields
-      self.metadata = metadata
+      if fields is None:
+        self.fields = {}
+      else:
+        self.fields = fields
+      if metadata is None:
+        self.metadata = {}
+      else:
+        self.metadata = metadata
 
   ############################
   def as_json(self):

@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+
+import logging
+import random
+import sys
+import time
+import unittest
+import warnings
+
+import mysql.connector.errors
+
+sys.path.append('.')
+
+from logger.utils.das_record import DASRecord
+from logger.utils.nmea_parser import NMEAParser
+
+from database.mysql_connector import MySQLConnector as DB
+
+SAMPLE_DATA = [
+  's330 2017-11-04:05:12:19.479303 $INZDA,000000.17,07,08,2014,,*78',
+  's330 2017-11-04:05:12:19.729748 $INGGA,000000.16,3934.831698,S,03727.695242,W,1,12,0.7,0.82,M,-3.04,M,,*6F',
+  's330 2017-11-04:05:12:19.984911 $INVTG,227.19,T,245.64,M,10.8,N,20.0,K,A*36',
+  's330 2017-11-04:05:12:20.240177 $INRMC,000000.16,A,3934.831698,S,03727.695242,W,10.8,227.19,070814,18.5,W,A*00',
+  's330 2017-11-04:05:12:20.495430 $INHDT,235.18,T*18',
+  's330 2017-11-04:05:12:20.748665 $PSXN,20,1,0,0,0*3A',
+  's330 2017-11-04:05:12:21.000716 $PSXN,22,-0.05,-0.68*32',
+  's330 2017-11-04:05:12:21.256010 $PSXN,23,-2.82,1.00,235.18,-1.66*3D',
+]
+
+class TestDatabase(unittest.TestCase):
+
+  ############################
+  def test_mysql_connector(self):
+    parser = NMEAParser()
+    try:
+      db = DB(database='test', host='localhost', user='test', password='test')
+    except mysql.connector.errors.ProgrammingError as e:
+      self.assertTrue(False,'Unable to create database connection. Have you '
+                      'set up the appropriate setup script in database/setup?')
+
+    test_num = random.randint(0,100000)
+    records = [parser.parse_record(s) for s in SAMPLE_DATA]
+    for i in range(len(records)):
+      records[i].data_id = '%d_%s' % (test_num, records[i].data_id)
+      table_name = db.table_name(records[i])
+      logging.info('Deleting table %s', table_name)
+      if db.table_exists(table_name):
+        db.delete_table(table_name)
+      self.assertFalse(db.table_exists(table_name))
+
+    for record in records:
+      table_name = db.table_name(record)
+
+      self.assertFalse(db.table_exists(table_name))
+      db.create_table_from_record(record)
+      self.assertTrue(db.table_exists(table_name))
+      
+      db.write_record(record)
+      result = db.read(table_name)
+      logging.info('Read record: %s', str(result))
+      self.assertEqual(record, result)
+
+      # Make sure we don't get anything when we try a second time
+      self.assertFalse(db.read(table_name))
+      
+    for record in records:
+      table_name = db.table_name(record)
+      db.write_record(record)
+      results = db.read_range(table_name, start=1)
+      logging.debug('Read records: %s', [str(r) for r in results])
+      self.assertEqual(len(results), 2)
+
+    table_name = db.table_name(records[0])
+    
+    db.seek(table_name, 0, 'start')
+    self.assertEqual(db.read(table_name), records[0])
+    self.assertEqual(db.read(table_name), records[0])
+    self.assertEqual(db.read(table_name), None)
+    db.seek(table_name, -2, 'current')
+    self.assertEqual(db.read(table_name), records[0])
+    self.assertEqual(db.read(table_name), records[0])
+    self.assertEqual(db.read(table_name), None)
+    db.seek(table_name, -1, 'end')
+    self.assertEqual(db.read(table_name), records[0])
+    self.assertEqual(db.read(table_name), None)
+
+    # Finally, clean up
+    for record in records:
+      table_name = db.table_name(record)
+      db.delete_table(table_name)
+      self.assertFalse(db.table_exists(table_name))
+      
+    db.close()
+
+if __name__ == '__main__':
+  import argparse
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-v', '--verbosity', dest='verbosity',
+                      default=0, action='count',
+                      help='Increase output verbosity')
+  args = parser.parse_args()
+
+  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  logging.basicConfig(format=LOGGING_FORMAT)
+
+  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+  
+  unittest.main(warnings='ignore')
