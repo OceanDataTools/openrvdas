@@ -60,21 +60,21 @@ to import it as "Connector".
 ## Connector Class methods
 
 A connector class should implement the following methods:
-
- __init__(self, database, host, user, password)
-exec_sql_command(self, command)
-table_name(self,  record)
-table_exists(self, table_name)
-create_table_from_record(self,  record)
-write_record(self, record)
-read(self,  table_name, start=None)
-seek(self,  table_name, offset=0, origin='current')
-read_range(self,  table_name, start=None, stop=None)
-read_time_range(self,  table_name, start_time=None, stop_time=None)
-delete_table(self,  table_name)
-close(self)
-
-Please see [database/mysql_connector.py](my_sql_connector.py) for the
+```
+  __init__(self, database, host, user, password)
+  exec_sql_command(self, command)
+  table_name(self,  record)
+  table_exists(self, table_name)
+  create_table_from_record(self,  record)
+  write_record(self, record)
+  read(self,  table_name, start=None)
+  seek(self,  table_name, offset=0, origin='current')
+  read_range(self,  table_name, start=None, stop=None)
+  read_time_range(self,  table_name, start_time=None, stop_time=None)
+  delete_table(self,  table_name)
+  close(self)
+```
+Please see [database/mysql_connector.py](mysql_connector.py) for the
 semantics of of these methods.
 
 ## Running
