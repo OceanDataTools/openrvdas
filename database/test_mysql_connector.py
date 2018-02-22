@@ -7,14 +7,13 @@ import time
 import unittest
 import warnings
 
-import mysql.connector.errors
-
 sys.path.append('.')
 
 from logger.utils.das_record import DASRecord
 from logger.utils.nmea_parser import NMEAParser
 
-from database.mysql_connector import MySQLConnector as DB
+from database.settings import MYSQL_ENABLED
+from database.mysql_connector import MySQLConnector
 
 SAMPLE_DATA = [
   's330 2017-11-04:05:12:19.479303 $INZDA,000000.17,07,08,2014,,*78',
@@ -30,11 +29,14 @@ SAMPLE_DATA = [
 class TestDatabase(unittest.TestCase):
 
   ############################
+  @unittest.skipUnless(MYSQL_ENABLED, 'MySQL not installed; tests of MySQL '
+                       'functionality will not be run.')
   def test_mysql_connector(self):
     parser = NMEAParser()
     try:
-      db = DB(database='test', host='localhost', user='test', password='test')
-    except mysql.connector.errors.ProgrammingError as e:
+      db = MySQLConnector(database='test', host='localhost',
+                          user='test', password='test')
+    except Exception as e:
       self.assertTrue(False,'Unable to create database connection. Have you '
                       'set up the appropriate setup script in database/setup?')
 
@@ -100,7 +102,7 @@ if __name__ == '__main__':
                       help='Increase output verbosity')
   args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   logging.basicConfig(format=LOGGING_FORMAT)
 
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}

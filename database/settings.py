@@ -1,9 +1,39 @@
 """
 Settings for database operations.
 """
+import logging
+import sys
+
+sys.path.append('.')
 
 # Which database connector to use. When selecting a new connector, you may
 # need to run the corresponding database/setup_xxx_connector.sh script.
 
+Connector = None
+DATABASE_ENABLED = False
+MYSQL_ENABLED = False
 
-CONNECTOR = 'mysql_connector' # use database/setup_mysql_connector.sh
+try:
+  # Specify/uncomment the database you're using here
+
+  # To set up MySQL connectivity, install, configure and start
+  # MySQL server, and set up appropriate mysql user:
+  #   apt-get install mysql-server libmysqlclient-dev # ubuntu
+  #
+  #   pip3 install mysqlclient, mysql-connector==2.1.6
+  #
+  #   # Create 'data' and 'test' databases and mysql_user
+  #   database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
+  #
+  from database.mysql_connector import MYSQL_ENABLED, MySQLConnector as Connector
+  if MYSQL_ENABLED:
+      DATABASE_ENABLED = True
+
+  # Put instructions and imports for other databases here
+
+except ImportError:
+  pass
+
+if not DATABASE_ENABLED:
+  logging.warning('Settings in database/settings.py not configured; database '
+                  'functionality may not be available.')

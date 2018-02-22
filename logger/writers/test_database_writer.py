@@ -7,6 +7,7 @@ import unittest
 import warnings
 
 sys.path.append('.')
+from database.settings import DATABASE_ENABLED
 
 from logger.utils.das_record import DASRecord
 from logger.writers.database_writer import DatabaseWriter
@@ -26,13 +27,13 @@ SAMPLE_DATA = [
 class TestDatabaseWriter(unittest.TestCase):
 
   ############################
-  def test_create_table(self):
-    warnings.filterwarnings("ignore", category=ResourceWarning)
-
+  @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseWriter; '
+                       'Database not configured in dabase/settings.py.')
+  def test_database_writer(self):
     parser = NMEAParser()
     writer = DatabaseWriter(database='test', host='localhost',
-                        user='test', password='test',
-                        create_if_missing=True)
+                            user='test', password='test',
+                            create_if_missing=True)
 
     test_num = random.randint(0,100000)
     records = [parser.parse_record(s) for s in SAMPLE_DATA]

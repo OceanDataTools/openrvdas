@@ -7,6 +7,7 @@ import unittest
 import warnings
 
 sys.path.append('.')
+from database.settings import DATABASE_ENABLED
 
 from logger.utils.das_record import DASRecord
 from logger.readers.database_reader import DatabaseReader
@@ -23,9 +24,11 @@ SAMPLE_DATA = [
   's330 2017-11-04:06:54:19.408518 $INZDA,002039.17,07,08,2014,,*70',
 ]
 
-class TestDatabaseWriter(unittest.TestCase):
+class TestDatabaseReader(unittest.TestCase):
 
   ############################
+  @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
+                       'Database not configured in dabase/settings.py.')
   def test_read(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)
@@ -91,6 +94,8 @@ class TestDatabaseWriter(unittest.TestCase):
     reader.db.close()
 
   ############################
+  @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
+                       'Database not configured in dabase/settings.py.')
   def test_read_range(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)
@@ -127,6 +132,8 @@ class TestDatabaseWriter(unittest.TestCase):
     reader.db.close()
 
   ############################
+  @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
+                       'Database not configured in dabase/settings.py.')
   def test_read_time_range(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)

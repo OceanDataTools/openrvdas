@@ -3,23 +3,28 @@
 import logging
 import sys
 
-import mysql.connector as db
-
 sys.path.append('.')
-
 from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 
-from logger.writers.writer import Writer
+try:
+  import mysql.connector
+  MYSQL_ENABLED = True
+except ImportError:
+  MYSQL_ENABLED = False
 
 # Based on https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html
 
 ################################################################################
-class MySQLConnector(Writer):
+class MySQLConnector:
   def __init__(self, database, host, user, password):
     """Interface to MySQLConnector, to be imported by, e.g. DatabaseWriter."""
-    self.connection = db.connect(database=database, host=host,
-                                 user=user, password=password)
+    if not MYSQL_ENABLED:
+      logging.warning('MySQL not found, so MySQL functionality not available.')
+      return
+
+    self.connection = mysql.connector.connect(database=database, host=host,
+                                        user=user, password=password)
     # Map from table_name->next id we're going to read from that table
     self.next_id = {}
 

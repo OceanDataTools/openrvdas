@@ -11,13 +11,7 @@ from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 from logger.readers.reader import TimestampedReader
 
-from database import settings
-
-# Isolate DB-related operations to imported class.
-if settings.CONNECTOR == 'mysql_connector':
-  from database.mysql_connector import MySQLConnector as DB
-else:
-  logging.fatal('Unknown database connector: "%s"', settings.CONNECTOR)
+from database.settings import DATABASE_ENABLED, Connector
 
 ################################################################################
 # Read to the specified file. If filename is empty, read to stdout.
@@ -30,8 +24,11 @@ class DatabaseReader(TimestampedReader):
                data_id, message_type=None, sleep_interval=2):
     super().__init__(output_format=Python_Record)
 
-    self.db = DB(database=database, host=host, user=user, password=password)
+    if not DATABASE_ENABLED:
+      raise RuntimeError('Database not configured; DatabaseReader unavailable.')
 
+    self.db = Connector(database=database, host=host,
+                        user=user, password=password)
     dummy_das_record = DASRecord(data_id=data_id, message_type=message_type)
     self.table_name = self.db.table_name(dummy_das_record)
     self.sleep_interval = sleep_interval

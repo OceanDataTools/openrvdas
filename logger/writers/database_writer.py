@@ -9,13 +9,7 @@ from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
-from database import settings
-
-# Isolate DB-related operations to imported class.
-if settings.CONNECTOR == 'mysql_connector':
-  from database.mysql_connector import MySQLConnector as DB
-else:
-  logging.fatal('Unknown database connector: "%s"', settings.CONNECTOR)
+from database.settings import DATABASE_ENABLED, Connector
 
 ################################################################################
 class DatabaseWriter(Writer):
@@ -26,7 +20,11 @@ class DatabaseWriter(Writer):
     exist."""
     super().__init__(input_format=Python_Record)
 
-    self.db = DB(database=database, host=host, user=user, password=password)
+    if not DATABASE_ENABLED:
+      raise RuntimeError('Database not configured; DatabaseWriter unavailable.')
+
+    self.db = Connector(database=database, host=host,
+                        user=user, password=password)
     self.create_if_missing = create_if_missing
     self.skip_record_type_check = skip_record_type_check
 
