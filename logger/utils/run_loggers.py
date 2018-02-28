@@ -42,7 +42,7 @@ sys.path.append('.')
 
 from logger.utils.build_config import BuildConfig
 from logger.utils.read_json import read_json
-from logger.listener.listen import ListenerFromConfig
+from logger.listener.listen import ListenerFromLoggerConfig
 
 run_logging = logging.getLogger(__name__)
 
@@ -152,7 +152,7 @@ class LoggerRunner:
     config, and return the Process object."""
 
     run_logging.debug('Starting config:\n%s', pprint.pformat(config))
-    listener = ListenerFromConfig(config)
+    listener = ListenerFromLoggerConfig(config)
     proc = multiprocessing.Process(target=listener.run)
     proc.start()
     return proc

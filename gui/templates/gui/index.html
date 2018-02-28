@@ -205,6 +205,12 @@
     clearInterval(timeout_timer);
     timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
 
+    // Websocket server wants us to reload the page
+    var refresh = message.refresh;
+    if (refresh) {
+      window.location.reload(true);
+    }
+
     var status = message.status;
     if (status) {
       // Update mode - "select_mode" only defined if user is authenticated;

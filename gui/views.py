@@ -9,9 +9,9 @@ from django.http import HttpResponse
 
 sys.path.append('.')
 
-from .models import load_config_to_models
-from .models import Logger, Config, Mode, Cruise
-from .models import ConfigState, CruiseState, CurrentCruise
+from .models import load_cruise_config_to_models
+from .models import Logger, LoggerConfig, LoggerConfigState
+from .models import Mode, Cruise, CruiseState, CurrentCruise
 
 # Read in JSON with comments
 from logger.utils.read_json import parse_json
@@ -47,7 +47,7 @@ def index(request):
 
       try:
         config = parse_json(config_contents.decode('utf-8'))
-        errors += load_config_to_models(config, config_file.name)
+        errors += load_cruise_config_to_models(config, config_file.name)
       except JSONDecodeError as e:
         errors.append(str(e))
         config = None
@@ -72,7 +72,7 @@ def index(request):
 
       # Now update all the logger.current_config assignments to reflect
       # current mode.
-      for config in Config.objects.filter(mode=new_mode):
+      for config in LoggerConfig.objects.filter(mode=new_mode):
         logger = config.logger
         logger.desired_config = config
         logger.save()
@@ -159,7 +159,7 @@ def edit_config(request, logger_name):
       desired_config = None
       logging.warning('Selected null config for %s', logger_name)
     else:
-      desired_config = Config.objects.get(id=config_id)
+      desired_config = LoggerConfig.objects.get(id=config_id)
       logging.warning('Selected config "%s" for %s',
                       desired_config.name, logger_name)
 
@@ -178,7 +178,7 @@ def edit_config(request, logger_name):
     return HttpResponse('<script>window.close()</script>')
 
   logger = Logger.objects.get(name=logger_name)
-  all_configs = Config.objects.filter(logger=logger)
+  all_configs = LoggerConfig.objects.filter(logger=logger)
   logger_mode_config = get_logger_mode_config(logger)
 
   return render(request, 'gui/edit_config.html',
@@ -206,7 +206,7 @@ def load_config(request):
 
       try:
         config = parse_json(config_contents.decode('utf-8'))
-        errors += load_config_to_models(config, config_file.name)
+        errors += load_cruise_config_to_models(config, config_file.name)
       except JSONDecodeError as e:
         errors.append(str(e))
 
@@ -226,11 +226,11 @@ def get_logger_mode_config(logger):
   try:
     cruise = CurrentCruise.objects.latest('as_of').cruise
     mode = cruise.current_mode
-    return Config.objects.get(logger=logger, mode=mode)
+    return LoggerConfig.objects.get(logger=logger, mode=mode)
   except CurrentCruise.DoesNotExist:
     logging.warning('CurrentCruise does not exist')
     return None
-  except Config.DoesNotExist:
+  except LoggerConfig.DoesNotExist:
     logging.warning('No config matching logger %s in mode %s', logger, mode)
     return None
 

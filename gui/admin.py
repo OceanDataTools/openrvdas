@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import Logger, Config, Mode, Cruise
-from .models import CurrentCruise, CruiseState, ConfigState
+from .models import Logger, LoggerConfig, LoggerConfigState
+from .models import Mode, Cruise, CurrentCruise, CruiseState
 
 class ModeInline(admin.TabularInline):
   model = Mode
@@ -13,8 +13,8 @@ class ModeInline(admin.TabularInline):
   can_delete = False
   show_change_link = True
   
-class ConfigInline(admin.TabularInline):
-  model = Config
+class LoggerConfigInline(admin.TabularInline):
+  model = LoggerConfig
   extra = 0
   fields = ('logger', 'name')
   readonly_fields = ('name', 'logger', 'enabled', 'mode', 'config_json')
@@ -32,7 +32,7 @@ class CruiseAdmin(admin.ModelAdmin):
 
   list_display = ('id', 'end', 'start',
                   'current_mode', 'default_mode',
-                  'config_filename', 'modes')
+                  'config_filename', 'loaded_time', 'modes')
   fieldsets = [
     (None,    {'fields':['id', 'current_mode']}),
     ('Dates', {'classes': ['collapse'],
@@ -52,7 +52,7 @@ class ModeAdmin(admin.ModelAdmin):
     #('JSON Source', {'classes': ['collapse'],
     #                 'fields': ['config_json']})
     ]
-  inlines = [ ConfigInline ]
+  inlines = [ LoggerConfigInline ]
 
 class CurrentCruiseAdmin(admin.ModelAdmin):
   list_display = ('cruise', 'as_of')
@@ -64,7 +64,6 @@ admin.site.register(Mode, ModeAdmin)
 admin.site.register(CurrentCruise, CurrentCruiseAdmin)
 
 admin.site.register(Logger)
-admin.site.register(Config)
-
-admin.site.register(ConfigState)
+admin.site.register(LoggerConfig)
+admin.site.register(LoggerConfigState)
 admin.site.register(CruiseState)

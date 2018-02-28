@@ -50,6 +50,7 @@ from logger.readers.logfile_reader import LogfileReader
 from logger.readers.network_reader import NetworkReader
 from logger.readers.serial_reader import SerialReader
 from logger.readers.text_file_reader import TextFileReader
+from logger.readers.database_reader import DatabaseReader
 from logger.readers.timeout_reader import TimeoutReader
 
 from logger.transforms.prefix_transform import PrefixTransform
@@ -65,13 +66,14 @@ from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
 from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.logfile_writer import LogfileWriter
+from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
 
 from logger.utils import read_json
 from logger.listener.listener import Listener
 
 ################################################################################
-class ListenerFromConfig(Listener):
+class ListenerFromLoggerConfig(Listener):
   """Helper class for instantiating a Listener object from a Python dict."""
   ############################
   def __init__(self, config):
@@ -134,7 +136,7 @@ class ListenerFromConfig(Listener):
     return component
 
 ################################################################################
-class ListenerFromConfigFile(ListenerFromConfig):
+class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
   """Helper class for instantiating a Listener object from a JSON config."""
   ############################
   def __init__(self, config_file):
@@ -165,6 +167,13 @@ if __name__ == '__main__':
   # Readers
   parser.add_argument('--network', dest='network', default=None,
                       help='Comma-separated network addresses to read from')
+
+  parser.add_argument('--database', dest='database', default=None,
+                      help='user@host:database:data_id:message_type to '
+                      'read from. Multiple'
+                      'readers may be specified by comma-separating the '
+                      'specifications. Should be accompanied by the '
+                      '--database_password flag.')
 
   parser.add_argument('--file', dest='file', default=None,
                       help='Comma-separated files to read from in parallel. '
@@ -254,6 +263,14 @@ if __name__ == '__main__':
   parser.add_argument('--write_network', dest='write_network', default=None,
                       help='Network address(es) to write to')
 
+  parser.add_argument('--write_database', dest='write_database', default=None,
+                      help='user@host:database to write to. Should be '
+                      'accompanied by the --database_password flag.')
+
+  parser.add_argument('--database_password', dest='database_password',
+                      default=None, help='Password for database specified by '
+                      '--write_database and/or --read_database.')
+
   parser.add_argument('--write_record_screen', dest='write_record_screen',
                       action='store_true', default=False,
                       help='Display the most current DASRecord field values '
@@ -298,7 +315,7 @@ if __name__ == '__main__':
           'line arguments (except -v) may be used: {}'.format(sys.argv[i]))
 
     # Read config file and instantiate
-    listener = ListenerFromConfigFile(parsed_args.config_file)
+    listener = ListenerFromLoggerConfigFile(parsed_args.config_file)
 
   # If not --config, go parse all those crazy command line arguments manually
   else:
@@ -398,6 +415,23 @@ if __name__ == '__main__':
             filebase=filebase, use_timestamps=all_args.logfile_use_timestamps,
             refresh_file_spec=all_args.refresh_file_spec))
 
+      # For each comma-separated spec, parse out values for
+      # user@host:database:data_id[:message_type]. We count on
+      # --database_password having been specified somewhere.
+      if new_args.database:
+        password = all_args.database_password
+        for spec in new_args.database.split(','):
+          (user, host_db) = spec.split('@')
+          (host, database, data_id) = host_db.split(':', maxsplit=2)
+          if ':' in data_id:
+            (data_id, message_type) = data_id.split(':')
+          else:
+            message_type = None
+          readers.append(DatabaseReader(database=database, host=host,
+                                        user=user, password=password,
+                                        data_id=data_id,
+                                        message_type=message_type))
+
       # SerialReader is a little more complicated than other readers
       # because it can take so many parameters. Use the kwargs trick to
       # pass them all in.
@@ -440,6 +474,15 @@ if __name__ == '__main__':
           writers.append(NetworkWriter(network=addr))
       if new_args.write_record_screen:
         writers.append(RecordScreenWriter())
+      if new_args.write_database:
+        password = all_args.database_password
+        # Parse out values for user@host:database. We count on
+        # --database_password having been specified somewhere.
+        (user, host_db) = new_args.write_database.split('@')
+        (host, database) = host_db.split(':')
+        writers.append(DatabaseWriter(database=database, host=host,
+                                        user=user, password=password,
+                                        create_if_missing=True))
 
     ##########################
     # Now that we've got our readers, transforms and writers defined,

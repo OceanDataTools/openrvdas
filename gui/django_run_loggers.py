@@ -51,11 +51,11 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
 django.setup()
 
-from gui.models import Logger, Config, Mode, Cruise
-from gui.models import ConfigState, CruiseState, CurrentCruise
+from gui.models import Logger, LoggerConfig, LoggerConfigState
+from gui.models import Mode, Cruise, CruiseState, CurrentCruise
 
 from logger.utils.read_json import parse_json
-from logger.listener.listen import ListenerFromConfig
+from logger.listener.listen import ListenerFromLoggerConfig
 
 from gui.settings import WEBSOCKET_HOST, WEBSOCKET_PORT
 
@@ -93,6 +93,10 @@ class DjangoLoggerRunner:
     self.processes = {}
     self.errors = {}
 
+    # If new current cruise is loaded, we want to notice and politely
+    # kill off all running loggers from the previous current cruise.
+    self.current_cruise_timestamp = None
+    
     self.interval = interval
     self.quit_flag = False
     
@@ -111,7 +115,29 @@ class DjangoLoggerRunner:
     except CurrentCruise.DoesNotExist:
       logging.warning('No current cruise - nothing to do.')
       return None
+
+    # Before we do anything else, make sure that we haven't had a new
+    # "current_cruise" loaded since we last looked. If we have,
+    # indelicately kill off all running loggers and clear out configs.
+
+    cruise_timestamp = cruise.loaded_time.timestamp()
+    if not self.current_cruise_timestamp:
+      self.current_cruise_timestamp = cruise_timestamp
+    if self.current_cruise_timestamp != cruise_timestamp:
+      logging.warning('New cruise loaded - killing off running loggers.')
+      for logger in self.processes:
+        process = self.processes[logger]
+        process.terminate()
+      self.processes = {}
+      self.configs = {}
+      self.errors = {}
+
+      # Set our new current_cruise_timestamp
+      self.current_cruise_timestamp = cruise_timestamp
+
+      
     status['cruise'] = cruise.id
+    status['cruise_loaded_time'] = cruise_timestamp
     status['cruise_start'] = cruise.start.strftime(TIME_FORMAT)
     status['cruise_end'] = cruise.end.strftime(TIME_FORMAT)
 
@@ -208,7 +234,7 @@ class DjangoLoggerRunner:
     try:
       config_dict = parse_json(config.config_json)
       run_logging.debug('Starting config:\n%s', pprint.pformat(config))
-      listener = ListenerFromConfig(config_dict)
+      listener = ListenerFromLoggerConfig(config_dict)
 
       proc = multiprocessing.Process(target=listener.run)
       proc.start()
@@ -262,7 +288,7 @@ class LoggerServer:
     loop.run_until_complete(start_server)
 
     try:
-      loop.run_forever()
+      loop.run_forever()      
     except KeyboardInterrupt:
       logging.warning('Status server received keyboard interrupt - '
                       'trying to shut down nicely.')
@@ -302,13 +328,28 @@ class LoggerServer:
         if not self.status == previous_status:
           logging.warning('Logger status has changed')
           logging.info('New status: %s', pprint.pformat(self.status))
+
+          # Has user reloaded the cruise configuration? If so, trigger
+          # a page refresh. Otherwise, send status
+          if (previous_status and
+              self.status['cruise_loaded_time']
+                != previous_status['cruise_loaded_time']):
+              values['refresh'] = True
+          else:
+            values['status'] = self.status
+          
           previous_status = self.status
-          values['status'] = self.status
 
       send_message = json_dumps(values)
 
       logging.info('sending: %s', send_message)
-      await websocket.send(send_message)
+      try:
+        await websocket.send(send_message)
+
+      # If the client has disconnected, we're done here - go home
+      except websockets.exceptions.ConnectionClosed:
+        return
+
       await asyncio.sleep(self.interval)
 
 ################################################################################

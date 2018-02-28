@@ -13,7 +13,7 @@ class Logger(models.Model):
   name = models.CharField(max_length=256, blank=True)
   cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
                              blank=True, null=True)
-  desired_config = models.ForeignKey('Config', on_delete=models.CASCADE,
+  desired_config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
                                      related_name="desired_config",
                                      blank=True, null=True)
 
@@ -21,7 +21,7 @@ class Logger(models.Model):
     return self.name
    
 ##############################
-class Config(models.Model):
+class LoggerConfig(models.Model):
   name = models.CharField(max_length=256, blank=True)
   logger = models.ForeignKey('Logger', on_delete=models.CASCADE,
                              blank=True, null=True)
@@ -41,7 +41,6 @@ class Mode(models.Model):
   name = models.CharField(max_length=256, blank=True)
   cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
                              blank=True, null=True)
-
   def __str__(self):
     return self.name
   
@@ -54,7 +53,8 @@ class Cruise(models.Model):
   # The file this cruise configuration has been loaded from
   config_filename = models.CharField(max_length=256, blank=True, null=True)
   config_text = models.TextField(blank=True, null=True)
-  
+  loaded_time = models.DateTimeField(auto_now_add=True, null=True)
+
   current_mode = models.ForeignKey('Mode', on_delete=models.SET_NULL,
                                    blank=True, null=True,
                                    related_name='cruise_current_mode')
@@ -88,17 +88,17 @@ class CruiseState(models.Model):
     return '%s: %s' % (self.cruise, self.mode)
 
 ##############################
-# Do we want this config running? Is it? If so, since when, and what's its pid?
+# Do we want this logger_config running? Is it? If so, since when, and what's its pid?
 # If run state doesn't align with current mode, then highlight in interface
-class ConfigState(models.Model):
-  config = models.ForeignKey('Config', on_delete=models.CASCADE)
+class LoggerConfigState(models.Model):
+  config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE)
   running = models.BooleanField()
   desired = models.BooleanField()
   process_id = models.IntegerField(default=0, blank=True)
   timestamp = models.DateTimeField(auto_now_add=True)
   
 ################################################################################
-def load_config_to_models(config, config_filename='none'):
+def load_cruise_config_to_models(config, config_filename='none'):
   errors = []
   
   # Load cruise info. In theory, we're okay with there not being a
@@ -114,7 +114,7 @@ def load_config_to_models(config, config_filename='none'):
     cruise_id = '--no name--'
     cruise_start = None
     cruise_end = None
-    
+
   # If the cruise already exists, delete it (and all modes/configs
   # that point to it) before creating the new one. Save the filename
   # and the config source that we've been handed.
@@ -149,10 +149,10 @@ def load_config_to_models(config, config_filename='none'):
                                                         cruise=cruise_model)
 
         config_json = json.dumps(logger_config, indent=2, sort_keys=True)
-        config_model = Config(name=logger_config.get('name', 'no_name'),
-                              logger=logger_model,
-                              mode=mode_model,
-                              config_json=config_json)
+        config_model = LoggerConfig(name=logger_config.get('name', 'no_name'),
+                                    logger=logger_model,
+                                    mode=mode_model,
+                                    config_json=config_json)
         config_model.save()
 
   # Do we have a default mode?

@@ -8,7 +8,7 @@ import threading
 
 from logger.utils.build_config import BuildConfig
 from logger.utils.read_json import read_json
-from logger.listener.listen import ListenerFromConfig
+from logger.listener.listen import ListenerFromLoggerConfig
 
 vars = {
   "%CRUISE%" : "NBP1700",
@@ -43,7 +43,7 @@ logger_configs = BuildConfig.expand_template(vars, logger_template,
 pprint.pprint(logger_configs)
 
 for logger in logger_configs:
-  listener = ListenerFromConfig(logger_configs[logger])
+  listener = ListenerFromLoggerConfig(logger_configs[logger])
   threading.Thread(target=listener.run).start()
 
 """
@@ -55,7 +55,7 @@ import sys
 sys.path.append('.')
 
 from logger.utils.read_json import read_json
-from logger.listener.listen import ListenerFromConfig
+from logger.listener.listen import ListenerFromLoggerConfig
 
 ################################################################################
 class BuildConfig:
@@ -316,7 +316,7 @@ def validate_config(config):
     for logger, logger_spec in loggers.items():
       logging.info('    Validating logger: %s:%s', mode_name, logger)
       try:
-        listener = ListenerFromConfig(logger_spec)
+        listener = ListenerFromLoggerConfig(logger_spec)
       except KeyboardInterrupt:
         return
       except Exception as e:
