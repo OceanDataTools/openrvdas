@@ -39,14 +39,14 @@ class TestDatabaseWriter(unittest.TestCase):
     records = [parser.parse_record(s) for s in SAMPLE_DATA]
     for i in range(len(records)):
       records[i].data_id = '%d_%s' % (test_num, records[i].data_id)
-      table_name = writer._table_name(records[i])
+      table_name = writer._table_name_from_record(records[i])
       logging.info('Deleting table %s', table_name)
       if writer._table_exists(table_name):
         writer._delete_table(table_name)
       self.assertFalse(writer._table_exists(table_name))
 
     for record in records:
-      table_name = writer._table_name(record)
+      table_name = writer._table_name_from_record(record)
 
       self.assertFalse(writer._table_exists(table_name))    
       writer.write(record)

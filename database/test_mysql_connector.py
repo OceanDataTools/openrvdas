@@ -14,6 +14,7 @@ from logger.utils.nmea_parser import NMEAParser
 
 from database.settings import MYSQL_ENABLED
 from database.mysql_connector import MySQLConnector
+from mysql.connector.errors import ProgrammingError
 
 SAMPLE_DATA = [
   's330 2017-11-04:05:12:19.479303 $INZDA,000000.17,07,08,2014,,*78',
@@ -44,14 +45,21 @@ class TestDatabase(unittest.TestCase):
     records = [parser.parse_record(s) for s in SAMPLE_DATA]
     for i in range(len(records)):
       records[i].data_id = '%d_%s' % (test_num, records[i].data_id)
-      table_name = db.table_name(records[i])
+      table_name = db.table_name_from_record(records[i])
       logging.info('Deleting table %s', table_name)
       if db.table_exists(table_name):
         db.delete_table(table_name)
       self.assertFalse(db.table_exists(table_name))
 
+    # Delete the mapping table so that we can test its automatic creation
+    if db.table_exists(db.FIELD_NAME_MAPPING_TABLE):
+      try:
+        db.delete_table(db.FIELD_NAME_MAPPING_TABLE)
+      except ProgrammingError:
+        pass
+      
     for record in records:
-      table_name = db.table_name(record)
+      table_name = db.table_name_from_record(record)
 
       self.assertFalse(db.table_exists(table_name))
       db.create_table_from_record(record)
@@ -62,17 +70,22 @@ class TestDatabase(unittest.TestCase):
       logging.info('Read record: %s', str(result))
       self.assertEqual(record, result)
 
-      # Make sure we don't get anything when we try a second time
+      # Some fields can come from more than one record, and we only
+      # map to the first such record/table_name
+      #for field in record.fields:
+      #  self.assertEqual(table_name, db.table_name_from_field(field))
+
+      # Make sure we don't get anything when we try a second read
       self.assertFalse(db.read(table_name))
       
     for record in records:
-      table_name = db.table_name(record)
+      table_name = db.table_name_from_record(record)
       db.write_record(record)
       results = db.read_range(table_name, start=1)
       logging.debug('Read records: %s', [str(r) for r in results])
       self.assertEqual(len(results), 2)
 
-    table_name = db.table_name(records[0])
+    table_name = db.table_name_from_record(records[0])
     
     db.seek(table_name, 0, 'start')
     self.assertEqual(db.read(table_name), records[0])
@@ -88,7 +101,7 @@ class TestDatabase(unittest.TestCase):
 
     # Finally, clean up
     for record in records:
-      table_name = db.table_name(record)
+      table_name = db.table_name_from_record(record)
       db.delete_table(table_name)
       self.assertFalse(db.table_exists(table_name))
       

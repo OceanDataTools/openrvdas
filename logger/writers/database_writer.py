@@ -29,9 +29,9 @@ class DatabaseWriter(Writer):
     self.skip_record_type_check = skip_record_type_check
 
   ############################
-  def _table_name(self,  record):
+  def _table_name_from_record(self,  record):
     """Infer table name from record."""
-    return self.db.table_name(record)
+    return self.db.table_name_from_record(record)
 
   ############################
   def _table_exists(self, table_name):
@@ -69,7 +69,7 @@ class DatabaseWriter(Writer):
 
     # If table doesn't exist, either create or complain, depending on
     # what user specified at initialization.
-    table_name = self._table_name(record)
+    table_name = self._table_name_from_record(record)
     if not self._table_exists(table_name):
       if self.create_if_missing:
         self._create_table_from_record(record)

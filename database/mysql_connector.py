@@ -17,6 +17,10 @@ except ImportError:
 
 ################################################################################
 class MySQLConnector:
+  # Name of table in which we will store mappings from record field
+  # names to the tnames of the tables containing those fields.
+  FIELD_NAME_MAPPING_TABLE = 'FIELD_NAME_MAPPING_TABLE'
+
   def __init__(self, database, host, user, password):
     """Interface to MySQLConnector, to be imported by, e.g. DatabaseWriter."""
     if not MYSQL_ENABLED:
@@ -38,7 +42,7 @@ class MySQLConnector:
     cursor.close()
     
   ############################
-  def table_name(self,  record):
+  def table_name_from_record(self,  record):
     """Infer table name from record."""
     table_name = record.data_id
     if record.message_type:
@@ -47,6 +51,26 @@ class MySQLConnector:
     # Clean up common, non-SQL-friendly characters
     #table_name = table_name.replace('$','').replace('-','_')
     return table_name
+
+  ############################
+  def table_name_from_field(self,  field):
+    """Look up which table a particular field is stored in."""
+
+    # If mapping table doesn't exist, then either we've not seen any
+    # records yet, or something has gone horribly wrong.
+    if not self.table_exists(self.FIELD_NAME_MAPPING_TABLE):
+      logging.info('Mapping table "%s" does not exist - is something wrong?')
+      return None
+    
+    query = 'select table_name from %s where (field_name = "%s")' % \
+            (self.FIELD_NAME_MAPPING_TABLE, field)
+    logging.debug('executing query "%s"', query)
+    cursor = self.connection.cursor()
+    cursor.execute(query)
+    try:
+      return next(cursor)[0]
+    except (StopIteration, IndexError):
+      return None
 
   ############################
   def table_exists(self, table_name):
@@ -69,12 +93,39 @@ class MySQLConnector:
   }
   
   ############################
+  def _register_record_fields(self,  record):
+    """Add a field_name->table_name entry for each field name in the record
+    to the database. This will allow us to look up the right tables to fetch
+    when given a list of field names."""
+
+    # Create mapping table if it doesn't exist yet
+    if not self.table_exists(self.FIELD_NAME_MAPPING_TABLE):
+      table_cmd = 'create table %s (field_name varchar(255) primary key, ' \
+                  'table_name tinytext, index(field_name))' \
+                  %  self.FIELD_NAME_MAPPING_TABLE
+      logging.info('Creating table with command: %s', table_cmd)
+      self.exec_sql_command(table_cmd)
+
+    # What table does this record type belong to?
+    table_name = self.table_name_from_record(record)
+
+    # Iterate through fields in record, figure out their type and
+    # create an table type appropriate for each. Skip if a matching
+    # field_name already exists.
+    for field_name in record.fields:
+      if not self.table_name_from_field(field_name):
+        write_cmd = 'insert into %s values ("%s", "%s")' % \
+                    (self.FIELD_NAME_MAPPING_TABLE, field_name, table_name)
+        logging.debug('Inserting record into table with command: %s', write_cmd)
+        self.exec_sql_command(write_cmd)
+
+  ############################
   def create_table_from_record(self,  record):
     """Create a new table with one column for each field in the record. Try
     to infer the proper type for each column based on the type of the value
     of the field."""
 
-    table_name = self.table_name(record)
+    table_name = self.table_name_from_record(record)
     if self.table_exists(table_name):
       logging.warning('Trying to create table that already exists: %s',
                       table_name)
@@ -93,11 +144,15 @@ class MySQLConnector:
         raise TypeError('Unrecognized value type in record: %s', type(value))
       columns.append('`%s` %s' %( field, self.TYPE_MAP[type(value)]))
 
-    table_cmd = 'create table `%s` (%s, primary key (`id`))' % \
+    table_cmd = 'create table `%s` (%s, primary key (`id`), ' \
+                'index(id, timestamp))' % \
                 (table_name, ','.join(columns))
     logging.info('Creating table with command: %s', table_cmd)
     self.exec_sql_command(table_cmd)
 
+    # Register the fields in the record as being contained in this table.
+    self._register_record_fields(record)
+    
   ############################
   def write_record(self, record):
     """Write record to table."""
@@ -111,7 +166,7 @@ class MySQLConnector:
       elif type(value) is bool:
         return '1' if value else '0'
       
-    table_name = self.table_name(record)
+    table_name = self.table_name_from_record(record)
 
     keys = record.fields.keys()
     write_cmd = 'insert into `%s` (`timestamp`,%s) values (%f,%s)' % \
@@ -174,16 +229,22 @@ class MySQLConnector:
     return results
 
   ############################
-  def read(self,  table_name, start=None):
+  def read(self,  table_name, field_list=None, start=None):
     """Read the next record from table. If start is specified, reset read
     to start at that position."""
 
-    if  start is None:
+    if start is None:
       if not table_name in self.next_id:
         self.next_id[table_name] = 1
       start = self.next_id[table_name]
+
+    # If they haven't given us any fields, retrieve everything
+    if not field_list:
+      fields = '*'
+    else:
+      fields = 'id,timestamp,' + ','.join(field_list)
       
-    query = 'select * from `%s` where (id = %d)' % (table_name, start)
+    query = 'select %s from `%s` where (id = %d)' % (fields, table_name, start)
     result = self._fetch_and_parse_records(table_name, query)
 
     if not result:
@@ -211,7 +272,7 @@ class MySQLConnector:
                   table_name, self.next_id[table_name])
 
   ############################
-  def read_range(self,  table_name, start=None, stop=None):
+  def read_range(self,  table_name, field_list=None, start=None, stop=None):
     """Read one or more records from table. If start is not specified,
     begin reading at the next not-yet-read record. If stops is
     not specified, read as many records as are available."""
@@ -226,11 +287,18 @@ class MySQLConnector:
       condition_list.append('id < %d' % stop)
     condition_clause = 'where (%s)' % ' and '.join(condition_list)
 
-    query = 'select * from `%s` %s' % (table_name, condition_clause)
+    # If they haven't given us any fields, retrieve everything
+    if not field_list:
+      fields = '*'
+    else:
+      fields = 'id,timestamp,' + ','.join(field_list)
+    
+    query = 'select %s from `%s` %s' % (fields, table_name, condition_clause)
     return self._fetch_and_parse_records(table_name, query)
 
   ############################
-  def read_time_range(self,  table_name, start_time=None, stop_time=None):
+  def read_time_range(self, table_name, field_list=None,
+                      start_time=None, stop_time=None):
     """Read one or more records from table. If start_time is not
     specified, begin reading at the earliest record. If stop_time is
     not specified, read to the most recent."""
@@ -246,7 +314,13 @@ class MySQLConnector:
     else:
       condition_clause = ''
 
-    query = 'select * from `%s` %s' % (table_name, condition_clause)
+    # If they haven't given us any fields, retrieve everything
+    if not field_list:
+      fields = '*'
+    else:
+      fields = 'id,timestamp,' + ','.join(field_list)
+
+    query = 'select %s from `%s` %s' % (fields, table_name, condition_clause)
     return self._fetch_and_parse_records(table_name, query)
     
   ############################
@@ -259,6 +333,12 @@ class MySQLConnector:
     # Clear out our recollection of how far into the table we've read
     if table_name in self.next_id:
       del self.next_id[table_name]
+
+    # Delete any references to that table from the file name mapping
+    delete_refs = 'delete from %s where table_name = "%s"' % \
+                  (self.FIELD_NAME_MAPPING_TABLE, table_name)
+    logging.info('Removing table references with command: %s', delete_refs)
+    self.exec_sql_command(delete_refs)
 
   ############################
   def close(self):
