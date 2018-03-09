@@ -12,6 +12,8 @@ from logger.utils.das_record import DASRecord
 from logger.readers.reader import TimestampedReader
 
 from database.settings import DATABASE_ENABLED, Connector
+from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
+from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD
 
 ################################################################################
 # Read records from specified table.
@@ -20,8 +22,10 @@ class DatabaseReader(TimestampedReader):
   Database records to DASRecords.
   """
   ############################
-  def __init__(self, database, host, user, password, data_id,
-               message_type=None, sleep_interval=2):
+  def __init__(self, data_id, message_type=None,
+               database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
+               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
+               sleep_interval=2):
     super().__init__(output_format=Python_Record)
 
     if not DATABASE_ENABLED:
@@ -88,7 +92,10 @@ class DatabaseFieldReader(TimestampedReader):
   Timestamped database fields to dictionary.
   """
   ############################
-  def __init__(self, database, host, user, password, fields, sleep_interval=2):
+  def __init__(self, fields,
+               database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
+               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
+               sleep_interval=2):
     super().__init__()
 
     if not DATABASE_ENABLED:
@@ -97,7 +104,8 @@ class DatabaseFieldReader(TimestampedReader):
     self.db = Connector(database=database, host=host,
                         user=user, password=password)
 
-    self.fields = fields.split(',')
+    self.fields = fields
+    logging.info('Created DatabaseFieldReader for %s', fields)
 
     # Map from field names to table names and back. Keep track if we have
     # a table for every field or not.

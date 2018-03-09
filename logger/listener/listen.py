@@ -427,10 +427,10 @@ if __name__ == '__main__':
             (data_id, message_type) = data_id.split(':')
           else:
             message_type = None
-          readers.append(DatabaseReader(database=database, host=host,
-                                        user=user, password=password,
-                                        data_id=data_id,
-                                        message_type=message_type))
+          readers.append(DatabaseReader(data_id=data_id,
+                                        message_type=message_type,
+                                        database=database, host=host,
+                                        user=user, password=password))
 
       # SerialReader is a little more complicated than other readers
       # because it can take so many parameters. Use the kwargs trick to
@@ -481,8 +481,8 @@ if __name__ == '__main__':
         (user, host_db) = new_args.write_database.split('@')
         (host, database) = host_db.split(':')
         writers.append(DatabaseWriter(database=database, host=host,
-                                        user=user, password=password,
-                                        create_if_missing=True))
+                                      user=user, password=password,
+                                      create_if_missing=True))
 
     ##########################
     # Now that we've got our readers, transforms and writers defined,

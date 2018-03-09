@@ -1,0 +1,164 @@
+{% extends 'gui/base.html' %}
+
+{% block content %}
+
+<title>Widget</title>
+<h1>Widget</h1>
+{# ######################################################################## #}
+<body>
+</body>
+{# ######################################################################## #}
+{# Start of Javascript                                                      #}
+<script type="text/javascript">
+
+
+  // Websocket connection code
+  if (! "WebSocket" in window) {
+    alert("Warning: websockets not supported by your Browser!");
+  }
+  // Set timer to retry websocket connection if it closes. Interval is
+  // turned off in ws.onopen() if/when we succeed.
+  var ws;
+  var retry_interval = 3000;
+  var retry_websocket_connection;
+
+  // Initialize widget and try connecting. NOTE: we should really
+  // pass initial_message into connect_websocket and stash it, but
+  // I've not been able to get the context/bind() stuff to work so
+  // that the message persists if, e.g. server isn't up yet and we
+  // need to retry.
+
+  // 'initial_message' is what websocket should send to server once
+  // it has connected.
+  var initial_message = initialize_widget();
+  connect_websocket();
+  
+  ///////////////////////////////
+  function connect_websocket(message) {
+    console.log("Trying to reconnect to websocket_display_server");
+    ws = new WebSocket("ws://{{ websocket_display_server }}");
+    
+    ws.onopen = function() {
+      // We've succeeded in opening - don't try anymore
+      console.log("Connected - clearing retry interval");
+      clearTimeout(retry_websocket_connection);
+
+      // Web Socket is connected, send data using send()
+      ws.send(JSON.stringify(initial_message));
+      console.log("Sent initial message: " +
+                   JSON.stringify(initial_message));
+    };
+
+    ws.onclose = function() { 
+      // websocket is closed.
+      console.log("Connection is closed...");
+
+      // Set up an alarm to sleep, then try re-opening websocket
+      console.log("Setting timer to reconnect");
+      retry_websocket_connection = setTimeout(connect_websocket,
+                                              retry_interval);
+    };
+
+    ws.onmessage = function (received_message) {
+      //console.log("message: " + received_message.data);
+      process_message(JSON.parse(received_message.data));
+    };
+  };
+  
+  window.onbeforeunload = function(event) {
+    console.log("Closing websocket");
+    ws.close();
+  };
+
+  function send(message) {
+    console.log("Sending message '" + message + "'");
+    ws.send(message);
+    console.log("Sent!");
+  };
+
+  ////////////////////////////////////////////////////////////////////
+  // Widget-specific functions
+
+  function initialize_widget() {
+  // Widget-specific code
+    var num_secs = 30;
+    var field_list = "{{ field_list }}";
+    var  fields = field_list.split(',');
+    if (fields.length == 1 && fields[0].length == 0) {
+      fields = [];
+    }
+
+    // Create the table and rows
+    var table = document.createElement("table");
+    table.id = "result_table";
+    var body = document.getElementsByTagName("body")[0];
+    body.appendChild(table);
+
+    if (fields.length == 0) {
+      table.innerHTML =
+             "Call with desired fields in comma-separated " +
+             "list following url specification. e.g.: " +
+             "<a href=http://localhost:8000/widget/S330Pitch,S330Roll>" +
+             "http://localhost:8000/widget/S330Pitch,S330Roll</a>";
+    }
+
+    console.log("Drawing table rows");
+    var tr = document.createElement("tr");
+    var td_timestamp = document.createElement("td");
+    td_timestamp.id = "timestamp";
+    td_timestamp.colSpan = "2";
+    var td_timestamp_txt = document.createTextNode("No timestamp. Is gui/displayserver.py running?");
+    td_timestamp.appendChild(td_timestamp_txt);
+    tr.appendChild(td_timestamp);
+    table.appendChild(tr);                          
+
+    for (var i = 0; i < fields.length; i++) {
+      var tr = document.createElement("tr");
+      var td1 = document.createElement("td");
+      var td1_txt = document.createTextNode(fields[i]);
+      td1.appendChild(td1_txt);
+
+      var td2 = document.createElement("td");
+      var td2_txt = document.createTextNode("-");
+      td2.appendChild(td2_txt);
+      td2.id = fields[i] + "_td";
+
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      table.appendChild(tr);                          
+    }
+
+    // Create the initial message we want the websocket to send
+    // on our behalf.
+    var message = [];
+    for (var i = 0; i < fields.length; i++) {
+      message.push([fields[i], num_secs]);
+    }
+    console.log("Initialization message: " + JSON.stringify(message));
+    return message;
+  };
+
+  ///////////////////////////////////////////////////////////////
+  function process_message(message) {
+    // Fill in the values we've received
+    for (var field_name in message) {
+      if (message.hasOwnProperty(field_name)) {
+        var value_list = message[field_name];
+        var last_pair = value_list[value_list.length-1];
+        var timestamp = last_pair[0];
+        var value = last_pair[1];
+        var td = document.getElementById(field_name + "_td");
+        td.innerHTML = value
+
+        var ts_td = document.getElementById("timestamp");
+        ts_td.innerHTML = Date(timestamp * 1000);
+      }
+    }
+
+    //clearInterval(timeout_timer);
+    //timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
+  };
+
+</script>
+
+{% endblock content %}

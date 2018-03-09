@@ -6,6 +6,11 @@ import sys
 
 sys.path.append('.')
 
+DEFAULT_DATABASE = 'data'
+DEFAULT_DATABASE_HOST = 'localhost'
+DEFAULT_DATABASE_USER = 'rvdas'
+DEFAULT_DATABASE_PASSWORD = 'rvdas'
+
 # Which database connector to use. When selecting a new connector, you may
 # need to run the corresponding database/setup_xxx_connector.sh script.
 

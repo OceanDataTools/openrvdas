@@ -16,7 +16,7 @@ from .models import Mode, Cruise, CruiseState, CurrentCruise
 # Read in JSON with comments
 from logger.utils.read_json import parse_json
 
-from gui.settings import WEBSOCKET_STATUS_SERVER
+from gui.settings import WEBSOCKET_STATUS_SERVER, WEBSOCKET_DISPLAY_SERVER
 
 from gui.django_run_loggers import LoggerServer
 
@@ -234,3 +234,16 @@ def get_logger_mode_config(logger):
     logging.warning('No config matching logger %s in mode %s', logger, mode)
     return None
 
+################################################################################
+def widget(request, field_list=''):
+  global logger_server
+  global logger_server_proc
+
+  template_vars = {
+    'field_list': field_list,
+    'is_superuser': True,
+    'websocket_display_server': WEBSOCKET_DISPLAY_SERVER,
+  }
+
+  # Render what we've ended up with
+  return render(request, 'gui/widget.html', template_vars)

@@ -207,9 +207,9 @@ class TestDatabaseFieldReader(unittest.TestCase):
                             user='test', password='test',
                             create_if_missing=True)
 
-    reader = DatabaseFieldReader(database='test', host='localhost',
-                                 user='test', password='test',
-                                 fields='S330GPSTime,S330GPSDay,S330Roll')
+    reader = DatabaseFieldReader(fields=['S330GPSTime','S330GPSDay','S330Roll'],
+                                 database='test', host='localhost',
+                                 user='test', password='test')
 
     table_name = writer._table_name_from_record(DASRecord(data_id=data_id,
                                                 message_type=message_type))
@@ -274,9 +274,9 @@ class TestDatabaseFieldReader(unittest.TestCase):
                             user='test', password='test',
                             create_if_missing=True)
 
-    reader = DatabaseReader(database='test', host='localhost',
-                            user='test', password='test',
-                            data_id=data_id, message_type='$INZDA')
+    reader = DatabaseReader(data_id=data_id, message_type='$INZDA',
+                            database='test', host='localhost',
+                            user='test', password='test')
 
     table_name = writer._table_name_from_record(DASRecord(data_id=data_id,
                                                 message_type=message_type))
@@ -312,9 +312,9 @@ class TestDatabaseFieldReader(unittest.TestCase):
                             user='test', password='test',
                             create_if_missing=True)
 
-    reader = DatabaseReader(database='test', host='localhost',
-                            user='test', password='test',
-                            data_id=data_id, message_type='$INZDA')
+    reader = DatabaseReader(data_id=data_id, message_type='$INZDA',
+                            database='test', host='localhost',
+                            user='test', password='test')
 
     table_name = writer._table_name_from_record(DASRecord(data_id=data_id,
                                                 message_type=message_type))

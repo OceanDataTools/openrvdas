@@ -30,10 +30,16 @@ HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
-WEBSOCKET_HOST = 'localhost'
-#WEBSOCKET_HOST = HOSTNAME
-WEBSOCKET_PORT = 8765
-WEBSOCKET_STATUS_SERVER = '%s:%d/status' % (WEBSOCKET_HOST, WEBSOCKET_PORT)
+# Hack to just run locally without worrying about opening ports
+HOSTNAME = 'localhost'
+
+STATUS_HOST = HOSTNAME
+STATUS_PORT = 8765
+WEBSOCKET_STATUS_SERVER = '%s:%d/status' % (STATUS_HOST, STATUS_PORT)
+
+DISPLAY_HOST = HOSTNAME
+DISPLAY_PORT = 8766
+WEBSOCKET_DISPLAY_SERVER = '%s:%d/display' % (DISPLAY_HOST, DISPLAY_PORT)
 
 # Application definition
 

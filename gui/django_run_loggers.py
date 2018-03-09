@@ -57,7 +57,7 @@ from gui.models import Mode, Cruise, CruiseState, CurrentCruise
 from logger.utils.read_json import parse_json
 from logger.listener.listen import ListenerFromLoggerConfig
 
-from gui.settings import WEBSOCKET_HOST, WEBSOCKET_PORT
+from gui.settings import STATUS_HOST, STATUS_PORT
 
 run_logging = logging.getLogger(__name__)
 
@@ -254,7 +254,7 @@ class DjangoLoggerRunner:
 ################################################################################
 class LoggerServer:
   ############################
-  def __init__(self, interval=0.5, host=WEBSOCKET_HOST, port=WEBSOCKET_PORT):
+  def __init__(self, interval=0.5, host=STATUS_HOST, port=STATUS_PORT):
 
     self.interval = interval
     self.host = host
@@ -358,10 +358,10 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser()
   parser.add_argument('--host', dest='host', action='store',
-                      default=WEBSOCKET_HOST,
+                      default=STATUS_HOST,
                       help='Hostname for status server.')
   parser.add_argument('--port', dest='port', action='store', type=int,
-                      default=WEBSOCKET_PORT,
+                      default=STATUS_PORT,
                       help='Port for status server.')
 
   parser.add_argument('--interval', dest='interval', action='store',

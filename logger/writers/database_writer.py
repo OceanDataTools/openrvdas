@@ -4,16 +4,19 @@ import logging
 import sys
 
 sys.path.append('.')
-  
+
 from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
 from database.settings import DATABASE_ENABLED, Connector
+from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
+from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD
 
 ################################################################################
 class DatabaseWriter(Writer):
-  def __init__(self, database, host, user, password,
+  def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
+               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
                create_if_missing=False, skip_record_type_check=False):
     """Write to the passed DASRecord to a database table. If
     create_if_missing is true, create the table if it doesn't yet
