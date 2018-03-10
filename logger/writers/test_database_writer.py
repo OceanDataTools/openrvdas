@@ -28,7 +28,7 @@ class TestDatabaseWriter(unittest.TestCase):
 
   ############################
   @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseWriter; '
-                       'Database not configured in dabase/settings.py.')
+                       'Database not configured in database/settings.py.')
   def test_database_writer(self):
     parser = NMEAParser()
     writer = DatabaseWriter(database='test', host='localhost',

@@ -38,7 +38,7 @@ to get the database working:
 ```
 2. Install the python mysql-connector modules
 ```
-  pip3 install mysqlclient, mysql-connector==2.1.6
+  pip3 install mysqlclient mysql-connector==2.1.6
 ```
 3. Run the configuration script that will create 'test' and 'data'
 databases and will create an sql user that has access to those databases.
@@ -75,7 +75,7 @@ A connector class should implement the following methods:
   close(self)
 ```
 Please see [database/mysql_connector.py](mysql_connector.py) for the
-semantics of of these methods.
+semantics of these methods.
 
 ## Running
 

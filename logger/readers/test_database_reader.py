@@ -39,7 +39,7 @@ class TestDatabaseReader(unittest.TestCase):
 
   ############################
   @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
-                       'Database not configured in dabase/settings.py.')
+                       'Database not configured in database/settings.py.')
   def test_read(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)
@@ -106,7 +106,7 @@ class TestDatabaseReader(unittest.TestCase):
 
   ############################
   @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
-                       'Database not configured in dabase/settings.py.')
+                       'Database not configured in database/settings.py.')
   def test_read_range(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)
@@ -144,7 +144,7 @@ class TestDatabaseReader(unittest.TestCase):
 
   ############################
   @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
-                       'Database not configured in dabase/settings.py.')
+                       'Database not configured in database/settings.py.')
   def test_read_time_range(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)
@@ -196,7 +196,7 @@ class TestDatabaseFieldReader(unittest.TestCase):
 
   ############################
   @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
-                       'Database not configured in dabase/settings.py.')
+                       'Database not configured in database/settings.py.')
   def test_read(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)
@@ -263,7 +263,7 @@ class TestDatabaseFieldReader(unittest.TestCase):
 
   ############################
   @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
-                       'Database not configured in dabase/settings.py.')
+                       'Database not configured in database/settings.py.')
   def test_read_range(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)
@@ -301,7 +301,7 @@ class TestDatabaseFieldReader(unittest.TestCase):
 
   ############################
   @unittest.skipUnless(DATABASE_ENABLED, 'Skipping test of DatabaseReader; '
-                       'Database not configured in dabase/settings.py.')
+                       'Database not configured in database/settings.py.')
   def test_read_time_range(self):
     # Create records using synthetic, randomized data id and write to db
     test_num = random.randint(0,100000)

@@ -3,7 +3,7 @@
 
 Simple demonstration:
 
-1. Make sure database is configured (using root passwor
+1. Make sure database is configured (using root password)
 
     database/setup_mysql_connector.sh <root_pwd> <mysql_user> <user_pwd>
 
