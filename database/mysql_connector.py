@@ -89,7 +89,7 @@ class MySQLConnector:
     int:   'int',
     float: 'double',
     str:   'text',
-    bool:  'bool'
+    bool:  'bool',
   }
   
   ############################
@@ -124,7 +124,8 @@ class MySQLConnector:
     """Create a new table with one column for each field in the record. Try
     to infer the proper type for each column based on the type of the value
     of the field."""
-
+    if not record:
+      return
     table_name = self.table_name_from_record(record)
     if self.table_exists(table_name):
       logging.warning('Trying to create table that already exists: %s',
@@ -140,7 +141,11 @@ class MySQLConnector:
     # create an table type appropriate for each.
     for field in record.fields:
       value = record.fields[field]
+      if value is None:
+        value = ''
       if not type(value) in self.TYPE_MAP:
+        logging.error('Unrecognized value type in record: %s', type(value))
+        logging.error('Record: %s', str(record))
         raise TypeError('Unrecognized value type in record: %s', type(value))
       columns.append('`%s` %s' %( field, self.TYPE_MAP[type(value)]))
 
@@ -159,13 +164,18 @@ class MySQLConnector:
 
     # Helper function for formatting
     def map_value_to_str(value):
-      if type(value) in [int, float]:
+      if value is None:
+        return '""'
+      elif type(value) in [int, float]:
         return str(value)
       elif type(value) is str:
         return '"%s"' % value
       elif type(value) is bool:
         return '1' if value else '0'
-      
+      logging.warning('Found unexpected value type "%s" for "%s"',
+                      type(value), value)
+      return '""'
+
     table_name = self.table_name_from_record(record)
 
     keys = record.fields.keys()

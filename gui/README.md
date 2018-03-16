@@ -55,10 +55,9 @@ the sample cruise definition for running on test data, run:
   python3 manage.py runserver localhost:8000
 ```
 4. In a browser window, visit ```http://localhost:8000```
-5. In a separate window, start the LoggerServer (-v increases verbosity
-of the LoggerServer, -V increases the verbosity of the loggers it runs).
+5. In a separate window, run gui/run_servers.py
 ```
-  python3 gui/django_run_loggers.py -v -V
+  python3 gui/run_servers.py
 ```
 
 6. The sample cruise configuration relies on simulated serial ports
@@ -88,7 +87,8 @@ configuration for the current mode, its configuration button will be
 yellow.
 
 The sample configurations use UDP broadcasts to port 6224 for network
-writes and subdirectories under /tmp/log/NBP1700/ for file writes. You can run a listener on the port using
+writes and subdirectories under /tmp/log/NBP1700/ for file writes. You
+can run a listener on the port using
 ```
   python3 logger/listener/listen.py --network :6224 --write_file -
 ```
@@ -102,17 +102,45 @@ Note also that you can still observe the state of the system if you
 are not logged in (e.g. as ```rvdas```), but you will be unable to
 select or change any configurations.
 
+The "Manage Servers" button will open a page from which (when it is
+working), you will be able to stop and restart logger and status
+servers. You can also use links on that page to open other pages that
+monitor the messages emitted by the individual servers.
+
+### Widgets
+
+A very rudimentary display widget has been implemented in
+```
+http://localhost:8000/widget
+```
+It draws its data from records written to the database, so will only
+display new data when the relevant loggers are writing to the database
+(in the sample configuration, this happens in underway mode, or if you
+manually select a net/file/db configuration for an individual logger).
+
+To use it, append the widget path name with a comma-separated list of
+Fields you wish to monitor, e.g.
+```
+http://localhost:8000/widget/S330Roll,S330Pitch
+```
+The S330Roll and S330Pitch fields are produced by the s330 logger,
+so select and enable the s330 -> net/file/db configuration. If
+all has gone well, the widget values should begin to update.
+
 ## Next Steps
 
-A couple of immediate design questions include
+1. Allow servers to be started/stopped from the web UI. This would
+probably entail making run_servers.py an always-running service and
+have the management page control it by storing desired server states
+in the Django ServerStates table.
 
-1. Should we move from websockets to Django channels? (probably - that's what they're designed for)
-2. Should the LoggerServer be run as a separate command-line process (probably not), as a service, or should adminstrators be able to start/stop it via a button on the GUI console?
+2. The current UI is...rudimentary. It would be nice to have someone
+who understands both UI and web design to have a go at a V2.
 
 ## Contributing
 
-Please contact David Pablo Cohn (*david dot cohn at gmail dot com*) - to discuss
-opportunities for participating in code development.
+Please contact David Pablo Cohn (*david dot cohn at gmail dot com*) -
+to discuss opportunities for participating in code development.
 
 ## License
 

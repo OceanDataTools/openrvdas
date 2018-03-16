@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise, CurrentCruise, CruiseState
+from .models import ServerState, ServerMessage, StatusUpdate
 
 class ModeInline(admin.TabularInline):
   model = Mode
@@ -57,11 +58,22 @@ class ModeAdmin(admin.ModelAdmin):
 class CurrentCruiseAdmin(admin.ModelAdmin):
   list_display = ('cruise', 'as_of')
 
+class ServerStateAdmin(admin.ModelAdmin):
+  list_display = ('timestamp', 'server', 'running', 'desired', 'process_id')
+
+class ServerMessageAdmin(admin.ModelAdmin):
+  list_display = ('timestamp', 'server', 'message')
+
+class StatusUpdateAdmin(admin.ModelAdmin):
+  list_display = ('timestamp', 'server', 'cruise', 'status')
+
+
 admin.site.register(Cruise, CruiseAdmin)
-
 admin.site.register(Mode, ModeAdmin)
-
 admin.site.register(CurrentCruise, CurrentCruiseAdmin)
+admin.site.register(ServerState, ServerStateAdmin)
+admin.site.register(ServerMessage, ServerMessageAdmin)
+admin.site.register(StatusUpdate, StatusUpdateAdmin)
 
 admin.site.register(Logger)
 admin.site.register(LoggerConfig)

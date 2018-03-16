@@ -35,8 +35,8 @@
   
   ///////////////////////////////
   function connect_websocket(message) {
-    console.log("Trying to reconnect to websocket_display_server");
-    ws = new WebSocket("ws://{{ websocket_display_server }}");
+    console.log("Trying to reconnect to websocket_server");
+    ws = new WebSocket("ws://{{ websocket_server }}/data");
     
     ws.onopen = function() {
       // We've succeeded in opening - don't try anymore
@@ -107,7 +107,7 @@
     var td_timestamp = document.createElement("td");
     td_timestamp.id = "timestamp";
     td_timestamp.colSpan = "2";
-    var td_timestamp_txt = document.createTextNode("No timestamp. Is gui/displayserver.py running?");
+    var td_timestamp_txt = document.createTextNode("No timestamp. Is gui/run_servers.py running?");
     td_timestamp.appendChild(td_timestamp_txt);
     tr.appendChild(td_timestamp);
     table.appendChild(tr);                          

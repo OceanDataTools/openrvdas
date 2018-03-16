@@ -168,8 +168,9 @@
     // Generic logger definition templates that we're going to draw on
     // to fill in the actual configurations in the cruise modes
     "templates": {        
-        "%INST%_LOGFILE_WRITER": {    // Generic logfile writer
-            "class": "LogfileWriter",
+        // Generic logfile writer
+        "%INST%_LOGFILE_WRITER": {
+               "class": "LogfileWriter",
             "kwargs": {"filebase": "%LOGFILE_BASE%/%INST%/raw/%CRUISE%_%INST%"}
         },
         
@@ -187,11 +188,26 @@
                            }
             }
         },
+
+        // Generic database writer - a ComposedWriter that prefixes
+        // instrument data_id then parses into DASRecord before writing
+        "%INST%_DATABASE_WRITER": {
+            "class": "ComposedWriter",
+            "kwargs": {
+                "transforms": [
+                    { "class": "PrefixTransform",
+                      "kwargs": {"prefix": "%INST%"}},
+                    { "class": "ParseNMEATransform"}
+                ],
+                "writers": {"class": "DatabaseWriter",
+                            "kwargs": {"create_if_missing": true}}
+            }
+        },
         
         // Generic loggers
         // Read from serial, write to network and logfile
         "%INST%_SERIAL_LOGGER": {
-            "name": "%INST%->net/file",
+            "name": "%INST%->net/file/db",
             "readers": {
                 "class": "SerialReader",
                 "kwargs": {
@@ -202,7 +218,8 @@
             "transforms": {"class": "TimestampTransform"},
             "writers": [
                 "%INST%_LOGFILE_WRITER",
-                "%INST%_NETWORK_WRITER"
+                "%INST%_NETWORK_WRITER",
+                "%INST%_DATABASE_WRITER"
             ]
         },
         

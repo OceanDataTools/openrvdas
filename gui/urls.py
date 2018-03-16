@@ -25,6 +25,10 @@ urlpatterns = [
   path('logout/', auth_views.logout,
       {'next_page': '../'}, name='logout'),
 
+  path('servers', views.servers, name='servers'),
+  path('server_messages/<str:server>', views.server_messages,
+       name='server_messages'),
+  
   path('load_config', views.load_config, name='load_config'),
   path('edit_config/<str:logger_name>', views.edit_config, name='edit_config'),
   path('', views.index, name='index'),

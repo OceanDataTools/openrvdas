@@ -7,9 +7,30 @@
   <h1>{{ cruise.id }} Cruise Management</h1>
   {# ######################################################################## #}
   {# Draw the loggers and their current configurations.                       #}
-  <table>
+  <table style="background-color:white">
+    <tr id="server_row">
+      <td colspan=3>
+        <button type="submit" id="status_server_button"
+                name="StatusServer" value=""
+                disabled style="background-color:orangered">Status Server
+        </button>
+        <button type="submit" id="logger_server_button"
+                name="LoggerServer" value=""
+                disabled style="background-color:orangered">Logger Server
+        </button>
+        {% if user.is_authenticated %}
+        <button
+           onclick="window.open('servers', '_blank', 'height=235,width=280,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,copyhistory=no');">
+          Manage Servers
+        </button>
+        {% else %}
+        <a href="../login"><b>Log in</b></a> to manage servers
+        {% endif %}
+      </td>
+    </tr>
     <tr id="time_row">
-      <td>Last update:</td><td id="time_td">no connection - is server running?</td>
+      <td>Last update:</td>
+      <td id="time_td">no connection - is status server running?</td>
     <tr id="time_warning_row" style="display:none;">
       <td>Now:</td><td id="time_warning_td"</td>
     </tr>
@@ -72,16 +93,21 @@
     Current configuration: {{ cruise.config_filename }}</td>
 {% endif %}
 {% if user.is_authenticated %}
-<td style="border: 0px;">
-  <form>
-    {% csrf_token %}
-    <button type="submit"
-          onclick="window.open('load_config', '_blank', 'location=yes,height=140,width=450,scrollbars=yes,status=yes');">
-      Load configuration file
-    </button>
-  </form></td>
-  {% endif %}
-</tr></table>
+    <td style="border: 0px;">
+      <form>
+        {% csrf_token %}
+        <button type="submit"
+                onclick="window.open('load_config', '_blank', 'location=yes,height=140,width=450,scrollbars=yes,status=yes');">
+          Load configuration file
+        </button>
+    </form></td>
+    {% endif %}
+  </tr>
+  <tr>
+    <td>
+    </td>
+  </tr>
+</table>
 
 {% comment %}
 {# ######################################################################## #}
@@ -120,39 +146,40 @@
   Logged in as <b>{{ user }}.</b>
   <a href="../logout">Log out</a>
   {% else %}
-  <a href="../login"><b>Log in</b></a> to edit configurations or mode
+  <a href="../login"><b>Log in</b></a> to manage servers, configurations or mode
   {% endif %}
   </p>
 
 {# ######################################################################## #}
 {# Start of Javascript                                                      #}
 <script type="text/javascript">
+  // We're after logger statuses, so append '/logger' path
+  var websocket_server = "ws://{{ websocket_server }}/logger";
+
+  //////////////////////////////////////////////////////////////
+  // WebSocket code - need to pull this out into a separate file
+  // so we're not duplicating it in each of these files!
   if (! "WebSocket" in window) {
     alert("Warning: websockets not supported by your Browser!");
   }
-  var ws;
 
   // Set timer to retry websocket connection if it closes. Interval is
   // turned off in ws.onopen() if/when we succeed.
   var retry_interval = 3000;
   var retry_websocket_connection;
+  var ws;
   
   // Try connecting right off the bat
   connect_websocket();
 
-  ///////////////////////////////
   function connect_websocket() {
-    console.log("Trying to reconnect to websocket_status_server");
-    ws = new WebSocket("ws://{{ websocket_status_server }}");
+    console.log("Trying to connect to websocket at " + websocket_server);
+    ws = new WebSocket(websocket_server);
     
     ws.onopen = function() {
       // We've succeeded in opening - don't try anymore
       console.log("Connected - clearing retry interval");
       clearTimeout(retry_websocket_connection);
-
-      // Web Socket is connected, send data using send()
-      //ws.send("Message to send");
-      //console.log("Message is sent...");
     };
 
     ws.onclose = function() { 
@@ -166,6 +193,7 @@
     };
 
     ws.onmessage = function (received_message) { 
+      console.log("Got status update message: " + received_message.data);
       process_message(JSON.parse(received_message.data));
     };
   };
@@ -181,12 +209,19 @@
     console.log("Sent!");
   };
 
+  //////////////////////////////////////////////////////
+  // Start of index.html-specific Javascript
+
   // If no update in 5 seconds, change background color to red
   var TIMEOUT_INTERVAL = 5000;
   function flag_timeout() {
     document.getElementById("time_row").style.backgroundColor = "orangered";
     document.getElementById("time_warning_td").innerHTML = Date();
     document.getElementById("time_warning_row").style.display = "";
+
+    document.getElementById("status_server_button").style.backgroundColor = "yellow";
+    document.getElementById("logger_server_button").style.backgroundColor = "yellow";
+      var status_button = document.getElementById("status_server_button");
   }
   var timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
 
@@ -215,7 +250,24 @@
     if (status) {
       // Update mode - "select_mode" only defined if user is authenticated;
       // otherwise we should have "mode_name"
-      var select_mode = document.getElementById("select_mode");
+
+      var status_button = document.getElementById("status_server_button");
+      if (status.StatusServer.running != status.StatusServer.desired) {
+        status_button.style.backgroundColor = "yellow";
+      } else if (status.StatusServer.running) {
+        status_button.style.backgroundColor = "lightgreen";
+      } else {
+        status_button.style.backgroundColor = "orangered";
+      }
+      var logger_button = document.getElementById("logger_server_button");
+      if (status.LoggerServer.running != status.LoggerServer.desired) {
+        logger_button.style.backgroundColor = "yellow";
+      } else if (status.LoggerServer.running) {
+        logger_button.style.backgroundColor = "lightgreen";
+      } else {
+        logger_button.style.backgroundColor = "orangered";
+      }
+
       if (select_mode) {
         select_mode.value = status.current_mode;
       } else {

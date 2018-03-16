@@ -1,0 +1,164 @@
+{% extends 'gui/base.html' %}
+
+{% block content %}
+
+<head>
+  <title>Server Management</title>
+  {# <meta http-equiv="refresh" content="3"> #}
+</head>
+
+<h1>Server Management</h1>
+
+{# ######################################################################## #}
+{# start/stop status_server and logger_server                               #}
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  {% if user.is_authenticated %}
+  <table>
+    <tr>
+      <td colspan=2>
+        <button type="submit" id="start_button"
+                name="start" value="start" disabled
+                style="background-color:lightgreen">Start Servers<br> </button>
+        <button type="submit" id="stop_button"
+                name="stop" value="start" disabled
+                style="background-color:orangered">Stop Servers<br> </button>
+      </td>
+    </tr>
+    <tr><td>Start/Stop disabled - please run<br>
+        'gui/run_servers.py' manually</td></tr>
+  </table>
+  {% endif %}
+  <table>
+    <tr style="border-bottom: 1px solid gray;border-top: 1px solid gray">
+      <td>
+        <button type="submit" id="status_button" name="StatusServer" value=""
+                disabled style="background-color:orangered">Status Server
+        </button>
+      </td>
+      <td>
+        <a href="#" onclick="message_window('StatusServer');return false;">
+          Status server log</a>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <button type="submit" id="logger_button" name="LoggerServer" value=""
+                disabled style="background-color:orangered">Logger Server
+        </button>
+      <td>
+        <a href="#" onclick="message_window('LoggerServer');return false;">
+          Logger server log</a>
+      </td>
+    </tr>
+  </table>
+  <table>
+    <tr>
+      <td>
+        <button type="submit" onclick="window.close();">Close</button>
+      </td>
+    </tr>
+  </table>
+</form>
+
+{# ######################################################################## #}
+{# Start of Javascript                                                      #}
+<script type="text/javascript">
+
+  // We're after server statuses, so append '/server' path
+  var websocket_server = "ws://{{ websocket_server }}/server";
+
+  //////////////////////////////////////////////////////////////
+  // WebSocket code - need to pull this out into a separate file
+  // so we're not duplicating it in each of these files!
+  if (! "WebSocket" in window) {
+    alert("Warning: websockets not supported by your Browser!");
+  }
+
+  // Set timer to retry websocket connection if it closes. Interval is
+  // turned off in ws.onopen() if/when we succeed.
+  var retry_interval = 3000;
+  var retry_websocket_connection;
+  var ws;
+  
+  // Try connecting right off the bat
+  connect_websocket();
+
+  function connect_websocket() {
+    console.log("Trying to connect to websocket at " + websocket_server);
+    ws = new WebSocket(websocket_server);
+    
+    ws.onopen = function() {
+      // We've succeeded in opening - don't try anymore
+      console.log("Connected - clearing retry interval");
+      clearTimeout(retry_websocket_connection);
+    };
+
+    ws.onclose = function() { 
+      // websocket is closed.
+      console.log("Connection is closed...");
+
+      // Set page to show that we're not connected
+      on_disconnect();
+
+      // Set up an alarm to sleep, then try re-opening websocket
+      console.log("Setting timer to reconnect");
+      retry_websocket_connection = setTimeout(connect_websocket,retry_interval);
+    };
+
+    ws.onmessage = function (received_message) { 
+      console.log("Got status update message: " + received_message.data);
+      process_message(JSON.parse(received_message.data));
+    };
+  };
+  
+  window.onbeforeunload = function(event) {
+    console.log("Closing websocket");
+    ws.close();
+  };
+
+  function send(message) {
+    console.log("Sending message '" + message + "'");
+    ws.send(message);
+    console.log("Sent!");
+  };
+
+  //////////////////////////////////////////////////////
+  // Start of server.html-specific Javascript
+
+  function on_disconnect() {
+    console.log("Setting status to 'disconnected' state");
+    document.getElementById("status_button").style.backgroundColor = "yellow";
+    document.getElementById("logger_button").style.backgroundColor = "yellow";
+  }
+
+  function process_message(message) {
+    // Fill in the values we've received
+
+    var status_button = document.getElementById("status_button");
+    if (message.StatusServer.running != message.StatusServer.desired) {
+      status_button.style.backgroundColor = "yellow";
+    } else if (message.StatusServer.running) {
+      status_button.style.backgroundColor = "lightgreen";
+    } else {
+      status_button.style.backgroundColor = "orangered";  
+    }
+
+    var logger_button = document.getElementById("logger_button");
+    if (message.LoggerServer.running != message.LoggerServer.desired) {
+      logger_button.style.backgroundColor = "yellow";
+    } else if (message.LoggerServer.running) {
+      logger_button.style.backgroundColor = "lightgreen";
+    } else {
+      logger_button.style.backgroundColor = "orangered";
+    }
+  }
+
+  function message_window(server) {
+    window.open("server_messages/" + server, "_blank",
+    "height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,copyhistory=no");
+  }
+</script>
+
+{% endblock content %}

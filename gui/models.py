@@ -16,7 +16,9 @@ class Logger(models.Model):
   desired_config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
                                      related_name="desired_config",
                                      blank=True, null=True)
-
+  current_config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
+                                     related_name="current_config",
+                                     blank=True, null=True)
   def __str__(self):
     return self.name
    
@@ -88,15 +90,43 @@ class CruiseState(models.Model):
     return '%s: %s' % (self.cruise, self.mode)
 
 ##############################
-# Do we want this logger_config running? Is it? If so, since when, and what's its pid?
-# If run state doesn't align with current mode, then highlight in interface
+# Do we want this logger_config running? Is it? If so, since when, and
+# what's its pid?  If run state doesn't align with current mode, then
+# highlight in interface
 class LoggerConfigState(models.Model):
   config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE)
-  running = models.BooleanField()
-  desired = models.BooleanField()
+  running = models.BooleanField(default=False)
+  desired = models.BooleanField(default=False)
   process_id = models.IntegerField(default=0, blank=True)
   timestamp = models.DateTimeField(auto_now_add=True)
-  
+  errors = models.TextField(blank=True, null=True)
+
+##############################
+# Which servers are running, and when?
+# If run state doesn't align with current mode, then highlight in interface
+class ServerState(models.Model):
+  timestamp = models.DateTimeField(auto_now_add=True)
+  server = models.CharField(max_length=80, blank=True, null=True)
+  running = models.BooleanField(default=False)
+  desired = models.BooleanField(default=False)
+  process_id = models.IntegerField(default=0, blank=True, null=True)
+
+##############################
+# Messages that our servers log
+class ServerMessage(models.Model):
+  server = models.CharField(max_length=80, blank=True, null=True)
+  message = models.TextField(blank=True, null=True)
+  timestamp = models.DateTimeField(auto_now_add=True)
+
+##############################
+# JSON-encoded status message saved various servers
+class StatusUpdate(models.Model):
+  timestamp = models.DateTimeField(auto_now_add=True)
+  server = models.CharField(max_length=80, blank=True, null=True)
+  cruise = models.CharField(max_length=80, blank=True, null=True)
+  status = models.TextField(blank=True, null=True)
+
+
 ################################################################################
 def load_cruise_config_to_models(config, config_filename='none'):
   errors = []
