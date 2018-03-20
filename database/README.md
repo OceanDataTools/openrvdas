@@ -44,8 +44,10 @@ to get the database working:
 databases and will create an sql user that has access to those databases.
 It will also create a 'test' user that has access only to 'test'.
 ```
-  database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
+  database/setup_mysql_connector.sh <mysql_user> <mysql_user_pwd>
 ```
+(Note: The script will ask for the root MySQL password.)
+
 At this point you should be able to test the installation by running the
 database/test_mysql_connector.py script (to test the mysql_connector)
 and logger/writers/test_database_writer.py script (to ensure that it has

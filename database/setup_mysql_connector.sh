@@ -2,8 +2,13 @@
 
 # Set up appropriate user and test databases and users for mysql_connector.
 
-if [ ! $# == 3 ]; then
-    echo Usage: $0 MYSQL_ROOT_PASSWORD MYSQL_USER_NAME MYSQL_USER_PASSWORD
+if [ ! $# == 2 ]; then
+    echo Usage:
+    echo
+    echo     $0 MYSQL_USER_NAME MYSQL_USER_PASSWORD
+    echo
+    echo Will create required tables and named MySQL user and give user
+    echo access to the newly-created tables.
     exit
 fi
 
@@ -15,13 +20,14 @@ if [ ! `which mysql` ]; then
     exit
 fi
 
-ROOT_PWD=$1
-USER=$2
-PWD=$3
+USER=$1
+PWD=$2
 
 # Create databases if they don't exist, and give user access. Also
 # give user 'test' access to test database.
-mysql -u root -p$ROOT_PWD <<EOF 
+#mysql -u root -p$ROOT_PWD <<EOF 
+echo Enter MySQL root password
+mysql -u root -p <<EOF 
 
 drop user if exists 'test'@'localhost'; 
 create user 'test'@'localhost' identified by 'test';
