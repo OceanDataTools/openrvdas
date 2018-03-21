@@ -246,7 +246,7 @@ class StatusServer:
       try:
         cruise = CurrentCruise.objects.latest('as_of').cruise
       except CurrentCruise.DoesNotExist:
-        logging.warning('No current cruise - nothing to do.')
+        logging.info('No current cruise - nothing to do.')
         await asyncio.sleep(interval)
         continue
 
@@ -332,7 +332,7 @@ class StatusServer:
   # If request is for logger data updates (e.g. from widgets).
   @asyncio.coroutine
   async def _serve_data(self, websocket, interval=0.5):
-    from logger.readers.database_reader import DatabaseFieldReader
+    from logger.readers.database_reader import DatabaseReader
     from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
     from database.settings import DEFAULT_DATABASE_USER
     from database.settings import DEFAULT_DATABASE_PASSWORD
@@ -372,30 +372,26 @@ class StatusServer:
     results = {}
     now = time.time()
     for (num_secs, field_list) in back_data.items():
-      # Create a DatabaseFieldReader to get num_secs worth of back
-      # data for these fields. Provide a start_time of num_secs ago,
-      # and no stop_time, so we get everything up to present.
+      # Create a DatabaseReader to get num_secs worth of back data for
+      # these fields. Provide a start_time of num_secs ago, and no
+      # stop_time, so we get everything up to present.
       logging.debug('Creating DatabaseFileReader for %s', field_list)
       logging.debug('Requesting timestamps from %f-%f', now-num_secs, now)
-      reader = DatabaseFieldReader(fields, DEFAULT_DATABASE,
-                                   DEFAULT_DATABASE_HOST,
-                                   DEFAULT_DATABASE_USER,
-                                   DEFAULT_DATABASE_PASSWORD)
+      reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
+                              DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
       num_sec_results = reader.read_time_range(start_time=now-num_secs)
       results.update(num_sec_results)
     max_timestamp_seen = 0
                      
     # Now that we've gotten all the back results, create a single
     # DatabaseFieldReader to read all the fields.
-    reader = DatabaseFieldReader(fields,  DEFAULT_DATABASE,
-                                 DEFAULT_DATABASE_HOST,
-                                 DEFAULT_DATABASE_USER,
-                                 DEFAULT_DATABASE_PASSWORD)
+    reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
+                            DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
     while True:
       # If we do have results, package them up and send them
       if results:
         send_message = json_dumps(results)
-        logging.info('Data server sending: %s', send_message)
+        logging.debug('Data server sending: %s', send_message)
         try:
           await websocket.send(send_message)
         except websockets.exceptions.ConnectionClosed:

@@ -169,11 +169,10 @@ if __name__ == '__main__':
                       help='Comma-separated network addresses to read from')
 
   parser.add_argument('--database', dest='database', default=None,
-                      help='user@host:database:data_id:message_type to '
-                      'read from. Multiple'
-                      'readers may be specified by comma-separating the '
-                      'specifications. Should be accompanied by the '
-                      '--database_password flag.')
+                      help='Format: user@host:database:field1,field2,... '
+                      'Read specified fields from database. If no fields are '
+                      'specified, read all fields in database. Should '
+                      'be accompanied by the --database_password flag.')
 
   parser.add_argument('--file', dest='file', default=None,
                       help='Comma-separated files to read from in parallel. '
@@ -420,17 +419,15 @@ if __name__ == '__main__':
       # --database_password having been specified somewhere.
       if new_args.database:
         password = all_args.database_password
-        for spec in new_args.database.split(','):
-          (user, host_db) = spec.split('@')
-          (host, database, data_id) = host_db.split(':', maxsplit=2)
-          if ':' in data_id:
-            (data_id, message_type) = data_id.split(':')
-          else:
-            message_type = None
-          readers.append(DatabaseReader(data_id=data_id,
-                                        message_type=message_type,
-                                        database=database, host=host,
-                                        user=user, password=password))
+        (user, host_db) = new_args.database.split('@')
+        (host, database) = host_db.split(':', maxsplit=1)
+        if ':' in database:
+          (database, fields) = database.split(':')
+        else:
+          fields = None
+        readers.append(DatabaseReader(fields=fields,
+                                      database=database, host=host,
+                                      user=user, password=password))
 
       # SerialReader is a little more complicated than other readers
       # because it can take so many parameters. Use the kwargs trick to
@@ -481,8 +478,7 @@ if __name__ == '__main__':
         (user, host_db) = new_args.write_database.split('@')
         (host, database) = host_db.split(':')
         writers.append(DatabaseWriter(database=database, host=host,
-                                      user=user, password=password,
-                                      create_if_missing=True))
+                                      user=user, password=password))
 
     ##########################
     # Now that we've got our readers, transforms and writers defined,

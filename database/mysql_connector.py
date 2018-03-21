@@ -1,5 +1,31 @@
 #!/usr/bin/env python3
+"""Tables:
 
+  data: pk timestamp field_name field_value source_record
+
+We don't know what type each value will have, so have a column for
+int, float, str and bool and leave all but the appropriate value type
+NULL. Docs claim that NULL values take no space, so...
+
+Still so many ways we could make this more space efficient, most
+obviously by partitioning field_name (and even timestamp?) into
+foreign keys.
+
+    field_name - could store this in a separate table so that it's only
+      a foreign key in the data table. Something like:
+
+        fields: id field_name field_type
+      
+    source_record - an id indexing a table where raw source records are
+      stored, so that we can re-parse and recreate whatever data we want
+      if needed.
+
+Current implementation is simple and inefficient in both computation
+and storage.
+
+TODO: Allow wildcarding field selection, so client can specify 'S330*,Knud*'
+
+"""
 import logging
 import sys
 
@@ -13,15 +39,15 @@ try:
 except ImportError:
   MYSQL_ENABLED = False
 
-# Based on https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html
-
 ################################################################################
 class MySQLConnector:
   # Name of table in which we will store mappings from record field
   # names to the tnames of the tables containing those fields.
-  FIELD_NAME_MAPPING_TABLE = 'FIELD_NAME_MAPPING_TABLE'
+  DATA_TABLE = 'data'
+  FIELD_TABLE = 'fields'
+  SOURCE_TABLE = 'source'
 
-  def __init__(self, database, host, user, password):
+  def __init__(self, database, host, user, password, save_source=True):
     """Interface to MySQLConnector, to be imported by, e.g. DatabaseWriter."""
     if not MYSQL_ENABLED:
       logging.warning('MySQL not found, so MySQL functionality not available.')
@@ -29,10 +55,41 @@ class MySQLConnector:
 
     self.connection = mysql.connector.connect(database=database, host=host,
                                         user=user, password=password)
-    # Map from table_name->next id we're going to read from that table
-    self.next_id = {}
+    self.save_source = save_source
+
+    # What's the next id we're supposed to read? Or if we've been
+    # reading by timestamp, what's the last timestamp we've seen?
+    self.next_id = 1
+    self.last_timestamp = 0
 
     self.exec_sql_command('set autocommit = 1')
+
+    # Create tables if they don't exist yet
+    if not self.table_exists(self.SOURCE_TABLE):
+      table_cmd = 'CREATE TABLE %s (id INT PRIMARY KEY AUTO_INCREMENT, ' \
+                  'record TEXT)' % self.SOURCE_TABLE
+      logging.info('Creating table with command: %s', table_cmd)
+      self.exec_sql_command(table_cmd)
+
+    if not self.table_exists(self.DATA_TABLE):
+      table_cmd = ['CREATE TABLE %s ' % self.DATA_TABLE,
+                   '(',
+                   'id INT PRIMARY KEY AUTO_INCREMENT,',
+                   'timestamp DOUBLE,',
+                   'field_name VARCHAR(255),',
+                   'int_value INT,',
+                   'float_value DOUBLE,',
+                   'str_value TEXT,',
+                   'bool_value INT,',
+                   'source INT,',
+                   'INDEX (timestamp),',
+                   'FOREIGN KEY (source) REFERENCES %s(id)' \
+                      % self.SOURCE_TABLE,
+                   ')'
+      ]
+      logging.info('Creating table with command: %s', ' '.join(table_cmd))
+      self.exec_sql_command(' '.join(table_cmd))
+    
 
   ############################
   def exec_sql_command(self, command):
@@ -41,37 +98,6 @@ class MySQLConnector:
     self.connection.commit()
     cursor.close()
     
-  ############################
-  def table_name_from_record(self,  record):
-    """Infer table name from record."""
-    table_name = record.data_id
-    if record.message_type:
-      table_name += '#' + record.message_type
-
-    # Clean up common, non-SQL-friendly characters
-    #table_name = table_name.replace('$','').replace('-','_')
-    return table_name
-
-  ############################
-  def table_name_from_field(self,  field):
-    """Look up which table a particular field is stored in."""
-
-    # If mapping table doesn't exist, then either we've not seen any
-    # records yet, or something has gone horribly wrong.
-    if not self.table_exists(self.FIELD_NAME_MAPPING_TABLE):
-      logging.info('Mapping table "%s" does not exist - is something wrong?')
-      return None
-    
-    query = 'select table_name from %s where (field_name = "%s")' % \
-            (self.FIELD_NAME_MAPPING_TABLE, field)
-    logging.debug('executing query "%s"', query)
-    cursor = self.connection.cursor()
-    cursor.execute(query)
-    try:
-      return next(cursor)[0]
-    except (StopIteration, IndexError):
-      return None
-
   ############################
   def table_exists(self, table_name):
     """Does the specified table exist in the database?"""
@@ -83,129 +109,147 @@ class MySQLConnector:
       exists = False
     cursor.close()
     return exists
-
-  ############################
-  TYPE_MAP = {
-    int:   'int',
-    float: 'double',
-    str:   'text',
-    bool:  'bool',
-  }
-  
-  ############################
-  def _register_record_fields(self,  record):
-    """Add a field_name->table_name entry for each field name in the record
-    to the database. This will allow us to look up the right tables to fetch
-    when given a list of field names."""
-
-    # Create mapping table if it doesn't exist yet
-    if not self.table_exists(self.FIELD_NAME_MAPPING_TABLE):
-      table_cmd = 'create table %s (field_name varchar(255) primary key, ' \
-                  'table_name tinytext, index(field_name))' \
-                  %  self.FIELD_NAME_MAPPING_TABLE
-      logging.info('Creating table with command: %s', table_cmd)
-      self.exec_sql_command(table_cmd)
-
-    # What table does this record type belong to?
-    table_name = self.table_name_from_record(record)
-
-    # Iterate through fields in record, figure out their type and
-    # create an table type appropriate for each. Skip if a matching
-    # field_name already exists.
-    for field_name in record.fields:
-      if not self.table_name_from_field(field_name):
-        write_cmd = 'insert into %s values ("%s", "%s")' % \
-                    (self.FIELD_NAME_MAPPING_TABLE, field_name, table_name)
-        logging.debug('Inserting record into table with command: %s', write_cmd)
-        self.exec_sql_command(write_cmd)
-
-  ############################
-  def create_table_from_record(self,  record):
-    """Create a new table with one column for each field in the record. Try
-    to infer the proper type for each column based on the type of the value
-    of the field."""
-    if not record:
-      return
-    table_name = self.table_name_from_record(record)
-    if self.table_exists(table_name):
-      logging.warning('Trying to create table that already exists: %s',
-                      table_name)
-      return
-
-    # Id and timestamp are needed for all tables
-    columns = ['`id` int(11) not null auto_increment',
-               # '`message_type` text',
-               '`timestamp` double not null']
-
-    # Iterate through fields in record, figure out their type and
-    # create an table type appropriate for each.
-    for field in record.fields:
-      value = record.fields[field]
-      if value is None:
-        value = ''
-      if not type(value) in self.TYPE_MAP:
-        logging.error('Unrecognized value type in record: %s', type(value))
-        logging.error('Record: %s', str(record))
-        raise TypeError('Unrecognized value type in record: %s', type(value))
-      columns.append('`%s` %s' %( field, self.TYPE_MAP[type(value)]))
-
-    table_cmd = 'create table `%s` (%s, primary key (`id`), ' \
-                'index(id, timestamp))' % \
-                (table_name, ','.join(columns))
-    logging.info('Creating table with command: %s', table_cmd)
-    self.exec_sql_command(table_cmd)
-
-    # Register the fields in the record as being contained in this table.
-    self._register_record_fields(record)
     
   ############################
   def write_record(self, record):
     """Write record to table."""
 
-    # Helper function for formatting
-    def map_value_to_str(value):
-      if value is None:
-        return '""'
-      elif type(value) in [int, float]:
-        return str(value)
-      elif type(value) is str:
-        return '"%s"' % value
-      elif type(value) is bool:
-        return '1' if value else '0'
-      logging.warning('Found unexpected value type "%s" for "%s"',
-                      type(value), value)
-      return '""'
+    # First, check that we've got something we can work with
+    if not record:
+      return
+    if not type(record) == DASRecord:
+      logging.error('write_record() received non-DASRecord as input. '
+                    'Type: %s', type(record))
+      return
 
-    table_name = self.table_name_from_record(record)
+    timestamp = record.timestamp
 
-    keys = record.fields.keys()
-    write_cmd = 'insert into `%s` (`timestamp`,%s) values (%f,%s)' % \
-                (table_name, ','.join(keys), record.timestamp,
-                 ','.join([map_value_to_str(record.fields[k]) for k in keys]))
-    
-    logging.debug('Inserting record into table with command: %s', write_cmd)
-    self.exec_sql_command(write_cmd)
+    # If we're saving source records, we have to do a little
+    # legerdemain: after we've saved the record, we need to retrieve
+    # the id of the record we've just saved so that we can attach it
+    # to the data values we're about to save.
+    if self.save_source:
+      write_cmd = 'insert into `%s` (record) values (\'%s\')' % \
+                  (self.SOURCE_TABLE, record.as_json())
+      logging.info('Inserting source into table with command: %s', write_cmd)
+      self.exec_sql_command(write_cmd)
 
-  ############################
-  def _parse_table_name(self, table_name):
-    """Parse table name into data_id and message_type."""
-    if '#' in table_name:
-      (data_id, message_type) = table_name.split(sep='#', maxsplit=1)
+      # Get the id of the saved source record. Note: documentation
+      # *claims* that this is kept on a per-client basis, so it's safe
+      # even if another client does an intervening write.
+      query = 'select last_insert_id()'
+      cursor = self.connection.cursor()
+      cursor.execute(query)
+      source_field = ', source'
+      source_id = next(cursor)[0]
     else:
-      data_id = table_name
-      message_type = None
-    return (data_id, message_type)
+      source_field = ''
+      source_id = None
+      
+    # Write one row for each field-value pair.
+    # NOTE: We should be able to speed this up tons by aggregating
+    # into a single write.
+    for key, value in record.fields.items():
+      if type(value) is int:
+        target = 'int_value'
+        format = str(value)
+      elif type(value) is float:
+        target = 'float_value'
+        format = str(value)
+      elif type(value) is str:
+        target = 'str_value'
+        format = '"' + value + '"'
+      elif type(value) is bool:
+        target = 'bool_value'
+        format = '1' if value else '0'
+      elif value is None:
+        continue
+      else:        
+        logging.error('Unknown record value type (%s) for %s: %s',
+                      type(value), key, value)
+        continue
 
+      # Build the SQL query
+      fields = 'timestamp, field_name, %s' % target
+      values = '%f, "%s", %s' % (timestamp, key, format)
+
+      # If we've saved this field's source record, append source's
+      # foreign key to row so we can look it up.
+      if source_id:
+        fields += ', source'
+        values += ', %d' % source_id
+        
+      write_cmd = 'insert into `%s` (%s) values (%s)' % \
+                  (self.DATA_TABLE, fields, values)
+      logging.info('Inserting record into table with command: %s', write_cmd)
+      self.exec_sql_command(write_cmd)
+   
   ############################
-  def _get_table_columns(self, table_name):
-    """Get columns (we could probably cache these, checking against the
-    existence of self.last_record_read[table_name] to know when we
-    need to rebuild."""
-    cursor = self.connection.cursor()
-    cursor.execute('show columns in `%s`' % table_name)
-    columns = [c[0] for c in cursor]
-    logging.debug('Columns: %s', columns)
-    return columns
+  def read(self, field_list=None, start=None, num_records=1):
+    """Read the next record from table. If start is specified, reset read
+    to start at that position."""
+
+    if start is None:
+      start = self.next_id
+    condition = 'id >= %d' % start
+
+    # If they haven't given us any fields, retrieve everything
+    if field_list:
+      field_conditions = ['field_name="%s"' % f for f in field_list.split(',')]
+      condition += ' and (%s)' % ' or '.join(field_conditions)
+
+    condition += ' order by id'
+    
+    if num_records is not None:
+      condition += ' limit %d' % num_records
+  
+    query = 'select * from `%s` where %s' % (self.DATA_TABLE, condition)
+    logging.debug('read query: %s', query)
+    return self._process_query(query)
+  
+  ############################
+  def read_time(self, field_list=None, start_time=None, stop_time=None):
+    """Read the next records from table based on timestamps. If start_time
+    is None, use the timestamp of the last read record. If stop_time is None,
+    read all records since then."""
+
+    if start_time is None:
+      condition = 'timestamp > %f' % self.last_timestamp
+    else:
+      condition = 'timestamp > %f' % start_time
+
+    if stop_time is not None:
+      condition = '(%s and timestamp < %f)' % (condition, stop_time)
+
+    # If they haven't given us any fields, retrieve everything
+    if field_list:
+      field_conditions = ['field_name="%s"' % f for f in field_list]
+      condition += ' and (%s)' % ' or '.join(field_conditions)
+
+    condition += ' order by timestamp'
+  
+    query = 'select * from `%s` where %s' % (self.DATA_TABLE, condition)
+    logging.debug('read query: %s', query)
+    return self._process_query(query)
+    
+  ############################
+  def seek(self, offset=0, origin='current'):
+    """Behavior is intended to mimic file seek() behavior but with
+    respect to records: 'offset' means number of records, and origin
+    is either 'start', 'current' or 'end'."""
+
+    num_rows = self._num_rows(self.DATA_TABLE)
+
+    if origin == 'current':
+      self.next_id += offset
+    elif origin == 'start':
+      self.next_id = offset + 1
+    elif origin == 'end':
+      self.next_id = num_rows + offset + 1
+
+    self._next_id = min(num_rows, self.next_id)
+    
+    logging.debug('Seek: next position %d', self.next_id)
 
   ############################
   def _num_rows(self, table_name):
@@ -214,124 +258,37 @@ class MySQLConnector:
     cursor.execute(query)
     num_rows = next(cursor)[0]
     return num_rows
-  
+
   ############################
-  def _fetch_and_parse_records(self, table_name, query):
-    """Fetch records, give DB query, and parse into DASRecords."""
-
-    (data_id, message_type) = self._parse_table_name(table_name)
-    columns = self._get_table_columns(table_name)
-
+  def _process_query(self, query):
     cursor = self.connection.cursor()
     cursor.execute(query)
 
-    results = []
+    results = {}
     for values in cursor:
-      logging.debug('value: %s', values)
-      fields = dict(zip(columns, values))
-      id = fields.pop('id')
-      self.next_id[table_name] = id + 1
-      
-      timestamp = fields.pop('timestamp')      
-      results.append(DASRecord(data_id=data_id, message_type=message_type,
-                               timestamp=timestamp, fields=fields))
+      (id, timestamp, field_name,
+       int_value, float_value, str_value, bool_value,
+       source) = values
+
+      if not field_name in results:
+        results[field_name] = []
+        
+      if int_value is not None:
+        val = int_value
+      elif float_value is not None:
+        val = float_value
+      elif str_value is not None:
+        val = str_value
+      elif float_value is not None:
+        val = int_value
+      elif bool_value is not None:
+        val = bool(bool_value)
+
+      results[field_name].append((timestamp, val))
+      self.next_id = id + 1
+      self.last_timestamp = timestamp
     cursor.close()
     return results
-
-  ############################
-  def read(self,  table_name, field_list=None, start=None):
-    """Read the next record from table. If start is specified, reset read
-    to start at that position."""
-
-    if start is None:
-      if not table_name in self.next_id:
-        self.next_id[table_name] = 1
-      start = self.next_id[table_name]
-
-    # If they haven't given us any fields, retrieve everything
-    if not field_list:
-      fields = '*'
-    else:
-      fields = 'id,timestamp,' + ','.join(field_list)
-      
-    query = 'select %s from `%s` where (id = %d)' % (fields, table_name, start)
-    result = self._fetch_and_parse_records(table_name, query)
-
-    if not result:
-      return None
-    return result[0]
-
-  ############################
-  def seek(self,  table_name, offset=0, origin='current'):
-    """Behavior is intended to mimic file seek() behavior but with
-    respect to records: 'offset' means number of records, and origin
-    is either 'start', 'current' or 'end'."""
-
-    if not table_name in self.next_id:
-      self.next_id[table_name] = 1
-    
-    if origin == 'current':
-      self.next_id[table_name] += offset
-    elif origin == 'start':
-      self.next_id[table_name] = offset + 1
-    elif origin == 'end':
-      num_rows = self._num_rows(table_name)
-      self.next_id[table_name] = num_rows + offset + 1
-      
-    logging.debug('Seek: next position table %s %d',
-                  table_name, self.next_id[table_name])
-
-  ############################
-  def read_range(self,  table_name, field_list=None, start=None, stop=None):
-    """Read one or more records from table. If start is not specified,
-    begin reading at the next not-yet-read record. If stops is
-    not specified, read as many records as are available."""
-
-    if  start is None:
-      if not table_name in self.next_id:
-        self.next_id[table_name] = 1
-      start = self.next_id[table_name]
-      
-    condition_list = ['id >= %d' % start]
-    if stop is not None:
-      condition_list.append('id < %d' % stop)
-    condition_clause = 'where (%s)' % ' and '.join(condition_list)
-
-    # If they haven't given us any fields, retrieve everything
-    if not field_list:
-      fields = '*'
-    else:
-      fields = 'id,timestamp,' + ','.join(field_list)
-    
-    query = 'select %s from `%s` %s' % (fields, table_name, condition_clause)
-    return self._fetch_and_parse_records(table_name, query)
-
-  ############################
-  def read_time_range(self, table_name, field_list=None,
-                      start_time=None, stop_time=None):
-    """Read one or more records from table. If start_time is not
-    specified, begin reading at the earliest record. If stop_time is
-    not specified, read to the most recent."""
-
-    condition_list = []
-    if  start_time is not None:
-      condition_list.append('timestamp >= %f' % start_time)
-    if  stop_time is not None:
-      condition_list.append('timestamp < %f' % stop_time)
-
-    if condition_list:
-      condition_clause = 'where (%s)' % ' and '.join(condition_list)
-    else:
-      condition_clause = ''
-
-    # If they haven't given us any fields, retrieve everything
-    if not field_list:
-      fields = '*'
-    else:
-      fields = 'id,timestamp,' + ','.join(field_list)
-
-    query = 'select %s from `%s` %s' % (fields, table_name, condition_clause)
-    return self._fetch_and_parse_records(table_name, query)
     
   ############################
   def delete_table(self,  table_name):
@@ -339,16 +296,6 @@ class MySQLConnector:
     delete_cmd = 'drop table `%s`' % table_name
     logging.info('Dropping table with command: %s', delete_cmd)
     self.exec_sql_command(delete_cmd)
-
-    # Clear out our recollection of how far into the table we've read
-    if table_name in self.next_id:
-      del self.next_id[table_name]
-
-    # Delete any references to that table from the file name mapping
-    delete_refs = 'delete from %s where table_name = "%s"' % \
-                  (self.FIELD_NAME_MAPPING_TABLE, table_name)
-    logging.info('Removing table references with command: %s', delete_refs)
-    self.exec_sql_command(delete_refs)
 
   ############################
   def close(self):

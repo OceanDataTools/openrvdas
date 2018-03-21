@@ -24,6 +24,45 @@ SAMPLE_DATA = [
   's330 2017-11-04:05:12:21.256010 $PSXN,23,-2.82,1.00,235.18,-1.66*3D',
 ]
 
+SINGLE_RESULTS = [
+  {'S330GPSTime': [(1509772339.479303, 0.17)]},
+  {'S330GPSDay': [(1509772339.479303, 7)]},
+  {'S330GPSMonth': [(1509772339.479303, 8)]},
+  {'S330GPSYear': [(1509772339.479303, 2014)]},
+  {'S330GPSTime': [(1509772339.729748, 0.16)]},
+  {'S330Lat': [(1509772339.729748, 3934.831698)]},
+  {'S330NorS': [(1509772339.729748, 'S')]},
+  {'S330Lon': [(1509772339.729748, 3727.695242)]},
+  {'S330EorW': [(1509772339.729748, 'W')]},
+  {'S330FixQuality': [(1509772339.729748, 1)]},
+  {'S330NumSats': [(1509772339.729748, 12)]},
+  {'S330HDOP': [(1509772339.729748, 0.7)]},
+  {'S330AntennaHeight': [(1509772339.729748, 0.82)]},
+  {'S330CourseTrue': [(1509772339.984911, 227.19)]},
+  {'S330CourseMag': [(1509772339.984911, 245.64)]},
+  {'S330SOGKt': [(1509772339.984911, 10.8)]},
+  {'S330GPSTime': [(1509772340.240177, 0.16)]},
+  {'S330Lat': [(1509772340.240177, 3934.831698)]},
+  {'S330NorS': [(1509772340.240177, 'S')]},
+  {'S330Lon': [(1509772340.240177, 3727.695242)]},
+  {'S330EorW': [(1509772340.240177, 'W')]},
+  {'S330Speed': [(1509772340.240177, 10.8)]},
+  {'S330CourseTrue': [(1509772340.240177, 227.19)]},
+  {'S330Date': [(1509772340.240177, '070814')]},
+  {'S330MagVar': [(1509772340.240177, 18.5)]},
+  {'S330MagVarEorW': [(1509772340.240177, 'W')]},
+  {'S330HeadingTrue': [(1509772340.49543, 235.18)]},
+  {'S330HorizQual': [(1509772340.748665, 1)]},
+  {'S330HeightQual': [(1509772340.748665, 0)]},
+  {'S330HeadingQual': [(1509772340.748665, 0)]},
+  {'S330RollPitchQual': [(1509772340.748665, 0)]},
+  {'S330GyroCal': [(1509772341.000716, -0.05)]},
+  {'S330GyroOffset': [(1509772341.000716, -0.68)]},
+  {'S330Roll': [(1509772341.25601, -2.82)]},
+  {'S330Pitch': [(1509772341.25601, 1.0)]},
+  {'S330HeadingTrue': [(1509772341.25601, 235.18)]}
+]
+
 class TestDatabaseWriter(unittest.TestCase):
 
   ############################
@@ -32,31 +71,25 @@ class TestDatabaseWriter(unittest.TestCase):
   def test_database_writer(self):
     parser = NMEAParser()
     writer = DatabaseWriter(database='test', host='localhost',
-                            user='test', password='test',
-                            create_if_missing=True)
-
+                            user='test', password='test')
+    writer.db.exec_sql_command('truncate table data')
+    
     test_num = random.randint(0,100000)
     records = [parser.parse_record(s) for s in SAMPLE_DATA]
-    for i in range(len(records)):
-      records[i].data_id = '%d_%s' % (test_num, records[i].data_id)
-      table_name = writer._table_name_from_record(records[i])
-      logging.info('Deleting table %s', table_name)
-      if writer._table_exists(table_name):
-        writer._delete_table(table_name)
-      self.assertFalse(writer._table_exists(table_name))
 
+    index = 0
+    
     for record in records:
-      table_name = writer._table_name_from_record(record)
-
-      self.assertFalse(writer._table_exists(table_name))    
       writer.write(record)
-      result = writer.db.read(table_name)
-      logging.debug('Read record: %s', str(result))
-      
-      self.assertTrue(writer._table_exists(table_name))
 
-      writer._delete_table(table_name)
-      self.assertFalse(writer._table_exists(table_name))
+      result = True
+      while result:
+        result = writer.db.read()
+        logging.debug('Read %d: %s', index, result)
+        if result:
+          self.assertEqual(result, SINGLE_RESULTS[index])
+          index += 1
+      
      
 if __name__ == '__main__':
   import argparse

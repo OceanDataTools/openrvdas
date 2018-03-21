@@ -17,10 +17,8 @@ from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD
 class DatabaseWriter(Writer):
   def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
                user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-               create_if_missing=False, skip_record_type_check=False):
-    """Write to the passed DASRecord to a database table. If
-    create_if_missing is true, create the table if it doesn't yet
-    exist."""
+               skip_record_type_check=False):
+    """Write to the passed DASRecord to a database table."""
     super().__init__(input_format=Python_Record)
 
     if not DATABASE_ENABLED:
@@ -28,26 +26,13 @@ class DatabaseWriter(Writer):
 
     self.db = Connector(database=database, host=host,
                         user=user, password=password)
-    self.create_if_missing = create_if_missing
     self.skip_record_type_check = skip_record_type_check
-
-  ############################
-  def _table_name_from_record(self,  record):
-    """Infer table name from record."""
-    return self.db.table_name_from_record(record)
 
   ############################
   def _table_exists(self, table_name):
     """Does the specified table exist in the database?"""
     return self.db.table_exists(table_name)
   
-  ############################
-  def _create_table_from_record(self,  record):
-    """Create a new table with one column for each field in the record. Try
-    to infer the proper type for each column based on the type of the value
-    of the field."""
-    self.db.create_table_from_record(record)
-
   ############################
   def _write_record(self, record):
     """Write record to table."""
@@ -69,17 +54,6 @@ class DatabaseWriter(Writer):
       logging.error('Record passed to DatabaseWriter is not of type '
                     '"DASRecord"; is type "%s"', type(record))
       return
-
-    # If table doesn't exist, either create or complain, depending on
-    # what user specified at initialization.
-    table_name = self._table_name_from_record(record)
-    if not self._table_exists(table_name):
-      if self.create_if_missing:
-        self._create_table_from_record(record)
-      else:
-        logging.error('Table "%s" does not exist, and create_if_missing==False',
-                      table_name)
-        return
 
     # Write the record
     self._write_record(record)

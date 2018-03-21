@@ -199,8 +199,7 @@
                       "kwargs": {"prefix": "%INST%"}},
                     { "class": "ParseNMEATransform"}
                 ],
-                "writers": {"class": "DatabaseWriter",
-                            "kwargs": {"create_if_missing": true}}
+                "writers": {"class": "DatabaseWriter"}
             }
         },
         

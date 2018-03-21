@@ -27,6 +27,55 @@ SAMPLE_DATA = [
   's330 2017-11-04:05:12:21.256010 $PSXN,23,-2.82,1.00,235.18,-1.66*3D',
 ]
 
+SINGLE_RESULTS = [
+  {'S330GPSTime': [(1509772339.479303, 0.17)]},
+  {'S330GPSDay': [(1509772339.479303, 7)]},
+  {'S330GPSMonth': [(1509772339.479303, 8)]},
+  {'S330GPSYear': [(1509772339.479303, 2014)]},
+  {'S330GPSTime': [(1509772339.729748, 0.16)]},
+  {'S330Lat': [(1509772339.729748, 3934.831698)]},
+  {'S330NorS': [(1509772339.729748, 'S')]},
+  {'S330Lon': [(1509772339.729748, 3727.695242)]},
+  {'S330EorW': [(1509772339.729748, 'W')]},
+  {'S330FixQuality': [(1509772339.729748, 1)]},
+  {'S330NumSats': [(1509772339.729748, 12)]},
+  {'S330HDOP': [(1509772339.729748, 0.7)]},
+  {'S330AntennaHeight': [(1509772339.729748, 0.82)]},
+  {'S330CourseTrue': [(1509772339.984911, 227.19)]},
+  {'S330CourseMag': [(1509772339.984911, 245.64)]},
+  {'S330SOGKt': [(1509772339.984911, 10.8)]},
+  {'S330GPSTime': [(1509772340.240177, 0.16)]},
+  {'S330Lat': [(1509772340.240177, 3934.831698)]},
+  {'S330NorS': [(1509772340.240177, 'S')]},
+  {'S330Lon': [(1509772340.240177, 3727.695242)]},
+  {'S330EorW': [(1509772340.240177, 'W')]},
+  {'S330Speed': [(1509772340.240177, 10.8)]},
+  {'S330CourseTrue': [(1509772340.240177, 227.19)]},
+  {'S330Date': [(1509772340.240177, '070814')]},
+  {'S330MagVar': [(1509772340.240177, 18.5)]},
+  {'S330MagVarEorW': [(1509772340.240177, 'W')]},
+  {'S330HeadingTrue': [(1509772340.49543, 235.18)]},
+  {'S330HorizQual': [(1509772340.748665, 1)]},
+  {'S330HeightQual': [(1509772340.748665, 0)]},
+  {'S330HeadingQual': [(1509772340.748665, 0)]},
+  {'S330RollPitchQual': [(1509772340.748665, 0)]},
+  {'S330GyroCal': [(1509772341.000716, -0.05)]},
+  {'S330GyroOffset': [(1509772341.000716, -0.68)]},
+  {'S330Roll': [(1509772341.25601, -2.82)]},
+  {'S330Pitch': [(1509772341.25601, 1.0)]},
+  {'S330HeadingTrue': [(1509772341.25601, 235.18)]}
+]
+
+RESET_RESULTS = [
+  {'S330CourseTrue': [(1509772339.984911, 227.19)]},
+  {'S330CourseMag': [(1509772339.984911, 245.64)]},
+  {'S330CourseTrue': [(1509772340.240177, 227.19)]}
+]
+
+BATCH_RESULTS = [
+  {'S330CourseTrue': [(1509772339.984911, 227.19), (1509772340.240177, 227.19)], 'S330CourseMag': [(1509772339.984911, 245.64)]},
+]
+
 class TestDatabase(unittest.TestCase):
 
   ############################
@@ -37,76 +86,40 @@ class TestDatabase(unittest.TestCase):
     try:
       db = MySQLConnector(database='test', host='localhost',
                           user='test', password='test')
+      db.exec_sql_command('truncate table data')
     except Exception as e:
       self.assertTrue(False,'Unable to create database connection. Have you '
                       'set up the appropriate setup script in database/setup?')
 
-    test_num = random.randint(0,100000)
-    records = [parser.parse_record(s) for s in SAMPLE_DATA]
-    for i in range(len(records)):
-      records[i].data_id = '%d_%s' % (test_num, records[i].data_id)
-      table_name = db.table_name_from_record(records[i])
-      logging.info('Deleting table %s', table_name)
-      if db.table_exists(table_name):
-        db.delete_table(table_name)
-      self.assertFalse(db.table_exists(table_name))
-
-    # Delete the mapping table so that we can test its automatic creation
-    if db.table_exists(db.FIELD_NAME_MAPPING_TABLE):
-      try:
-        db.delete_table(db.FIELD_NAME_MAPPING_TABLE)
-      except ProgrammingError:
-        pass
-      
+    records = [parser.parse_record(s) for s in SAMPLE_DATA]      
     for record in records:
-      table_name = db.table_name_from_record(record)
-
-      self.assertFalse(db.table_exists(table_name))
-      db.create_table_from_record(record)
-      self.assertTrue(db.table_exists(table_name))
-      
       db.write_record(record)
-      result = db.read(table_name)
+
+    for r in SINGLE_RESULTS:
+      result = db.read()
+      self.assertEqual(result, r)
       logging.info('Read record: %s', str(result))
-      self.assertEqual(record, result)
+    self.assertEqual(db.read(), {})
 
-      # Some fields can come from more than one record, and we only
-      # map to the first such record/table_name
-      #for field in record.fields:
-      #  self.assertEqual(table_name, db.table_name_from_field(field))
+    logging.info('###### Resetting')
+    db.seek(0, 'start')
+    for r in RESET_RESULTS:
+      result = db.read('S330CourseTrue,S330CourseMag')
+      self.assertEqual(result, r)
+      logging.info('Read record: %s', str(result))
+    self.assertEqual(db.read('S330CourseTrue,S330CourseMag'), {})
 
-      # Make sure we don't get anything when we try a second read
-      self.assertFalse(db.read(table_name))
-      
-    for record in records:
-      table_name = db.table_name_from_record(record)
-      db.write_record(record)
-      results = db.read_range(table_name, start=1)
-      logging.debug('Read records: %s', [str(r) for r in results])
-      self.assertEqual(len(results), 2)
-
-    table_name = db.table_name_from_record(records[0])
+    logging.info('###### Resetting')
+    db.seek(0, 'start')
+    for r in BATCH_RESULTS:
+      result = db.read('S330CourseTrue,S330CourseMag', num_records=None)
+      self.assertEqual(result, r)
+      logging.info('Read record: %s', str(result))
+    self.assertEqual(db.read('S330CourseTrue,S330CourseMag', num_records=None), {})
     
-    db.seek(table_name, 0, 'start')
-    self.assertEqual(db.read(table_name), records[0])
-    self.assertEqual(db.read(table_name), records[0])
-    self.assertEqual(db.read(table_name), None)
-    db.seek(table_name, -2, 'current')
-    self.assertEqual(db.read(table_name), records[0])
-    self.assertEqual(db.read(table_name), records[0])
-    self.assertEqual(db.read(table_name), None)
-    db.seek(table_name, -1, 'end')
-    self.assertEqual(db.read(table_name), records[0])
-    self.assertEqual(db.read(table_name), None)
-
-    # Finally, clean up
-    for record in records:
-      table_name = db.table_name_from_record(record)
-      db.delete_table(table_name)
-      self.assertFalse(db.table_exists(table_name))
-      
     db.close()
 
+    
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()

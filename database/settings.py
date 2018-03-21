@@ -31,6 +31,7 @@ try:
   #   database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
   #
   from database.mysql_connector import MYSQL_ENABLED, MySQLConnector as Connector
+  #from database.mysql_record_connector import MYSQL_ENABLED, MySQLRecordConnector as Connector
   if MYSQL_ENABLED:
       DATABASE_ENABLED = True
 

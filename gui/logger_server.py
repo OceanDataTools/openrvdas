@@ -96,7 +96,7 @@ class WriteToDjangoHandler(logging.Handler):
     self.formatter = logging.Formatter(LOGGING_FORMAT)
       
   def emit(self, record):
-    print('Saving Logger ServerMessage: %s' % record)
+    print('Saving Logger ServerMessage: %s' % record.getMessage())
     message = ServerMessage(server=self.logger_name,
                             message=self.formatter.format(record))
     message.save()
