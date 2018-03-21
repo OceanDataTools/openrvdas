@@ -30,7 +30,7 @@ restarts them if they should be and are not.
 The StatusServer and LoggerServer can be run manually from the command
 line as well, using the expected invocation:
 
-  gui/status_server.py
+  gui/logger_server.py
   gui/status_server.py
 
 Use the --help flag to see what options are available with each.

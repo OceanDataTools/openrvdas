@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run status server that reads data from Django database and feeds it
-to web pages via websocket.
+to web pages via websocket. See PROTOCOLS below for more information
+about the data formats it provides.
 
 Typically invoked via the web interface:
 
@@ -31,7 +32,7 @@ restarts them if they should be and are not.
 The StatusServer and LoggerServer can be run manually from the command
 line as well, using the expected invocation:
 
-  gui/status_server.py
+  gui/logger_server.py
   gui/status_server.py
 
 Use the --help flag to see what options are available with each.
@@ -44,6 +45,56 @@ above, sample_cruise.json, you'll also need to run
 
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
+
+PROTOCOLS
+
+The StatusServer takes connections on the host:port specified on the
+command line or defaults to the values WEBSOCKET_HOST and
+WEBSOCKET_PORT imported from gui.settings.
+
+It then loops, iteratively serving updates via a JSONified dictionary
+whose contents depend on the requested path from that host (these are
+divided out in the _serve_requests() routine, below):
+
+/server - server status dictionary
+
+      server_name: {'running':bool, 'desired':bool}
+
+    Indicating whether the specified servers are running, and whether
+    they're desired to be running.
+
+/logger - serve logger statuses
+
+      {'time_str':str,
+       'status': {
+          'gyr1': {<status dictionary},
+          'knud': {<status dictionary},
+          ...
+        }
+      }
+
+/messages/<server> - serve messages emitted by the specified server
+
+      [message, message, message,...]
+
+    Servers at present are StatusServer and LoggerServer
+
+/data - serve data field updates
+
+    First waits to receive a JSONified message of the form
+
+      [["Field1", seconds_1], ["Field2", seconds_2], ...]
+
+    listing the fields requested and how many seconds of back-data are
+    desired.
+
+    Then sends a dictionary of back-data followed by iterative updates
+    as new values for the requested fields come in:
+
+    {"Field1": [[timestamp, val], [timestamp, val], ...],
+     "Field2": [[timestamp, val], [timestamp, val], ...],
+     ...
+    }
 
 """
 
