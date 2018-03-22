@@ -426,18 +426,20 @@ class StatusServer:
       # Create a DatabaseReader to get num_secs worth of back data for
       # these fields. Provide a start_time of num_secs ago, and no
       # stop_time, so we get everything up to present.
-      logging.debug('Creating DatabaseFileReader for %s', field_list)
-      logging.debug('Requesting timestamps from %f-%f', now-num_secs, now)
+      logging.debug('Creating DatabaseReader for %s', field_list)
+      logging.debug('Requesting %g seconds of timestamps from %f-%f',
+                      num_secs, now-num_secs, now)
       reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
                               DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
       num_sec_results = reader.read_time_range(start_time=now-num_secs)
+      logging.debug('results: %s', num_sec_results)
       results.update(num_sec_results)
-    max_timestamp_seen = 0
                      
     # Now that we've gotten all the back results, create a single
-    # DatabaseFieldReader to read all the fields.
+    # DatabaseReader to read all the fields.
     reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
                             DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
+    max_timestamp_seen = 0
     while True:
       # If we do have results, package them up and send them
       if results:
@@ -458,6 +460,15 @@ class StatusServer:
       for field in results:
         last_timestamp = results[field][-1][0]
         max_timestamp_seen = max(max_timestamp_seen, last_timestamp)
+
+      # Bug's corner case: if we didn't retrieve any data on the first
+      # time through (because it was all too old), max_timestamp_seen
+      # will be zero, causing us to retrieve *all* the data in the DB
+      # on the next iteration. If we do find that max_timestamp_seen
+      # is zero, set it to "now" to prevent this.
+      if not max_timestamp_seen:
+        max_timestamp_seen = now
+
       logging.debug('Results: %s', results)
       if len(results):
         logging.info('Received %d fields, max timestamp %f',
