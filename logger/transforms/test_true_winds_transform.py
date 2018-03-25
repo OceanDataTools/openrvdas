@@ -36,87 +36,103 @@ mwx1 2017-11-04:05:12:26.370350 PUS,A,083,007.92,M,+340.94,+015.43,60,06""".sp
 RESULTS = [
   None,
   None,
+  {'PortApparentWindDir': 306.18,
+   'PortTrueWindDir': 335.177393161606,
+   'PortTrueWindSpeed': 11.249182721390321},
+  {'PortApparentWindDir': 313.18,
+   'PortTrueWindDir': 342.66448950069207,
+   'PortTrueWindSpeed': 11.25976276053472},
   None,
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772340.299984,
-   'fields':{'ApparentWindDir': 313.18,
-             'TrueWindDir': 342.66448950069207,
-             'TrueWindSpeed': 11.25976276053472},
-   'metadata': {}
-  },
-  None,
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772341.058888,
-   'fields':{'ApparentWindDir': 315.18,
-             'TrueWindDir': 348.2689627651261,
-             'TrueWindSpeed': 10.136863844493519},
-   'metadata': {}
-  },
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772341.819033,
-   'fields':{'ApparentWindDir': 310.18,
-             'TrueWindDir': 343.1228501177092,
-             'TrueWindSpeed': 10.05993172731625},
-   'metadata': {}
-  },
+  {'PortApparentWindDir': 315.18,
+   'PortTrueWindDir': 348.2689627651261,
+   'PortTrueWindSpeed': 10.136863844493519},
+  {'PortApparentWindDir': 310.18,
+   'PortTrueWindDir': 343.1228501177092,
+   'PortTrueWindSpeed': 10.05993172731625},
   None,
   None,
   None,
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772342.578922,
-   'fields':{'ApparentWindDir': 301.73,
-             'TrueWindDir': 333.4224730215687,
-             'TrueWindSpeed': 10.26784719951879},
-   'metadata': {}
-  },
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772343.338983,
-   'fields':{'ApparentWindDir': 298.73,
-             'TrueWindDir': 327.52747400046405,
-             'TrueWindSpeed': 10.96297769275824},
-   'metadata': {}
-  },
+  {'PortApparentWindDir': 301.73,
+   'PortTrueWindDir': 333.4224730215687,
+   'PortTrueWindSpeed': 10.26784719951879},
+  {'PortApparentWindDir': 298.73,
+   'PortTrueWindDir': 327.52747400046405,
+   'PortTrueWindSpeed': 10.96297769275824},
   None,
   None,
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772344.093591,
-   'fields':{'ApparentWindDir': 303.52,
-             'TrueWindDir': 335.0149290175605,
-             'TrueWindSpeed': 10.81633764120597},
-   'metadata': {}
-  },
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772344.854513,
-   'fields':{'ApparentWindDir': 306.52,
-             'TrueWindDir': 344.6328600199945,
-             'TrueWindSpeed': 9.305209500229173},
-   'metadata': {}
-  },
+  {'PortApparentWindDir': 303.52,
+   'PortTrueWindDir': 335.0149290175605,
+   'PortTrueWindSpeed': 10.81633764120597},
+  {'PortApparentWindDir': 306.52,
+   'PortTrueWindDir': 344.6328600199945,
+   'PortTrueWindSpeed': 9.305209500229173},
   None,
   None,
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772345.615169,
-   'fields':{'ApparentWindDir': 315.02,
-             'TrueWindDir': 356.9663690251725,
-             'TrueWindSpeed': 8.967493827016044},
-   'metadata': {}
-  },
-  {'data_id': 'truw',
-   'message_type': 'None',
-   'timestamp': 1509772346.370350,
-   'fields':{'ApparentWindDir': 318.02,
-             'TrueWindDir': 356.03324971116865,
-             'TrueWindSpeed': 9.765859956501929},
-   'metadata': {}
-  }
+  {'PortApparentWindDir': 315.02,
+   'PortTrueWindDir': 356.9663690251725,
+   'PortTrueWindSpeed': 8.967493827016044},
+  {'PortApparentWindDir': 318.02,
+   'PortTrueWindDir': 356.03324971116865,
+   'PortTrueWindSpeed': 9.765859956501929},
+]
+
+NO_TIMESTAMP_RESULTS = [
+  None,
+  None,
+  {'PortTrueWindDir': 335.177393161606,
+   'PortTrueWindSpeed': 11.249182721390321,
+   'PortApparentWindDir': 306.18},
+  {'PortTrueWindDir': 342.66448950069207,
+   'PortTrueWindSpeed': 11.25976276053472,
+   'PortApparentWindDir': 313.18},
+  {'PortTrueWindDir': 343.28434098427203,
+   'PortTrueWindSpeed': 10.992853771379666,
+   'PortApparentWindDir': 313.18},
+  {'PortTrueWindDir': 348.2689627651261,
+   'PortTrueWindSpeed': 10.136863844493519,
+   'PortApparentWindDir': 315.18},
+  {'PortTrueWindDir': 343.1228501177092,
+   'PortTrueWindSpeed': 10.05993172731625,
+   'PortApparentWindDir': 310.18},
+  {'PortTrueWindDir': 343.37379038523636,
+   'PortTrueWindSpeed': 10.088484891973131,
+   'PortApparentWindDir': 310.5},
+  {'PortTrueWindDir': 344.9123243896964,
+   'PortTrueWindSpeed': 9.979279490855696,
+   'PortApparentWindDir': 310.5},
+  {'PortTrueWindDir': 345.0911117416127,
+   'PortTrueWindSpeed': 10.000613431316216,
+   'PortApparentWindDir': 310.73},
+  {'PortTrueWindDir': 333.4224730215687,
+   'PortTrueWindSpeed': 10.26784719951879,
+   'PortApparentWindDir': 301.73},
+  {'PortTrueWindDir': 327.52747400046405,
+   'PortTrueWindSpeed': 10.96297769275824,
+   'PortApparentWindDir': 298.73},
+  {'PortTrueWindDir': 328.59459759678725,
+   'PortTrueWindSpeed': 10.986776999590612,
+   'PortApparentWindDir': 298.73},
+  {'PortTrueWindDir': 328.39699838501554,
+   'PortTrueWindSpeed': 10.965036068189718,
+   'PortApparentWindDir': 298.52},
+  {'PortTrueWindDir': 335.0149290175605,
+   'PortTrueWindSpeed': 10.81633764120597,
+   'PortApparentWindDir': 303.52},
+  {'PortTrueWindDir': 344.6328600199945,
+   'PortTrueWindSpeed': 9.305209500229173,
+   'PortApparentWindDir': 306.52},
+  {'PortTrueWindDir': 344.39420954439606,
+   'PortTrueWindSpeed': 9.526315883589124,
+   'PortApparentWindDir': 306.52},
+  {'PortTrueWindDir': 344.02321171966395,
+   'PortTrueWindSpeed': 9.478349994953241,
+   'PortApparentWindDir': 306.02},
+  {'PortTrueWindDir': 356.9663690251725,
+   'PortTrueWindSpeed': 8.967493827016044,
+   'PortApparentWindDir': 315.02},
+  {'PortTrueWindDir': 356.03324971116865,
+   'PortTrueWindSpeed': 9.765859956501929,
+   'PortApparentWindDir': 318.02},
 ]
 
 SANITY_CHECK = [
@@ -144,43 +160,20 @@ SANITY_CHECK = [
 ]
 SANITY_RESULTS = [
   {
-    'ApparentWindDir': 0,
-    'TrueWindDir': 0,
-    'TrueWindSpeed': 0
+    'PortApparentWindDir': 0,
+    'PortTrueWindDir': 0,
+    'PortTrueWindSpeed': 0
   },
   {
-    'ApparentWindDir': 90,
-    'TrueWindDir': 135.0,
-    'TrueWindSpeed': 14.142135623730953
+    'PortApparentWindDir': 90,
+    'PortTrueWindDir': 135.0,
+    'PortTrueWindSpeed': 14.142135623730953
   },
   {
-    'ApparentWindDir': 0,
-    'TrueWindDir': 360,
-    'TrueWindSpeed': 20
+    'PortApparentWindDir': 0,
+    'PortTrueWindDir': 360,
+    'PortTrueWindSpeed': 20
   },
-]
-
-NMEA_RESULTS = [
-  None,
-  None,
-  None,
-  'truw 2017-11-04:05:12:20.299984 342.664,11.2598,313.18',
-  None,
-  'truw 2017-11-04:05:12:21.058888 348.269,10.1369,315.18',
-  'truw 2017-11-04:05:12:21.819033 343.123,10.0599,310.18',
-  None,
-  None,
-  None,
-  'truw 2017-11-04:05:12:22.578922 333.422,10.2678,301.73',
-  'truw 2017-11-04:05:12:23.338983 327.527,10.963,298.73',
-  None,
-  None,
-  'truw 2017-11-04:05:12:24.093591 335.015,10.8163,303.52',
-  'truw 2017-11-04:05:12:24.854513 344.633,9.30521,306.52',
-  None,
-  None,
-  'truw 2017-11-04:05:12:25.615169 356.966,8.96749,315.02',
-  'truw 2017-11-04:05:12:26.370350 356.033,9.76586,318.02'
 ]
 
 class TestTrueWindsTransform(unittest.TestCase):
@@ -190,30 +183,75 @@ class TestTrueWindsTransform(unittest.TestCase):
     expected_results = RESULTS.copy()
     
     # Use port wind speed, output in m/s
-    tw = TrueWindsTransform(data_id='truw',
-                            course_fields='S330CourseTrue',
-                            speed_fields='S330Speed',
-                            heading_fields='S330HeadingTrue',
-                            wind_dir_fields='MwxPortRelWindDir',
-                            wind_speed_fields='MwxPortRelWindSpeed',
+    tw = TrueWindsTransform(course_field='S330CourseTrue',
+                            speed_field='S330Speed',
+                            heading_field='S330HeadingTrue',
+                            wind_dir_field='MwxPortRelWindDir',
+                            update_on_fields=['MwxPortRelWindDir'],
+                            wind_speed_field='MwxPortRelWindSpeed',
+                            true_dir_name='PortTrueWindDir',
+                            true_speed_name='PortTrueWindSpeed',
+                            apparent_dir_name='PortApparentWindDir',
                             convert_speed_factor=0.5144)
     parse = ParseNMEATransform()
 
+    value_dict = {}
+    timestamp_dict = {}
+    
     while lines:
       record = parse.transform(lines.pop(0))
-      result = tw.transform(record)
+      for field in record.fields:
+        value_dict[field] = record.fields[field]
+        timestamp_dict[field] = record.timestamp
+        
+      result = tw.transform(value_dict, timestamp_dict)
       expected = expected_results.pop(0)
-      if expected:
-        self.assertEqual(result.data_id, 'truw')
-        self.assertEqual(result.message_type, None)
-        self.assertEqual(result.timestamp, expected['timestamp'])
-        self.assertAlmostEqual(result.fields['ApparentWindDir'], expected['fields']['ApparentWindDir'], delta=0.00001)
-        self.assertAlmostEqual(result.fields['TrueWindDir'], expected['fields']['TrueWindDir'], delta=0.00001)
-        self.assertAlmostEqual(result.fields['TrueWindSpeed'], expected['fields']['TrueWindSpeed'], delta=0.00001)
-        self.assertDictEqual(result.metadata, expected['metadata'])
-      else:
+      logging.info('Got result: %s', result)
+      logging.info('Expected result: %s', expected)
+
+      if not result or not expected:
         self.assertIsNone(result)
-    return
+        self.assertIsNone(expected)
+      else:
+        self.assertDictEqual(result, expected)
+
+  ############################
+  def test_no_timestamps(self):
+    lines = LINES.copy()
+    expected_results = NO_TIMESTAMP_RESULTS.copy()
+    
+    # Use port wind speed, output in m/s
+    tw = TrueWindsTransform(course_field='S330CourseTrue',
+                            speed_field='S330Speed',
+                            heading_field='S330HeadingTrue',
+                            wind_dir_field='MwxPortRelWindDir',
+                            update_on_fields=['MwxPortRelWindDir'],
+                            wind_speed_field='MwxPortRelWindSpeed',
+                            true_dir_name='PortTrueWindDir',
+                            true_speed_name='PortTrueWindSpeed',
+                            apparent_dir_name='PortApparentWindDir',
+                            convert_speed_factor=0.5144)
+    parse = ParseNMEATransform()
+
+    value_dict = {}
+    timestamp_dict = {}
+    
+    while lines:
+      record = parse.transform(lines.pop(0))
+      for field in record.fields:
+        value_dict[field] = record.fields[field]
+        timestamp_dict[field] = record.timestamp
+        
+      result = tw.transform(value_dict)
+      expected = expected_results.pop(0)
+      logging.info('Got result: %s', result)
+      logging.info('Expected result: %s', expected)
+
+      if not result or not expected:
+        self.assertIsNone(result)
+        self.assertIsNone(expected)
+      else:
+        self.assertDictEqual(result, expected)
 
   ############################
   def test_sanity(self):
@@ -221,60 +259,24 @@ class TestTrueWindsTransform(unittest.TestCase):
     check = SANITY_CHECK.copy()
     expected_results = SANITY_RESULTS.copy()
     
-    tw = TrueWindsTransform(data_id='truw',
-                            course_fields='CourseTrue',
-                            speed_fields='Speed',
-                            heading_fields='HeadingTrue',
-                            wind_dir_fields='RelWindDir',
-                            wind_speed_fields='RelWindSpeed')
+    tw = TrueWindsTransform(course_field='CourseTrue',
+                            speed_field='Speed',
+                            heading_field='HeadingTrue',
+                            wind_dir_field='RelWindDir',
+                            wind_speed_field='RelWindSpeed',
+                            true_dir_name='PortTrueWindDir',
+                            true_speed_name='PortTrueWindSpeed',
+                            apparent_dir_name='PortApparentWindDir')
 
     while check:
       fields = check.pop(0)
       record = DASRecord(data_id='truw', fields=fields)
-      result = tw.transform(record)
-      logging.debug('sanity result: %s', result)
-      expected_fields = expected_results.pop(0)
-      self.assertDictEqual(result.fields, expected_fields)
-
-    return
-
-  ############################
-  def test_nmea(self):
-    lines = LINES.copy()
-    expected_results = RESULTS.copy()
-    nmea_results = NMEA_RESULTS.copy()
-    
-    # Use port wind speed, output in m/s
-    tw = TrueWindsTransform(data_id='truw',
-                            course_fields='S330CourseTrue',
-                            speed_fields='S330Speed',
-                            heading_fields='S330HeadingTrue',
-                            wind_dir_fields='MwxPortRelWindDir',
-                            wind_speed_fields='MwxPortRelWindSpeed',
-                            convert_speed_factor=0.5144,
-                            output_nmea=True)
-    parse = ParseNMEATransform()
-
-    while lines:
-      record = parse.transform(lines.pop(0))
-      result = tw.transform(record)
-      nmea_expected = nmea_results.pop(0)
-      self.assertEqual(result, nmea_expected)
-
-      # Now check that parsing into a DASRecord works as expected
-      das_result = parse.transform(result)
+      result = tw.transform(record.fields)
       expected = expected_results.pop(0)
-      if das_result is None:
-        self.assertEqual(das_result, expected)
-      else:
-        das_fields = das_result.fields
-        exp_fields = expected['fields']
-        self.assertAlmostEqual(das_fields['TrueWindDir'],
-                               exp_fields['TrueWindDir'], delta=0.001)
-        self.assertAlmostEqual(das_fields['TrueWindSpeed'],
-                               exp_fields['TrueWindSpeed'], delta=0.001)
-        self.assertAlmostEqual(das_fields['ApparentWindDir'],
-                               exp_fields['ApparentWindDir'], delta=0.001)
+      logging.info('sanity result: %s', result)
+      logging.info('sanity expected: %s', expected)
+      self.assertDictEqual(result, expected)
+
     return
   
 ################################################################################

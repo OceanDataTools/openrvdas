@@ -2,22 +2,25 @@
 """Compute true winds by processing and aggregating vessel
 course/speed/heading and relative wind dir/speed records.
 
+NOTE that this transform is a DerivedDataTransform, so it takes a
+different form of input than a generic Transform. See the definition
+of DerivedDataTransform for more information.
+
 There are plenty of challenges with computing a universally-accepted
 true wind value. Even with the correct algorithm (not a given), unless
 the vessel nav and anemometer values have identical timestamps,
 there's the question of how one integrates/interpolates/extrapolates
 values with different timestamps.
 
-Below, we make the simplifying assumption that vessel
-course/speed/heading is less variable than wind dir/speed, so we cache
-the most recent vessel record when we receive it, and only output a
-true wind estimate when we receive new anemometer records. A more
-robust approach would be to wait until we got the next vessel record
-and interpolate the course/speed/heading values between the two vessel
-records (or, conversely, output when we got a vessel record, using an
-interpolation of the preceding and following anemometer readings?).
+We allow making the simplifying assumption that, e.g., vessel
+course/speed/heading is less variable than wind dir/speed, so we will
+only produce updated results when we receive new anemometer records. A
+more robust approach would be to wait until we got the next vessel
+record and interpolate the course/speed/heading values between the two
+vessel records (or, conversely, output when we got a vessel record,
+using an interpolation of the preceding and following anemometer
+readings?).
 
-TODO: a subclass that expects NMEA input and parses it into DASRecords.
 """
 
 import logging
@@ -25,41 +28,45 @@ import sys
 
 sys.path.append('.')
 
-from logger.utils import formats
-from logger.utils.das_record import DASRecord
 from logger.utils.timestamp import time_str
 from logger.utils.truewinds.truew import truew
-from logger.transforms.transform import Transform
+from logger.transforms.derived_data_transform import DerivedDataTransform
 
 ################################################################################
-class TrueWindsTransform(Transform):
+class TrueWindsTransform(DerivedDataTransform):
   """Transform that computes true winds from vessel
   course/speed/heading and anemometer relative wind speed/dir.
   """
-  def __init__(self, data_id, course_fields, speed_fields, heading_fields,
-               wind_dir_fields, wind_speed_fields,
+  def __init__(self,
+               course_field, speed_field, heading_field,
+               wind_dir_field, wind_speed_field,
+               true_dir_name,
+               true_speed_name,
+               apparent_dir_name,
                update_on_fields=None,
                zero_line_reference=0,
                convert_wind_factor=1,
                convert_speed_factor=1,
                output_nmea=False):
     """
-    data_id
-             The data_id that will be attached to the records produced.
+    course_field
+    speed_field
+    heading_field
+    wind_dir_field
+    wind_speed_field
+             Field names from which we should take values for
+             course, speed over ground, heading, relative wind speed
+             and relative wind direction.
 
-    course_fields
-    speed_fields
-    heading_fields
-    wind_dir_fields
-    wind_speed_fields
-             Comma-separated lists of field names from which we should
-             take values for course, speed over ground, heading, relative
-             wind speed and relative wind direction.
+    true_dir_name
+    true_speed_name
+    apparent_dir_name
+             Names that should be given to transform output values.
 
-    update_on_fields
-             If non-empty, a comma-separated list of fields, any of whose
-             arrival should trigger an output record. By default, equal to
-             wind_dir_fields.
+    update_on_fields              
+             If non-empty, a list of fields, any of whose arrival should
+             trigger an output record. If None, generate output when any
+             field is updated.
 
     zero_line_reference
              Angle between bow and zero line on anemometer, referenced
@@ -73,108 +80,138 @@ class TrueWindsTransform(Transform):
              Typically, only one of these will be not equal to 1; e.g. to
              output true winds as meters/sec, we'll leave convert_wind_factor
              as 1 and specify convert_speed_factor=0.5144
-
-    output_nmea
-             If True, output an NMEA-like string.
     """
-    super().__init__(input_format=formats.Python_Record,
-                     output_format=formats.Text)
-    self.data_id = data_id
-    self.course_fields = course_fields.split(',')
-    self.speed_fields = speed_fields.split(',')
-    self.heading_fields = heading_fields.split(',')
-    self.wind_dir_fields = wind_dir_fields.split(',')
-    self.wind_speed_fields = wind_speed_fields.split(',')
+    super().__init__()
 
-    if update_on_fields:
-      self.update_on_fields = update_on_fields.split(',')
-    else:
-      self.update_on_fields = self.wind_dir_fields
+    self.course_field = course_field
+    self.speed_field = speed_field
+    self.heading_field = heading_field
+    self.wind_dir_field = wind_dir_field
+    self.wind_speed_field = wind_speed_field
+
+    self.true_dir_name = true_dir_name
+    self.true_speed_name = true_speed_name
+    self.apparent_dir_name = apparent_dir_name
+    
+    self.update_on_fields = update_on_fields
+
     self.zero_line_reference = zero_line_reference
 
     self.convert_wind_factor = convert_wind_factor
     self.convert_speed_factor = convert_speed_factor
     self.output_nmea = output_nmea
-    
+
+    # TODO: It may make sense for us to cache most recent values so
+    # that, for example, we can take single DASRecords in the
+    # transform() method and use the most recent values we've seen
+    # from previous calls.
     self.course_val = None
     self.speed_val = None
     self.heading_val = None
     self.wind_dir_val = None
     self.wind_speed_val = None
 
-    self.last_timestamp = 0
-    
-  ############################
-  def transform(self, record):
-    """Incorporate any useable fields in this record, and if it gives 
-    us a new true wind value, return it."""
-    if not record:
-      return None
+    self.course_val_time = 0
+    self.speed_val_time = 0
+    self.heading_val_time = 0
+    self.wind_dir_val_time = 0
+    self.wind_speed_val_time = 0
 
-    if not type(record) is DASRecord:
-      logging.warning('Improper format record: %s',record)
+  ############################
+  def fields(self):
+    """Which fields are we interested in to produce transformed data?"""
+    return [self.course_field, self.speed_field, self.heading_field,
+            self.wind_dir_field, self.wind_speed_field]
+
+  ############################
+  def transform(self, value_dict, timestamp_dict=None):
+    """Incorporate any useable fields in this record, and if it gives 
+    us a new true wind value, return the results."""
+
+    if not value_dict or type(value_dict) is not dict:
+      logging.warning('Improper type for value dict: %s', type(value_dict))
+      return None
+    if timestamp_dict and type(timestamp_dict) is not dict:
+      logging.warning('Improper type for timestamp dict: %s',
+                      type(timestamp_dict))
       return None
 
     update = False
-    for field_name in record.fields:
-      if field_name in self.course_fields:
-        self.course_val = record.fields[field_name]
-      elif field_name in self.speed_fields:
-        self.speed_val = record.fields[field_name] * self.convert_speed_factor
-      elif field_name in self.heading_fields:
-        self.heading_val = record.fields[field_name]
-      elif field_name in self.wind_dir_fields:
-        self.wind_dir_val = record.fields[field_name]
-      elif field_name in self.wind_speed_fields:
-        self.wind_speed_val = record.fields[field_name] * self.convert_wind_factor
-      
-      if field_name in self.update_on_fields:
-        update = True
 
+    course_val = value_dict.get(self.course_field,  None)
+    speed_val = value_dict.get(self.speed_field, None)
+    heading_val = value_dict.get(self.heading_field, None)
+    wind_dir_val = value_dict.get(self.wind_dir_field, None)
+    wind_speed_val = value_dict.get(self.wind_speed_field, None)
+
+    if None in (course_val, speed_val, heading_val,
+                wind_dir_val, wind_speed_val):
+      logging.debug('Not all required values for true winds are present')
+      return None
+    
+    # If we have timestamps, check our most recent timestamps against
+    # what's passed in the dictionary.
+    if not timestamp_dict:
+      update = True
+    else:
+      new_course_val_time = timestamp_dict.get(self.course_field, 0)
+      if new_course_val_time > self.course_val_time:
+        self.course_val_time = new_course_val_time
+        if not self.update_on_fields or \
+           self.course_field in self.update_on_fields:
+          update = True
+
+      new_speed_val_time = timestamp_dict.get(self.speed_field, 0)
+      if new_speed_val_time > self.speed_val_time:
+        self.speed_val_time = new_speed_val_time
+        if not self.update_on_fields or \
+           self.speed_field in self.update_on_fields:
+          update = True
+
+      new_heading_val_time = timestamp_dict.get(self.heading_field, 0)
+      if new_heading_val_time > self.heading_val_time:
+        self.heading_val_time = new_heading_val_time
+        if not self.update_on_fields or \
+           self.heading_field in self.update_on_fields:
+          update = True
+
+      new_wind_dir_val_time = timestamp_dict.get(self.wind_dir_field, 0)
+      if new_wind_dir_val_time > self.wind_dir_val_time:
+        self.wind_dir_val_time = new_wind_dir_val_time
+        if not self.update_on_fields or \
+           self.wind_dir_field in self.update_on_fields:
+          update = True
+          
+      new_wind_speed_val_time = timestamp_dict.get(self.wind_speed_field, 0)
+      if new_wind_speed_val_time > self.wind_speed_val_time:
+        self.wind_speed_val_time = new_wind_speed_val_time
+        if not self.update_on_fields or \
+           self.wind_speed_field in self.update_on_fields:
+          update = True
+          
     # If we've not seen anything that updates fields that would
     # trigger a new true winds value, return None.
     if not update:
       return None
 
-    if self.course_val is None:
-      logging.info('Still missing course_val')
-      return None
-    if self.speed_val is None:
-      logging.info('Still missing speed_val')
-      return None
-    if self.heading_val is None:
-      logging.info('Still missing heading_val')
-      return None
-    if self.wind_dir_val is None:
-      logging.info('Still missing wind_dir_val')
-      return None
-    if self.wind_speed_val is None:
-      logging.info('Still missing wind_speed_val')
-      return None
+    speed_val *= self.convert_speed_factor
+    wind_speed_val *= self.convert_wind_factor
 
     logging.info('Computing new true winds')
-    (true_dir, true_speed, app_dir) = truew(crse=self.course_val,
-                                            cspd=self.speed_val,
-                                            hd=self.heading_val,
-                                            wdir=self.wind_dir_val,
-                                            zlr=self.zero_line_reference,
-                                            wspd=self.wind_speed_val)
+    (true_dir, true_speed, apparent_dir) = truew(crse=course_val,
+                                                 cspd=speed_val,
+                                                 hd=heading_val,
+                                                 wdir=wind_dir_val,
+                                                 zlr=self.zero_line_reference,
+                                                 wspd=wind_speed_val)
 
-    logging.info('Got true winds: dir: %s, speed: %s, app_dir: %s',
-                 true_dir, true_speed, app_dir)
-    if true_dir is None or true_speed is None or app_dir is None:
+    logging.info('Got true winds: dir: %s, speed: %s, apparent_dir: %s',
+                 true_dir, true_speed, apparent_dir)
+    if None in (true_dir, true_speed, apparent_dir):
       logging.info('Got invalid true winds')
       return None
 
     # If here, we've got a valid new true wind result
-    if self.output_nmea:
-      new_record = '%s %s %g,%g,%g' % (self.data_id,
-                                       time_str(record.timestamp),
-                                       true_dir, true_speed, app_dir)
-    else:
-      new_record = DASRecord(data_id=self.data_id,
-                             timestamp=record.timestamp,
-                             fields={'TrueWindDir': true_dir,
-                                     'TrueWindSpeed': true_speed,
-                                     'ApparentWindDir': app_dir})
-    return new_record
+    return {self.true_dir_name: true_dir,
+            self.true_speed_name: true_speed,
+            self.apparent_dir_name: apparent_dir}
