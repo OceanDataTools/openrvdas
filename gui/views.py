@@ -73,7 +73,7 @@ def index(request):
       # Find the config that matches the new mode for each logger. If
       # no config for a logger, that means the logger isn't supposed
       # to be running in this mode. 
-      for logger in Logger.objects.all():
+      for logger in Logger.objects.filter(cruise=cruise):
         config_set = LoggerConfig.objects.filter(logger=logger, mode=new_mode)
         config_set_size = config_set.count()
         if config_set_size == 0:
@@ -107,7 +107,7 @@ def index(request):
 
   # Get config corresponding to current mode for each logger
   loggers = {}
-  for logger in Logger.objects.all():
+  for logger in Logger.objects.filter(cruise=cruise):
     desired_config = logger.desired_config or None
     if logger.desired_config:
       logging.warning('config for %s is %s', logger.name, desired_config.name)

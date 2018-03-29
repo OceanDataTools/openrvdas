@@ -296,7 +296,7 @@ class StatusServer:
       # Before we do anything else, get CurrentCruise.
       try:
         cruise = CurrentCruise.objects.latest('as_of').cruise
-      except CurrentCruise.DoesNotExist:
+      except (CurrentCruise.DoesNotExist, gui.models.DoesNotExist):
         logging.info('No current cruise - nothing to do.')
         await asyncio.sleep(interval)
         continue
@@ -305,19 +305,22 @@ class StatusServer:
       # server (or whomever) to use.    
       status = {}
       status['cruise'] = cruise.id
-      #status['cruise_loaded_time'] = cruise_timestamp
-      status['cruise_start'] = cruise.start.strftime(TIME_FORMAT)
-      status['cruise_end'] = cruise.end.strftime(TIME_FORMAT)
+      status['cruise_loaded_time'] = cruise.loaded_time.timestamp()
+      if cruise.start:
+        status['cruise_start'] = cruise.start.strftime(TIME_FORMAT)
+      if cruise.end:
+        status['cruise_end'] = cruise.end.strftime(TIME_FORMAT)
 
       current_mode = cruise.current_mode
-      status['current_mode'] = current_mode.name
+      if current_mode:
+        status['current_mode'] = current_mode.name
 
       # We'll fill in the logger statuses one at a time
       status['loggers'] = {}
 
       # Get config corresponding to current mode for each logger
       logger_status = {}
-      for logger in Logger.objects.all():
+      for logger in Logger.objects.filter(cruise=cruise):
         logger_status = {}
       
         # What config do we want logger to be in?

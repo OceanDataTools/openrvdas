@@ -25,7 +25,7 @@ class DatabaseReader(TimestampedReader):
   def __init__(self, fields=None,
                database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
                user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-               sleep_interval=2):
+               sleep_interval=1.0):
     super().__init__(output_format=Python_Record)
 
     if not DATABASE_ENABLED:

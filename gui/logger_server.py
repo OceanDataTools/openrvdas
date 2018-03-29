@@ -192,7 +192,8 @@ class LoggerServer:
     if self.current_cruise_timestamp != cruise_timestamp:
       logging.warning('New cruise loaded - killing off running loggers.')
       for logger in self.processes:
-        self.processes[logger].terminat()
+        if self.processes[logger]:
+          self.processes[logger].terminate()
       self.processes = {}
       self.configs = {}
       self.errors = {}
@@ -203,7 +204,7 @@ class LoggerServer:
 
     # We'll fill in the logger statuses one at a time
     loggers = {}
-    for logger in Logger.objects.all():
+    for logger in Logger.objects.filter(cruise=cruise):
       warnings = []
       logger_status = {}
       # What config do we want logger to be in?
@@ -279,15 +280,19 @@ class LoggerServer:
       loggers[logger.name] = logger_status
 
     # Build a status dict we'll return at the end for the status
-    # server (or whomever) to use.    
+    # server (or whomever) to use.
     status = {
       'cruise': cruise.id,
       'cruise_loaded_time': cruise_timestamp,
-      'cruise_start': cruise.start.strftime(TIME_FORMAT),
-      'cruise_end': cruise.end.strftime(TIME_FORMAT),
-      'current_mode': current_mode.name,
       'loggers': loggers,
     }
+    if current_mode:
+      status['current_mode'] = current_mode.name
+    if cruise.start:
+      status['cruise_start'] = cruise.start.strftime(TIME_FORMAT)
+    if cruise.end:
+      status['cruise_end'] = cruise.end.strftime(TIME_FORMAT)
+
     return status
   
   ############################

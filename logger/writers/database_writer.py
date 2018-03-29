@@ -17,8 +17,17 @@ from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD
 class DatabaseWriter(Writer):
   def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
                user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-               skip_record_type_check=False):
-    """Write to the passed DASRecord to a database table."""
+               field_dict_input=False):
+    """Write to the passed DASRecord to a database table.
+
+    If flag field_dict_input is true, expect input in the format
+
+       {field_name: [(timestamp, value), (timestamp, value),...],
+        field_name: [(timestamp, value), (timestamp, value),...],
+        ...
+       }
+
+    Otherwise expect input to be a DASRecord."""
     super().__init__(input_format=Python_Record)
 
     if not DATABASE_ENABLED:
@@ -26,7 +35,7 @@ class DatabaseWriter(Writer):
 
     self.db = Connector(database=database, host=host,
                         user=user, password=password)
-    self.skip_record_type_check = skip_record_type_check
+    self.field_dict_input = field_dict_input
 
   ############################
   def _table_exists(self, table_name):
@@ -49,11 +58,37 @@ class DatabaseWriter(Writer):
     if not record:
       return
 
-    # By default, check that what we've got is a DASRecord
-    if not self.skip_record_type_check and type(record) is not DASRecord:
-      logging.error('Record passed to DatabaseWriter is not of type '
-                    '"DASRecord"; is type "%s"', type(record))
+    # If input purports to not be a field dict, it should be a
+    # DASRecord. Just write it out.
+    if not self.field_dict_input:
+      if type(record) is DASRecord:
+        self._write_record(record)
+      else:
+        logging.error('Record passed to DatabaseWriter is not of type '
+                      '"DASRecord"; is type "%s"', type(record))
       return
 
-    # Write the record
-    self._write_record(record)
+    # If here, we believe we've received a field dict, in which each
+    # field may have multiple [timestamp, value] pairs. First thing we
+    # do is reformat the data into a map of
+    #        {timestamp: {field:value, field:value],...}}
+    if not type(record) is dict:
+      raise ValueError('DatabaseWriter.write() received record purporting '
+                         'to be a field dict but of type %s' % type(record))
+    values_by_timestamp = {}
+    try:
+      for field, ts_value_list in record.items():
+        for (timestamp, value) in ts_value_list:
+          if not timestamp in values_by_timestamp:
+            values_by_timestamp[timestamp] = {}
+          values_by_timestamp[timestamp][field] = value
+    except ValueError:
+      logging.error('Badly-structured field dictionary: %s: %s',
+                    field, pprint.pformat(ts_value_list))
+
+    # Now go through each timestamp, generate a DASRecord from its
+    # values, and write them.
+    for timestamp in sorted(values_by_timestamp):
+      das_record = DASRecord(timestamp=timestamp,
+                             fields=values_by_timestamp[timestamp])
+      self._write_record(das_record)

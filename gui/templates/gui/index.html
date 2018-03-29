@@ -225,6 +225,8 @@
   }
   var timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
 
+  var cruise_loaded_time = 0;
+
   function process_message(message) {
     // Fill in the values we've received
 
@@ -240,14 +242,16 @@
     clearInterval(timeout_timer);
     timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
 
-    // Websocket server wants us to reload the page
-    var refresh = message.refresh;
-    if (refresh) {
-      window.location.reload(true);
-    }
-
     var status = message.status;
     if (status) {
+      // Has cruise changed behind our back? If so, reload
+      if (cruise_loaded_time == 0) {
+        cruise_loaded_time = status.cruise_loaded_time;
+      }
+      if (status.cruise_loaded_time > cruise_loaded_time) {
+        window.location.reload(true);
+      }
+
       // Update mode - "select_mode" only defined if user is authenticated;
       // otherwise we should have "mode_name"
 
@@ -288,7 +292,12 @@
         var enabled_td = document.getElementById(logger_name + "_enabled_td");
         var error_td = document.getElementById(logger_name + "_error");
   
-        if (!row) { console.log("Couldn't find row for " + logger_name) }
+        // If we can't find a row, maybe things have changed out
+        // from under us? Try reloading.
+        if (!row) {
+          console.log("Couldn't find row for " + logger_name);
+          window.location.reload(true);
+        }
 
         if (current) {
           config_button.innerHTML = current;

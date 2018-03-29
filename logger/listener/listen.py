@@ -61,6 +61,8 @@ from logger.transforms.timestamp_transform import TimestampTransform
 from logger.transforms.parse_nmea_transform import ParseNMEATransform
 from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform
 from logger.transforms.true_winds_transform import TrueWindsTransform
+from logger.transforms.derived_data_transform import DerivedDataTransform
+from logger.transforms.derived_data_transform import ComposedDerivedDataTransform
 
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
@@ -95,7 +97,7 @@ class ListenerFromLoggerConfig(Listener):
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords
-      elif type(value) in [float, bool, int, str]:
+      elif type(value) in [float, bool, int, str, list]:
         kwargs[key] = value
 
       # Else what do we have?

@@ -1,0 +1,51 @@
+// A sample derived-data transform to generate and store true winds from
+// database data. There are three "loggers" here: one that reads SeaPath330
+// data from serial port and store it in a logfile and in the database, one
+// that does the same for mast weather data, and a third that reads the
+// relevant fields from the database, uses them to compute true winds, and
+// stores the results back in the database.
+{
+    "name": "derived->db",
+    "readers": {
+        "class": "DatabaseReader",
+        "kwargs": {
+            "database": "data",
+            "host": "localhost",
+            "user": "rvdas",
+            "password": "rvdas"
+        }
+    },
+    "transforms": {
+        "class": "ComposedDerivedDataTransform",
+        "kwargs": {
+            "transforms": [
+                {
+                    "class": "TrueWindsTransform",
+                    "kwargs": {
+                        "course_field": "S330CourseTrue",
+                        "speed_field": "S330Speed",
+                        "heading_field": "S330HeadingTrue",
+                        "wind_dir_field": "MwxPortRelWindDir",
+                        "wind_speed_field": "MwxPortRelWindSpeed",
+                        "true_dir_name": "PortTrueWindDir",
+                        "true_speed_name": "PortTrueWindSpeed",
+                        "apparent_dir_name": "PortApparentWindDir",
+                        "convert_speed_factor": 0.5144
+                    }
+                }
+                //,
+                // Other derived data transforms should go here
+            ]
+        }
+    },
+    "writers": {
+        "class": "DatabaseWriter",
+        "kwargs": {
+            "database": "data",
+            "host": "localhost",
+            "user": "rvdas",
+            "password": "rvdas",
+            "field_dict_input": true
+        }
+    }
+}
