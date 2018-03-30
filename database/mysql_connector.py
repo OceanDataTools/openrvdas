@@ -122,8 +122,6 @@ class MySQLConnector:
                     'Type: %s', type(record))
       return
 
-    timestamp = record.timestamp
-
     # If we're saving source records, we have to do a little
     # legerdemain: after we've saved the record, we need to retrieve
     # the id of the record we've just saved so that we can attach it
@@ -146,22 +144,27 @@ class MySQLConnector:
       source_field = ''
       source_id = None
       
-    # Write one row for each field-value pair.
-    # NOTE: We should be able to speed this up tons by aggregating
-    # into a single write.
-    for key, value in record.fields.items():
+    # Write one row for each field-value pair. Columns are:
+    #     timestamp
+    #     field_name
+    #     int_value   \
+    #     float_value, \ Only one of these fields will be non-NULL,
+    #     str_value    / depending on the type of the value.
+    #     bool_value  /
+
+    timestamp = record.timestamp
+    values = []
+    for field_name, value in record.fields.items():
+      value_array = ['%f' % timestamp, '"%s"' % field_name,
+                     'NULL', 'NULL', 'NULL', 'NULL']
       if type(value) is int:
-        target = 'int_value'
-        format = str(value)
+        value_array[2] = '%d' % value
       elif type(value) is float:
-        target = 'float_value'
-        format = str(value)
+        value_array[3] = '%f' % value
       elif type(value) is str:
-        target = 'str_value'
-        format = '"' + value + '"'
+        value_array[4] = '"%s"' % value
       elif type(value) is bool:
-        target = 'bool_value'
-        format = '1' if value else '0'
+        value_array[5] = '%d' % ('1' if value else '0')
       elif value is None:
         continue
       else:        
@@ -169,20 +172,30 @@ class MySQLConnector:
                       type(value), key, value)
         continue
 
-      # Build the SQL query
-      fields = 'timestamp, field_name, %s' % target
-      values = '%f, "%s", %s' % (timestamp, key, format)
-
       # If we've saved this field's source record, append source's
       # foreign key to row so we can look it up.
       if source_id:
-        fields += ', source'
-        values += ', %d' % source_id
-        
-      write_cmd = 'insert into `%s` (%s) values (%s)' % \
-                  (self.DATA_TABLE, fields, values)
-      logging.info('Inserting record into table with command: %s', write_cmd)
-      self.exec_sql_command(write_cmd)
+         value_array.append('%d' % source_id)
+
+      # Join entries into a string, append to list of other values
+      # we've already saved.
+      value_str = '(%s)' % ','.join(value_array)
+      values.append(value_str)
+      
+    # Build the SQL query
+    fields = ['timestamp',
+              'field_name',
+              'int_value',
+              'float_value',
+              'str_value',
+              'bool_value']
+    if source_id:
+      fields.append('source')
+
+    write_cmd = 'insert into `%s` (%s) values %s' % \
+                  (self.DATA_TABLE, ','.join(fields), ','.join(values))
+    logging.debug('Inserting record into table with command: %s', write_cmd)
+    self.exec_sql_command(write_cmd)
    
   ############################
   def read(self, field_list=None, start=None, num_records=1):
