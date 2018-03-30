@@ -117,7 +117,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
 django.setup()
 
-from gui.models import CurrentCruise, Logger, LoggerConfigState
+from gui.models import Cruise, Logger, LoggerConfigState
 from gui.models import ServerMessage, StatusUpdate, ServerState
 
 from gui.settings import WEBSOCKET_HOST, WEBSOCKET_PORT
@@ -218,10 +218,11 @@ class StatusServer:
       # Client wants server status. That's whether StatusServer (us),
       # and LoggerServer are and should be running.
       await self._serve_server_status(websocket=websocket)
-    elif path == '/logger':
+    elif path.find('/logger/') == 0:
       # Client wants logger status - this is what we serve to the main
       # cruise page.
-      await self._serve_logger_status(websocket=websocket)
+      cruise_id = path[len('/logger/'):]
+      await self._serve_logger_status(websocket=websocket, cruise_id=cruise_id)
     elif path.find('/messages/') == 0:
       # Client wants server_messages - path suffix may vary
       server = path[len('/messages/'):]
@@ -287,16 +288,16 @@ class StatusServer:
   ############################
   # If request is for logger status updates (e.g. from index.html).
   @asyncio.coroutine
-  async def _serve_logger_status(self, websocket, interval=1.0):
+  async def _serve_logger_status(self, websocket, cruise_id, interval=1.0):
     previous_status = None
 
     while True:
       logging.info('_serve_logger_status() looping')
 
-      # Before we do anything else, get CurrentCruise.
+      # Before we do anything else, get cruise we're serving.
       try:
-        cruise = CurrentCruise.objects.latest('as_of').cruise
-      except (CurrentCruise.DoesNotExist, gui.models.DoesNotExist):
+        cruise = Cruise.objects.get(id=cruise_id)
+      except Cruise.DoesNotExist:
         logging.info('No current cruise - nothing to do.')
         await asyncio.sleep(interval)
         continue

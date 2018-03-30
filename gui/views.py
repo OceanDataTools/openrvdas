@@ -17,7 +17,7 @@ sys.path.append('.')
 
 from .models import load_cruise_config_to_models
 from .models import Logger, LoggerConfig, LoggerConfigState
-from .models import Mode, Cruise, CruiseState, CurrentCruise
+from .models import Mode, Cruise, CurrentCruise, CruiseState
 from .models import ServerMessage, ServerState
 
 from gui.run_servers import ServerRunner
@@ -37,34 +37,52 @@ def get_server_state(server):
     return ServerState(server=server, running=False, desired=False)
 
 ################################################################################
-def index(request):
+def index(request, cruise_id=None):
 
   # We'll accumulate any errors we encounter here
   errors = []
 
+  # First: do we have a cruise
+  if cruise_id:
+    try:
+      cruise = Cruise.objects.get(id=cruise_id)
+    except Cruise.DoesNotExist:
+      errors.append('Specified cruise "%s" does not exist.' % cruise_id)
+      cruise = None
+  else:
+    try:
+      cruise = CurrentCruise.objects.latest('as_of').cruise
+      cruise_id = cruise.id
+    except CurrentCruise.DoesNotExist:
+      cruise = None
+    
+  cruise_list = Cruise.objects.all()
+
+  if not cruise:
+    template_vars = {
+      'websocket_server': WEBSOCKET_SERVER,
+      'cruise': None,
+      'cruise_list': cruise_list,
+      'status_server_running': get_server_state('StatusServer').running,
+      'logger_server_running': get_server_state('LoggerServer').running,
+      'errors': ', '.join(errors),
+    }
+    return render(request, 'gui/index.html', template_vars)
+    
   ############################
   # If we've gotten a POST request
   if request.method == 'POST':
     logging.warning('REQUEST: %s', request.POST)
-
-    # Did we get a configuration file?
-    if request.FILES.get('config_file', None):
-      config_file = request.FILES['config_file']
-      config_contents = config_file.read() 
-      logging.warning('Uploading file "%s"...', config_file.name)
-
-      try:
-        config = parse_json(config_contents.decode('utf-8'))
-        errors += load_cruise_config_to_models(config, config_file.name)
-      except JSONDecodeError as e:
-        errors.append(str(e))
-        config = None
+    # Did we get a cruise selection?
+    if request.POST.get('select_cruise', None):
+      cruise_id = request.POST['select_cruise']
+      logging.warning('switching to cruise "%s"', cruise_id)
+      cruise = Cruise.objects.get(id=cruise_id)
 
     # Did we get a mode selection?
     elif request.POST.get('select_mode', None):
       new_mode_name = request.POST['select_mode']
       logging.warning('switching to mode "%s"', new_mode_name)
-      cruise = CurrentCruise.objects.latest('as_of').cruise      
       new_mode = Mode.objects.get(name=new_mode_name, cruise=cruise)
       current_mode = new_mode
       cruise.current_mode = new_mode
@@ -94,16 +112,8 @@ def index(request):
       logging.warning('Unknown POST request: %s', request.POST)
 
   # Now assemble the information needed to display the page.
-  try:
-    cruise = CurrentCruise.objects.latest('as_of').cruise
-    modes = Mode.objects.filter(cruise=cruise)
-    current_mode = cruise.current_mode
-    logging.warning('Current cruise: %s', cruise.id)
-  except CurrentCruise.DoesNotExist:
-    cruise = None
-    modes = []
-    current_mode = None
-    logging.warning('No current cruise')
+  modes = Mode.objects.filter(cruise=cruise)
+  current_mode = cruise.current_mode
 
   # Get config corresponding to current mode for each logger
   loggers = {}
@@ -119,6 +129,7 @@ def index(request):
     'is_superuser': True,
     'websocket_server': WEBSOCKET_SERVER,
     'cruise': cruise,
+    'cruise_list': cruise_list,
     'modes': modes,
     'current_mode': current_mode,
     'loggers': loggers,
@@ -257,12 +268,9 @@ def load_config(request):
 # By default, what config should logger have in current mode?
 def get_logger_mode_config(logger):
   try:
-    cruise = CurrentCruise.objects.latest('as_of').cruise
+    cruise = logger.cruise
     mode = cruise.current_mode
     return LoggerConfig.objects.get(logger=logger, mode=mode)
-  except CurrentCruise.DoesNotExist:
-    logging.warning('CurrentCruise does not exist')
-    return None
   except LoggerConfig.DoesNotExist:
     logging.warning('No config matching logger %s in mode %s', logger, mode)
     return None

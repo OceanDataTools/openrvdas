@@ -174,37 +174,12 @@ class LoggerServer:
 
   ############################
   def check_loggers(self, halt=False):
-    """Start up all the loggers using the configuration specified in
-    the current mode."""
-
-    try:  # Get the current cruise
-      cruise = CurrentCruise.objects.latest('as_of').cruise
-    except CurrentCruise.DoesNotExist:
-      logging.warning('No current cruise - nothing to do.')
-      return None
-
-    # Before we do anything else, make sure that we haven't had a new
-    # "current_cruise" loaded since we last looked. If we have,
-    # indelicately kill off all running loggers and clear out configs.
-    cruise_timestamp = cruise.loaded_time.timestamp()
-    if not self.current_cruise_timestamp:
-      self.current_cruise_timestamp = cruise_timestamp
-    if self.current_cruise_timestamp != cruise_timestamp:
-      logging.warning('New cruise loaded - killing off running loggers.')
-      for logger in self.processes:
-        if self.processes[logger]:
-          self.processes[logger].terminate()
-      self.processes = {}
-      self.configs = {}
-      self.errors = {}
-
-      # Set our new current_cruise_timestamp
-      self.current_cruise_timestamp = cruise_timestamp
-    current_mode = cruise.current_mode
+    """Check the desired state of all loggers and start/stop them accordingly.
+    """
 
     # We'll fill in the logger statuses one at a time
     loggers = {}
-    for logger in Logger.objects.filter(cruise=cruise):
+    for logger in Logger.objects.all():
       warnings = []
       logger_status = {}
       # What config do we want logger to be in?
@@ -282,17 +257,8 @@ class LoggerServer:
     # Build a status dict we'll return at the end for the status
     # server (or whomever) to use.
     status = {
-      'cruise': cruise.id,
-      'cruise_loaded_time': cruise_timestamp,
       'loggers': loggers,
     }
-    if current_mode:
-      status['current_mode'] = current_mode.name
-    if cruise.start:
-      status['cruise_start'] = cruise.start.strftime(TIME_FORMAT)
-    if cruise.end:
-      status['cruise_end'] = cruise.end.strftime(TIME_FORMAT)
-
     return status
   
   ############################

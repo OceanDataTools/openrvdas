@@ -31,8 +31,12 @@ urlpatterns = [
   
   path('load_config', views.load_config, name='load_config'),
   path('edit_config/<str:logger_name>', views.edit_config, name='edit_config'),
-  path('', views.index, name='index'),
 
   path('widget/<str:field_list>', views.widget, name='widget'),
   path('widget/', views.widget, name='widget'),
+
+  path('', views.index, name='index'),
+  path('cruise/', views.index, name='index'),
+  path('cruise/<str:cruise_id>', views.index, name='index'),
+
 ]
