@@ -14,12 +14,17 @@ are using CentOS-7-x86_64-DVD-1611.iso
 
 Perform the default CentOS install. Once the installation has completed, open a terminal window and update the installed packages via
 ```
+sudo yum -y install deltarpm
 sudo yum -y update
 ```
 
 Several packages are needed to simplify the installation of OpenRVDAS:
 ```
-sudo yum install -y wget gcc readline-devel zlib-devel openssl-devel
+sudo yum install -y wget gcc readline-devel zlib-devel openssl-devel 
+
+# If you will be installing the Django GUI:
+sudo yum install -y sqlite-devel
+
 ```
 
 ### Prerequisites
@@ -33,7 +38,7 @@ wget https://www.python.org/ftp/python/3.6.3/Python-3.6.3.tgz
 tar xzf Python-3.6.3.tgz
 cd Python-3.6.3
 
-./configure --enable-optimizations
+./configure --enable-optimizations --enable-loadable-sqlite-extensions
 sudo make
 sudo make install
 ```
@@ -114,7 +119,13 @@ cd ~/openrvdas
 python3 -m unittest discover
 ```
 
-Note that NetworkReader and NetworkWriter tests may fail unless the user has permissions to write to port 8001 on the host machine.
+Note that NetworkReader and NetworkWriter tests may fail unless the user has permissions to write to port 8000 and 8001 on the host machine. Under CentOS, you can add this permission with
+```
+sudo firewall-cmd --permanent --add-port=8000/tcp
+sudo firewall-cmd --permanent --add-port=8000/udp
+sudo firewall-cmd --permanent --add-port=8001/udp
+sudo firewall-cmd --reload
+```
 
 Tests may be run on a directory by directory basis.  For example, to test all code in logger/readers:
 ```
