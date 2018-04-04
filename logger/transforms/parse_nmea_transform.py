@@ -15,7 +15,8 @@ class ParseNMEATransform(Transform):
   def __init__(self, json=False,
                message_path=nmea_parser.DEFAULT_MESSAGE_PATH,
                sensor_path=nmea_parser.DEFAULT_SENSOR_PATH,
-               sensor_model_path=nmea_parser.DEFAULT_SENSOR_MODEL_PATH):
+               sensor_model_path=nmea_parser.DEFAULT_SENSOR_MODEL_PATH,
+               time_format=None):
     """
     json    Return a JSON-encoded representation of the DASRecord instead
             of DASRecord itself.
@@ -28,7 +29,8 @@ class ParseNMEATransform(Transform):
                      output_format=formats.Python_Record)
     self.json = json
     self.parser = nmea_parser.NMEAParser(message_path, sensor_path,
-                                         sensor_model_path)
+                                         sensor_model_path,
+                                         time_format=time_format)
   
   ############################
   def transform(self, record):
