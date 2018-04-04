@@ -12,9 +12,12 @@ sys.path.append('.')
 from logger.utils.das_record import DASRecord
 from logger.utils.nmea_parser import NMEAParser
 
-from database.settings import MYSQL_ENABLED
-from database.mysql_record_connector import MySQLRecordConnector
-from mysql.connector.errors import ProgrammingError
+try:
+  from database.settings import MYSQL_ENABLED
+  from database.mysql_record_connector import MySQLRecordConnector
+  from mysql.connector.errors import ProgrammingError
+except ModuleNotFoundError:
+  MYSQL_ENABLED = False
 
 SAMPLE_DATA = [
   's330 2017-11-04:05:12:19.479303 $INZDA,000000.17,07,08,2014,,*78',

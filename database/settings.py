@@ -1,5 +1,22 @@
 """
 Settings for database operations.
+
+To set up MySQL connectivity, install, configure and start
+MySQL server, and set up appropriate mysql user:
+
+   apt-get install mysql-server libmysqlclient-dev # ubuntu
+
+     or
+
+   yum install mariadb-server mariadb-devel mariadb-libs
+   
+     then
+
+   pip3 install mysqlclient, mysql-connector==2.1.6
+
+   # Create 'data' and 'test' databases and mysql_user
+   database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
+
 """
 import logging
 import sys
