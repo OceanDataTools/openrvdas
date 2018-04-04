@@ -11,7 +11,7 @@ import sys
 sys.path.append('.')
 from logger.utils import read_json
 from logger.utils.das_record import DASRecord
-from logger.utils.timestamp import timestamp
+from logger.utils.timestamp import timestamp, TIME_FORMAT
 
 DEFAULT_MESSAGE_PATH = 'local/message/*.json'
 DEFAULT_SENSOR_PATH = 'local/sensor/*.json'
@@ -27,10 +27,12 @@ class NMEAParser:
   ############################
   def __init__(self, message_path=DEFAULT_MESSAGE_PATH,
                sensor_path=DEFAULT_SENSOR_PATH,
-               sensor_model_path=DEFAULT_SENSOR_MODEL_PATH):
+               sensor_model_path=DEFAULT_SENSOR_MODEL_PATH,
+               time_format=None):
     self.messages = self._read_definitions(message_path)
     self.sensor_models = self._read_definitions(sensor_model_path)
     self.sensors = self._read_definitions(sensor_path)
+    self.time_format=time_format or TIME_FORMAT
 
   ############################
   def parse_record(self, nmea_record):
@@ -42,7 +44,7 @@ class NMEAParser:
       return None
     try:
       (data_id, raw_ts, message) = nmea_record.strip().split(maxsplit=2)
-      ts = timestamp(raw_ts)
+      ts = timestamp(raw_ts, time_format=self.time_format)
     except ValueError:
       logging.error('Record not in <data_id> <timestamp> <NMEA> format: "%s"',
                     nmea_record)
