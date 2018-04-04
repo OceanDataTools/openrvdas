@@ -143,7 +143,11 @@ class MySQLConnector:
     else:
       source_field = ''
       source_id = None
-      
+
+    if not record.fields:
+      logging.info('DASRecord has no parsed fields. Skipping record.')
+      return
+
     # Write one row for each field-value pair. Columns are:
     #     timestamp
     #     field_name
