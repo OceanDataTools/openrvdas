@@ -41,7 +41,7 @@ class NMEAParser:
       logging.error('Record is not NMEA string: "%s"', nmea_record)
       return None
     try:
-      (data_id, raw_ts, message) = nmea_record.strip().split(sep=' ', maxsplit=2)
+      (data_id, raw_ts, message) = nmea_record.strip().split(maxsplit=2)
       ts = timestamp(raw_ts)
     except ValueError:
       logging.error('Record not in <data_id> <timestamp> <NMEA> format: "%s"',

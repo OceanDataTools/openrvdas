@@ -32,6 +32,9 @@ from datetime import datetime, timezone
 DATE_FORMAT = '%Y-%m-%d'    # Gregorian
 TIME_FORMAT = '%Y-%m-%d:%H:%M:%S.%f'  # Gregorian
 
+# Used on the Sikuliaq
+#TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'  # Gregorian
+
 ################################################################################
 def timestamp(time_str=None, time_zone=timezone.utc, time_format=TIME_FORMAT):
   """Return numeric timestamp for a passed time_str. If no time_str is

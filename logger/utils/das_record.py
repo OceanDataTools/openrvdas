@@ -58,12 +58,14 @@ class DASRecord:
 
   ############################
   def __str__(self):
-    return ('{\'data_id\': \'%s\', \'message_type\': \'%s\', '
-            '\'timestamp\': %f, \'fields\':%s, \'metadata\': %s }'
-            % (self.data_id, self.message_type, 
-               self.timestamp,
-               pprint.pformat(self.fields),
-               pprint.pformat(self.metadata)))
+    das_dict = {
+      'data_id': self.data_id,
+      'message_type': self.message_type,
+      'timestamp': self.timestamp,
+      'fields': self.fields,
+      'metadata': self.metadata
+      }
+    return pprint.pformat(das_dict)
 
   ############################
   def __eq__(self, other):
