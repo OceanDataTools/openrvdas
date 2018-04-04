@@ -35,6 +35,9 @@ to get the database working:
 1. Install the MySQL server and its client tools
 ```
   apt-get install mysql-server libmysqlclient-dev # ubuntu
+
+  yum install mariadb-server mariadb-devel mariadb-libs # CentOS
+  service mariadb start
 ```
 2. Install the python mysql-connector modules
 ```

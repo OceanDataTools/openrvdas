@@ -59,6 +59,11 @@ the sample cruise definition for running on test data, run:
 ```
   python3 gui/run_servers.py
 ```
+Note that run_servers.py will need access to port 8765 (by default - you can change this in gui/settings.py). On CentOS, add this via:
+```
+sudo firewall-cmd --permanent --add-port=8765/tcp
+sudo firewall-cmd --reload
+```
 
 6. The sample cruise configuration relies on simulated serial ports
 serving data stored in the test/ directory. To set up the simulated
