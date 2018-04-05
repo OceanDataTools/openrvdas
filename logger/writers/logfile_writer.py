@@ -48,7 +48,7 @@ class LogfileWriter(Writer):
     
     # First things first: get the date string from the record
     try:
-      time_str = record.split(' ')[0]
+      time_str = record.split()[0]
       ts = timestamp.timestamp(time_str, time_format=self.time_format)
       date_str = timestamp.date_str(ts, date_format=self.date_format)
       logging.debug('LogfileWriter date_str: %s', date_str)
