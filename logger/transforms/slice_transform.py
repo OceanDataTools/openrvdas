@@ -11,13 +11,14 @@ from logger.transforms.transform import Transform
 
 ################################################################################
 class SliceTransform(Transform):
-  def __init__(self, fields=None, sep=' '):
+  def __init__(self, fields=None, sep=None):
     """
     fields    A comma-separated list of integers and/or ranges. A range
               is an int:int pair, where either or both of the ints may
               be omitted to mean the extreme values (0 or sys.maxsize).
 
-    sep       Field separator, assumed to be a single space
+    sep       Field separator; if omitted, uses default behavior of split()
+              which assumes all contiguous whitespace as a single separator.
 
     Example:
 
@@ -75,4 +76,5 @@ class SliceTransform(Transform):
         
       logging.debug('SliceTransform.write() selecting %s: %s', field, slice)
       out_record.extend(slice)
-    return self.sep.join(out_record)
+    separator = self.sep or ' '
+    return separator.join(out_record)
