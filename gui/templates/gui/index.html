@@ -10,30 +10,37 @@
   {# Draw the loggers and their current configurations.                       #}
   <table style="background-color:white">
     <tr id="server_row">
-      <td colspan=3>
+      <td>
         <button type="submit" id="status_server_button"
                 name="StatusServer" value=""
                 disabled style="background-color:orangered">Status Server
         </button>
+      </td>
+      <td>
+        <a href="#" onclick="message_window('StatusServer');return false;">
+          server log</a>
+      </td>
+      <td>
         <button type="submit" id="logger_server_button"
                 name="LoggerServer" value=""
                 disabled style="background-color:orangered">Logger Server
         </button>
-        {% if user.is_authenticated %}
-        <button
-           onclick="window.open('../servers', '_blank', 'height=235,width=280,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,copyhistory=no');">
-          Manage Servers
-        </button>
-        {% else %}
-        <a href="../login"><b>Log in</b></a> to manage servers
-        {% endif %}
+      </td>
+      <td>
+        <a href="#" onclick="message_window('LoggerServer');return false;">
+          server log</a>
       </td>
     </tr>
+    
     <tr id="time_row">
-      <td>Last update:</td>
-      <td id="time_td">no connection - is status server running?</td>
+      <td colspan=4>Last update:
+        <span id="time_td">no connection - is status server running?</span>
+      </td>
+    </tr>
     <tr id="time_warning_row" style="display:none;">
-      <td>Now:</td><td id="time_warning_td"</td>
+      <td colspan=4>
+        Now:<span id="time_warning_td"></span>
+      </td>
     </tr>
   </table>
   <hr>
@@ -383,7 +390,14 @@ Current configuration: {{ cruise.config_filename }}
     console.log('Edit request for ' + logger_name);
     //loggers = "{{ loggers }}";
     //console.log('Loggers: ' + loggers);
-  }  
+  }
+
+  ///////////////////////////////
+  function message_window(server) {
+    window.open("server_messages/" + server, "_blank",
+    "height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,copyhistory=no");
+  }
+
 </script>
 
 {% endblock content %}
