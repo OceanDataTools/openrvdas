@@ -37,7 +37,8 @@ to get the database working:
   apt-get install mysql-server libmysqlclient-dev # ubuntu
 
   yum install mariadb-server mariadb-devel mariadb-libs # CentOS
-  service mariadb start
+  service mariadb start  # to start db server
+  sudo systemctl enable httpd.service # to make it start on boot
 ```
 2. Install the python mysql-connector modules
 ```
