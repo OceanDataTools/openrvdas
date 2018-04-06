@@ -38,10 +38,10 @@ create_skq_config.py script and re-generate the skq_cruise.json file.
 
 The script generates a configuration with four modes:
 
-  off - no loggers running
-  file - write logger data to file (currently in /tmp/log/...)
-  db - write logger data to SQL database
-  file/db - write logger data to both file and db
+  - off - no loggers running
+  - file - write logger data to file (currently in /tmp/log/...)
+  - db - write logger data to SQL database
+  - file/db - write logger data to both file and db
 
 When used by the command line utility logger/utils/run_loggers.py, you can
 specify the desired mode on the command line:
