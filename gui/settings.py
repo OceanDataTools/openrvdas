@@ -26,12 +26,11 @@ SECRET_KEY = '$ra$!o9_p)vz^6^cm)9%i&_2afjavl_3m#tl0g@1kk06cj$qz4'
 DEBUG = True
 
 import socket
-HOSTNAME = socket.gethostname()
+
+#HOSTNAME = socket.gethostname()
+HOSTNAME = '10.0.0.113'
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
-
-# Hack to just run locally without worrying about opening ports
-HOSTNAME = 'localhost'
 
 WEBSOCKET_HOST = HOSTNAME
 WEBSOCKET_PORT = 8765
