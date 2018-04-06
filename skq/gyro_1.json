@@ -1,0 +1,27 @@
+{
+    "name": "gyro_1->file",
+    "readers": {
+        "class": "NetworkReader",
+        "kwargs": { "network": ":54122" }
+    },
+    "transforms": {
+        "class": "RegexFilterTransform",
+        "kwargs": { "pattern": "^gyro_1" }
+    },
+    "writers": {
+        "class": "ComposedWriter",
+        "kwargs": {
+            "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+            },
+            "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/CRUISE/INST/raw/CRUISE_INST",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+            }
+        }
+    }
+}

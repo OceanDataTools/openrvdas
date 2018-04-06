@@ -1,6 +1,6 @@
 {
     "cruise": {
-        "id": "SKQ_SAMPLE",
+        "id": "SKQ_6224",
         "start": "2018-04-01",
         "end": "2018-05-01"
     },
@@ -13,7 +13,7 @@
           "name": "cruiseid->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54000" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -40,7 +40,7 @@
           "name": "met_ptu307->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54100" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -67,7 +67,7 @@
           "name": "rain_rmy50202->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54101" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -94,7 +94,7 @@
           "name": "rad_qsr2150a->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54104" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -121,7 +121,7 @@
           "name": "rad_psp-pir->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54105" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -148,7 +148,7 @@
           "name": "thermo_pyrometer-ct15->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54106" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -175,7 +175,7 @@
           "name": "fluoro_turner-c6->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54107" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -202,7 +202,7 @@
           "name": "grav_bgm3_222->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54108" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -229,7 +229,7 @@
           "name": "pco2_ldeo_merge->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54109" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -256,7 +256,7 @@
           "name": "tsg_sbe45_fwd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54110" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -283,7 +283,7 @@
           "name": "thermo_sbe38_fwd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54111" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -310,7 +310,7 @@
           "name": "thermo_sbe38_incubator->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54112" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -337,7 +337,7 @@
           "name": "tsg_sbe45_fwd_2->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54114" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -364,7 +364,7 @@
           "name": "flow_omega_fwd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54115" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -391,7 +391,7 @@
           "name": "flow_krohne_pco2->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54116" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -418,7 +418,7 @@
           "name": "ssv_aml-svxchang_fwd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54117" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -445,7 +445,7 @@
           "name": "ins_seapath_position->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54119" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -472,7 +472,7 @@
           "name": "gnss_cnav->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54121" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -499,7 +499,7 @@
           "name": "gyro_1->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54122" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -526,7 +526,7 @@
           "name": "gyro_2->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54125" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -553,7 +553,7 @@
           "name": "wind_gill_fwdmast->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54124" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -580,7 +580,7 @@
           "name": "wind_gill_fwdmast_true->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54124" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -607,7 +607,7 @@
           "name": "speedlog->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54125" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -634,7 +634,7 @@
           "name": "sb_echosounder_1->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54126" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -661,7 +661,7 @@
           "name": "sb_echosounder_2->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54127" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -688,7 +688,7 @@
           "name": "winch_rapp->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54128" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -715,7 +715,7 @@
           "name": "flow_krohne_fwd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54129" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -742,7 +742,7 @@
           "name": "wind_mast_port->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54130" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -769,7 +769,7 @@
           "name": "wind_mast_port_true->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54130" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -796,7 +796,7 @@
           "name": "wind_mast_stbd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54131" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -823,7 +823,7 @@
           "name": "wind_mast_stbd_true->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54131" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -850,7 +850,7 @@
           "name": "oxygen_sbe43_fwd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54132" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -877,7 +877,7 @@
           "name": "oxygen_sbe43_fwd_calc->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54132" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -904,7 +904,7 @@
           "name": "mbari_isus_fwd->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54133" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -931,7 +931,7 @@
           "name": "tsg_emssv->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54001" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -958,7 +958,7 @@
           "name": "mb_em710_centerbeam->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":55555" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -985,7 +985,7 @@
           "name": "mb_em302_centerbeam->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":55005" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1014,7 +1014,7 @@
           "name": "cruiseid->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54000" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1035,7 +1035,7 @@
           "name": "met_ptu307->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54100" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1056,7 +1056,7 @@
           "name": "rain_rmy50202->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54101" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1077,7 +1077,7 @@
           "name": "rad_qsr2150a->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54104" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1098,7 +1098,7 @@
           "name": "rad_psp-pir->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54105" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1119,7 +1119,7 @@
           "name": "thermo_pyrometer-ct15->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54106" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1140,7 +1140,7 @@
           "name": "fluoro_turner-c6->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54107" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1161,7 +1161,7 @@
           "name": "grav_bgm3_222->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54108" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1182,7 +1182,7 @@
           "name": "pco2_ldeo_merge->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54109" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1203,7 +1203,7 @@
           "name": "tsg_sbe45_fwd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54110" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1224,7 +1224,7 @@
           "name": "thermo_sbe38_fwd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54111" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1245,7 +1245,7 @@
           "name": "thermo_sbe38_incubator->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54112" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1266,7 +1266,7 @@
           "name": "tsg_sbe45_fwd_2->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54114" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1287,7 +1287,7 @@
           "name": "flow_omega_fwd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54115" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1308,7 +1308,7 @@
           "name": "flow_krohne_pco2->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54116" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1329,7 +1329,7 @@
           "name": "ssv_aml-svxchang_fwd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54117" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1350,7 +1350,7 @@
           "name": "ins_seapath_position->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54119" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1371,7 +1371,7 @@
           "name": "gnss_cnav->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54121" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1392,7 +1392,7 @@
           "name": "gyro_1->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54122" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1413,7 +1413,7 @@
           "name": "gyro_2->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54125" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1434,7 +1434,7 @@
           "name": "wind_gill_fwdmast->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54124" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1455,7 +1455,7 @@
           "name": "wind_gill_fwdmast_true->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54124" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1476,7 +1476,7 @@
           "name": "speedlog->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54125" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1497,7 +1497,7 @@
           "name": "sb_echosounder_1->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54126" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1518,7 +1518,7 @@
           "name": "sb_echosounder_2->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54127" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1539,7 +1539,7 @@
           "name": "winch_rapp->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54128" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1560,7 +1560,7 @@
           "name": "flow_krohne_fwd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54129" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1581,7 +1581,7 @@
           "name": "wind_mast_port->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54130" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1602,7 +1602,7 @@
           "name": "wind_mast_port_true->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54130" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1623,7 +1623,7 @@
           "name": "wind_mast_stbd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54131" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1644,7 +1644,7 @@
           "name": "wind_mast_stbd_true->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54131" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1665,7 +1665,7 @@
           "name": "oxygen_sbe43_fwd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54132" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1686,7 +1686,7 @@
           "name": "oxygen_sbe43_fwd_calc->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54132" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1707,7 +1707,7 @@
           "name": "mbari_isus_fwd->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54133" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1728,7 +1728,7 @@
           "name": "tsg_emssv->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54001" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1749,7 +1749,7 @@
           "name": "mb_em710_centerbeam->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":55555" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1770,7 +1770,7 @@
           "name": "mb_em302_centerbeam->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":55005" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1793,7 +1793,7 @@
           "name": "cruiseid->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54000" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1832,7 +1832,7 @@
           "name": "met_ptu307->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54100" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1871,7 +1871,7 @@
           "name": "rain_rmy50202->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54101" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1910,7 +1910,7 @@
           "name": "rad_qsr2150a->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54104" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1949,7 +1949,7 @@
           "name": "rad_psp-pir->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54105" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -1988,7 +1988,7 @@
           "name": "thermo_pyrometer-ct15->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54106" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2027,7 +2027,7 @@
           "name": "fluoro_turner-c6->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54107" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2066,7 +2066,7 @@
           "name": "grav_bgm3_222->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54108" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2105,7 +2105,7 @@
           "name": "pco2_ldeo_merge->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54109" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2144,7 +2144,7 @@
           "name": "tsg_sbe45_fwd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54110" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2183,7 +2183,7 @@
           "name": "thermo_sbe38_fwd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54111" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2222,7 +2222,7 @@
           "name": "thermo_sbe38_incubator->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54112" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2261,7 +2261,7 @@
           "name": "tsg_sbe45_fwd_2->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54114" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2300,7 +2300,7 @@
           "name": "flow_omega_fwd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54115" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2339,7 +2339,7 @@
           "name": "flow_krohne_pco2->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54116" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2378,7 +2378,7 @@
           "name": "ssv_aml-svxchang_fwd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54117" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2417,7 +2417,7 @@
           "name": "ins_seapath_position->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54119" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2456,7 +2456,7 @@
           "name": "gnss_cnav->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54121" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2495,7 +2495,7 @@
           "name": "gyro_1->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54122" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2534,7 +2534,7 @@
           "name": "gyro_2->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54125" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2573,7 +2573,7 @@
           "name": "wind_gill_fwdmast->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54124" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2612,7 +2612,7 @@
           "name": "wind_gill_fwdmast_true->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54124" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2651,7 +2651,7 @@
           "name": "speedlog->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54125" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2690,7 +2690,7 @@
           "name": "sb_echosounder_1->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54126" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2729,7 +2729,7 @@
           "name": "sb_echosounder_2->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54127" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2768,7 +2768,7 @@
           "name": "winch_rapp->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54128" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2807,7 +2807,7 @@
           "name": "flow_krohne_fwd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54129" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2846,7 +2846,7 @@
           "name": "wind_mast_port->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54130" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2885,7 +2885,7 @@
           "name": "wind_mast_port_true->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54130" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2924,7 +2924,7 @@
           "name": "wind_mast_stbd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54131" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -2963,7 +2963,7 @@
           "name": "wind_mast_stbd_true->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54131" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -3002,7 +3002,7 @@
           "name": "oxygen_sbe43_fwd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54132" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -3041,7 +3041,7 @@
           "name": "oxygen_sbe43_fwd_calc->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54132" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -3080,7 +3080,7 @@
           "name": "mbari_isus_fwd->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54133" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -3119,7 +3119,7 @@
           "name": "tsg_emssv->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":54001" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -3158,7 +3158,7 @@
           "name": "mb_em710_centerbeam->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":55555" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
@@ -3197,7 +3197,7 @@
           "name": "mb_em302_centerbeam->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":55005" }
+            "kwargs": { "network": ":6224" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
