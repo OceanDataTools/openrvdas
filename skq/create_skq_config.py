@@ -131,7 +131,8 @@ for line in fileinput.input():
   # FOLLOWING LINE IS FOR TESTING ONLY (SEE README.md). COMMENT IT OUT
   # TO GENERATE A CONFIGURATION WHERE EACH LOGGER READS FROM ITS
   # PROPER PORT.
-  port = '6224'
+
+  #port = '6224'
   
   logger = file_db_config
   logger = logger.replace('INST', inst)
