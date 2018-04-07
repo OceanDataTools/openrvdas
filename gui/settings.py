@@ -30,9 +30,6 @@ HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
-# Hack to just run locally without worrying about opening ports
-HOSTNAME = 'localhost'
-
 WEBSOCKET_HOST = HOSTNAME
 WEBSOCKET_PORT = 8765
 WEBSOCKET_SERVER = '%s:%d' % (WEBSOCKET_HOST, WEBSOCKET_PORT)
@@ -130,3 +127,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")

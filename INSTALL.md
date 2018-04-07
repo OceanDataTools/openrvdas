@@ -38,7 +38,7 @@ wget https://www.python.org/ftp/python/3.6.3/Python-3.6.3.tgz
 tar xzf Python-3.6.3.tgz
 cd Python-3.6.3
 
-./configure --enable-optimizations --enable-loadable-sqlite-extensions
+./configure --enable-optimizations --enable-threading --enable-loadable-sqlite-extensions
 sudo make
 sudo make install
 ```
