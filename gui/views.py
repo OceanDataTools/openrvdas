@@ -123,7 +123,7 @@ def index(request, cruise_id=None):
       logging.warning('config for %s is %s', logger.name, desired_config.name)
     else:
       logging.warning('no config for %s', logger.name)
-    loggers[logger.name] = desired_config or None
+    loggers[logger.name] = logger.id
 
   template_vars = {
     'is_superuser': True,
@@ -191,8 +191,8 @@ def server_messages(request, server):
   return render(request, 'gui/server_messages.html', template_vars)
 
 ################################################################################
-def edit_config(request, logger_name):
-  logger = Logger.objects.get(name=logger_name)
+def edit_config(request, logger_id):
+  logger = Logger.objects.get(id=logger_id)
   
   ############################
   # If we've gotten a POST request
@@ -200,11 +200,11 @@ def edit_config(request, logger_name):
     config_id = request.POST['select_config']
     if not config_id:
       desired_config = None
-      logging.warning('Selected null config for %s', logger_name)
+      logging.warning('Selected null config for %s', logger.name)
     else:
       desired_config = LoggerConfig.objects.get(id=config_id)
       logging.warning('Selected config "%s" for %s',
-                      desired_config.name, logger_name)
+                      desired_config.name, logger.name)
 
       enabled_text = request.POST.get('enabled', None)
       if not enabled_text in ['enabled', 'disabled']:
@@ -220,7 +220,6 @@ def edit_config(request, logger_name):
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 
-  logger = Logger.objects.get(name=logger_name)
   all_configs = LoggerConfig.objects.filter(logger=logger)
   logger_mode_config = get_logger_mode_config(logger)
 
@@ -230,10 +229,10 @@ def edit_config(request, logger_name):
                  'all_configs': all_configs})
 
 ################################################################################
-def load_config(request):
+def load_cruise_config(request):
   # If not a POST, just draw the page
   if not request.method == 'POST':
-    return render(request, 'gui/load_config.html', {})
+    return render(request, 'gui/load_cruise_config.html', {})
 
   # If POST, we've expect there to be a file to process
   else:
@@ -261,7 +260,7 @@ def load_config(request):
       errors.append('No configuration file selected')
 
     # If here, there were errors
-    return render(request, 'gui/load_config.html',
+    return render(request, 'gui/load_cruise_config.html',
                   {'errors': ';'.join(errors)})
 
 ################################################################################

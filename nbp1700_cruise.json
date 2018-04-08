@@ -1,0 +1,769 @@
+{
+    "vars": {
+        "%CRUISE%": "NBP1700",
+        "%START_DATE%": "2017-01-01",
+        "%END_DATE%": "2017-02-01",
+        "%LOGFILE_BASE%": "/tmp/log/%CRUISE%",
+        "%UDP_PORT%": ":6224",
+        "%INST%": [
+            "knud",
+            "gyr1",
+            "mwx1",
+            "s330",
+            "eng1",
+            "rtmp"
+        ],
+        "%PORT_INST%": [
+            "gyr1",
+            "mwx1",
+            "s330",
+            "eng1"
+        ],
+        "%UW_INST%": [
+            "knud",
+            "rtmp"
+        ],
+        "%QC_LIMITS%": "CWNCTension:-150:10000,CWNCPayout:-6000:100000,EngPowerVoltage:11:13"
+    },
+    "cruise": {
+        "id": "NBP1700",
+        "start": "2017-01-01",
+        "end": "2017-02-01"
+    },
+    "modes": {
+        "off": {},
+        "port": {
+            "gyr1": {
+                "name": "gyr1->net",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_gyr1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "gyr1"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
+                    }
+                }
+            },
+            "mwx1": {
+                "name": "mwx1->net",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_mwx1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "mwx1"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
+                    }
+                }
+            },
+            "s330": {
+                "name": "s330->net",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_s330",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "s330"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
+                    }
+                }
+            },
+            "eng1": {
+                "name": "eng1->net",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_eng1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "eng1"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "underway": {
+            "knud": {
+                "name": "knud->net/file/db",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_knud",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": [
+                    {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/tmp/log/NBP1700/knud/raw/NBP1700_knud"
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "knud"
+                                }
+                            },
+                            "writers": {
+                                "class": "NetworkWriter",
+                                "kwargs": {
+                                    "network": ":6224"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": [
+                                {
+                                    "class": "PrefixTransform",
+                                    "kwargs": {
+                                        "prefix": "knud"
+                                    }
+                                },
+                                {
+                                    "class": "ParseNMEATransform"
+                                }
+                            ],
+                            "writers": {
+                                "class": "DatabaseWriter"
+                            }
+                        }
+                    }
+                ]
+            },
+            "rtmp": {
+                "name": "rtmp->net/file/db",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_rtmp",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": [
+                    {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/tmp/log/NBP1700/rtmp/raw/NBP1700_rtmp"
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "rtmp"
+                                }
+                            },
+                            "writers": {
+                                "class": "NetworkWriter",
+                                "kwargs": {
+                                    "network": ":6224"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": [
+                                {
+                                    "class": "PrefixTransform",
+                                    "kwargs": {
+                                        "prefix": "rtmp"
+                                    }
+                                },
+                                {
+                                    "class": "ParseNMEATransform"
+                                }
+                            ],
+                            "writers": {
+                                "class": "DatabaseWriter"
+                            }
+                        }
+                    }
+                ]
+            },
+            "gyr1": {
+                "name": "gyr1->net/file/db",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_gyr1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": [
+                    {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/tmp/log/NBP1700/gyr1/raw/NBP1700_gyr1"
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "gyr1"
+                                }
+                            },
+                            "writers": {
+                                "class": "NetworkWriter",
+                                "kwargs": {
+                                    "network": ":6224"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": [
+                                {
+                                    "class": "PrefixTransform",
+                                    "kwargs": {
+                                        "prefix": "gyr1"
+                                    }
+                                },
+                                {
+                                    "class": "ParseNMEATransform"
+                                }
+                            ],
+                            "writers": {
+                                "class": "DatabaseWriter"
+                            }
+                        }
+                    }
+                ]
+            },
+            "mwx1": {
+                "name": "mwx1->net/file/db",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_mwx1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": [
+                    {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/tmp/log/NBP1700/mwx1/raw/NBP1700_mwx1"
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "mwx1"
+                                }
+                            },
+                            "writers": {
+                                "class": "NetworkWriter",
+                                "kwargs": {
+                                    "network": ":6224"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": [
+                                {
+                                    "class": "PrefixTransform",
+                                    "kwargs": {
+                                        "prefix": "mwx1"
+                                    }
+                                },
+                                {
+                                    "class": "ParseNMEATransform"
+                                }
+                            ],
+                            "writers": {
+                                "class": "DatabaseWriter"
+                            }
+                        }
+                    }
+                ]
+            },
+            "s330": {
+                "name": "s330->net/file/db",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_s330",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": [
+                    {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/tmp/log/NBP1700/s330/raw/NBP1700_s330"
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "s330"
+                                }
+                            },
+                            "writers": {
+                                "class": "NetworkWriter",
+                                "kwargs": {
+                                    "network": ":6224"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": [
+                                {
+                                    "class": "PrefixTransform",
+                                    "kwargs": {
+                                        "prefix": "s330"
+                                    }
+                                },
+                                {
+                                    "class": "ParseNMEATransform"
+                                }
+                            ],
+                            "writers": {
+                                "class": "DatabaseWriter"
+                            }
+                        }
+                    }
+                ]
+            },
+            "eng1": {
+                "name": "eng1->net/file/db",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_eng1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": [
+                    {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/tmp/log/NBP1700/eng1/raw/NBP1700_eng1"
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "eng1"
+                                }
+                            },
+                            "writers": {
+                                "class": "NetworkWriter",
+                                "kwargs": {
+                                    "network": ":6224"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "class": "ComposedWriter",
+                        "kwargs": {
+                            "transforms": [
+                                {
+                                    "class": "PrefixTransform",
+                                    "kwargs": {
+                                        "prefix": "eng1"
+                                    }
+                                },
+                                {
+                                    "class": "ParseNMEATransform"
+                                }
+                            ],
+                            "writers": {
+                                "class": "DatabaseWriter"
+                            }
+                        }
+                    }
+                ]
+            },
+            "qc_logger": {
+                "name": "qc_logger",
+                "readers": {
+                    "class": "NetworkReader",
+                    "kwargs": {
+                        "network": ":6224"
+                    }
+                },
+                "transforms": [
+                    {
+                        "class": "ParseNMEATransform"
+                    },
+                    {
+                        "class": "QCFilterTransform",
+                        "kwargs": {
+                            "bounds": "CWNCTension:-150:10000,CWNCPayout:-6000:100000,EngPowerVoltage:11:13"
+                        }
+                    }
+                ],
+                "writers": {
+                    "class": "TextFileWriter"
+                }
+            }
+        },
+        "underway_no_network": {
+            "knud": {
+                "name": "knud->file",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_knud",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1700/knud/raw/NBP1700_knud"
+                    }
+                }
+            },
+            "gyr1": {
+                "name": "gyr1->file",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_gyr1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1700/gyr1/raw/NBP1700_gyr1"
+                    }
+                }
+            },
+            "mwx1": {
+                "name": "mwx1->file",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_mwx1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1700/mwx1/raw/NBP1700_mwx1"
+                    }
+                }
+            },
+            "s330": {
+                "name": "s330->file",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_s330",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1700/s330/raw/NBP1700_s330"
+                    }
+                }
+            },
+            "eng1": {
+                "name": "eng1->file",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_eng1",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1700/eng1/raw/NBP1700_eng1"
+                    }
+                }
+            },
+            "rtmp": {
+                "name": "rtmp->file",
+                "readers": {
+                    "class": "SerialReader",
+                    "kwargs": {
+                        "port": "/tmp/tty_rtmp",
+                        "baudrate": 9600
+                    }
+                },
+                "transforms": {
+                    "class": "TimestampTransform"
+                },
+                "writers": {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1700/rtmp/raw/NBP1700_rtmp"
+                    }
+                }
+            }
+        }
+    },
+    "default_mode": "off",
+    "templates": {
+        "%INST%_LOGFILE_WRITER": {
+            "class": "LogfileWriter",
+            "kwargs": {
+                "filebase": "%LOGFILE_BASE%/%INST%/raw/%CRUISE%_%INST%"
+            }
+        },
+        "%INST%_NETWORK_WRITER": {
+            "class": "ComposedWriter",
+            "kwargs": {
+                "transforms": {
+                    "class": "PrefixTransform",
+                    "kwargs": {
+                        "prefix": "%INST%"
+                    }
+                },
+                "writers": {
+                    "class": "NetworkWriter",
+                    "kwargs": {
+                        "network": "%UDP_PORT%"
+                    }
+                }
+            }
+        },
+        "%INST%_DATABASE_WRITER": {
+            "class": "ComposedWriter",
+            "kwargs": {
+                "transforms": [
+                    {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "%INST%"
+                        }
+                    },
+                    {
+                        "class": "ParseNMEATransform"
+                    }
+                ],
+                "writers": {
+                    "class": "DatabaseWriter"
+                }
+            }
+        },
+        "%INST%_SERIAL_LOGGER": {
+            "name": "%INST%->net/file/db",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": [
+                "%INST%_LOGFILE_WRITER",
+                "%INST%_NETWORK_WRITER",
+                "%INST%_DATABASE_WRITER"
+            ]
+        },
+        "%INST%_SERIAL_LOGGER_NO_WRITE": {
+            "name": "%INST%->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": "%INST%_NETWORK_WRITER"
+        },
+        "%INST%_SERIAL_LOGGER_NO_NETWORK": {
+            "name": "%INST%->file",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": "%INST%_LOGFILE_WRITER"
+        },
+        "%INST%_NETWORK_LOGGER": {
+            "name": "%INST%->file",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": "%INST%_LOGFILE_WRITER"
+        },
+        "%QC_LOGGER%": {
+            "name": "qc_logger",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": "%UDP_PORT%"
+                }
+            },
+            "transforms": [
+                {
+                    "class": "ParseNMEATransform"
+                },
+                {
+                    "class": "QCFilterTransform",
+                    "kwargs": {
+                        "bounds": "%QC_LIMITS%"
+                    }
+                }
+            ],
+            "writers": {
+                "class": "TextFileWriter"
+            }
+        }
+    }
+}

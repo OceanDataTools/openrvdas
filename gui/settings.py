@@ -26,6 +26,7 @@ SECRET_KEY = '$ra$!o9_p)vz^6^cm)9%i&_2afjavl_3m#tl0g@1kk06cj$qz4'
 DEBUG = True
 
 import socket
+
 HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
