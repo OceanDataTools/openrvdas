@@ -29,8 +29,9 @@ urlpatterns = [
   path('server_messages/<str:server>', views.server_messages,
        name='server_messages'),
   
-  path('load_config', views.load_config, name='load_config'),
-  path('edit_config/<str:logger_name>', views.edit_config, name='edit_config'),
+  path('load_cruise_config', views.load_cruise_config,
+       name='load_cruise_config'),
+  path('edit_config/<str:logger_id>', views.edit_config, name='edit_config'),
 
   path('widget/<str:field_list>', views.widget, name='widget'),
   path('widget/', views.widget, name='widget'),
