@@ -27,8 +27,7 @@ DEBUG = True
 
 import socket
 
-#HOSTNAME = socket.gethostname()
-HOSTNAME = '10.0.0.113'
+HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
