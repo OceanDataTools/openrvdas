@@ -303,7 +303,7 @@ Current configuration: {{ cruise.config_filename }}
         var current = values['current_config'] || "";
         var mode_match = values['mode_match'] || "";
         var enabled = values['current_enabled'] || "";
-        var error = values['current_error'] || "";
+        var error = values['errors'] || "";
 
         var row = document.getElementById(logger_name + "_row")
         var config_td = document.getElementById(logger_name + "_config_td");
