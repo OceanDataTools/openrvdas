@@ -285,6 +285,8 @@ class LoggerServer:
         raise e
       logging.warning('Config %s got exception: %s', config.name, str(e))
       self.errors[config.name] = str(e)
+      LoggerConfigState(config=config, desired=True,
+                        running=False, errors=str(e)).save()
 
     return None
 

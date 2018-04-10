@@ -329,6 +329,14 @@ class StatusServer:
         if desired_config:
           logger_status['desired_config'] = desired_config.name
           logger_status['desired_enabled'] = desired_config.enabled
+
+          # Is there a problem with the desired state?
+          try:
+            config_state = LoggerConfigState.objects.filter(
+                             config=desired_config, desired=True).latest('pk')
+            logger_status['errors'] = config_state.errors
+          except LoggerConfigState.DoesNotExist:
+            logger_status['errors'] = None
         else:
           logger_status['desired_config'] = None
           logger_status['desired_enabled'] = True
@@ -338,16 +346,9 @@ class StatusServer:
         if current_config:
           logger_status['current_config'] = current_config.name
           logger_status['current_enabled'] = current_config.enabled
-          try:
-            config_state = LoggerConfigState.objects.filter(
-                             config=current_config).latest('pk')
-            logger_status['current_errors'] = config_state.errors
-          except LoggerConfigState.DoesNotExist:
-            logger_status['current_errors'] = '(no config state found)'
         else:
           logger_status['current_config'] = None
           logger_status['current_enabled'] = True
-          logger_status['current_errors'] = ''
 
         # Is the current_config the same as the config of our current mode?
         mode_match =  current_config and current_config.mode == current_mode
