@@ -94,6 +94,6 @@ class Listener:
 
     # Exit in an orderly fashion if someone hits Ctl-C
     except KeyboardInterrupt:
-      logging.warning('Listener %s received KeyboardInterrupt - exiting.',
-                      self.name or '')
+      logging.info('Listener %s received KeyboardInterrupt - exiting.',
+                   self.name or '')
 

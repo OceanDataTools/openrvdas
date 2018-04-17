@@ -13,7 +13,7 @@ sys.path.append('.')
 
 from logger.readers.text_file_reader import TextFileReader
 from logger.writers.text_file_writer import TextFileWriter
-from logger.utils.run_loggers import LoggerRunner
+from logger.utils.logger_runner import LoggerRunner, run_logging
 
 CONFIG = {
   "modes": {
@@ -71,25 +71,15 @@ class TestLoggerRunner(unittest.TestCase):
   ############################
   def test_basic(self):
 
-    runner = LoggerRunner(self.config, interval=0.1)
-
-    runner_thread = threading.Thread(target=runner.run)
-    runner_thread.start()
-
-    time.sleep(0.2)
-
     # Assure ourselves that the dest file doesn't exist yet and that
     # we're in our default mode
     self.assertFalse(os.path.exists(self.dest_name))
-    self.assertEqual(runner.mode, "off")
 
-    with self.assertLogs(logging.getLogger(), logging.WARNING):
-      runner.set_mode('nonexistent mode')
-    self.assertEqual(runner.mode, "off")
+    runner = LoggerRunner(interval=0.1)
+    runner_thread = threading.Thread(target=runner.run)
+    runner_thread.start()
 
-    runner.set_mode('on')  
-    self.assertEqual(runner.mode, "on")
-
+    runner.set_configs(self.config['modes']['on'])  
     time.sleep(0.6)
 
     reader = TextFileReader(self.dest_name)
@@ -100,14 +90,22 @@ class TestLoggerRunner(unittest.TestCase):
     self.assertTrue(runner.processes['logger'].is_alive())
     pid = runner.processes['logger'].pid
 
-    # Try shutting down
-    runner.quit()
-    time.sleep(0.2)
+    self.assertDictEqual(runner.check_loggers(), {'logger': True})
+    self.assertDictEqual(runner.get_errors(), {'logger': []})
+
+    runner.set_configs(self.config['modes']['off'])
+    self.assertDictEqual(runner.check_loggers(), {})
+    self.assertDictEqual(runner.get_errors(), {})
 
     # Verify that the process has indeed shut down. This should throw
     # an exception if the process doesn't exist.
-    #with self.assertRaises(OSError):
-    #  os.kill(pid, 0)    
+    with self.assertRaises(ProcessLookupError):
+      os.kill(pid, 0)    
+    
+    # Try shutting down
+    runner.quit()
+    runner_thread.join(0.2)
+    self.assertFalse(runner_thread.is_alive())
     
 ################################################################################
 if __name__ == '__main__':
