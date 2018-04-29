@@ -239,7 +239,6 @@ class LoggerServer:
     """Exit the loop and shut down all loggers."""
     self.quit_flag = True
 
-
 ################################################################################
 if __name__ == '__main__':
   import argparse

@@ -1,0 +1,3238 @@
+{
+    "cruise": {
+        "id": "SKQ_SAMPLE",
+        "start": "2018-04-01",
+        "end": "2018-05-01"
+    },
+    "default_mode": "off",
+    "modes": {
+      // Nothing's running when off
+      "off": {},
+      "file": {
+        "cruiseid": {
+          "name": "cruiseid->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54000" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^cruiseid" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "met_ptu307": {
+          "name": "met_ptu307->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54100" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^met_ptu307" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "rain_rmy50202": {
+          "name": "rain_rmy50202->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54101" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rain_rmy50202" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "rad_qsr2150a": {
+          "name": "rad_qsr2150a->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54104" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rad_qsr2150a" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "rad_psp-pir": {
+          "name": "rad_psp-pir->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54105" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rad_psp-pir" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "thermo_pyrometer-ct15": {
+          "name": "thermo_pyrometer-ct15->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54106" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_pyrometer-ct15" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "fluoro_turner-c6": {
+          "name": "fluoro_turner-c6->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54107" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^fluoro_turner-c6" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "grav_bgm3_222": {
+          "name": "grav_bgm3_222->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54108" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^grav_bgm3_222" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "pco2_ldeo_merge": {
+          "name": "pco2_ldeo_merge->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54109" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^pco2_ldeo_merge" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "tsg_sbe45_fwd": {
+          "name": "tsg_sbe45_fwd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54110" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_sbe45_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "thermo_sbe38_fwd": {
+          "name": "thermo_sbe38_fwd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54111" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_sbe38_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "thermo_sbe38_incubator": {
+          "name": "thermo_sbe38_incubator->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54112" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_sbe38_incubator" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "tsg_sbe45_fwd_2": {
+          "name": "tsg_sbe45_fwd_2->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54114" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_sbe45_fwd_2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "flow_omega_fwd": {
+          "name": "flow_omega_fwd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54115" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_omega_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "flow_krohne_pco2": {
+          "name": "flow_krohne_pco2->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54116" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_krohne_pco2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "ssv_aml-svxchang_fwd": {
+          "name": "ssv_aml-svxchang_fwd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54117" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^ssv_aml-svxchang_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "ins_seapath_position": {
+          "name": "ins_seapath_position->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54119" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^ins_seapath_position" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "gnss_cnav": {
+          "name": "gnss_cnav->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54121" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gnss_cnav" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "gyro_1": {
+          "name": "gyro_1->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54122" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gyro_1" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "gyro_2": {
+          "name": "gyro_2->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54125" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gyro_2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "wind_gill_fwdmast": {
+          "name": "wind_gill_fwdmast->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54124" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_gill_fwdmast" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "wind_gill_fwdmast_true": {
+          "name": "wind_gill_fwdmast_true->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54124" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_gill_fwdmast_true" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "speedlog": {
+          "name": "speedlog->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54125" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^speedlog" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "sb_echosounder_1": {
+          "name": "sb_echosounder_1->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54126" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^sb_echosounder_1" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "sb_echosounder_2": {
+          "name": "sb_echosounder_2->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54127" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^sb_echosounder_2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "winch_rapp": {
+          "name": "winch_rapp->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54128" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^winch_rapp" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "flow_krohne_fwd": {
+          "name": "flow_krohne_fwd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54129" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_krohne_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "wind_mast_port": {
+          "name": "wind_mast_port->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54130" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_port" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "wind_mast_port_true": {
+          "name": "wind_mast_port_true->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54130" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_port_true" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "wind_mast_stbd": {
+          "name": "wind_mast_stbd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54131" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_stbd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "wind_mast_stbd_true": {
+          "name": "wind_mast_stbd_true->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54131" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_stbd_true" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "oxygen_sbe43_fwd": {
+          "name": "oxygen_sbe43_fwd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54132" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^oxygen_sbe43_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "oxygen_sbe43_fwd_calc": {
+          "name": "oxygen_sbe43_fwd_calc->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54132" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^oxygen_sbe43_fwd_calc" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "mbari_isus_fwd": {
+          "name": "mbari_isus_fwd->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54133" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mbari_isus_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "tsg_emssv": {
+          "name": "tsg_emssv->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54001" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_emssv" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "mb_em710_centerbeam": {
+          "name": "mb_em710_centerbeam->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":55555" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mb_em710_centerbeam" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        },
+  "mb_em302_centerbeam": {
+          "name": "mb_em302_centerbeam->file",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":55005" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mb_em302_centerbeam" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "SliceTransform",
+                "kwargs": {"fields": "1:"}
+              },
+              "writers": {
+                "class": "LogfileWriter",
+                "kwargs": {
+                  "filebase": "/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                }
+              }
+            }
+          }
+        }
+      },
+      "db": {
+        "cruiseid": {
+          "name": "cruiseid->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54000" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^cruiseid" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "met_ptu307": {
+          "name": "met_ptu307->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54100" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^met_ptu307" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "rain_rmy50202": {
+          "name": "rain_rmy50202->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54101" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rain_rmy50202" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "rad_qsr2150a": {
+          "name": "rad_qsr2150a->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54104" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rad_qsr2150a" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "rad_psp-pir": {
+          "name": "rad_psp-pir->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54105" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rad_psp-pir" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "thermo_pyrometer-ct15": {
+          "name": "thermo_pyrometer-ct15->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54106" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_pyrometer-ct15" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "fluoro_turner-c6": {
+          "name": "fluoro_turner-c6->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54107" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^fluoro_turner-c6" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "grav_bgm3_222": {
+          "name": "grav_bgm3_222->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54108" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^grav_bgm3_222" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "pco2_ldeo_merge": {
+          "name": "pco2_ldeo_merge->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54109" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^pco2_ldeo_merge" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "tsg_sbe45_fwd": {
+          "name": "tsg_sbe45_fwd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54110" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_sbe45_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "thermo_sbe38_fwd": {
+          "name": "thermo_sbe38_fwd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54111" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_sbe38_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "thermo_sbe38_incubator": {
+          "name": "thermo_sbe38_incubator->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54112" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_sbe38_incubator" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "tsg_sbe45_fwd_2": {
+          "name": "tsg_sbe45_fwd_2->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54114" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_sbe45_fwd_2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "flow_omega_fwd": {
+          "name": "flow_omega_fwd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54115" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_omega_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "flow_krohne_pco2": {
+          "name": "flow_krohne_pco2->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54116" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_krohne_pco2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "ssv_aml-svxchang_fwd": {
+          "name": "ssv_aml-svxchang_fwd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54117" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^ssv_aml-svxchang_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "ins_seapath_position": {
+          "name": "ins_seapath_position->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54119" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^ins_seapath_position" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "gnss_cnav": {
+          "name": "gnss_cnav->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54121" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gnss_cnav" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "gyro_1": {
+          "name": "gyro_1->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54122" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gyro_1" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "gyro_2": {
+          "name": "gyro_2->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54125" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gyro_2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "wind_gill_fwdmast": {
+          "name": "wind_gill_fwdmast->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54124" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_gill_fwdmast" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "wind_gill_fwdmast_true": {
+          "name": "wind_gill_fwdmast_true->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54124" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_gill_fwdmast_true" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "speedlog": {
+          "name": "speedlog->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54125" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^speedlog" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "sb_echosounder_1": {
+          "name": "sb_echosounder_1->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54126" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^sb_echosounder_1" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "sb_echosounder_2": {
+          "name": "sb_echosounder_2->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54127" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^sb_echosounder_2" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "winch_rapp": {
+          "name": "winch_rapp->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54128" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^winch_rapp" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "flow_krohne_fwd": {
+          "name": "flow_krohne_fwd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54129" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_krohne_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "wind_mast_port": {
+          "name": "wind_mast_port->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54130" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_port" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "wind_mast_port_true": {
+          "name": "wind_mast_port_true->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54130" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_port_true" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "wind_mast_stbd": {
+          "name": "wind_mast_stbd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54131" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_stbd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "wind_mast_stbd_true": {
+          "name": "wind_mast_stbd_true->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54131" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_stbd_true" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "oxygen_sbe43_fwd": {
+          "name": "oxygen_sbe43_fwd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54132" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^oxygen_sbe43_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "oxygen_sbe43_fwd_calc": {
+          "name": "oxygen_sbe43_fwd_calc->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54132" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^oxygen_sbe43_fwd_calc" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "mbari_isus_fwd": {
+          "name": "mbari_isus_fwd->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54133" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mbari_isus_fwd" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "tsg_emssv": {
+          "name": "tsg_emssv->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54001" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_emssv" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "mb_em710_centerbeam": {
+          "name": "mb_em710_centerbeam->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":55555" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mb_em710_centerbeam" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        },
+  "mb_em302_centerbeam": {
+          "name": "mb_em302_centerbeam->db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":55005" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mb_em302_centerbeam" }
+          },
+          "writers": {
+            "class": "ComposedWriter",
+            "kwargs": {
+              "transforms": {
+                "class": "ParseNMEATransform",
+                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+              },
+              "writers": { "class": "DatabaseWriter" }
+            }
+          }
+        }
+      },
+      "file/db": {
+        "cruiseid": {
+          "name": "cruiseid->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54000" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^cruiseid" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "met_ptu307": {
+          "name": "met_ptu307->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54100" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^met_ptu307" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "rain_rmy50202": {
+          "name": "rain_rmy50202->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54101" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rain_rmy50202" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "rad_qsr2150a": {
+          "name": "rad_qsr2150a->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54104" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rad_qsr2150a" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "rad_psp-pir": {
+          "name": "rad_psp-pir->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54105" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^rad_psp-pir" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "thermo_pyrometer-ct15": {
+          "name": "thermo_pyrometer-ct15->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54106" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_pyrometer-ct15" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "fluoro_turner-c6": {
+          "name": "fluoro_turner-c6->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54107" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^fluoro_turner-c6" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "grav_bgm3_222": {
+          "name": "grav_bgm3_222->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54108" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^grav_bgm3_222" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "pco2_ldeo_merge": {
+          "name": "pco2_ldeo_merge->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54109" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^pco2_ldeo_merge" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "tsg_sbe45_fwd": {
+          "name": "tsg_sbe45_fwd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54110" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_sbe45_fwd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "thermo_sbe38_fwd": {
+          "name": "thermo_sbe38_fwd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54111" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_sbe38_fwd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "thermo_sbe38_incubator": {
+          "name": "thermo_sbe38_incubator->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54112" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^thermo_sbe38_incubator" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "tsg_sbe45_fwd_2": {
+          "name": "tsg_sbe45_fwd_2->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54114" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_sbe45_fwd_2" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "flow_omega_fwd": {
+          "name": "flow_omega_fwd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54115" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_omega_fwd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "flow_krohne_pco2": {
+          "name": "flow_krohne_pco2->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54116" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_krohne_pco2" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "ssv_aml-svxchang_fwd": {
+          "name": "ssv_aml-svxchang_fwd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54117" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^ssv_aml-svxchang_fwd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "ins_seapath_position": {
+          "name": "ins_seapath_position->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54119" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^ins_seapath_position" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "gnss_cnav": {
+          "name": "gnss_cnav->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54121" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gnss_cnav" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "gyro_1": {
+          "name": "gyro_1->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54122" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gyro_1" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "gyro_2": {
+          "name": "gyro_2->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54125" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^gyro_2" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "wind_gill_fwdmast": {
+          "name": "wind_gill_fwdmast->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54124" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_gill_fwdmast" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "wind_gill_fwdmast_true": {
+          "name": "wind_gill_fwdmast_true->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54124" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_gill_fwdmast_true" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "speedlog": {
+          "name": "speedlog->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54125" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^speedlog" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "sb_echosounder_1": {
+          "name": "sb_echosounder_1->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54126" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^sb_echosounder_1" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "sb_echosounder_2": {
+          "name": "sb_echosounder_2->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54127" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^sb_echosounder_2" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "winch_rapp": {
+          "name": "winch_rapp->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54128" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^winch_rapp" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "flow_krohne_fwd": {
+          "name": "flow_krohne_fwd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54129" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^flow_krohne_fwd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "wind_mast_port": {
+          "name": "wind_mast_port->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54130" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_port" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "wind_mast_port_true": {
+          "name": "wind_mast_port_true->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54130" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_port_true" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "wind_mast_stbd": {
+          "name": "wind_mast_stbd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54131" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_stbd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "wind_mast_stbd_true": {
+          "name": "wind_mast_stbd_true->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54131" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^wind_mast_stbd_true" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "oxygen_sbe43_fwd": {
+          "name": "oxygen_sbe43_fwd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54132" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^oxygen_sbe43_fwd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "oxygen_sbe43_fwd_calc": {
+          "name": "oxygen_sbe43_fwd_calc->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54132" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^oxygen_sbe43_fwd_calc" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "mbari_isus_fwd": {
+          "name": "mbari_isus_fwd->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54133" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mbari_isus_fwd" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "tsg_emssv": {
+          "name": "tsg_emssv->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":54001" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^tsg_emssv" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "mb_em710_centerbeam": {
+          "name": "mb_em710_centerbeam->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":55555" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mb_em710_centerbeam" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        },
+  "mb_em302_centerbeam": {
+          "name": "mb_em302_centerbeam->file/db",
+          "readers": {
+            "class": "NetworkReader",
+            "kwargs": { "network": ":55005" }
+          },
+          "transforms": {
+            "class": "RegexFilterTransform",
+            "kwargs": { "pattern": "^mb_em302_centerbeam" }
+          },
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                },
+                "writers": { "class": "DatabaseWriter" }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+}
+
