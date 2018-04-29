@@ -94,7 +94,7 @@ class NMEAParser:
     # raw fields and an optional checksum.
     match = NMEA_RE.match(message)
     if not match:
-      raise ValueError('Can\'t parse NMEA record: "%s"' % nmea_record)
+      raise ValueError('Can\'t parse NMEA record: "%s"' % message)
 
     # Parse out the optional checksum from the raw fields. The first
     # field may be a message type, but we'll deal with that later.

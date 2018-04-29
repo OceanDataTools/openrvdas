@@ -10,15 +10,17 @@ from django.db import models
 
 ##############################
 class Logger(models.Model):
+  """Note that name may not be unique in the database - multiple cruises
+  may have loggers named 'gyr1'. To distinguish conflicts, we use the
+  implicit logger id."""
   name = models.CharField(max_length=256, blank=True)
   cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
                              blank=True, null=True)
-  desired_config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
-                                     related_name="desired_config",
-                                     blank=True, null=True)
-  current_config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
-                                     related_name="current_config",
-                                     blank=True, null=True)
+
+  # The current configuration for this logger.
+  config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
+                             related_name='logger_config',
+                             blank=True, null=True)
   def __str__(self):
     return self.name
    
@@ -94,11 +96,14 @@ class CruiseState(models.Model):
 # what's its pid?  If run state doesn't align with current mode, then
 # highlight in interface
 class LoggerConfigState(models.Model):
-  config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE)
-  running = models.BooleanField(default=False)
-  desired = models.BooleanField(default=False)
-  process_id = models.IntegerField(default=0, blank=True)
+  logger = models.ForeignKey('Logger', on_delete=models.CASCADE,
+                             blank=True, null=True)
+  config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
+                             blank=True, null=True)
   timestamp = models.DateTimeField(auto_now_add=True)
+
+  running = models.BooleanField(default=False)
+  process_id = models.IntegerField(default=0, blank=True, null=True)
   errors = models.TextField(blank=True, null=True)
 
 ##############################

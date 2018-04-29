@@ -129,7 +129,7 @@ class MySQLConnector:
     if self.save_source:
       write_cmd = 'insert into `%s` (record) values (\'%s\')' % \
                   (self.SOURCE_TABLE, record.as_json())
-      logging.info('Inserting source into table with command: %s', write_cmd)
+      logging.debug('Inserting source into table with command: %s', write_cmd)
       self.exec_sql_command(write_cmd)
 
       # Get the id of the saved source record. Note: documentation

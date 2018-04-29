@@ -31,16 +31,17 @@ class LoggerConfigInline(admin.TabularInline):
 
 #############################################
 class LoggerAdmin(admin.ModelAdmin):
-  list_display = ('name', 'cruise', 'desired_config', 'current_config')
+  list_display = ('name', 'cruise', 'config')
+  list_filter = ('cruise',)
 
 class LoggerConfigAdmin(admin.ModelAdmin):
   list_display = ('name', 'logger', 'mode', 'enabled', 'config_json')
   list_filter = ('logger', 'mode', 'enabled')
 
 class LoggerConfigStateAdmin(admin.ModelAdmin):
-  list_display = ('timestamp', 'config', 'running', 'desired',
+  list_display = ('timestamp', 'logger', 'config', 'running',
                   'process_id', 'errors')
-  list_filter = ('config__logger', 'config', 'running', 'desired')
+  list_filter = ('logger__cruise', 'logger', 'config', 'running')
   
 #############################################
 class ModeAdmin(admin.ModelAdmin):

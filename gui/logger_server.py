@@ -53,6 +53,7 @@ import os
 import pprint
 import signal
 import sys
+#import threading
 import time
 
 from json import dumps as json_dumps
@@ -68,9 +69,8 @@ from gui.models import Cruise, CurrentCruise
 from gui.models import ServerMessage, StatusUpdate
 
 from logger.utils.read_json import parse_json
-from logger.listener.listen import ListenerFromLoggerConfig
 
-run_logging = logging.getLogger(__name__)
+from logger.utils.logger_manager import LoggerManager, run_logging
 
 TIME_FORMAT = '%Y-%m-%d:%H:%M:%S'
 
@@ -78,14 +78,7 @@ LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
 # Number of times we'll try a failing logger before giving up
-DEFAULT_NUM_TRIES = 3
-
-############################
-# Translate an external signal (such as we'd get from os.kill) into a
-# KeyboardInterrupt, which will signal the start() loop to exit nicely.
-def kill_handler(self, signum):
-  logging.warning('Received external kill')
-  raise KeyboardInterrupt('Received external kill signal')
+DEFAULT_MAX_TRIES = 3
 
 ############################
 # Helper to allow us to save Python logging.* messages to Django database
@@ -103,36 +96,34 @@ class WriteToDjangoHandler(logging.Handler):
 ################################################################################
 class LoggerServer:
   ############################
-  def __init__(self, interval=0.5, num_tries=3,
+  def __init__(self, interval=0.5, max_tries=3,
                verbosity=0, logger_verbosity=0):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
 
     interval - number of seconds to sleep between checking/updating loggers
 
-    num_tries - number of times to try a failed server before giving up
+    max_tries - number of times to try a failed server before giving up
     """    
-    # Map logger name to config and to the process running it
-    self.configs = {}
-    self.processes = {}
-    self.errors = {}
+
+    self.logger_manager = LoggerManager(interval=interval, max_tries=max_tries)
+
+    # Instead of running the LoggerManager.run() in a separate thread,
+    # we'll manually call its check_logger() method in our own run()
+    # method.
+
+    #self.logger_manager_thread = threading.Thread(target=self.logger_manager.run)
 
     # If new current cruise is loaded, we want to notice and politely
     # kill off all running loggers from the previous current cruise.
     self.current_cruise_timestamp = None
-
     self.interval = interval
     self.quit_flag = False
-
-    # Set the signal handler so that an external break will get translated
-    # into a KeyboardInterrupt.
-    signal.signal(signal.SIGTERM, kill_handler)
 
     # Set up logging levels for both ourselves and for the loggers we
     # start running. Attach a Handler that will write log messages to
     # Django database.
     logging.basicConfig(format=LOGGING_FORMAT)
-    #run_logging.basicConfig(format=LOGGING_FORMAT)
 
     log_verbosity = LOG_LEVELS[min(verbosity, max(LOG_LEVELS))]
     log_logger_verbosity = LOG_LEVELS[min(logger_verbosity, max(LOG_LEVELS))]
@@ -142,153 +133,112 @@ class LoggerServer:
 
     run_logging.setLevel(log_verbosity)
     logging.getLogger().setLevel(log_logger_verbosity)
-    
+  
   ############################
-  def start(self):
+  def run(self):
     """Loop, checking that loggers are in the state they should be,
     getting them into that state if they aren't, and saving the resulting
-    status to a StatusUpdate record in the database."""
+    status to a StatusUpdate record in the database.
+
+    We get the logger running status - True (running), False (not
+    running but should be) or None (not running and shouldn't be) -
+    and any errors. If logger is not in state we want it and there are
+    no t is not running. If logger is not running and there are no
+    errors, it means the LoggerManager
+
+    """
+
+    # Rather than relying on our LoggerManager to loop and check
+    # loggers, we do it ourselves, so that we can update statuses and
+    # errors in the Django database.
+    old_configs = {}
+    old_status = {}
 
     try:
       while not self.quit_flag:
-        logging.info('Checking loggers')
-        status = self.check_loggers()
-        if status:
-          StatusUpdate(server='LoggerServer',
-                       cruise=status.get('cruise', None),
-                       status=json_dumps(status)).save()
+        loggers = Logger.objects.all()
+        
+        # Get the currently-specified config for each logger. If
+        # things have changed, extract the JSON for the new configs
+        # and send to LoggerManager to start/stop the relevant
+        # processes.
+
+        # NOTE: we key off of logger id instead of logger name for the
+        # config dict. We do this because we may have multiple cruises
+        # with overlapping logger names loaded at the same time.
+        configs = {logger.id:logger.config for logger in loggers}
+
+        # If configs have changed, send JSON for the new configs to be run
+        if not configs == old_configs:
+          configs_json = {logger_id:parse_json(config.config_json)
+                          for logger_id, config in configs.items() if config}
+          logging.info('Configurations changed - updating.')
+          logging.debug('New configurations: %s', pprint.pformat(configs))
+          self.logger_manager.set_configs(configs_json)
+
+        # Get status of loggers, including errors, telling
+        # LoggerManager to clear out old errors and start/stop any
+        # loggers that aren't in the desired configuration. Returned
+        # status is a dict keyed by logger id's. Value are a dict of
+        #
+        # {
+        #   logger_id: {'errors': [],
+        #               'running': True/False/None,
+        #               'failed': True/False},
+        #   ...
+        # }
+        status = self.logger_manager.check_loggers(update=True,
+                                                   clear_errors=True)
+
+        # If there's anything notable - an error or change of state -
+        # create a new LoggerConfigState to document it.
+        for logger_id, logger_status in status.items():
+          config = configs.get(logger_id, None)
+          old_config = old_configs.get(logger_id, None)
+          old_logger_status = old_status.get(logger_id, {})
+
+          try:
+            logger = Logger.objects.get(id=logger_id)
+          except Logger.DoesNotExist:
+            logging.warning('No logger corresponding to id %d?!?', logger_id)
+            continue
+          
+          if (logger_status.get('errors', None) or
+              logger_status != old_logger_status or
+              config != old_config):
+            running = bool(logger_status.get('running', False))
+            errors = ', '.join(logger_status.get('errors', []))
+            pid = logger_status.get('pid', None)
+            logging.info('Updating %s config: %s; running: %s, errors: %s',
+                         logger, config.name if config else '-none-',
+                         running, errors or 'None')
+            LoggerConfigState(logger=logger, config=config, running=running,
+                              process_id=pid, errors=errors).save()
+            
+        # Cache what we've observed so that we can tell what has
+        # changed next time around.
+        old_configs = configs
+        old_status = status
+
+        # Nap for a bit before checking again
         time.sleep(self.interval)
 
     except KeyboardInterrupt:
       logging.warning('LoggerServer received keyboard interrupt - '
                       'trying to shut down nicely.')
 
-    # Ask the loggers to all halt, and stop looping
-    self.status = self.check_loggers(halt=True)
-    self.quit()
+    # Set LoggerManager to empty configs to shut down all its loggers
+    self.logger_manager.set_configs({})
+    
+    # Tell the LoggerManager to stop and wait for its thread to exit
+    #self.logger_manager.quit()
+    #self.logger_manager_thread.join()
+
   ############################
   def quit(self):
     """Exit the loop and shut down all loggers."""
     self.quit_flag = True
 
-  ############################
-  def check_loggers(self, halt=False):
-    """Check the desired state of all loggers and start/stop them accordingly.
-    """
-
-    # We'll fill in the logger statuses one at a time
-    loggers = {}
-    for logger in Logger.objects.all():
-      warnings = []
-      logger_status = {}
-      # What config do we want logger to be in?
-      desired_config = logger.desired_config
-      # What config is logger currently in (as far as we know)?
-      current_config = self.configs.get(logger, None)
-
-      # Regardless of what the database says, is logger running?
-      logger_process = self.processes.get(logger, None)
-      logger_running = bool(logger_process and logger_process.is_alive())
-
-      # If not, and if it should be, complain
-      if current_config and current_config.enabled and not logger_running:
-        warning = 'Process for "%s" unexpectedly dead!' % logger
-        run_logging.warning(warning)
-        warnings.append(warning)
-        LoggerConfigState(config=current_config, desired=True,
-                          running=False, errors=warning).save()
-
-      # Special case: if we've been given the 'halt' signal, the
-      # desired_config of every logger is "off", represented by None.
-      if halt:
-        desired_config = None
-
-      # If we don't think our current config should be running
-      if (desired_config is None or not desired_config.enabled or
-          desired_config != current_config):
-        if logger_running:
-          run_logging.info('Shutting down process for %s', logger)
-          self.processes[logger].terminate()
-          self.processes[logger] = None
-
-        # Record that we've shut current config down
-        if current_config:
-          LoggerConfigState(config=current_config, running=False).save()
-
-      # If we need to change current_config to the desired_config
-      if desired_config != current_config:
-        self.configs[logger] = desired_config
-        logger.current_config = desired_config
-        logger.save()
-
-        # Record that we've shut current config down
-        if desired_config:
-          LoggerConfigState(config=desired_config, desired=True,
-                            running=desired_config.enabled).save()
-
-      # Is our new current_config enabled? If so, run its logger
-      if desired_config and desired_config.enabled:
-        logger_process = self.processes.get(logger, None)
-        logger_running = bool(logger_process and logger_process.is_alive())
-        if not logger_running:
-          run_logging.info('Starting up new process for %s', logger)
-          self.processes[logger] = self._start_logger(desired_config)
-
-      # We've assembled all the information we need for status. Stash it
-      if desired_config:
-        logger_status = {
-          'desired_config': desired_config.name,
-          'desired_enabled': desired_config.enabled,
-          'current_config': desired_config.name,
-          'current_enabled': desired_config.enabled,
-          'current_error': self.errors.get(desired_config.name,''),
-          'warnings': warnings
-        }
-      else:
-        logger_status = {
-          'desired_config': None,
-          'desired_enabled': False,
-          'current_config': None,
-          'current_enabled': False
-        }
-      loggers[logger.name] = logger_status
-
-    # Build a status dict we'll return at the end for the status
-    # server (or whomever) to use.
-    status = {
-      'loggers': loggers,
-    }
-    return status
-  
-  ############################
-  def _start_logger(self, config):
-    """Create a new process running a Listener/Logger using the passed
-    config, and return the Process object."""
-
-    # Zero out any error before we try (again)
-    self.errors[config.name] = None
-    
-    try:
-      config_dict = parse_json(config.config_json)
-      run_logging.debug('Starting config:\n%s', pprint.pformat(config))
-      listener = ListenerFromLoggerConfig(config_dict)
-
-      proc = multiprocessing.Process(target=listener.run)
-      proc.start()
-      return proc
-
-    # If something went wrong. If it was a KeyboardInterrupt, pass it
-    # along, otherwise stash error and return None
-    except Exception as e:
-      if e is KeyboardInterrupt:
-        self.quit()
-        raise e
-      logging.warning('Config %s got exception: %s', config.name, str(e))
-      self.errors[config.name] = str(e)
-      LoggerConfigState(config=config, desired=True,
-                        running=False, errors=str(e)).save()
-
-    return None
 
 ################################################################################
 if __name__ == '__main__':
@@ -298,8 +248,8 @@ if __name__ == '__main__':
   parser.add_argument('--interval', dest='interval', action='store',
                       type=float, default=1,
                       help='How many seconds to sleep between logger checks.')
-  parser.add_argument('--num_tries', dest='num_tries', action='store', type=int,
-                      default=DEFAULT_NUM_TRIES,
+  parser.add_argument('--max_tries', dest='max_tries', action='store', type=int,
+                      default=DEFAULT_MAX_TRIES,
                       help='Number of times to retry failed loggers.')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
@@ -309,8 +259,8 @@ if __name__ == '__main__':
                       help='Increase output verbosity of component loggers')
   args = parser.parse_args()
   
-  server = LoggerServer(interval=args.interval, num_tries=args.num_tries,
+  server = LoggerServer(interval=args.interval, max_tries=args.max_tries,
                         verbosity=args.verbosity,
                         logger_verbosity=args.logger_verbosity)
-  server.start()
+  server.run()
   
