@@ -1,32 +1,33 @@
 #!/usr/bin/env python3
-"""Run loggers.
+"""Start/stop loggers according passed in definitions and commands.
 
 Typical use:
 
-  # Create an expanded configuration
-  logger/utils/build_config.py --config test/configs/sample_cruise.json > config.json
-
   # Run the loggers from the "underway" mode of that configuration
-  logger/utils/logger_manager.py --config config.json --mode underway -v
+  logger/utils/logger_manager.py \
+      --config test/configs/sample_cruise.json \
+      -v -V
 
 (To get this to work using the sample config sample_cruise.json above,
-sample_cruise.json, you'll also need to run
+you'll also need to run
 
   logger/utils/serial_sim.py --config test/serial_sim.py
 
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
 
-You can also run with the --interactive flag, in which case you can,
-at any point, type the name of a mode into the terminal window the
-controller will switch to that mode:
+The logger_manager.py script may be called with a --mode parameter
+that will start it in one of the modes defined in sample_cruise.json
+(off, port, underway). If --mode is omitted, it will start in its
+default mode (specified as "off" in sample_cruise.json). To switch
+modes while the script is running, type the name of the new mode (or
+"quit") on the command line while the logger_manager.py is running.
 
-  logger/utils/run_loggers.py --config config.json --interactive
-
-At the moment, --interactive is a bit messy, as user input is liable
-to be interspersed with logging output, making it difficult to see the
-state that's being typed in.
-
+Be advised that the command line script is intentionally just a
+rudimentary wrapper around the LoggerManager class. We expect that,
+more often than not, the LoggerManager class will be used directly by
+other code, such as a LoggerServer, which can exercise its full
+powers.
 """
 
 import argparse
@@ -123,9 +124,6 @@ class LoggerManager:
       elif process:
         self._kill_logger(logger)
 
-      # Wipe out old config
-      self.logger_configs[logger] = None
-
       # Finally, if we have a new config, start up the new process for it
       if new_config:
         run_logging.info('Starting up new process for %s', logger)
@@ -142,10 +140,23 @@ class LoggerManager:
     """    
     # All loggers, whether in current configuration or desired mode.
     with self.config_lock:
-      loggers = set(self.logger_configs.keys()).union(new_configs.keys())
-      for logger in loggers:
-        new_config = new_configs.get(logger, None)
-        self.set_config(logger, new_config)
+      # If loggers we know about are no longer part of new config,
+      # shut them down and delete them. Note that this is different
+      # from the logger having an empty/None configuration, which
+      # means we should shut it down, but we still remember it.
+      disappearing_loggers = set(self.logger_configs) - set(new_configs)
+      if disappearing_loggers:
+        logging.info('New configuration contains no mention of some '
+                    'loggers. Shutting down and deleting: %s',
+                     disappearing_loggers)
+        for logger in disappearing_loggers:
+          self._kill_and_delete_logger(logger)
+          
+      # Now set all the other loggers in their new configs. This
+      # includes starting them up if new config is running and
+      # shutting them down if it isn't.
+      for logger, config in new_configs.items():
+        self.set_config(logger, config)
   
   ############################
   def _start_logger(self, logger, config):
@@ -188,22 +199,34 @@ class LoggerManager:
         process.terminate()
         process.join()
       else:
-        logging.warning('Attempted to kill process for %s, but no '
-                        'associated process found.', logger)
+        logging.info('Attempted to kill process for %s, but no '
+                     'associated process found.', logger)
 
     # Clean out debris from old logger process
-    if logger in self.processes: del self.processes[logger]
-    if logger in self.errors: del self.errors[logger]
+    self.logger_configs[logger] = None
+    self.processes[logger] = None
+    self.errors[logger] = []
     self.failed_loggers.discard(logger)
 
   ############################
-  def check_logger(self, logger, update=False, clear_errors=False):
+  def _kill_and_delete_logger(self, logger):
+    """Not only kill the logger, but remove all trace of it from memory."""
+    self._kill_logger(logger)
+
+    # Clean out debris from old logger process
+    if logger in self.logger_configs: del self.logger_configs[logger]
+    if logger in self.processes: del self.processes[logger]
+    if logger in self.errors: del self.errors[logger]
+    self.failed_loggers.discard(logger)
+    
+  ############################
+  def check_logger(self, logger, manage=False, clear_errors=False):
     """Check whether passed logger is in state it should be. Restart/stop it 
     as appropriate. Return True if logger is in desired state.
 
     logger - name of logger to check.
 
-    update - if True, and if logger isn't in state it's supposed to be,
+    manage - if True, and if logger isn't in state it's supposed to be,
              try restarting it.
     clear_errors - if True, clear out accumulated error messages.
     """
@@ -226,7 +249,7 @@ class LoggerManager:
       elif not config and process:
         run_logging.warning('Logger %s shouldn\'t be running, but is?', logger)
         running = True
-        if update:
+        if manage:
           self._kill_logger(logger)
           process = None
 
@@ -234,8 +257,9 @@ class LoggerManager:
       else:
         running = False
         
-        # If we're supposed to try and update the state, restart logger.
-        if update:
+        # If we're supposed to try and manage the state ourselves,
+        # restart dead logger.
+        if manage:
           # If we've tried restarting max_tries times, give up and
           # consider logger to have failed.
           if logger in self.failed_loggers:
@@ -266,15 +290,15 @@ class LoggerManager:
     return status
     
   ############################
-  def check_loggers(self, update=False, clear_errors=False):
+  def check_loggers(self, manage=False, clear_errors=False):
     """Check that all loggers are in desired states. Return map from
     logger name to Boolean, where True means logger is running and
     should be.
 
-    update       - if True, try to restart dead loggers.
+    manage       - if True, try to restart dead loggers.
     clear_errors - if True, clear out accumulated error messages.
     """
-    return {logger:self.check_logger(logger, update, clear_errors)
+    return {logger:self.check_logger(logger, manage, clear_errors)
             for logger in self.logger_configs}
 
   ############################
@@ -298,11 +322,60 @@ class LoggerManager:
     # Iterate until we get 'quit'
     while not self.quit_flag:
       with self.config_lock:
-        status = self.check_loggers(update=True)
-        logging.info('Logger status: %s', str(status))
+        status = self.check_loggers(manage=True)
+        logging.debug('Logger status: %s', str(status))
 
       run_logging.debug('Sleeping %s seconds...', self.interval)
       time.sleep(self.interval)
+
+
+################################################################################
+def get_configs(cruise_config, mode):
+  """Helper function: return a dict of {logger:config, ...} for given mode."""
+  loggers = cruise_config.get('loggers', None)
+  if not loggers:
+    raise ValueError('Cruise config has no "loggers" field')
+
+  configs = cruise_config.get('configs', None)
+  if not configs:
+    raise ValueError('Cruise config has no "configs" field')
+
+  modes = cruise_config.get('modes', None)
+  if not modes:
+    raise ValueError('Cruise config has no "modes" field')
+
+  mode_configs = modes.get(mode, None)
+  if mode is None:
+    raise ValueError('Cruise config has no mode "%s"' % mode)
+
+  # What config each logger is/should be in
+  logger_configs = {}
+  for logger, logger_spec in loggers.items():
+    logger_mode_config_name = mode_configs.get(logger, None)
+
+    # If mode doesn't include a config name for logger, then logger isn't
+    # running in this mode. Give it an empty config.
+    if not logger_mode_config_name:
+      configs[logger] = None
+      continue
+    
+    # Otherwise, we've got the name of the logger's config. Verify
+    # that it's a valid config for this logger, and look it up in the
+    # config dict.
+    valid_logger_configs = logger_spec.get('configs', None)
+    if not valid_logger_configs:
+      raise ValueError('Logger spec for %s has no "configs" field' % logger)
+    if not logger_mode_config_name in valid_logger_configs:
+      raise ValueError('Config "%s" is not valid config for logger %s '
+                       '(valid configs are: %s)' %
+                       (logger_mode_config_name, logger, valid_logger_configs))
+    config = configs.get(logger_mode_config_name, None)
+    if config is None:
+      raise ValueError('No config "%s" defined for cruise.'
+                       % logger_mode_config_name)
+    logger_configs[logger] = config
+
+  return logger_configs
 
 ################################################################################
 if __name__ == '__main__':
@@ -344,18 +417,34 @@ if __name__ == '__main__':
   run_thread = threading.Thread(target=logger_manager.run)
   run_thread.start()
 
-  cruise_config_json = read_json(args.config)
-  configs = cruise_config_json.get('modes', None)
-  if not configs:
+  cruise_config = read_json(args.config)
+  loggers = cruise_config.get('loggers', None)
+  if not loggers:
+    raise ValueError('Config file "%s" has no "loggers" field' % args.config)
+  modes = cruise_config.get('modes', None)
+  if not modes:
     raise ValueError('Config file "%s" has no "modes" field' % args.config)
+  default_mode = cruise_config.get('default_mode', None)
+  if not default_mode:
+    raise ValueError('Config file "%s" has no "default_mode"' % args.config)
+  if not default_mode in modes:
+    raise ValueError('Default mode "%s" not defined in %s' %
+                     (default_mode, args.config))
 
-  # Did they give us a desired mode on the command line?
+  # Did they give us a desired mode on the command line? If not set to
+  # default_mode.
   if args.mode:
-    mode_config = configs.get(args.mode, None)
-    if mode_config is None:
-      raise ValueError('Config file "%s" has no mode "%s"' %
-                       (args.config, args.mode))
-    logger_manager.set_configs(mode_config)    
+    if args.mode in modes:
+      mode = args.mode
+    else:
+      raise ValueError('Config file has no mode "%s"' % args.mode)
+  else:
+    mode = default_mode
+
+  # Set the initial configs and start running
+  logging.info('#### Starting LoggerManager in mode %s', mode)
+  configs = get_configs(cruise_config, mode)
+  logger_manager.set_configs(configs)
 
   # Loop, trying new modes, until we receive a keyboard interrupt
   try:
@@ -366,14 +455,15 @@ if __name__ == '__main__':
       if new_mode == 'quit':
         break
       
-      mode_config = configs.get(new_mode, None)
-      if mode_config is None:
+      if not new_mode in modes:
         logging.error('Config file "%s" has no mode "%s"' %
                       (args.config, new_mode))
-        logging.error('Valid modes are %s and quit.', ', '.join(configs.keys()))
+        logging.error('Valid modes are "%s" and "quit".',
+                      '", "'.join(modes.keys()))
       else:
         logging.info('#### Setting mode to %s', new_mode)
-        logger_manager.set_configs(mode_config)
+        configs = get_configs(cruise_config, new_mode)
+        logger_manager.set_configs(configs)
 
   # On keyboard interrupt, break from our own loop and signal the
   # run() thread that it should clean up and terminate.

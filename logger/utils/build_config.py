@@ -52,6 +52,8 @@ import logging
 import pprint
 import sys
 
+from collections import OrderedDict
+
 sys.path.append('.')
 
 from logger.utils.read_json import read_json
@@ -282,16 +284,29 @@ class BuildConfig:
     templates = config.get('templates', {})
     expanded_templates =  self.expand_template(vars, templates, templates)
 
-    # Create a copy of the config dict and swap in expanded bits
-    new_config = config           
+    # Create a new config dict and swap in expanded bits
+    #new_config = config
+    new_config = OrderedDict()
 
     cruise = config.get('cruise', {})
     if cruise:
       new_config['cruise'] = self.expand_template(vars, cruise,
                                                   expanded_templates)
+    loggers = config.get('loggers', {})
+    if loggers:
+      new_config['loggers'] = self.expand_template(vars, loggers,
+                                                 expanded_templates)
     modes = config.get('modes', {})
     if modes:
       new_config['modes'] = self.expand_template(vars, modes,
+                                                 expanded_templates)
+    default_mode = config.get('default_mode', {})
+    if default_mode:
+      new_config['default_mode'] = self.expand_template(vars, default_mode,
+                                                        expanded_templates)
+    configs = config.get('configs', {})
+    if configs:
+      new_config['configs'] = self.expand_template(vars, configs,
                                                  expanded_templates)
     return new_config
 

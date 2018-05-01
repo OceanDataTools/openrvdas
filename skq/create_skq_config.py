@@ -6,7 +6,7 @@ listening for UDP packets on the specified port.
 
 To run, first use this script to generate the config file:
 
-   skq/create_skq_config.py < skq/skq/skq_ports.txt > skq/skq_cruise.json
+   skq/create_skq_config.py < skq/skq_ports.txt > skq/skq_cruise.json
 
 Then either hand the config file to the command line run_loggers.py script:
 
@@ -25,13 +25,27 @@ or load the script via the Django GUI, as described in the gui/
 subdirectory.
 
 """
+import json
+import pprint
+import sys
 
-import fileinput
+from collections import OrderedDict
+
+sys.path.append('.')
+
+from logger.utils.read_json import parse_json
+
+# Following line is for testing only (see README.md). Set
+# ALL_USE_SAME_PORT to False to generate a configuration where each
+# logger reads from its proper port.
+
+ALL_USE_SAME_PORT = False
+PORT = '6224'
 
 # Set to desired cruise ID
 cruise = 'SKQ_SAMPLE'
 
-file_db_config = """  "INST": {
+file_db_config = """{
           "name": "INST->file/db",
           "readers": {
             "class": "NetworkReader",
@@ -71,7 +85,7 @@ file_db_config = """  "INST": {
           ]
         }"""
 
-file_config = """  "INST": {
+file_config = """{
           "name": "INST->file",
           "readers": {
             "class": "NetworkReader",
@@ -99,7 +113,7 @@ file_config = """  "INST": {
           }
         }"""
 
-db_config = """  "INST": {
+db_config = """{
           "name": "INST->db",
           "readers": {
             "class": "NetworkReader",
@@ -121,61 +135,65 @@ db_config = """  "INST": {
           }
         }"""
 
-file_db_loggers = []
-file_loggers = []
-db_loggers = []
+lines = [line.strip() for line in sys.stdin.readlines()]
 
-for line in fileinput.input():
-  (inst, port) = line.strip().split('\t', maxsplit=2)
-
-  # FOLLOWING LINE IS FOR TESTING ONLY (SEE README.md). COMMENT IT OUT
-  # TO GENERATE A CONFIGURATION WHERE EACH LOGGER READS FROM ITS
-  # PROPER PORT.
-
-  #port = '6224'
+loggers = {}
+modes = {}
+configs = {}
   
-  logger = file_db_config
-  logger = logger.replace('INST', inst)
-  logger = logger.replace('PORT', port)
-  logger = logger.replace('CRUISE', cruise)
-  file_db_loggers.append(logger)
+modes['off'] = {}
+modes['file'] = {}
+modes['db'] = {}
+modes['file/db'] = {}
 
-  logger = file_config
-  logger = logger.replace('INST', inst)
-  logger = logger.replace('PORT', port)
-  logger = logger.replace('CRUISE', cruise)
-  file_loggers.append(logger)
+for line in lines:
+  (inst, port) = line.split('\t', maxsplit=2)
 
-  logger = db_config
-  logger = logger.replace('INST', inst)
-  logger = logger.replace('PORT', port)
-  logger = logger.replace('CRUISE', cruise)
-  db_loggers.append(logger)
+  if ALL_USE_SAME_PORT:
+    port = PORT
+  
+  config = file_db_config
+  config = config.replace('INST', inst)
+  config = config.replace('PORT', port)
+  config = config.replace('CRUISE', cruise)
+  configs['%s->file/db' % inst] = parse_json(config)
 
-skq_config = """{
-    "cruise": {
-        "id": "%s",
-        "start": "2018-04-01",
-        "end": "2018-05-01"
-    },
-    "default_mode": "off",
-    "modes": {
-      // Nothing's running when off
-      "off": {},
-      "file": {
-      %s
-      },
-      "db": {
-      %s
-      },
-      "file/db": {
-      %s
-      }
-    }
+  config = file_config
+  config = config.replace('INST', inst)
+  config = config.replace('PORT', port)
+  config = config.replace('CRUISE', cruise)
+  configs['%s->file' % inst] = parse_json(config)
+
+  config = db_config
+  config = config.replace('INST', inst)
+  config = config.replace('PORT', port)
+  config = config.replace('CRUISE', cruise)
+  configs['%s->db' % inst] = parse_json(config)
+
+  loggers[inst] = {}
+  loggers[inst]['configs'] = [
+    'off', '%s->file/db' % inst, '%s->file' % inst, '%s->db' % inst
+  ]
+
+  modes['file'][inst] = '%s->file' % inst
+  modes['db'][inst] = '%s->db' % inst
+  modes['file/db'][inst] = '%s->file/db' % inst
+  
+#pprint.pprint(loggers, width=40, compact=False)
+#pprint.pprint(modes, width=40, compact=False)
+
+skq_cruise = OrderedDict()
+skq_cruise['cruise'] = {
+  'id': '%s' % cruise,
+  'start': '2018-04-01',
+  'end': '2018-05-01'
 }
-"""
+skq_cruise['loggers'] = loggers
+skq_cruise['modes'] = modes
+skq_cruise['default_mode'] = 'off'
+skq_cruise['configs'] = configs
 
-print(skq_config % (cruise,
-                    ',\n'.join(file_loggers),
-                    ',\n'.join(db_loggers),
-                    ',\n'.join(file_db_loggers)))
+#pprint.pprint(loggers, width=40, compact=False)
+#pprint.pprint(modes, width=40, compact=False)
+#pprint.pprint(skq_cruise, width=40, compact=False)
+print(json.dumps(skq_cruise, indent=4))

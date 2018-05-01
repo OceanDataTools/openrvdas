@@ -99,12 +99,7 @@ class TestLoggerManager(unittest.TestCase):
                          })
 
     manager.set_configs(self.config['modes']['off'])
-    self.assertDictEqual(manager.check_loggers(),
-                         {'logger': {'errors': [],
-                                     'running': None,
-                                     'pid': None,
-                                     'failed': False}
-                         })
+    self.assertDictEqual(manager.check_loggers(), {})
 
     # Verify that the process has indeed shut down. This should throw
     # an exception if the process doesn't exist.

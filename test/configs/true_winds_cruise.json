@@ -10,159 +10,183 @@
         "start": "2018-01-01",
         "end": "2018-02-01"        
     },
+
+    "loggers": {
+        "mwx1": {
+            "configs": ["off", "mwx1->net/file/db"]
+        },
+        "s330": {
+            "configs": ["off", "s330->net/file/db"]
+        },
+        "derived": {
+            "configs": ["off", "derived->db"]
+        }
+    },
+
     "modes": {
-        "off": {},
+        "off": {
+            "mwx1": "off",
+            "s330": "off",
+            "derived": "off"
+        },
         "underway": {
-            "mwx1": {
-                "name": "mwx1->net/file/db",
-                "readers": {
-                    "class": "SerialReader",
+            "mwx1": "mwx1->net/file/db",
+            "s330": "s330->net/file/db",
+            "derived": "derived->db"
+        }
+    },
+    "default_mode": "off",
+
+    "configs": {
+        "off": {},
+        
+        "mwx1->net/file/db": {
+            "name": "mwx1->net/file/db",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_mwx1",
+                    "baudrate": 9600
+                    }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": [
+                {
+                    "class": "ComposedWriter",
                     "kwargs": {
-                        "port": "/tmp/tty_mwx1",
-                        "baudrate": 9600
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "mwx1"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
                     }
                 },
-                "transforms": {
-                    "class": "TimestampTransform"
-                },
-                "writers": [
-                    {
-                        "class": "ComposedWriter",
-                        "kwargs": {
-                            "transforms": {
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": [
+                            {
                                 "class": "PrefixTransform",
                                 "kwargs": {
                                     "prefix": "mwx1"
                                 }
                             },
-                            "writers": {
-                                "class": "NetworkWriter",
-                                "kwargs": {
-                                    "network": ":6224"
-                                }
+                            {
+                                "class": "ParseNMEATransform"
                             }
-                        }
-                    },
-                    {
-                        "class": "ComposedWriter",
-                        "kwargs": {
-                            "transforms": [
-                                {
-                                    "class": "PrefixTransform",
-                                    "kwargs": {
-                                        "prefix": "mwx1"
-                                    }
-                                },
-                                {
-                                    "class": "ParseNMEATransform"
-                                }
-                            ],
-                            "writers": {
-                                "class": "DatabaseWriter"
-                            }
+                        ],
+                        "writers": {
+                            "class": "DatabaseWriter"
                         }
                     }
-                ]
+                }
+            ]
+        },
+        "s330->net/file/db": {
+            "name": "s330->net/file/db",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_s330",
+                    "baudrate": 9600
+                }
             },
-            "s330": {
-                "name": "s330->net/file/db",
-                "readers": {
-                    "class": "SerialReader",
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": [
+                {
+                    "class": "ComposedWriter",
                     "kwargs": {
-                        "port": "/tmp/tty_s330",
-                        "baudrate": 9600
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "s330"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
                     }
                 },
-                "transforms": {
-                    "class": "TimestampTransform"
-                },
-                "writers": [
-                    {
-                        "class": "ComposedWriter",
-                        "kwargs": {
-                            "transforms": {
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": [
+                            {
                                 "class": "PrefixTransform",
                                 "kwargs": {
                                     "prefix": "s330"
                                 }
                             },
-                            "writers": {
-                                "class": "NetworkWriter",
-                                "kwargs": {
-                                    "network": ":6224"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "class": "ComposedWriter",
-                        "kwargs": {
-                            "transforms": [
-                                {
-                                    "class": "PrefixTransform",
-                                    "kwargs": {
-                                        "prefix": "s330"
-                                    }
-                                },
-                                {
-                                    "class": "ParseNMEATransform"
-                                }
-                            ],
-                            "writers": {
-                                "class": "DatabaseWriter"
-                            }
-                        }
-                    }
-                ]
-            },
-            "derived": {
-                "name": "derived->db",
-                "readers": {
-                    "class": "DatabaseReader",
-                    "kwargs": {
-                        "database": "data",
-                        "host": "localhost",
-                        "user": "rvdas",
-                        "password": "rvdas",
-                        "sleep_interval": 1.0
-                    }
-                },
-                "transforms": {
-                    "class": "ComposedDerivedDataTransform",
-                    "kwargs": {
-                        "transforms": [
                             {
-                                "class": "TrueWindsTransform",
-                                "kwargs": {
-                                    "course_field": "S330CourseTrue",
-                                    "speed_field": "S330Speed",
-                                    "heading_field": "S330HeadingTrue",
-                                    "wind_dir_field": "MwxPortRelWindDir",
-                                    "wind_speed_field": "MwxPortRelWindSpeed",
-                                    "true_dir_name": "PortTrueWindDir",
-                                    "true_speed_name": "PortTrueWindSpeed",
-                                    "update_on_fields": ["MwxPortRelWindDir"],
-                                    "apparent_dir_name": "PortApparentWindDir",
-                                    "convert_speed_factor": 0.5144
-                                }
+                                "class": "ParseNMEATransform"
                             }
-                            // Other derived data transforms should go here
-                        ]
+                        ],
+                        "writers": {
+                            "class": "DatabaseWriter"
+                        }
                     }
-                },
-                "writers": {
-                    "class": "DatabaseWriter",
-                    "kwargs": {
-                        "database": "data",
-                        "host": "localhost",
-                        "user": "rvdas",
-                        "password": "rvdas",
-                        "field_dict_input": true
-                    }
+                }
+            ]
+        },
+        "derived->db": {
+            "name": "derived->db",
+            "readers": {
+                "class": "DatabaseReader",
+                "kwargs": {
+                    "database": "data",
+                    "host": "localhost",
+                    "user": "rvdas",
+                    "password": "rvdas",
+                    "sleep_interval": 1.0
+                }
+            },
+            "transforms": {
+                "class": "ComposedDerivedDataTransform",
+                "kwargs": {
+                    "transforms": [
+                        {
+                            "class": "TrueWindsTransform",
+                            "kwargs": {
+                                "course_field": "S330CourseTrue",
+                                "speed_field": "S330Speed",
+                                "heading_field": "S330HeadingTrue",
+                                "wind_dir_field": "MwxPortRelWindDir",
+                                "wind_speed_field": "MwxPortRelWindSpeed",
+                                "true_dir_name": "PortTrueWindDir",
+                                "true_speed_name": "PortTrueWindSpeed",
+                                "update_on_fields": ["MwxPortRelWindDir"],
+                                "apparent_dir_name": "PortApparentWindDir",
+                                "convert_speed_factor": 0.5144
+                            }
+                        }
+                        // Other derived data transforms should go here
+                    ]
+                }
+            },
+            "writers": {
+                "class": "DatabaseWriter",
+                "kwargs": {
+                    "database": "data",
+                    "host": "localhost",
+                    "user": "rvdas",
+                    "password": "rvdas",
+                    "field_dict_input": true
                 }
             }
         }
-    },
-    
-    "default_mode": "off"
+    }
 }

@@ -128,37 +128,28 @@ EXPANDED_LOGGERS = {
                 'kwargs': {'baudrate': 9600,
                            'port': '/tmp/tty_gyr1'}},
     'transforms': {'class': 'TimestampTransform'},
-    'writers': [
-      {'class': 'LogfileWriter',
-       'kwargs': {'filebase': '/tmp/logs/NBP1700/gyr1/raw/NBP1700_gyr1'}},
-      {'class': 'ComposedWriter',
-       'kwargs': {
-         'transforms': {'class': 'PrefixTransform',
-                        'kwargs': {'prefix': 'gyr1'}},
-         'writers': {'class': 'NetworkWriter',
-                     'kwargs': {'network': ':6224'}
-         }
-       }
-      }
-    ]
-  },
+    'writers': [{'class': 'LogfileWriter',
+                 'kwargs': {'filebase': '/tmp/logs/NBP1700/gyr1/raw/NBP1700_gyr1'}},
+                {'class': 'ComposedWriter',
+                 'kwargs': {'transforms': {'class': 'PrefixTransform',
+                                           'kwargs': {'prefix': 'gyr1'}},
+                            'writers': {'class': 'NetworkWriter',
+                                        'kwargs': {'network': ':6224'}}}}]},
   'knud_SERIAL_LOGGER': {
     'readers': {'class': 'SerialReader',
                 'kwargs': {'baudrate': 9600,
                            'port': '/tmp/tty_knud'}},
     'transforms': {'class': 'TimestampTransform'},
-    'writers': [
-      {'class': 'LogfileWriter',
-       'kwargs': {'filebase': '/tmp/logs/NBP1700/knud/raw/NBP1700_knud'}},
-      {'class': 'ComposedWriter',
-       'kwargs': {
-         'transforms': {'class': 'PrefixTransform',
-                        'kwargs': {'prefix': 'knud'}},
-         'writers': {'class': 'NetworkWriter',
-                     'kwargs': {'network': ':6224'}
-         }
-       }
-      }
+    'writers': [{'class': 'LogfileWriter',
+                 'kwargs': {'filebase': '/tmp/logs/NBP1700/knud/raw/NBP1700_knud'}},
+                {'class': 'ComposedWriter',
+                 'kwargs': {'transforms': {'class': 'PrefixTransform',
+                                           'kwargs': {'prefix': 'knud'}},
+                            'writers': {'class': 'NetworkWriter',
+                                        'kwargs': {'network': ':6224'}
+                            }
+                 }
+                }
     ]
   }
 }
@@ -167,116 +158,93 @@ EXPANDED_LOGGERS = {
 CONFIG = {
   "vars": VARS,
   "templates": FULL_TEMPLATES,
+  "loggers": {
+      "knud": {
+        "configs": {
+          "knud off": None,
+          "knud->net": "knud_SERIAL_LOGGER_NO_WRITE",
+          "knud->net/file": "knud_SERIAL_LOGGER"
+          }
+        },
+      "gyr1": {
+        "configs": {
+          "gyr1 off": None,
+          "gyr1->net/file": "gyr1_SERIAL_LOGGER"
+          }
+        }
+    },
   "modes": {
     "off": {},
-    "port": {"%INST%": "%INST%_SERIAL_LOGGER_NO_WRITE"},
+    "port": {
+      "knud": "knud->net",
+      "gyr1": "gyr1->net/file"
+      },
     "underway": {
-      "knud": "knud_SERIAL_LOGGER_NO_WRITE",
-      "gyr1": "gyr1_SERIAL_LOGGER"
+      "knud": "knud->net/file",
+      "gyr1": "gyr1->net/file"
     }
   }
 }
 
 # What we expect when we expand the config template
 EXPANDED_CONFIG = {
-  'modes': {'off': {},
-           'port': {
-             'gyr1': {
-               'readers': {'class': 'SerialReader',
-                           'kwargs': {'baudrate': 9600,
-                                      'port': '/tmp/tty_gyr1'}},
-               'transforms': {'class': 'TimestampTransform'},
-               'writers': {'class': 'ComposedWriter',
-                           'kwargs': {
-                             'transforms': {'class': 'PrefixTransform',
-                                            'kwargs': {'prefix': 'gyr1'}},
-                             'writers': {'class': 'NetworkWriter',
-                                         'kwargs': {'network': ':6224'}}}}},
-             'knud': {
-               'readers': {'class': 'SerialReader',
-                           'kwargs': {'baudrate': 9600,
-                                      'port': '/tmp/tty_knud'}},
-               'transforms': {'class': 'TimestampTransform'},
-               'writers': {'class': 'ComposedWriter',
-                           'kwargs': {
-                             'transforms': {'class': 'PrefixTransform',
-                                            'kwargs': {'prefix': 'knud'}},
-                             'writers': {'class': 'NetworkWriter',
-                                         'kwargs': {'network': ':6224'}
-                             }
-                           }
-               }
-             }
-           },
-            'underway': {
-              'gyr1': {
-                'readers': {'class': 'SerialReader',
-                            'kwargs': {'baudrate': 9600,
-                                       'port': '/tmp/tty_gyr1'}},
-                'transforms': {'class': 'TimestampTransform'},
-                'writers': [{'class': 'LogfileWriter',
-                             'kwargs': {'filebase': '/tmp/logs/NBP1700/gyr1/raw/NBP1700_gyr1'}
-                },
-                            {'class': 'ComposedWriter',
-                             'kwargs': {
-                               'transforms': {'class': 'PrefixTransform',
-                                              'kwargs': {'prefix': 'gyr1'}
-                               },
+  'loggers': {
+    'gyr1': {'configs': {
+      'gyr1 off': None,
+      'gyr1->net/file': {
+        'readers': {'class': 'SerialReader',
+                    'kwargs': {'baudrate': 9600,
+                               'port': '/tmp/tty_gyr1'}},
+        'transforms': {'class': 'TimestampTransform'},
+        'writers': [
+          {'class': 'LogfileWriter',
+           'kwargs': {'filebase': '/tmp/logs/NBP1700/gyr1/raw/NBP1700_gyr1'}},
+          {'class': 'ComposedWriter',
+           'kwargs': {'transforms': {'class': 'PrefixTransform',
+                                     'kwargs': {'prefix': 'gyr1'}},
+                      'writers': {'class': 'NetworkWriter',
+                                  'kwargs': {'network': ':6224'}}}}]}}},
+    'knud': {'configs': {
+      'knud off': None,
+      'knud->net': {
+        'readers': {'class': 'SerialReader',
+                    'kwargs': {'baudrate': 9600,
+                               'port': '/tmp/tty_knud'}},
+        'transforms': {'class': 'TimestampTransform'},
+        'writers': {'class': 'ComposedWriter',
+                    'kwargs': {'transforms': {'class': 'PrefixTransform',
+                                              'kwargs': {'prefix': 'knud'}},
                                'writers': {'class': 'NetworkWriter',
-                                           'kwargs': {'network': ':6224'}
-                               }
-                             }
-                            }
-                ]
-              },
-              'knud': {
-                'readers': {'class': 'SerialReader',
-                            'kwargs': {'baudrate': 9600,
-                                       'port': '/tmp/tty_knud'}},
-                'transforms': {'class': 'TimestampTransform'},
-                'writers': {'class': 'ComposedWriter',
-                            'kwargs': {
-                              'transforms': {'class': 'PrefixTransform',
-                                             'kwargs': {'prefix': 'knud'}
-                              },
-                              'writers': {'class': 'NetworkWriter',
-                                          'kwargs': {'network': ':6224'}
-                              }
-                            }
-                }
-              }
-            }
-  },
-  'templates': {
-    '%INST%_SERIAL_READER': {
-      'class': 'SerialReader',
-      'kwargs': {'baudrate': 9600,
-                 'port': '/tmp/tty_%INST%'}
-    },    
-    '%INST%_LOGFILE_WRITER': {
-      'class': 'LogfileWriter',
-      'kwargs': {'filebase': '/tmp/logs/%CRUISE%/%INST%/raw/%CRUISE%_%INST%'}},
-    '%INST%_NETWORK_WRITER': {
-      'class': 'ComposedWriter',
-      'kwargs': {'transforms': {'class': 'PrefixTransform',
-                                'kwargs': {'prefix': '%INST%'}
-      },
-                 'writers': {'class': 'NetworkWriter',
-                             'kwargs': {'network': ':6224'}
-                 }
+                                           'kwargs': {'network': ':6224'}}}}},
+      'knud->net/file': {
+        'readers': {'class': 'SerialReader',
+                    'kwargs': {'baudrate': 9600,
+                               'port': '/tmp/tty_knud'}},
+        'transforms': {'class': 'TimestampTransform'},
+        'writers': [
+          {'class': 'LogfileWriter',
+           'kwargs': {'filebase': '/tmp/logs/NBP1700/knud/raw/NBP1700_knud'}},
+          {'class': 'ComposedWriter',
+           'kwargs': {'transforms': {'class': 'PrefixTransform',
+                                     'kwargs': {'prefix': 'knud'}},
+                      'writers': {'class': 'NetworkWriter',
+                                  'kwargs': {'network': ':6224'}
+                      }
+           }
+          }
+        ]
       }
-    },
-    '%INST%_SERIAL_LOGGER': {
-      'readers': '%INST%_SERIAL_READER',
-      'transforms': {'class': 'TimestampTransform'},
-      'writers': ['%INST%_LOGFILE_WRITER',
-                  '%INST%_NETWORK_WRITER']},
-    '%INST%_SERIAL_LOGGER_NO_WRITE': {
-      'readers': '%INST%_SERIAL_READER',
-      'transforms': {'class': 'TimestampTransform'},
-      'writers': '%INST%_NETWORK_WRITER'}
+    }
+    }
   },
-  'vars': {'%CRUISE%': 'NBP1700', '%INST%': ['knud', 'gyr1']
+  'modes': {'off': {},
+            'port': {
+              'gyr1': 'gyr1->net/file',
+              'knud': 'knud->net'
+            },
+            'underway': {
+              'gyr1': 'gyr1->net/file',
+              'knud': 'knud->net/file'}
   }
 }
 
@@ -331,8 +299,7 @@ class TestBuildConfigs(unittest.TestCase):
   ############################
   def test_expand_config(self):
     logger_def = BuildConfig.expand_config(CONFIG)
-
-    logging.info('expanded logger: %s', pprint.pformat(logger_def))
+    logging.info('expanded config: %s', pprint.pformat(logger_def))
     self.assertDictEqual(logger_def, EXPANDED_CONFIG)
     
 ################################################################################
