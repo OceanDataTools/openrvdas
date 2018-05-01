@@ -87,9 +87,9 @@ class SimSerial:
     logging.info('Finished: %s', ' '.join(cmd))
 
   ############################
-  def run(self):
+  def run(self, loop=False):
     """Create the virtual port with socat and start feeding it records from
-    the designated logfile."""
+    the designated logfile. If loop==True, loop when reaching end of input."""
     self.socat_thread = threading.Thread(target=self._run_socat)
     self.socat_thread.start()
     time.sleep(0.2)
@@ -102,8 +102,14 @@ class SimSerial:
     while not self.quit:
       record = self.reader.read() # get the next record
       logging.debug('SimSerial got: %s', record)
+
+      # End of input? If loop==True, re-open the logfile from the start
       if record is None:
-        break
+        if not loop:
+          break
+        self.reader = LogfileReader(filebase=self.source_file,
+                                    use_timestamps=self.use_timestamps)
+
       record = self.strip.transform(record)  # strip the timestamp
       if record: 
         logging.debug('SimSerial writing: %s', record)
@@ -124,6 +130,9 @@ if __name__ == '__main__':
   parser.add_argument('--logfile', dest='logfile',
                       help='Log file to read from.')
 
+  parser.add_argument('--loop', dest='loop', action='store_true',
+                      help='If True, loop when reaching end of sample data')
+  
   parser.add_argument('--port', dest='port', help='Virtual serial port to open')
   parser.add_argument('--baud', dest='baud', type=int,
                       help='Baud rate for port.')
@@ -149,15 +158,19 @@ if __name__ == '__main__':
     for inst in configs:
       config = configs[inst]
       sim = SimSerial(port=config['port'], source_file=config['logfile'])
-      sim_thread = threading.Thread(target=sim.run)
+      sim_thread = threading.Thread(target=sim.run, kwargs={'loop': args.loop})
       sim_thread.start()
       thread_list.append(sim_thread)
+
+    logging.warning('Waiting for threads to complete')
+    for thread in thread_list:
+      thread.join()
 
   # If no config file, just a simple, single serial port
   elif args.logfile and args.port:
     sim_serial = SimSerial(port=args.port, baudrate=args.baud,
                            source_file=args.logfile)
-    sim_serial.run()
+    sim_serial.run(args.loop)
 
   # Otherwise, we don't have enough information to run
   else:
