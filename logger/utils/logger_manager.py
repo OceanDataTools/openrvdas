@@ -76,9 +76,17 @@ class LoggerManager:
     self.max_tries = max_tries
     self.quit_flag = False
 
-    # Set the signal handler so that an external break will get translated
-    # into a KeyboardInterrupt.
-    signal.signal(signal.SIGTERM, kill_handler)
+    # Set the signal handler so that an external break will get
+    # translated into a KeyboardInterrupt. But signal only works if
+    # we're in the main thread - catch if we're not, and just assume
+    # everything's gonna be okay and we'll get shut down with a proper
+    # "quit()" call othewise.
+    # 
+    try:
+      signal.signal(signal.SIGTERM, kill_handler)
+    except ValueError:
+      logging.warning('LoggerManager not running in main thread; '
+                      'shutting down with Ctl-C may not work.')
 
     # Don't let other threads mess with data while we're
     # messing. Re-entrant so that we don't have to worry about
@@ -187,6 +195,7 @@ class LoggerManager:
       self.logger_configs[logger] = config
       self.processes[logger] = proc
       self.errors[logger] = errors
+      self.failed_loggers.discard(logger)
 
   ############################
   def _kill_logger(self, logger):

@@ -204,6 +204,7 @@ class InMemoryServerAPI(ServerAPI):
     self.mode = {}
     self.logger_config = {}
     self.callbacks = {}
+    self.status = []
 
   #############################
   # API methods below are used in querying/modifying the API for the
@@ -430,6 +431,14 @@ class InMemoryServerAPI(ServerAPI):
     # is updated. Do those now.
     self.signal_update(cruise_id=None)
 
+  ############################
+  # Methods for feeding data from LoggerServer back into the API
+  ############################
+  def update_status(self, status):
+    """Save/register the loggers' retrieved status report with the API."""
+    logging.info('Got status: %s', status)
+    self.status.append( (time.time(), status) )
+
   #############################
   # Methods to modify the data store
   ############################
@@ -476,6 +485,37 @@ class InMemoryServerAPI(ServerAPI):
   #def add_config_to_mode(self, cruise_id, config, logger_id, mode)
   #def delete_config(self, config_id)
 
+
+"""
+In Django, we'd implement update_status as follows:
+
+        # If there's anything notable - an error or change of state -
+        # create a new LoggerConfigState to document it.
+        for logger_id, logger_status in status.items():
+          config = configs.get(logger_id, None)
+          old_config = old_configs.get(logger_id, None)
+          old_logger_status = old_status.get(logger_id, {})
+
+          try:
+            logger = Logger.objects.get(id=logger_id)
+          except Logger.DoesNotExist:
+            logging.warning('No logger corresponding to id %d?!?', logger_id)
+            continue
+          
+          if (logger_status.get('errors', None) or
+              logger_status != old_logger_status or
+              config != old_config):
+            running = bool(logger_status.get('running', False))
+            errors = ', '.join(logger_status.get('errors', []))
+            pid = logger_status.get('pid', None)
+            logging.info('Updating %s config: %s; running: %s, errors: %s',
+                         logger, config.name if config else '-none-',
+                         running, errors or 'None')
+            LoggerConfigState(logger=logger, config=config, running=running,
+                              process_id=pid, errors=errors).save()
+ 
+"""
+  
 ################################################################################
 if __name__ == '__main__':
   import argparse
