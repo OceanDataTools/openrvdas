@@ -8,9 +8,9 @@ To run, first use this script to generate the config file:
 
    skq/create_skq_config.py < skq/skq_ports.txt > skq/skq_cruise.json
 
-Then either hand the config file to the command line run_loggers.py script:
+Then either hand the config file to the command line logger_manager script:
 
-   logger/utils/run_loggers.py \
+   logger/utils/logger_manager.py \
        --config skq/skq_cruise.json \
        --mode file/db -v 
 
