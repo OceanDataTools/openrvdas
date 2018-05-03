@@ -362,13 +362,16 @@ class InMemoryServerAPI(ServerAPI):
     # Here's a quick one-liner that doesn't do any checking:
     self.logger_config[cruise_id] = modes[mode].copy()
 
-    # A slow carefully-checked way of setting configs.
+    # Here's s slow carefully-checked way of setting configs:
     #for logger, config in modes[mode].items():
     #  self.set_logger_config(cruise_id, logger, config)
 
-    # Q: At this point should we notify someone (the LoggerServer?)
-    # that config has changed? A: For now, we're relying on someone
-    # calling signal_update() once they've made the changes they want.
+    # Q: At this point should we could signal an update. Or we could
+    # count on the API calling signal_update(). Or count on the update
+    # being picked up by polling. For now, don't signal the update.
+
+    #logging.warning('Signaling update')
+    #self.signal_update(cruise_id)
 
   ############################
   def set_logger_config(self, cruise_id, logger, config):
@@ -429,7 +432,8 @@ class InMemoryServerAPI(ServerAPI):
     # for that specified cruise. But we may also have callbacks (filed
     # under None) that are supposed to be executed when *any* cruise
     # is updated. Do those now.
-    self.signal_update(cruise_id=None)
+    if cruise_id is not None:
+      self.signal_update(cruise_id=None)
 
   ############################
   # Methods for feeding data from LoggerServer back into the API

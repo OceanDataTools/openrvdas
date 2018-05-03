@@ -74,6 +74,7 @@ class LoggerServer:
 
     api - ServerAPI (or subclass) instance by which LoggerServer will get
           its data store updates
+
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a failed server before giving up
@@ -83,9 +84,6 @@ class LoggerServer:
     if not issubclass(type(api), ServerAPI):
       raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
     self.api = api
-    
-    # kill off all running loggers from the previous current cruise.
-    self.current_cruise_timestamp = None
     self.interval = interval
     self.max_tries = max_tries
     self.quit_flag = False
@@ -95,6 +93,15 @@ class LoggerServer:
     # fly, as we're asked to manage cruises.
     self.logger_manager = {}
 
+    # Keep track of old configs on a cruise-by-cruise basis so we only
+    # send updates to the LoggerManagers when things change.
+    self.old_configs = {}
+
+    # Don't let more than one thread mess with configurations at a
+    # time. Might be able to speed things up by having one lock per
+    # cruise_id, but this is safe, and works for now.
+    self.config_lock = threading.Lock()
+    
     # Set up logging levels for both ourselves and for the loggers we
     # start running. Attach a Handler that will write log messages to
     # Django database.
@@ -104,7 +111,37 @@ class LoggerServer:
     log_logger_verbosity = LOG_LEVELS[min(logger_verbosity, max(LOG_LEVELS))]
     run_logging.setLevel(log_verbosity)
     logging.getLogger().setLevel(log_logger_verbosity)
-  
+
+  ############################
+  def update_configs(self, cruise_id=None):
+    """Check the API for updated configs for cruise_id, and send them to
+    the appropriate LoggerManager. If cruise_id is None, iteratively check 
+    for all cruises."""
+
+    if cruise_id is None:
+      for iter_cruise_id in self.api.get_cruises():
+        self.update_configs(iter_cruise_id)
+      return
+    
+    # If here, we've been given a cruise_id; do we have a
+    # LoggerManager for this cruise yet?
+    if not cruise_id in self.logger_manager:
+      self.logger_manager[cruise_id] = LoggerManager(interval=self.interval,
+                                                     max_tries=self.max_tries)
+    
+    # Get the most recent configs for this cruise. If they have
+    # changed since last time, tell the LoggerManager to shut
+    # down old configs and start new ones.
+    with self.config_lock:
+      configs = api.get_configs(cruise_id)
+      if not cruise_id in self.old_configs:
+        self.old_configs[cruise_id] = {}
+
+      if configs != self.old_configs[cruise_id]:
+        logging.warning('Got updated configs for %s', cruise_id)
+        self.logger_manager[cruise_id].set_configs(configs)
+        self.old_configs[cruise_id] = configs
+
   ############################
   def run(self):
     """Loop, checking that loggers are in the state they should be,
@@ -122,40 +159,24 @@ class LoggerServer:
     # Rather than relying on our LoggerManager to loop and check
     # loggers, we do it ourselves, so that we can update statuses and
     # errors in the Django database.
-    old_configs = {}
-
     try:
       while not self.quit_flag:
         status = {}
         for cruise_id in api.get_cruises():
-          # Do we have a LoggerManager for this cruise yet?
-          if not cruise_id in self.logger_manager:
-            self.logger_manager[cruise_id] = LoggerManager(
-              interval=self.interval, max_tries=self.max_tries)
-          logger_manager = self.logger_manager[cruise_id]
-          
-          # Get the most recent configs for this cruise. If they have
-          # changed since last time, tell the LoggerManager to shut
-          # down old configs and start new ones.
-          configs = api.get_configs(cruise_id)
-          if not cruise_id in old_configs:
-            old_configs[cruise_id] = {}
+          self.update_configs(cruise_id)
 
-          if configs != old_configs[cruise_id]:
-            logging.warning('Got updated configs for %s', cruise_id)
-            logger_manager.set_configs(configs)
-            old_configs[cruise_id] = configs
-
-          # Now check up on status of all loggers that are supposed to be
-          # running. Because manage=True, we'll restart those that are
-          # supposed to be but aren't. We'll get a dict of
+          # Now check up on status of all loggers that are supposed to
+          # be running under this cruise_id. Because manage=True,
+          # we'll restart those that are supposed to be but
+          # aren't. We'll get a dict of
           #
           # { logger_id: {errors: [], running,  failed},
           #   logger_id: {...}, 
           #   logger_id: {...}
           # }
-          status[cruise_id] = logger_manager.check_loggers(manage=True,
-                                                           clear_errors=True)
+          if cruise_id in self.logger_manager:
+            status[cruise_id] = self.logger_manager[cruise_id].check_loggers(
+              manage=True, clear_errors=True)
 
         # Write the returned statuses to data store
         api.update_status(status)
@@ -175,9 +196,6 @@ class LoggerServer:
   def quit(self):
     """Exit the loop and shut down all loggers."""
     self.quit_flag = True
-
-
-  
 
 ################################################################################
 if __name__ == '__main__':
@@ -217,6 +235,20 @@ if __name__ == '__main__':
   # Simplifying assumption: we've got exactly one cruise loaded
   cruise_id = api.get_cruises()[0]
   modes = api.get_modes(cruise_id)
+
+  # Register a callback if the API wants to give us new configs to run
+  # for this cruise. This would be triggered if someone called
+  #
+  # api.signal_update(cruise_id)
+  #
+  # or if we uncommented the last lines in the InMemoryServerAPI
+  # implementation of set_mode() so that it signaled an update once it
+  # had finished updating the configs to reflect a new cruise mode.
+  #
+  # For now, it's just here for documentation
+  api.on_update(callback=logger_server.update_configs,
+                kwargs={'cruise_id':cruise_id},
+                cruise_id=cruise_id)
   
   # Loop, trying new modes, until we receive a keyboard interrupt
   try:
