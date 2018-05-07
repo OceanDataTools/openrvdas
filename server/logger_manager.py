@@ -116,8 +116,9 @@ class LoggerManager:
                       'shutting down with Ctl-C may not work.')
 
     self.logger_runner = LoggerRunner(interval=interval, max_tries=max_tries)
-
+    
     # Get any initial configuration
+    self.cruise_config = None
     if cruise_config:
       self._load_cruise(cruise_config, mode)
 
@@ -148,7 +149,9 @@ class LoggerManager:
 
     if cruise_config is None:
       cruise_config = self.cruise_config
-
+    if cruise_config is None:
+        raise ValueError('No cruise_config loaded')
+      
     if mode is None:
       mode = cruise_config.get('default_mode', None)
       if mode is None:
@@ -356,7 +359,7 @@ class LoggerManager:
       status = self.logger_runner.check_loggers(manage=True, clear_errors=True)
       if websocket:
         await websocket.send(json.dumps({'status': status}))
-        logging.debug('Sent status')
+        logging.info('Sent status')
 
       await asyncio.sleep(self.interval)
         

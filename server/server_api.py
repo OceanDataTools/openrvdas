@@ -83,7 +83,7 @@ class ServerAPI:
     """Return list of cruise id's. Returns, e.g.
     > api.get_cruises()
           ["NBP1700", "NBP1701"]
-  """
+    """
     raise NotImplementedError('get_cruises must be implemented by subclass')
 
   #############################

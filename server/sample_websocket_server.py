@@ -8,7 +8,7 @@ import time
 import websockets
 
 sys.path.append('.')
-from openrvdas.logger.utils.read_json import read_json
+from logger.utils.read_json import read_json
 
 # Called when we receive a status update
 async def status_consumer(message):
@@ -35,7 +35,7 @@ async def producer_handler(websocket):
   """
 
   await asyncio.sleep(3)
-  cruise_config = read_json('openrvdas/test/configs/sample_cruise.json')
+  cruise_config = read_json('test/configs/sample_cruise.json')
   await websocket.send('set_cruise %s' % json.dumps(cruise_config))
 
   await asyncio.sleep(3)
