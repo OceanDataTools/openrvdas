@@ -70,7 +70,7 @@ from gui.models import ServerMessage, StatusUpdate
 
 from logger.utils.read_json import parse_json
 
-from logger.utils.logger_manager import LoggerManager, run_logging
+from server.logger_manager import LoggerRunner, run_logging
 
 TIME_FORMAT = '%Y-%m-%d:%H:%M:%S'
 
@@ -106,13 +106,13 @@ class LoggerServer:
     max_tries - number of times to try a failed server before giving up
     """    
 
-    self.logger_manager = LoggerManager(interval=interval, max_tries=max_tries)
+    self.logger_runner = LoggerRunner(interval=interval, max_tries=max_tries)
 
-    # Instead of running the LoggerManager.run() in a separate thread,
+    # Instead of running the LoggerRunner.run() in a separate thread,
     # we'll manually call its check_logger() method in our own run()
     # method.
 
-    #self.logger_manager_thread = threading.Thread(target=self.logger_manager.run)
+    #self.logger_runner_thread = threading.Thread(target=self.logger_runner.run)
 
     # If new current cruise is loaded, we want to notice and politely
     # kill off all running loggers from the previous current cruise.
@@ -144,11 +144,11 @@ class LoggerServer:
     running but should be) or None (not running and shouldn't be) -
     and any errors. If logger is not in state we want it and there are
     no t is not running. If logger is not running and there are no
-    errors, it means the LoggerManager
+    errors, it means the LoggerRunner
 
     """
 
-    # Rather than relying on our LoggerManager to loop and check
+    # Rather than relying on our LoggerRunner to loop and check
     # loggers, we do it ourselves, so that we can update statuses and
     # errors in the Django database.
     old_configs = {}
@@ -160,7 +160,7 @@ class LoggerServer:
         
         # Get the currently-specified config for each logger. If
         # things have changed, extract the JSON for the new configs
-        # and send to LoggerManager to start/stop the relevant
+        # and send to LoggerRunner to start/stop the relevant
         # processes.
 
         # NOTE: we key off of logger id instead of logger name for the
@@ -174,10 +174,10 @@ class LoggerServer:
                           for logger_id, config in configs.items() if config}
           logging.info('Configurations changed - updating.')
           logging.debug('New configurations: %s', pprint.pformat(configs))
-          self.logger_manager.set_configs(configs_json)
+          self.logger_runner.set_configs(configs_json)
 
         # Get status of loggers, including errors, telling
-        # LoggerManager to clear out old errors and start/stop any
+        # LoggerRunner to clear out old errors and start/stop any
         # loggers that aren't in the desired configuration. Returned
         # status is a dict keyed by logger id's. Value are a dict of
         #
@@ -187,7 +187,7 @@ class LoggerServer:
         #               'failed': True/False},
         #   ...
         # }
-        status = self.logger_manager.check_loggers(update=True,
+        status = self.logger_runner.check_loggers(update=True,
                                                    clear_errors=True)
 
         # If there's anything notable - an error or change of state -
@@ -227,12 +227,12 @@ class LoggerServer:
       logging.warning('LoggerServer received keyboard interrupt - '
                       'trying to shut down nicely.')
 
-    # Set LoggerManager to empty configs to shut down all its loggers
-    self.logger_manager.set_configs({})
+    # Set LoggerRunner to empty configs to shut down all its loggers
+    self.logger_runner.set_configs({})
     
-    # Tell the LoggerManager to stop and wait for its thread to exit
-    #self.logger_manager.quit()
-    #self.logger_manager_thread.join()
+    # Tell the LoggerRunner to stop and wait for its thread to exit
+    #self.logger_runner.quit()
+    #self.logger_runner_thread.join()
 
   ############################
   def quit(self):

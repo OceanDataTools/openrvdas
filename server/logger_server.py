@@ -53,10 +53,9 @@ import time
 sys.path.append('.')
 
 from logger.utils.read_json import read_json
-from logger.utils.logger_manager import LoggerManager, run_logging
-from logger.utils.server_api import ServerAPI
 
-from logger.utils.server_api import InMemoryServerAPI
+from server.server_api import ServerAPI
+from server.logger_manager import LoggerManager, run_logging
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
@@ -198,6 +197,8 @@ class LoggerServer:
     self.quit_flag = True
 
 ################################################################################
+from server.in_memory_server_api import InMemoryServerAPI
+
 if __name__ == '__main__':
   import argparse
 

@@ -22,11 +22,11 @@ The script generates a configuration with four modes:
   - db - write logger data to SQL database
   - file/db - write logger data to both file and db
 
-When used by the command line utility logger/utils/logger_manager.py,
+When used by the command line utility server/logger_manager.py,
 you can specify the desired mode on the command line:
 
 ```
-    logger/utils/logger_manager.py
+    server/logger_manager.py
       --config skq/skq_cruise.json
       --mode file/db
 ```
@@ -47,7 +47,7 @@ records that begin with their data id.
 
 This allows us to test by running, e.g.
 ```
-    logger/utils/logger_manager.py
+    server/logger_manager.py
       --config skq/skq_cruise_6224.json
       --mode file/db
       -v

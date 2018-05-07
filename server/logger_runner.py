@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Start/stop loggers according passed in definitions and commands.
+"""Low-level class to start/stop loggers according passed in
+definitions and commands.
+
+Typically used by a higher-level class like LoggerManager
 
 Typical use:
 
   # Run the loggers from the "underway" mode of that configuration
-  logger/utils/logger_manager.py \
-      --config test/configs/sample_cruise.json \
-      -v -V
+  server/logger_manager.py --config test/configs/sample_cruise.json \
+      --mode underway
 
 (To get this to work using the sample config sample_cruise.json above,
 you'll also need to run
@@ -16,21 +18,15 @@ you'll also need to run
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
 
-The logger_manager.py script may be called with a --mode parameter
-that will start it in one of the modes defined in sample_cruise.json
-(off, port, underway). If --mode is omitted, it will start in its
-default mode (specified as "off" in sample_cruise.json). To switch
-modes while the script is running, type the name of the new mode (or
-"quit") on the command line while the logger_manager.py is running.
-
 Be advised that the command line script is intentionally just a
-rudimentary wrapper around the LoggerManager class. We expect that,
-more often than not, the LoggerManager class will be used directly by
+rudimentary wrapper around the LoggerRunner class. We expect that,
+more often than not, the LoggerRunner class will be used directly by
 other code, such as a LoggerServer, which can exercise its full
 powers.
-"""
 
+"""
 import argparse
+import json
 import logging
 import multiprocessing
 import pprint
@@ -47,24 +43,23 @@ from logger.listener.listen import ListenerFromLoggerConfig
 run_logging = logging.getLogger(__name__)
 
 ############################
-# Translate an external signal (such as we'd get from os.kill) into a
-# KeyboardInterrupt, which will signal the start() loop to exit nicely.
 def kill_handler(self, signum):
+  """Translate an external signal (such as we'd get from os.kill) into a
+  KeyboardInterrupt, which will signal the start() loop to exit nicely."""
   logging.info('Received external kill')
   raise KeyboardInterrupt('Received external kill signal')
 
 ################################################################################
-class LoggerManager:
+class LoggerRunner:
   ############################
   def __init__(self, interval=0.5, max_tries=3, initial_configs=None):
-    """Create a LoggerManager.
+    """Create a LoggerRunner.
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to retry a dead logger config
 
-    initial_configs - optionally, dict of configs to start up on creation.
+    initial_configs - optional dict of configs to start up on creation.
     """
-
     # Map logger name to config, process running it, and any errors
     self.logger_configs = {}
     self.processes = {}
@@ -75,17 +70,16 @@ class LoggerManager:
     self.interval = interval
     self.max_tries = max_tries
     self.quit_flag = False
-
+      
     # Set the signal handler so that an external break will get
     # translated into a KeyboardInterrupt. But signal only works if
     # we're in the main thread - catch if we're not, and just assume
     # everything's gonna be okay and we'll get shut down with a proper
     # "quit()" call othewise.
-    # 
     try:
       signal.signal(signal.SIGTERM, kill_handler)
     except ValueError:
-      logging.warning('LoggerManager not running in main thread; '
+      logging.warning('LoggerRunner not running in main thread; '
                       'shutting down with Ctl-C may not work.')
 
     # Don't let other threads mess with data while we're
@@ -93,10 +87,13 @@ class LoggerManager:
     # re-acquiring when, for example set_configs() calls set_config().
     self.config_lock = threading.RLock()
 
+    # Only let one call to check_loggers() proceed at a time
+    self.check_loggers_lock = threading.Lock()
+    
     # If we were given any initial configs, set 'em up
     if initial_configs:
       self.set_configs(initial_configs)
-    
+
   ############################
   def set_config(self, logger, new_config):
     """Start/stop individual logger to put into new config.
@@ -239,7 +236,6 @@ class LoggerManager:
              try restarting it.
     clear_errors - if True, clear out accumulated error messages.
     """
-
     with self.config_lock:
       config = self.logger_configs.get(logger, None)
       process = self.processes.get(logger, None)
@@ -307,8 +303,9 @@ class LoggerManager:
     manage       - if True, try to restart dead loggers.
     clear_errors - if True, clear out accumulated error messages.
     """
-    return {logger:self.check_logger(logger, manage, clear_errors)
-            for logger in self.logger_configs}
+    with self.check_loggers_lock:
+      return {logger:self.check_logger(logger, manage, clear_errors)
+              for logger in self.logger_configs}
 
   ############################
   def quit(self):
@@ -339,67 +336,18 @@ class LoggerManager:
 
 
 ################################################################################
-def get_configs(cruise_config, mode):
-  """Helper function: return a dict of {logger:config, ...} for given mode."""
-  loggers = cruise_config.get('loggers', None)
-  if not loggers:
-    raise ValueError('Cruise config has no "loggers" field')
-
-  configs = cruise_config.get('configs', None)
-  if not configs:
-    raise ValueError('Cruise config has no "configs" field')
-
-  modes = cruise_config.get('modes', None)
-  if not modes:
-    raise ValueError('Cruise config has no "modes" field')
-
-  mode_configs = modes.get(mode, None)
-  if mode is None:
-    raise ValueError('Cruise config has no mode "%s"' % mode)
-
-  # What config each logger is/should be in
-  logger_configs = {}
-  for logger, logger_spec in loggers.items():
-    logger_mode_config_name = mode_configs.get(logger, None)
-
-    # If mode doesn't include a config name for logger, then logger isn't
-    # running in this mode. Give it an empty config.
-    if not logger_mode_config_name:
-      configs[logger] = None
-      continue
-    
-    # Otherwise, we've got the name of the logger's config. Verify
-    # that it's a valid config for this logger, and look it up in the
-    # config dict.
-    valid_logger_configs = logger_spec.get('configs', None)
-    if not valid_logger_configs:
-      raise ValueError('Logger spec for %s has no "configs" field' % logger)
-    if not logger_mode_config_name in valid_logger_configs:
-      raise ValueError('Config "%s" is not valid config for logger %s '
-                       '(valid configs are: %s)' %
-                       (logger_mode_config_name, logger, valid_logger_configs))
-    config = configs.get(logger_mode_config_name, None)
-    if config is None:
-      raise ValueError('No config "%s" defined for cruise.'
-                       % logger_mode_config_name)
-    logger_configs[logger] = config
-
-  return logger_configs
-
-################################################################################
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
-  parser.add_argument('--config', dest='config', action='store', required=True,
-                      help='Name of cruise configuration file to load.')
-  parser.add_argument('--mode', dest='mode', action='store', default=None,
-                      help='Optional name of mode to start system in.')
-  parser.add_argument('--interactive', dest='interactive', action='store_true',
-                      help='Whether to interactively accept mode changes from '
-                      'the command line.')
+  parser.add_argument('--config', dest='config', action='store', default=None,
+                      help='Initial set of configs to run.')
+  parser.add_argument('--max_tries', dest='max_tries', action='store',
+                      type=int, default=3, help='How many times to try a '
+                      'crashing config before giving up on it as failed.')
   parser.add_argument('--interval', dest='interval', action='store',
                       type=int, default=1,
                       help='How many seconds to sleep between logger checks.')
+
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
                       help='Increase output verbosity')
@@ -418,66 +366,12 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   run_logging.setLevel(LOG_LEVELS[args.verbosity])
 
-  # Verbosity of our component loggers (and everything else)
-  args.logger_verbosity = min(args.logger_verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.logger_verbosity])
-  
-  logger_manager = LoggerManager(interval=args.interval)
-  run_thread = threading.Thread(target=logger_manager.run)
-  run_thread.start()
-
-  cruise_config = read_json(args.config)
-  loggers = cruise_config.get('loggers', None)
-  if not loggers:
-    raise ValueError('Config file "%s" has no "loggers" field' % args.config)
-  modes = cruise_config.get('modes', None)
-  if not modes:
-    raise ValueError('Config file "%s" has no "modes" field' % args.config)
-  default_mode = cruise_config.get('default_mode', None)
-  if not default_mode:
-    raise ValueError('Config file "%s" has no "default_mode"' % args.config)
-  if not default_mode in modes:
-    raise ValueError('Default mode "%s" not defined in %s' %
-                     (default_mode, args.config))
-
-  # Did they give us a desired mode on the command line? If not set to
-  # default_mode.
-  if args.mode:
-    if args.mode in modes:
-      mode = args.mode
-    else:
-      raise ValueError('Config file has no mode "%s"' % args.mode)
+  if args.config:
+    initial_configs = read_json(args.config)
   else:
-    mode = default_mode
-
-  # Set the initial configs and start running
-  logging.info('#### Starting LoggerManager in mode %s', mode)
-  configs = get_configs(cruise_config, mode)
-  logger_manager.set_configs(configs)
-
-  # Loop, trying new modes, until we receive a keyboard interrupt
-  try:
-    while True:
-      print(' mode?: ')
-      new_mode = input()
-
-      if new_mode == 'quit':
-        break
-      
-      if not new_mode in modes:
-        logging.error('Config file "%s" has no mode "%s"' %
-                      (args.config, new_mode))
-        logging.error('Valid modes are "%s" and "quit".',
-                      '", "'.join(modes.keys()))
-      else:
-        logging.info('#### Setting mode to %s', new_mode)
-        configs = get_configs(cruise_config, new_mode)
-        logger_manager.set_configs(configs)
-
-  # On keyboard interrupt, break from our own loop and signal the
-  # run() thread that it should clean up and terminate.
-  except KeyboardInterrupt:
-    pass
-
-  logger_manager.quit()
+    initial_configs = None
     
+  runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
+                        initial_configs=initial_configs)
+  runner.run()
+

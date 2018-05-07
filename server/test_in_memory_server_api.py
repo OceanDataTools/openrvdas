@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
 
 import logging
-import os
 import sys
-import tempfile
-import threading
-import time
 import unittest
 import warnings
 
 sys.path.append('.')
 
-from logger.utils.server_api import InMemoryServerAPI
-
+from server.in_memory_server_api import InMemoryServerAPI
 
 sample_1700 = {
   "cruise": {

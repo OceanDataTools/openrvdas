@@ -13,7 +13,7 @@ sys.path.append('.')
 
 from logger.readers.text_file_reader import TextFileReader
 from logger.writers.text_file_writer import TextFileWriter
-from logger.utils.logger_manager import LoggerManager, run_logging
+from server.logger_runner import LoggerRunner, run_logging
 
 CONFIG = {
   "modes": {
@@ -45,7 +45,7 @@ publish, distribute, sublicense, and/or sell...""".split('\n')
 
 
 ################################################################################
-class TestLoggerManager(unittest.TestCase):
+class TestLoggerRunner(unittest.TestCase):
   ############################
   def setUp(self):
     # To suppress resource warnings about unclosed files
@@ -75,7 +75,7 @@ class TestLoggerManager(unittest.TestCase):
     # we're in our default mode
     self.assertFalse(os.path.exists(self.dest_name))
 
-    manager = LoggerManager(interval=0.1)
+    manager = LoggerRunner(interval=0.1)
     manager_thread = threading.Thread(target=manager.run)
     manager_thread.start()
 

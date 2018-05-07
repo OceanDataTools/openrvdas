@@ -6,7 +6,7 @@
 //      --config test/config/sample_cruise_template.json \
 //         > test/config/sample_cruise.json
 //
-//   logger/utils/logger_manager.py \
+//   server/logger_manager.py \
 //      --config test/config/sample_cruise.json \
 //      --mode underway
 //

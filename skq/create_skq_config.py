@@ -10,7 +10,7 @@ To run, first use this script to generate the config file:
 
 Then either hand the config file to the command line logger_manager script:
 
-   logger/utils/logger_manager.py \
+   server/logger_manager.py \
        --config skq/skq_cruise.json \
        --mode file/db -v 
 
