@@ -139,7 +139,7 @@ class LoggerManager:
     specified mode, otherwise set it in its default mode."""
     self.cruise_config = cruise_config
     new_configs = self._get_configs(cruise_config, mode)
-    self.logger_runner.set_configs(new_configs)
+    self.set_configs(new_configs)
 
   ##############################################################################
   def _get_configs(self, cruise_config=None, mode=None):
@@ -228,6 +228,16 @@ class LoggerManager:
       print('  %s\n      %s' % (command, desc))
 
   ############################
+  def set_configs(self, configs):
+    """Replace complete set of configs we are supposed to be running."""
+    self.logger_runner.set_configs(configs)
+
+  ############################
+  def set_config(self, logger, config):
+    """Set/change a single logger config, leaving others unchanged."""
+    self.logger_runner.set_config(logger, config)
+
+  ############################
   def process_command(self, command):
     """Parse and execute the command string we've received."""
     with self.command_lock:
@@ -242,7 +252,7 @@ class LoggerManager:
         logging.info('Setting mode to %s', mode_name)
         try:
           configs = self._get_configs(mode=mode_name)
-          self.logger_runner.set_configs(configs)
+          self.set_configs(configs)
         except ValueError as e:
           logging.error('%s', e)
 
@@ -260,7 +270,7 @@ class LoggerManager:
       elif command.find('set_configs ') == 0:
         (configs_cmd, configs_str) = command.split(maxsplit=1)
         logging.info('Setting configs to %s', configs_str)
-        self.logger_runner.set_configs(json.loads(config_str))
+        self.set_configs(json.loads(configs_str))
 
       # load_cruise <cruise config file name>
       elif command.find('load_cruise ') == 0:
@@ -288,7 +298,7 @@ class LoggerManager:
         (logger_cmd, logger, config_json) = command.split(maxsplit=2)
         logging.info('Setting logger %s to config %s', logger, config_json)
         try:
-          self.logger_runner.set_config(logger, json.loads(config_json))
+          self.set_config(logger, json.loads(config_json))
         except ValueError as e:
           logging.error('%s', e)
 
@@ -320,7 +330,7 @@ class LoggerManager:
             raise ValueError('Config "%s" is not valid for logger "%s"'
                              % (config_name, logger_name))
 
-          self.logger_runner.set_config(logger_name, config)
+          self.set_config(logger_name, config)
         except ValueError as e:
           logging.error('%s', e)
 
@@ -350,7 +360,7 @@ class LoggerManager:
       self.process_command(command)
 
   ############################
-  async def _check_loggers(self, websocket=None):
+  async def check_loggers(self, websocket=None):
     """Check logger status. If websocket, send status to websocket."""
     if websocket:
       await websocket.send(json.dumps({'host_id': self.host_id}))
@@ -370,22 +380,26 @@ class LoggerManager:
     # If we have a websocket, send status updates to it. Also listen
     # to it for command updates.
     if self.websocket:
-      async with websockets.connect('ws://' + self.websocket) as websocket:
-        get_commands_task = asyncio.ensure_future(
-          self._get_websocket_commands(websocket))
-        check_loggers_task = asyncio.ensure_future(
-          self._check_loggers(websocket))
-        done, pending = await asyncio.wait([get_commands_task,
-                                            check_loggers_task],
-                                           return_when=asyncio.FIRST_COMPLETED)
-      # When here, either check_loggers_tast or get_commands_task has
-      # ended. Terminate the other task.
-      for task in pending:
-        task.cancel()
+      try:
+        async with websockets.connect('ws://' + self.websocket) as websocket:
+          get_commands_task = asyncio.ensure_future(
+            self._get_websocket_commands(websocket))
+          check_loggers_task = asyncio.ensure_future(
+            self.check_loggers(websocket))
+          done, pending = await asyncio.wait([get_commands_task,
+                                              check_loggers_task],
+                                             return_when=asyncio.FIRST_COMPLETED)
+        # When here, either check_loggers_tast or get_commands_task has
+        # ended. Terminate the other task.
+        for task in pending:
+          task.cancel()
+      except OSError as e:
+        logging.error('Failed to connect to websocket on %s: %s',
+                      self.websocket, str(e))
 
     # If not websocket, just start logger-checking loop
     else:
-      await self._check_loggers()
+      await self.check_loggers()
 
   ############################
   def run(self):
@@ -418,11 +432,14 @@ class LoggerManager:
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
+
+  # Starting conditions - which cruise config and mode?
   parser.add_argument('--config', dest='config', action='store', default=None,
                       help='Name of cruise configuration file to load.')
   parser.add_argument('--mode', dest='mode', action='store', default=None,
                       help='Optional name of mode to start system in.')
 
+  # Where we take commands from - console or websocket?
   parser.add_argument('--console', dest='console', action='store_true',
                       help='If specified, attempt to read stdin for further '
                       'commands')
@@ -433,11 +450,12 @@ if __name__ == '__main__':
   parser.add_argument('--host_id', dest='host_id', action='store', default='',
                       help='Host ID to send to websocket to identify ourselves')
 
+  # Loop parameters for LoggerRunner - how frequently to check?
   parser.add_argument('--interval', dest='interval', action='store',
                       type=float, default=1,
                       help='How many seconds to sleep between logger checks.')
   parser.add_argument('--max_tries', dest='max_tries', action='store',
-                      type=int, default=1,
+                      type=int, default=3,
                       help='How many seconds to sleep between logger checks.')
 
   parser.add_argument('-v', '--verbosity', dest='verbosity',

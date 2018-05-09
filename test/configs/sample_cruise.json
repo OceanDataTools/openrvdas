@@ -78,6 +78,7 @@
     "configs": {
         "off": {},
         "knud->net": {
+            "host_id": "knud.host",
             "name": "knud->net",
             "readers": {
                 "class": "SerialReader",
@@ -258,6 +259,7 @@
             }
         },
         "knud->file/net/db": {
+            "host_id": "knud.host",
             "name": "knud->net/file/db",
             "readers": {
                 "class": "SerialReader",
