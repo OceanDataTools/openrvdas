@@ -158,8 +158,11 @@ class TestInMemoryServerAPI(unittest.TestCase):
     with self.assertRaises(ValueError):
       api.get_configs('NBP1701', 'invalid_mode')
     self.assertEqual(api.get_configs('NBP1701', 'port'),
-                     {'knud': 'off', 'gyr1': 'gyr1->net',
-                      'mwx1': 'mwx1->net', 's330': 'off'})
+                      {'gyr1': {'config gyr1->net'},
+                       'knud': {},
+                       'mwx1': {'config mwx1->net'},
+                       's330': {}
+                      })
 
     self.assertDictEqual(api.get_loggers('NBP1700'),
                          {'knud': {'configs': [

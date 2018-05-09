@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-API for interacting with data store.
+API for interacting with data store. Implementations should subclass.
 """
 
 import argparse
@@ -162,23 +162,35 @@ class ServerAPI:
     raise NotImplementedError('get_configs must be implemented by subclass')
 
   #############################
-  def get_logger_configs(self, cruise_id, logger_id):
+  def get_logger_config_names(self, cruise_id, logger_id):
     """Retrieve list of config names that are valid for the specified logger .
-    > api.get_logger_configs('NBP1700', 'knud')
+    > api.get_logger_config_names('NBP1700', 'knud')
           ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
     """
     raise NotImplementedError(
-      'get_logger_configs must be implemented by subclass')
+      'get_logger_config_names must be implemented by subclass')
 
   #############################
-  def get_mode_config(self, cruise_id, logger_id, mode=None):
+  def get_logger_config(self, cruise_id, logger_id, mode=None):
     """Retrieve the config associated with the specified logger
     in the specified mode. If mode is omitted, retrieve config
     associated with the cruise's current mode.
-    > api.get_mode_config('NBP1700', 'knud')
+    > api.get_logger_config('NBP1700', 'knud')
            { config_spec }
    """
-    raise NotImplementedError('get_mode_config must be implemented by subclass')
+    raise NotImplementedError(
+      'get_logger_config must be implemented by subclass')
+
+  #############################
+  def get_logger_config_name(self, cruise_id, logger_id, mode=None):
+    """Retrieve the name of the config associated with the specified logger
+    in the specified mode. If mode is omitted, retrieve config name
+    associated with the cruise's current mode.
+    > api.get_logger_config_name('NBP1700', 'knud')
+           knud->net
+   """
+    raise NotImplementedError(
+      'get_logger_config_name must be implemented by subclass')
 
   ############################
   # Methods for manipulating the desired state via API to indicate
@@ -193,9 +205,9 @@ class ServerAPI:
     raise NotImplementedError('set_mode must be implemented by subclass')
 
   #############################
-  def set_logger_config(self, cruise_id, logger, config):
+  def set_logger_config_name(self, cruise_id, logger, config_name):
     """Set specified logger to new config.
-    > api.set_logger_config('NBP1700', 'knud', 'knud->file/net/db')
+    > api.set_logger_config_name('NBP1700', 'knud', 'knud->file/net/db')
     """
     raise NotImplementedError(
       'set_logger_config must be implemented by subclass')

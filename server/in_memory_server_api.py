@@ -109,20 +109,8 @@ class InMemoryServerAPI(ServerAPI):
     the cruise's current logger configs. If cruise_id is omitted,
     return configs for *all* cruises."""
     if cruise_id:
-      # If mode is specified, get the configs associated with that mode
-      if mode:
-        cruise_config = self.get_cruise_config(cruise_id)
-        if not cruise_config:
-          raise ValueError('Cruise "%s" not found in data store' % cruise_id)
-        modes = cruise_config.get('modes', None)
-        if not modes:
-          raise ValueError('Cruise "%s" has no modes??' % cruise_id)
-        if not mode in modes:
-          raise ValueError('Cruise "%s" has no mode "%s"' % (cruise_id, mode))
-        return modes[mode]
-
-      # If mode is not specified, return current mode for each logger
-      return {logger:self.get_config(cruise_id, logger)
+      loggers = self.get_loggers(cruise_id)
+      return {logger:self.get_logger_config(cruise_id, logger, mode)
               for logger in self.get_loggers(cruise_id)}
 
     # If cruise was omitted, return configs for *all* cruises. We
@@ -138,58 +126,59 @@ class InMemoryServerAPI(ServerAPI):
     return configs
 
   #############################
-  def get_logger_configs(self, cruise_id, logger_id):
+  def get_logger_config_names(self, cruise_id, logger_id):
     """Retrieve list of config names that are valid for the specified logger .
-    > api.get_logger_configs('NBP1700', 'knud')
+    > api.get_logger_config_names('NBP1700', 'knud')
           ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
     """
     logger = self.get_logger(cruise_id, logger_id)
     return logger.get('configs', [])
 
   ############################
-  def get_mode_config(self, cruise_id, logger_id, mode=None):
-    """Retrieve the config associated with the specified logger
-    in the specified mode. If mode is omitted, retrieve logger's
+  def get_logger_config(self, cruise_id, logger_id, mode=None):
+    """Retrieve the config associated with the specified logger in the
+    specified mode. If mode is omitted, retrieve logger's current
+    config. If no config is defined, return empty config: {}."""
+    config_name = self.get_logger_config_name(cruise_id, logger_id, mode)
+
+    if config_name is None:
+      return {}
+    return self.get_config(cruise_id, config_name)
+
+  ############################
+  def get_logger_config_name(self, cruise_id, logger_id, mode=None):
+    """Retrieve name of the config associated with the specified logger
+    in the specified mode. If mode is omitted, retrieve name of logger's
     current config."""
 
-    # First, get map of configs
-    cruise_config = self.get_cruise_config(cruise_id)
-    if not cruise_config:
-      raise ValueError('No cruise config found for "%s"?!?' % cruise_id)
-      
-    configs = cruise_config.get('configs', None)
-    if not configs:
-      raise ValueError('Cruise "%s" has no configs?!?' % cruise_id)
-
-    # If mode is not specified, get logger's current config name, then
-    # look up matching config.
+    # If mode is not specified, get logger's current config name
     if mode is None:
       cruise_configs = self.logger_config.get(cruise_id)
       if not cruise_configs:
         raise ValueError('No config defined for cruise "%s"?!?' % cruise_id)
+      return cruise_configs.get(logger_id, None)
 
-      config_name = cruise_configs.get(logger_id, None)
-      return configs.get(config_name, None)
-    
     # If mode is specified, look up the config associated with this
-    # logger in that mode
+    # logger in that mode. First, get map of configs
+    cruise_config = self.get_cruise_config(cruise_id)
+    if not cruise_config:
+      raise ValueError('No cruise config found for "%s"?!?' % cruise_id)
     cruise_modes = cruise_config.get('modes', None)
     if not cruise_modes:
       raise ValueError('Cruise "%s" has no modes?!?' % cruise_id)
-
     logger_config_dict = cruise_modes.get(mode, None)
     if logger_config_dict is None:
       raise ValueError('Cruise "%s" has no mode "%s"?!?' % (cruise_id, mode))
 
-    config_name = logger_config_dict.get(logger, None)
+    # Should we return None here if no config is defined instead of
+    # raising an exception? That would be consistent with the
+    # philosphy of "no config == empty config"
+    config_name = logger_config_dict.get(logger_id, None)
     if not config_name:
+      #raise ValueError('Cruise %s, logger %s mode %s no config name found' %
+      #                 (cruise_id, logger_id, mode))
       return None
-
-    config = configs.get(config_name, None)
-    if not config:
-      raise ValueError('Cruise "%s" config "%s" not found?!?' %
-                       (cruise_id, config_name))
-    return config
+    return config_name
 
   ############################
   # Methods for manipulating the desired state via API to indicate
@@ -215,51 +204,26 @@ class InMemoryServerAPI(ServerAPI):
 
     # Here's s slow carefully-checked way of setting configs:
     #for logger, config in modes[mode].items():
-    #  self.set_logger_config(cruise_id, logger, config)
+    #  self.set_logger_config_name(cruise_id, logger, config)
 
     # Q: At this point should we could signal an update. Or we could
     # count on the API calling signal_update(). Or count on the update
     # being picked up by polling. For now, don't signal the update.
 
-    #logging.warning('Signaling update')
-    #self.signal_update(cruise_id)
+    logging.info('Signaling update')
+    self.signal_update(cruise_id)
 
   ############################
-  def set_logger_config(self, cruise_id, logger, config):
-    """Set specified logger to new config."""
-
-    # NOTE: checking below is commented out because we're assigning a
-    # config spec, not a config name. So we don't necessarily have any
-    # way of checking whether it's compatible with the specified
-    # logger.
-    
-    ## First, follow down the data structure to make sure it's a valid
-    ## config for this logger.
-    #cruise_config = self.get_cruise_config(cruise_id)
-    #if not cruise_config:
-    #  raise ValueError('Cruise "%s" not found in data store' % cruise_id)
-    #loggers = cruise_config.get('loggers', None)
-    #if not loggers:
-    #  raise ValueError('Cruise "%s" has no loggers??' % cruise_id)
-    #logger_spec = loggers.get(logger, None)
-    #if not logger_spec:
-    #  raise ValueError('Cruise "%s" has no logger "%s"??' % (cruise_id, logger))
-    #configs = logger_spec.get('configs', None)
-    #if not configs:
-    #  raise ValueError('Logger "%s" in cruise "%s" has no configs??' %
-    #                   (logger, cruise_id))
-    #if not config in configs:
-    #  raise ValueError('Config "%s" not valid for logger "%s" in cruise "%s"' %
-    #                   (config, logger, cruise_id))
-
-    # If all is good, assign it
+  def set_logger_config_name(self, cruise_id, logger, config_name):
+    """Set specified logger to new config. NOTE: we have no way to check
+    whether logger is compatible with config, so we rely on whoever is
+    calling us to have made that determination."""
     if not cruise_id in self.logger_config:
       self.logger_config[cruise_id] = {}
-    self.logger_config[cruise_id][logger] = config
+    self.logger_config[cruise_id][logger] = config_name
 
-    # Q: At this point should we notify someone (the LoggerServer?)
-    # that config has changed? A: For now, we're relying on someone
-    # calling signal_update() once they've made the changes they want.
+    logging.info('Signaling update')
+    self.signal_update(cruise_id)
 
   #############################
   # API method to register a callback. When the data store changes,
@@ -334,7 +298,9 @@ class InMemoryServerAPI(ServerAPI):
       del self.logger_config[cruise_id]
     if cruise_id in self.callbacks:
       del self.callbacks[cruise_id]
-      
+
+  ############################
+  # Methods for manually constructing/modifying a cruise spec via API
   #def add_cruise(self, cruise_id, start=None, end=None)
   #def add_mode(self, cruise_id, mode)
   #def delete_mode(self, cruise_id, mode)

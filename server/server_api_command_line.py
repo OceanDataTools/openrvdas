@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """Command line interface for server API.
 
-See server/server_api.py for full documentation on the ServerAPI.
+Includes a script that maintains an InMemoryServerAPI instance and
+allows you to modify it. Run via
+
+    server/server_api_command_line.py
+
+and type "help" for list of valid commands.
+
+Also see server/server_api.py for full documentation on the ServerAPI.
 """
 
 import argparse
 import asyncio
+import atexit
 import json
 import logging
 import os
 import pprint
 import queue
+import readline
 import sys
 import threading
 import time
@@ -32,7 +41,7 @@ def get_stdin_commands(api):
   """Read stdin for commands and process them."""
   while True:
     command = input('command? ')
-    process_command(command)
+    process_command(api, command)
 
 ############################
 def show_commands():
@@ -53,12 +62,12 @@ def show_commands():
     ('set_mode <cruise_id>  <name of mode>', 'Set new current mode\n'),
 
     ('loggers <cruise_id>', 'Get list of loggers for specified cruise'),
+    ('configs <cruise_id>', 'Get names of current configurations cruise id\n'),
+
     ('logger_configs <cruise_id> <logger>',
      'Get names of all configurations for specified logger'),
     ('set_logger_config_name <cruise_id> <logger name> <name of logger config>',
-     'Set logger to named configuration'),
-    ('set_logger_config <cruise_id> <logger name> <JSON encoding of a config>',
-     'Set logger to new configuration\n'),
+     'Set logger to named configuration\n'),
 
     ('quit', 'Quit gracefully')      
   ]
@@ -67,7 +76,7 @@ def show_commands():
     print('  %s\n      %s' % (command, desc))
 
 ############################
-def process_command(command):
+def process_command(api, command):
   """Parse and execute the command string we've received."""
   # cruises
   try:
@@ -129,14 +138,9 @@ def process_command(command):
     # logger_configs <cruise_id> <logger>
     elif command.find('logger_configs ') == 0:
       (logger_cmd, cruise_id, logger_name) = command.split(maxsplit=2)
-      logger_configs = api.get_logger_configs(cruise_id, logger_name)
+      logger_configs = api.get_logger_config_names(cruise_id, logger_name)
       print('Configs for %s:%s: %s' %
             (cruise_id, logger_name, ', '.join(logger_configs)))
-    # set_logger_config <logger name> <JSON encoding of a config>
-    elif command.find('set_logger_config ') == 0:
-      (logger_cmd, cruise_id, logger, config_json) = command.split(maxsplit=3)
-      logging.info('Setting logger %s to config %s', logger, config_json)
-      api.set_logger_config(cruise_id, logger, json.loads(config_json))
 
     # set_logger_config_name <cruise_id> <logger name> <name of logger config>
     elif command.find('set_logger_config_name ') == 0:
@@ -145,11 +149,18 @@ def process_command(command):
       logging.info('Setting logger %s to config %s', logger_name, config_name)
 
       # Is this a valid config for this logger?
-      if not config_name in api.get_logger_configs(cruise_id, logger_name):
+      if not config_name in api.get_logger_config_names(cruise_id, logger_name):
         raise ValueError('Config "%s" is not valid for logger "%s"'
                          % (config_name, logger_name))
-      config = api.get_config(cruise_id, config_name)
-      api.set_logger_config(cruise_id, logger_name, config)
+      api.set_logger_config_name(cruise_id, logger_name, config_name)
+
+    # configs <cruise_id>
+    elif command.find('configs ') == 0:
+      (config_cmd, cruise_id) = command.split(maxsplit=1)
+      config_names = {logger_id:api.get_logger_config_name(cruise_id, logger_id)
+                 for logger_id in api.get_loggers(cruise_id)}
+      for logger_id, config_name in config_names.items():
+        print('%s: %s' % (logger_id, config_name))
 
     ## status
     #elif command == 'status':
@@ -193,6 +204,17 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
+  # Keep a history file around 
+  histfile = os.path.join(os.path.expanduser("~"),'.rvdas_command_line_history')
+  try:
+    readline.read_history_file(histfile)
+    # default history len is -1 (infinite), which may grow unruly
+    readline.set_history_length(1000)
+  except FileNotFoundError:
+    pass
+  atexit.register(readline.write_history_file, histfile)
+
+  # Create API and start taking commands
   api = InMemoryServerAPI()
   get_stdin_commands(api)
   
