@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""API implementation for interacting with an in-memory data store,
-along with a command-line script that exercises it.
+"""API implementation for interacting with an in-memory data store.
 
-See server/server_api.py for full documentation on the ServerAPI.
+See server/server_api_command_line.py for a sample script that
+exercises this class. Also see server/server_api.py for full
+documentation on the ServerAPI.
 """
 
 import argparse
@@ -84,7 +85,22 @@ class InMemoryServerAPI(ServerAPI):
     if not logger in loggers:
       raise ValueError('No logger "%s" found in cruise "%s"' %
                        (logger, cruise_id))
-    return loggers.get(logger_id)
+    return loggers.get(logger)
+
+  ############################
+  def get_config(self, cruise_id, config_name):
+    """Retrieve the config associated with the specified name."""
+    cruise_config = self.get_cruise_config(cruise_id)
+    if not cruise_id:
+      raise ValueError('No cruise config defined that would allow '
+                       'setting logger config by name')
+    configs = cruise_config.get('configs', None)
+    if configs is None:
+      raise ValueError('No "configs" in cruise config')
+    config = configs.get(config_name, None)
+    if config is None:
+      raise ValueError('No config "%s" in cruise config' % config_name)
+    return config
 
   ############################
   def get_configs(self, cruise_id=None, mode=None):
@@ -121,8 +137,17 @@ class InMemoryServerAPI(ServerAPI):
       configs.update(munged_configs)
     return configs
 
+  #############################
+  def get_logger_configs(self, cruise_id, logger_id):
+    """Retrieve list of config names that are valid for the specified logger .
+    > api.get_logger_configs('NBP1700', 'knud')
+          ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
+    """
+    logger = self.get_logger(cruise_id, logger_id)
+    return logger.get('configs', [])
+
   ############################
-  def get_config(self, cruise_id, logger_id, mode=None):
+  def get_mode_config(self, cruise_id, logger_id, mode=None):
     """Retrieve the config associated with the specified logger
     in the specified mode. If mode is omitted, retrieve logger's
     current config."""
@@ -203,24 +228,29 @@ class InMemoryServerAPI(ServerAPI):
   def set_logger_config(self, cruise_id, logger, config):
     """Set specified logger to new config."""
 
-    # First, follow down the data structure to make sure it's a valid
-    # config for this logger.
-    cruise_config = self.get_cruise_config(cruise_id)
-    if not cruise_config:
-      raise ValueError('Cruise "%s" not found in data store' % cruise_id)
-    loggers = cruise_config.get('loggers', None)
-    if not loggers:
-      raise ValueError('Cruise "%s" has no loggers??' % cruise_id)
-    logger_spec = loggers.get(logger, None)
-    if not logger_spec:
-      raise ValueError('Cruise "%s" has no logger "%s"??' % (cruise_id, logger))
-    configs = logger_spec.get('configs', None)
-    if not configs:
-      raise ValueError('Logger "%s" in cruise "%s" has no configs??' %
-                       (logger, cruise_id))
-    if not config in configs:
-      raise ValueError('Config "%s" not valid for logger "%s" in cruise "%s"' %
-                       (config, logger, cruise_id))
+    # NOTE: checking below is commented out because we're assigning a
+    # config spec, not a config name. So we don't necessarily have any
+    # way of checking whether it's compatible with the specified
+    # logger.
+    
+    ## First, follow down the data structure to make sure it's a valid
+    ## config for this logger.
+    #cruise_config = self.get_cruise_config(cruise_id)
+    #if not cruise_config:
+    #  raise ValueError('Cruise "%s" not found in data store' % cruise_id)
+    #loggers = cruise_config.get('loggers', None)
+    #if not loggers:
+    #  raise ValueError('Cruise "%s" has no loggers??' % cruise_id)
+    #logger_spec = loggers.get(logger, None)
+    #if not logger_spec:
+    #  raise ValueError('Cruise "%s" has no logger "%s"??' % (cruise_id, logger))
+    #configs = logger_spec.get('configs', None)
+    #if not configs:
+    #  raise ValueError('Logger "%s" in cruise "%s" has no configs??' %
+    #                   (logger, cruise_id))
+    #if not config in configs:
+    #  raise ValueError('Config "%s" not valid for logger "%s" in cruise "%s"' %
+    #                   (config, logger, cruise_id))
 
     # If all is good, assign it
     if not cruise_id in self.logger_config:
