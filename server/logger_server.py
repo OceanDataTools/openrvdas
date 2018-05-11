@@ -122,7 +122,8 @@ CRUISE_ID_SEPARATOR = ':'
 ################################################################################
 class LoggerServer:
   ############################
-  def __init__(self, api=None, websocket=None, interval=0.5, max_tries=3,
+  def __init__(self, api=None, websocket=None, host_id=None,
+               interval=0.5, max_tries=3,
                verbosity=0, logger_verbosity=0):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
@@ -134,9 +135,15 @@ class LoggerServer:
           for LoggerManagers to connect to for dispatches of logger
           configs they should run.
 
+    host_id - optional id by which we identify ourselves. Tasks that
+         include a "host_id" specification will only be dispatched to
+         the matching host. For now, all tasks without a host_id
+         specification will be run on the local machine.
+
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a failed server before giving up
+
     """
     # Set up logging levels for both ourselves and for the loggers we
     # start running. Attach a Handler that will write log messages to
@@ -152,6 +159,7 @@ class LoggerServer:
     if not issubclass(type(api), ServerAPI):
       raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
     self.api = api
+    self.host_id = host_id or None
     self.interval = interval
     self.max_tries = max_tries
     self.quit_flag = False
@@ -206,6 +214,7 @@ class LoggerServer:
   # This is a consumer - it takes a message and does something with it
   async def queued_consumer(self, message, client_id):
    logging.debug('Received message from client #%d: %s', client_id, message)
+   logging.warning('Received message from client #%d: %s', client_id, message)
    self.receive_queue[client_id].put(message)
     
   ############################
@@ -276,9 +285,8 @@ class LoggerServer:
       # Now dispatch to the hosts that we *do* want stuff to be
       # running on.
       for host_id, configs in config_map.items():
-        # host_id == None indicates configs with no host restriction;
-        # we run these locally
-        if host_id is None:
+        # host_id == self.host_id indicates that we should run locally
+        if host_id == self.host_id:
           self.logger_runner.set_configs(configs)
         else:
           self._set_host_configs(host_id, configs)
@@ -345,12 +353,12 @@ class LoggerServer:
         
         # If there is a host restriction, set up a dict for configs
         # restricted to that host. If no restriction, file config
-        # under key 'None' to run locally.
+        # under key self.host_id (which may be 'None') to run locally.
         logging.debug('Config for logger %s, cruise %s: %s',
                         logger, cruise_id, config)
         if not config:
           continue
-        host_id = config.get('host_id', None)
+        host_id = config.get('host_id', self.host_id)
         if not host_id in config_map:
           config_map[host_id] = {}
         cruise_and_logger = cruise_id + CRUISE_ID_SEPARATOR + logger
@@ -388,6 +396,23 @@ class LoggerServer:
                                                     clear_errors=True)
         # Write the returned statuses to data store
         api.update_status(status)
+
+        # Iterate through our clients, grabbing one status from each
+        # (for fairness) until we've got them all.
+        # NOTE: THIS SHOULD BE IN A SEPARATE THREAD!
+        while True:
+          got_status = False
+          for client_id, receive_queue in self.receive_queue.items():
+            try:
+              status = self.receive_queue[client_id].get_nowait()
+              logging.warning('Got status from %s', client_id)
+              api.update_status(status)
+              got_status = True
+            except queue.Empty:
+              pass
+          if not got_status:
+            break
+        logging.warning('Done getting status')
 
         # Nap for a bit before checking again
         time.sleep(self.interval)
@@ -428,6 +453,8 @@ if __name__ == '__main__':
                       help='Host:port on which to open a websocket server '
                       'for LoggerManagers that are willing to accept config '
                       'dispatches.')
+  parser.add_argument('--host_id', dest='host_id', action='store', default='',
+                      help='Host ID by which we identify ourselves')
 
   parser.add_argument('--interval', dest='interval', action='store',
                       type=float, default=1,
@@ -451,7 +478,9 @@ if __name__ == '__main__':
 
   api = InMemoryServerAPI()
   logger_server = LoggerServer(api=api, websocket=args.websocket,
-                               interval=args.interval, max_tries=args.max_tries,
+                               host_id=args.host_id,
+                               interval=args.interval,
+                               max_tries=args.max_tries,
                                verbosity=args.verbosity,
                                logger_verbosity=args.logger_verbosity)
   logger_server_thread = threading.Thread(target=logger_server.run)
@@ -490,12 +519,16 @@ if __name__ == '__main__':
   get_commands_thread.start()
 
   if logger_server.websocket_server:
-
     logger_server.websocket_server.run()
-  else:
-    while get_commands_thread.is_alive():
-      time.sleep(1)
-    
+
+
+  #else:
+  #  while get_commands_thread.is_alive():
+  #    logging.warning('cmd is alive')
+  #    time.sleep(1)
+  logging.warning('wait command')
+  get_commands_thread.join() 
+  logging.warning('wait serv')
   logger_server.quit()
   logger_server_thread.join()
   
