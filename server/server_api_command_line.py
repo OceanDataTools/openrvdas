@@ -12,22 +12,16 @@ Also see server/server_api.py for full documentation on the ServerAPI.
 """
 
 import argparse
-import asyncio
 import atexit
 import json
 import logging
 import os
-import pprint
-import queue
 import readline
 import sys
-import threading
-import time
 
 sys.path.append('.')
 
-from logger.utils.read_json import read_json, parse_json
-
+from logger.utils.read_json import read_json
 from server.server_api import ServerAPI
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
@@ -39,6 +33,9 @@ LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 ############################
 def get_stdin_commands(api):
   """Read stdin for commands and process them."""
+  if not issubclass(type(api), ServerAPI):
+    raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
+
   while True:
     command = input('command? ')
     process_command(api, command)
@@ -88,6 +85,8 @@ def process_command(api, command):
         print('No cruises loaded')
 
     # load_cruise <cruise config file name>
+    elif command == 'load_cruise':
+      raise ValueError('format: load_cruise <cruise config file name>')
     elif command.find('load_cruise ') == 0:
       (load_cmd, filename) = command.split(maxsplit=1)
       logging.info('Loading cruise config from %s', filename)
@@ -98,12 +97,16 @@ def process_command(api, command):
         logging.error('Unable to find file "%s"', filename)
 
     # set_cruise <JSON encoding of a cruise>
+    elif command == 'set_cruise':
+      raise ValueError('format: set_cruise <JSON encoding of a cruise')
     elif command.find('set_cruise ') == 0:
       (cruise_cmd, cruise_json) = command.split(maxsplit=1)
       logging.info('Setting cruise config to %s', cruise_json)
       api.load_cruise(json.loads(cruise_json))
 
     # delete_cruise <cruise_id>
+    elif command == 'delete_cruise':
+      raise ValueError('format: delete_cruise <cruise id>')
     elif command.find('delete_cruise ') == 0:
       (cruise_cmd, cruise_id) = command.split(maxsplit=1)
       logging.info('Deleting cruise %s', cruise_id)
@@ -111,18 +114,24 @@ def process_command(api, command):
 
     ############################
     # mode <cruise_id>
+    elif command == 'mode':
+      raise ValueError('format: mode <cruise id>')
     elif command.find('mode ') == 0:
       (mode_cmd, cruise_id) = command.split(maxsplit=1)
       mode = api.get_mode(cruise_id)
       print('Current mode for %s: %s' % (cruise_id, mode))
 
     # modes <cruise_id>
+    elif command == 'modes':
+      raise ValueError('format: modes <cruise id>')
     elif command.find('modes ') == 0:
       (mode_cmd, cruise_id) = command.split(maxsplit=1)
       modes = api.get_modes(cruise_id)
       print('Modes for %s: %s' % (cruise_id, ', '.join(modes)))
 
     # set_mode <cruise_id> <mode>
+    elif command == 'set_mode':
+      raise ValueError('format: set_mode <cruise id> <mode>')
     elif command.find('set_mode ') == 0:
       (mode_cmd, cruise_id, mode_name) = command.split(maxsplit=2)
       logging.info('Setting mode to %s', mode_name)
@@ -130,12 +139,16 @@ def process_command(api, command):
 
     ############################
     # loggers <cruise_id>
+    elif command == 'loggers':
+      raise ValueError('format: loggers <cruise id>')
     elif command.find('loggers ') == 0:
       (loggers_cmd, cruise_id) = command.split(maxsplit=1)
       loggers = api.get_loggers(cruise_id)
       print('Loggers for %s: %s' % (cruise_id, ', '.join(loggers)))
 
     # logger_configs <cruise_id> <logger>
+    elif command == 'logger_configs':
+      raise ValueError('format: logger_configs <cruise_id> <logger>')
     elif command.find('logger_configs ') == 0:
       (logger_cmd, cruise_id, logger_name) = command.split(maxsplit=2)
       logger_configs = api.get_logger_config_names(cruise_id, logger_name)
@@ -143,6 +156,8 @@ def process_command(api, command):
             (cruise_id, logger_name, ', '.join(logger_configs)))
 
     # set_logger_config_name <cruise_id> <logger name> <name of logger config>
+    elif command == 'set_logger_config_name':
+      raise ValueError('format: set_logger_config_name <cruise_id> <logger name> <name of logger config>')
     elif command.find('set_logger_config_name ') == 0:
       (logger_cmd, cruise_id,
        logger_name, config_name) = command.split(maxsplit=3)
@@ -155,6 +170,8 @@ def process_command(api, command):
       api.set_logger_config_name(cruise_id, logger_name, config_name)
 
     # configs <cruise_id>
+    elif command == 'configs':
+      raise ValueError('format: configs <cruise id>')
     elif command.find('configs ') == 0:
       (config_cmd, cruise_id) = command.split(maxsplit=1)
       config_names = {logger_id:api.get_logger_config_name(cruise_id, logger_id)
@@ -186,7 +203,6 @@ def process_command(api, command):
     
 ################################################################################
 if __name__ == '__main__':
-  import argparse
   from server.in_memory_server_api import InMemoryServerAPI
 
   parser = argparse.ArgumentParser()
