@@ -16,6 +16,7 @@ import atexit
 import json
 import logging
 import os
+import pprint
 import readline
 import sys
 
@@ -52,8 +53,6 @@ def show_commands():
     ('delete_cruise <cruise id>',
      'Delete a cruise from the server\n'),
     
-    #('status', 'Print current logger status to console\n'),
-
     ('mode <cruise_id>', 'Get current mode of specified cruise'),
     ('modes <cruise_id>', 'Get all modes of specified cruise'),
     ('set_mode <cruise_id>  <name of mode>', 'Set new current mode\n'),
@@ -65,6 +64,11 @@ def show_commands():
      'Get names of all configurations for specified logger'),
     ('set_logger_config_name <cruise_id> <logger name> <name of logger config>',
      'Set logger to named configuration\n'),
+
+    ('status [<num_records>]',
+     'Print current logger status to console. If an integer num_records is\n'
+     '      provided, output that many of the most recent records. If\n'
+     '      num_records is negative, output all records in storage\n'),
 
     ('quit', 'Quit gracefully')      
   ]
@@ -179,12 +183,19 @@ def process_command(api, command):
       for logger_id, config_name in config_names.items():
         print('%s: %s' % (logger_id, config_name))
 
-    ## status
-    #elif command == 'status':
-    #  if self.console:
-    #    # Do a non-updating status check
-    #    status = self.logger_runner.check_loggers()
-    #    print(status)
+    # status
+    elif command == 'status':
+      status_list = api.get_status()
+      if status_list:
+        timestamp, status = status_list[0]
+        print('%s: %s' % (timestamp, pprint.pformat(status)))
+
+    # status <num_records>
+    elif command.find('status ') == 0:
+      (status_cmd, num_reports) = command.split(maxsplit=1)
+      status_list = api.get_status(int(num_reports))
+      for (timestamp, status) in status_list:
+        print('%s: %s' % (timestamp, status))
 
     # Quit gracefully
     elif command == 'quit':

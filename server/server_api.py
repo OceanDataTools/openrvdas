@@ -237,6 +237,14 @@ class ServerAPI:
     """Save/register the loggers' retrieved status report with the API."""
     raise NotImplementedError('update_status must be implemented by subclass')
 
+  ############################
+  # Methods for getting status data from API
+  ############################
+  def get_status(self, num_reports=1):
+    """Retrieve the most-recent specified number of status reports. If the
+    number is negative, retrieve them all."""
+    raise NotImplementedError('get_status must be implemented by subclass')
+
   #############################
   """Methods below are used to load/create/modify the data store's model
   of a cruise."""

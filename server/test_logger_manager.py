@@ -14,6 +14,10 @@ sys.path.append('.')
 from logger.readers.network_reader import NetworkReader
 from server.logger_manager import LoggerManager
 
+from server.in_memory_server_api import InMemoryServerAPI
+from server.server_api_command_line import process_command
+
+
 sample_data = [
   'Permission is hereby granted, free of charge, to any person obtaining a copy',
   'of this software and associated documentation files (the "Software"), to deal',
@@ -49,7 +53,7 @@ sample_cruise = {
       "name": "sample->net",
       "readers": {
         "class": "TextFileReader",
-        "kwargs": {"interval": 0.5,
+        "kwargs": {"interval": 0.2,
                    "file_spec": "fill this in" }
       },
       "transforms": {
@@ -65,7 +69,7 @@ sample_cruise = {
       "name": "sample->file",
       "readers": {
         "class": "TextFileReader",
-        "kwargs": {"interval": 0.5,
+        "kwargs": {"interval": 0.2,
                    "file_spec": "fill this in" }
       },
       "transforms": {
@@ -113,44 +117,28 @@ class TestLoggerManagerAPI(unittest.TestCase):
   ############################
   def test_basic(self):
 
+    ###############################
+    # Create LoggerManager and test it
+    api = InMemoryServerAPI()
+    logger_manager = LoggerManager(api=api)
+
     ############################
-    def network_reader():
+    def run_commands(logger_manager):
       reader = NetworkReader(network=':6220')
+      api = logger_manager.api
+      time.sleep(1)
+
+      process_command(api, 'load_cruise %s' % self.cruise_filename)
+      process_command(api, 'set_mode NBP1700 port')      
       for i in range(4):
         self.assertEqual(reader.read(), 'TestLoggerManager ' + sample_data[i])
       logging.info('NetworkReader done')
+      logger_manager.quit()
 
-    ############################
-    def run_commands(logger_manager):
-      time.sleep(1)
-      logger_manager.process_command('load_cruise %s' % self.cruise_filename)
-      logger_manager.process_command('set_mode port')      
-      time.sleep(2.5)
-      logger_manager.process_command('quit')
-
-    ############################
-    def run_commands(logger_manager):
-      time.sleep(1)
-      logger_manager.process_command('load_cruise %s' % self.cruise_filename)
-      logger_manager.process_command('set_mode port')      
-      time.sleep(2.5)
-      logger_manager.process_command('quit')
-
-    ###############################
-    # Create LoggerManager and test it
-    logger_manager = LoggerManager()
-
-    network_reader_thread = threading.Thread(target=network_reader)
-    network_reader_thread.start()
-    
-    command_thread = threading.Thread(target=run_commands,
-                                      args=(logger_manager,))
-    command_thread.start()
-
+    cmd_thread = threading.Thread(target=run_commands, args=(logger_manager,))
+    cmd_thread.start()
     logger_manager.run()
-
-    network_reader_thread.join()
-    command_thread.join()
+    cmd_thread.join()
     
 ################################################################################
 if __name__ == '__main__':
@@ -161,10 +149,9 @@ if __name__ == '__main__':
                       help='Increase output verbosity')
   args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+  LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   logging.basicConfig(format=LOGGING_FORMAT)
-
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
   

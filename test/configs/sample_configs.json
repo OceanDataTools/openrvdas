@@ -1,0 +1,187 @@
+// Sample config file that could be fed directly to a LoggerRunner, e.g. via
+//
+//    server/logger_runner.py --config test/configs/sample_configs.json -v
+{
+        "off": {},
+        "knud->net": {
+            "host_id": "knud.host",
+            "name": "knud->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_knud",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "knud"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        },
+        "gyr1->net": {
+            "name": "gyr1->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_gyr1",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "gyr1"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        },
+        "mwx1->net": {
+            "name": "mwx1->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_mwx1",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "mwx1"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        },
+        "s330->net": {
+            "name": "s330->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_s330",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "s330"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        },
+        "eng1->net": {
+            "name": "eng1->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_eng1",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "eng1"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        },
+        "rtmp->net": {
+            "name": "rtmp->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_rtmp",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "rtmp"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        }
+}

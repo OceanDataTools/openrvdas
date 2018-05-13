@@ -263,6 +263,18 @@ class InMemoryServerAPI(ServerAPI):
     logging.info('Got status: %s', status)
     self.status.append( (time.time(), status) )
 
+  ############################
+  # Methods for getting status data from API
+  ############################
+
+  def get_status(self, num_reports=1):
+    """Retrieve the most-recent specified number of status reports. If the
+    number is negative, retrieve them all."""
+    if num_reports < 1:
+      return self.status
+    else:
+      return self.status[-num_reports:]
+
   #############################
   # Methods to modify the data store
   ############################

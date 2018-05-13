@@ -2,30 +2,81 @@
 """Low-level class to start/stop loggers according passed in
 definitions and commands.
 
-Typically used by a higher-level class like LoggerManager
+Intended to be used in one of four ways:
 
-Typical use:
+(See note below about simulated serial ports if you want to try the
+command lines below)
 
-  # Run the loggers from the "underway" mode of that configuration
-  server/logger_manager.py --config test/configs/sample_cruise.json \
-      --mode underway
+1. As a simple standalone logger runner: you give it an intial dict of
+   logger configurations, and it tries to keep them running.
 
-(To get this to work using the sample config sample_cruise.json above,
-you'll also need to run
+     server/logger_runner.py --configs test/configs/sample_configs.json
+ 
+   Note: the LoggerRunner doesn't know anything about modes, and doesn't
+   take a full cruise configuration - it just takes a dict of logger
+   configurations and runs them.
+
+2. As instantiated by a LoggerManager:
+
+     server/logger_manager.py --config test/configs/sample_cruise.json -v
+
+   When invoked as above, the LoggerManager will instantiate a LoggerRunner
+   interpret commands from the command line and dispatch the requested
+   loggers to its LoggerRunner. (Type "help" on the LoggerManager command
+   line for the commands it understands.)
+
+3. As instantiated by some other script.
+
+4. As a websocket client listening to a LoggerManager:
+
+     server/run_loggers.py --websocket localhost:8765 --host_id knud.host
+
+   with a LoggerManager running like this:
+
+     server/logger_manager.py --websocket localhost:8765 --host_id master.host
+
+   When invoked with the --websocket flag, a LoggerManager will
+   attempt to create a websocket server at the specified address and
+   listen for clients to connect.
+
+   When invoked with the --websocket and --host_id flags, a
+   LoggerRunner will attempt to connect to the named address and
+   identify itself by the provided host_id.
+
+   When the LoggerManager identifies a config to be run that includes
+   a host_id restriction, e.g.
+
+        "knud->net": {
+            "host_id": "knud.host",
+            "readers": ...
+            ...
+         }
+
+   it will attempt to dispatch that config to the appropriate
+   client. (Note: configs with no host restriction will be run by the
+   LoggerManager itself, and if a config has a host restriction and no
+   host by that name has connected, the LoggerManager will issue a
+   warning and not run the config.)
+
+
+Simulated Serial Ports:
+
+The sample_cruise.json and sample_configs.json files above specify
+configs that read from simulated serial ports and write to UDP port
+6224. To get the configs to actually run, you'll need to run
 
   logger/utils/serial_sim.py --config test/serial_sim.py
 
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
 
-Be advised that the command line script is intentionally just a
-rudimentary wrapper around the LoggerRunner class. We expect that,
-more often than not, the LoggerRunner class will be used directly by
-other code, such as a LoggerServer, which can exercise its full
-powers.
+To verify that the scripts are actually working as intended, you can
+create a network listener on port 6224 in yet another window:
+
+  logger/listener/listen.py --network :6224 --write_file -
 
 """
-import argparse
+import asyncio
 import json
 import logging
 import multiprocessing
@@ -34,11 +85,19 @@ import signal
 import sys
 import time
 import threading
+try:
+  import websockets
+except ImportError:
+  logging.info('Unable to import "websockets" - websocket functionality '
+               'will not be available.')
 
 sys.path.append('.')
 
 from logger.utils.read_json import read_json
 from logger.listener.listen import ListenerFromLoggerConfig
+
+LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
 run_logging = logging.getLogger(__name__)
 
@@ -52,13 +111,21 @@ def kill_handler(self, signum):
 ################################################################################
 class LoggerRunner:
   ############################
-  def __init__(self, interval=0.5, max_tries=3, initial_configs=None):
+  def __init__(self, interval=0.5, max_tries=3, initial_configs=None,
+               websocket=None, host_id=None):
     """Create a LoggerRunner.
     interval - number of seconds to sleep between checking/updating loggers
 
-    max_tries - number of times to retry a dead logger config
+    max_tries - number of times to try a dead logger config. If zero, then
+                never stop retrying.
 
     initial_configs - optional dict of configs to start up on creation.
+
+    websocket - Optional websocket address (host:port) to connect to
+                for updates.
+
+    host_id - Optional string by which this instance will identify itself
+              to websocket server.
     """
     # Map logger name to config, process running it, and any errors
     self.logger_configs = {}
@@ -94,6 +161,9 @@ class LoggerRunner:
     if initial_configs:
       self.set_configs(initial_configs)
 
+    self.websocket = websocket
+    self.host_id = host_id
+      
   ############################
   def set_config(self, logger, new_config):
     """Start/stop individual logger to put into new config.
@@ -102,8 +172,8 @@ class LoggerRunner:
 
     new_config - dict containing Listener configuration.
     """
-    logging.info('Setting logger %s to config %s', logger,
-                 new_config.get('name', 'Unknown') if new_config else None)
+    config_name = new_config.get('name', 'Unknown') if new_config else None
+    logging.info('Setting logger %s to config %s', logger, config_name)
 
     with self.config_lock:
       current_config = self.logger_configs.get(logger, None)
@@ -116,12 +186,18 @@ class LoggerRunner:
       # process is running, all is right with the world; skip to next.
       process = self.processes.get(logger, None)
       if current_config == new_config:
-        if process and process.is_alive():
-          return
-        else:
-          warning = 'Process for "%s" unexpectedly dead!' % logger
+        if not process:
+          warning = 'No process found for "%s"' % config_name
           run_logging.warning(warning)
           self.errors[logger].append(warning)
+        elif not process.is_alive():
+          warning = 'Process for "%s" unexpectedly dead!' % config_name
+          run_logging.warning(warning)
+          self.errors[logger].append(warning)
+        else:
+          # Config hasn't changed, we have process and it's alive. All
+          # is well - go home.
+          return
 
       # Either old and new config don't match or process is dead. If
       # process isn't dead, then it means old and new config don't
@@ -131,7 +207,7 @@ class LoggerRunner:
 
       # Finally, if we have a new config, start up the new process for it
       if new_config:
-        run_logging.info('Starting up new process for %s', logger)
+        run_logging.info('Starting up new process for %s', config_name)
         self._start_logger(logger, new_config)
         self.num_tries[logger] = 1
       
@@ -226,6 +302,23 @@ class LoggerRunner:
     self.failed_loggers.discard(logger)
     
   ############################
+  async def _get_websocket_commands(self, websocket):
+    """Listen to websocket for commands and process them."""
+    async for command in websocket:
+      if command == 'quit':
+        self.quit_flag = True
+
+      elif command.find('set_configs ') == 0:
+        (configs_cmd, configs_str) = command.split(maxsplit=1)
+        logging.info('Setting configs to %s', configs_str)
+        self.set_configs(json.loads(configs_str))
+
+      else:
+        logging.error('Unrecognized command: %s', command)
+        await websocket.send(json.dumps(
+          {'error': 'unrecognized command: ' + command}))
+
+  ############################
   def check_logger(self, logger, manage=False, clear_errors=False):
     """Check whether passed logger is in state it should be. Restart/stop it 
     as appropriate. Return True if logger is in desired state.
@@ -261,22 +354,24 @@ class LoggerRunner:
       # Here if it should be running, but isn't.
       else:
         running = False
-        
+        config_name = config.get('name', 'unknown')
         # If we're supposed to try and manage the state ourselves,
         # restart dead logger.
         if manage:
           # If we've tried restarting max_tries times, give up and
           # consider logger to have failed.
           if logger in self.failed_loggers:
-            logging.debug('Logger %s failed %d times; not retrying',
-                          logger, self.max_tries)
-          elif self.num_tries[logger] == self.max_tries:
+            logging.debug('Logger %s (config %s) has failed %d times; '
+                          'not retrying', logger, config_name, self.max_tries)
+          elif self.max_tries and self.num_tries[logger] == self.max_tries:
             self.failed_loggers.add(logger)
-            run_logging.warning('Logger %s has failed %d times; not retrying',
-                                logger, self.max_tries)
+            run_logging.warning(
+              'Logger %s (config %s) has failed %d times; '
+              'not retrying', logger, config_name, self.max_tries)
           else:
             # If we've not used up all our tries, try starting it again
-            warning = 'Process for %s unexpectedly dead; restarting' % logger
+            warning = 'Process for %s (config %s) unexpectedly dead; ' \
+                      'restarting' % (logger, config_name)
             run_logging.warning(warning)
             self.errors[logger].append(warning)
             self._start_logger(logger, self.logger_configs[logger])
@@ -290,22 +385,93 @@ class LoggerRunner:
       }
       # Clear accumulated errors for this logger if they've asked us to
       if clear_errors:
-        self.errors[logger] = []
-        
+        self.errors[logger] = []        
     return status
     
   ############################
   def check_loggers(self, manage=False, clear_errors=False):
-    """Check that all loggers are in desired states. Return map from
-    logger name to Boolean, where True means logger is running and
-    should be.
+    """Check logger status.
 
-    manage       - if True, try to restart dead loggers.
-    clear_errors - if True, clear out accumulated error messages.
+    manage - if True, try to restart/stop loggers to put them in the state
+             their configs say they should be in.
+
+    clear_errors - if True, clear out any errors reported by checking.
     """
     with self.check_loggers_lock:
+      loggers = set(self.logger_configs)
       return {logger:self.check_logger(logger, manage, clear_errors)
-              for logger in self.logger_configs}
+              for logger in loggers}
+
+  ############################
+  async def _check_loggers_loop(self, websocket=None,
+                          manage=False, clear_errors=False):
+    """Iteratively check logger status.
+
+    websocket - a passed websocket; if not None, send status to websocket.
+ 
+    manage - if True, try to restart/stop loggers to put them in the state
+             their configs say they should be in.
+
+    clear_errors - if True, clear out any errors reported by checking.
+    """
+    # If websocket, first thing we should do is identify ourselves
+    if websocket:
+      await websocket.send(json.dumps({'host_id': self.host_id}))
+      
+    while not self.quit_flag:
+      status = self.check_loggers(manage, clear_errors)
+      if websocket:
+        await websocket.send(json.dumps({'status': status}))
+        logging.info('Sent status')
+
+      await asyncio.sleep(self.interval)
+
+  ############################
+  async def _logger_task_handler(self):
+    """Check up on the loggers. If no websocket, that just means calling
+    check_loggers() and letting it iterate until done. If we do have a
+    websocket, set up two tasks in parallel: one that calls
+    check_loggers() and a parallel one that looks for updates from the
+    websocket."""
+    # If no websocket, just fire up check_loggers() and wait for it to finish.
+    if not self.websocket:
+      await self.check_loggers(manage=True, clear_errors=True)
+
+    # If we have a websocket specification
+    else:
+      try:
+        async with websockets.connect('ws://' + self.websocket) as websocket:
+          get_commands_task = asyncio.ensure_future(
+            self._get_websocket_commands(websocket))
+          check_loggers_task = asyncio.ensure_future(
+            self._check_loggers_loop(websocket, manage=True, clear_errors=True))
+          done, pending = await asyncio.wait([get_commands_task,
+                                            check_loggers_task],
+                                            return_when=asyncio.FIRST_COMPLETED)
+        # When here, either check_loggers_tast or get_commands_task has
+        # ended. Terminate the other task.
+        for task in pending:
+          task.cancel()
+      except OSError as e:
+        logging.error('Failed to connect to websocket on %s: %s',
+                      self.websocket, str(e))
+
+  ############################
+  def run(self):
+    """Loop. If attached to a websocket, read commands from it to update
+    configs and send back status reports. Otherwise just check up on loggers
+    and discard status report."""
+    try:
+      if self.websocket:
+        # Fire up our task loop, checking status
+        asyncio.get_event_loop().run_until_complete(self._logger_task_handler())
+      else:
+        # If not running websocket, don't mess with event loop
+        while not self.quit_flag:
+          status = self.check_loggers(manage=True, clear_errors=True)
+    except KeyboardInterrupt:
+      logging.warning('Received KeyboardInterrupt. Exiting')
+      self.quit()
 
   ############################
   def quit(self):
@@ -320,30 +486,27 @@ class LoggerRunner:
     [self.set_config(logger, None)
      for logger in list(self.logger_configs.keys())]
 
-  ############################
-  def run(self):
-    """Iterate, checking loggers, warning of problems and restarting as
-    indicated."""
-
-    # Iterate until we get 'quit'
-    while not self.quit_flag:
-      with self.config_lock:
-        status = self.check_loggers(manage=True)
-        logging.debug('Logger status: %s', str(status))
-
-      run_logging.debug('Sleeping %s seconds...', self.interval)
-      time.sleep(self.interval)
-
-
 ################################################################################
+import argparse
+
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store', default=None,
                       help='Initial set of configs to run.')
+
+  parser.add_argument('--websocket', dest='websocket', action='store',
+                      default=None, help='Optional websocket address '
+                      '(host:port) to connect to for updates.')
+  parser.add_argument('--host_id', dest='host_id', action='store',
+                      default=None, help='Name by which to identify ourselves '
+                      'to websocket server. Required if --websocket is '
+                      'specified.')
+
   parser.add_argument('--max_tries', dest='max_tries', action='store',
                       type=int, default=3, help='How many times to try a '
-                      'crashing config before giving up on it as failed.')
+                      'crashing config before giving up on it as failed. If '
+                      'zero, then never stop retrying.')
   parser.add_argument('--interval', dest='interval', action='store',
                       type=int, default=1,
                       help='How many seconds to sleep between logger checks.')
@@ -366,12 +529,20 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   run_logging.setLevel(LOG_LEVELS[args.verbosity])
 
-  if args.config:
-    initial_configs = read_json(args.config)
-  else:
-    initial_configs = None
+  if not args.websocket and not args.config:
+    logging.error('No initial configs and no websocket to take commands from, '
+                  'so nothing to do - exiting.')
+    exit(1)
+
+  if args.websocket and not args.host_id:
+    logging.error('Websocket client needs --host_id or it will not ever get '
+                  'tasks assigned to it - exiting.')
+    exit(1)
     
+  initial_configs = read_json(args.config) if args.config else None
+
   runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
-                        initial_configs=initial_configs)
+                      initial_configs=initial_configs,
+                      websocket=args.websocket, host_id=args.host_id)
   runner.run()
 

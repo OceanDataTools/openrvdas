@@ -14,42 +14,33 @@ To run, try:
 
     server/websocket_server.py --websocket localhost:8765 -v
 
-In a separate window, start up the simulated serial ports:
+In a second window, start up a LoggerRunner as a websocket client:
 
-    logger/utils/simulate_serial.py --config test/serial_sim.json -v
+    server/logger_runner.py --websocket localhost:8765 \
+            --host_id client.host -v 
 
-In a third window, start up a LoggerManager as a websocket client:
+You should see messages from the LoggerRunner appear on the
+websocket_server's console, beginning with an identifying message,
+then repeated status messages. If you type a command into the
+websocket console, it will be relayed to the LoggerRunner, which (most
+likely) will complain that it is an unrecognized command. (The only
+commands the LoggerRunner recognizes over the websocket are 'quit' and
+'set_configs' followed by a JSON encoding of a complete set of logger
+configurations).
 
-    server/logger_manager.py --websocket localhost:8765 -v 
-
-You should then be able to send commands to the LoggerManager from the
-websocket server. Try:
-
-    load_cruise test/configs/sample_cruise.json
-
-    set_mode port
-
-    set_mode off
-
-    quit
-
-(You can verify that the loggers are starting/stopping as desired by firing up a listener in yet *another* window:
-
-    logger/listener/listen.py --network :6224 --write_file -
-)
+To explore the WebsocketServer in context, please look at the
+documentation for LoggerManager, which uses a WebsocketServer to
+dispatch configurations to client LoggerRunners.
 """
 import asyncio
-import json
 import logging
 import queue
-import sys
 import threading
 import time
 import websockets
 
 ################################################################################
 class WebsocketServer:
-
   ############################
   def __init__(self, host, port, consumer, producer,
                on_connect=None, on_disconnect=None):
@@ -69,8 +60,7 @@ class WebsocketServer:
 
     on_disconnect - optional routine to be called when a client
        disconnects. Should take a single integer representing client's
-       unique client_id
-
+       unique client_id.
     """
     self.host = host
     self.port = port

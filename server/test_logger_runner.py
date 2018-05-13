@@ -75,22 +75,22 @@ class TestLoggerRunner(unittest.TestCase):
     # we're in our default mode
     self.assertFalse(os.path.exists(self.dest_name))
 
-    manager = LoggerRunner(interval=0.1)
-    manager_thread = threading.Thread(target=manager.run)
-    manager_thread.start()
+    runner = LoggerRunner(interval=0.1)
+    runner_thread = threading.Thread(target=runner.run)
+    runner_thread.start()
 
-    manager.set_configs(self.config['modes']['on'])  
+    runner.set_configs(self.config['modes']['on'])  
     time.sleep(0.6)
-
+    
     reader = TextFileReader(self.dest_name)
     for line in SAMPLE_DATA:
       logging.info('Checking line: "%s"', line)
       self.assertEqual(line, reader.read())
 
-    self.assertTrue(manager.processes['logger'].is_alive())
-    pid = manager.processes['logger'].pid
+    self.assertTrue(runner.processes['logger'].is_alive())
+    pid = runner.processes['logger'].pid
 
-    status = manager.check_loggers()
+    status = runner.check_loggers()
     self.assertDictEqual(status,
                          {'logger': {'errors': [],
                                      'running': True,
@@ -98,8 +98,8 @@ class TestLoggerRunner(unittest.TestCase):
                                      'failed': False}
                          })
 
-    manager.set_configs(self.config['modes']['off'])
-    self.assertDictEqual(manager.check_loggers(), {})
+    runner.set_configs(self.config['modes']['off'])
+    self.assertDictEqual(runner.check_loggers(), {})
 
     # Verify that the process has indeed shut down. This should throw
     # an exception if the process doesn't exist.
@@ -107,9 +107,9 @@ class TestLoggerRunner(unittest.TestCase):
       os.kill(pid, 0)    
     
     # Try shutting down
-    manager.quit()
-    manager_thread.join(0.2)
-    self.assertFalse(manager_thread.is_alive())
+    runner.quit()
+    runner_thread.join(0.2)
+    self.assertFalse(runner_thread.is_alive())
     
 ################################################################################
 if __name__ == '__main__':
