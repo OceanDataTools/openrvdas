@@ -65,11 +65,11 @@ def show_commands():
     ('set_logger_config_name <cruise_id> <logger name> <name of logger config>',
      'Set logger to named configuration\n'),
 
-    ('status [<num_records>]',
-     'Print current logger status to console. If an integer num_records is\n'
-     '      provided, output that many of the most recent records. If\n'
-     '      num_records is negative, output all records in storage\n'),
-
+    ('status <cruise_id>',
+     'Print most recent status for each logger in cruise')
+    ('status_since <cruise_id> <timestamp>',
+     'Get all logger status updates since specified timestamp\n'),
+    
     ('quit', 'Quit gracefully')      
   ]
   print('Valid commands:')
@@ -185,17 +185,19 @@ def process_command(api, command):
 
     # status
     elif command == 'status':
-      status_list = api.get_status()
-      if status_list:
-        timestamp, status = status_list[0]
-        print('%s: %s' % (timestamp, pprint.pformat(status)))
-
-    # status <num_records>
+      raise ValueError('format: status <cruise id>')
     elif command.find('status ') == 0:
-      (status_cmd, num_reports) = command.split(maxsplit=1)
-      status_list = api.get_status(int(num_reports))
-      for (timestamp, status) in status_list:
-        print('%s: %s' % (timestamp, status))
+      (status_cmd, cruise_id) = command.split(maxsplit=1)
+      status_dict = api.get_status(cruise_id)
+      print('%s' % pprint.pformat(status_dict))
+
+    # status_since
+    elif command == 'status_since':
+      raise ValueError('format: status_since <cruise id> <timestamp>')
+    elif command.find('status_since ') == 0:
+      (status_cmd, cruise_id, since_timestamp) = command.split(maxsplit=2)
+      status_dict = api.get_status(cruise_id, float(since_timestamp))
+      print('%s' % pprint.pformat(status_dict))
 
     # Quit gracefully
     elif command == 'quit':
@@ -215,6 +217,7 @@ def process_command(api, command):
 ################################################################################
 if __name__ == '__main__':
   from server.in_memory_server_api import InMemoryServerAPI
+  from gui.django_server_api import DjangoServerAPI
 
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbosity', dest='verbosity',
@@ -242,7 +245,8 @@ if __name__ == '__main__':
   atexit.register(readline.write_history_file, histfile)
 
   # Create API and start taking commands
-  api = InMemoryServerAPI()
+  #  api = InMemoryServerAPI()
+  api = DjangoServerAPI()
   get_stdin_commands(api)
   
   

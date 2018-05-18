@@ -14,33 +14,35 @@ class ModeInline(admin.TabularInline):
   readonly_fields = ('name', 'cruise')
   can_delete = False
   show_change_link = True
-  
-class LoggerConfigInline(admin.TabularInline):
-  model = LoggerConfig
+
+#############################################
+class LoggerConfigModeInline(admin.TabularInline):
+  model = LoggerConfig.modes.through
   extra = 0
-  fields = ('logger', 'name')
-  readonly_fields = ('name', 'logger', 'enabled', 'mode', 'config_json')
+  #fields = ('logger', 'name')
+  #readonly_fields = ('name', 'logger', 'enabled', 'modes', 'config_json')
   can_delete = False
   show_change_link = True
-  """fieldsets = [
-    (None,    {'fields':['name', 'logger']}),
-    ('JSON Source', {'classes': ['collapse'],
-                     'fields': ['config_json']})
-    ]
-  """
 
 #############################################
 class LoggerAdmin(admin.ModelAdmin):
   list_display = ('name', 'cruise', 'config')
   list_filter = ('cruise',)
 
+#############################################
 class LoggerConfigAdmin(admin.ModelAdmin):
-  list_display = ('name', 'logger', 'mode', 'enabled', 'config_json')
-  list_filter = ('logger', 'mode', 'enabled')
+  list_display = ('name', 'logger', 'get_modes', 'enabled', 'config_json')
+  list_filter = ('logger', 'enabled')
+  
+  def get_modes(self, obj):
+        return "\n".join([m.name for m in obj.modes.all()])
 
+  inlines = [LoggerConfigModeInline]
+
+#############################################
 class LoggerConfigStateAdmin(admin.ModelAdmin):
-  list_display = ('timestamp', 'logger', 'config', 'running',
-                  'process_id', 'errors')
+  list_display = ('timestamp', 'last_checked', 'logger', 'config',
+                  'running', 'failed', 'pid', 'errors')
   list_filter = ('logger__cruise', 'logger', 'config', 'running')
   
 #############################################
@@ -54,7 +56,8 @@ class ModeAdmin(admin.ModelAdmin):
     #('JSON Source', {'classes': ['collapse'],
     #                 'fields': ['config_json']})
     ]
-  inlines = [ LoggerConfigInline ]
+  inlines = [LoggerConfigModeInline]
+
 
 #############################################
 class CruiseAdmin(admin.ModelAdmin):

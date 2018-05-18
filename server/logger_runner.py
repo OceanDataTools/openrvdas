@@ -383,9 +383,12 @@ class LoggerRunner:
         'failed': logger in self.failed_loggers,
         'pid': process.pid if process else None
       }
+      if config and 'name' in config:
+        status['config'] = config.get('name')
+
       # Clear accumulated errors for this logger if they've asked us to
       if clear_errors:
-        self.errors[logger] = []        
+        self.errors[logger] = []
     return status
     
   ############################

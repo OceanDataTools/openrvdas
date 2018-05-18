@@ -143,12 +143,12 @@
 
     "loggers": {
         "%INST%": {
-            "configs": ["off", "%INST%->net", "%INST%->file/net/db"]
+            "configs": ["%INST%->off", "%INST%->net", "%INST%->file/net/db"]
         }
     },
 
     "configs": {
-        "off": {},
+        "%INST%->off": {},
         "%INST%->net": "%INST%_SERIAL_LOGGER_NO_WRITE",
         "%INST%->file/net/db": "%INST%_SERIAL_LOGGER"
     },
@@ -158,13 +158,13 @@
     "modes": {
         // Nothing's running when off
         "off": {
-            "%INST%": "off"
+            "%INST%": "%INST%->off"
         },
         
         // In port, we only run certain instruments, and don't write to disk
         "port": {
             "%PORT_INST%": "%PORT_INST%->net",
-            "%UW_INST%": "off"
+            "%UW_INST%": "%UW_INST%->off"
         },
         
         // Underway, everything's in default mode of running/saving.

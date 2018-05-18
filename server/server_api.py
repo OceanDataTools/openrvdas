@@ -240,9 +240,10 @@ class ServerAPI:
   ############################
   # Methods for getting status data from API
   ############################
-  def get_status(self, num_reports=1):
-    """Retrieve the most-recent specified number of status reports. If the
-    number is negative, retrieve them all."""
+  def get_status(self, cruise_id, since_timestamp=None):
+    """Retrieve a dict of the most-recent status report from each
+    logger. If since_timestamp is specified, retrieve all status reports
+    since that time."""
     raise NotImplementedError('get_status must be implemented by subclass')
 
   #############################

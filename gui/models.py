@@ -27,10 +27,14 @@ class Logger(models.Model):
 ##############################
 class LoggerConfig(models.Model):
   name = models.CharField(max_length=256, blank=True)
+  cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
+                             blank=True, null=True)
   logger = models.ForeignKey('Logger', on_delete=models.CASCADE,
                              blank=True, null=True)
-  mode = models.ForeignKey('Mode', on_delete=models.CASCADE,
-                           blank=True, null=True)
+
+  # A config may be used by a logger in more than one mode
+  modes = models.ManyToManyField('Mode')
+
   config_json = models.TextField('configuration string')
 
   # If this config is disabled, don't run it, even when mode
@@ -38,7 +42,7 @@ class LoggerConfig(models.Model):
   enabled = models.BooleanField(default=True)
 
   def __str__(self):
-    return '%s (%s)' % (self.name, self.mode)
+    return '%s (%s)' % (self.name, self.modes.all())
 
 ##############################
 class Mode(models.Model):
@@ -101,10 +105,12 @@ class LoggerConfigState(models.Model):
   config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
                              blank=True, null=True)
   timestamp = models.DateTimeField(auto_now_add=True)
+  last_checked = models.DateTimeField(blank=True, null=True)
 
   running = models.BooleanField(default=False)
-  process_id = models.IntegerField(default=0, blank=True, null=True)
-  errors = models.TextField(blank=True, null=True)
+  failed = models.BooleanField(default=False)
+  pid = models.IntegerField(default=0) #, blank=True, null=True)
+  errors = models.TextField(default='') #, blank=True, null=True)
 
 ##############################
 # Which servers are running, and when?

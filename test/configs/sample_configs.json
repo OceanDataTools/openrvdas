@@ -2,7 +2,6 @@
 //
 //    server/logger_runner.py --config test/configs/sample_configs.json -v
 {
-        "off": {},
         "knud->net": {
             "host_id": "knud.host",
             "name": "knud->net",

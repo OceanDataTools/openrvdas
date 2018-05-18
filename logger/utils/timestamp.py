@@ -36,16 +36,27 @@ TIME_FORMAT = '%Y-%m-%d:%H:%M:%S.%f'  # Gregorian
 #TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'  # Gregorian
 
 ################################################################################
+def datetime_obj(time_str=None, time_zone=timezone.utc,time_format=TIME_FORMAT):
+  """Return datetime object for a passed time_str. If no time_str is
+  passed, return datetime object for now."""
+  if time_str is None:
+    return datetime.now(time_zone)
+
+  # If they've given us a time string to convert. Set timezone as necessary.
+  return datetime.strptime(time_str, time_format).replace(tzinfo=time_zone)
+
+################################################################################
+def datetime_obj_from_timestamp(timestamp, time_zone=timezone.utc):
+  """Return datetime object for a passed timestamp."""
+
+  # If they've given us a time string to convert. Set timezone as necessary.
+  return datetime.fromtimestamp(timestamp, tz=time_zone)
+
+################################################################################
 def timestamp(time_str=None, time_zone=timezone.utc, time_format=TIME_FORMAT):
   """Return numeric timestamp for a passed time_str. If no time_str is
   passed, return timestamp for now."""
-  if time_str is None:
-    return datetime.now(time_zone).timestamp()
-
-  # If they've given us a time string to convert to timestamp. Set
-  # timezone as necessary.
-  time_obj = datetime.strptime(time_str, time_format).replace(tzinfo=time_zone)
-  return time_obj.timestamp()
+  return datetime_obj(time_str, time_zone, time_format).timestamp()
 
 ################################################################################
 def time_str(timestamp=None, time_zone=timezone.utc, time_format=TIME_FORMAT):

@@ -9,6 +9,7 @@ documentation on the ServerAPI.
 import argparse
 import logging
 import os
+import pprint
 import sys
 import time
 
@@ -260,20 +261,62 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   def update_status(self, status):
     """Save/register the loggers' retrieved status report with the API."""
-    logging.info('Got status: %s', status)
     self.status.append( (time.time(), status) )
 
   ############################
   # Methods for getting status data from API
   ############################
 
-  def get_status(self, num_reports=1):
-    """Retrieve the most-recent specified number of status reports. If the
-    number is negative, retrieve them all."""
-    if num_reports < 1:
-      return self.status
-    else:
-      return self.status[-num_reports:]
+  def get_status(self, cruise_id, since_timestamp=None):
+    """Retrieve a dict of the most-recent status report from each
+    logger. If since_timestamp is specified, retrieve all status reports
+    since that time."""
+
+    # Start by getting set of loggers for cruise. Store as
+    # cruise_id:logger for ease of lookup.
+    logger_set = set([cruise_id + ID_SEPARATOR + logger
+                   for logger in self.get_loggers(cruise_id)])
+    logging.debug('logger_set: %s', logger_set)
+
+    # Step backwards through status messages until we run out of
+    # status messages or reach termination condition. If
+    # since_timestamp==None, our termination is when we have a status
+    # for each of our loggers. If since_timestamp is a number, our
+    # termination is when we've grabbed all the statuses with a
+    # timestamp greater than the specified number.
+    status = {}
+    
+    status_index = len(self.status)-1
+    logging.debug('starting at status index %d', status_index)
+    while logger_set and status_index >= 0:
+      # record is a dict of 'cruise_id:logger' : {fields}
+      (timestamp, record) = self.status[status_index]
+      logging.debug('%d: %f: %s', status_index, timestamp, pprint.pformat(record))
+      
+      # If we've been given a numeric timestamp and we've stepped back
+      # in time to or before that timestamp, we're done - break out.
+      if since_timestamp is not None and timestamp <= since_timestamp:
+        break
+
+      # Otherwise, examine ids in this record to see if they're for
+      # the cruise in question.
+      for id, fields in record.items():
+        # If id is cruise_id:logger that we're interested in, grab it.
+        logging.debug('Is %s in %s?', id, logger_set)
+        if id in logger_set:
+          if not timestamp in status:
+            status[timestamp] = {}
+          status[timestamp][id] = fields
+
+          # If since_timestamp==None, we only want the latest status
+          # for each logger. So once we've found it, remove the id
+          # from the logger_set we're lookings. We'll drop out of the
+          # loop when the set is empty.
+          if since_timestamp is None:
+            logger_set.discard(id)
+      status_index -= 1
+
+    return status
 
   #############################
   # Methods to modify the data store
@@ -322,34 +365,3 @@ class InMemoryServerAPI(ServerAPI):
   #def add_config_to_logger(self, cruise_id, config, logger_id)
   #def add_config_to_mode(self, cruise_id, config, logger_id, mode)
   #def delete_config(self, cruise_id, config_id)
-
-
-"""
-In Django, we'd implement update_status as follows:
-
-        # If there's anything notable - an error or change of state -
-        # create a new LoggerConfigState to document it.
-        for logger_id, logger_status in status.items():
-          config = configs.get(logger_id, None)
-          old_config = old_configs.get(logger_id, None)
-          old_logger_status = old_status.get(logger_id, {})
-
-          try:
-            logger = Logger.objects.get(id=logger_id)
-          except Logger.DoesNotExist:
-            logging.warning('No logger corresponding to id %d?!?', logger_id)
-            continue
-          
-          if (logger_status.get('errors', None) or
-              logger_status != old_logger_status or
-              config != old_config):
-            running = bool(logger_status.get('running', False))
-            errors = ', '.join(logger_status.get('errors', []))
-            pid = logger_status.get('pid', None)
-            logging.info('Updating %s config: %s; running: %s, errors: %s',
-                         logger, config.name if config else '-none-',
-                         running, errors or 'None')
-            LoggerConfigState(logger=logger, config=config, running=running,
-                              process_id=pid, errors=errors).save()
- 
-"""

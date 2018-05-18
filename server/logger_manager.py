@@ -317,7 +317,6 @@ class LoggerManager:
     None means it's from our local LoggerRunner."""
     status = response.get('status', None)
     if status:
-      logging.info('Got status from %s', client_id or 'local')
       self.api.update_status(status)
 
     errors = response.get('errors', None)
@@ -431,6 +430,8 @@ if __name__ == '__main__':
   import readline
 
   from server.in_memory_server_api import InMemoryServerAPI
+  from gui.django_server_api import DjangoServerAPI
+  
   from server.server_api_command_line import get_stdin_commands
   
   parser = argparse.ArgumentParser()
@@ -468,6 +469,7 @@ if __name__ == '__main__':
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
   api = InMemoryServerAPI()
+  #api = DjangoServerAPI()
   logger_manager = LoggerManager(api=api, websocket=args.websocket,
                                  host_id=args.host_id,
                                  interval=args.interval,
