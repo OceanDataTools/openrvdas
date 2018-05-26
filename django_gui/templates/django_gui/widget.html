@@ -1,4 +1,4 @@
-{% extends 'gui/base.html' %}
+{% extends 'django_gui/base.html' %}
 
 {% block content %}
 
@@ -107,7 +107,7 @@
     var td_timestamp = document.createElement("td");
     td_timestamp.id = "timestamp";
     td_timestamp.colSpan = "2";
-    var td_timestamp_txt = document.createTextNode("No timestamp. Is gui/run_servers.py running?");
+    var td_timestamp_txt = document.createTextNode("No timestamp. Is django_gui/run_servers.py running?");
     td_timestamp.appendChild(td_timestamp_txt);
     tr.appendChild(td_timestamp);
     table.appendChild(tr);                          

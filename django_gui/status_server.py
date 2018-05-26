@@ -17,7 +17,7 @@ Typically invoked via the web interface:
   ./manage.py runserver localhost:8000
 
   # In a separate window, run the script that runs servers:
-  gui/run_servers.py
+  django_gui/run_servers.py
 
   # Point your browser at http://localhost:8000, log in and load the
   # configuration you created using the "Choose file" and "Load
@@ -32,8 +32,8 @@ restarts them if they should be and are not.
 The StatusServer and LoggerServer can be run manually from the command
 line as well, using the expected invocation:
 
-  gui/logger_server.py
-  gui/status_server.py
+  django_gui/logger_server.py
+  django_gui/status_server.py
 
 Use the --help flag to see what options are available with each.
 
@@ -50,7 +50,7 @@ PROTOCOLS
 
 The StatusServer takes connections on the host:port specified on the
 command line or defaults to the values WEBSOCKET_HOST and
-WEBSOCKET_PORT imported from gui.settings.
+WEBSOCKET_PORT imported from django_gui.settings.
 
 It then loops, iteratively serving updates via a JSONified dictionary
 whose contents depend on the requested path from that host (these are
@@ -114,13 +114,13 @@ from json import dumps as json_dumps, loads as json_loads
 sys.path.append('.')
 
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 
-from gui.models import Cruise, Logger, LoggerConfigState
-from gui.models import ServerMessage, StatusUpdate, ServerState
+from django_gui.models import Cruise, Logger, LoggerConfigState
+from django_gui.models import ServerMessage, StatusUpdate, ServerState
 
-from gui.settings import WEBSOCKET_HOST, WEBSOCKET_PORT
+from django_gui.settings import WEBSOCKET_HOST, WEBSOCKET_PORT
 
 TIME_FORMAT = '%Y-%m-%d:%H:%M:%S'
 

@@ -16,7 +16,7 @@ Typically invoked via the web interface:
   ./manage.py runserver localhost:8000
 
   # In a separate window, run the script that runs servers:
-  gui/run_servers.py
+  django_gui/run_servers.py
 
   # Point your browser at http://localhost:8000, log in and load the
   # configuration you created using the "Choose file" and "Load
@@ -31,8 +31,8 @@ restarts them if they should be and are not.
 The StatusServer and LoggerServer can be run manually from the command
 line as well, using the expected invocation:
 
-  gui/status_server.py
-  gui/status_server.py
+  django_gui/status_server.py
+  django_gui/status_server.py
 
 Use the --help flag to see what options are available with each.
 
@@ -57,13 +57,13 @@ import time
 sys.path.append('.')
 
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 
-from gui.models import ServerMessage, ServerState
+from django_gui.models import ServerMessage, ServerState
 
-from gui.status_server import StatusServer
-from gui.logger_server import LoggerServer
+from django_gui.status_server import StatusServer
+from django_gui.logger_server import LoggerServer
 
 # Not implemented!
 DEFAULT_NUM_TRIES = 3

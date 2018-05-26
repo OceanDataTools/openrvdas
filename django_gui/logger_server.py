@@ -15,7 +15,7 @@ Typically invoked via the web interface:
   ./manage.py runserver localhost:8000
 
   # In a separate window, run the script that runs servers:
-  gui/run_servers.py
+  django_gui/run_servers.py
 
   # Point your browser at http://localhost:8000, log in and load the
   # configuration you created using the "Choose file" and "Load
@@ -30,8 +30,8 @@ restarts them if they should be and are not.
 The StatusServer and LoggerServer can be run manually from the command
 line as well, using the expected invocation:
 
-  gui/logger_server.py
-  gui/status_server.py
+  django_gui/logger_server.py
+  django_gui/status_server.py
 
 Use the --help flag to see what options are available with each.
 
@@ -61,12 +61,12 @@ from json import dumps as json_dumps
 sys.path.append('.')
 
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 
-from gui.models import Logger, LoggerConfigState
-from gui.models import Cruise, CurrentCruise
-from gui.models import ServerMessage, StatusUpdate
+from django_gui.models import Logger, LoggerConfigState
+from django_gui.models import Cruise, CurrentCruise
+from django_gui.models import ServerMessage, StatusUpdate
 
 from logger.utils.read_json import parse_json
 

@@ -182,6 +182,7 @@ class LoggerManager:
     self.client_to_host_id = {None:self.host_id}
     self.send_queue = {}     # client_id->queue for messages to send to ws
     self.receive_queue = {}  # client_id->queue for messages from ws
+    self.path = {}           # client_id->path to which client connected
 
     # A lock to make sure only one thread is messing with the above
     # maps at any given time.
@@ -333,7 +334,7 @@ class LoggerManager:
       self.client_to_host_id[client_id] = host_id
 
   ############################
-  def register_client(self, websocket, client_id):
+  def register_client(self, websocket, client_id, path):
     """We've been alerted that a websocket client has connected.
     Create send/receive queues for it."""
     with self.client_map_lock:
@@ -341,6 +342,7 @@ class LoggerManager:
       if not client_id in self.send_queue:
         self.send_queue[client_id] = queue.Queue()
         self.receive_queue[client_id] = queue.Queue()
+        self.path[client_id] = path
 
   ############################
   def unregister_client(self, client_id):
@@ -350,7 +352,8 @@ class LoggerManager:
     with self.client_map_lock:
       if client_id in self.send_queue: del self.send_queue[client_id]
       if client_id in self.receive_queue: del self.receive_queue[client_id]
-      
+      if client_id in self.path: del self.path[client_id]
+
       if client_id in self.client_to_host_id:
         host_id = self.client_to_host_id[client_id]
         del self.host_id_to_client[host_id]
@@ -428,9 +431,6 @@ if __name__ == '__main__':
   import argparse
   import atexit
   import readline
-
-  from server.in_memory_server_api import InMemoryServerAPI
-  from gui.django_server_api import DjangoServerAPI
   
   from server.server_api_command_line import get_stdin_commands
   
@@ -439,6 +439,11 @@ if __name__ == '__main__':
                       help='Name of cruise configuration file to load.')
   parser.add_argument('--mode', dest='mode', action='store', default=None,
                       help='Optional name of mode to start system in.')
+
+  parser.add_argument('--database', dest='database', action='store',
+                      default='memory', help='What backing store database '
+                      'to use. Currently-implemented options are "memory" '
+                      'and "django".')
 
   # Optional address for websocket server from which we'll accept
   # connections from LoggerRunners willing to accept dispatched
@@ -468,8 +473,19 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-  api = InMemoryServerAPI()
-  #api = DjangoServerAPI()
+  # Are we using an in-memory store or Django database as our backing
+  # store? Do our imports conditionally, so they don't actually have
+  # to have Django if they're not using it.
+  if args.database == 'memory':
+    from server.in_memory_server_api import InMemoryServerAPI
+    api = InMemoryServerAPI()
+  elif args.database == 'django':
+    from gui.django_server_api import DjangoServerAPI
+    api = DjangoServerAPI()
+  else:
+    raise ValueError('--database argument must either be "memory" (default) '
+                     'or "django".')
+
   logger_manager = LoggerManager(api=api, websocket=args.websocket,
                                  host_id=args.host_id,
                                  interval=args.interval,

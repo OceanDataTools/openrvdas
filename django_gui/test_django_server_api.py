@@ -128,7 +128,7 @@ sample_test_1 = {
 ################################################################################
 class TestDjangoServerAPI(TestCase):
   ############################
-  @unittest.skipUnless(__name__ == '__main__', 'test_django_server_api.py must be run by running "./manager.py test gui"')
+  @unittest.skipUnless('test' in sys.argv, 'test_django_server_api.py must be run by running "./manager.py test gui"')
   def test_basic(self):
     api = DjangoServerAPI()
 

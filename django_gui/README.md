@@ -39,9 +39,9 @@ likely require more robust services, such as Apache and MySQL or
 MariaDB.
 
 1. Set up the default Django database models (uses SQLite, as
-configured in gui/settings.py):
+configured in django_gui/settings.py):
 ```
-  python3 manage.py makemigrations gui
+  python3 manage.py makemigrations django
   python3 manage.py migrate
   python3 manage.py createsuperuser --email rvdas@somerandom.com --username rvdas
 ```
@@ -55,11 +55,11 @@ the sample cruise definition for running on test data, run:
   python3 manage.py runserver localhost:8000
 ```
 4. In a browser window, visit ```http://localhost:8000```
-5. In a separate window, run gui/run_servers.py
+5. In a separate window, run django_gui/run_servers.py
 ```
-  python3 gui/run_servers.py
+  python3 django_gui/run_servers.py
 ```
-Note that run_servers.py will need access to port 8765 (by default - you can change this in gui/settings.py). On CentOS, add this via:
+Note that run_servers.py will need access to port 8765 (by default - you can change this in django_gui/settings.py). On CentOS, add this via:
 ```
 sudo firewall-cmd --permanent --add-port=8765/tcp
 sudo firewall-cmd --reload

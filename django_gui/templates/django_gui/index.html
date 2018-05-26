@@ -1,9 +1,9 @@
-{% extends 'gui/base.html' %}
+{% extends 'django_gui/base.html' %}
 
 {% block content %}
 
-<title>{{ cruise.id }} Cruise Management</title>
-<h1>{{ cruise.id }} Cruise Management</h1>
+<title>{{ cruise_id }} Cruise Management</title>
+<h1>{{ cruise_id }} Cruise Management</h1>
 
 {# ######################################################################## #}
 {# Show server status up top.                                               #}
@@ -44,17 +44,20 @@
     
 {# ######################################################################## #}
 {# Draw the loggers and their current configurations.                       #}
-{% if cruise %}      
+{% if cruise_id %}      
   <hr>
   <table>
     <tr><th>logger</th><th colspan=3>configuration</th></tr>
-    {% for logger_name, logger_id in loggers.items %}
+    {% for logger_name, logger_config in loggers.items %}
     <tr id="{{ logger_name }}_row">
       <td id="{{ logger_name }}_td">{{ logger_name }}</td>
       <td id="{{ logger_name }}_config_td">
         {% if user.is_authenticated %}
           <button id="{{ logger_name }}_config_button" type="submit"
-            onclick="window.open('../edit_config/{{ logger_id }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');">
+                  onclick="window.open('../edit_config/{{ cruise_id }}/{{logger_name }}/{{ logger_config }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');">
+
+            {# onclick="window.open('../edit_config/{{ logger_config }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');"> #}
+            {{ logger_config }}
           </button>
         {% else %}
           <span id="{{ logger_name }}_config_button">
@@ -76,19 +79,19 @@
     <p>Mode:
       <select name="select_mode" id="select_mode"
               onchange="highlight_select_mode()">
-      {% for mode in modes %}
+      {% for mode_option in modes %}
       <option id="mode_{{ mode }}"
-         {% if mode == current_mode %}
+         {% if mode_option == current_mode %}
          selected
          {% endif %}>
-          {{ mode.name }}
+          {{ mode_option }}
       </option> 
       {% endfor %}
     </select>  
     <button type="submit">Change mode</button></p>
     </form>
   {% else %}
-    <p>Mode: <b><span id="mode_name">{{ cruise.current_mode }}</span></b></p>
+    <p>Mode: <b><span id="mode_name">{{ current_mode }}</span></b></p>
   {% endif %}
 {% else %}
   <title>No cruise selected</title>
@@ -101,12 +104,12 @@
   <p>Cruise:
     <select name="select_cruise" id="select_cruise"
             onchange="highlight_select_cruise()">
-      {% for cruise_id in cruise_list %}
-      <option id="cruise_{{ cruise_id }}"
-              {% if cruise_id == cruise %}
+      {% for cruise_id_option in cruise_list %}
+      <option id="cruise_{{ cruise_id_option }}"
+              {% if cruise_id_option == cruise_id %}
                 selected
               {% endif %}>
-        {{ cruise_id.id }}
+        {{ cruise_id_option }}
       </option> 
       {% endfor %}
     </select>  
@@ -115,7 +118,7 @@
 
 {# ######################################################################## #}
 {# Status bar                                                               #}
-{% if cruise %}
+{% if cruise_id %}
 Current configuration: {{ cruise.config_filename }}
 {% endif %}
 {% if user.is_authenticated %}
@@ -173,7 +176,7 @@ Current configuration: {{ cruise.config_filename }}
 {# Start of Javascript                                                      #}
 <script type="text/javascript">
   // We're after logger statuses, so append '/logger' path
-  var websocket_server = "ws://{{ websocket_server }}/logger/{{ cruise.id }}";
+  var websocket_server = "ws://{{ websocket_server }}/logger/{{ cruise_id }}";
 
   //////////////////////////////////////////////////////////////
   // WebSocket code - need to pull this out into a separate file
@@ -246,6 +249,7 @@ Current configuration: {{ cruise.config_filename }}
 
   var cruise_loaded_time = 0;
 
+  ////////////////////////////
   function process_message(message) {
     // Fill in the values we've received
 

@@ -21,7 +21,6 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
 django.setup()
 
-from .models import load_cruise_config_to_models
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise, CruiseState
 from .models import ServerMessage, ServerState
@@ -220,6 +219,9 @@ class DjangoServerAPI(ServerAPI):
     cruise.current_mode = mode_obj
     cruise.save()
 
+    # Store the fact that our mode has been changed.
+    CruiseState(cruise=cruise, current_mode=mode_obj).save()
+    
     for logger in Logger.objects.filter(cruise=cruise):
       logger_id = logger.name
       new_config = self._get_logger_config_object(cruise_id,
@@ -388,9 +390,10 @@ class DjangoServerAPI(ServerAPI):
   #############################
   # Methods to modify the data store
   ############################
-  def load_cruise(self, cruise_config):
+  def load_cruise(self, cruise_config, config_filename=None):
     """Add a complete cruise configuration (id, modes, configs, 
     default) to the data store."""
+    
     cruise_def = cruise_config.get('cruise', {})
     loggers = cruise_config.get('loggers', None)
     modes = cruise_config.get('modes', None)
@@ -405,24 +408,26 @@ class DjangoServerAPI(ServerAPI):
       raise ValueError('Cruise configuration has no configs')
     
     ################
-    # Begin by creating the Cruise object. If no cruise name, make up
-    # a sequential name.
+    # Begin by creating the Cruise object. If no cruise name, use
+    # filename. If no filename, make up a sequential name.
     cruise_id = cruise_def.get('id', None)
-    if not cruise_id:
+    if cruise_id is None:
+      cruise_id = config_filename
+    if cruise_id is None:
       cruise_id = 'cruise_%d' % len(Cruise.objects.all())
 
     # Does this cruise already exist? If so, delete it.
     # Alternatively, we could throw a ValueError telling user they
     # have to delete it first.
     for old_cruise in Cruise.objects.filter(id=cruise_id):
-      raise ValueError('Cruise %s already exists - delete it first' % cruise_id)
-      #logging.warning('Cruise %s already exists - deleting old one', cruise_id)
-      #old_cruise.delete()
+      #raise ValueError('Cruise %s already exists; delete it first' % cruise_id)
+      logging.warning('Cruise %s already exists - deleting old one', cruise_id)
+      old_cruise.delete()
 
     if ID_SEPARATOR in cruise_id:
       raise ValueError('Illegal character "%s" in cruise id: "%s"' %
                        ID_SEPARATOR, cruise_id)
-    cruise = Cruise(id=cruise_id)
+    cruise = Cruise(id=cruise_id, config_filename=config_filename)
     start_time = cruise_def.get('start', None)
     if start_time:
       cruise.start = datetime_obj(start_time, time_format=DATE_FORMAT)
@@ -444,7 +449,6 @@ class DjangoServerAPI(ServerAPI):
         cruise.default_mode = mode
         cruise.save()
 
-
     ################
     # Create the loggers
     for logger_name, logger_spec in loggers.items():
@@ -457,14 +461,20 @@ class DjangoServerAPI(ServerAPI):
       if logger_configs is None:
         raise ValueError('Logger %s (cruise %s) has no config declaration' %
                          (logger_name, cruise_id))
+
+      # Find the corresponding configuration
       for config_name in logger_configs:
-        config_spec = configs.get(config_name, None)
+        config_spec = configs.get(config_name, None)        
         if config_spec is None:
           raise ValueError('Config %s (declared by logger %s) not found' %
                            (config_name, logger_name))
         logging.info('  Associating config %s with logger %s',
                      config_name, logger_name)
         logging.info('config_spec: %s', config_spec)
+
+        # A minor hack: fold the config's name into the spec
+        if not 'name' in config_spec:
+          config_spec['name'] = config_name        
         config = LoggerConfig(name=config_name, cruise=cruise, logger=logger,
                               config_json=json.dumps(config_spec))
         config.save()
@@ -492,14 +502,7 @@ class DjangoServerAPI(ServerAPI):
     logging.info('Cruise %s loaded - setting to default mode %s',
                  cruise_id, default_mode)
     self.set_mode(cruise_id, default_mode)
-    """
 
-    self.cruise_configs[cruise_id] = cruise_config
-
-    # Set cruise into default mode, if one is defined
-    if 'default_mode' in cruise_config:
-      self.set_mode(cruise_id, cruise_config['default_mode'])
-    """
   ############################
   def delete_cruise(self, cruise_id):
     """Remove the specified cruise from the data store."""

@@ -15,17 +15,21 @@ from django.views.decorators.csrf import csrf_exempt
 
 sys.path.append('.')
 
-from .models import load_cruise_config_to_models
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise, CurrentCruise, CruiseState
 from .models import ServerMessage, ServerState
 
-from gui.run_servers import ServerRunner
+from django_gui.run_servers import ServerRunner
 
 # Read in JSON with comments
 from logger.utils.read_json import parse_json
 
-from gui.settings import WEBSOCKET_SERVER, WEBSOCKET_SERVER
+from django_gui.settings import WEBSOCKET_SERVER, WEBSOCKET_SERVER
+
+############################
+# We're going to interact with the Django DB via its API class
+from .django_server_api import DjangoServerAPI
+api = DjangoServerAPI()
 
 ############################
 def get_server_state(server):
@@ -38,37 +42,17 @@ def get_server_state(server):
 
 ################################################################################
 def index(request, cruise_id=None):
-
-  # We'll accumulate any errors we encounter here
-  errors = []
-
-  # First: do we have a cruise
-  if cruise_id:
-    try:
-      cruise = Cruise.objects.get(id=cruise_id)
-    except Cruise.DoesNotExist:
-      errors.append('Specified cruise "%s" does not exist.' % cruise_id)
-      cruise = None
-  else:
-    try:
-      cruise = CurrentCruise.objects.latest('as_of').cruise
-      cruise_id = cruise.id
-    except CurrentCruise.DoesNotExist:
-      cruise = None
-    
-  cruise_list = Cruise.objects.all()
-
-  if not cruise:
+  if not cruise_id:
     template_vars = {
       'websocket_server': WEBSOCKET_SERVER,
       'cruise': None,
-      'cruise_list': cruise_list,
+      'cruise_list': api.get_cruises(),
       'status_server_running': get_server_state('StatusServer').running,
       'logger_server_running': get_server_state('LoggerServer').running,
-      'errors': ', '.join(errors),
+      'errors': '',
     }
-    return render(request, 'gui/index.html', template_vars)
-    
+    return render(request, 'django_gui/index.html', template_vars)
+   
   ############################
   # If we've gotten a POST request
   if request.method == 'POST':
@@ -76,70 +60,48 @@ def index(request, cruise_id=None):
     # Did we get a cruise selection?
     if request.POST.get('select_cruise', None):
       cruise_id = request.POST['select_cruise']
-      logging.warning('switching to cruise "%s"', cruise_id)
-      cruise = Cruise.objects.get(id=cruise_id)
+      logging.info('switching to cruise "%s"', cruise_id)
+
+    # Are they deleting a cruise?(!)
+    if request.POST.get('delete_cruise', None):
+      logging.info('deleting cruise "%s"', cruise_id)
+      api.delete_cruise(request.POST['delete_cruise'])
 
     # Did we get a mode selection?
     elif request.POST.get('select_mode', None):
       new_mode_name = request.POST['select_mode']
-      logging.warning('switching to mode "%s"', new_mode_name)
-      new_mode = Mode.objects.get(name=new_mode_name, cruise=cruise)
-      current_mode = new_mode
-      cruise.current_mode = new_mode
-      cruise.save()
-
-      # Find the config that matches the new mode for each logger. If
-      # no config for a logger, that means the logger isn't supposed
-      # to be running in this mode. 
-      for logger in Logger.objects.filter(cruise=cruise):
-        config_set = LoggerConfig.objects.filter(logger=logger, mode=new_mode)
-        config_set_size = config_set.count()
-        if config_set_size == 0:
-          desired_config = None
-        elif config_set_size == 1:
-          desired_config = config_set.first()
-        else:
-          desired_config = None
-          logging.error('Multiple matching configs for logger %s, mode %s',
-                        logger.name, new_mode_name)
-
-        logger.desired_config = desired_config
-        logger.save()
-        #LoggerConfigState(config=desired_config, desired=true).save()
+      logging.info('switching to mode "%s"', new_mode_name)
+      api.set_mode(cruise_id, new_mode_name)
 
     # Else unknown post
     else:
       logging.warning('Unknown POST request: %s', request.POST)
 
   # Now assemble the information needed to display the page.
-  modes = Mode.objects.filter(cruise=cruise)
-  current_mode = cruise.current_mode
+  cruise_list = api.get_cruises()
+  modes = api.get_modes(cruise_id)
+  current_mode = api.get_mode(cruise_id)
 
   # Get config corresponding to current mode for each logger
   loggers = {}
-  for logger in Logger.objects.filter(cruise=cruise):
-    desired_config = logger.desired_config or None
-    if logger.desired_config:
-      logging.warning('config for %s is %s', logger.name, desired_config.name)
-    else:
-      logging.warning('no config for %s', logger.name)
-    loggers[logger.name] = logger.id
+  for logger_id in api.get_loggers(cruise_id):
+    logger_config = api.get_logger_config_name(cruise_id, logger_id)
+    loggers[logger_id] = logger_config
+    logging.warning('config for %s is %s', logger_id, logger_config)
 
   template_vars = {
     'is_superuser': True,
     'websocket_server': WEBSOCKET_SERVER,
-    'cruise': cruise,
+    'cruise_id': cruise_id,
     'cruise_list': cruise_list,
     'modes': modes,
     'current_mode': current_mode,
     'loggers': loggers,
     'status_server_running': get_server_state('StatusServer').running,
     'logger_server_running': get_server_state('LoggerServer').running,
-    'errors': ', '.join(errors),
+    'errors': '',
   }
-
-  # Render what we've ended up with
-  return render(request, 'gui/index.html', template_vars)
+  return render(request, 'django_gui/index.html', template_vars)
 
 ################################################################################
 run_servers_object = None
@@ -148,7 +110,7 @@ run_servers_process = None
 ################################################################################
 # To start/stop/monitor servers
 
-# NOTE: Starting/stopping the ServerRunner process (gui/run_servers.py)
+# NOTE: Starting/stopping the ServerRunner process (django_gui/run_servers.py)
 # is not yet working. You'll need to start/stop it manually for now.
 
 def servers(request):
@@ -182,74 +144,63 @@ def servers(request):
   template_vars = {'websocket_server': WEBSOCKET_SERVER}
 
   # Render what we've ended up with
-  return render(request, 'gui/servers.html', template_vars)
+  return render(request, 'django_gui/servers.html', template_vars)
 
 ################################################################################
 # Page to display messages from the specified server
 def server_messages(request, server):
   template_vars = {'websocket_server': WEBSOCKET_SERVER, 'server': server}
-  return render(request, 'gui/server_messages.html', template_vars)
+  return render(request, 'django_gui/server_messages.html', template_vars)
 
 ################################################################################
-def edit_config(request, logger_id):
-  logger = Logger.objects.get(id=logger_id)
+def edit_config(request, cruise_id, logger_id, logger_config):
   
   ############################
-  # If we've gotten a POST request
+  # If we've gotten a POST request, they've selected a new config
   if request.method == 'POST':
-    config_id = request.POST['select_config']
-    if not config_id:
-      desired_config = None
-      logging.warning('Selected null config for %s', logger.name)
-    else:
-      desired_config = LoggerConfig.objects.get(id=config_id)
-      logging.warning('Selected config "%s" for %s',
-                      desired_config.name, logger.name)
-
-      enabled_text = request.POST.get('enabled', None)
-      if not enabled_text in ['enabled', 'disabled']:
-        raise ValueError('Got bad "enabled" value: "%s"', enabled_text)
-      enabled = enabled_text == 'enabled'
-      desired_config.enabled = enabled
-      desired_config.save()
-
-    # Set the config to be its logger's desired_config
-    logger.desired_config = desired_config
-    logger.save()
+    new_config = request.POST['select_config']
+    logging.warning('selected config: %s', new_config)
+    api.set_logger_config_name(cruise_id, logger_id, new_config)
     
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 
-  all_configs = LoggerConfig.objects.filter(logger=logger)
-  logger_mode_config = get_logger_mode_config(logger)
-
-  return render(request, 'gui/edit_config.html',
-                {'logger': logger,
-                 'logger_mode_config': logger_mode_config,
-                 'all_configs': all_configs})
-
+  # What's our current mode? What's the default config for this logger
+  # in this mode?
+  current_mode = api.get_mode(cruise_id)
+  default_mode_config = api.get_logger_config_name(cruise_id, logger_id,
+                                                   current_mode)
+  return render(request, 'django_gui/edit_config.html',
+                {'cruise_id': cruise_id,
+                 'logger_id': logger_id,
+                 'logger_config': logger_config,
+                 'default_mode_config': default_mode_config,
+                 'logger_config_options':
+                 api.get_logger_config_names(cruise_id, logger_id)
+                })
+                
 ################################################################################
 def load_cruise_config(request):
   # If not a POST, just draw the page
   if not request.method == 'POST':
-    return render(request, 'gui/load_cruise_config.html', {})
+    return render(request, 'django_gui/load_cruise_config.html', {})
 
   # If POST, we've expect there to be a file to process
   else:
-    logging.warning('Got POST: %s', request.POST)
     errors = []
 
     # Did we get a configuration file?
     if request.FILES.get('config_file', None):
-
       config_file = request.FILES['config_file']
       config_contents = config_file.read() 
       logging.warning('Uploading file "%s"...', config_file.name)
 
       try:
         config = parse_json(config_contents.decode('utf-8'))
-        errors += load_cruise_config_to_models(config, config_file.name)
+        api.load_cruise(config, config_file.name)
       except JSONDecodeError as e:
+        errors.append(str(e))
+      except ValueError as e:
         errors.append(str(e))
 
       # If no errors, close window - we're done.
@@ -260,19 +211,8 @@ def load_cruise_config(request):
       errors.append('No configuration file selected')
 
     # If here, there were errors
-    return render(request, 'gui/load_cruise_config.html',
+    return render(request, 'django_gui/load_cruise_config.html',
                   {'errors': ';'.join(errors)})
-
-################################################################################
-# By default, what config should logger have in current mode?
-def get_logger_mode_config(logger):
-  try:
-    cruise = logger.cruise
-    mode = cruise.current_mode
-    return LoggerConfig.objects.get(logger=logger, mode=mode)
-  except LoggerConfig.DoesNotExist:
-    logging.warning('No config matching logger %s in mode %s', logger, mode)
-    return None
 
 ################################################################################
 def widget(request, field_list=''):
@@ -285,4 +225,4 @@ def widget(request, field_list=''):
   }
 
   # Render what we've ended up with
-  return render(request, 'gui/widget.html', template_vars)
+  return render(request, 'django_gui/widget.html', template_vars)

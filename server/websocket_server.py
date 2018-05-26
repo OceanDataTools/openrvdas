@@ -54,9 +54,10 @@ class WebsocketServer:
        strings we want to send out to that client on the websocket.
 
     on_connect - optional routine to be called when a new client connects.
-       Should take two parameters:
+       Should take three parameters:
            websocket - the websocket itself, in case someone wants to store it
            client_id - an integer client id
+           path - the path with which the client connected
 
     on_disconnect - optional routine to be called when a client
        disconnects. Should take a single integer representing client's
@@ -112,7 +113,7 @@ class WebsocketServer:
       self.client_map[client_id] = websocket
       self.num_clients += 1
       if self.on_connect:
-        self.on_connect(websocket, client_id)
+        self.on_connect(websocket, client_id, path)
     
     tasks = []
 
@@ -204,7 +205,7 @@ async def queued_producer(client_id):
       await asyncio.sleep(0.1)
       
 ############################
-def register_websocket_client(websocket, client_id):
+def register_websocket_client(websocket, client_id, path):
   """We've been alerted that a websocket client has connected.
   Register it properly."""
   global send_queue, receive_queue, websocket_map_lock
