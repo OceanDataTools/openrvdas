@@ -18,7 +18,7 @@ from json import dumps as json_dumps
 sys.path.append('.')
 
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gui.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 
 from .models import Logger, LoggerConfig, LoggerConfigState

@@ -14,7 +14,7 @@ from django.test import TestCase
 
 sys.path.append('.')
 
-from gui.django_server_api import DjangoServerAPI
+from django_gui.django_server_api import DjangoServerAPI
 
 sample_test_0 = {
   "cruise": {
