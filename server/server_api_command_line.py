@@ -66,7 +66,7 @@ def show_commands():
      'Set logger to named configuration\n'),
 
     ('status <cruise_id>',
-     'Print most recent status for each logger in cruise')
+     'Print most recent status for each logger in cruise'),
     ('status_since <cruise_id> <timestamp>',
      'Get all logger status updates since specified timestamp\n'),
     
