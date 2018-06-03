@@ -258,7 +258,7 @@ if __name__ == '__main__':
   ############################
   # Writers
   parser.add_argument('--write_file', dest='write_file', default=None,
-                      help='File(s) to write to (empty for stdout)')
+                      help='File(s) to write to (\'-\' for stdout)')
 
   parser.add_argument('--write_logfile', dest='write_logfile', default=None,
                       help='Filename base to write to. A date string that '
