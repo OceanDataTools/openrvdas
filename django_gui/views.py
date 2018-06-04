@@ -24,7 +24,7 @@ from django_gui.run_servers import ServerRunner
 # Read in JSON with comments
 from logger.utils.read_json import parse_json
 
-from django_gui.settings import WEBSOCKET_SERVER, WEBSOCKET_SERVER
+from django_gui.settings import WEBSOCKET_SERVER
 
 ############################
 # We're going to interact with the Django DB via its API class

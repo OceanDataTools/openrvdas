@@ -10,7 +10,7 @@ command lines below)
 1. As a simple standalone logger runner: you give it an intial dict of
    logger configurations, and it tries to keep them running.
 
-     server/logger_runner.py --configs test/configs/sample_configs.json
+     server/logger_runner.py --config test/configs/sample_configs.json
  
    Note: the LoggerRunner doesn't know anything about modes, and doesn't
    take a full cruise configuration - it just takes a dict of logger
@@ -25,9 +25,10 @@ command lines below)
    loggers to its LoggerRunner. (Type "help" on the LoggerManager command
    line for the commands it understands.)
 
-3. As instantiated by some other script.
+3. As instantiated by some other script that directly creates and
+   manages a LoggerRunner object.
 
-4. As a websocket client listening to a LoggerManager:
+4. As a websocket client taking orders from a LoggerManager:
 
      server/run_loggers.py --websocket localhost:8765 --host_id knud.host
 
@@ -74,12 +75,12 @@ To verify that the scripts are actually working as intended, you can
 create a network listener on port 6224 in yet another window:
 
   logger/listener/listen.py --network :6224 --write_file -
-
 """
 import asyncio
 import json
 import logging
 import multiprocessing
+import os
 import pprint
 import signal
 import sys
@@ -134,6 +135,12 @@ class LoggerRunner:
     self.num_tries = {}
     self.failed_loggers = set()
 
+    # We want to remember that we've shut down and erased a logger so
+    # that the next time we're asked for a status update, we can add
+    # one last notice that it's not running. Without it, the most
+    # recent status report for it will be its previous state.
+    self.disappeared_loggers = set()
+    
     self.interval = interval
     self.max_tries = max_tries
     self.quit_flag = False
@@ -146,8 +153,8 @@ class LoggerRunner:
     try:
       signal.signal(signal.SIGTERM, kill_handler)
     except ValueError:
-      logging.warning('LoggerRunner not running in main thread; '
-                      'shutting down with Ctl-C may not work.')
+      logging.info('LoggerRunner not running in main thread; '
+                   'shutting down with Ctl-C may not work.')
 
     # Don't let other threads mess with data while we're
     # messing. Re-entrant so that we don't have to worry about
@@ -165,6 +172,34 @@ class LoggerRunner:
     self.host_id = host_id
       
   ############################
+  def set_configs(self, new_configs):
+    """Start/stop loggers as necessary to move from current configs
+    to new configs.
+
+    new_configs - a dict of {logger_name:config} for all loggers that
+                  should be running
+    """
+    # All loggers, whether in current configuration or desired mode.
+    with self.config_lock:
+      # If loggers we know about are no longer part of new config,
+      # shut them down and delete them. Note that this is different
+      # from the logger having an empty/None configuration, which
+      # means we should shut it down, but we still remember it.
+      self.disappeared_loggers = set(self.logger_configs) - set(new_configs)
+      if self.disappeared_loggers:
+        logging.info('New configuration contains no mention of some '
+                    'loggers. Shutting down and deleting: %s',
+                     self.disappeared_loggers)
+        for logger in self.disappeared_loggers:
+          self._kill_and_delete_logger(logger)
+          
+      # Now set all the other loggers in their new configs. This
+      # includes starting them up if new config is running and
+      # shutting them down if it isn't.
+      for logger, config in new_configs.items():
+        self.set_config(logger, config)
+  
+  ############################
   def set_config(self, logger, new_config):
     """Start/stop individual logger to put into new config.
     
@@ -178,8 +213,15 @@ class LoggerRunner:
     with self.config_lock:
       current_config = self.logger_configs.get(logger, None)
 
-      # Isn't running and shouldn't be running. Nothing to do here
-      if current_config is None and new_config is None:
+      # Save new config and reset our various flags it *seems*
+      # reasonable to reset errors and number of tries if user has
+      # reset config, even if it is to same config.
+      self.logger_configs[logger] = new_config
+      self.num_tries[logger] = 0
+      self.errors[logger] = []
+
+      # Logger isn't running and shouldn't be running. Nothing to do here
+      if not current_config and not new_config:
         return
 
       # If current_config == new_config (and is not None) and the
@@ -202,8 +244,7 @@ class LoggerRunner:
       # Either old and new config don't match or process is dead. If
       # process isn't dead, then it means old and new config don't
       # match. So kill old process before starting new one.
-      elif process:
-        self._kill_logger(logger)
+      self._kill_logger(logger)
 
       # Finally, if we have a new config, start up the new process for it
       if new_config:
@@ -212,34 +253,6 @@ class LoggerRunner:
         self.num_tries[logger] = 1
       
   ############################
-  def set_configs(self, new_configs):
-    """Start/stop loggers as necessary to move from current configs
-    to new configs.
-
-    new_configs - a dict of {logger_name:config} for all loggers that
-                  should be running
-    """    
-    # All loggers, whether in current configuration or desired mode.
-    with self.config_lock:
-      # If loggers we know about are no longer part of new config,
-      # shut them down and delete them. Note that this is different
-      # from the logger having an empty/None configuration, which
-      # means we should shut it down, but we still remember it.
-      disappearing_loggers = set(self.logger_configs) - set(new_configs)
-      if disappearing_loggers:
-        logging.info('New configuration contains no mention of some '
-                    'loggers. Shutting down and deleting: %s',
-                     disappearing_loggers)
-        for logger in disappearing_loggers:
-          self._kill_and_delete_logger(logger)
-          
-      # Now set all the other loggers in their new configs. This
-      # includes starting them up if new config is running and
-      # shutting them down if it isn't.
-      for logger, config in new_configs.items():
-        self.set_config(logger, config)
-  
-  ############################
   def _start_logger(self, logger, config):
     """Create a new process running a Listener/Logger using the passed
     config, and return the Process object."""
@@ -247,8 +260,7 @@ class LoggerRunner:
     try:
       run_logging.debug('Starting config:\n%s', pprint.pformat(config))
       listener = ListenerFromLoggerConfig(config)
-
-      proc = multiprocessing.Process(target=listener.run)
+      proc = multiprocessing.Process(target=listener.run, daemon=True)
       proc.start()
       errors = []
 
@@ -258,7 +270,6 @@ class LoggerRunner:
       if e is KeyboardInterrupt:
         self.quit()
         return
-
       logging.warning('Config %s got exception: %s', config['name'], str(e))
       proc = None
       errors = [str(e)]
@@ -277,15 +288,20 @@ class LoggerRunner:
     with self.config_lock:
       process = self.processes.get(logger, None)
       if process:
-        run_logging.info('Shutting down process for %s', logger)
-        process.terminate()
+        run_logging.info('Shutting down %s (pid %d)', logger, process.pid)
+        # For reasons I can't fathom, when LoggerRunner isn't in the
+        # main thread, process.terminate() is propagating to the main
+        # thread in our own process and killing everything. Using the
+        # heavier-handed os.kill() seems to not have this problem.
+        os.kill(process.pid, signal.SIGKILL)
+        #process.terminate()
         process.join()
       else:
         logging.info('Attempted to kill process for %s, but no '
                      'associated process found.', logger)
 
     # Clean out debris from old logger process
-    self.logger_configs[logger] = None
+    #self.logger_configs[logger] = None
     self.processes[logger] = None
     self.errors[logger] = []
     self.failed_loggers.discard(logger)
@@ -305,18 +321,26 @@ class LoggerRunner:
   async def _get_websocket_commands(self, websocket):
     """Listen to websocket for commands and process them."""
     async for command in websocket:
-      if command == 'quit':
-        self.quit_flag = True
-
-      elif command.find('set_configs ') == 0:
-        (configs_cmd, configs_str) = command.split(maxsplit=1)
-        logging.info('Setting configs to %s', configs_str)
-        self.set_configs(json.loads(configs_str))
-
-      else:
-        logging.error('Unrecognized command: %s', command)
+      try:
+        self.parse_command(command)
+      except ValueError:
         await websocket.send(json.dumps(
           {'error': 'unrecognized command: ' + command}))
+
+  ############################
+  def parse_command(self, command):
+    """Parse and execute the passed command."""
+    if command == 'quit':
+      self.quit_flag = True
+
+    elif command.find('set_configs ') == 0:
+      (configs_cmd, configs_str) = command.split(maxsplit=1)
+      logging.info('Setting configs to %s', configs_str)
+      self.set_configs(json.loads(configs_str))
+
+    else:
+      logging.error('Unrecognized command: %s', command)
+      raise ValueError('Unrecognized command: %s' % command)
 
   ############################
   def check_logger(self, logger, manage=False, clear_errors=False):
@@ -331,21 +355,25 @@ class LoggerRunner:
     """
     with self.config_lock:
       config = self.logger_configs.get(logger, None)
+      config_name = config.get('name', 'unknown') if config else None
       process = self.processes.get(logger, None)
 
       # Now figure out whether we are (and should be) running.
       
-      # Not running and shouldn't be. We're good.
-      if config is None and process is None:
+      # Not running and shouldn't be. We're good. Reset our warnings.
+      if not config and not process:
         running = None
+        self.failed_loggers.discard(logger)
+        self.errors[logger] = []
+        self.num_tries[logger] = 0
 
       # If we are running and are supposed to be, also good.
       elif config and process and process.is_alive():
         running = True
+        self.failed_loggers.discard(logger)
 
       # Shouldn't be running, but is?!?
       elif not config and process:
-        run_logging.warning('Logger %s shouldn\'t be running, but is?', logger)
         running = True
         if manage:
           self._kill_logger(logger)
@@ -354,7 +382,6 @@ class LoggerRunner:
       # Here if it should be running, but isn't.
       else:
         running = False
-        config_name = config.get('name', 'unknown')
         # If we're supposed to try and manage the state ourselves,
         # restart dead logger.
         if manage:
@@ -378,13 +405,12 @@ class LoggerRunner:
             self.num_tries[logger] += 1
 
       status = {
+        'config': config_name,
         'errors': self.errors.get(logger, []),
         'running': running,
         'failed': logger in self.failed_loggers,
         'pid': process.pid if process else None
       }
-      if config and 'name' in config:
-        status['config'] = config.get('name')
 
       # Clear accumulated errors for this logger if they've asked us to
       if clear_errors:
@@ -393,17 +419,36 @@ class LoggerRunner:
     
   ############################
   def check_loggers(self, manage=False, clear_errors=False):
-    """Check logger status.
+    """Check logger status, returning a dict of 
 
-    manage - if True, try to restart/stop loggers to put them in the state
-             their configs say they should be in.
+      logger_id:
+          config  - name of config (or None)
+          errors  - list of errors
+          running - Bool whether logger process is running
+          failed  - Bool whether logger process has failed
+          pid:    - logger pid or None, if not running
 
-    clear_errors - if True, clear out any errors reported by checking.
+    Parameters:
+      manage - if True, try to restart/stop loggers to put them in the state
+               their configs say they should be in.
+
+      clear_errors - if True, clear out any errors reported by checking.
     """
     with self.check_loggers_lock:
-      loggers = set(self.logger_configs)
-      return {logger:self.check_logger(logger, manage, clear_errors)
-              for logger in loggers}
+      # If there are any disappeared loggers, we want to give them one
+      # last status report which will show that they are not running.
+      loggers = set(self.logger_configs).union(self.disappeared_loggers)
+
+      # This is an approximation to intent: if we're clearing errors,
+      # guess that we're also going to be storing statuses, so will
+      # have on record that the disappeared loggers have shut down.
+      if clear_errors:
+        self.disappeared_loggers = set()
+
+      status = {logger:self.check_logger(logger, manage, clear_errors)
+                for logger in loggers}
+      logging.debug('check_loggers got status: %s', pprint.pformat(status))
+      return status
 
   ############################
   async def _check_loggers_loop(self, websocket=None,
@@ -439,25 +484,26 @@ class LoggerRunner:
     # If no websocket, just fire up check_loggers() and wait for it to finish.
     if not self.websocket:
       await self.check_loggers(manage=True, clear_errors=True)
-
+      return
+    
     # If we have a websocket specification
-    else:
-      try:
-        async with websockets.connect('ws://' + self.websocket) as websocket:
-          get_commands_task = asyncio.ensure_future(
-            self._get_websocket_commands(websocket))
-          check_loggers_task = asyncio.ensure_future(
-            self._check_loggers_loop(websocket, manage=True, clear_errors=True))
-          done, pending = await asyncio.wait([get_commands_task,
+    try:
+      server_addr = 'ws://%s/logger_runner/%s' % (self.websocket,self.host_id)
+      async with websockets.connect(server_addr) as websocket:
+        get_commands_task = asyncio.ensure_future(
+          self._get_websocket_commands(websocket))
+        check_loggers_task = asyncio.ensure_future(
+          self._check_loggers_loop(websocket, manage=True, clear_errors=True))
+        done, pending = await asyncio.wait([get_commands_task,
                                             check_loggers_task],
-                                            return_when=asyncio.FIRST_COMPLETED)
-        # When here, either check_loggers_tast or get_commands_task has
-        # ended. Terminate the other task.
-        for task in pending:
-          task.cancel()
-      except OSError as e:
-        logging.error('Failed to connect to websocket on %s: %s',
-                      self.websocket, str(e))
+                                           return_when=asyncio.FIRST_COMPLETED)
+      # When here, either check_loggers_tast or get_commands_task has
+      # ended. Terminate the other task.
+      for task in pending:
+        task.cancel()
+    except OSError as e:
+      logging.error('Failed to connect to websocket on %s: %s',
+                    self.websocket, str(e))
 
   ############################
   def run(self):
@@ -523,12 +569,10 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-
-  logging.basicConfig(format=LOGGING_FORMAT)
-
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
-  # Our verbosity
+  # Set our logging verbosity
+  logging.basicConfig(format=LOGGING_FORMAT)
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   run_logging.setLevel(LOG_LEVELS[args.verbosity])
 

@@ -76,7 +76,7 @@ class TestLoggerRunner(unittest.TestCase):
     self.assertFalse(os.path.exists(self.dest_name))
 
     runner = LoggerRunner(interval=0.1)
-    runner_thread = threading.Thread(target=runner.run)
+    runner_thread = threading.Thread(target=runner.run, daemon=True)
     runner_thread.start()
 
     runner.set_configs(self.config['modes']['on'])  
@@ -92,7 +92,8 @@ class TestLoggerRunner(unittest.TestCase):
 
     status = runner.check_loggers()
     self.assertDictEqual(status,
-                         {'logger': {'errors': [],
+                         {'logger': {'config': 'unknown',
+                                     'errors': [],
                                      'running': True,
                                      'pid': pid,
                                      'failed': False}

@@ -37,49 +37,80 @@ The -v flag may be specified on any of the above command lines to
 increase diagnostic verbosity to "INFO". Repeating the flag sets
 verbosity to "DEBUG".
 
+For the LoggerManager and LoggerRunner, the -V (capitalized) flag
+increases verbosity of the loggers being run.
+
 #######################################################
 To try out the scripts, open four(!) terminal windows.
 
-1. In the first one, run a listener that monitors UDP port 6224. The
-   sample cruise config file defines loggers that write to this port
-   when active, so this will be where we see output show up when
-   loggers are running:
+1. In the first terminal, start the LoggerManager with a websocket server:
 
-   logger/listener/listen.py --network :6224 --write_file -
+   server/logger_manager.py --websocket localhost:8765 -v
 
-2. In the second one, run the script that sets up the simulate serial
-   ports that the sample cruise configuration (in
-   tests/configs/sample_cruise.json):
-   logger/utils/simulate_serial.py --config test/serial_sim.json -v
-
-3. In the third one, start a LoggerManager with a websocket server:
-
-   server/logger_manager.py --config test/configs/sample_cruise.json \
-         --websocket localhost:8765 -v
-
-4. In the fourth one, start a LoggerRunner that will try to connect
+2. In a second terminal, start a LoggerRunner that will try to connect
    to the websocket on the LoggerManager you've started.
 
    server/logger_runner.py --websocket localhost:8765 \
          --host_id knud.host -v
 
-   Note that this LoggerRunner is identifying its host as
-   "knud.host"; if you look at sample_cruise.json, you'll notice that
+   Note that this LoggerRunner is identifies its host as "knud.host";
+   if you look at test/configs/sample_cruise.json, you'll notice that
    the configs for the "knud" logger have a host restriction of
    "knud.host", meaning that our LoggerManager should try to dispatch
    those configs to this LoggerRunner.
 
-5. In the terminal running the LoggerManager, try a few commands:
+3. The sample cruise that we're going to load and run is configured to
+   read from simulated serial ports. To create those simulated ports
+   and start feeding data to them, use a third terminal window to run:
+
+   logger/utils/simulate_serial.py --config test/serial_sim.json -v
+
+4. Finally, we'd like to be able to easily glimpse the data that the
+   loggers are producing. The sample cruise configuration tells the
+   loggers to write to UDP port 6224 when running, so use the fourth
+   terminal to run a Listener that will monitor that port. The '-'
+   filename tells the Listener to write to stdout (see listen.py
+   --help for all Listener options):
+
+   logger/listener/listen.py --network :6224 --write_file -
+
+5. Whew! Now try a few commands in the terminal running the
+   LoggerManager (you can type 'help' for a full list):
+
+   # Load a cruise configuration
+
+   command? load_cruise test/configs/sample_cruise.json
 
    command? cruises
-   Loaded cruises: NBP1700
+     Loaded cruises: NBP1700
+
+   # Change cruise modes
+
    command? modes NBP1700
-   Modes for NBP1700: off, port, underway
+     Modes for NBP1700: off, port, underway
+
    command? set_mode NBP1700 port
-   ...
+     (You should notice data appearing in the Listener window.)
+
    command? set_mode NBP1700 underway
-   ...
+     (You should notice more data appearing in the Listener window, and
+      the LoggerRunner in the second window should leap into action.)
+
    command? set_mode NBP1700 off
+
+   # Manually change logger configurations
+
+   command? loggers NBP1700
+     Loggers for NBP1700: knud, gyr1, mwx1, s330, eng1, rtmp
+
+   command? logger_configs NBP1700 s330
+     Configs for NBP1700:s330: s330->off, s330->net, s330->file/net/db
+   
+   command? set_logger_config_name NBP1700 s330 s330->net
+
+   command? set_mode NBP1700 off
+
+   command? quit
 
    When setting the mode to port, you should notice data appearing in
    the listener window, and should see diagnostic output in the
@@ -96,6 +127,7 @@ import json
 import logging
 import os
 import queue
+import signal
 import sys
 import threading
 import time
@@ -116,6 +148,12 @@ CRUISE_ID_SEPARATOR = ':'
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+
+############################
+def kill_handler(self, signum):
+  """Translate an external signal (such as we'd get from os.kill) into a
+  KeyboardInterrupt, which will signal the start() loop to exit nicely."""
+  raise KeyboardInterrupt('Received external kill signal')
 
 ################################################################################
 class LoggerManager:
@@ -141,7 +179,6 @@ class LoggerManager:
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a failed server before giving up
-
     """
     # Set up logging levels for both ourselves and for the loggers we
     # start running. Attach a Handler that will write log messages to
@@ -153,6 +190,14 @@ class LoggerManager:
     run_logging.setLevel(log_verbosity)
     logging.getLogger().setLevel(log_logger_verbosity)
 
+    # Set signal to catch SIGTERM and convert it into a
+    # KeyboardInterrupt so we can shut things down gracefully.
+    try:
+      signal.signal(signal.SIGTERM, kill_handler)
+    except ValueError:
+      logging.warning('LoggerManager not running in main thread; '
+                      'shutting down with Ctl-C may not work.')
+
     # api class must be subclass of ServerAPI
     if not issubclass(type(api), ServerAPI):
       raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
@@ -161,123 +206,345 @@ class LoggerManager:
     self.interval = interval
     self.max_tries = max_tries
     self.quit_flag = False
-    self.websocket_server = None
-
+    
     # Keep track of old configs so we only send updates to the
     # LoggerRunners when things change.
     self.old_configs = {}
     self.config_lock = threading.Lock()
-    
-    # Create our own LoggerRunner to use by default when configs don't
-    # specify a host restriction. (NOTE: we really ought to find a way
-    # to load balance and not take on all unrestricted configs
-    # ourselves.)
-    self.logger_runner = LoggerRunner(interval=self.interval,
-                                      max_tries=self.max_tries)
-
-    # Maps between client_id and host_id. To facilitate simplicity of
-    # handling code elsewhere, we assign the client_id of our "local"
-    # LoggerRunner to be None.
-    self.host_id_to_client = {self.host_id:None}
-    self.client_to_host_id = {None:self.host_id}
-    self.send_queue = {}     # client_id->queue for messages to send to ws
-    self.receive_queue = {}  # client_id->queue for messages from ws
-    self.path = {}           # client_id->path to which client connected
-
-    # A lock to make sure only one thread is messing with the above
-    # maps at any given time.
-    self.client_map_lock = threading.Lock()
 
     # Has caller directed us to launch a Websocket server where other
     # LoggerRunners can connect? 
-    if websocket:
-      from server.websocket_server import WebsocketServer
-      try:
-        host, port_str = args.websocket.split(':')
-        port = int(port_str)
-        self.websocket_server = WebsocketServer(
-          host=host, port=port,
-          consumer=self.queued_consumer,
-          producer=self.queued_producer,
-          on_connect=self.register_client,
-          on_disconnect=self.unregister_client)
-        #self.websocket_server.run()
-      except ValueError as e:
-        logging.error('--websocket arg "%s" not in host:port format',
-                      args.websocket)
-        exit(1)
+    self.websocket = websocket
+
+    # Websocket-related stuff below. Client_id 0 refers to our local
+    # LoggerRunner process, which we manage in a separate thread.
+    self.client_map_lock = threading.Lock()
+    self.next_client_id = 1  # id we will assign to next client that connects
+    self.client_map = {}     # client_id -> websocket
+    self.host_id_map = {}    # client_id -> host name, if we have it 
+    self.send_queue = {}     # client_id->queue for messages to send to ws
+    self.receive_queue = {}  # client_id->queue for messages received from ws
+    
+    # LoggerRunners attached via /logger_runner path. We'll send them
+    # configurations and read status updates from them.
+    self.logger_runner_clients = set() 
+
+    # Clients (such as web consoles) attached via /logger_status
+    # path. We'll send them logger status updates.
+    # NOT YET IMPLEMENTED!!!
+    self.logger_status_clients = set()
+
+    # Clients attached via /server_status path. We'll send them
+    # messages about the status of this server and changes in configs.
+    # NOT YET IMPLEMENTED!!!
+    self.server_status_clients = set()
+
+    # Clients attached via the /data path. We'll receive requests for
+    # which fields (and how much back data) they want, then send them
+    # new data as they arrive.
+    # NOT YET IMPLEMENTED!!!
+    self.data_clients = set()
 
   ##########################
-  # "Consumes" a message (typically received by the websocket) by
-  # putting it on the "received" queue
-  async def queued_consumer(self, message, client_id):
-   logging.debug('Received message from client #%d: %s', client_id, message)
-   self.receive_queue[client_id].put(message)
-    
+  def local_logger_runner(self):
+    """Create and run a local LoggerRunner as client_id 0."""
+    client_id = 0
+    with self.client_map_lock:
+      self.host_id_map[client_id] = self.host_id 
+      self.send_queue[client_id] = queue.Queue()
+      self.receive_queue[client_id] = queue.Queue()
+      self.logger_runner_clients.add(client_id)
+
+    logger_runner = LoggerRunner(max_tries=self.max_tries)
+    # Instead of calling the LoggerRunner.run(), we iterate ourselves,
+    # checking whether there are commands we want to push to the
+    # LoggerRunner and doing updates to retrieve status reports.
+    while not self.quit_flag:
+      try:
+        message = self.send_queue[client_id].get_nowait()
+        if message.strip():
+          logging.debug('Got message: %s', message.strip())
+          logger_runner.parse_command(message)
+      except queue.Empty:
+        logging.debug('No messages for local LoggerRunner')
+      except ValueError:
+        pass
+      
+      status = logger_runner.check_loggers(manage=True, clear_errors=True)
+      message = {'status': status}
+      self._process_logger_runner_message(client_id, message)
+
+      time.sleep(self.interval)
+  
   ############################
-  # "Produces" and returns message (typically from the "send" queue)
-  # to be sent by the websocket.
-  async def queued_producer(self, client_id):
-    while True:
+  @asyncio.coroutine
+  async def _handle_websocket_connection(self, client_id, websocket,
+                                         sender=None, receiver=None,
+                                         host_id=None):
+    """Handle a websocket client that has connected. Note that we expect
+    the sender and receiver, if passed, to be 'futures', that is,
+    called instantiations of async coroutines. Yeah, it's all still a
+    little magic to me, but see the docs the following for insight:
+    http://cheat.readthedocs.io/en/latest/python/asyncio.html
+    """
+    # Do we have a host id?
+    if host_id is not None:
+      with self.client_map_lock:
+        self.host_id_map[client_id] = host_id
+
+    # Create reader/writer tasks to send/receive data to/from websocket
+    tasks = []
+    if sender is not None:
+      # Task that produces data from somewhere and sends to websocket
+      tasks.append(asyncio.ensure_future(sender))
+    if receiver is not None:
+      # Task that receives data from websocket and does something with it
+      asyncio.ensure_future(receiver)
+
+    # Wait until one (or both) tasks finish
+    done, pending = await asyncio.wait(
+      tasks, return_when=asyncio.FIRST_COMPLETED)
+
+    # Clean up the uncompleted task(s) and entries we created.
+    for task in pending:
+      task.cancel()
+    if host_id is not None:
+      with self.client_map_lock:
+        del self.host_id_map[client_id]
+
+  ############################
+  @asyncio.coroutine
+  async def _serve_websocket(self, websocket, path):
+    """Serve requests from clients who connect to us via websocket."""
+
+    with self.client_map_lock:
+      client_id = self.next_client_id
+      self.next_client_id += 1
+
+      logging.warning('New client #%d attached: %s', client_id, path)
+      self.client_map[client_id] = websocket
+      self.send_queue[client_id] = queue.Queue()
+      self.receive_queue[client_id] = queue.Queue()
+
+    ###########
+    # Remote LoggerRunner has connected. Its "producer" is simple: we
+    # just send it whatever is in its send_queue. Its consumer is a
+    # little more complicated, as we want to process what we've
+    # received as soon as we get it.
+    if path.find('/logger_runner/') == 0:
+      host_id = path[len('/logger_runner/'):]
+      logging.warning('New LoggerRunner %s, (id #%d)', host_id, client_id)
+      with self.client_map_lock:
+        self.logger_runner_clients.add(client_id)
+      # Create 'futures' for sender and receiver - see following:
+      # http://cheat.readthedocs.io/en/latest/python/asyncio.html      
+      sender = self._queued_sender(client_id)
+      receiver = self._logger_runner_receiver(client_id)
+      
+      await self._handle_websocket_connection(
+        client_id=client_id, websocket=websocket,
+        sender=sender, receiver=receiver, host_id=host_id)
+
+      # Clean up when connection closes
+      with self.client_map_lock:
+        self.logger_runner_clients.discard(client_id)
+
+    ###########
+    # Logger status client has connected. Serve it status updates
+    elif path.find('/logger_status/') == 0:
+      # Client wants logger status - this is what we serve to the main
+      # cruise page.
+      cruise_id = path[len('/logger_status/'):]
+      sender = self._logger_status_sender(client_id, cruise_id)
+      
+      with self.client_map_lock:
+        self.logger_status_clients.add(client_id)
+
+      await self._handle_websocket_connection(
+        client_id=client_id, websocket=websocket, sender=sender)
+
+      with self.client_map_lock:
+        self.logger_status_clients.discard(client_id)
+
+    ##########################
+    # NOTE: NOTHING OF THE ALTERNATIVES BELOW ARE IMPLEMENTED YET!!!
+    elif path == '/server':
+      # Client wants server status. That's whether StatusServer (us),
+      # and LoggerServer are and should be running.
+      await self._serve_server_status(websocket=websocket)
+    elif path.find('/messages/') == 0:
+      # Client wants server_messages - path suffix may vary
+      server = path[len('/messages/'):]
+      await self._serve_server_messages(websocket=websocket, server=server)
+    elif path == '/data':
+      # Client wants logger data - this is what we serve widgets
+      await self._serve_data(websocket=websocket)
+    ##########################
+    else:
+      # Client wants something unknown. Complain and return
+      logging.warning('Unknown status request: "%s"', path)
+
+    # When client disconnects, delete the queues it was using
+    with self.client_map_lock:
+      logging.info('WebsocketServer client #%d completed', client_id)
+      del self.client_map[client_id]
+      if client_id in self.send_queue: del self.send_queue[client_id]
+      if client_id in self.receive_queue: del self.receive_queue[client_id]
+  
+  ############################
+  # Methods below are senders/receivers for various websocket clients.
+
+  ############################
+  async def _queued_sender(self, client_id):
+    """Iteratively pull messages from the client's send_queue and send to
+    its websocket.
+    """
+    websocket = self.client_map.get(client_id, None)
+    if not websocket:
+      raise ValueError('No websocket for client_id %s!' % client_id)
+    while not self.quit_flag:
       try:
         message = self.send_queue[client_id].get_nowait()
         if message.strip():
           logging.debug('Sending message to client #%d: %s', client_id, message)
-          return message
+          await websocket.send(message)
       except queue.Empty:
         await asyncio.sleep(0.1)
 
   ############################
-  def _set_host_configs(self, host_id, configs):
-    """Assign the passed configs to the named host_id. If host_id matches
-    self.host_id, then assign the configs to our local LoggerRunner."""
-    if configs:
-      logging.info('Dispatching configs for host %s', host_id or 'local')
-    else:
-      logging.info('No configs for host %s', host_id or 'local')
-
-    if host_id == self.host_id:
-      self.logger_runner.set_configs(configs)
+  async def _logger_status_sender(self, client_id, cruise_id):
+    """Iteratively grab status messages for a cruise_id and send to
+    websocket. In theory we could be much more efficient and directly
+    grab status updates in _process_logger_runner_messages() when we
+    get them from the LoggerRunners.
+    """
+    # If they haven't specified a cruise_id, there's nothing for us to
+    # send them. Sleep a little to reduce overhead, then return, so
+    # they get disconnected.
+    if not cruise_id in self.api.get_cruises():
+      logging.warning('Client %d: cruise id "%s" not found. Ignoring request',
+                      client_id, cruise_id)
+      asyncio.sleep(3)
       return
 
-    # If here, we need to dispatch somewhere non-local
-    if not self.websocket_server:
-      logging.error('No websocket server - unable to dispatch '
-                    'tasks for host_id "%s"', host_id)
-      return
-    client_id = self.host_id_to_client.get(host_id, None)
-    if client_id is None:
-      logging.error('No host %s available for dispatched tasks', host_id)
-      return
+    websocket = self.client_map.get(client_id, None)
+    if not websocket:
+      raise ValueError('No websocket for client_id %s!' % client_id)
 
-    # If here, we're ready to dispatch
-    command = 'set_configs ' + json.dumps(configs)
-    self.send_queue[client_id].put(command)
+    # We stash previous_configs so that we know not to send them if
+    # they haven't changed since last check. We keep the raw
+    # previous_status separately, because we have to do some
+    # processing to get it into a form that's useful for our clients,
+    # and we want do avoid doing that processing if we can.
+    previous_configs = {}
+    previous_logger_status = {}
+
+    while not self.quit_flag:
+      something_changed = False
+      configs = {
+        'cruise_id': cruise_id,
+        'modes': self.api.get_modes(cruise_id),
+        'mode': self.api.get_mode(cruise_id),
+        'loggers': {logger_id:
+                    self.api.get_logger_config_name(cruise_id, logger_id)
+                    for logger_id in self.api.get_loggers(cruise_id)}
+      }
+      if not configs == previous_configs:
+        something_changed = True
+        previous_configs = configs
+
+      # We expect status to be a dict of timestamp:{logger status
+      # dict} entries. We may have multiple entries if we have
+      # multiple LoggerRunners, e.g., if some have connected via
+      # websockets. If we don't have any yet, work with a dummy entry.
+      status = self.api.get_status(cruise_id) or {0: {}}
+      timestamp = 0
+      logger_status = {}
+      for next_timestamp, next_logger_status in status.items():
+        timestamp = max(timestamp, next_timestamp)
+        logger_status.update(next_logger_status)
+
+      # Has anything changed with logger statuses?
+      if not logger_status == previous_logger_status:
+        previous_logger_status = logger_status
+        something_changed = True
+
+      # If no changes, just send the timestamp; otherwise, assemble a
+      # complete message from configs and status.
+      message = {'timestamp': timestamp}
+      if something_changed:
+        message.update(configs)
+        # NOTE: the keys of the 'status' here are concatenated
+        # cruise_id:logger_id strings. We save our cycles and leave
+        # them for the client to parse out.
+        message['status'] = logger_status
+
+      logging.debug('Sending logger status to client %d: %s', client_id,message)
+      await websocket.send(json.dumps(message))
+      await asyncio.sleep(self.interval)
+
+  ##########################
+  async def _queued_receiver(self, client_id):
+    """Iteratively read messages from websocket and place result in
+    client's receive_queue.
+    """
+    websocket = self.client_map.get(client_id, None)
+    if not websocket:
+      raise ValueError('No websocket for client_id %s!' % client_id)
+    while not self.quit_flag:
+      message = await websocket.recv()
+      logging.debug('Received message from client #%d: %s', client_id, message)
+      self.receive_queue[client_id].put(message)
+
+  ##########################
+  async def _logger_runner_receiver(self, client_id):
+    """Iteratively read messages from websocket and process received
+    status and error updates.
+    """
+    websocket = self.client_map.get(client_id, None)
+    if not websocket:
+      raise ValueError('No websocket for client_id %s!' % client_id)
+    while not self.quit_flag:
+      message_str = await websocket.recv()
+      message = json.loads(message_str)
+      self._process_logger_runner_message(client_id, message)
+
+  ##########################
+  def _process_logger_runner_message(self, client_id, message):
+    """Process a message received from a LoggerRunner. We expect
+    message to be a dict of 
+    {
+      'status': {
+        cruise_id:logger_id: {errors: [], running,  failed},
+        cruise_id:logger_id: {...}, 
+        cruise_id:logger_id: {...}
+      },
+      'errors': {}   # if any errors to report
+    }
+    """
+    logging.debug('LoggerRunner %s sent fields: %s',
+                  client_id or 'local', ', '.join(message.keys()))
+    status = message.get('status', None)
+    errors = message.get('errors', None)
+    if status:
+      self.api.update_status(status)
+    if errors:
+      logging.error('Errors from client %s: %s', client_id or 'local', errors)
 
   ############################
-  def dispatch_configs(self, config_map):
-    """We're passed a dict mapping host_ids to sets of configs.  Dispatch
-    the configs to their respective hosts."""
-
-    with self.config_lock:
-      # First, see if there are any configs we're supposed to dispatch
-      # for which we don't have the appropriate host.
-      for desired_host in config_map:
-        if not desired_host in self.host_id_to_client:
-          logging.warning('Unable to dispatch configs to "%s" - no such host',
-                          desired_host)
-      # For each of our registered clients, see if we have any configs
-      # in the config_map for them to run. If not, assign them an
-      # empty config ({}) so that they're not running anything.
-      for host_id, client_id in self.host_id_to_client.items():
-        desired_config = config_map.get(host_id, {})
-        self._set_host_configs(host_id, desired_config)
-
+  def update_configs_loop(self, cruise_id=None):
+    """Iteratively check the API for updated configs for cruise_id and
+    send them to the appropriate LoggerRunners.
+    """
+    while not self.quit_flag:
+      self.update_configs(cruise_id)
+      time.sleep(self.interval)
+      
   ############################
   def update_configs(self, cruise_id=None):
     """Check the API for updated configs for cruise_id, and send them to
-    the appropriate LoggerRunner. If cruise_id is None, check for all
-    cruises."""
+    the appropriate LoggerRunners.
+    """
     # Get latest configs.
     with self.config_lock:
       if cruise_id:
@@ -295,13 +562,13 @@ class LoggerManager:
     config_map = {}
     for cruise_id, cruise_configs in new_configs.items():
       for logger, config in cruise_configs.items():
-        
+
         # If there is a host restriction, set up a dict for configs
         # restricted to that host. If no restriction, file config
         # under key self.host_id (which may be 'None') to run locally.
         logging.debug('Config for logger %s, cruise %s: %s',
                         logger, cruise_id, config)
-        if not config:
+        if config is None:
           continue
         host_id = config.get('host_id', self.host_id)
         if not host_id in config_map:
@@ -313,112 +580,67 @@ class LoggerManager:
     self.dispatch_configs(config_map)
 
   ############################
-  def process_response(self, response, client_id=None):
-    """Process responses we get from connected clients. A client_id of
-    None means it's from our local LoggerRunner."""
-    status = response.get('status', None)
-    if status:
-      self.api.update_status(status)
-
-    errors = response.get('errors', None)
-    if errors:
-      logging.error('Errors from client %s: %s', client_id or 'local', errors)
-
-    # Note: clients who don't provide a host_id don't get registered
-    # in the host-client maps, and thus will never get any jobs
-    # assigned to them.
-    host_id = response.get('host_id', None)
-    if host_id is not None:
-      logging.info('Got host_id "%s" from client %s', host_id, client_id)
-      self.host_id_to_client[host_id] = client_id
-      self.client_to_host_id[client_id] = host_id
-
-  ############################
-  def register_client(self, websocket, client_id, path):
-    """We've been alerted that a websocket client has connected.
-    Create send/receive queues for it."""
-    with self.client_map_lock:
-      # If we haven't created queues for it yet, do that now
-      if not client_id in self.send_queue:
-        self.send_queue[client_id] = queue.Queue()
-        self.receive_queue[client_id] = queue.Queue()
-        self.path[client_id] = path
-
-  ############################
-  def unregister_client(self, client_id):
-    """We've been alerted that a websocket client has disconnected.
-    Unregister it properly. NOTE: SHOULDN'T WE PROCESS EVERYTHING IN
-    THESE QUEUES BEFORE DISCONNECTING?"""
-    with self.client_map_lock:
-      if client_id in self.send_queue: del self.send_queue[client_id]
-      if client_id in self.receive_queue: del self.receive_queue[client_id]
-      if client_id in self.path: del self.path[client_id]
-
-      if client_id in self.client_to_host_id:
-        host_id = self.client_to_host_id[client_id]
-        del self.host_id_to_client[host_id]
-        del self.client_to_host_id[client_id]
-      logging.warning('Client #%d (%s)has disconnected', client_id, host_id)
-
-  ############################
-  def run(self):
-    """Loop, checking that loggers are in the state they should be,
-    getting them into that state if they aren't, and saving the resulting
-    status to a StatusUpdate record in the database.
-
-    We get the logger running status - True (running), False (not
-    running but should be) or None (not running and shouldn't be) -
-    and any errors.
+  def dispatch_configs(self, config_map):
+    """We're passed a dict mapping host_ids to sets of configs. Look up
+    corresponding client_id for each host and dispatch configs to it.
     """
-    try:
-      while not self.quit_flag:
-        # Check for new configs and send them out
-        self.update_configs()
+    with self.client_map_lock:
+      # First, see if there are any configs we're supposed to dispatch
+      # for which we don't have the appropriate host.
+      hosts = set(self.host_id_map.values())
+      for desired_host in config_map:
+        if not desired_host in hosts:
+          logging.warning('Unable to dispatch configs to "%s" - no such host',
+                          desired_host)
+      # For each of our registered clients, see if we have any configs
+      # in the config_map for them to run. If not, assign them an
+      # empty config ({}) so that they're not running anything.
+      for client_id in self.logger_runner_clients:
+        if not client_id in self.host_id_map:
+          raise ValueError('Client #%d has no host id?!?' % client_id)        
+        host_id = self.host_id_map[client_id]
+        desired_config = config_map.get(host_id, {})
+        command = 'set_configs ' + json.dumps(desired_config)
+        self.send_queue[client_id].put(command)
 
-        # Now check up on status of all loggers that are supposed to
-        # be running. Because manage=True, we'll restart those that
-        # are supposed to be but aren't. We'll get a dict of
-        #
-        # { cruise_id:logger_id: {errors: [], running,  failed},
-        #   cruise_id:logger_id: {...}, 
-        #   cruise_id:logger_id: {...}
-        # }
+  ############################
+  def start(self):
+    """Start the threads that make up the LoggerManager operation: a local
+    LoggerRunner, the configuration update loop and optionally, a
+    websocket server that remote LoggerRunners and web clients can
+    connect to. Start all threads as daemons so that they'll
+    automatically terminate if the main thread does.
+    """
+    # Start the local LoggerRunner in its own thread.
+    local_logger_thread = threading.Thread(
+      target=self.local_logger_runner, daemon=True)
+    local_logger_thread.start()
 
-        # First check up on our local LoggerRunner. Wrap its status
-        # response with a 'status' tag before passing it along for
-        # processing.
-        status = self.logger_runner.check_loggers(manage=True,clear_errors=True)
-        response = {'status': status}
-        self.process_response(response, client_id=None)
+    # Update configs in a separate thread.
+    update_configs_thread = threading.Thread(
+      target=self.update_configs_loop, daemon=True)
+    update_configs_thread.start()
 
-        # Now iterate through our clients, grabbing response from each
-        # in turn (for fairness) until we've got them all.  NOTE: THIS
-        # SHOULD BE IN A SEPARATE THREAD!
-        while True:
-          got_response = False
-          for client_id, receive_queue in self.receive_queue.items():
-            try:
-              response_str = self.receive_queue[client_id].get_nowait()
-              response = json.loads(response_str)
-              logging.info('Client %s sent: %s',
-                              client_id, ', '.join(response.keys()))
-              self.process_response(response, client_id)
-              got_response = True
-            except queue.Empty:
-              pass
-          if not got_response:
-            break
-        logging.debug('Done getting responses')
-
-        # Nap for a bit before checking again
-        time.sleep(self.interval)
-
-    except KeyboardInterrupt:
-      logging.warning('LoggerManager received keyboard interrupt - '
-                      'trying to shut down nicely.')
-
-    # Set all LoggerRunners to empty configs to shut down all their loggers
-    self.logger_runner.quit()
+    # If we've got a websocket specification, launch websocket
+    # server in its own separate thread.
+    if self.websocket:
+      import websockets
+      event_loop = asyncio.get_event_loop()
+      try:
+        host, port_str = args.websocket.split(':')
+        self.websocket_server = websockets.serve(self._serve_websocket,
+                                                 host, int(port_str))
+        event_loop.run_until_complete(self.websocket_server)
+        event_loop_thread = threading.Thread(target=event_loop.run_forever,
+                                             daemon=True)
+        event_loop_thread.start()
+      except OSError:
+        logging.warning('Failed to open websocket %s:%s', host, port)
+        sys.exit(1)
+      except ValueError as e:
+        logging.error('--websocket "%s" not in host:port format',
+                      self.websocket)
+        sys.exit(1)
 
   ############################
   def quit(self):
@@ -432,7 +654,7 @@ if __name__ == '__main__':
   import atexit
   import readline
   
-  from server.server_api_command_line import get_stdin_commands
+  from server.server_api_command_line import ServerAPICommandLine
   
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store',
@@ -441,6 +663,7 @@ if __name__ == '__main__':
                       help='Optional name of mode to start system in.')
 
   parser.add_argument('--database', dest='database', action='store',
+                      choices=['memory', 'django'],
                       default='memory', help='What backing store database '
                       'to use. Currently-implemented options are "memory" '
                       'and "django".')
@@ -473,66 +696,77 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-  # Are we using an in-memory store or Django database as our backing
-  # store? Do our imports conditionally, so they don't actually have
-  # to have Django if they're not using it.
-  if args.database == 'memory':
+  
+  ############################
+  # Instantiate API - a Are we using an in-memory store or Django
+  # database as our backing store? Do our imports conditionally, so
+  # they don't actually have to have Django if they're not using it.
+  if args.database == 'django':
+    from django_gui.django_server_api import DjangoServerAPI
+    api = DjangoServerAPI()
+  elif args.database == 'memory':
     from server.in_memory_server_api import InMemoryServerAPI
     api = InMemoryServerAPI()
-  elif args.database == 'django':
-    from gui.django_server_api import DjangoServerAPI
-    api = DjangoServerAPI()
   else:
-    raise ValueError('--database argument must either be "memory" (default) '
-                     'or "django".')
+    raise ValueError('Illegal arg for --database: "%s"' % args.database)
 
+  ############################
+  # Create our LoggerManager
   logger_manager = LoggerManager(api=api, websocket=args.websocket,
                                  host_id=args.host_id,
                                  interval=args.interval,
                                  max_tries=args.max_tries,
                                  verbosity=args.verbosity,
                                  logger_verbosity=args.logger_verbosity)
-  logger_manager_thread = threading.Thread(target=logger_manager.run)
-  logger_manager_thread.start()
-
-  # Keep a history file around 
-  histfile = os.path.join(os.path.expanduser("~"),
-                          '.rvdas_logger_manager_history')
-  try:
-    readline.read_history_file(histfile)
-    # default history len is -1 (infinite), which may grow unruly
-    readline.set_history_length(1000)
-  except FileNotFoundError:
-    pass
-  atexit.register(readline.write_history_file, histfile)
-
-  # If they've given us an initial cruise_config, get and load it.
-  if args.config:
-    cruise_config = read_json(args.config)
-    api.load_cruise(cruise_config)
-  if args.mode:
-    cruise_id = cruise_config.get('cruise', {}).get('id', None)
-    if not cruise_id:
-      raise ValueError('Unable to find cruise_id in specified cruise config: %s'
-                       % args.config)
-    api.set_mode(cruise_id, args.mode)
 
   # Register a callback: when api.set_mode() or api.set_config() have
   # completed, they call api.signal_update(cruise_id). We're
   # registering update_configs() with the API so that it gets called
   # when the api signals that an update has occurred.
-  api.on_update(callback=logger_manager.update_configs) #,
-                #kwargs={'cruise_id':cruise_id},
-                #cruise_id=cruise_id)
+  api.on_update(callback=logger_manager.update_configs)
 
-  get_commands_thread = threading.Thread(target=get_stdin_commands, args=(api,))
-  get_commands_thread.start()
+  ############################
+  # Start all the various LoggerManager threads running
+  logger_manager.start()
 
-  if logger_manager.websocket_server:
-    logger_manager.websocket_server.run()
+  ############################
+  # If they've given us an initial cruise_config, get and load it.
+  if args.config:
+    cruise_config = read_json(args.config)    
+    api.load_cruise(cruise_config)
 
-  get_commands_thread.join() 
-  logger_manager.quit()
-  logger_manager_thread.join()
+  if args.mode:
+    if not args.config:
+      raise ValueError('Argument --mode can only be used with --config')      
+    cruise_id = cruise_config.get('cruise', {}).get('id', None)
+    if not cruise_id:
+      raise ValueError('Unable to find cruise_id in config: %s' % args.config)
+    api.set_mode(cruise_id, args.mode)
+
+  ############################
+  # Set up command line interface to get commands.
+  # QUESTION: Should this be only activated by a command line flag?
+
+  # Read from history file, if one exists, to get past commands.
+  hist_filename = '.openrvdas_logger_manager_history'
+  hist_path = os.path.join(os.path.expanduser('~'), hist_filename)
+  try:
+    readline.read_history_file(hist_path)
+    # default history len is -1 (infinite), which may grow unruly
+    readline.set_history_length(1000)
+  except (FileNotFoundError, PermissionError):
+    pass
+  atexit.register(readline.write_history_file, hist_path)
+
+  # Create reader to read/process commands from stdin. Note: this
+  # needs to be in main thread for Ctl-C termination to be properly
+  # caught and processed, otherwise interrupts go to the wrong places.
+  command_line_reader = ServerAPICommandLine(api=api)
+  try:
+    command_line_reader.run()
+  except KeyboardInterrupt:
+    pass
+  logging.debug('Done with command_line_reader - exiting')
+
   
   

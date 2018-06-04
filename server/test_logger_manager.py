@@ -15,7 +15,7 @@ from logger.readers.network_reader import NetworkReader
 from server.logger_manager import LoggerManager
 
 from server.in_memory_server_api import InMemoryServerAPI
-from server.server_api_command_line import process_command
+from server.server_api_command_line import ServerAPICommandLine
 
 
 sample_data = [
@@ -128,16 +128,19 @@ class TestLoggerManagerAPI(unittest.TestCase):
       api = logger_manager.api
       time.sleep(1)
 
-      process_command(api, 'load_cruise %s' % self.cruise_filename)
-      process_command(api, 'set_mode NBP1700 port')      
+      runner = ServerAPICommandLine(api)
+      
+      runner.process_command('load_cruise %s' % self.cruise_filename)
+      runner.process_command('set_mode NBP1700 port')      
       for i in range(4):
         self.assertEqual(reader.read(), 'TestLoggerManager ' + sample_data[i])
       logging.info('NetworkReader done')
       logger_manager.quit()
 
-    cmd_thread = threading.Thread(target=run_commands, args=(logger_manager,))
+    cmd_thread = threading.Thread(target=run_commands, daemon=True,
+                                  args=(logger_manager,))
     cmd_thread.start()
-    logger_manager.run()
+    logger_manager.start()
     cmd_thread.join()
     
 ################################################################################
