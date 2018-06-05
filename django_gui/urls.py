@@ -31,7 +31,7 @@ urlpatterns = [
   
   path('load_cruise_config', views.load_cruise_config,
        name='load_cruise_config'),
-  path('edit_config/<str:cruise_id>/<str:logger_id>/<str:logger_config>',
+  path('edit_config/<str:cruise_id>/<str:logger_id>',
        views.edit_config, name='edit_config'),
 
   path('widget/<str:field_list>', views.widget, name='widget'),

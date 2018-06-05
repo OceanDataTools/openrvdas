@@ -109,6 +109,13 @@ def kill_handler(self, signum):
   logging.info('Received external kill')
   raise KeyboardInterrupt('Received external kill signal')
 
+############################
+def runnable(config):
+  """Is this logger configuration runnable? (Or, e.g. does it just have
+  a name and no readers/transforms/writers?)
+  """
+  return config and ('readers' in config or 'writers' in config)
+
 ################################################################################
 class LoggerRunner:
   ############################
@@ -170,7 +177,7 @@ class LoggerRunner:
 
     self.websocket = websocket
     self.host_id = host_id
-      
+
   ############################
   def set_configs(self, new_configs):
     """Start/stop loggers as necessary to move from current configs
@@ -221,7 +228,7 @@ class LoggerRunner:
       self.errors[logger] = []
 
       # Logger isn't running and shouldn't be running. Nothing to do here
-      if not current_config and not new_config:
+      if not runnable(current_config) and not runnable(new_config):
         return
 
       # If current_config == new_config (and is not None) and the
@@ -247,8 +254,8 @@ class LoggerRunner:
       self._kill_logger(logger)
 
       # Finally, if we have a new config, start up the new process for it
-      if new_config:
-        run_logging.info('Starting up new process for %s', config_name)
+      if runnable(new_config):
+        run_logging.warning('Starting up new process for %s', config_name)
         self._start_logger(logger, new_config)
         self.num_tries[logger] = 1
       
@@ -361,19 +368,19 @@ class LoggerRunner:
       # Now figure out whether we are (and should be) running.
       
       # Not running and shouldn't be. We're good. Reset our warnings.
-      if not config and not process:
+      if not runnable(config) and not process:
         running = None
         self.failed_loggers.discard(logger)
         self.errors[logger] = []
         self.num_tries[logger] = 0
 
       # If we are running and are supposed to be, also good.
-      elif config and process and process.is_alive():
+      elif runnable(config) and process and process.is_alive():
         running = True
         self.failed_loggers.discard(logger)
 
       # Shouldn't be running, but is?!?
-      elif not config and process:
+      elif not runnable(config) and process:
         running = True
         if manage:
           self._kill_logger(logger)

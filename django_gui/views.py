@@ -17,38 +17,38 @@ sys.path.append('.')
 
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise, CurrentCruise, CruiseState
-from .models import ServerMessage, ServerState
+from .models import LogMessage, ServerState
 
-from django_gui.run_servers import ServerRunner
+from server.logger_manager import LoggerManager
 
 # Read in JSON with comments
 from logger.utils.read_json import parse_json
 
-from django_gui.settings import WEBSOCKET_SERVER
+from django_gui.settings import HOSTNAME, WEBSOCKET_SERVER
 
 ############################
 # We're going to interact with the Django DB via its API class
 from .django_server_api import DjangoServerAPI
 api = DjangoServerAPI()
 
-############################
-def get_server_state(server):
-  """Retrieve latest state for specified server name. If none exists,
-  create (but do not save) a new default one."""
-  try:
-    return ServerState.objects.filter(server=server).latest('timestamp')
-  except ServerState.DoesNotExist:
-    return ServerState(server=server, running=False, desired=False)
-
+def log_request(request, cmd):
+  global api
+  user = request.user
+  host = request.get_host()
+  elements = ', '.join(['%s:%s' % (k,v) for k, v in request.POST.items()
+                        if k not in ['csrfmiddlewaretoken']])
+  api.message_log(source='Django', user='(%s@%s)' % (user, host),
+                  log_level=api.INFO, message='post: %s' % elements)
+  
 ################################################################################
 def index(request, cruise_id=None):
+  """Home page - render logger states and cruise information.
+  """
   if not cruise_id:
     template_vars = {
       'websocket_server': WEBSOCKET_SERVER,
       'cruise': None,
       'cruise_list': api.get_cruises(),
-      'status_server_running': get_server_state('StatusServer').running,
-      'logger_server_running': get_server_state('LoggerServer').running,
       'errors': '',
     }
     return render(request, 'django_gui/index.html', template_vars)
@@ -56,7 +56,9 @@ def index(request, cruise_id=None):
   ############################
   # If we've gotten a POST request
   if request.method == 'POST':
-    logging.warning('REQUEST: %s', request.POST)
+    # First things first: log the request
+    log_request(request, cruise_id + ' index')
+
     # Did we get a cruise selection?
     if request.POST.get('select_cruise', None):
       cruise_id = request.POST['select_cruise']
@@ -97,8 +99,8 @@ def index(request, cruise_id=None):
     'modes': modes,
     'current_mode': current_mode,
     'loggers': loggers,
-    'status_server_running': get_server_state('StatusServer').running,
-    'logger_server_running': get_server_state('LoggerServer').running,
+    #'status_server_running': get_server_state('StatusServer').running,
+    #'logger_server_running': get_server_state('LoggerServer').running,
     'errors': '',
   }
   return render(request, 'django_gui/index.html', template_vars)
@@ -153,11 +155,14 @@ def server_messages(request, server):
   return render(request, 'django_gui/server_messages.html', template_vars)
 
 ################################################################################
-def edit_config(request, cruise_id, logger_id, logger_config):
-  
+def edit_config(request, cruise_id, logger_id):  
   ############################
   # If we've gotten a POST request, they've selected a new config
   if request.method == 'POST':
+    # First things first: log the request
+    log_request(request, '%s:%s edit_config' % (cruise_id, logger_id))
+
+    # Now figure out what they selected
     new_config = request.POST['select_config']
     logging.warning('selected config: %s', new_config)
     api.set_logger_config_name(cruise_id, logger_id, new_config)
@@ -167,16 +172,17 @@ def edit_config(request, cruise_id, logger_id, logger_config):
 
   # What's our current mode? What's the default config for this logger
   # in this mode?
+  config_options = api.get_logger_config_names(cruise_id, logger_id)
+  current_config = api.get_logger_config_name(cruise_id, logger_id)
   current_mode = api.get_mode(cruise_id)
-  default_mode_config = api.get_logger_config_name(cruise_id, logger_id,
-                                                   current_mode)
+  default_config = api.get_logger_config_name(cruise_id, logger_id,
+                                              current_mode)
   return render(request, 'django_gui/edit_config.html',
                 {'cruise_id': cruise_id,
                  'logger_id': logger_id,
-                 'logger_config': logger_config,
-                 'default_mode_config': default_mode_config,
-                 'logger_config_options':
-                 api.get_logger_config_names(cruise_id, logger_id)
+                 'current_config': current_config,
+                 'default_config': default_config,
+                 'config_options': config_options
                 })
                 
 ################################################################################

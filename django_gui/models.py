@@ -88,7 +88,7 @@ class CruiseState(models.Model):
   started = models.DateTimeField(auto_now_add=True)
 
   def __str__(self):
-    return '%s: %s' % (self.cruise, self.mode)
+    return '%s: %s' % (self.cruise, self.current_mode)
 
 ##############################
 # Do we want this logger_config running? Is it? If so, since when, and
@@ -102,10 +102,19 @@ class LoggerConfigState(models.Model):
   timestamp = models.DateTimeField(auto_now_add=True)
   last_checked = models.DateTimeField(blank=True, null=True)
 
-  running = models.BooleanField(default=False)
-  failed = models.BooleanField(default=False)
-  pid = models.IntegerField(default=0) #, blank=True, null=True)
-  errors = models.TextField(default='') #, blank=True, null=True)
+  running = models.NullBooleanField(default=False, blank=True, null=True)
+  failed = models.BooleanField(default=False, blank=True)
+  pid = models.IntegerField(default=0, blank=True, null=True)
+  errors = models.TextField(default='', blank=True, null=True)
+
+##############################
+# Messages that our servers log
+class LogMessage(models.Model):
+  source = models.CharField(max_length=80, blank=True, null=True)
+  user = models.CharField(max_length=80, blank=True, null=True)
+  log_level = models.IntegerField(default=0, blank=True, null=True)
+  message = models.TextField(blank=True, null=True)
+  timestamp = models.DateTimeField(auto_now_add=True)
 
 ##############################
 # Which servers are running, and when?
@@ -116,13 +125,6 @@ class ServerState(models.Model):
   running = models.BooleanField(default=False)
   desired = models.BooleanField(default=False)
   process_id = models.IntegerField(default=0, blank=True, null=True)
-
-##############################
-# Messages that our servers log
-class ServerMessage(models.Model):
-  server = models.CharField(max_length=80, blank=True, null=True)
-  message = models.TextField(blank=True, null=True)
-  timestamp = models.DateTimeField(auto_now_add=True)
 
 ##############################
 # JSON-encoded status message saved various servers

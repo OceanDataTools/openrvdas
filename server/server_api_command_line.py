@@ -13,12 +13,14 @@ Also see server/server_api.py for full documentation on the ServerAPI.
 
 import argparse
 import atexit
+import getpass  # to get username
 import json
 import logging
 import os
 import pprint
 import readline
 import signal
+import socket  # to get hostname
 import sys
 
 sys.path.append('.')
@@ -28,6 +30,10 @@ from server.server_api import ServerAPI
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+
+SOURCE_NAME = 'ServerAPICommandLine'
+USER = getpass.getuser()
+HOSTNAME = socket.gethostname()
 
 ############################
 def kill_handler(self, signum):
@@ -62,6 +68,8 @@ class ServerAPICommandLine:
   def run(self):
     """Iterate, reading commands and processing them."""
     try:
+      self.api.message_log(SOURCE_NAME, '(%s@%s)' % (USER, HOSTNAME),
+                           self.api.INFO, 'started')
       while not self.quit_requested:
         command = input('command? ')
         if command:
@@ -102,6 +110,10 @@ class ServerAPICommandLine:
        'Print most recent status for each logger in cruise'),
       ('status_since <cruise_id> <timestamp>',
        'Get all logger status updates since specified timestamp\n'),
+
+      ('server_log [timestamp]',
+       'Print most recent log message for server, optionally all messages '
+       'since specified timestamp\n'),
 
       ('quit', 'Quit gracefully')      
     ]
@@ -235,6 +247,18 @@ class ServerAPICommandLine:
         status_dict = self.api.get_status(cruise_id, float(since_timestamp))
         print('%s' % pprint.pformat(status_dict))
 
+      # server_log
+      elif command == 'server_log':
+        server_log = self.api.get_message_log(source=SOURCE_NAME)
+        print('%s' % pprint.pformat(server_log))
+
+      # server_log timestamp
+      elif command.find('server_log') == 0:
+        (log_cmd, since_timestamp) = command.split(maxsplit=1)
+        server_log = self.api.get_message_log(source=SOURCE_NAME, user=None,
+          log_level=self.api.DEBUG, since_timestamp=float(since_timestamp))
+        print('%s' % pprint.pformat(server_log))
+
       # Quit gracefully
       elif command == 'quit':
         logging.info('Got quit command')
@@ -249,6 +273,9 @@ class ServerAPICommandLine:
 
     except ValueError as e:
       logging.error('%s', e)
+    finally:
+      self.api.message_log(SOURCE_NAME, '(%s@%s)' % (USER, HOSTNAME),
+                            self.api.INFO, 'command: '+ command)
     
 ################################################################################
 if __name__ == '__main__':

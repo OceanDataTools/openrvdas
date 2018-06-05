@@ -10,8 +10,9 @@
 <h1>{{ server }} messages</h1>
 
 {# ######################################################################## #}
-<textarea id="server_messages" rows=18 cols=80>
-</textarea>
+<table id="server_messages" rows=18 cols=80>
+  <th>time</th><th>source</th><th>user</th><th>level</th><th>message</th></tr>
+</table>
 
 {# ######################################################################## #}
 {# Start of Javascript                                                      #}
@@ -19,7 +20,7 @@
 
   // We're after messages statuses, so append '/messages' path followed
   // by name of server we want messages from.
-  var websocket_server = "ws://{{ websocket_server }}/messages/{{ server }}";
+  var websocket_server = "ws://{{ websocket_server }}/messages//";
 
   //////////////////////////////////////////////////////////////
   // WebSocket code - need to pull this out into a separate file
@@ -90,9 +91,27 @@
     var server_messages = document.getElementById("server_messages");
     server_messages.style.backgroundColor = "white";
 
-    // Initially just add to text area. Eventually we need to figure out
-    // an efficient way to trim old messages.
-    server_messages.innerHTML = server_messages.innerHTML + message.join("\n");
+    var message_length = message.length;
+    for (var i = 0; i < message_length; i++) {
+      var log_message = message[i];
+      var tr = document.createElement("tr");
+      var td = document.createElement("td");
+      td.appendChild(document.createTextNode(log_message[0])); // timestamp
+      tr.appendChild(td);
+      var td = document.createElement("td");
+      td.appendChild(document.createTextNode(log_message[1])); // source
+      tr.appendChild(td);
+      var td = document.createElement("td");
+      td.appendChild(document.createTextNode(log_message[2])); // user
+      tr.appendChild(td);
+      var td = document.createElement("td");
+      td.appendChild(document.createTextNode(log_message[3])); // log_level
+      tr.appendChild(td);
+      var td = document.createElement("td");
+      td.appendChild(document.createTextNode(log_message[4])); // message
+      tr.appendChild(td);
+      server_messages.appendChild(tr);
+    }
     server_messages.scrollTop = server_messages.scrollHeight;
   }
 

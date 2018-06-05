@@ -33,6 +33,7 @@ class InMemoryServerAPI(ServerAPI):
     self.logger_config = {}
     self.callbacks = {}
     self.status = []
+    self.server_messages = []
 
   #############################
   # API methods below are used in querying/modifying the API for the
@@ -317,6 +318,46 @@ class InMemoryServerAPI(ServerAPI):
       status_index -= 1
 
     return status
+
+  ############################
+  # Methods for storing/retrieving messages from servers/loggers/etc.
+  ############################
+  def message_log(self, source, user, log_level, message):
+    """Timestamp and store the passed message."""
+    self.server_messages.append((time.time(), source, user, log_level, message))
+
+  ############################
+  def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
+                     since_timestamp=None):
+    """Retrieve log messages from source at or below log_level since
+    timestamp. If source is omitted, retrieve from all sources. If
+    log_level is omitted, retrieve at all levels. If since_timestamp is
+    omitted, only retrieve most recent message.
+    """
+    index = len(self.server_messages)-1
+    messages = []
+    while index >= 0:
+      message = self.server_messages[index]
+      timestamp, mesg_source, mesg_user, mesg_log_level, mesg_message = message
+      
+      # Have we gone back too far? If so, we're done.
+      if since_timestamp is not None and timestamp <= since_timestamp:
+        break
+
+      if mesg_log_level > log_level:
+        continue
+      if user is not None and not mesg_user == user:
+        continue
+      if source is not None and not mesg_source == source:
+        continue
+      messages.insert(0, message)
+
+      # Are we only looking for last message, and do we have a message?
+      if since_timestamp is None and messages:
+        break
+      index -= 1
+
+    return messages
 
   #############################
   # Methods to modify the data store

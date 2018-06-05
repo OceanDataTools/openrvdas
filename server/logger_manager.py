@@ -123,18 +123,21 @@ To try out the scripts, open four(!) terminal windows.
 
 """
 import asyncio
+import getpass  # to get username
 import json
 import logging
 import os
 import queue
 import signal
+import socket  # to get hostname
 import sys
 import threading
 import time
+import websockets
 
 sys.path.append('.')
 
-from logger.utils.read_json import read_json
+from logger.utils.read_json import read_json, parse_json
 
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner, run_logging
@@ -148,6 +151,10 @@ CRUISE_ID_SEPARATOR = ':'
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+
+SOURCE_NAME = 'LoggerManager'
+USER = getpass.getuser()
+HOSTNAME = socket.gethostname()
 
 ############################
 def kill_handler(self, signum):
@@ -278,9 +285,8 @@ class LoggerManager:
   
   ############################
   @asyncio.coroutine
-  async def _handle_websocket_connection(self, client_id, websocket,
-                                         sender=None, receiver=None,
-                                         host_id=None):
+  async def _handle_client_connection(self, client_id, sender=None,
+                                      receiver=None, host_id=None):
     """Handle a websocket client that has connected. Note that we expect
     the sender and receiver, if passed, to be 'futures', that is,
     called instantiations of async coroutines. Yeah, it's all still a
@@ -314,6 +320,112 @@ class LoggerManager:
 
   ############################
   @asyncio.coroutine
+  async def _serve_data(self, client_id):
+    """Serve data, if it exists, from database, if it exists, using default
+    database location, tables, user and password.
+
+    NOTE: This is the kind of code your mother warned you about. It's a
+    quick first pass, and will therefore follow me to my grave and haunt
+    you for years to come. For the love of Guido, please clean this up.
+    """
+    from logger.readers.database_reader import DatabaseReader
+    from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
+    from database.settings import DEFAULT_DATABASE_USER
+    from database.settings import DEFAULT_DATABASE_PASSWORD
+
+    EPSILON = 0.00001
+    
+    # If asking for data, we expect an initial message that is a JSON
+    # list of pairs, each pair containing a field name and how many
+    # seconds worth of back data we want for it.
+    websocket = self.client_map[client_id]
+    message = await websocket.recv()
+    logging.warning('Data request: "%s"', message)
+    if not message:
+      logging.info('Received empty data request, doing nothing.')
+      return
+    try:
+      field_list = json.loads(message)
+    except json.JSONDecodeError:
+      logging.warning('Received unparseable JSON request: "%s"', message)
+      return
+
+    for (field_name, num_secs) in field_list:
+      logging.warning('Requesting field: %s, %g secs.', field_name, num_secs)
+
+    # Get requested back data. Note that we may have had different
+    # back data time spans for different fields. Because some of these
+    # might be extremely voluminous (think 30 minutes of winch data),
+    # take the computational hit of initially creating a separate
+    # reader for each backlog.
+    fields = []
+    back_data = {}
+    for (field_name, num_secs) in field_list:
+      fields.append(field_name)
+      if not num_secs in back_data:
+        back_data[num_secs] = []
+      back_data[num_secs].append(field_name)
+
+    results = {}
+    now = time.time()
+    for (num_secs, field_list) in back_data.items():
+      # Create a DatabaseReader to get num_secs worth of back data for
+      # these fields. Provide a start_time of num_secs ago, and no
+      # stop_time, so we get everything up to present.
+      logging.debug('Creating DatabaseReader for %s', field_list)
+      logging.debug('Requesting %g seconds of timestamps from %f-%f',
+                      num_secs, now-num_secs, now)
+      reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
+                              DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
+      num_sec_results = reader.read_time_range(start_time=now-num_secs)
+      logging.debug('results: %s', num_sec_results)
+      results.update(num_sec_results)
+                     
+    # Now that we've gotten all the back results, create a single
+    # DatabaseReader to read all the fields.
+    reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
+                            DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
+    max_timestamp_seen = 0
+    while True:
+      # If we do have results, package them up and send them
+      if results:
+        send_message = json.dumps(results)
+        logging.debug('Data server sending: %s', send_message)
+        try:
+          await websocket.send(send_message)
+        except websockets.exceptions.ConnectionClosed:
+          return
+
+      # New results or not, take a nap before trying to fetch more results
+      logging.debug('Sleeping %g seconds', self.interval)
+      await asyncio.sleep(self.interval)
+
+      # What's the timestamp of the most recent result we've seen?
+      # Each value should be a list of (timestamp, value) pairs. Look
+      # at the last timestamp in each value list.
+      for field in results:
+        last_timestamp = results[field][-1][0]
+        max_timestamp_seen = max(max_timestamp_seen, last_timestamp)
+
+      # Bug's corner case: if we didn't retrieve any data on the first
+      # time through (because it was all too old), max_timestamp_seen
+      # will be zero, causing us to retrieve *all* the data in the DB
+      # on the next iteration. If we do find that max_timestamp_seen
+      # is zero, set it to "now" to prevent this.
+      if not max_timestamp_seen:
+        max_timestamp_seen = now
+
+      logging.debug('Results: %s', results)
+      if len(results):
+        logging.info('Received %d fields, max timestamp %f',
+                     len(results), max_timestamp_seen)
+
+      # Check whether there are results newer than latest timestamp
+      # we've already seen.
+      results = reader.read_time_range(start_time=max_timestamp_seen + EPSILON)
+
+  ############################
+  @asyncio.coroutine
   async def _serve_websocket(self, websocket, path):
     """Serve requests from clients who connect to us via websocket."""
 
@@ -341,16 +453,15 @@ class LoggerManager:
       sender = self._queued_sender(client_id)
       receiver = self._logger_runner_receiver(client_id)
       
-      await self._handle_websocket_connection(
-        client_id=client_id, websocket=websocket,
-        sender=sender, receiver=receiver, host_id=host_id)
+      await self._handle_client_connection(client_id=client_id, sender=sender,
+                                           receiver=receiver, host_id=host_id)
 
       # Clean up when connection closes
       with self.client_map_lock:
         self.logger_runner_clients.discard(client_id)
 
     ###########
-    # Logger status client has connected. Serve it status updates
+    # Logger status client has connected. Serve it logger status updates
     elif path.find('/logger_status/') == 0:
       # Client wants logger status - this is what we serve to the main
       # cruise page.
@@ -360,25 +471,36 @@ class LoggerManager:
       with self.client_map_lock:
         self.logger_status_clients.add(client_id)
 
-      await self._handle_websocket_connection(
-        client_id=client_id, websocket=websocket, sender=sender)
+      await self._handle_client_connection(client_id=client_id, sender=sender)
 
       with self.client_map_lock:
         self.logger_status_clients.discard(client_id)
 
-    ##########################
-    # NOTE: NOTHING OF THE ALTERNATIVES BELOW ARE IMPLEMENTED YET!!!
-    elif path == '/server':
-      # Client wants server status. That's whether StatusServer (us),
-      # and LoggerServer are and should be running.
-      await self._serve_server_status(websocket=websocket)
+    ###########
+    # Status message client has connected. Serve it status updates
     elif path.find('/messages/') == 0:
-      # Client wants server_messages - path suffix may vary
-      server = path[len('/messages/'):]
-      await self._serve_server_messages(websocket=websocket, server=server)
+      # Client wants server log messages
+      source = None
+      log_level = sys.maxsize
+      try:
+        path_parts = path.split('/')[2:]
+        if path_parts:
+          source = path_parts.pop(0) or None
+        if path_parts:
+          log_level_str = path_parts.pop(0)
+          log_level = int(log_level_str)
+      except ValueError:
+        pass
+      
+      sender = self._log_message_sender(client_id, source, log_level)
+      await self._handle_client_connection(client_id=client_id, sender=sender)
+
+    ##########################
+    # Display client has connected.
     elif path == '/data':
       # Client wants logger data - this is what we serve widgets
-      await self._serve_data(websocket=websocket)
+      await self._serve_data(client_id=client_id)
+      
     ##########################
     else:
       # Client wants something unknown. Complain and return
@@ -406,8 +528,12 @@ class LoggerManager:
       try:
         message = self.send_queue[client_id].get_nowait()
         if message.strip():
-          logging.debug('Sending message to client #%d: %s', client_id, message)
-          await websocket.send(message)
+          logging.debug('Sending message to client #%d: %s',
+                        client_id, message)
+        await websocket.send(message)
+      except websockets.ConnectionClosed:
+        logging.warning('Client %d connection closed', client_id)
+        return
       except queue.Empty:
         await asyncio.sleep(0.1)
 
@@ -480,9 +606,44 @@ class LoggerManager:
         message['status'] = logger_status
 
       logging.debug('Sending logger status to client %d: %s', client_id,message)
-      await websocket.send(json.dumps(message))
+      try:
+        await websocket.send(json.dumps(message))
+      except websockets.ConnectionClosed:
+        logging.warning('Client %d connection closed', client_id)
+        return
       await asyncio.sleep(self.interval)
 
+  ############################
+  async def _log_message_sender(self, client_id, source=None,
+                                log_level=sys.maxsize):
+    """Iteratively grab log_messages of log_level and below and send to
+    websocket. If source is not specified, retrieve from all
+    sources. If log_level is not specified, retrieve all log levels.
+    """
+    logging.warning('Created message sender client %s: source %s, log_level %d',
+                 client_id, source, log_level)
+    websocket = self.client_map.get(client_id, None)
+    if not websocket:
+      raise ValueError('No websocket for client_id %s!' % client_id)
+
+    # Arbitrarily get the last 10 minutes' requests
+    last_timestamp = time.time() - (10 * 60)
+    while not self.quit_flag:
+      logging.debug('last message timestamp: %s', last_timestamp)      
+      messages = self.api.get_message_log(source=source, user=None,
+                                          log_level=log_level,
+                                          since_timestamp=last_timestamp)
+      if messages:
+        logging.debug('got messages: %s', messages)
+        # Remember timestamp of last message
+        last_timestamp = max(last_timestamp, float(messages[-1][0]))
+        try:
+          await websocket.send(json.dumps(messages))
+        except websockets.ConnectionClosed:
+          logging.warning('Client %d connection closed', client_id)
+          return
+      await asyncio.sleep(self.interval)
+   
   ##########################
   async def _queued_receiver(self, client_id):
     """Iteratively read messages from websocket and place result in
@@ -624,10 +785,9 @@ class LoggerManager:
     # If we've got a websocket specification, launch websocket
     # server in its own separate thread.
     if self.websocket:
-      import websockets
       event_loop = asyncio.get_event_loop()
       try:
-        host, port_str = args.websocket.split(':')
+        host, port_str = self.websocket.split(':')
         self.websocket_server = websockets.serve(self._serve_websocket,
                                                  host, int(port_str))
         event_loop.run_until_complete(self.websocket_server)
@@ -734,7 +894,8 @@ if __name__ == '__main__':
   if args.config:
     cruise_config = read_json(args.config)    
     api.load_cruise(cruise_config)
-
+    api.message_log(SOURCE_NAME, '(%s@%s)' % (USER, HOSTNAME),
+                    api.INFO, 'started with cruise: %s' % args.config)
   if args.mode:
     if not args.config:
       raise ValueError('Argument --mode can only be used with --config')      
@@ -742,6 +903,8 @@ if __name__ == '__main__':
     if not cruise_id:
       raise ValueError('Unable to find cruise_id in config: %s' % args.config)
     api.set_mode(cruise_id, args.mode)
+    api.message_log(SOURCE_NAME, api.INFO,
+                    'initial mode (%s@%s): %s', (USER, HOSTNAME, args.mode))
 
   ############################
   # Set up command line interface to get commands.

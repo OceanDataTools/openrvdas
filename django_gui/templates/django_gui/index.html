@@ -8,28 +8,6 @@
 {# ######################################################################## #}
 {# Show server status up top.                                               #}
 <table style="background-color:white">
-  <tr id="server_row">
-    <td>
-      <button type="submit" id="status_server_button"
-              name="StatusServer" value=""
-              disabled style="background-color:orangered">Status Server
-        </button>
-    </td>
-    <td>
-      <a href="#" onclick="message_window('StatusServer');return false;">
-        server log</a>
-    </td>
-    <td>
-      <button type="submit" id="logger_server_button"
-              name="LoggerServer" value=""
-                disabled style="background-color:orangered">Logger Server
-      </button>
-      </td>
-    <td>
-      <a href="#" onclick="message_window('LoggerServer');return false;">
-        server log</a>
-    </td>
-  </tr>
   <tr id="time_row">
     <td colspan=4>Last update:
       <span id="time_td">no connection - is status server running?</span>
@@ -38,6 +16,12 @@
   <tr id="time_warning_row" style="display:none;">
     <td colspan=4>
       Now:<span id="time_warning_td"></span>
+    </td>
+  </tr>
+  <tr id="server_row">
+    <td>
+      <a href="#" onclick="message_window('StatusServer');return false;">
+        server log</a>
     </td>
   </tr>
 </table>
@@ -53,7 +37,7 @@
       <td id="{{ logger_name }}_td">{{ logger_name }}</td>
       <td id="{{ logger_name }}_config_td">
         <button id="{{ logger_name }}_config_button" type="submit"
-                onclick="window.open('../edit_config/{{ cruise_id }}/{{logger_name }}/{{ logger_config }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');"
+                onclick="window.open('../edit_config/{{ cruise_id }}/{{logger_name }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');"
                 {% if not user.is_authenticated %}
                 disabled
                 {% endif %}
@@ -127,31 +111,6 @@ Current configuration: {{ cruise.config_filename }}
   </button>
 </form>
 {% endif %}
-
-{% comment %}
-{# ######################################################################## #}
-{# Start/stop django_run_loggers                                            #}
-{% if user.is_authenticated %}
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {% if server_running %}
-  <button type="submit" name="server" value="stop" style="background-color:indianred">
-    Stop server
-  </button>
-  {% else %}
-  <button type="submit" name="server" value="start" style="background-color:lightgreen">
-    Start server
-  </button>
-  {% endif %}
-</form>
-{% else %}
-  {% if server_running %}
-    Server running
-  {% else %}
-    Server not running
-  {% endif %}
-{% endif %}
-{% endcomment %}
 
 {# ######################################################################## #}
 {# Display any errors                                                       #}

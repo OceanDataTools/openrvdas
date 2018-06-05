@@ -13,15 +13,15 @@
   Select config: <select name="select_config" id="select_config"
           onchange="update_select()">
     </option>
-    {% for config_option in logger_config_options %}
+    {% for config_option in config_options %}
     <option value="{{ config_option }}"
     
-       {% if config_option == logger_config %}
+       {% if config_option == current_config %}
        selected
        {% endif %}>
       {{ config_option }}
-      {% if config_option == default_mode_config %}
-        [default]
+      {% if config_option == default_config %}
+        [mode default]
       {% endif %}
       </option>
     {% endfor %}
@@ -45,7 +45,7 @@
 function update_select() {
   var sel = document.getElementById("select_config");
   var selected_value = sel.options[sel.selectedIndex].value;
-  if (selected_value == "{{ logger_config }}") {
+  if (selected_value == "{{ current_config }}") {
     sel.style.backgroundColor="white";
   } else {
     sel.style.backgroundColor="yellow";

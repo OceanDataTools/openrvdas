@@ -23,7 +23,7 @@ django.setup()
 
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise, CruiseState
-from .models import ServerMessage, ServerState
+from .models import LogMessage, ServerState
 
 from logger.utils.timestamp import datetime_obj, datetime_obj_from_timestamp
 from logger.utils.timestamp import DATE_FORMAT
@@ -231,8 +231,8 @@ class DjangoServerAPI(ServerAPI):
       logger.save()
 
       # Save that we've updated the logger's config
-      LoggerConfigState(logger=logger, config=new_config,
-                        running=bool(new_config)).save()
+      LoggerConfigState(logger=logger, config=new_config, pid=0,
+                        running=False).save()
 
     # Notify any callbacks that wanted to be called when the state of
     # the world changes.
@@ -251,8 +251,8 @@ class DjangoServerAPI(ServerAPI):
     logger.save()
 
     # Save that we've updated the logger's config
-    LoggerConfigState(logger=logger, config=new_config,
-                      running=bool(new_config)).save()
+    LoggerConfigState(logger=logger, config=new_config, pid=0,
+                      running=False).save()
 
     # Notify any callbacks that wanted to be called when the state of
     # the world changes.
@@ -290,7 +290,7 @@ class DjangoServerAPI(ServerAPI):
       self.signal_update(cruise_id=None)
 
   ############################
-  # Methods for feeding data from LoggerServer back into the API
+  # Methods for feeding data from LoggerManager back into the API
   ############################
   def update_status(self, status):
     """Save/register the loggers' retrieved status report with the API."""
@@ -318,7 +318,9 @@ class DjangoServerAPI(ServerAPI):
         config = LoggerConfig.objects.get(name=logger_config, cruise=cruise_id,
                                           logger=logger)
         stored_state = LoggerConfigState(logger_status=logger_status,
-                                         logger=logger, config=config)
+                                         logger=logger, config=config,
+                                         running=False, failed=False,
+                                         pid=0, errors='')
         stored_state.save()
 
       # Compare stored LoggerConfigState with the new status. If there
@@ -341,9 +343,8 @@ class DjangoServerAPI(ServerAPI):
       stored_state.save()
 
   ############################
-  # Methods for getting status data from API
+  # Methods for getting logger status data from API
   ############################
-
 
   def get_status(self, cruise_id, since_timestamp=None):
     """Retrieve a dict of the most-recent status report from each
@@ -386,6 +387,37 @@ class DjangoServerAPI(ServerAPI):
           logger__cruise_id=cruise_id, last_checked__gt=since_datetime):
         _add_lcs_to_status(lcs)
     return status
+
+  ############################
+  # Methods for storing/retrieving messages from servers/loggers/etc.
+  ############################
+  def message_log(self, source, user, log_level, message):
+    """Timestamp and store the passed message."""
+    LogMessage(source=source, log_level=log_level, message=message).save()
+
+  ############################
+  def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
+                     since_timestamp=None):
+    """Retrieve log messages from source at or below log_level since
+    timestamp. If source is omitted, retrieve from all sources. If
+    # definition, backfill it herelog_level is omitted, retrieve at
+    # definition, backfill it hereall levels. If since_timestamp is
+    omitted, only retrieve most recent message.
+    """
+    logs = LogMessage.objects.filter(log_level__lte=log_level)
+    if source is not None:
+      logs = logs.filter(source=source)
+    if user is not None:
+      logs = logs.filter(user=user)
+    if since_timestamp is None:
+      message = logs.latest('timestamp')
+      return [(message.timestamp.timestamp(), message.source,
+               message.user, message.log_level, message.message)]
+    else:
+      since_datetime = datetime_obj_from_timestamp(since_timestamp)      
+      logs = logs.filter(timestamp__gt=since_datetime).order_by('timestamp')
+      return [(message.timestamp.timestamp(), message.source, message.user,
+               message.log_level, message.message) for message in logs]
 
   #############################
   # Methods to modify the data store

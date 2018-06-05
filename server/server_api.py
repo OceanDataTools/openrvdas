@@ -74,7 +74,7 @@ class ServerAPI:
   ############################
   def __init__(self):
     pass
-  
+
   #############################
   # API methods below are used in querying/modifying the API for the
   # record of the running state of loggers.
@@ -231,20 +231,44 @@ class ServerAPI:
                               'at top level')
 
   ############################
-  # Methods for feeding data from LoggerServer back into the API
+  # Methods for feeding data from LoggerManager back into the API
   ############################
   def update_status(self, status):
     """Save/register the loggers' retrieved status report with the API."""
     raise NotImplementedError('update_status must be implemented by subclass')
 
   ############################
-  # Methods for getting status data from API
+  # Methods for getting logger status data from API
   ############################
   def get_status(self, cruise_id, since_timestamp=None):
     """Retrieve a dict of the most-recent status report from each
     logger. If since_timestamp is specified, retrieve all status reports
     since that time."""
     raise NotImplementedError('get_status must be implemented by subclass')
+
+  ############################
+  # Methods for storing/retrieving messages from servers/loggers/etc.
+  ############################
+  # Logging levels corresponding to logging module levels
+  WARNING = 0
+  INFO    = 1
+  DEBUG   = 2
+
+  ############################
+  def message_log(self, source, log_level, user, message):
+    """Timestamp and store the passed message."""
+    raise NotImplementedError('message_log must be implemented by subclass')
+
+  ############################
+  def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
+                      since_timestamp=None):
+    """Retrieve log messages from source at or below log_level since
+    timestamp. If source is omitted, retrieve from all sources. If
+    # definition, backfill it herelog_level is omitted, retrieve at
+    # definition, backfill it hereall levels. If since_timestamp is
+    omitted, only retrieve most recent message.
+    """
+    raise NotImplementedError('get_message_log must be implemented by subclass')
 
   #############################
   """Methods below are used to load/create/modify the data store's model
