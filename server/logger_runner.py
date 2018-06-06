@@ -255,7 +255,7 @@ class LoggerRunner:
 
       # Finally, if we have a new config, start up the new process for it
       if runnable(new_config):
-        run_logging.warning('Starting up new process for %s', config_name)
+        run_logging.debug('Starting up new process for %s', config_name)
         self._start_logger(logger, new_config)
         self.num_tries[logger] = 1
       

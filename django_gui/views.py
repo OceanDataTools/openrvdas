@@ -150,8 +150,11 @@ def servers(request):
 
 ################################################################################
 # Page to display messages from the specified server
-def server_messages(request, server):
-  template_vars = {'websocket_server': WEBSOCKET_SERVER, 'server': server}
+def server_messages(request, log_level=logging.INFO, source=None):
+  template_vars = {'websocket_server': WEBSOCKET_SERVER,
+                   'log_level': log_level,
+                   'source': source}
+  logging.warning('ll: %s, source: %s', log_level, source)
   return render(request, 'django_gui/server_messages.html', template_vars)
 
 ################################################################################

@@ -344,7 +344,7 @@ class InMemoryServerAPI(ServerAPI):
       if since_timestamp is not None and timestamp <= since_timestamp:
         break
 
-      if mesg_log_level > log_level:
+      if mesg_log_level < log_level:
         continue
       if user is not None and not mesg_user == user:
         continue

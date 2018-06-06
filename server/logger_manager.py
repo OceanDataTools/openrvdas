@@ -150,6 +150,7 @@ DEFAULT_MAX_TRIES = 3
 CRUISE_ID_SEPARATOR = ':'
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
 SOURCE_NAME = 'LoggerManager'
@@ -161,6 +162,19 @@ def kill_handler(self, signum):
   """Translate an external signal (such as we'd get from os.kill) into a
   KeyboardInterrupt, which will signal the start() loop to exit nicely."""
   raise KeyboardInterrupt('Received external kill signal')
+
+############################
+class WriteToAPILoggingHandler(logging.Handler):
+  """Allow us to save Python logging.* messages to API backing store."""
+  def __init__(self, api, logger_format):
+    super().__init__()
+    self.api = api
+    self.formatter = logging.Formatter(logger_format)
+      
+  def emit(self, record):
+    self.api.message_log('Logger', '(%s@%s)' % (USER, HOSTNAME), record.levelno,
+                         message=self.formatter.format(record))
+
 
 ################################################################################
 class LoggerManager:
@@ -195,7 +209,10 @@ class LoggerManager:
     log_verbosity = LOG_LEVELS[min(verbosity, max(LOG_LEVELS))]
     log_logger_verbosity = LOG_LEVELS[min(logger_verbosity, max(LOG_LEVELS))]
     run_logging.setLevel(log_verbosity)
+    run_logging.addHandler(WriteToAPILoggingHandler(api, API_LOGGING_FORMAT))
+
     logging.getLogger().setLevel(log_logger_verbosity)
+    logging.getLogger().addHandler(WriteToAPILoggingHandler(api,LOGGING_FORMAT))
 
     # Set signal to catch SIGTERM and convert it into a
     # KeyboardInterrupt so we can shut things down gracefully.
@@ -480,19 +497,21 @@ class LoggerManager:
     # Status message client has connected. Serve it status updates
     elif path.find('/messages/') == 0:
       # Client wants server log messages
+      log_level = logging.INFO
       source = None
-      log_level = sys.maxsize
       try:
         path_parts = path.split('/')[2:]
         if path_parts:
-          source = path_parts.pop(0) or None
-        if path_parts:
+          logging.warning('parts 1: %s', path_parts)
           log_level_str = path_parts.pop(0)
           log_level = int(log_level_str)
+        if path_parts:
+          logging.warning('parts 2: %s', path_parts)
+          source = path_parts.pop(0) or None
       except ValueError:
         pass
       
-      sender = self._log_message_sender(client_id, source, log_level)
+      sender = self._log_message_sender(client_id, log_level, source)
       await self._handle_client_connection(client_id=client_id, sender=sender)
 
     ##########################
@@ -614,8 +633,8 @@ class LoggerManager:
       await asyncio.sleep(self.interval)
 
   ############################
-  async def _log_message_sender(self, client_id, source=None,
-                                log_level=sys.maxsize):
+  async def _log_message_sender(self, client_id, log_level=logging.INFO,
+                                source=None):
     """Iteratively grab log_messages of log_level and below and send to
     websocket. If source is not specified, retrieve from all
     sources. If log_level is not specified, retrieve all log levels.

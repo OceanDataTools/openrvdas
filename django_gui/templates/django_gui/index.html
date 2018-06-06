@@ -20,7 +20,7 @@
   </tr>
   <tr id="server_row">
     <td>
-      <a href="#" onclick="message_window('StatusServer');return false;">
+      <a href="#" onclick="message_window();return false;">
         server log</a>
     </td>
   </tr>
@@ -399,9 +399,9 @@ Current configuration: {{ cruise.config_filename }}
   }  
 
   ///////////////////////////////
-  function message_window(server) {
-    window.open("/server_messages/" + server, "_blank",
-    "height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,copyhistory=no");
+  function message_window() {
+    window.open("/server_messages/30", "_blank",
+    "height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,copyhistory=no");
   }
 
 </script>

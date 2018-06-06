@@ -250,9 +250,11 @@ class ServerAPI:
   # Methods for storing/retrieving messages from servers/loggers/etc.
   ############################
   # Logging levels corresponding to logging module levels
-  WARNING = 0
-  INFO    = 1
-  DEBUG   = 2
+  CRITICAL = logging.CRITICAL
+  ERROR    = logging.ERROR
+  WARNING  = logging.WARNING
+  INFO     = logging.INFO
+  DEBUG    = logging.DEBUG
 
   ############################
   def message_log(self, source, log_level, user, message):
@@ -262,10 +264,9 @@ class ServerAPI:
   ############################
   def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
                       since_timestamp=None):
-    """Retrieve log messages from source at or below log_level since
+    """Retrieve log messages from source at or above log_level since
     timestamp. If source is omitted, retrieve from all sources. If
-    # definition, backfill it herelog_level is omitted, retrieve at
-    # definition, backfill it hereall levels. If since_timestamp is
+    log_level is omitted, retrieve at all levels. If since_timestamp is
     omitted, only retrieve most recent message.
     """
     raise NotImplementedError('get_message_log must be implemented by subclass')

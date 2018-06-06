@@ -3,11 +3,11 @@
 {% block content %}
 
 <head>
-  <title>{{ server }} messages</title>
+  <title>Server messages</title>
   {# <meta http-equiv="refresh" content="3"> #}
 </head>
 
-<h1>{{ server }} messages</h1>
+<h1>Server messages</h1>
 
 {# ######################################################################## #}
 <table id="server_messages" rows=18 cols=80>
@@ -20,7 +20,12 @@
 
   // We're after messages statuses, so append '/messages' path followed
   // by name of server we want messages from.
-  var websocket_server = "ws://{{ websocket_server }}/messages//";
+  var ws_addr = "ws://{{ websocket_server }}/messages/{{ log_level }}";
+  {% if source %}
+    ws_addr += "/{{ source }}";
+  {% endif %}
+  console.log("connecting to: " + ws_addr);
+  var websocket_server = ws_addr;
 
   //////////////////////////////////////////////////////////////
   // WebSocket code - need to pull this out into a separate file

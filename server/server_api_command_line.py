@@ -31,7 +31,7 @@ from server.server_api import ServerAPI
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
-SOURCE_NAME = 'ServerAPICommandLine'
+SOURCE_NAME = 'CommandLine'
 USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
