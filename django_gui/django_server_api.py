@@ -317,8 +317,7 @@ class DjangoServerAPI(ServerAPI):
         logger = Logger.objects.get(name=logger_id, cruise=cruise_id)
         config = LoggerConfig.objects.get(name=logger_config, cruise=cruise_id,
                                           logger=logger)
-        stored_state = LoggerConfigState(logger_status=logger_status,
-                                         logger=logger, config=config,
+        stored_state = LoggerConfigState(logger=logger, config=config,
                                          running=False, failed=False,
                                          pid=0, errors='')
         stored_state.save()

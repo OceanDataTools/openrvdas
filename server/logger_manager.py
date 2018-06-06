@@ -269,6 +269,49 @@ class LoggerManager:
     # NOT YET IMPLEMENTED!!!
     self.data_clients = set()
 
+  ############################
+  def start(self):
+    """Start the threads that make up the LoggerManager operation: a local
+    LoggerRunner, the configuration update loop and optionally, a
+    websocket server that remote LoggerRunners and web clients can
+    connect to. Start all threads as daemons so that they'll
+    automatically terminate if the main thread does.
+    """
+    # Start the local LoggerRunner in its own thread.
+    local_logger_thread = threading.Thread(
+      target=self.local_logger_runner, daemon=True)
+    local_logger_thread.start()
+
+    # Update configs in a separate thread.
+    update_configs_thread = threading.Thread(
+      target=self.update_configs_loop, daemon=True)
+    update_configs_thread.start()
+
+    # If we've got a websocket specification, launch websocket
+    # server in its own separate thread.
+    if self.websocket:
+      event_loop = asyncio.get_event_loop()
+      try:
+        host, port_str = self.websocket.split(':')
+        self.websocket_server = websockets.serve(self._serve_websocket,
+                                                 host, int(port_str))
+        event_loop.run_until_complete(self.websocket_server)
+        event_loop_thread = threading.Thread(target=event_loop.run_forever,
+                                             daemon=True)
+        event_loop_thread.start()
+      except OSError:
+        logging.warning('Failed to open websocket %s:%s', host, port)
+        sys.exit(1)
+      except ValueError as e:
+        logging.error('--websocket "%s" not in host:port format',
+                      self.websocket)
+        sys.exit(1)
+
+  ############################
+  def quit(self):
+    """Exit the loop and shut down all loggers."""
+    self.quit_flag = True
+
   ##########################
   def local_logger_runner(self):
     """Create and run a local LoggerRunner as client_id 0."""
@@ -300,6 +343,94 @@ class LoggerManager:
 
       time.sleep(self.interval)
   
+  ############################
+  @asyncio.coroutine
+  async def _serve_websocket(self, websocket, path):
+    """Serve requests from clients who connect to us via websocket."""
+
+    with self.client_map_lock:
+      client_id = self.next_client_id
+      self.next_client_id += 1
+
+      logging.info('New client #%d attached: %s', client_id, path)
+      self.client_map[client_id] = websocket
+      self.send_queue[client_id] = queue.Queue()
+      self.receive_queue[client_id] = queue.Queue()
+
+    ###########
+    # Remote LoggerRunner has connected. Its "producer" is simple: we
+    # just send it whatever is in its send_queue. Its consumer is a
+    # little more complicated, as we want to process what we've
+    # received as soon as we get it.
+    if path.find('/logger_runner/') == 0:
+      host_id = path[len('/logger_runner/'):]
+      logging.info('New LoggerRunner %s, (id #%d)', host_id, client_id)
+      with self.client_map_lock:
+        self.logger_runner_clients.add(client_id)
+      # Create 'futures' for sender and receiver - see following:
+      # http://cheat.readthedocs.io/en/latest/python/asyncio.html      
+      sender = self._queued_sender(client_id)
+      receiver = self._logger_runner_receiver(client_id)
+      
+      await self._handle_client_connection(client_id=client_id, sender=sender,
+                                           receiver=receiver, host_id=host_id)
+      # Clean up when connection closes
+      with self.client_map_lock:
+        self.logger_runner_clients.discard(client_id)
+
+    ###########
+    # Logger status client has connected. Serve it logger status updates
+    elif path.find('/logger_status/') == 0:
+      # Client wants logger status - this is what we serve to the main
+      # cruise page.
+      cruise_id = path[len('/logger_status/'):]
+      sender = self._logger_status_sender(client_id, cruise_id)
+      
+      with self.client_map_lock:
+        self.logger_status_clients.add(client_id)
+
+      await self._handle_client_connection(client_id=client_id, sender=sender)
+
+      with self.client_map_lock:
+        self.logger_status_clients.discard(client_id)
+
+    ###########
+    # Status message client has connected. Serve it status updates
+    elif path.find('/messages/') == 0:
+      # Client wants server log messages
+      log_level = logging.INFO
+      source = None
+      try:
+        path_parts = path.split('/')[2:]
+        if path_parts:
+          log_level_str = path_parts.pop(0)
+          log_level = int(log_level_str)
+        if path_parts:
+          source = path_parts.pop(0) or None
+      except ValueError:
+        pass
+      
+      sender = self._log_message_sender(client_id, log_level, source)
+      await self._handle_client_connection(client_id=client_id, sender=sender)
+
+    ##########################
+    # Display client has connected.
+    elif path == '/data':
+      # Client wants logger data - this is what we serve widgets
+      await self._serve_data(client_id=client_id)
+      
+    ##########################
+    else:
+      # Client wants something unknown. Complain and return
+      logging.warning('Unknown status request: "%s"', path)
+
+    # When client disconnects, delete the queues it was using
+    with self.client_map_lock:
+      logging.info('WebsocketServer client #%d completed', client_id)
+      del self.client_map[client_id]
+      if client_id in self.send_queue: del self.send_queue[client_id]
+      if client_id in self.receive_queue: del self.receive_queue[client_id]
+
   ############################
   @asyncio.coroutine
   async def _handle_client_connection(self, client_id, sender=None,
@@ -352,23 +483,23 @@ class LoggerManager:
 
     EPSILON = 0.00001
     
-    # If asking for data, we expect an initial message that is a JSON
-    # list of pairs, each pair containing a field name and how many
-    # seconds worth of back data we want for it.
+    # We expect an initial message that is a JSON list of pairs, each
+    # pair containing a field name and how many seconds worth of back
+    # data we want for it.
     websocket = self.client_map[client_id]
     message = await websocket.recv()
-    logging.warning('Data request: "%s"', message)
+    logging.info('Data request: "%s"', message)
     if not message:
       logging.info('Received empty data request, doing nothing.')
       return
     try:
       field_list = json.loads(message)
     except json.JSONDecodeError:
-      logging.warning('Received unparseable JSON request: "%s"', message)
+      logging.info('Received unparseable JSON request: "%s"', message)
       return
 
     for (field_name, num_secs) in field_list:
-      logging.warning('Requesting field: %s, %g secs.', field_name, num_secs)
+      logging.info('Requesting field: %s, %g secs.', field_name, num_secs)
 
     # Get requested back data. Note that we may have had different
     # back data time spans for different fields. Because some of these
@@ -440,97 +571,6 @@ class LoggerManager:
       # Check whether there are results newer than latest timestamp
       # we've already seen.
       results = reader.read_time_range(start_time=max_timestamp_seen + EPSILON)
-
-  ############################
-  @asyncio.coroutine
-  async def _serve_websocket(self, websocket, path):
-    """Serve requests from clients who connect to us via websocket."""
-
-    with self.client_map_lock:
-      client_id = self.next_client_id
-      self.next_client_id += 1
-
-      logging.warning('New client #%d attached: %s', client_id, path)
-      self.client_map[client_id] = websocket
-      self.send_queue[client_id] = queue.Queue()
-      self.receive_queue[client_id] = queue.Queue()
-
-    ###########
-    # Remote LoggerRunner has connected. Its "producer" is simple: we
-    # just send it whatever is in its send_queue. Its consumer is a
-    # little more complicated, as we want to process what we've
-    # received as soon as we get it.
-    if path.find('/logger_runner/') == 0:
-      host_id = path[len('/logger_runner/'):]
-      logging.warning('New LoggerRunner %s, (id #%d)', host_id, client_id)
-      with self.client_map_lock:
-        self.logger_runner_clients.add(client_id)
-      # Create 'futures' for sender and receiver - see following:
-      # http://cheat.readthedocs.io/en/latest/python/asyncio.html      
-      sender = self._queued_sender(client_id)
-      receiver = self._logger_runner_receiver(client_id)
-      
-      await self._handle_client_connection(client_id=client_id, sender=sender,
-                                           receiver=receiver, host_id=host_id)
-
-      # Clean up when connection closes
-      with self.client_map_lock:
-        self.logger_runner_clients.discard(client_id)
-
-    ###########
-    # Logger status client has connected. Serve it logger status updates
-    elif path.find('/logger_status/') == 0:
-      # Client wants logger status - this is what we serve to the main
-      # cruise page.
-      cruise_id = path[len('/logger_status/'):]
-      sender = self._logger_status_sender(client_id, cruise_id)
-      
-      with self.client_map_lock:
-        self.logger_status_clients.add(client_id)
-
-      await self._handle_client_connection(client_id=client_id, sender=sender)
-
-      with self.client_map_lock:
-        self.logger_status_clients.discard(client_id)
-
-    ###########
-    # Status message client has connected. Serve it status updates
-    elif path.find('/messages/') == 0:
-      # Client wants server log messages
-      log_level = logging.INFO
-      source = None
-      try:
-        path_parts = path.split('/')[2:]
-        if path_parts:
-          logging.warning('parts 1: %s', path_parts)
-          log_level_str = path_parts.pop(0)
-          log_level = int(log_level_str)
-        if path_parts:
-          logging.warning('parts 2: %s', path_parts)
-          source = path_parts.pop(0) or None
-      except ValueError:
-        pass
-      
-      sender = self._log_message_sender(client_id, log_level, source)
-      await self._handle_client_connection(client_id=client_id, sender=sender)
-
-    ##########################
-    # Display client has connected.
-    elif path == '/data':
-      # Client wants logger data - this is what we serve widgets
-      await self._serve_data(client_id=client_id)
-      
-    ##########################
-    else:
-      # Client wants something unknown. Complain and return
-      logging.warning('Unknown status request: "%s"', path)
-
-    # When client disconnects, delete the queues it was using
-    with self.client_map_lock:
-      logging.info('WebsocketServer client #%d completed', client_id)
-      del self.client_map[client_id]
-      if client_id in self.send_queue: del self.send_queue[client_id]
-      if client_id in self.receive_queue: del self.receive_queue[client_id]
   
   ############################
   # Methods below are senders/receivers for various websocket clients.
@@ -551,7 +591,7 @@ class LoggerManager:
                         client_id, message)
         await websocket.send(message)
       except websockets.ConnectionClosed:
-        logging.warning('Client %d connection closed', client_id)
+        logging.info('Client %d connection closed', client_id)
         return
       except queue.Empty:
         await asyncio.sleep(0.1)
@@ -628,7 +668,7 @@ class LoggerManager:
       try:
         await websocket.send(json.dumps(message))
       except websockets.ConnectionClosed:
-        logging.warning('Client %d connection closed', client_id)
+        logging.info('Client %d connection closed', client_id)
         return
       await asyncio.sleep(self.interval)
 
@@ -639,7 +679,7 @@ class LoggerManager:
     websocket. If source is not specified, retrieve from all
     sources. If log_level is not specified, retrieve all log levels.
     """
-    logging.warning('Created message sender client %s: source %s, log_level %d',
+    logging.info('Created message sender client %s: source %s, log_level %d',
                  client_id, source, log_level)
     websocket = self.client_map.get(client_id, None)
     if not websocket:
@@ -659,7 +699,7 @@ class LoggerManager:
         try:
           await websocket.send(json.dumps(messages))
         except websockets.ConnectionClosed:
-          logging.warning('Client %d connection closed', client_id)
+          logging.info('Client %d connection closed', client_id)
           return
       await asyncio.sleep(self.interval)
    
@@ -782,49 +822,6 @@ class LoggerManager:
         desired_config = config_map.get(host_id, {})
         command = 'set_configs ' + json.dumps(desired_config)
         self.send_queue[client_id].put(command)
-
-  ############################
-  def start(self):
-    """Start the threads that make up the LoggerManager operation: a local
-    LoggerRunner, the configuration update loop and optionally, a
-    websocket server that remote LoggerRunners and web clients can
-    connect to. Start all threads as daemons so that they'll
-    automatically terminate if the main thread does.
-    """
-    # Start the local LoggerRunner in its own thread.
-    local_logger_thread = threading.Thread(
-      target=self.local_logger_runner, daemon=True)
-    local_logger_thread.start()
-
-    # Update configs in a separate thread.
-    update_configs_thread = threading.Thread(
-      target=self.update_configs_loop, daemon=True)
-    update_configs_thread.start()
-
-    # If we've got a websocket specification, launch websocket
-    # server in its own separate thread.
-    if self.websocket:
-      event_loop = asyncio.get_event_loop()
-      try:
-        host, port_str = self.websocket.split(':')
-        self.websocket_server = websockets.serve(self._serve_websocket,
-                                                 host, int(port_str))
-        event_loop.run_until_complete(self.websocket_server)
-        event_loop_thread = threading.Thread(target=event_loop.run_forever,
-                                             daemon=True)
-        event_loop_thread.start()
-      except OSError:
-        logging.warning('Failed to open websocket %s:%s', host, port)
-        sys.exit(1)
-      except ValueError as e:
-        logging.error('--websocket "%s" not in host:port format',
-                      self.websocket)
-        sys.exit(1)
-
-  ############################
-  def quit(self):
-    """Exit the loop and shut down all loggers."""
-    self.quit_flag = True
 
 ################################################################################
 ################################################################################
