@@ -329,7 +329,7 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
                      since_timestamp=None):
-    """Retrieve log messages from source at or below log_level since
+    """Retrieve log messages from source at or above log_level since
     timestamp. If source is omitted, retrieve from all sources. If
     log_level is omitted, retrieve at all levels. If since_timestamp is
     omitted, only retrieve most recent message.
