@@ -5,18 +5,49 @@
 <head>
   <title>Server messages</title>
   {# <meta http-equiv="refresh" content="3"> #}
+
+  <style>
+    tbody{
+    display:block;
+    overflow:auto;
+    height:200px;
+    width:100%;
+    }
+    thead tr{
+    display: table-header-group;
+    }
+    
+    thead {
+    }
+    
+    th, td {
+    }
+  </style>
 </head>
 
 <h1>Server messages</h1>
 
 {# ######################################################################## #}
-<table id="server_messages" rows=18 cols=80>
-  <th>time</th><th>source</th><th>user</th><th>level</th><th>message</th></tr>
+<table rows=18 cols=80>
+  <thead>
+    <th>time</th><th>source</th><th>user</th><th>level</th><th>message</th></tr>
+  </thead>
+  <tbody id="server_messages">
+  </tbody>
 </table>
 
 {# ######################################################################## #}
 {# Start of Javascript                                                      #}
 <script type="text/javascript">
+  var LOG_LEVEL = {
+    "ALL":       0,
+    "DEBUG":    10,
+    "INFO":     20,
+    "WARNING":  30,
+    "ERROR":    40,
+    "CRITICAL": 50
+  }
+
 
   // We're after messages statuses, so append '/messages' path followed
   // by name of server we want messages from.
@@ -88,14 +119,18 @@
   function on_disconnect() {
     console.log("Setting buttons to 'disconnected' state");
     var server_messages = document.getElementById("server_messages");
-    server_messages.style.backgroundColor = "yellow";
+    //server_messages.style.backgroundColor = "yellow";
   }
 
   function process_message(message) {
     // Fill in the values we've received
     var server_messages = document.getElementById("server_messages");
-    server_messages.style.backgroundColor = "white";
+    //server_messages.style.backgroundColor = "white";
 
+    var page_bottom = server_messages.scrollHeight;
+    var page_position = server_messages.scrollTop + server_messages.clientHeight;
+    var at_bottom = (page_bottom == page_position);
+  
     var message_length = message.length;
     for (var i = 0; i < message_length; i++) {
       var log_message = message[i];
@@ -115,9 +150,19 @@
       var td = document.createElement("td");
       td.appendChild(document.createTextNode(log_message[4])); // message
       tr.appendChild(td);
+
+      // Set message color if it's a warning or error
+      if (log_message[3] >= LOG_LEVEL["ERROR"]) {
+      tr.style.backgroundColor = "orangered";
+      } else if (log_message[3] >= LOG_LEVEL["WARNING"]) {
+      tr.style.backgroundColor = "yellow";
+      }
       server_messages.appendChild(tr);
     }
-    server_messages.scrollTop = server_messages.scrollHeight;
+
+    if (at_bottom) {
+      server_messages.scrollTop = server_messages.scrollHeight + server_messages.clientHeight;
+    }
   }
 
 </script>

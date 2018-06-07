@@ -171,7 +171,7 @@ Current configuration: {{ cruise.config_filename }}
     };
 
     ws.onmessage = function (received_message) { 
-      console.log("Got status update message: " + received_message.data);
+      //console.log("Got status update message: " + received_message.data);
       process_message(JSON.parse(received_message.data));
     };
   };
@@ -400,7 +400,7 @@ Current configuration: {{ cruise.config_filename }}
 
   ///////////////////////////////
   function message_window() {
-    window.open("/server_messages/30", "_blank",
+    window.open("/server_messages/20", "_blank",
     "height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,copyhistory=no");
   }
 

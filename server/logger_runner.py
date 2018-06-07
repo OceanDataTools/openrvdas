@@ -277,7 +277,7 @@ class LoggerRunner:
       if e is KeyboardInterrupt:
         self.quit()
         return
-      logging.warning('Config %s got exception: %s', config['name'], str(e))
+      logging.error('Config %s got exception: %s', config['name'], str(e))
       proc = None
       errors = [str(e)]
 

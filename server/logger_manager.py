@@ -141,6 +141,7 @@ from logger.utils.read_json import read_json, parse_json
 
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner, run_logging
+from server.data_server import DataServer
 
 # Number of times we'll try a failing logger before giving up
 DEFAULT_MAX_TRIES = 3
@@ -416,8 +417,12 @@ class LoggerManager:
     ##########################
     # Display client has connected.
     elif path == '/data':
-      # Client wants logger data - this is what we serve widgets
-      await self._serve_data(client_id=client_id)
+      # Client wants logger data - this is what we serve widgets. This
+      # is a messy and fraught bit of code, so we've isolated it into
+      # its own class.
+      websocket = self.client_map[client_id]
+      data_server = DataServer(websocket)
+      await data_server.serve_data()
       
     ##########################
     else:
@@ -465,112 +470,6 @@ class LoggerManager:
     if host_id is not None:
       with self.client_map_lock:
         del self.host_id_map[client_id]
-
-  ############################
-  @asyncio.coroutine
-  async def _serve_data(self, client_id):
-    """Serve data, if it exists, from database, if it exists, using default
-    database location, tables, user and password.
-
-    NOTE: This is the kind of code your mother warned you about. It's a
-    quick first pass, and will therefore follow me to my grave and haunt
-    you for years to come. For the love of Guido, please clean this up.
-    """
-    from logger.readers.database_reader import DatabaseReader
-    from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
-    from database.settings import DEFAULT_DATABASE_USER
-    from database.settings import DEFAULT_DATABASE_PASSWORD
-
-    EPSILON = 0.00001
-    
-    # We expect an initial message that is a JSON list of pairs, each
-    # pair containing a field name and how many seconds worth of back
-    # data we want for it.
-    websocket = self.client_map[client_id]
-    message = await websocket.recv()
-    logging.info('Data request: "%s"', message)
-    if not message:
-      logging.info('Received empty data request, doing nothing.')
-      return
-    try:
-      field_list = json.loads(message)
-    except json.JSONDecodeError:
-      logging.info('Received unparseable JSON request: "%s"', message)
-      return
-
-    for (field_name, num_secs) in field_list:
-      logging.info('Requesting field: %s, %g secs.', field_name, num_secs)
-
-    # Get requested back data. Note that we may have had different
-    # back data time spans for different fields. Because some of these
-    # might be extremely voluminous (think 30 minutes of winch data),
-    # take the computational hit of initially creating a separate
-    # reader for each backlog.
-    fields = []
-    back_data = {}
-    for (field_name, num_secs) in field_list:
-      fields.append(field_name)
-      if not num_secs in back_data:
-        back_data[num_secs] = []
-      back_data[num_secs].append(field_name)
-
-    results = {}
-    now = time.time()
-    for (num_secs, field_list) in back_data.items():
-      # Create a DatabaseReader to get num_secs worth of back data for
-      # these fields. Provide a start_time of num_secs ago, and no
-      # stop_time, so we get everything up to present.
-      logging.debug('Creating DatabaseReader for %s', field_list)
-      logging.debug('Requesting %g seconds of timestamps from %f-%f',
-                      num_secs, now-num_secs, now)
-      reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
-                              DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
-      num_sec_results = reader.read_time_range(start_time=now-num_secs)
-      logging.debug('results: %s', num_sec_results)
-      results.update(num_sec_results)
-                     
-    # Now that we've gotten all the back results, create a single
-    # DatabaseReader to read all the fields.
-    reader = DatabaseReader(fields, DEFAULT_DATABASE, DEFAULT_DATABASE_HOST,
-                            DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD)
-    max_timestamp_seen = 0
-    while True:
-      # If we do have results, package them up and send them
-      if results:
-        send_message = json.dumps(results)
-        logging.debug('Data server sending: %s', send_message)
-        try:
-          await websocket.send(send_message)
-        except websockets.exceptions.ConnectionClosed:
-          return
-
-      # New results or not, take a nap before trying to fetch more results
-      logging.debug('Sleeping %g seconds', self.interval)
-      await asyncio.sleep(self.interval)
-
-      # What's the timestamp of the most recent result we've seen?
-      # Each value should be a list of (timestamp, value) pairs. Look
-      # at the last timestamp in each value list.
-      for field in results:
-        last_timestamp = results[field][-1][0]
-        max_timestamp_seen = max(max_timestamp_seen, last_timestamp)
-
-      # Bug's corner case: if we didn't retrieve any data on the first
-      # time through (because it was all too old), max_timestamp_seen
-      # will be zero, causing us to retrieve *all* the data in the DB
-      # on the next iteration. If we do find that max_timestamp_seen
-      # is zero, set it to "now" to prevent this.
-      if not max_timestamp_seen:
-        max_timestamp_seen = now
-
-      logging.debug('Results: %s', results)
-      if len(results):
-        logging.info('Received %d fields, max timestamp %f',
-                     len(results), max_timestamp_seen)
-
-      # Check whether there are results newer than latest timestamp
-      # we've already seen.
-      results = reader.read_time_range(start_time=max_timestamp_seen + EPSILON)
   
   ############################
   # Methods below are senders/receivers for various websocket clients.
