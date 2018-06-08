@@ -26,6 +26,26 @@ from logger.utils.read_json import parse_json
 
 from django_gui.settings import HOSTNAME, WEBSOCKET_SERVER
 
+# Convenience dicts we pass to the server_message page to
+# translate logging levels to names and colors.
+LOG_LEVELS = {
+  0:  'ALL',
+  10: 'DEBUG',
+  20: 'INFO',
+  30: 'WARNING',
+  40: 'ERROR',
+  50: 'CRITICAL'
+}
+
+LOG_LEVEL_COLORS = {
+  0:  '',
+  10: '',
+  20: '',
+  30: '#FFFF99',
+  40: '#FF9999',
+  50: '#FF6666'
+}
+
 ############################
 # We're going to interact with the Django DB via its API class
 from .django_server_api import DjangoServerAPI
@@ -151,10 +171,12 @@ def servers(request):
 ################################################################################
 # Page to display messages from the specified server
 def server_messages(request, log_level=logging.INFO, source=None):
+
   template_vars = {'websocket_server': WEBSOCKET_SERVER,
                    'log_level': log_level,
+                   'log_levels': LOG_LEVELS,
+                   'log_level_colors': LOG_LEVEL_COLORS,
                    'source': source}
-  logging.warning('ll: %s, source: %s', log_level, source)
   return render(request, 'django_gui/server_messages.html', template_vars)
 
 ################################################################################

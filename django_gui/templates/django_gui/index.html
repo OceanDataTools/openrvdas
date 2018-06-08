@@ -98,10 +98,7 @@
 </form>
 
 {# ######################################################################## #}
-{# Status bar                                                               #}
-{% if cruise_id %}
-Current configuration: {{ cruise.config_filename }}
-{% endif %}
+{# Load configuration                                                       #}
 {% if user.is_authenticated %}
 <form>
   {% csrf_token %}

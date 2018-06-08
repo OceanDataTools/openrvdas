@@ -7,20 +7,20 @@
   {# <meta http-equiv="refresh" content="3"> #}
 
   <style>
-    tbody{
+    .scrollTable tbody{
     display:block;
     overflow:auto;
     height:200px;
     width:100%;
     }
-    thead tr{
+    .scrollTable thead tr{
     display: table-header-group;
     }
     
-    thead {
+    .scrollTable thead {
     }
     
-    th, td {
+    .scrollTable th, td {
     }
   </style>
 </head>
@@ -28,6 +28,22 @@
 <h1>Server messages</h1>
 
 {# ######################################################################## #}
+<table>
+  <tr>
+    {% for level, level_name in log_levels.items %}
+    <td>
+      <button onclick="window.location='/server_messages/{{ level }}/'"
+              {% if log_level == level %}
+              style="background-color:gray"
+              {% endif %}
+              >
+        {{ level_name }}
+      </button>
+    </td>
+    {% endfor %}
+  </tr>
+</table>
+<div class=scrollTable>
 <table rows=18 cols=80>
   <thead>
     <th>time</th><th>source</th><th>user</th><th>level</th><th>message</th></tr>
@@ -35,20 +51,14 @@
   <tbody id="server_messages">
   </tbody>
 </table>
+</div>
 
 {# ######################################################################## #}
 {# Start of Javascript                                                      #}
 <script type="text/javascript">
-  var LOG_LEVEL = {
-    "ALL":       0,
-    "DEBUG":    10,
-    "INFO":     20,
-    "WARNING":  30,
-    "ERROR":    40,
-    "CRITICAL": 50
-  }
 
-
+  //////////////////////////////////////////////////////////////
+  // Connect to the websocket
   // We're after messages statuses, so append '/messages' path followed
   // by name of server we want messages from.
   var ws_addr = "ws://{{ websocket_server }}/messages/{{ log_level }}";
@@ -59,8 +69,8 @@
   var websocket_server = ws_addr;
 
   //////////////////////////////////////////////////////////////
-  // WebSocket code - need to pull this out into a separate file
-  // so we're not duplicating it in each of these files!
+  // Generic websocket code - need to pull this out into a separate
+  // file so we're not duplicating it in each of these files.
   if (! "WebSocket" in window) {
     alert("Warning: websockets not supported by your Browser!");
   }
@@ -97,7 +107,7 @@
     };
 
     ws.onmessage = function (received_message) { 
-      console.log("Got status update message: " + received_message.data);
+      //console.log("Got status update message: " + received_message.data);
       process_message(JSON.parse(received_message.data));
     };
   };
@@ -108,13 +118,13 @@
   };
 
   function send(message) {
-    console.log("Sending message '" + message + "'");
+    //console.log("Sending message '" + message + "'");
     ws.send(message);
-    console.log("Sent!");
+    //console.log("Sent!");
   };
 
   //////////////////////////////////////////////////////
-  // Start of server.html-specific Javascript
+  // Start of server_messages.html-specific Javascript
 
   function on_disconnect() {
     console.log("Setting buttons to 'disconnected' state");
@@ -122,44 +132,80 @@
     //server_messages.style.backgroundColor = "yellow";
   }
 
+  function timestamp_to_date(timestamp) {
+    var date = new Date(timestamp*1000);
+    var hours = date.getHours();
+    var minutes = "0" + date.getMinutes();
+    var seconds = "0" + date.getSeconds();
+    var date_str = "";
+    //date_str += hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+    date_str += date.getUTCFullYear() + "-"
+       + ("0" + date.getUTCMonth()).substr(-2) + "-"
+       + ("0" + date.getUTCDate()).substr(-2) + " "
+       + ("0" + date.getUTCHours()).substr(-2) + ":"
+       + ("0" + date.getUTCMinutes()).substr(-2) + ":"
+       + ("0" + date.getUTCSeconds()).substr(-2) + "."
+       + ("00" + date.getMilliseconds()).substr(-3);
+    return date_str;
+  }
+
   function process_message(message) {
     // Fill in the values we've received
     var server_messages = document.getElementById("server_messages");
     //server_messages.style.backgroundColor = "white";
 
+    // Is display at bottom of table? If so, we'll scroll down after
+    // adding new entries.
     var page_bottom = server_messages.scrollHeight;
-    var page_position = server_messages.scrollTop + server_messages.clientHeight;
+    var page_position = server_messages.scrollTop+server_messages.clientHeight;
     var at_bottom = (page_bottom == page_position);
   
     var message_length = message.length;
     for (var i = 0; i < message_length; i++) {
-      var log_message = message[i];
+      var timestamp = timestamp_to_date(message[i][0]);
+      var source    = message[i][1];
+      var user      = message[i][2];
+      var mesg_log_level = message[i][3];
+      var mesg      = message[i][4];
       var tr = document.createElement("tr");
       var td = document.createElement("td");
-      td.appendChild(document.createTextNode(log_message[0])); // timestamp
+
+      td.appendChild(document.createTextNode(timestamp));
       tr.appendChild(td);
+
       var td = document.createElement("td");
-      td.appendChild(document.createTextNode(log_message[1])); // source
+      td.appendChild(document.createTextNode(source));
       tr.appendChild(td);
+
       var td = document.createElement("td");
-      td.appendChild(document.createTextNode(log_message[2])); // user
+      td.appendChild(document.createTextNode(user));
       tr.appendChild(td);
+
       var td = document.createElement("td");
-      td.appendChild(document.createTextNode(log_message[3])); // log_level
+      var log_level_name = "-";
+      {% for level, level_name in log_levels.items %}
+        if (mesg_log_level == {{ level }}) {
+          log_level_name = "{{ level_name }}";
+        }
+      {% endfor %}
+      td.appendChild(document.createTextNode(log_level_name));
       tr.appendChild(td);
+
       var td = document.createElement("td");
-      td.appendChild(document.createTextNode(log_message[4])); // message
+      td.appendChild(document.createTextNode(mesg));
       tr.appendChild(td);
 
       // Set message color if it's a warning or error
-      if (log_message[3] >= LOG_LEVEL["ERROR"]) {
-      tr.style.backgroundColor = "orangered";
-      } else if (log_message[3] >= LOG_LEVEL["WARNING"]) {
-      tr.style.backgroundColor = "yellow";
-      }
+      {% for level, level_color in log_level_colors.items %}
+        if (mesg_log_level == {{ level }}) {
+          tr.style.backgroundColor = "{{ level_color }}";
+        }
+      {% endfor %}
       server_messages.appendChild(tr);
     }
 
+    // If window was at bottom before we added new stuff, scroll down
+    // to keep it at the bottom.
     if (at_bottom) {
       server_messages.scrollTop = server_messages.scrollHeight + server_messages.clientHeight;
     }
