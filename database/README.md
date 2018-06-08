@@ -7,7 +7,7 @@ for an introduction to the OpenRVDAS system. This document discusses
 specifically setting up OpenRVDAS to read/write logger data from/to
 a database using DatabaseReader and DatabaseWriter.
 
-Note that Django, [as discussed in the gui subdir](../gui/README.md),
+Note that Django, [as discussed in the django_gui subdir](../django_gui/README.md),
 has its own database setup - what is described below is only relevant
 to DatabaseReader and DatabaseWriter.
 
