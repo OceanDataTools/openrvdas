@@ -18,6 +18,9 @@ servers:
 ```
   pip3 install websockets
 ```
+If the LoggerManager code is to serve data via display widgets, you'll
+also need to install the necessary database components by following
+instructions in the [database/README.md file](../database/README.md).
 
 ## Running
 
