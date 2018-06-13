@@ -27,8 +27,11 @@ DEBUG = True
 
 import socket
 
+# If the system-defined hostname from gethostname(), below, is
+# incorrect or unacceptable for some reason, comment it out and define
+# your own hostname in its place.
+
 HOSTNAME = socket.gethostname()
-HOSTNAME = 'localhost'
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
