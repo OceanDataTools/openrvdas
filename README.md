@@ -93,6 +93,12 @@ For full details on the use of listen.py, run:
   logger/listener/listen.py --help
 ```
 
+### Running logger_runner.py and logger_manager.py
+Server scripts for managing multiple loggers are described in the [server/README.md file](servers/README.md).
+
+### Running the Django-based web interface
+Installation and running of the Django-based web interface is described in the [django_gui/README.md file](django_gui/README.md).
+
 ## Contributing
 
 Please contact David Pablo Cohn (*david dot cohn at gmail dot com*) - to discuss
@@ -123,3 +129,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Additional Licenses
+

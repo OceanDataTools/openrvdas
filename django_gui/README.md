@@ -38,34 +38,42 @@ test server and the default SQLite database. Actual deployments will
 likely require more robust services, such as Apache and MySQL or
 MariaDB.
 
+0. Create a settings.py file from the template:
+```
+cp ./django_gui/settings.py.dist ./django_gui/settings.py
+```
+
 1. Set up the default Django database models (uses SQLite, as
 configured in django_gui/settings.py):
 ```
-  python3 manage.py makemigrations django
+  python3 manage.py makemigrations django_gui
   python3 manage.py migrate
   python3 manage.py createsuperuser --email rvdas@somerandom.com --username rvdas
 ```
-2. Generate a full cruise configuration for the server to use. To use
-the sample cruise definition for running on test data, run:
+2. Start the LoggerManager as a server (as per in [the server README.md](../server/README.md)),
+specifying the Django backing store:
 ```
-  python3 logger/utils/build_config.py --config test/configs/sample_cruise.json > cruise.json
+  server/logger_manager.py --websocket localhost:8765 --database django
 ```
-3. Start the test server
-```
-  python3 manage.py runserver localhost:8000
-```
-4. In a browser window, visit ```http://localhost:8000```
-5. In a separate window, run django_gui/run_servers.py
-```
-  python3 django_gui/run_servers.py
-```
-Note that run_servers.py will need access to port 8765 (by default - you can change this in django_gui/settings.py). On CentOS, add this via:
+Note that Javascript on the Django pages will try to connect to the
+LoggerManager at port 8765 by default. You can change this in
+django_gui/settings.py if you need to use another port). To open this port
+for websockets on CentOS, run:
 ```
 sudo firewall-cmd --permanent --add-port=8765/tcp
 sudo firewall-cmd --reload
 ```
+Once the LoggerManager is running, you can control it from the command line
+as described in [the server README.md](../server/README.md), and you can type
+"help" for a complete list of commands.
 
-6. The sample cruise configuration relies on simulated serial ports
+3. To control the LoggerManager via Django, start the Django test server:
+```
+  python3 ./manage.py runserver localhost:8000
+```
+4. In a browser window, visit ```http://localhost:8000```
+
+5. The sample cruise configuration relies on simulated serial ports
 serving data stored in the test/ directory. To set up the simulated
 ports, run
 ```
@@ -76,12 +84,17 @@ At this point in the browser window, you should see an indication that
 no configuration is loaded, along with a prompt to log in. Log in
 using the rvdas account you created.
 
-Select "Load configuration file" to select and load the
-```cruise.json``` configuration file you created in Step 2.
+Select "Load configuration file" to select and load the file
+```test/configs/sample_cruise.json```. This file is a complete cruise
+specification configuration created by the logger/utils/build_config.py
+script as follows:
+```
+  python3 logger/utils/build_config.py --config test/configs/sample_cruise.json > cruise.json
+```
 
 The GUI window should now update to show a set of loggers,
 configurations and mode selector in mode "off". Select the mode
-"underway" (it will turn yellow), then hit "change mode" to
+"underway" (it will turn yellow), then hit "Change mode" to
 commit. The LoggerServer will select the logger configurations
 appropriate for the selected mode and run them.
 
@@ -107,10 +120,17 @@ Note also that you can still observe the state of the system if you
 are not logged in (e.g. as ```rvdas```), but you will be unable to
 select or change any configurations.
 
-The "Manage Servers" button will open a page from which (when it is
-working), you will be able to stop and restart logger and status
-servers. You can also use links on that page to open other pages that
-monitor the messages emitted by the individual servers.
+The "server log" link will open a new page showing the diagnostic messages
+from the LoggerManager. This page could use some improvement, but for now
+the path encodes the minimum log level to be displayed (10 = DEBUG, 20 = INFO,
+30 = WARNING) and optionally which message source to display (empty means all):
+```
+   localhost:8000/server_messages/<log_level>/<source>
+```
+E.g., you could display only logger debug information by opening the URL
+```
+   localhost:8000/server_messages/10/Logger
+```
 
 ### Widgets
 
@@ -172,3 +192,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Additional Licenses
+
