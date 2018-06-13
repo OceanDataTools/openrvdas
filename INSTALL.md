@@ -147,3 +147,4 @@ logger/readers/test_network_reader.py -v -v
 ```
 ## Database and GUI Functionality
 To use the database functionality implemented by DatabaseWriter and DatabaseReader, you will also need to follow the installation and configuration instructions in the [database/README.md](database/README.md) file. To use the Django-based GUI, you will need to follow the instructions in [django_gui/README.md](django_gui/README.md).
+

@@ -38,10 +38,15 @@ test server and the default SQLite database. Actual deployments will
 likely require more robust services, such as Apache and MySQL or
 MariaDB.
 
+0. Create a settings.py file from the template:
+```
+cp ./django_gui/settings.py.dist ./django_gui/settings.py
+```
+
 1. Set up the default Django database models (uses SQLite, as
 configured in django_gui/settings.py):
 ```
-  python3 manage.py makemigrations django
+  python3 manage.py makemigrations django_gui
   python3 manage.py migrate
   python3 manage.py createsuperuser --email rvdas@somerandom.com --username rvdas
 ```
@@ -187,3 +192,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Additional Licenses
+

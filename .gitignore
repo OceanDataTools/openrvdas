@@ -9,3 +9,5 @@ __pycache__
 
 db.sqlite3
 gui/migrations
+
+django_gui/settings.py
