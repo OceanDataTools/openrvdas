@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""
+Create simulated serial port(s) and feed it logfile data. Typical call:
+
+  logger/utils/simulate_serial.py --config test/serial_sim.json -v
+
+"""
+
 import logging
 import subprocess
 import sys
@@ -113,7 +120,10 @@ class SimSerial:
       record = self.strip.transform(record)  # strip the timestamp
       if record: 
         logging.debug('SimSerial writing: %s', record)
-        self.writer.write(record)   # and write it to the virtual port
+        try:
+          self.writer.write(record)   # and write it to the virtual port
+        except OSError:
+          break
 
     # If we're here, we got None from our input, and are done. Signal
     # for run_socat to exit
@@ -151,29 +161,32 @@ if __name__ == '__main__':
 
   # Okay - get to work here
 
-  if args.config:
-    configs = read_json(args.config)
-    logging.info('Read configs: %s', configs)
-    thread_list = []
-    for inst in configs:
-      config = configs[inst]
-      sim = SimSerial(port=config['port'], source_file=config['logfile'])
-      sim_thread = threading.Thread(target=sim.run, kwargs={'loop': args.loop})
-      sim_thread.start()
-      thread_list.append(sim_thread)
+  try:
+    if args.config:
+      configs = read_json(args.config)
+      logging.info('Read configs: %s', configs)
+      thread_list = []
+      for inst in configs:
+        config = configs[inst]
+        sim = SimSerial(port=config['port'], source_file=config['logfile'])
+        sim_thread = threading.Thread(target=sim.run, kwargs={'loop':args.loop})
+        sim_thread.start()
+        thread_list.append(sim_thread)
 
-    logging.warning('Waiting for threads to complete')
-    for thread in thread_list:
-      thread.join()
+      logging.warning('Running simulated ports for %s',
+                      ', '.join(configs.keys()))
+      for thread in thread_list:
+        thread.join()
 
-  # If no config file, just a simple, single serial port
-  elif args.logfile and args.port:
-    sim_serial = SimSerial(port=args.port, baudrate=args.baud,
-                           source_file=args.logfile)
-    sim_serial.run(args.loop)
+    # If no config file, just a simple, single serial port
+    elif args.logfile and args.port:
+      sim_serial = SimSerial(port=args.port, baudrate=args.baud,
+                             source_file=args.logfile)
+      sim_serial.run(args.loop)
 
-  # Otherwise, we don't have enough information to run
-  else:
-    parser.error('Either --config or both --logfile and --port must '
-                 'be specified')
-    
+    # Otherwise, we don't have enough information to run
+    else:
+      parser.error('Either --config or both --logfile and --port must '
+                   'be specified')
+  except KeyboardInterrupt:    
+    logging.warning('Received keyboard interrupt - shutting down')
