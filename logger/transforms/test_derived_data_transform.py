@@ -192,6 +192,38 @@ class RecipTransform(DerivedDataTransform):
 
 ################################################################################
 class TestComposedDerivedDataTransform(unittest.TestCase):
+  ############################
+  def assertRecursiveAlmostEqual(self, val1, val2, max_diff=0.00001):
+    """Assert that two values/dicts/lists/sets are almost equal. That is,
+    that their non-numerical entries are equal, and that their
+    numerical entries are equal to within max_diff. NOTE: does not
+    detect 'almost' equal for sets.
+    """
+    if type(val1) in (int, float) and type(val2) in (int, float):
+      self.assertLess(abs(val1-val2), max_diff)
+      return
+    
+    if type(val1) in (str, bool, type(None)):
+      self.assertEqual(val1, val2)
+      return
+
+    # If here, it should be a list, set or dict
+    self.assertTrue(type(val1) in (set, list, dict))
+    self.assertEqual(type(val1), type(val2))
+    self.assertEqual(len(val1), len(val2))
+    
+    if type(val1) == list:
+      for i in range(len(val1)):
+        self.assertRecursiveAlmostEqual(val1[i], val2[i], max_diff)
+
+    elif type(val1) == set:
+      for v in val1:
+        self.assertTrue(v in val2)
+
+    elif type(val1) == dict:
+      for k in val1:
+        self.assertTrue(k in val2)
+        self.assertRecursiveAlmostEqual(val1[k], val2[k], max_diff)
 
   ############################
   def test_bad_transform(self):
@@ -241,7 +273,7 @@ class TestComposedDerivedDataTransform(unittest.TestCase):
         self.assertIsNone(result)
         self.assertIsNone(expected)
       else:
-        self.assertDictEqual(result.fields, expected)
+        self.assertRecursiveAlmostEqual(result.fields, expected)
 
   ############################
   def test_field_dict(self):
@@ -285,7 +317,7 @@ class TestComposedDerivedDataTransform(unittest.TestCase):
         field_values[field].append([record.timestamp, value])
 
     results = t.transform(field_values)
-    self.assertDictEqual(results, FIELD_DICT_RESULT)
+    self.assertRecursiveAlmostEqual(results, FIELD_DICT_RESULT)
     """
     expected = DAS_RECORD_RESULTS[i]
       
