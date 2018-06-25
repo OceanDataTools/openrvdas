@@ -148,7 +148,11 @@ class TestDjangoServerAPI(TestCase):
     self.assertEqual(api.get_modes('test_0'), ['off', 'port', 'underway'])
     self.assertEqual(api.get_mode('test_0'), 'off')
     self.assertDictEqual(api.get_configs('test_0'),
-                         {'knud': {}, 'gyr1': {}, 'mwx1': {}, 's330': {}})
+                         {'knud': {'name': 'off'},
+                          'gyr1': {'name': 'off'},
+                          'mwx1': {'name': 'off'},
+                          's330': {'name': 'off'}
+                         })
 
     with self.assertRaises(ValueError):
       api.set_mode('test_0', 'invalid mode')
@@ -156,27 +160,37 @@ class TestDjangoServerAPI(TestCase):
     api.set_mode('test_0', 'underway')
     self.assertEqual(api.get_mode('test_0'), 'underway')
     self.assertDictEqual(api.get_configs('test_0'),
-                         {'knud': {'knud':'config knud->net/file'},
-                          'gyr1': {'gyr1':'config gyr1->net/file'},
-                          'mwx1': {'mwx1':'config mwx1->net/file'},
-                          's330': {'s330':'config s330->net/file'}})
+                         {'knud': {'knud':'config knud->net/file',
+                                   'name': 'knud->net/file'},
+                          'gyr1': {'gyr1':'config gyr1->net/file',
+                                   'name': 'gyr1->net/file'},
+                          'mwx1': {'mwx1':'config mwx1->net/file',
+                                   'name': 'mwx1->net/file'},
+                          's330': {'s330':'config s330->net/file',
+                                   'name': 's330->net/file'}})
     self.assertDictEqual(api.get_configs(),
-                         {'test_0:knud': {'knud':'config knud->net/file'},
-                          'test_0:gyr1': {'gyr1':'config gyr1->net/file'},
-                          'test_0:mwx1': {'mwx1':'config mwx1->net/file'},
-                          'test_0:s330': {'s330':'config s330->net/file'},
-                          'test_1:knud': {},
-                          'test_1:gyr1': {},
-                          'test_1:mwx1': {},
-                          'test_1:s330': {}})
+                         {'test_0:knud': {'knud':'config knud->net/file',
+                                          'name': 'knud->net/file'},
+                          'test_0:gyr1': {'gyr1':'config gyr1->net/file',
+                                          'name': 'gyr1->net/file'},
+                          'test_0:mwx1': {'mwx1':'config mwx1->net/file',
+                                          'name': 'mwx1->net/file'},
+                          'test_0:s330': {'s330':'config s330->net/file',
+                                          'name': 's330->net/file'},
+                          'test_1:knud': {'name': 'off'},
+                          'test_1:gyr1': {'name': 'off'},
+                          'test_1:mwx1': {'name': 'off'},
+                          'test_1:s330': {'name': 'off'}})
 
     with self.assertRaises(ValueError):
       api.get_configs('test_1', 'invalid_mode')
     self.assertEqual(api.get_configs('test_1', 'port'),
-                      {'gyr1': {'gyr1':'config gyr1->net'},
-                       'knud': {},
-                       'mwx1': {'mwx1':'config mwx1->net'},
-                       's330': {}
+                      {'gyr1': {'gyr1':'config gyr1->net',
+                                'name': 'gyr1->net'},
+                       'knud': {'name': 'off'},
+                       'mwx1': {'mwx1':'config mwx1->net',
+                                'name': 'mwx1->net'},
+                       's330': {'name': 'off'}
                       })
     self.assertDictEqual(api.get_loggers('test_0'),
                          {'knud': {'configs': [
@@ -190,10 +204,10 @@ class TestDjangoServerAPI(TestCase):
     api.delete_cruise('test_0')
     self.assertEqual(api.get_cruises(), ['test_1'])
     self.assertDictEqual(api.get_configs(),
-                         {'test_1:knud': {},
-                          'test_1:gyr1': {},
-                          'test_1:mwx1': {},
-                          'test_1:s330': {}})
+                         {'test_1:knud': {'name': 'off'},
+                          'test_1:gyr1': {'name': 'off'},
+                          'test_1:mwx1': {'name': 'off'},
+                          'test_1:s330': {'name': 'off'}})
     
 ################################################################################
 if __name__ == '__main__':
