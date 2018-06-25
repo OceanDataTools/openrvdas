@@ -100,6 +100,7 @@ class TestLoggerRunner(unittest.TestCase):
                          })
 
     runner.set_configs(self.config['modes']['off'])
+    time.sleep(0.1)
     self.assertDictEqual(runner.check_loggers(), {})
 
     # Verify that the process has indeed shut down. This should throw
@@ -109,7 +110,7 @@ class TestLoggerRunner(unittest.TestCase):
     
     # Try shutting down
     runner.quit()
-    runner_thread.join(0.2)
+    runner_thread.join(2.0)
     self.assertFalse(runner_thread.is_alive())
     
 ################################################################################
