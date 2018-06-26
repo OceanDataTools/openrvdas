@@ -222,7 +222,6 @@ else
 }
 EOF
 mv /tmp/nginx.conf /etc/nginx/nginx.conf
-fi
 echo Done setting up NGINX
 
 # Set up openrvdas
@@ -235,7 +234,7 @@ echo Initializing OpenRVDAS database...
 cd openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
 
-python3 manage.py makemigrations gui
+python3 manage.py makemigrations django_gui
 python3 manage.py migrate
 echo yes | python3 manage.py collectstatic
 
@@ -246,14 +245,14 @@ echo "from django.contrib.auth.models import User; User.objects.filter(email='${
 # Connect uWSGI with our project installation
 echo "############################################################################"
 echo Creating OpenRVDAS-specific uWSGI files
-cp /etc/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/gui
+cp /etc/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
 
-cat > $INSTALL_ROOT/openrvdas/gui/openrvdas_nginx.conf<<EOF
+cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
 # openrvdas_nginx.conf
 
 # the upstream component nginx needs to connect to
 upstream django {
-    server unix://${INSTALL_ROOT}/openrvdas/gui/openrvdas.sock; # for a file socket
+    server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
 }
 
 # configuration of the server
@@ -279,23 +278,23 @@ server {
     # Finally, send all non-media requests to the Django server.
     location / {
         uwsgi_pass  django;
-        include     ${INSTALL_ROOT}/openrvdas/gui/uwsgi_params;
+        include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
     }
 }
 EOF
 
 # Make symlink to nginx dir
-ln -sf ${INSTALL_ROOT}/openrvdas/gui/openrvdas_nginx.conf /etc/nginx/sites-enabled 
+ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf /etc/nginx/sites-enabled 
 
-cat > ${INSTALL_ROOT}/openrvdas/gui/openrvdas_uwsgi.ini <<EOF
+cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 # openrvdas_uwsgi.ini file
 [uwsgi]
 
 # Django-related settings
 # the base directory (full path)
-chdir           = /opt/openrvdas
+chdir           = ${INSTALL_ROOT}/openrvdas
 # Django's wsgi file
-module          = gui.wsgi
+module          = django_gui.wsgi
 # the base directory from which bin/python is available
 # Do an ln -s bin/python3 bin/python in this dir!!!
 home            = /usr/local
@@ -306,7 +305,7 @@ master          = true
 # maximum number of worker processes
 processes       = 10
 # the socket (use the full path to be safe
-socket          = /opt/openrvdas/gui/openrvdas.sock
+socket          = ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock
 # ... with appropriate permissions - may be needed
 # chmod-socket    = 664
 chmod-socket    = 666
@@ -314,10 +313,9 @@ chmod-socket    = 666
 vacuum          = true
 EOF
 
-
 # Make vassal directory and copy symlink in
 mkdir -p /etc/uwsgi/vassals
-ln -sf ${INSTALL_ROOT}/openrvdas/gui/openrvdas_uwsgi.ini \
+ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
       /etc/uwsgi/vassals/
 
 # Make everything accessible to nginx
