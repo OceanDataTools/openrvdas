@@ -124,7 +124,7 @@ class TestLoggerManagerAPI(unittest.TestCase):
 
     ############################
     def run_commands(logger_manager):
-      reader = NetworkReader(network=':6220')
+      reader = NetworkReader(network=':8002')
       api = logger_manager.api
       time.sleep(1)
 

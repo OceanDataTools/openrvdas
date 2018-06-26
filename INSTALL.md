@@ -127,11 +127,12 @@ cd ~/openrvdas
 python3 -m unittest discover
 ```
 
-Note that NetworkReader and NetworkWriter tests may fail unless the user has permissions to write to port 8000 and 8001 on the host machine. Under CentOS, you can add this permission with
+Note that NetworkReader and NetworkWriter tests may fail unless the user has permissions to write UDP to port 8000, 8001 and 8002 on the host machine. Websocket services, by default, will also need TCP access to port 8765. Under CentOS, you can add these permissions with
 ```
-sudo firewall-cmd --permanent --add-port=8000/tcp
 sudo firewall-cmd --permanent --add-port=8000/udp
 sudo firewall-cmd --permanent --add-port=8001/udp
+sudo firewall-cmd --permanent --add-port=8002/udp
+sudo firewall-cmd --permanent --add-port=8765/tcp
 sudo firewall-cmd --reload
 ```
 

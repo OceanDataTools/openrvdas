@@ -4,12 +4,11 @@
 # installation and install and configure all the components to run the full
 # OpenRVDAS system.
 
-# Once this script has completed and the machine has been rebooted, you should
-# only need to run gui/run_servers.py from the project directory to have the 
-# system up and running. NOTE: the next iteration will establish run_servers.py
-# as a service that can be started/stopped with "service openrvdas_gui start". But
-# we don't want to make it start automatically by default, as it can eat away at
-# both machine computation and bandwidth budgets.
+# Once this script has completed and the machine has been rebooted,
+# you should be able to run "service openrvdas start" to have the
+# system up and running. We don't want to make it start automatically
+# by default, as it can eat away at both machine computation and
+# bandwidth budgets.
 
 # OpenRVDAS is available as open source under the MIT License at 
 #   https:/github.com/davidpablocohn/openrvdas
@@ -86,7 +85,7 @@ yum install -y deltarpm
 yum install -y epel-release
 yum -y update
 
-yum install -y socat git nginx sqlite-devel \
+yum install -y socat git nginx sqlite-devel readline-devel \
                wget gcc zlib-devel openssl-devel
 
 # Install database stuff and set up as service.
@@ -234,6 +233,8 @@ git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
 
 echo Initializing OpenRVDAS database...
 cd openrvdas
+cp django_gui/settings.py.dist django_gui/settings.py
+
 python3 manage.py makemigrations gui
 python3 manage.py migrate
 echo yes | python3 manage.py collectstatic
@@ -331,8 +332,18 @@ sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 
 firewall-cmd --zone=public --permanent --add-port=80/tcp
 firewall-cmd --zone=public --permanent --add-port=8000/tcp
+firewall-cmd --zone=public --permanent --add-port=8001/tcp
+
+# Websocket port
 firewall-cmd --zone=public --permanent --add-port=8765/tcp
+
+# Our favorite UDP port for network data
 firewall-cmd --zone=public --permanent --add-port=6224/udp
+
+# For unittest access
+firewall-cmd --zone=public --permanent --add-port=8000/udp
+firewall-cmd --zone=public --permanent --add-port=8001/udp
+firewall-cmd --zone=public --permanent --add-port=8002/udp
 firewall-cmd --reload
 
 # Make uWSGI run on boot
@@ -347,7 +358,7 @@ echo "##########################################################################
 echo Installing OpenRVDAS server as a service
 cat > /etc/systemd/system/openrvdas.service <<EOF
 [Unit]
-Description = Run openrvdas/gui/run_servers.py as service
+Description = Run openrvdas/server/logger_manager.py as service
 After = network.target
 
 [Service]
@@ -365,20 +376,20 @@ OPENRVDAS_LOGFILE=/var/log/openrvdas.log
 touch \$OPENRVDAS_LOGFILE
 chown $RVDAS_USER \$OPENRVDAS_LOGFILE
 chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 gui/run_servers.py -v &>> \$OPENRVDAS_LOGFILE"
+sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket $HOSTNAME:8765 -v &>> \$OPENRVDAS_LOGFILE"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF
 #!/bin/bash
 USER=rvdas
-sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 gui/run_servers.py"'
+sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 server/logger_manager.py"'
 EOF
 
 chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh
 
 echo "############################################################################"
 echo The OpenRVDAS server can be configured to start on boot. Otherwise you will
-echo need to either run it manually from a terminal \('gui/run_servers.py' from the
+echo need to either run it manually from a terminal \('server/logger_manager.py' from the
 echo openrvdas base directory\) or start as a service \('service openrvdas start'\).
 echo
 while true; do
