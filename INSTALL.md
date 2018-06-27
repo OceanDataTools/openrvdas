@@ -14,8 +14,9 @@ are using CentOS-7-x86_64-DVD-1611.iso
 
 NOTE: an experimental script in ```utils/build_openrvdas_centos7.sh``` is designed to perform a full
 installation of OpenRVDAS when run on a clean CentOS 7 system. You can download the script from GitHub and run it
-as root, and it will install and set up the core logging, database and GUI services (NGINX web server and uWSGI),
-requiring only that the user run ```gui/run_servers.py``` to have full system functionality. But the script *is*
+as root, and it will install and set up the core logging, database and GUI services (NGINX web server and uWSGI). The
+script provides the option of configuring the OpenRVDAS servers to start automatically on boot or manually, via
+```service openrvdas start``` (and shut down via ```service openrvdas stop```). But the script *is*
 still experimental and may break in inexplicable ways.
 
 As an alternative you can manually install OpenRVDAS as follows:
