@@ -52,10 +52,6 @@ read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_B
 OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 echo "Will install from repository '$OPENRVDAS_REPO', branch '$OPENRVDAS_BRANCH'"
 
-read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
-RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
-echo "Creating user '$RVDAS_USER'"
-
 while true; do
     read -p "Run Python optimizations? " yn
     case $yn in
@@ -64,6 +60,9 @@ while true; do
         * ) echo "Please answer yes or no.";;
     esac
 done
+
+read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
 
 # Convenient way of commenting out stuff
 if [ 0 -eq 1 ]; then
@@ -389,7 +388,7 @@ OPENRVDAS_LOGFILE=/var/log/openrvdas.log
 touch \$OPENRVDAS_LOGFILE
 chown $RVDAS_USER \$OPENRVDAS_LOGFILE
 chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket $HOSTNAME:8765 --no-console -v &>> \$OPENRVDAS_LOGFILE"
+sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket $HOSTNAME:8765 --database django --no-console -v &>> \$OPENRVDAS_LOGFILE"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF

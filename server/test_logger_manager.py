@@ -62,7 +62,7 @@ sample_cruise = {
       },
       "writers": {
         "class": "NetworkWriter",
-        "kwargs": {"network": ":6220"}
+        "kwargs": {"network": ":8002"}
       }
     },
     "sample->file": {
