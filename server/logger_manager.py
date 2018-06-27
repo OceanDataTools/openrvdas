@@ -33,6 +33,12 @@ launched via:
   server/logger_runner.py --websocket localhost:8765 \
       --host_id knud.host
 
+By default, the LoggerManager will initialize a command line API that
+reads from stdin. Typing "help" at the command prompt will list
+available commands. If logger_manager.py is to be run in a context
+where stdin is not available (i.e. as part of a script), then it
+should be called with the --no-console flag.
+
 The -v flag may be specified on any of the above command lines to
 increase diagnostic verbosity to "INFO". Repeating the flag sets
 verbosity to "DEBUG".
@@ -237,6 +243,8 @@ class LoggerManager:
     self.old_configs = {}
     self.config_lock = threading.Lock()
 
+    self.update_configs_thread = None
+    
     # Has caller directed us to launch a Websocket server where other
     # LoggerRunners can connect? 
     self.websocket = websocket
@@ -284,9 +292,9 @@ class LoggerManager:
     local_logger_thread.start()
 
     # Update configs in a separate thread.
-    update_configs_thread = threading.Thread(
+    self.update_configs_thread = threading.Thread(
       target=self.update_configs_loop, daemon=True)
-    update_configs_thread.start()
+    self.update_configs_thread.start()
 
     # If we've got a websocket specification, launch websocket
     # server in its own separate thread.
@@ -301,7 +309,7 @@ class LoggerManager:
                                              daemon=True)
         event_loop_thread.start()
       except OSError:
-        logging.warning('Failed to open websocket %s:%s', host, port)
+        logging.warning('Failed to open websocket %s:%s', host, port_str)
         sys.exit(1)
       except ValueError as e:
         logging.error('--websocket "%s" not in host:port format',
@@ -760,6 +768,10 @@ if __name__ == '__main__':
                       default=DEFAULT_MAX_TRIES,
                       help='Number of times to retry failed loggers.')
 
+  parser.add_argument('--no-console', dest='no_console', default=False,
+                      action='store_true', help='Run without a console '
+                      'that reads commands from stdin.')
+
   parser.add_argument('-v', '--verbosity', dest='verbosity', default=0,
                       action='count', help='Increase output verbosity')
   parser.add_argument('-V', '--logger_verbosity', dest='logger_verbosity',
@@ -821,30 +833,41 @@ if __name__ == '__main__':
     api.message_log(SOURCE_NAME, api.INFO,
                     'initial mode (%s@%s): %s', (USER, HOSTNAME, args.mode))
 
-  ############################
-  # Set up command line interface to get commands.
-  # QUESTION: Should this be only activated by a command line flag?
-
-  # Read from history file, if one exists, to get past commands.
-  hist_filename = '.openrvdas_logger_manager_history'
-  hist_path = os.path.join(os.path.expanduser('~'), hist_filename)
   try:
-    readline.read_history_file(hist_path)
-    # default history len is -1 (infinite), which may grow unruly
-    readline.set_history_length(1000)
-  except (FileNotFoundError, PermissionError):
-    pass
-  atexit.register(readline.write_history_file, hist_path)
+    # If no console, just wait for the configuration update thread to
+    # end as a signal that we're done.
+    if args.no_console:
+      logging.warning('--no-console specified; waiting for LoggerManager '
+                   'to exit.')
+      if logger_manager.update_configs_thread:
+        logger_manager.update_configs_thread.join()
+      else:
+        logging.warning('LoggerManager has no update_configs_thread? '
+                        'Exiting...')
 
-  # Create reader to read/process commands from stdin. Note: this
-  # needs to be in main thread for Ctl-C termination to be properly
-  # caught and processed, otherwise interrupts go to the wrong places.
-  command_line_reader = ServerAPICommandLine(api=api)
-  try:
-    command_line_reader.run()
+    else:
+      # Create reader to read/process commands from stdin. Note: this
+      # needs to be in main thread for Ctl-C termination to be properly
+      # caught and processed, otherwise interrupts go to the wrong places.
+
+      # Set up command line interface to get commands. Start by
+      # reading history file, if one exists, to get past commands.
+      hist_filename = '.openrvdas_logger_manager_history'
+      hist_path = os.path.join(os.path.expanduser('~'), hist_filename)
+      try:
+        readline.read_history_file(hist_path)
+        # default history len is -1 (infinite), which may grow unruly
+        readline.set_history_length(1000)
+      except (FileNotFoundError, PermissionError):
+        pass
+      atexit.register(readline.write_history_file, hist_path)
+      
+      command_line_reader = ServerAPICommandLine(api=api)
+      command_line_reader.run()
+      
   except KeyboardInterrupt:
     pass
-  logging.debug('Done with command_line_reader - exiting')
+  logging.debug('Done with logger_manager.py - exiting')
 
   
   

@@ -56,6 +56,15 @@ read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
 RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
 echo "Creating user '$RVDAS_USER'"
 
+while true; do
+    read -p "Run Python optimizations? " yn
+    case $yn in
+        [Yy]* ) PYTHON_OPT=" --enable-optimizations"; break;;
+        [Nn]* ) PYTHON_OPT=""; break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 # Convenient way of commenting out stuff
 if [ 0 -eq 1 ]; then
   Commented out stuff goes here
@@ -141,21 +150,27 @@ echo Done setting up database
 echo "############################################################################"
 PYTHON_VERSION=3.6.3
 PYTHON_NAME=Python-${PYTHON_VERSION}
-cd /tmp
-if [ ! -e /tmp/${PYTHON_NAME}.tgz ]; then
-  echo Fetching ${PYTHON_NAME}
-  wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_NAME}.tgz
+if [[ `python3 -V` == "Python $PYTHON_VERSION" ]]; then
+    echo Already have $PYTHON_NAME - skipping installation
+else
+  echo Installing $PYTHON_NAME
+
+  cd /tmp
+  if [ ! -e /tmp/${PYTHON_NAME}.tgz ]; then
+    echo Fetching ${PYTHON_NAME}
+    wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_NAME}.tgz
+  fi
+  if [ ! -e /tmp/${PYTHON_NAME} ]; then
+    echo Unpacking Python
+    tar xzf Python-3.6.3.tgz
+  fi
+  echo Configuring and building Python
+  cd ${PYTHON_NAME}
+  ./configure $PYTHON_OPT --enable-loadable-sqlite-extensions
+  make install
+  ln -sf /usr/local/bin/python3 /usr/local/bin/python
+  echo Done making Python
 fi
-if [ ! -e /tmp/${PYTHON_NAME} ]; then
-  echo Unpacking Python
-  tar xzf Python-3.6.3.tgz
-fi
-echo Configuring and building Python
-cd ${PYTHON_NAME}
-./configure --enable-optimizations --enable-loadable-sqlite-extensions
-make install
-ln -sf /usr/local/bin/python3 /usr/local/bin/python
-echo Done making Python
 
 # Django and uWSGI
 echo "############################################################################"
@@ -163,7 +178,6 @@ echo Installing Django, uWSGI and other Python-dependent packages
 pip3 install --upgrade pip
 pip3 install Django==2.0 pyserial uwsgi websockets \
              mysqlclient mysql-connector==2.1.6
-
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
 echo "############################################################################"
@@ -221,8 +235,9 @@ else
      server_names_hash_bucket_size 64; 
 }
 EOF
-mv /tmp/nginx.conf /etc/nginx/nginx.conf
-echo Done setting up NGINX
+  mv /tmp/nginx.conf /etc/nginx/nginx.conf
+  echo Done setting up NGINX
+fi
 
 # Set up openrvdas
 echo "############################################################################"
@@ -374,7 +389,7 @@ OPENRVDAS_LOGFILE=/var/log/openrvdas.log
 touch \$OPENRVDAS_LOGFILE
 chown $RVDAS_USER \$OPENRVDAS_LOGFILE
 chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket $HOSTNAME:8765 -v &>> \$OPENRVDAS_LOGFILE"
+sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket $HOSTNAME:8765 --no-console -v &>> \$OPENRVDAS_LOGFILE"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF
