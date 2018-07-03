@@ -40,6 +40,19 @@ class DjangoServerAPI(ServerAPI):
     super().__init__()
     self.callbacks = {}
 
+    # Test whether Django is in fact initialized. If we get a DoesNotExist
+    # error, that means that our tables are working. 
+    try:
+      dummy_logger = Logger.objects.get(name='dummy')
+    except Logger.DoesNotExist:
+      pass # we're good here
+    except:
+      logging.fatal('Django tables do not appear to be initialized. Please '
+                    'see django_gui/README.md section on "makemigrations" '
+                    'for instructions.')
+      sys.exit(1)
+      
+
   #############################
   def _get_cruise_object(self, cruise_id):
     """Helper function for getting cruise object from id. Raise exception

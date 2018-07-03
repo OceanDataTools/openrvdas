@@ -49,7 +49,7 @@ LOG_LEVEL_COLORS = {
 ############################
 # We're going to interact with the Django DB via its API class
 from .django_server_api import DjangoServerAPI
-api = DjangoServerAPI()
+api = None
 
 def log_request(request, cmd):
   global api
@@ -57,13 +57,18 @@ def log_request(request, cmd):
   host = request.get_host()
   elements = ', '.join(['%s:%s' % (k,v) for k, v in request.POST.items()
                         if k not in ['csrfmiddlewaretoken']])
-  api.message_log(source='Django', user='(%s@%s)' % (user, host),
-                  log_level=api.INFO, message='post: %s' % elements)
+  if api:
+    api.message_log(source='Django', user='(%s@%s)' % (user, host),
+                    log_level=api.INFO, message='post: %s' % elements)
   
 ################################################################################
 def index(request, cruise_id=None):
   """Home page - render logger states and cruise information.
   """
+  global api
+  if api is None:
+    api = DjangoServerAPI()
+
   if not cruise_id:
     template_vars = {
       'websocket_server': WEBSOCKET_SERVER,
@@ -181,6 +186,10 @@ def server_messages(request, log_level=logging.INFO, source=None):
 
 ################################################################################
 def edit_config(request, cruise_id, logger_id):  
+  global api
+  if api is None:
+    api = DjangoServerAPI()
+
   ############################
   # If we've gotten a POST request, they've selected a new config
   if request.method == 'POST':
@@ -212,6 +221,10 @@ def edit_config(request, cruise_id, logger_id):
                 
 ################################################################################
 def load_cruise_config(request):
+  global api
+  if api is None:
+    api = DjangoServerAPI()
+
   # If not a POST, just draw the page
   if not request.method == 'POST':
     return render(request, 'django_gui/load_cruise_config.html', {})
