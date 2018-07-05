@@ -247,6 +247,7 @@ git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
 echo Initializing OpenRVDAS database...
 cd openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
+cp database/settings.py.dist database/settings.py
 
 python3 manage.py makemigrations django_gui
 python3 manage.py migrate
