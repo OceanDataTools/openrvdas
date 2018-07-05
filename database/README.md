@@ -21,9 +21,12 @@ below in "Connector Class Methods"
 
 ## Installation
 
-The steps needed to use the DatabaseReader and DatabaseWriter depend on
-which database you intend to use them with. Below, we describe how to
-set the system up to use MySQLConnector.
+The first step is to copy the distribution file
+[database/settings.py.dist](settings.py.dist)
+over to [database/settings.py](settings.py). From there, the steps needed to use the
+DatabaseReader and DatabaseWriter depend on which database you intend
+to use them with. Below, we describe how to set the system up to use
+MySQLConnector.
 
 ### MySQLConnector
 
