@@ -302,6 +302,8 @@ class LoggerManager:
       event_loop = asyncio.get_event_loop()
       try:
         host, port_str = self.websocket.split(':')
+        if not host:
+          host = '0.0.0.0'
         self.websocket_server = websockets.serve(self._serve_websocket,
                                                  host, int(port_str))
         event_loop.run_until_complete(self.websocket_server)
@@ -757,7 +759,9 @@ if __name__ == '__main__':
   parser.add_argument('--websocket', dest='websocket', action='store',
                       help='Host:port on which to open a websocket server '
                       'for LoggerRunners that are willing to accept config '
-                      'dispatches.')
+                      'dispatches. If host is omitted (e.g. '
+                      '"--websocket :8765"), accept connections on any of '
+                      'the server\'s network interfaces.')
   parser.add_argument('--host_id', dest='host_id', action='store', default='',
                       help='Host ID by which we identify ourselves')
 

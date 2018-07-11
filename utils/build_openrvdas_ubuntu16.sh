@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# This script is designed to be run as root. It should take a clean CentOS 7
-# installation and install and configure all the components to run the full
-# OpenRVDAS system.
+# This script is designed to be run as root. It should take a clean
+# Ubuntu 16.04 installation and install and configure all the components
+# to run the full OpenRVDAS system.
 
 # Once this script has completed and the machine has been rebooted,
 # you should be able to run "service openrvdas start" to have the
@@ -72,51 +72,54 @@ else
 fi
 
 # Set hostname
-echo "############################################################################"
+echo "#########################################################################"
 echo Setting hostname...
-hostnamectl set-hostname $HOSTNAME
-echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
+hostname $HOSTNAME
+echo $HOSTNAME > /etc/hostname
+ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
+if grep -q "$ETC_HOSTS_LINE" /etc/hosts ; then
+  echo Hostname already in /etc/hosts
+else
+  echo "$ETC_HOSTS_LINE" >> /etc/hosts
+fi
 
-# Install yum stuff
-echo "############################################################################"
-echo Installing required packages from yum...
-yum install -y deltarpm
-yum install -y epel-release
-yum -y update
+# If openssh-server not installed, do that
+if dpkg -l | grep -q openssh-server ; then
+  echo openssh-server already installed
+else
+  echo Installing openssh-server
+  apt install -Y openssh-server
+  systemctl restart ssh
+fi
 
-yum install -y socat git nginx sqlite-devel readline-devel \
-               wget gcc zlib-devel openssl-devel
+# Install apt packages
+echo "#########################################################################"
+echo Installing required packages...
+apt-get install -y socat git nginx libreadline-dev libmysqlclient-dev \
+        libsqlite3-dev 
 
 # Install database stuff and set up as service.
-# Problem is that the Mariadb version that ships with CentOS 7
-# is missing a bunch of commands that exist in MySQL. So add the
-# project repo, that has a more recent version.
-cat > /etc/yum.repos.d/MariaDB.repo <<EOF
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.1/centos7-amd64
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-EOF
+echo "#########################################################################"
+MYSQL_IS_UP=$(pgrep mysql | wc -l);
+if [ "$MYSQL_IS_UP" -ne 1 ];
+then
+  echo Installing MySQL and configuring as service...
+  read -p "Hit any key to continue. " any_key
+  apt-get install -y mysql-server
+  mysql_secure_installation
+else
+  echo MySQL already installed and running...
+fi
+update-rc.d mysql defaults
 
-echo "############################################################################"
-echo Installing Mariadb \(MySQL replacement in CentOS 7\)...
-yum install -y mariadb-server mariadb-devel mariadb-libs # CentOS
-service mariadb restart              # to manually start db server
-systemctl enable mariadb.service     # to make it start on boot
-
-echo "############################################################################"
-echo Configuring database:
-/usr/bin/mysql_secure_installation
-
-echo "############################################################################"
+echo "#########################################################################"
 echo Setting up database tables and permissions
 echo
 echo Creating database user "$RVDAS_USER"
 read -p "Database password to use for $RVDAS_USER? ($RVDAS_USER) " RVDAS_PASSWORD
 RVDAS_PASSWORD=${RVDAS_PASSWORD:-$RVDAS_USER}
 
-echo Please enter SQL database root password again
+echo Please enter MySQL root password again to continue configuration:
 mysql -u root -p <<EOF 
 drop user if exists 'test'@'localhost'; 
 create user 'test'@'localhost' identified by 'test';
@@ -137,7 +140,8 @@ EOF
 echo Done setting up database
 
 # Install Python
-echo "############################################################################"
+echo "#########################################################################"
+#PYTHON_VERSION=3.5.2
 PYTHON_VERSION=3.6.3
 PYTHON_NAME=Python-${PYTHON_VERSION}
 if [[ `python3 -V` == "Python $PYTHON_VERSION" ]]; then
@@ -153,6 +157,9 @@ else
     esac
   done
 
+  apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
+          libsqlite3-dev python3-dev python3-pip python3-openssl
+  
   cd /tmp
   if [ ! -e /tmp/${PYTHON_NAME}.tgz ]; then
     echo Fetching ${PYTHON_NAME}
@@ -171,14 +178,16 @@ else
 fi
 
 # Django and uWSGI
-echo "############################################################################"
+echo "#########################################################################"
 echo Installing Django, uWSGI and other Python-dependent packages
-pip3 install --upgrade pip
+#pip3 install --upgrade pip
 pip3 install Django==2.0 pyserial uwsgi websockets \
              mysqlclient mysql-connector==2.1.6
+
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
-echo "############################################################################"
+
+echo "#########################################################################"
 echo Configuring uWSGI as service
 
 # Create uwsgi.service file
@@ -213,7 +222,8 @@ cat > /root/scripts/stop_uwsgi_daemon.sh <<EOF
 /usr/local/bin/uwsgi --stop /etc/uwsgi/process.pid
 EOF
 
-chmod 755 /root/scripts/start_uwsgi_daemon.sh /root/scripts/stop_uwsgi_daemon.sh 
+chmod 755 /root/scripts/start_uwsgi_daemon.sh /root/scripts/stop_uwsgi_daemon.sh
+
 
 # Set up nginx
 echo "############################################################################"
@@ -238,7 +248,7 @@ EOF
 fi
 
 # Set up openrvdas
-echo "############################################################################"
+echo "#########################################################################"
 echo Fetching and setting up OpenRVDAS code...
 cd $INSTALL_ROOT
 git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
@@ -342,21 +352,23 @@ echo "##########################################################################
 echo Setting SELINUX permissions \(permissive\) and firewall ports
 sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 
-firewall-cmd --zone=public --permanent --add-port=80/tcp
-firewall-cmd --zone=public --permanent --add-port=8000/tcp
-firewall-cmd --zone=public --permanent --add-port=8001/tcp
-
-# Websocket port
-firewall-cmd --zone=public --permanent --add-port=8765/tcp
-
-# Our favorite UDP port for network data
-firewall-cmd --zone=public --permanent --add-port=6224/udp
-
-# For unittest access
-firewall-cmd --zone=public --permanent --add-port=8000/udp
-firewall-cmd --zone=public --permanent --add-port=8001/udp
-firewall-cmd --zone=public --permanent --add-port=8002/udp
-firewall-cmd --reload
+#iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+#iptables -A INPUT -p tcp --dport 8000 -j ACCEPT
+#iptables -A INPUT -p tcp --dport 8001 -j ACCEPT
+#
+## Websocket port
+#iptables -A INPUT -p tcp --dport 8765 -j ACCEPT
+#
+## Our favorite UDP port for network data
+#iptables -A INPUT -p udp --dport 6224 -j ACCEPT
+#
+## For unittest access
+#iptables -A INPUT -p udp --dport 8000 -j ACCEPT
+#iptables -A INPUT -p udp --dport 8001 -j ACCEPT
+#iptables -A INPUT -p udp --dport 8002 -j ACCEPT
+#
+## /etc/init.d/networking restart
+#
 
 # Make uWSGI run on boot
 systemctl enable uwsgi.service
@@ -366,55 +378,68 @@ service uwsgi start
 systemctl enable nginx.service
 service nginx start
 
-echo "############################################################################"
-echo Installing OpenRVDAS server as a service
-cat > /etc/systemd/system/openrvdas.service <<EOF
-[Unit]
-Description = Run openrvdas/server/logger_manager.py as service
-After = network.target
 
-[Service]
-ExecStart = /root/scripts/start_openrvdas.sh
-ExecStop = /root/scripts/stop_openrvdas.sh
+## Commented out stuff about setting OpenRVDAS logger_manager.py
+## running as a server.
+#
+#echo "#########################################################################"
+#echo Installing OpenRVDAS server as a service
+#cat > /etc/systemd/system/openrvdas.service <<EOF
+#[Unit]
+#Description = Run openrvdas/server/logger_manager.py as service
+#After = network.target
+#
+#[Service]
+#ExecStart = /root/scripts/start_openrvdas.sh
+#ExecStop = /root/scripts/stop_openrvdas.sh
+#
+#[Install]
+#WantedBy = multi-user.target
+#EOF
+#
+#cat > /root/scripts/start_openrvdas.sh <<EOF
+##!/bin/bash
+## Start openrvdas servers as service
+#OPENRVDAS_LOGFILE=/var/log/openrvdas.log
+#touch \$OPENRVDAS_LOGFILE
+#chown $RVDAS_USER \$OPENRVDAS_LOGFILE
+#chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
+#sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v &>> \$OPENRVDAS_LOGFILE"
+#EOF
+#
+#cat > /root/scripts/stop_openrvdas.sh <<EOF
+##!/bin/bash
+#USER=rvdas
+#sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 server/logger_manager.py"'
+#EOF
+#
+#chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh
+#
+#echo "############################################################################"
+#echo The OpenRVDAS server can be configured to start on boot. Otherwise you will
+#echo need to either run it manually from a terminal \('server/logger_manager.py' from the
+#echo openrvdas base directory\) or start as a service \('service openrvdas start'\).
+#echo
+#while true; do
+#    read -p "Do you wish to start the OpenRVDAS server on boot? " yn
+#    case $yn in
+#        [Yy]* ) systemctl enable openrvdas.service; break;;
+#        [Nn]* ) break;;
+#        * ) echo "Please answer yes or no.";;
+#    esac
+#done
 
-[Install]
-WantedBy = multi-user.target
-EOF
-
-cat > /root/scripts/start_openrvdas.sh <<EOF
-#!/bin/bash
-# Start openrvdas servers as service
-OPENRVDAS_LOGFILE=/var/log/openrvdas.log
-touch \$OPENRVDAS_LOGFILE
-chown $RVDAS_USER \$OPENRVDAS_LOGFILE
-chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v &>> \$OPENRVDAS_LOGFILE"
-EOF
-
-cat > /root/scripts/stop_openrvdas.sh <<EOF
-#!/bin/bash
-USER=rvdas
-sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 server/logger_manager.py"'
-EOF
-
-chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh
-
-echo "############################################################################"
-echo The OpenRVDAS server can be configured to start on boot. Otherwise you will
-echo need to either run it manually from a terminal \('server/logger_manager.py' from the
-echo openrvdas base directory\) or start as a service \('service openrvdas start'\).
-echo
-while true; do
-    read -p "Do you wish to start the OpenRVDAS server on boot? " yn
-    case $yn in
-        [Yy]* ) systemctl enable openrvdas.service; break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
-echo
-echo "############################################################################"
+echo "#########################################################################"
+echo "#########################################################################"
+echo Installation complete.
+echo 
+echo To run server, go to install directory and run logger_manager.py
+echo 
+echo   cd $INSTALL_ROOT/openrvdas
+echo   python3 server/logger_manager.py --websocket :8765 \\
+echo                 --database django --no-console -v
+echo 
+echo "#########################################################################"
 echo Finished installation and configuration. You must reboot before some
 echo changes take effect.
 while true; do
