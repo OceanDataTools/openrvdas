@@ -34,7 +34,7 @@ command lines below)
 
    with a LoggerManager running like this:
 
-     server/logger_manager.py --websocket localhost:8765 --host_id master.host
+     server/logger_manager.py --websocket :8765 --host_id master.host
 
    When invoked with the --websocket flag, a LoggerManager will
    attempt to create a websocket server at the specified address and

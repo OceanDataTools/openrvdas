@@ -26,14 +26,15 @@ TODO: read date/time format from some central settings file.
 
 from datetime import datetime, timezone
 
+TIME_FORMAT ='%Y-%m-%dT%H:%M:%S.%fZ'  # ISO 8601
+DATE_FORMAT = '%Y-%m-%d'              # ISO 8601
+
+# As used on the NBP
 #DATE_FORMAT = '%Y+%j'      # Julian
 #TIME_FORMAT = '%Y+%j:%H:%M:%S.%f'  # Julian
 
-DATE_FORMAT = '%Y-%m-%d'    # Gregorian
-TIME_FORMAT = '%Y-%m-%d:%H:%M:%S.%f'  # Gregorian
-
-# Used on the Sikuliaq
-#TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'  # Gregorian
+#DATE_FORMAT = '%Y-%m-%d'    # Gregorian
+#TIME_FORMAT = '%Y-%m-%d:%H:%M:%S.%f'  # Gregorian
 
 ################################################################################
 def datetime_obj(time_str=None, time_zone=timezone.utc,time_format=TIME_FORMAT):
