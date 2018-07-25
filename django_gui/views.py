@@ -72,7 +72,7 @@ def index(request, cruise_id=None):
   if not cruise_id:
     template_vars = {
       'websocket_server': WEBSOCKET_SERVER,
-      'cruise': None,
+      'cruise_id': '',
       'cruise_list': api.get_cruises(),
       'errors': '',
     }
