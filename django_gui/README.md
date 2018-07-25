@@ -19,38 +19,40 @@ ease of use.
 
 ## Installation
 
-If you have already installed the files needed to run the core
-OpenRVDAS code, as described in [the parent directory
-INSTALL.md](../INSTALL.md), there are only a couple more steps needed
-to run the GUI:
+If you used one of the scripts in the [utils directory](../utils),
+then you should already have a complete installation with NGINX as
+web server, MySQL as the cruise data database and SQLite as the
+Django database. The instructions below describe how to do a manual
+installation and run of the GUI, assuming you have already installed
+the files needed to run the core OpenRVDAS code, as described in
+[the parent directory INSTALL.md](../INSTALL.md).
 
-1. Install Django and websockets (future implementations may use
+You'll need to install Django and websockets (future implementations may use
 Django's "channels" functionality rather than websockets):
 ```
-  pip3 install websockets
-  pip3 install Django==2.0
+  pip3 install websockets Django==2.0
 ```
 
 ## Running
 
 This section describes running the GUI using the simplified Django
-test server and the default SQLite database. Actual deployments will
-likely require more robust services, such as Apache and MySQL or
-MariaDB.
+test server and the default SQLite database. If you have used the
+installation scripts in the [utils directory](../utils), please see
+the section on [Running a fully-deployed service]().
 
-0. Create a settings.py file from the template:
+1. Create a settings.py file from the template:
 ```
 cp ./django_gui/settings.py.dist ./django_gui/settings.py
 ```
 
-1. Set up the default Django database models (uses SQLite, as
+2. Set up the default Django database models (uses SQLite, as
 configured in django_gui/settings.py):
 ```
   python3 manage.py makemigrations django_gui
   python3 manage.py migrate
   python3 manage.py createsuperuser --email rvdas@somerandom.com --username rvdas
 ```
-2. Start the LoggerManager as a server (as per in [the server README.md](../server/README.md)),
+3. Start the LoggerManager as a server (as per in [the server README.md](../server/README.md)),
 specifying the Django backing store:
 ```
   server/logger_manager.py --websocket localhost:8765 --database django
@@ -67,13 +69,13 @@ Once the LoggerManager is running, you can control it from the command line
 as described in [the server README.md](../server/README.md), and you can type
 "help" for a complete list of commands.
 
-3. To control the LoggerManager via Django, start the Django test server:
+4. To control the LoggerManager via Django, start the Django test server:
 ```
   python3 ./manage.py runserver localhost:8000
 ```
-4. In a browser window, visit ```http://localhost:8000```
+5. In a browser window, visit ```http://localhost:8000```
 
-5. The sample cruise configuration relies on simulated serial ports
+6. The sample cruise configuration relies on simulated serial ports
 serving data stored in the test/ directory. To set up the simulated
 ports, run
 ```
@@ -132,6 +134,27 @@ E.g., you could display only logger debug information by opening the URL
    localhost:8000/server_messages/10/Logger
 ```
 
+## Running a fully-deployed system
+
+If you installed OpenRVDAS using one of the installation scripts in the
+[utils directory](../utils), then it has configured the system to use
+MySQL or MariaDB to store cruise data, SQLite to manage configuration data,
+and NGINX to run as a web server on port 80.
+
+You will still need to start the logger_manager.py script, either by running
+```
+   service openrvdas start
+```
+on CentOS or manually running
+```
+   server/logger_manager.py --websocket :8765 --database django --no-console -v
+```
+on Ubuntu, after which pointing a browser to http://localhost should take you
+the OpenRVDAS control page.
+
+If you use one of the sample configurations that rely on simulated serial ports,
+you will need to run simulate_serial.py, as in Step 6 of the previous section.
+
 ### Widgets
 
 A very rudimentary display widget has been implemented in
@@ -154,12 +177,7 @@ all has gone well, the widget values should begin to update.
 
 ## Next Steps
 
-1. Allow servers to be started/stopped from the web UI. This would
-probably entail making run_servers.py an always-running service and
-have the management page control it by storing desired server states
-in the Django ServerStates table.
-
-2. The current UI is...rudimentary. It would be nice to have someone
+The current UI is...rudimentary. It would be nice to have someone
 who understands both UI and web design to have a go at a V2.
 
 ## Contributing
