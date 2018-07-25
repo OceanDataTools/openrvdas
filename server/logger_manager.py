@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""LoggerServers get their desired state of the world via a ServerAPI
+"""LoggerManagers get their desired state of the world via a ServerAPI
 instance and attempt to start/stop loggers with the desired configs
-by dispatching requests to a local LoggerRunner.
+by dispatching requests to a local LoggerRunner and/or any remote
+LoggerRunners connected via websocket.
 
 To run the LoggerManager from the command line with (using the default
 of an InMemoryServerAPI):
 
   server/logger_manager.py
 
-If an initial cruise config is specified on the command line, as
+If an initial cruise definition is specified on the command line, as
 below:
 
   server/logger_manager.py --config test/configs/sample_cruise.json
 
-the cruise configuration will be loaded and set to its default
+the cruise definition will be loaded and set to its default
 mode. If a --mode argument is included, it will be used in place of
 the default mode.
 
@@ -34,8 +35,7 @@ launched via:
       --host_id knud.host
 
 By default, the LoggerManager will initialize a command line API that
-reads from stdin. Typing "help" at the command prompt will list
-available commands. If logger_manager.py is to be run in a context
+reads from stdin. If logger_manager.py is to be run in a context
 where stdin is not available (i.e. as part of a script), then it
 should be called with the --no-console flag.
 
@@ -45,6 +45,8 @@ verbosity to "DEBUG".
 
 For the LoggerManager and LoggerRunner, the -V (capitalized) flag
 increases verbosity of the loggers being run.
+
+Typing "help" at the command prompt will list available commands.
 
 #######################################################
 To try out the scripts, open four(!) terminal windows.

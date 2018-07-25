@@ -13,7 +13,7 @@ command lines below)
      server/logger_runner.py --config test/configs/sample_configs.json
  
    Note: the LoggerRunner doesn't know anything about modes, and doesn't
-   take a full cruise configuration - it just takes a dict of logger
+   take a full cruise definition - it just takes a dict of logger
    configurations and runs them.
 
 2. As instantiated by a LoggerManager:
