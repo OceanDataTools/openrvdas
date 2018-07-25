@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
 
 import logging
-import serial
 import socket
 import sys
 import time
+
+# Don't freak out if pyserial isn't installed - unless they actually
+# try to instantiate a SerialReader
+try:
+  import serial
+  SERIAL_MODULE_FOUND = True
+except ModuleNotFoundError:
+  SERIAL_MODULE_FOUND = False
 
 sys.path.append('.')
 
@@ -28,6 +35,11 @@ class SerialReader(Reader):
     reading.
     """
     super().__init__(output_format=Text)
+
+    if not SERIAL_MODULE_FOUND:
+      raise RuntimeError('Serial port functionality not available. Please '
+                         'install Python module pyserial.')
+
     self.serial = serial.Serial(port=port, baudrate=baudrate, bytesize=bytesize,
                                 parity=parity, stopbits=stopbits,
                                 timeout=timeout, xonxoff=xonxoff, rtscts=rtscts,

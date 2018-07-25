@@ -1,6 +1,9 @@
 """
 Settings for database operations.
 
+THIS FILE MUST BE COPIED OVER TO database/settings.py to be
+operational.
+
 To set up MySQL connectivity, install, configure and start
 MySQL server, and set up appropriate mysql user:
 

@@ -9,9 +9,17 @@ from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
-from database.settings import DATABASE_ENABLED, Connector
-from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
-from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD
+# Don't freak out if we can't find database settings - unless they actually
+# try to instantiate a DatabaseWriter.
+try:
+  from database.settings import DATABASE_ENABLED, Connector
+  from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
+  from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD
+  DATABASE_SETTINGS_FOUND = True
+except ModuleNotFoundError:
+  DATABASE_SETTINGS_FOUND = False
+  DEFAULT_DATABASE = DEFAULT_DATABASE_HOST = None
+  DEFAULT_DATABASE_USER = DEFAULT_DATABASE_PASSWORD = None
 
 ################################################################################
 class DatabaseWriter(Writer):
@@ -30,8 +38,13 @@ class DatabaseWriter(Writer):
     Otherwise expect input to be a DASRecord."""
     super().__init__(input_format=Python_Record)
 
+    if not DATABASE_SETTINGS_FOUND:
+      raise RuntimeError('File database/settings.py not found. Database '
+                         'functionality is not available. Have you copied '
+                         'over database/settings.py.dist to settings.py?')
     if not DATABASE_ENABLED:
-      raise RuntimeError('Database not configured; DatabaseWriter unavailable.')
+      raise RuntimeError('Database not configured in database/settings.py; '
+                         'DatabaseWriter unavailable.')
 
     self.db = Connector(database=database, host=host,
                         user=user, password=password)
