@@ -68,110 +68,87 @@ def index(request, cruise_id=None):
   global api
   if api is None:
     api = DjangoServerAPI()
-
-  if not cruise_id:
-    template_vars = {
-      'websocket_server': WEBSOCKET_SERVER,
-      'cruise_id': '',
-      'cruise_list': api.get_cruises(),
-      'errors': '',
-    }
-    return render(request, 'django_gui/index.html', template_vars)
    
   ############################
   # If we've gotten a POST request
+  errors = []
   if request.method == 'POST':
+    logging.warning('POST: %s', request.POST)
+    
     # First things first: log the request
-    log_request(request, cruise_id + ' index')
+    log_request(request, (cruise_id or 'no_cruise') + ' index')
 
     # Did we get a cruise selection?
-    if request.POST.get('select_cruise', None):
+    if 'select_cruise' in request.POST:
       cruise_id = request.POST['select_cruise']
       logging.info('switching to cruise "%s"', cruise_id)
 
     # Are they deleting a cruise?(!)
-    if request.POST.get('delete_cruise', None):
+    if 'delete_cruise' in request.POST:
       logging.info('deleting cruise "%s"', cruise_id)
       api.delete_cruise(request.POST['delete_cruise'])
 
     # Did we get a mode selection?
-    elif request.POST.get('select_mode', None):
+    elif 'select_mode' in request.POST:
       new_mode_name = request.POST['select_mode']
       logging.info('switching to mode "%s"', new_mode_name)
       api.set_mode(cruise_id, new_mode_name)
+
+    # Did we get a cruise definition file? Load it and switch to the
+    # cruise_id it defines.
+    elif 'load_cruise' in request.POST and 'config_file' in request.FILES:
+      config_file = request.FILES['config_file']
+      config_contents = config_file.read() 
+      logging.warning('Uploading file "%s"...', config_file.name)
+
+      try:
+        config = parse_json(config_contents.decode('utf-8'))
+        api.load_cruise(config, config_file.name)
+      except JSONDecodeError as e:
+        errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
+      except ValueError as e:
+        errors.append(str(e))
+
+      # If there weren't any errors, switch to the cruise_id we've
+      # just loaded.
+      if not errors:
+        cruise_id = config.get('cruise', {}).get('id', '')
+        return HttpResponse(
+          '<script>window.location.assign("/cruise/%s")</script>' % cruise_id)
+      else:
+        logging.warning('Errors! %s', errors)
+
+    elif 'cancel' in request.POST:
+      logging.warning('User canceled upload')
 
     # Else unknown post
     else:
       logging.warning('Unknown POST request: %s', request.POST)
 
-  # Now assemble the information needed to display the page.
-  cruise_list = api.get_cruises()
-  modes = api.get_modes(cruise_id)
-  current_mode = api.get_mode(cruise_id)
-
-  # Get config corresponding to current mode for each logger
-  loggers = {}
-  for logger_id in api.get_loggers(cruise_id):
-    logger_config = api.get_logger_config_name(cruise_id, logger_id)
-    loggers[logger_id] = logger_config
-    logging.warning('config for %s is %s', logger_id, logger_config)
-
+  # Assemble information to draw page
   template_vars = {
-    'is_superuser': True,
+    'cruise_id': cruise_id or '',
     'websocket_server': WEBSOCKET_SERVER,
-    'cruise_id': cruise_id,
-    'cruise_list': cruise_list,
-    'modes': modes,
-    'current_mode': current_mode,
-    'loggers': loggers,
-    #'status_server_running': get_server_state('StatusServer').running,
-    #'logger_server_running': get_server_state('LoggerServer').running,
-    'errors': '',
+    'cruise_list': api.get_cruises(),
+    'errors': errors,
   }
+
+  # If we have a cruise id, assemble loggers and other cruise-specific
+  # info from API.
+  if cruise_id:
+    #template_vars['is_superuser'] = True
+    template_vars['modes'] = api.get_modes(cruise_id)
+    template_vars['current_mode'] = api.get_mode(cruise_id)
+
+    # Get config corresponding to current mode for each logger
+    loggers = {}
+    for logger_id in api.get_loggers(cruise_id):
+      logger_config = api.get_logger_config_name(cruise_id, logger_id)
+      loggers[logger_id] = logger_config
+      logging.warning('config for %s is %s', logger_id, logger_config)
+    template_vars['loggers'] = loggers
+    
   return render(request, 'django_gui/index.html', template_vars)
-
-################################################################################
-run_servers_object = None
-run_servers_process = None
-
-################################################################################
-# To start/stop/monitor servers
-
-# NOTE: Starting/stopping the ServerRunner process (django_gui/run_servers.py)
-# is not yet working. You'll need to start/stop it manually for now.
-
-def servers(request):
-  global run_servers_object, run_servers_process
-
-  # If we've gotten a POST request, check for new desired_state
-  if request.method == 'POST':
-    if request.POST.get('start', None):
-      # Start the run_servers process
-      logging.warning('Starting servers')
-      if run_servers_object:
-        logging.warning('Killing existing run_servers process')
-        run_servers_object.quit()
-      #run_servers_object = ServerRunner()
-      #multiprocessing.set_start_method('spawn')
-      #run_servers_process = \
-      #    multiprocessing.Process(target=run_servers_object.start)
-      #run_servers_process.start()
-
-    if request.POST.get('stop', None):
-      # Stop any run_servers process
-      logging.warning('Stopping servers')
-      if run_servers_object:
-        logging.warning('Asking StatusServer and LoggerServer to shut down')
-        ServerState(server='StatusServer', running=True, desired=False).save()
-        ServerState(server='LoggerServer', running=True, desired=False).save()
-        time.sleep(1)
-        logging.warning('Killing existing run_servers process')
-        #run_servers_process.terminate()
-
-  template_vars = {'websocket_server': WEBSOCKET_SERVER}
-
-  # Render what we've ended up with
-  return render(request, 'django_gui/servers.html', template_vars)
 
 ################################################################################
 # Page to display messages from the specified server
@@ -218,45 +195,6 @@ def edit_config(request, cruise_id, logger_id):
                  'default_config': default_config,
                  'config_options': config_options
                 })
-                
-################################################################################
-def load_cruise_config(request):
-  global api
-  if api is None:
-    api = DjangoServerAPI()
-
-  # If not a POST, just draw the page
-  if not request.method == 'POST':
-    return render(request, 'django_gui/load_cruise_config.html', {})
-
-  # If POST, we've expect there to be a file to process
-  else:
-    errors = []
-
-    # Did we get a configuration file?
-    if request.FILES.get('config_file', None):
-      config_file = request.FILES['config_file']
-      config_contents = config_file.read() 
-      logging.warning('Uploading file "%s"...', config_file.name)
-
-      try:
-        config = parse_json(config_contents.decode('utf-8'))
-        api.load_cruise(config, config_file.name)
-      except JSONDecodeError as e:
-        errors.append(str(e))
-      except ValueError as e:
-        errors.append(str(e))
-
-      # If no errors, close window - we're done.
-      if not errors:
-        return HttpResponse('<script>window.close()</script>')
-
-    else:
-      errors.append('No configuration file selected')
-
-    # If here, there were errors
-    return render(request, 'django_gui/load_cruise_config.html',
-                  {'errors': ';'.join(errors)})
 
 ################################################################################
 def widget(request, field_list=''):

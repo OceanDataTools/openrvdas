@@ -445,11 +445,11 @@ class DjangoServerAPI(ServerAPI):
     configs = cruise_config.get('configs', None)
 
     if loggers is None:
-      raise ValueError('Cruise configuration has no loggers')  
+      raise ValueError('Cruise definition has no loggers')  
     if modes is None:
-      raise ValueError('Cruise configuration has no modes')
+      raise ValueError('Cruise definition has no modes')
     if configs is None:
-      raise ValueError('Cruise configuration has no configs')
+      raise ValueError('Cruise definition has no configs')
     
     ################
     # Begin by creating the Cruise object. If no cruise name, use

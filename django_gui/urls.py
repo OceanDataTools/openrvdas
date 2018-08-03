@@ -25,7 +25,6 @@ urlpatterns = [
   path('logout/', auth_views.logout,
       {'next_page': '../'}, name='logout'),
 
-  path('servers', views.servers, name='servers'),
   path('server_messages/', views.server_messages,
        name='server_messages'),
   path('server_messages/<int:log_level>/', views.server_messages,
@@ -33,8 +32,6 @@ urlpatterns = [
   path('server_messages/<int:log_level>/<str:source>/', views.server_messages,
        name='server_messages'),
   
-  path('load_cruise_config', views.load_cruise_config,
-       name='load_cruise_config'),
   path('edit_config/<str:cruise_id>/<str:logger_id>',
        views.edit_config, name='edit_config'),
 
