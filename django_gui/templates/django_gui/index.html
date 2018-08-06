@@ -269,7 +269,7 @@
         var logger_config = message.loggers[logger_name];
         //console.log("processing for config " + logger_config);
         var button = document.getElementById(logger_name + "_config_button");
-        var errors = document.getElementById(logger_name + "_error");
+        var error_td = document.getElementById(logger_name + "_error");
         if (button) {
           button.innerHTML = logger_config;
 
@@ -278,34 +278,44 @@
           // that will have to wait for later.
           //button.style.backgroundColor = "yellow";
 
-          // Now see if we have a status for this logger/config
-          if (message.status) {
-            var logger_status = message.status[message.cruise_id + ":" + logger_name];
-            if (logger_status) {
-              // If running == null, not supposed to be running; true means
-              // running and should be; false means not running but should be
-              if (logger_status.running == true) {
-                button.style.backgroundColor = "lightgreen";
-              } else if (logger_status.running == false) {
-                button.style.backgroundColor = "orangered";
-              } else {
-                button.style.backgroundColor = "lightgray";
-              }
-              // Display any error messages.
-              if (errors) {
-                // Only update error display if logger isn't "failed"
-                // otherwise just show last state and errors
-                if (!logger_status.failed) {
-                  if (logger_status.errors) {
-                    errors.innerHTML = logger_status.errors.join(", ");
-                    errors.style.backgroundColor = "orangered";
-                  } else {
-                    errors.innerHTML = "";
-                    errors.style.backgroundColor = "lightgray";
-                  }
-                }
-              }
-            }
+        }
+        // If message doesn't include a status, we're done with this logger
+        if (!message.status) {
+          continue;
+        }
+        // If message doesn't include a status for this logger, we're done
+        var logger_status = message.status[message.cruise_id+":"+logger_name];
+        if (!logger_status) {
+          continue;
+        }
+
+        // Got a ternary status for this logger:
+        //   true:  we're running and are supposed to be
+        //   false: not running and are supposed to be
+        //   null:  not running and not supposed to be
+        if (logger_status.running == true) {
+          button.style.backgroundColor = "lightgreen";
+        } else if (logger_status.running == false) {
+          button.style.backgroundColor = "orangered";
+        } else {
+          button.style.backgroundColor = "lightgray";
+        }
+
+        if (logger_status.failed) {
+          continue;
+        }
+
+        // Display any error messages.
+        if (error_td) {
+          // Only update error display if logger isn't "failed"
+          // otherwise just show last state and errors
+          var error_str = logger_status.errors.join(", ");
+          if (error_str) {
+            error_td.innerHTML = error_str;
+            error_td.style.backgroundColor = "orangered";
+          } else {
+            error_td.innerHTML = "";
+            error_td.style.backgroundColor = "lightgray";
           }
         }
       }
