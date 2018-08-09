@@ -15,7 +15,7 @@
   </tr>
   <tr id="time_warning_row" style="display:none;">
     <td colspan=4>
-      Now:<span id="time_warning_td"></span>
+      Now: <span id="time_warning_td"></span>
     </td>
   </tr>
   <tr id="server_row">
@@ -39,7 +39,7 @@
         <button id="{{ logger_name }}_config_button" type="submit"
                 onclick="window.open('../edit_config/{{ cruise_id }}/{{logger_name }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');"
                 {% if not user.is_authenticated %}
-                disabled
+                  disabled
                 {% endif %}
                 >
           {{ logger_config }}
@@ -100,30 +100,62 @@
 {# ######################################################################## #}
 {# Load configuration                                                       #}
 {% if user.is_authenticated %}
-<form>
-  {% csrf_token %}
-  <button type="submit"
-          onclick="window.open('../load_cruise_config', '_blank', 'location=yes,height=140,width=450,scrollbars=yes,status=yes');">
-    Load cruise file
+<hr>
+<div id="load_div_button">
+  <button type="submit" onclick="toggle_load_config_div()">
+  Load cruise file
   </button>
-</form>
+</div>
+<div id="load_config_div" style="display:none">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <table>
+      <tr>
+        <td>
+          <input id="config_file" type="file" name="config_file" size="20"
+                 onchange="show_load_button(this.files)">
+        </td>
+        <td>
+          <div id="load_button_div"  style="display:none">
+            <button type="submit" id="load_cruise_button"
+                    name="load_cruise">
+              Load
+            </button>
+          </div>
+        </td>
+        <td>
+          <button onclick="toggle_load_config_div();" name="cancel">
+            Cancel
+          </button>
+        </td>
+      </tr>
+    </table>
+  </form>
+</div>
+
 {% endif %}
 
 {# ######################################################################## #}
 {# Display any errors                                                       #}
 {% if errors %}
-  <p>Error parsing config file: {{ config_error }}</p>
+<p>
+  <font color="red">
+    {% for error in errors %}
+      {{ error }}<br>
+    {% endfor %}
+  </font>
+</p>
 {% endif %}
-  <hr>
+<hr>
 
-  <p>
+<p>
   {% if user.is_authenticated %}
   Logged in as <b>{{ user }}.</b>
   <a href="../logout">Log out</a>
   {% else %}
   <a href="../login"><b>Log in</b></a> to manage servers, configurations or mode
   {% endif %}
-  </p>
+</p>
 
 {# ######################################################################## #}
 {# Start of Javascript                                                      #}
@@ -237,7 +269,7 @@
         var logger_config = message.loggers[logger_name];
         //console.log("processing for config " + logger_config);
         var button = document.getElementById(logger_name + "_config_button");
-        var errors = document.getElementById(logger_name + "_error");
+        var error_td = document.getElementById(logger_name + "_error");
         if (button) {
           button.innerHTML = logger_config;
 
@@ -246,126 +278,48 @@
           // that will have to wait for later.
           //button.style.backgroundColor = "yellow";
 
-          // Now see if we have a status for this logger/config
-          if (message.status) {
-            var logger_status = message.status[message.cruise_id + ":" + logger_name];
-            if (logger_status) {
-              // If running == null, not supposed to be running; true means
-              // running and should be; false means not running but should be
-              if (logger_status.running == true) {
-                button.style.backgroundColor = "lightgreen";
-              } else if (logger_status.running == false) {
-                button.style.backgroundColor = "orangered";
-              } else {
-                button.style.backgroundColor = "lightgray";
-              }
-              // Display any error messages.
-              if (errors) {
-                // Only update error display if logger isn't "failed"
-                // otherwise just show last state and errors
-                if (!logger_status.failed) {
-                  if (logger_status.errors) {
-                    errors.innerHTML = logger_status.errors.join(", ");
-                    errors.style.backgroundColor = "orangered";
-                  } else {
-                    errors.innerHTML = "";
-                    errors.style.backgroundColor = "lightgray";
-                  }
-                }
-              }
-            }
+        }
+        // If message doesn't include a status, we're done with this logger
+        if (!message.status) {
+          continue;
+        }
+        // If message doesn't include a status for this logger, we're done
+        var logger_status = message.status[message.cruise_id+":"+logger_name];
+        if (!logger_status) {
+          continue;
+        }
+
+        // Got a ternary status for this logger:
+        //   true:  we're running and are supposed to be
+        //   false: not running and are supposed to be
+        //   null:  not running and not supposed to be
+        if (logger_status.running == true) {
+          button.style.backgroundColor = "lightgreen";
+        } else if (logger_status.running == false) {
+          button.style.backgroundColor = "orangered";
+        } else {
+          button.style.backgroundColor = "lightgray";
+        }
+
+        if (logger_status.failed) {
+          continue;
+        }
+
+        // Display any error messages.
+        if (error_td) {
+          // Only update error display if logger isn't "failed"
+          // otherwise just show last state and errors
+          var error_str = logger_status.errors.join(", ");
+          if (error_str) {
+            error_td.innerHTML = error_str;
+            error_td.style.backgroundColor = "orangered";
+          } else {
+            error_td.innerHTML = "";
+            error_td.style.backgroundColor = "lightgray";
           }
         }
       }
     }
-      /*
-      var status_button = document.getElementById("status_server_button");
-      if (status.StatusServer.running != status.StatusServer.desired) {
-        status_button.style.backgroundColor = "yellow";
-      } else if (status.StatusServer.running) {
-        status_button.style.backgroundColor = "lightgreen";
-      } else {
-        status_button.style.backgroundColor = "orangered";
-      }
-      var logger_button = document.getElementById("logger_server_button");
-      if (status.LoggerServer.running != status.LoggerServer.desired) {
-        logger_button.style.backgroundColor = "yellow";
-      } else if (status.LoggerServer.running) {
-        logger_button.style.backgroundColor = "lightgreen";
-      } else {
-        logger_button.style.backgroundColor = "orangered";
-      }
-      */
-  
-      /*
-      for (var logger_name in status.loggers) {
-        //console.log('processing status for ' + logger_name);
-        var values = status.loggers[logger_name];
-        var desired = values['desired_config'] || "";
-        var current = values['current_config'] || "";
-        var mode_match = values['mode_match'] || "";
-        var enabled = values['current_enabled'] || "";
-        var error = values['errors'] || "";
-
-        var row = document.getElementById(logger_name + "_row")
-        var config_td = document.getElementById(logger_name + "_config_td");
-        var config_button = document.getElementById(logger_name + "_config_button");
-        var enabled_td = document.getElementById(logger_name + "_enabled_td");
-        var error_td = document.getElementById(logger_name + "_error");
-  
-        // If we can't find a row, maybe things have changed out
-        // from under us? Try reloading.
-        if (!row) {
-          console.log("Couldn't find row for " + logger_name);
-          window.location.reload(true);
-        }
-
-        if (current) {
-          config_button.innerHTML = current;
-        } else {
-          config_button.innerHTML = "--None--";
-        }
-
-        if (enabled) {
-          enabled_td.innerHTML = "";
-        } else {
-          enabled_td.innerHTML = "disabled";
-        }
-
-        if (!current && !desired) {
-          row.style.backgroundColor = "lightgray";
-        } else if (current == desired) {
-          if (enabled) {
-            row.style.backgroundColor = "lightgreen";         
-          } else {
-            row.style.backgroundColor = "lightgray";
-          }
-        // If current config is not equal to desired
-        } else if (error) {
-          row.style.backgroundColor = "orangered";
-        } else {
-            row.style.backgroundColor = "yellow";  
-        }
-
-        // If the current_config doesn't match the default config
-        // for the current mode, flag the config as different
-        if (current && !mode_match) {
-          config_td.style.backgroundColor = "yellow";
-        } else {
-          config_td.style.backgroundColor = row.style.backgroundColor;
-        }
-
-        // Finally, do we have an error reported for this logger?
-        error_td.innerHTML = error;
-        if (error) {
-          row.style.backgroundColor = "orangered";
-          config_td.style.backgroundColor = "orangered";
-          error_td.style.backgroundColor = "orangered";
-        } else {
-          error_td.style.backgroundColor = row.style.backgroundColor;
-        }
-      }
-    */
 
   };
 
@@ -386,9 +340,45 @@
     window.location.assign("/cruise/" + cruise);
   }  
 
+  // Turn select pull-down's text background yellow when it's been changed
   function highlight_select_mode() {
     document.getElementById("select_mode").style.backgroundColor="yellow";
   }  
+
+  ///////////////////////////////
+  function load_cruise() {
+    var select = document.getElementById("select_cruise");
+    var cruise = select.options[select.selectedIndex].value;
+    console.log("Loading page: /cruise/" + cruise);
+    history.pushState(cruise, cruise, "/cruise/" + cruise);
+    window.location.assign("/cruise/" + cruise);
+  }
+
+  ///////////////////////////////
+  // Toggle whether the cruise file selector is visible
+  function toggle_load_config_div() {
+    var x = document.getElementById("load_div_button");
+    var y = document.getElementById("load_config_div");
+    if (x.style.display === "none") {
+        x.style.display = "block";
+        y.style.display = "none";
+    } else {
+        x.style.display = "none";
+        y.style.display = "block";
+    }
+  }
+
+  ///////////////////////////////
+  // When the cruise file selector has a file selected, show the
+  // "load" button
+  function show_load_button(files) {
+    var load_button_div = document.getElementById("load_button_div");
+    if (files.length) {
+      load_button_div.style.display = "block";
+    } else {
+      load_button_div.style.display = "none";
+    }
+  }
 
   ///////////////////////////////
   function message_window() {

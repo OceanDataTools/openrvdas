@@ -514,18 +514,30 @@ class LoggerManager:
     grab status updates in _process_logger_runner_messages() when we
     get them from the LoggerRunners.
     """
-    # If they haven't specified a cruise_id, there's nothing for us to
-    # send them. Sleep a little to reduce overhead, then return, so
-    # they get disconnected.
+    websocket = self.client_map.get(client_id, None)
+    if not websocket:
+      raise ValueError('No websocket for client_id %s!' % client_id)
+
+    # If they haven't specified a cruise_id, just send them empty
+    # updates so they can tell they're connected.
+    if cruise_id == '':
+      while not self.quit_flag:
+        message = {'timestamp': 0}
+        logging.debug('Sending empty status to client %d', client_id)
+        try:
+          await websocket.send(json.dumps(message))
+        except websockets.ConnectionClosed:
+          logging.info('Client %d connection closed', client_id)
+          return
+        await asyncio.sleep(self.interval)
+
     if not cruise_id in self.api.get_cruises():
       logging.warning('Client %d: cruise id "%s" not found. Ignoring request',
                       client_id, cruise_id)
       asyncio.sleep(3)
       return
 
-    websocket = self.client_map.get(client_id, None)
-    if not websocket:
-      raise ValueError('No websocket for client_id %s!' % client_id)
+    # If here, we've got a valid cruise_id to send updates for.
 
     # We stash previous_configs so that we know not to send them if
     # they haven't changed since last check. We keep the raw

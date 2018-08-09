@@ -12,27 +12,27 @@ sys.path.append('.')
 from logger.writers.logfile_writer import LogfileWriter
 from logger.utils import formats
 
-SAMPLE_DATA = """2017-11-03:17:23:04.832875 Nel mezzo del cammin di nostra vita
-2017-11-03:17:23:04.833188 mi ritrovai per una selva oscura,
-2017-11-03:17:23:04.833243 ché la diritta via era smarrita.
-2017-11-04:17:23:04.833274 Ahi quanto a dir qual era è cosa dura
-2017-11-04:17:23:04.833303 esta selva selvaggia e aspra e forte
-2017-11-04:17:23:04.833330 che nel pensier rinova la paura!
-2017-11-05:17:23:04.833356 Tant' è amara che poco è più morte;
-2017-11-05:17:23:04.833391 ma per trattar del ben ch'i' vi trovai,
-2017-11-05:17:23:04.833418 dirò de l'altre cose ch'i' v'ho scorte.
-2017-11-06:17:23:04.833445 Io non so ben ridir com' i' v'intrai,
-2017-11-06:17:23:04.833471 tant' era pien di sonno a quel punto
-2017-11-06:17:23:04.833498 che la verace via abbandonai.
-2017-11-07:17:23:04.833525 Ma poi ch'i' fui al piè d'un colle giunto,
-2017-11-07:17:23:04.833551 là dove terminava quella valle
-2017-11-07:17:23:04.833578 che m'avea di paura il cor compunto,
-2017-11-08:17:23:04.833604 guardai in alto e vidi le sue spalle
-2017-11-08:17:23:04.833630 vestite già de' raggi del pianeta
-2017-11-08:17:23:04.833657 che mena dritto altrui per ogne calle.
-2017-11-09:17:23:04.833683 Allor fu la paura un poco queta,
-2017-11-09:17:23:04.833710 che nel lago del cor m'era durata
-2017-11-09:17:23:04.833736 la notte ch'i' passai con tanta pieta.
+SAMPLE_DATA = """2017-11-03T17:23:04.832875Z Nel mezzo del cammin di nostra vita
+2017-11-03T17:23:04.833188Z mi ritrovai per una selva oscura,
+2017-11-03T17:23:04.833243Z ché la diritta via era smarrita.
+2017-11-04T17:23:04.833274Z Ahi quanto a dir qual era è cosa dura
+2017-11-04T17:23:04.833303Z esta selva selvaggia e aspra e forte
+2017-11-04T17:23:04.833330Z che nel pensier rinova la paura!
+2017-11-05T17:23:04.833356Z Tant' è amara che poco è più morte;
+2017-11-05T17:23:04.833391Z ma per trattar del ben ch'i' vi trovai,
+2017-11-05T17:23:04.833418Z dirò de l'altre cose ch'i' v'ho scorte.
+2017-11-06T17:23:04.833445Z Io non so ben ridir com' i' v'intrai,
+2017-11-06T17:23:04.833471Z tant' era pien di sonno a quel punto
+2017-11-06T17:23:04.833498Z che la verace via abbandonai.
+2017-11-07T17:23:04.833525Z Ma poi ch'i' fui al piè d'un colle giunto,
+2017-11-07T17:23:04.833551Z là dove terminava quella valle
+2017-11-07T17:23:04.833578Z che m'avea di paura il cor compunto,
+2017-11-08T17:23:04.833604Z guardai in alto e vidi le sue spalle
+2017-11-08T17:23:04.833630Z vestite già de' raggi del pianeta
+2017-11-08T17:23:04.833657Z che mena dritto altrui per ogne calle.
+2017-11-09T17:23:04.833683Z Allor fu la paura un poco queta,
+2017-11-09T17:23:04.833710Z che nel lago del cor m'era durata
+2017-11-09T17:23:04.833736Z la notte ch'i' passai con tanta pieta.
 """
 class TestLogfileWriter(unittest.TestCase):
 
