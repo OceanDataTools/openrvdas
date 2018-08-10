@@ -402,7 +402,7 @@ where the reader/transform/writer definition is a list of dictionaries, each def
 ```
 If there is only one component defined for readers/transforms/writers, it doesn't need to be enclosed in a list, as with the "readers" example above.
 
-One major advantage of using configuration files is the ability to use ComposedReaders and ComposedWriters, containers that allow efficient construction of sophisticated dataflows. Please see the [simple_logger.py](../test/configs/simple_logger.json), [composed_logger.py](../test/configs/composed_logger.json) and [parallel_logger.py](../test/configs/parallel_logger.json) files in the project's [test/configs](../test/configs) directory for examples, and read the document [OpenRVDAS Configuration Files](confugration_files.md) for a more complete description of the configuration file model.
+One major advantage of using configuration files is the ability to use ComposedReaders and ComposedWriters, containers that allow efficient construction of sophisticated dataflows. Please see the [simple_logger.py](../test/configs/simple_logger.json), [composed_logger.py](../test/configs/composed_logger.json) and [parallel_logger.py](../test/configs/parallel_logger.json) files in the project's [test/configs](../test/configs) directory for examples, and read the document [OpenRVDAS Configuration Files](configration_files.md) for a more complete description of the configuration file model.
 
 ## Running multiple loggers with logger\_runner.py
 
@@ -474,7 +474,6 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
       }
     }
   }
-}
 ```
 -   **Cruise mode (or just "mode")** - Logger configurations can be grouped into logical collections that will be active at any given time. Certain logger configurations will be running when a vessel is in port; another set may be running while the vessel is at sea, but within territorial waters; yet another when it is fully underway. usually just called a "mode".  The mode definition below indicates that when "port" mode is active, the configurations "gyr1-\>net", "mwx1-\>net", "s330-\>net" and "eng1-\>net" should be running:
 
@@ -492,9 +491,8 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
   "underway": {...} 
 }
 ```
--   **Cruise** - in addition to containing cruise metadata (cruise id, provisional start and ending dates) a cruise definition contains a collection of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes in which those configurations are to be run. A cruise definition file (such as in [test/configs/sample\_cruise.json](../test/configs/sample\_cruise.json)) defines the loggers for a cruise and the configurations they may take, as well as the modes into which they are grouped.
-
-  *NOTE: If a vessel is using an ROV, it is entirely reasonable for the ROV to have be its own cruise id and definition files. As a result, multiple cruises may be loaded at the same time and can be managed independently by the same logger\_manager: the vessel's cruise (e.g. id NBP1700) and the ROV's (e.g. id NBP1700-GL005).*
+-   **Cruise** - in addition to containing cruise metadata (cruise id, provisional start and ending dates) a cruise definition contains a collection of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes in which those configurations are to be run. A cruise definition file (such as in [test/configs/sample\_cruise.json](../test/configs/sample\_cruise.json)) defines the loggers for a cruise and the configurations they may take, as well as the modes into which they are grouped.  
+    *NOTE: If a vessel is using an ROV, it is entirely reasonable for the ROV to have be its own cruise id and definition files. As a result, multiple cruises may be loaded at the same time and can be managed independently by the same logger\_manager: the vessel's cruise (e.g. id NBP1700) and the ROV's (e.g. id NBP1700-GL005).*
 
 It is worth noting that in OpenRVDAS, a "logger" does not exist as a separate entity. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the sample cruise definition file, as the logger definition ("knud") is just a list of the configurations that are responsible for handling the
 
@@ -568,7 +566,7 @@ The Ubuntu script configures database and web components, but still requires log
 ```
 server/logger_manager.py --websocket :8765 --database django
 ```
-(If the logger\_manager.py script is going to be run as a service without access to STDIN, you may also need to specify --no-console on the command line.)
+(If the logger\_manager.py script is going to be run as a service without access to STDIN, you may also need to specify `--no-console` on the command line.)
 
 #### Manual installation
 

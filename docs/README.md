@@ -13,9 +13,9 @@ Please see the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md) to get s
 Other relevant documents are:
 
 * Running OpenRVDAS Loggers - how to use the core utility scripts
-* Configuration Files - how to define configuration files to simplify running loggers with listen.py
+* [Configuration Files](configuration_files.md) - how to define configuration files to simplify running loggers with listen.py
 * Creating Loggers - creating custom loggers from components
-* OpenRVDAS Components - what components exist and what they do
+* [OpenRVDAS Components][components.md) - what components exist and what they do
 * NMEA Parsing - how to work with the included NMEA parser 
 * Simulating Serial Input - using the simulate_serial.py script to create virtual serial ports for development and testing
 * OpenRVDAS User Interface - an introduction to the web-based GUI
