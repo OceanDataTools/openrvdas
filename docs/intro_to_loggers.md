@@ -2,33 +2,31 @@
 © 2018 David Pablo Cohn
  DRAFT 2018-08-09
 
-* **[Overview - needs and design philosophy](#overview---needs-and-design-philosophy)**
-  * [Design Philosophy](#design-philosophy)
-  * [Architecture](#architecture)
-  * [Document Roadmap](#document-roadmap)
-
-* **[Running simple loggers with listen.py](#running-simple-loggers-with-listen.py)**
-
-  * [Running with command line arguments](#running-with-command-line-arguments)
-  *[Examples using the listen.py script](#examples-using-the-listen.py-script)
-  * [Listener chaining](#listener-chaining)
-* **[Running more complicated loggers with configuration files](#running-more-complicated-loggers-with-configuration-files)**
-* **[Running multiple loggers with logger\_runner.py](#running-multiple-loggers-with-logger_runner.py)**
-
-* **[Managing multiple loggers with logger\_manager.py](#managing-multiple-loggers-with-logger_manager.py)**
-  * [Cruises, modes and configurations](#cruises-modes-and-configurations)
-  * [Running logger\_manager.py from the command line](#running-logger_manager.py-from-the-command-line)
-  * [Managing loggers via a web interface](#managing-loggers-via-a-web-interface)
-* **[Appendix](#appendix)**
-  * [Installation](#installation)
-    * [Installation scripts](#installation-scripts)
-    * [Manual installation](#manual-installation)
-  * [Testing](#testing)
-  * [Using Stored/Simulated Data](#using-storedsimulated-data)
-* **[Roadmap](#roadmap)**
-  * [Derived data values](#derived-data-values)
-  * [Automatic component discovery and incorporation](#automatic-component-discovery-and-incorporation)
-* **[More Documentation](#more-documentation)**
+## Table of Contents
+  * [Overview - needs and design philosophy](#overview---needs-and-design-philosophy)
+     * [Design Philosophy](#design-philosophy)
+     * [Architecture](#architecture)
+     * [Document Roadmap](#document-roadmap)
+  * [Running simple loggers with listen.py](#running-simple-loggers-with-listenpy)
+     * [Running with command line arguments](#running-with-command-line-arguments)
+     * [Examples using the listen.py script](#examples-using-the-listenpy-script)
+     * [Listener chaining](#listener-chaining)
+  * [Running more complicated loggers with configuration files](#running-more-complicated-loggers-with-configuration-files)
+  * [Running multiple loggers with logger_runner.py](#running-multiple-loggers-with-logger_runnerpy)
+  * [Managing multiple loggers with logger_manager.py](#managing-multiple-loggers-with-logger_managerpy)
+     * [Cruises, modes and configurations](#cruises-modes-and-configurations)
+     * [Running logger_manager.py from the command line](#running-logger_managerpy-from-the-command-line)
+     * [Managing loggers via a web interface](#managing-loggers-via-a-web-interface)
+  * [Appendix](#appendix)
+     * [Installation](#installation)
+        * [Installation scripts](#installation-scripts)
+        * [Manual installation](#manual-installation)
+     * [Testing](#testing)
+     * [Using Stored/Simulated Data](#using-storedsimulated-data)
+  * [Roadmap](#roadmap)
+     * [Derived data values](#derived-data-values)
+     * [Automatic component discovery and incorporation](#automatic-component-discovery-and-incorporation)
+  * [More Documentation](#more-documentation)
 
 ## Overview - needs and design philosophy
 
@@ -72,7 +70,7 @@ def logger(port, instrument):
 
 ![NetworkWriter data flow](images/network_writer.png)
 
-Please see the document [OpenRVDAS Components](https://docs.google.com/document/d/1Ppl0kLVOEjs0pFPX2RKgWQIm1At3h5K71W1D9tgUJaM/edit#) for a list and descriptions of currently-implemented Readers, Transforms and Writers.
+Please see the document [OpenRVDAS Components](components.md) for a list and descriptions of currently-implemented Readers, Transforms and Writers.
 
 ### Document Roadmap
 
@@ -161,7 +159,7 @@ logger/listener/listen.py \
     --serial port=/dev/ttyr15 \
     --write_file my_file
 ```
-If your machine doesn't have any serial ports sending actual data, you can create virtual serial ports, as described in [OpenRVDAS - Simulating Serial Input](https://docs.google.com/document/d/1NDaClgCllVM394wfCe8Ww0XCiENa3W8hI4FXOt5E3wo/edit#), by running
+If your machine doesn't have any serial ports sending actual data, you can create virtual serial ports, as described in [Simulating Serial Input](simulating_serial_input.md), by running
 
 ```
 logger/utils/simulate_serial.py \
@@ -404,7 +402,7 @@ where the reader/transform/writer definition is a list of dictionaries, each def
 ```
 If there is only one component defined for readers/transforms/writers, it doesn't need to be enclosed in a list, as with the "readers" example above.
 
-One major advantage of using configuration files is the ability to use ComposedReaders and ComposedWriters, containers that allow efficient construction of sophisticated dataflows. Please see the [simple_logger.py](../test/configs/simple_logger.json), [composed_logger.py](../test/configs/composed_logger.json) and [parallel_logger.py](../test/configs/parallel_logger.json) files in the project's [test/configs](https://github.com/davidpablocohn/openrvdas/tree/master/test/configs) directory for examples, and read the document [OpenRVDAS Configuration Files](https://docs.google.com/document/d/19IIv33rfHzI99fMoo-RvYbtGSOSgo_uwBqrp2THGDvY/edit#) for a more complete description of the configuration file model.
+One major advantage of using configuration files is the ability to use ComposedReaders and ComposedWriters, containers that allow efficient construction of sophisticated dataflows. Please see the [simple_logger.py](../test/configs/simple_logger.json), [composed_logger.py](../test/configs/composed_logger.json) and [parallel_logger.py](../test/configs/parallel_logger.json) files in the project's [test/configs](../test/configs) directory for examples, and read the document [OpenRVDAS Configuration Files](confugration_files.md) for a more complete description of the configuration file model.
 
 ## Running multiple loggers with logger\_runner.py
 
@@ -553,15 +551,15 @@ Please see the [server/README.md](../server/README.md) file and [logger_manager.
 
 ### Managing loggers via a web interface
 
-There is a still-rudimentary Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [OpenRVDAS Web Interface](https://docs.google.com/document/d/1hDh-IO0xXiW8nUbxl2I8qZcKF01mvIB_CrHDD5cUIyU) and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
+There is a still-rudimentary Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [OpenRVDAS Web Interface (web)](https://docs.google.com/document/d/1hDh-IO0xXiW8nUbxl2I8qZcKF01mvIB_CrHDD5cUIyU) and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
 
 ## Appendix
 
-###Installation
+### Installation
 
 #### Installation scripts
 
-There are rudimentary but complete system installation/configuration scripts available for CentOS 7 and Ubuntu 16 in [the project's utils directory](https://github.com/davidpablocohn/openrvdas/tree/master/utils). When copied over to a "bare" operating system installation and run, they will prompt for configuration information and download/install/configure all the files needed to run the complete OpenRVDAS system, including database and web interface.
+There are rudimentary but complete system installation/configuration scripts available for CentOS 7 and Ubuntu 16 in [the project's utils directory](../utils). When copied over to a "bare" operating system installation and run, they will prompt for configuration information and download/install/configure all the files needed to run the complete OpenRVDAS system, including database and web interface.
 
 As of this writing, the CentOS script provides a fairly complete installation, not only installing and configuring all database and web components, but configuring the logger\_manager.py as a system service and giving the option of having it automatically run on boot.
 
@@ -620,7 +618,7 @@ logger/listener/listen.py \
     --transform_prefix gyr1 \
     --write_network :6224
 ```
-Simulating a system that uses serial ports for its input is more involved. We provide a rudimentary serial port simulation in utils/simulate_serial.py. The file defines a SimSerial class and a command line script that invokes it:
+Simulating a system that uses serial ports for its input is more involved. We provide a rudimentary serial port simulation in logger/utils/simulate_serial.py. The file defines a SimSerial class and a command line script that invokes it:
 
 ```
 logger/utils/simulate_serial.py \
@@ -629,7 +627,7 @@ logger/utils/simulate_serial.py \
 ```
 tries to create virtual serial port /dev/ttyr15 and feeds it with data from the specified logfile, timing the records to arrive at the same intervals indicated between timestamps in the logfile.
 
-Note that if you wish to actually create virtual serial ports in /dev (perhaps corresponding to some port.tab definition), you will need to run the script as root, and if those ports actually exist, the script WILL WIPE THEM OUT.
+Note that if you wish to actually create virtual serial ports in /dev (perhaps corresponding to some port.tab definition), you will need to run the script as root, and if those ports actually exist, the script *WILL WIPE THEM OUT*.
 
 Because of this, it is recommended that you specify a different location for your simulated ports, such as /tmp/ttyr15, etc.
 
@@ -638,13 +636,13 @@ To simplify the creation/testing, simulate_serial.py can also take a JSON-format
 ```
 logger/utils/simulate_serial.py --config test/serial_sim.json
 ```
-Simulating a system that takes its input from serial ports is more involved. Please see [Simulating Serial Input](https://docs.google.com/document/d/1NDaClgCllVM394wfCe8Ww0XCiENa3W8hI4FXOt5E3wo/edit#) for information on how to set up and feed virtual serial ports.
+Simulating a system that takes its input from serial ports is more involved. Please see [Simulating Serial Input](simulating_serial_input.md) for information on how to set up and feed virtual serial ports.
 
 ## Roadmap
 
 ### Derived data values
 
-See the [Derived Data section of the Creating Loggers document](https://docs.google.com/document/d/1rrfwRCgyHqZsdkFgrmk04QC1fcgZ0Kpvt2Z7LpycIok/edit#heading=h.cgtt70evv4d9) for the state of derived data loggers.
+See the [Derived Data section of the Creating Loggers document (web)](https://docs.google.com/document/d/1rrfwRCgyHqZsdkFgrmk04QC1fcgZ0Kpvt2Z7LpycIok/edit#heading=h.cgtt70evv4d9) for the state of derived data loggers.
 
 ### Automatic component discovery and incorporation
 
@@ -658,10 +656,10 @@ For now, documentation is online in a Google Docs folder in [http://tinyurl.com/
 
 Some other relevant documents are:
 
--   [Running OpenRVDAS Loggers](https://docs.google.com/document/d/1w_wkdprtA31Fx4yTHLL6WoTtFrPmE3jskTeV6YSuOJI/edit)
--   [OpenRVDAS Components](https://docs.google.com/document/d/1Ppl0kLVOEjs0pFPX2RKgWQIm1At3h5K71W1D9tgUJaM/edit#)
--   [Creating Loggers](https://docs.google.com/document/d/1rrfwRCgyHqZsdkFgrmk04QC1fcgZ0Kpvt2Z7LpycIok/edit)
--   [Simulating Serial Input](https://docs.google.com/document/d/1NDaClgCllVM394wfCe8Ww0XCiENa3W8hI4FXOt5E3wo/edit)
+-   [OpenRVDAS Components](components.md)
+-   [Simulating Serial Input](simulating_serial_input.md)
+-   [Creating Loggers (web)](https://docs.google.com/document/d/1rrfwRCgyHqZsdkFgrmk04QC1fcgZ0Kpvt2Z7LpycIok/edit)
+-   [Running OpenRVDAS Loggers (web - deprecated)](https://docs.google.com/document/d/1w_wkdprtA31Fx4yTHLL6WoTtFrPmE3jskTeV6YSuOJI/edit)
 -   [NMEA Parsing](https://docs.google.com/document/d/1WHrORXoImrc5yULegoyN-mutmfdn4E5XtUuF7mWt_lY/edit)
 
 [^1]: Recommended version of Python is 3.6 or higher, but most listener     code has been verified to run on 3.5 and higher. Server code such as     logger\_runner.py and logger\_manager.py may experience problems on     3.5 due to changes in the async module.
