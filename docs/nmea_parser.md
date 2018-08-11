@@ -2,7 +2,7 @@
 © David Pablo Cohn - (david.cohn@gmail)  
 DRAFT 2018-08-10
 
-This document provides some introductory background on the NMEAParser of the OpenRVDAS architecture. For a more general introduction to the architecture, please refer to the OpenRVDAS Introduction to Loggers.
+This document provides some introductory background on the NMEAParser of the OpenRVDAS architecture. For a more general introduction to the architecture, please refer to the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md).
 
 NMNEAParser ([logger/utils/nmea\_parser.py](../logger/utils/nmea_parser.py)), the class that takes text NMEA records and parses them into structured records with named fields and timestamps, is the messiest and - at present - most fragile part of the logger system. The better part of this is due to the fact that there are so many different NMEA formats, and some instruments that nominally produce the same type of message do so with different formats.
 
@@ -42,7 +42,7 @@ The basic operation of the parser is as follows
 ```
 Going from the timestamped NMEA text to the the structured record requires a few steps and definitions.
 
-We expect the raw text records we receive to begin with a data\_id identifying the physical or virtual sensor that created the record and a timestamp (YYYY-MM-DDTHH:MM:SS.mmmmZ format by default, but can be overridden  in logger/utils/timestamp.py).
+We expect the raw text records we receive to begin with a data\_id identifying the physical or virtual sensor that created the record and a timestamp (the ISO 8601-compliant YYYY-MM-DDTHH:MM:SS.mmmmZ format by default, but can be overridden in logger/utils/timestamp.py).
 
 After stripping those off, we are left with the NMEA message itself. To parse that, we need to look up information about the sensor that produced it, in this case, 'knud'.
 
