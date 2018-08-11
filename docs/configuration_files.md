@@ -6,10 +6,11 @@
 
 * [Overview](#overview)
 * [Logger Configurations](#logger-configurations)
-* [Cruise Modes](#cruise-modes)
+* [Cruise definitions](#cruise-definitions)
+  * [Cruise Modes](#cruise-modes)
 * [Templates and Variables](#templates-and-variables)
-   * [Templates](#templates)
-   * [Variables](#variables)
+  * [Templates](#templates)
+  * [Variables](#variables)
 * [Expanding Configuration Files](#expanding-configuration-files)
 
 ## Overview
@@ -99,6 +100,8 @@ In the case of gyr1_logger.json, the logger requires only a single
 reader, so it is defined directly as a dict; the two transforms and
 two writers are both defined by enclosing the pair in a list.
 
+## Cruise definitions
+
 A full cruise definition file (such as
 [sample_cruise.json](../test/configs/sample_cruise.json)) may define
 many logger configurations. They will will be contained in a "configs"
@@ -106,6 +109,7 @@ dict that maps from configuration names to the configuration
 definitions themselves:
 
 ```
+{
   "configs": {
     "gyr1->off": {},
     "gyr1->net": {
@@ -114,14 +118,15 @@ definitions themselves:
         "class": "SerialReader",
         ...
       },
-    "gyr1->db/file/net": {
+    "gyr1->file/net/db": {
       ...
     },
     ...
   }
+}
 ```
 
-## Cruise Modes
+### Cruise Modes
 
 Typically, a vessel will have sets of logger configurations that
 should all be run together: which should be running when in port, when
@@ -135,6 +140,12 @@ when the mode is selected. To illustrate:
 
 ```
 {
+  "configs": {
+    "gyr1->off": {},
+    "gyr1->net": { ... },
+    "gyr1->file/net/db": { ... },
+    ...
+  },
   "modes": {
     "off": {
       "knud": "knud->off",
@@ -168,13 +179,6 @@ when the mode is selected. To illustrate:
 For accounting purposes, our convention is to include an empty
 configuration in the "configs" dict to denote the configuration of a
 logger that isn't running.
-
-```
-  "configs": {
-    "gyr1->off": {},
-    ...
-  }
-```
 
 Note also the additional (and optional) ```default_mode``` key
 in the cruise configuration. It specifies that, lacking any other

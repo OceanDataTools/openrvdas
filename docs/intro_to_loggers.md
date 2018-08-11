@@ -3,30 +3,28 @@
  DRAFT 2018-08-09
 
 ## Table of Contents
-  * [Overview - needs and design philosophy](#overview---needs-and-design-philosophy)
-     * [Design Philosophy](#design-philosophy)
-     * [Architecture](#architecture)
-     * [Document Roadmap](#document-roadmap)
-  * [Running simple loggers with listen.py](#running-simple-loggers-with-listenpy)
-     * [Running with command line arguments](#running-with-command-line-arguments)
-     * [Examples using the listen.py script](#examples-using-the-listenpy-script)
-     * [Listener chaining](#listener-chaining)
-  * [Running more complicated loggers with configuration files](#running-more-complicated-loggers-with-configuration-files)
-  * [Running multiple loggers with logger_runner.py](#running-multiple-loggers-with-logger_runnerpy)
-  * [Managing multiple loggers with logger_manager.py](#managing-multiple-loggers-with-logger_managerpy)
-     * [Cruises, modes and configurations](#cruises-modes-and-configurations)
-     * [Running logger_manager.py from the command line](#running-logger_managerpy-from-the-command-line)
-     * [Managing loggers via a web interface](#managing-loggers-via-a-web-interface)
-  * [Appendix](#appendix)
-     * [Installation](#installation)
-        * [Installation scripts](#installation-scripts)
-        * [Manual installation](#manual-installation)
-     * [Testing](#testing)
-     * [Using Stored/Simulated Data](#using-storedsimulated-data)
-  * [Roadmap](#roadmap)
-     * [Derived data values](#derived-data-values)
-     * [Automatic component discovery and incorporation](#automatic-component-discovery-and-incorporation)
-  * [More Documentation](#more-documentation)
+
+* [Overview - needs and design philosophy](#overview---needs-and-design-philosophy)
+   * [Design Philosophy](#design-philosophy)
+   * [Architecture](#architecture)
+   * [Document Roadmap](#document-roadmap)
+* [Defining simple loggers from the command line](#defining-simple-loggers-from-the-command-line)
+* [Logger configuration files](#logger-configuration-files)
+* [Running multiple loggers with logger_runner.py](#running-multiple-loggers-with-logger_runnerpy)
+* [Managing multiple loggers with logger_manager.py](#managing-multiple-loggers-with-logger_managerpy)
+   * [Cruises, modes and configurations](#cruises-modes-and-configurations)
+   * [Running logger_manager.py from the command line](#running-logger_managerpy-from-the-command-line)
+   * [Managing loggers via a web interface](#managing-loggers-via-a-web-interface)
+* [Appendix](#appendix)
+   * [Installation](#installation)
+      * [Installation scripts](#installation-scripts)
+      * [Manual installation](#manual-installation)
+   * [Testing](#testing)
+   * [Using Stored/Simulated Data](#using-storedsimulated-data)
+* [Roadmap](#roadmap)
+   * [Derived data values](#derived-data-values)
+   * [Automatic component discovery and incorporation](#automatic-component-discovery-and-incorporation)
+* [More Documentation](#more-documentation)
 
 ## Overview - needs and design philosophy
 
@@ -84,7 +82,7 @@ This document describes the architecture, its components, tools and scripts, fro
     -   The **logger\_manager.py** script allows loading, modifying and     monitoring sets of logger configurations, either from the     command line or as part of a system service. In addition to     running processes locally, it can dispatch configurations to     logger\_runner.py processes running on remote machines.
     -   A **Django-based web server** can connect to the     logger\_manager.py script via a websocket, allowing authorized     users on the network to control and monitor logger processes     from a browser window.
 
-## Running simple loggers with listen.py
+## Defining simple loggers from the command line
 
 The listen.py script incorporates the most common Readers, Transforms and Writers, providing much of the functionality that one might want in a logger straight from the command line. For example, the invocation:
 
@@ -100,240 +98,7 @@ implements the following data flow:
 
 ![Dual writer dataflow](images/dual_writer.png)
 
-In general, the listen.py script runs all of the specified readers in parallel, feeds their output to the specified transforms in series, then feeds the output of the last transform to all the specified writers in parallel:
-
-![Generic listener dataflow](images/generic_listener.png)
-
-### Running with command line arguments
-
-When readers, transforms and writers are specified on the command line, much of the flexibility of listen.py (and therefore much of the opportunity for screwing up) is due to its non-standard convention for parsing those arguments. **Specifically, listen.py parses arguments sequentially in the order in which they appear on the command line.**
-
-The command
-
-```
-listen.py --serial port=/dev/ttyr15,baudrate=9600 \
-    --transform_timestamp
-    --transform_prefix gyr1 \
-    --write_logfile /log/current/gyr1
-```
-
-will first add a timestamp to records and then prefix 'gyr1' to them, producing:
-
-`gyr1 2017-11-04:05:12:23.318039 $HEHDT,235.95,T*17`
-
-while the command line
-
-```
-listen.py --serial port=/dev/ttyr15,baudrate=9600 \
-    --transform_prefix gyr1 \
-    --transform_timestamp \
-    --write_logfile /log/current/gyr1
-```
-
-will prefix first, then add a timestamp:
-
-`2017-11-04:05:12:23.318039 gyr1 $HEHDT,235.95,T*17`
-
-Transforms can be applied in any order, and may be repeated as desired, but it is important to remember that because of the sequential processing of the command line, any flags on which a transform (or reader or writer) depends must appear before the transform on the command line. That is:
-
-```
-listen.py --network :6224 \
-    --slice_separator ' ' \
-    --transform_slice 0:3
-```
-will slice its records using a space as the field separator, while
-
-```
-listen.py --network :6224 \
-    --transform_slice 0:3 \
-    --slice_separator ' '  # ignored by the preceding transform
-```
-will use the default separator (a comma), because the `--slice_separator` argument comes after the `--transform_slice` argument that it is (presumably) supposed to act upon.
-
-### Examples using the listen.py script
-
-For all its limitations, the listen.py script has a lot of tricks up its sleeve. Here's a simple invocation to read from a serial port and write to a "normal" file:
-
-```
-logger/listener/listen.py \
-    --serial port=/dev/ttyr15 \
-    --write_file my_file
-```
-If your machine doesn't have any serial ports sending actual data, you can create virtual serial ports, as described in [Simulating Serial Input](simulating_serial_input.md), by running
-
-```
-logger/utils/simulate_serial.py \
-    --port /tmp/gyr1 \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04
-```
-in a separate terminal, in which case your listener command line would be
-
-```
-logger/listener/listen.py \
-    --serial port=/tmp/tty_gyr1 \
-    --write_file my_file
-```
-To see what is going on, specify '-' as the file argument, which tells the TextFileWriter to write to stdout:
-
-```
-logger/listener/listen.py \
-    --serial port=/tmp/tty_gyr1 \
-    --write_file -
-```
-You should see output like this:
-
-```
-$HEHDT,235.77,T*1b
-$HEHDT,235.85,T*16
-$HEHDT,235.91,T*13
-...
-```
-If you want to see more of what's going on, you can re-run the above commands with `-v` (to set logging level to "info") or `-v -v` (to set it to "debug").
-
-Let's go ahead and attach a timestamp to the data we receive, prefix it by the instrument name, and send it to the network, say port 6224, in addition to stdout:
-
-```
-logger/listener/listen.py \
-    --serial port=/tmp/tty_gyr1 \
-    --transform_timestamp \
-    --transform_prefix gyr1 \
-    --write_network :6224 \
-    --write_file -
-```
-producing
-
-```
-gyr1 2017-11-08:16:25:12.835904 $HEHDT,235.34,T*1c
-gyr1 2017-11-08:16:25:13.093473 $HEHDT,235.36,T*1e
-gyr1 2017-11-08:16:25:13.349195 $HEHDT,235.38,T*10
-...
-```
-(An error "Network is unreachable" may occur if you're offline.)
-
-You can also read directly from one or more network ports:
-
-```
-logger/listener/listen.py \
-    --network :6224,:6225 \
-    --write_file -
-```
-and filter the results to only receive records of interest:
-
-```
-logger/listener/listen.py \
-    --network :6224,:6225 \
-    --transform_regex_filter "^gyr1 " \
-    --write_file -
-```
-If our network records look like
-
-```
-gyr1 2017-11-08:16:25:13.349195 $HEHDT,235.38,T*10
-```
-
-we can strip off the instrument name before storing it:
-
-```
-logger/listener/listen.py \
-    --network :6224,:6225 \
-    --transform_regex_filter "^gyr1 " \
-    --transform_slice 1: \
-    --write_file -
-```
-which uses Python-style list indexing to select elements in a line of space-delimited fields (the `--slice_sep` argument allows specifying whatever delimiter is appropriate). The SliceTransform accepts arbitrary comma-separated indices, such as `--transform_slice -1,2:4,-2,0`.
-
-Logfile records are special in that they are prefixed with timestamps. If, for testing or display purposes, we want our LogfileReader to deliver the records in intervals that correspond to the intervals between their timestamps, we can specify so with a flag:
-
-```
-logger/listener/listen.py \
-    --logfile_use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
-    --write_file -
-```
-To read logfiles in parallel, we can either specify a comma-separated list of logfiles:
-
-```
-logger/listener/listen.py \
-    --logfile_use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1,test/nmea/NBP1700/knud/raw/NBP1700_knud \
-    --write_file -
-```
-or specify them with two separate `--logfile` flags:
-
-```
-logger/listener/listen.py \
-    --logfile_use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
-    --logfile test/nmea/NBP1700/knud/raw/NBP1700_knud \
-    --write_file -
-```
-It's worth taking a moment to discuss how listen.py and its FileReaders and LogfileReaders select and read through the files that are specified as their inputs.
-
-A FileReader takes a wildcarded filename and open the matching files in alphanumeric order, going on to the next when it reaches EOF of the previous file. Note that FileReaders also accept a `--tail` argument that says not to return EOF on reaching the end of the last file, but to continue checking for more input, as well as a `--refresh_file_spec` flag that further instructs it to check whether any new files matching the specification have appeared in the meantime.[^2]
-
-So the invocation
-
-```
-logger/listener/listen.py \
-    --tail --refresh_file_spec \
-    --file test/nmea/NBP1700/\*/raw/NBP1700_\* \
-    --write_file -
-```
-will create a single FileReader that will sequentially read through and deliver the records of all logfiles in the test directory, then wait to see if any more matching files ever show up. In contrast, each **comma-separated** value is used to instantiate a separate reader, as above.
-
-A LogfileReader is effectively a FileReader that understands and makes approximate use of the R2R naming conventions for logfiles,[^3] specifically that records for each instrument are logged in a file appended by the date of those records. So records for a gyroscope run the first three days of November might be stored as
-
-```
-NBP1700_gyr1-2017-11-01
-NBP1700_gyr1-2017-11-02
-NBP1700_gyr1-2017-11-03
-```
-Records within a logfile are also expected to be prefixed by a timestamp, the default format of which is encoded in timestamp.py
-
-When creating a LogfileReader, we give it a filebase (e.g. `NBP1700/gyr1/raw/NBP_gyr1`) and it knows to append a wildcard to the name and read through all files on the specified path bearing that name and a date suffix. For example,
-
-```
-logger/listener/listen.py \
-    --use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
-    --write_file -
-```
-Will match all files that have `NBP1700/gyr1/raw/NBP1700_gyr1` as their prefix and deliver the records they contain in sequence. As we've already observed, an additional power of LogfileReaders is that they can also parse the timestamps of their records and deliver them at a rate corresponding to their original creation times.
-
-So, given these pieces, let's try reading data from a logfile, stripping off the timestamps and creating new timestamps that are more spread out, simulating a faster delivery of data.
-
-```
-logger/listener/listen.py \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
-    --transform_slice 1: \
-    --transform_timestamp \
-    --write_logfile /tmp/NBP1700_fast_gyr \
-    --interval 0.1
-```
-Note that we've left off the `--use_timestamps` flag, so the LogfileReader will read its records as fast as it can. We slice off the first field in the record (the old timestamp), add a new one, and write it to a new logfile. We also specify `--interval 0.1` to tell the listener to sleep so that (as close as it can manage) new records come out every 0.1 seconds.
-
-If you append `-v -v` to the above call to place the listener in debug mode, you'll get to see all the inner workings as the LogfileReader instantiates an inner TextFileReader, fetches records from it, slices off the first field, adds a new timestamp and writes it to a date-stamped logfile.
-
-### Listener chaining
-
-While the previous section illustrates the flexibility of the listen.py script, there are still limitations. When running from the command line, **all** transforms are applied to **all** records from **all** readers, before being sent out to **all** writers. In our original custom logger, records sent to the NetworkWriter were prefixed with the instrument name ('gyr1'), while records that were written to the gyr1 logfile (where the prefix would be redundant) were not.
-
-One way around this problem is **listener chaining**.
-
-Chaining is just the process of running multiple instances of the script in parallel, for example:
-
-```
-listen.py --serial port=/dev/ttyr15,baudrate=9600 \
-    --transform_timestamp \
-    --write_logfile /log/current/gyr1 &
-
-listen.py --logfile /log/current/gyr1 \
-    --transform_prefix gyr1 \
-    --write_network :6224
-```
-The first of these scripts timestamps records as they come in and saves them in a log file. The second one reads that logfile, adds the desired prefix, and broadcasts it to the network via UDP. Surprisingly complex workflows can be achieved with chaining.
-
-## Running more complicated loggers with configuration files
+## Logger configuration files
 
 For logger workflows of non-trivial complexity, we recommend that users forgo specifying Readers, Transforms and Writers on the command line in favor of using configuration files.
 
@@ -381,32 +146,11 @@ where gyr_logger.json consists of the JSON definition
    ] 
 }
 ```
-The basic format of a logger configuration file is a JSON definition:
-
-```
-{ 
-  "readers": [... ], 
-  "transforms": [...], 
-  "writers": [...] 
-}
-```
-where the reader/transform/writer definition is a list of dictionaries, each defining one component via two elements: a "class" key defining the type of component, and a "kwargs" key defining its keyword arguments:
-
-```
-{ 
-  "class": "LogfileWriter", 
-  "kwargs": { 
-    "filebase": "/log/current/gyr1" 
-  } 
-}
-```
-If there is only one component defined for readers/transforms/writers, it doesn't need to be enclosed in a list, as with the "readers" example above.
-
-One major advantage of using configuration files is the ability to use ComposedReaders and ComposedWriters, containers that allow efficient construction of sophisticated dataflows. Please see the [simple_logger.py](../test/configs/simple_logger.json), [composed_logger.py](../test/configs/composed_logger.json) and [parallel_logger.py](../test/configs/parallel_logger.json) files in the project's [test/configs](../test/configs) directory for examples, and read the document [OpenRVDAS Configuration Files](configration_files.md) for a more complete description of the configuration file model.
+Use of listen.py script with and without configuration files is described in [The Listener Script](listen_py.md); configuration files are described in detail in [OpenRVDAS Configuration Files](configuration_files.md).
 
 ## Running multiple loggers with logger\_runner.py
 
-The listen.py script is handy for running a single logger from the command line. For more sophisticated logger management, the logger\_runner.py script is provided. The latter takes as its input a configuration file that specifies a dict of configurations that are to be run, where the keys are (convenient) configuration names, and the values are the different configurations themselves.
+The listen.py script is handy for running a single logger from the command line. For more sophisticated logger management, the logger\_runner.py script is provided. The latter takes as its input a JSON file defining a dict of configurations that are to be run, where the keys are (convenient) configuration names, and the values are the different configurations themselves.
 
 ```server/logger_runner.py --config test/config/sample_configs.json -v```
 
@@ -436,15 +180,15 @@ Please see the [server/README.md](../server/README.md) file and [logger_runner.p
 
 ## Managing multiple loggers with logger\_manager.py
 
-The logger\_runner.py script will run a set of loggers and retry them if they fail, but it doesn't provide any way of modifying their behaviors other than killing them all and re-running with a new set of configurations. The [logger_manager.py](../server/logger_manager.py) script is a powerful wrapper around logger\_runner.py.
+The logger\_runner.py script will run a set of loggers and retry them if they fail, but it doesn't provide any way of modifying their behaviors other than killing them all and re-running with a new set of configurations. The [logger\_manager.py](../server/logger_manager.py) script is a powerful wrapper around logger\_runner.py.
 
 ### Cruises, modes and configurations
 
-Before we dive into the use of logger\_manager.py, it's worth pausing for a moment to introduce some concepts that underlie the structure of the logger manager.
+Before we dive into the use of logger\_manager.py, it's worth pausing for a moment to introduce some concepts that underlie the structure of the logger manager. _(Note: much of this section should be moved to [OpenRVDAS Configuration Files](configuration_files.md))._
 
 -   **Logger configuration** - sometimes called just a "configuration" when we're getting sloppy. This is a definition for a set of Readers, Transforms and Writers feeding into each other, such as would be read using the --config argument of the listen.py script. In OpenRVDAS, each logger configuration that is active runs as its own daemon process.  The sample logger configuration below ("knud-\>net") reads NMEA data from the Knudsen serial port, timestamps and labels the record, then broadcasts it via UDP:
 
-```
+  ```
   "knud->net": {
     "host_id": "knud.host",
     "name": "knud->net",
@@ -474,24 +218,25 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
       }
     }
   }
-```
+  ```
 -   **Cruise mode (or just "mode")** - Logger configurations can be grouped into logical collections that will be active at any given time. Certain logger configurations will be running when a vessel is in port; another set may be running while the vessel is at sea, but within territorial waters; yet another when it is fully underway. usually just called a "mode".  The mode definition below indicates that when "port" mode is active, the configurations "gyr1-\>net", "mwx1-\>net", "s330-\>net" and "eng1-\>net" should be running:
 
-```
-"modes": { 
-  "off": {}, 
-  "port": { 
-    "gyr1": "gyr1->net", 
-    "mwx1": "mwx1->net", 
-    "s330": "s330->net", 
-    "eng1": "eng1->net", 
-    "knud": "knud->off", 
-    "rtmp": "rtmp->off" 
-  }, 
-  "underway": {...} 
-}
-```
+  ```
+  "modes": { 
+    "off": {}, 
+    "port": { 
+      "gyr1": "gyr1->net", 
+      "mwx1": "mwx1->net", 
+      "s330": "s330->net", 
+      "eng1": "eng1->net", 
+      "knud": "knud->off", 
+      "rtmp": "rtmp->off" 
+    }, 
+    "underway": {...} 
+  }
+  ```
 -   **Cruise** - in addition to containing cruise metadata (cruise id, provisional start and ending dates) a cruise definition contains a collection of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes in which those configurations are to be run. A cruise definition file (such as in [test/configs/sample\_cruise.json](../test/configs/sample\_cruise.json)) defines the loggers for a cruise and the configurations they may take, as well as the modes into which they are grouped.  
+  
     *NOTE: If a vessel is using an ROV, it is entirely reasonable for the ROV to have be its own cruise id and definition files. As a result, multiple cruises may be loaded at the same time and can be managed independently by the same logger\_manager: the vessel's cruise (e.g. id NBP1700) and the ROV's (e.g. id NBP1700-GL005).*
 
 It is worth noting that in OpenRVDAS, a "logger" does not exist as a separate entity. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the sample cruise definition file, as the logger definition ("knud") is just a list of the configurations that are responsible for handling the
@@ -549,7 +294,7 @@ Please see the [server/README.md](../server/README.md) file and [logger_manager.
 
 ### Managing loggers via a web interface
 
-There is a still-rudimentary Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [OpenRVDAS Web Interface (web)](https://docs.google.com/document/d/1hDh-IO0xXiW8nUbxl2I8qZcKF01mvIB_CrHDD5cUIyU) and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
+There is a still-rudimentary Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [OpenRVDAS Web Interface (web)](django_interface.md) and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
 
 ## Appendix
 
@@ -575,15 +320,11 @@ The rvdas logger code is designed to be minimally system dependent, and to run o
 ```
 git clone https://github.com/davidpablocohn/openrvdas.git
 ```
-Otherwise, you can download it by visiting
-
-[[https://github.com/davidpablocohn/openrvdas/archive/master.zip](https://github.com/davidpablocohn/openrvdas/archive/master.zip)
-
-and uncompressing the retrieved archive.
+Otherwise, you can download it by visiting [https://github.com/davidpablocohn/openrvdas/archive/master.zip](https://github.com/davidpablocohn/openrvdas/archive/master.zip) and uncompressing the retrieved archive.
 
 You should be able to cd to the openrvdas directory, and begin using the logger/listener/listen.py script directly.
 
-The use of some OpenRVDAS components (such as SerialReader, DatabaseReader and DatabaseWriter), as well as the Django-based web interface, may require additional Python and system packages to be installed and configured. The details of these requirements are described in [the project's INSTALL.md file](../INSTALL.md), and in the [database/README.md](../database/README.md) and [django_gui/README.md](../django_gui/README.md) files of the relevant components.
+Using some of the OpenRVDAS components (such as SerialReader, DatabaseReader and DatabaseWriter), as well as the Django-based web interface, may require additional Python and system packages to be installed and configured. The details of these requirements are described in [the project's INSTALL.md file](../INSTALL.md), and in the [database/README.md](../database/README.md) and [django_gui/README.md](../django_gui/README.md) files of the relevant components.
 
 ### Testing
 
@@ -603,7 +344,7 @@ python3 -m unittest discover logging.readers
 ```
 To run all tests, just omit the module path.
 
-Note that some tests are timing dependent and may fail if all tests are run at once (via python3 -m unittest discover from the home directory) on slower systems.[^5] If you encounter test failures, try re-running just the tests the directory that failed.
+Note that some tests are timing dependent and may fail if all tests are run at once (via `python3 -m unittest discover` from the home directory) on slower systems.[^5] If you encounter test failures, try re-running just the tests the directory that failed.
 
 ### Using Stored/Simulated Data
 
@@ -627,9 +368,9 @@ tries to create virtual serial port /dev/ttyr15 and feeds it with data from the 
 
 Note that if you wish to actually create virtual serial ports in /dev (perhaps corresponding to some port.tab definition), you will need to run the script as root, and if those ports actually exist, the script *WILL WIPE THEM OUT*.
 
-Because of this, it is recommended that you specify a different location for your simulated ports, such as /tmp/ttyr15, etc.
+Because of this, we recommend that you specify a different location for your simulated ports, such as /tmp/ttyr15, etc.
 
-To simplify the creation/testing, simulate_serial.py can also take a JSON-format[^6] configuration file such as the one in test/serial_sim.json, specifying a complete set of virtual serial port-log file pairings:
+To simplify the creation/testing, simulate_serial.py can also take a JSON-format[^6] configuration file such as the one in [test/serial\_sim.json](../test/serial_sim.json), specifying a complete set of virtual serial port-log file pairings:
 
 ```
 logger/utils/simulate_serial.py --config test/serial_sim.json
@@ -640,7 +381,15 @@ Simulating a system that takes its input from serial ports is more involved. Ple
 
 ### Derived data values
 
-See the [Derived Data section of the Creating Loggers document (web)](https://docs.google.com/document/d/1rrfwRCgyHqZsdkFgrmk04QC1fcgZ0Kpvt2Z7LpycIok/edit#heading=h.cgtt70evv4d9) for the state of derived data loggers.
+See the [Derived Data Loggers document](derived_data.md) for the state of derived data loggers.
+
+### Generalized dataflow
+
+The pipeline implemented by listen.py is convenient, but necessarily limiting. A more general model supporting an arbitrary dataflow graph would allow more efficient data processing.
+
+An execution model in which each component ran as a node in its own thread (or even process) and pushed its output to the input queue of other specified nodes doesn't seem like it would be all that hard to define or implement.
+
+![General Dataflow Model](images/general_dataflow.png)
 
 ### Automatic component discovery and incorporation
 
@@ -650,15 +399,15 @@ There are plenty of desirable features that we've not yet figured out how to imp
 
 ## More Documentation
 
-For now, documentation is online in a Google Docs folder in [http://tinyurl.com/openrvdas-docs](http://tinyurl.com/openrvdas-docs);
+For now, documentation is in transition from an online Google Docs folder in [http://tinyurl.com/openrvdas-docs](http://tinyurl.com/openrvdas-docs) to [Github-based markdown in this directory](.).
 
 Some other relevant documents are:
 
+-   [OpenRVDAS Django Web Interface](django_interface.md)
 -   [OpenRVDAS Components](components.md)
 -   [Simulating Serial Input](simulating_serial_input.md)
--   [Creating Loggers (web)](https://docs.google.com/document/d/1rrfwRCgyHqZsdkFgrmk04QC1fcgZ0Kpvt2Z7LpycIok/edit)
 -   [Running OpenRVDAS Loggers (web - deprecated)](https://docs.google.com/document/d/1w_wkdprtA31Fx4yTHLL6WoTtFrPmE3jskTeV6YSuOJI/edit)
--   [NMEA Parsing](https://docs.google.com/document/d/1WHrORXoImrc5yULegoyN-mutmfdn4E5XtUuF7mWt_lY/edit)
+-   [NMEA Parsing](nmea_parser.md)
 
 [^1]: Recommended version of Python is 3.6 or higher, but most listener     code has been verified to run on 3.5 and higher. Server code such as     logger\_runner.py and logger\_manager.py may experience problems on     3.5 due to changes in the async module.
 

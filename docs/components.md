@@ -8,16 +8,16 @@ and Transform components. For background on using them, please see the
 
 ## Contents
 
-  * [Introduction to Components](#introduction-to-components)
-  * [Using the Listener Class](#using-the-listener-class)
-  * [Composed Readers and Writers](#composed-readers-and-writers)
-  * [Using Configuration Files](#using-configuration-files)
-  * [Components](#components)
-     * [Readers](#readers)
-     * [Writers](#writers)
-     * [Transforms](#transforms)
-     * [Future Components](#future-components)
-  * [Appendix: Record Format Compatibility](#appendix-record-format-compatibility)
+* [Introduction to Components](#introduction-to-components)
+* [Using the Listener Class](#using-the-listener-class)
+* [Composed Readers and Writers](#composed-readers-and-writers)
+* [Using Configuration Files](#using-configuration-files)
+* [Components](#components)
+  * [Readers](#readers)
+  * [Writers](#writers)
+  * [Transforms](#transforms)
+  * [Future Components](#future-components)
+* [Appendix: Record Format Compatibility](#appendix-record-format-compatibility)
 
 
 ## Introduction to Components

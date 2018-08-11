@@ -12,13 +12,13 @@ Please see the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md) to get s
 
 Other relevant documents are:
 
-* Running OpenRVDAS Loggers - how to use the core utility scripts
+* [The Listener Script - listen.py](listen_py.md) - how to use OpenRVDAS's core utility script
 * [Configuration Files](configuration_files.md) - how to define configuration files to simplify running loggers with listen.py
 * [OpenRVDAS Components](components.md) - what components exist and what they do
-* NMEA Parsing - how to work with the included NMEA parser 
 * [Simulating Serial Input](simulating_serial_input.md) - using the simulate_serial.py script to create virtual serial ports for development and testing
-* OpenRVDAS User Interface - an introduction to the web-based GUI
+* [OpenRVDAS Django Web User Interface](django_interface.md) - an introduction to the web-based GUI
+* [NMEA Parsing](nmea_parser.md) - how to work with the included NMEA parser 
 
-A short link for the folder containing these documents is http://tinyurl.com/openrvdas-docs.
+A very rudimentary project website is available at [OpenRVDAS.org](http://openrvdas.org)
 
 *DISCLAIMER*: THIS CODE IS EXPERIMENTAL AND STILL IN THE EARLY STAGES OF DEVELOPMENT. IT SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON, ESPECIALLY NOT IN ANY APPLICATION WHERE ITS FAILURE COULD RESULT IN INJURY, LOSS OF LIFE, PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
