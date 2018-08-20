@@ -271,7 +271,7 @@
         var button = document.getElementById(logger_name + "_config_button");
         var error_td = document.getElementById(logger_name + "_error");
         if (button) {
-          button.innerHTML = logger_config;
+          button.innerHTML = logger_config || "no config";
 
           // We'd like a way to highlight when things change externally,
           // e.g. by turning button yellow for a couple of seconds. But

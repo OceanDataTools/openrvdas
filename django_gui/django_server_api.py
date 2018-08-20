@@ -77,17 +77,32 @@ class DjangoServerAPI(ServerAPI):
     logger_id. If mode is specified, get logger's config in that mode
     (or None if no config). If mode is None, get logger's
     current_config."""
-    if mode is None:
-      logger = self._get_logger_object(cruise_id, logger_id)
-      return logger.config
-    else:
-      try:
+    try:
+      if mode is None:
+        logger = self._get_logger_object(cruise_id, logger_id)
+        return logger.config
+      else:
         return LoggerConfig.objects.get(cruise__id=cruise_id,
                                         logger__name=logger_id,
                                         modes__name=mode)
-      except LoggerConfig.DoesNotExist:
-        raise ValueError('No such logger/mode (%s/%s) in cruise %s' %
-                         (logger_id, mode, cruise_id))
+    except LoggerConfig.DoesNotExist:
+      # If we didn't find a config, maybe there isn't one, which we
+      # should warn about. But maybe the mode or cruise_id themselves
+      # are undefined, which should be an error.
+      if not Cruise.objects.filter(id=cruise_id).count():
+        raise ValueError('No such cruise id "%s" defined' % cruise_id)
+      if not Logger.objects.filter(name=logger_id).count():
+        raise ValueError('No logger "%s" defined for cruise id "%s"' %
+                         (logger_id, cruise_id))
+      if not Mode.objects.filter(name=mode).count():
+        raise ValueError('No such mode "%s" defined for cruise id "%s"' %
+                         (mode, cruise_id))
+
+      # If cruise, logger and mode are defined, we're just lacking a
+      # config for this particular combination.
+      logging.warning('No such logger/mode (%s/%s) in cruise %s',
+                      logger_id, mode, cruise_id)
+      return None
 
   #############################
   def _get_logger_config_object_by_name(self, cruise_id, config_name):
@@ -214,8 +229,9 @@ class DjangoServerAPI(ServerAPI):
     current config."""
     config = self._get_logger_config_object(cruise_id, logger_id, mode)
     if not config:
-      raise ValueError('No config found for logger %s and cruise %s' %
-                       (logger_id, cruise_id))
+      logging.debug('No config found for logger %s and cruise %s',
+                    logger_id, cruise_id)
+      return None
     return config.name
 
   ############################
@@ -240,10 +256,9 @@ class DjangoServerAPI(ServerAPI):
       new_config = self._get_logger_config_object(cruise_id,
                                                   logger_id=logger_id,
                                                   mode=mode)
+      # Save new config and note that its state has been updated
       logger.config = new_config
       logger.save()
-
-      # Save that we've updated the logger's config
       LoggerConfigState(logger=logger, config=new_config, pid=0,
                         running=False).save()
 
@@ -376,7 +391,7 @@ class DjangoServerAPI(ServerAPI):
         status[lcs_timestamp] = {}
       id = cruise_id + ID_SEPARATOR + lcs.logger.name
       status[lcs_timestamp][id] = {
-        'config':lcs.config.name,
+        'config':lcs.config.name if lcs.config else None,
         'running':lcs.running,
         'failed':lcs.failed,
         'pid':lcs.pid,

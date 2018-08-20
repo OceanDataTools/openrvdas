@@ -184,6 +184,7 @@ class TestDjangoServerAPI(TestCase):
 
     with self.assertRaises(ValueError):
       api.get_configs('test_1', 'invalid_mode')
+
     self.assertEqual(api.get_configs('test_1', 'port'),
                       {'gyr1': {'gyr1':'config gyr1->net',
                                 'name': 'gyr1->net'},
