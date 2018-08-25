@@ -41,7 +41,7 @@ class DjangoServerAPI(ServerAPI):
     self.callbacks = {}
 
     # Test whether Django is in fact initialized. If we get a DoesNotExist
-    # error, that means that our tables are working. 
+    # error, that means that our tables are working.
     try:
       dummy_logger = Logger.objects.get(name='dummy')
     except Logger.DoesNotExist:
@@ -51,7 +51,6 @@ class DjangoServerAPI(ServerAPI):
                     'see django_gui/README.md section on "makemigrations" '
                     'for instructions.')
       sys.exit(1)
-      
 
   #############################
   def _get_cruise_object(self, cruise_id):
@@ -125,7 +124,7 @@ class DjangoServerAPI(ServerAPI):
   def get_cruise_config(self, cruise_id):
     """Return cruise config for specified cruise id."""
     return self._get_cruise_object(cruise_id)
-  
+
   ############################
   def get_mode(self, cruise_id):
     """Return cruise config for specified cruise id."""
@@ -161,7 +160,8 @@ class DjangoServerAPI(ServerAPI):
     return {
       logger.name:{'configs':self.get_logger_config_names(cruise_id,
                                                           logger.name)}
-            for logger in loggers}
+      for logger in loggers
+    }
 
   ############################
   def get_logger(self, cruise_id, logger):
@@ -250,7 +250,7 @@ class DjangoServerAPI(ServerAPI):
 
     # Store the fact that our mode has been changed.
     CruiseState(cruise=cruise, current_mode=mode_obj).save()
-    
+
     for logger in Logger.objects.filter(cruise=cruise):
       logger_id = logger.name
       new_config = self._get_logger_config_object(cruise_id,
@@ -378,7 +378,7 @@ class DjangoServerAPI(ServerAPI):
     logger. If since_timestamp is specified, retrieve all status reports
     since that time."""
     status = {}
-    
+
     def _add_lcs_to_status(lcs):
       """Helper function - add retrieved record to the status report."""
       # May be loggers that haven't been run yet
@@ -441,7 +441,7 @@ class DjangoServerAPI(ServerAPI):
       return [(message.timestamp.timestamp(), message.source,
                message.user, message.log_level, message.message)]
     else:
-      since_datetime = datetime_obj_from_timestamp(since_timestamp)      
+      since_datetime = datetime_obj_from_timestamp(since_timestamp)
       logs = logs.filter(timestamp__gt=since_datetime).order_by('timestamp')
       return [(message.timestamp.timestamp(), message.source, message.user,
                message.log_level, message.message) for message in logs]
@@ -450,9 +450,9 @@ class DjangoServerAPI(ServerAPI):
   # Methods to modify the data store
   ############################
   def load_cruise(self, cruise_config, config_filename=None):
-    """Add a complete cruise configuration (id, modes, configs, 
+    """Add a complete cruise configuration (id, modes, configs,
     default) to the data store."""
-    
+
     cruise_def = cruise_config.get('cruise', {})
     loggers = cruise_config.get('loggers', None)
     modes = cruise_config.get('modes', None)
@@ -460,12 +460,12 @@ class DjangoServerAPI(ServerAPI):
     configs = cruise_config.get('configs', None)
 
     if loggers is None:
-      raise ValueError('Cruise definition has no loggers')  
+      raise ValueError('Cruise definition has no loggers')
     if modes is None:
       raise ValueError('Cruise definition has no modes')
     if configs is None:
       raise ValueError('Cruise definition has no configs')
-    
+
     ################
     # Begin by creating the Cruise object. If no cruise name, use
     # filename. If no filename, make up a sequential name.
@@ -523,7 +523,7 @@ class DjangoServerAPI(ServerAPI):
 
       # Find the corresponding configuration
       for config_name in logger_configs:
-        config_spec = configs.get(config_name, None)        
+        config_spec = configs.get(config_name, None)
         if config_spec is None:
           raise ValueError('Config %s (declared by logger %s) not found' %
                            (config_name, logger_name))
@@ -533,7 +533,7 @@ class DjangoServerAPI(ServerAPI):
 
         # A minor hack: fold the config's name into the spec
         if not 'name' in config_spec:
-          config_spec['name'] = config_name        
+          config_spec['name'] = config_name
         config = LoggerConfig(name=config_name, cruise=cruise, logger=logger,
                               config_json=json.dumps(config_spec))
         config.save()
@@ -543,14 +543,14 @@ class DjangoServerAPI(ServerAPI):
           if logger_config_name and logger_config_name == config_name:
             try:
               logging.info('modes: %s', Mode.objects.filter(name=mode_name, cruise=cruise))
-              
+
               mode = Mode.objects.get(name=mode_name, cruise=cruise)
             except Mode.DoesNotExist:
               raise ValueError('Mode %s does not exist?!?' % mode_name)
             logging.info('    Associating config %s with mode %s',
                          config_name, mode_name)
             config.modes.add(mode)
-            
+
             # Is this config in the default mode of this logger?
             if mode_name == default_mode:
               logging.info('    Setting logger %s to default config: %s',

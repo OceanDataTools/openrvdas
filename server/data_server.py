@@ -5,14 +5,16 @@ The goal is to serve logger data, e.g. for widgets and displays. The
 class is initialized with a websocket.
 
 Calling get_fields() listens on the websocket for a JSON string
-encoding a list of pairs:
+encoding a dict
 
-  [(field_1_name, field_1_seconds), (field_2_name, field_2_seconds), ...]
+  {field_1_name: {'seconds': num_secs},
+   field_2_name: {'seconds': num_secs},
+   ...}
 
-where field_X_seconds is a float representing the number of seconds of
+where seconds is a float representing the number of seconds of
 back data being requested.
 
-This field list is passed to serve_fields(), which retrieves back data
+This field dict is passed to serve_fields(), which retrieves back data
 (in this implementation using a DatabaseReader), then checks back
 every <interval> seconds for more data to send along.
 
@@ -51,14 +53,14 @@ LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 ################################################################################
 class DataServer:
   ############################
-  def __init__(self, websocket, field_list=None, interval=1,
+  def __init__(self, websocket, fields=None, interval=1,
                host=DEFAULT_DATABASE_HOST, user=DEFAULT_DATABASE_USER,
                password=DEFAULT_DATABASE_PASSWORD, database=DEFAULT_DATABASE):
     self.websocket = websocket
     # Which fields to serve to client
     self.interval = interval
-    self.field_list = field_list
-    self.field_list_lock = threading.Lock()
+    self.fields = fields
+    self.fields_lock = threading.Lock()
 
     self.host = host
     self.user = user
@@ -72,8 +74,8 @@ class DataServer:
   async def serve_data(self):
     """Start serving on websocket. Assumes we've got our own event loop."""
 
-    field_list = await self.get_field_list()
-    await self.serve_fields(field_list)
+    fields = await self.get_fields()
+    await self.serve_fields(fields)
 
   ############################
   def quit(self):
@@ -82,7 +84,7 @@ class DataServer:
 
   ############################
   @asyncio.coroutine
-  async def get_field_list(self):
+  async def get_fields(self):
     """Get the fields we're interested in having served.
     """
     message = await self.websocket.recv()
@@ -92,14 +94,14 @@ class DataServer:
       return
 
     try:
-      self.field_list = json.loads(message)
-      return self.field_list
+      self.fields = json.loads(message)
+      return self.fields
     except json.JSONDecodeError:
       logging.info('get_fields(): unparseable JSON request: "%s"', message)
     
   ############################
   @asyncio.coroutine
-  async def serve_fields(self, field_list):
+  async def serve_fields(self, fields):
     """Serve data, if it exists, from database, if it exists, using default
     database location, tables, user and password.
 
@@ -107,18 +109,21 @@ class DataServer:
     quick first pass, and will therefore follow me to my grave and haunt
     you for years to come. For the love of Guido, please clean this up.
     """
-    for (field_name, num_secs) in field_list:
-      logging.info('Requesting field: %s, %g secs.', field_name, num_secs)
+    for (field_name) in fields:
+      logging.info('Requesting field: %s, %g secs.', field_name,
+                   fields[field_name].get('seconds', 0))
       
     # Get requested back data. Note that we may have had different
     # back data time spans for different fields. Because some of these
     # might be extremely voluminous (think 30 minutes of winch data),
     # take the computational hit of initially creating a separate
     # reader for each backlog.
-    fields = []
     back_data = {}
-    for (field_name, num_secs) in field_list:
-      fields.append(field_name)
+    for (field_name) in fields:
+      num_secs = fields[field_name].get('seconds', 0)
+      # Only get back seconds for fields that actually ask for it.
+      if not num_secs:
+        continue
       if not num_secs in back_data:
         back_data[num_secs] = []
       back_data[num_secs].append(field_name)
@@ -132,7 +137,7 @@ class DataServer:
       logging.debug('Creating DatabaseReader for %s', field_list)
       logging.debug('Requesting %g seconds of timestamps from %f-%f',
                       num_secs, now-num_secs, now)
-      reader = DatabaseReader(fields, self.database, self.host,
+      reader = DatabaseReader(field_list, self.database, self.host,
                               self.user, self.password)
       num_sec_results = reader.read_time_range(start_time=now-num_secs)
       logging.debug('results: %s', num_sec_results)
@@ -140,7 +145,7 @@ class DataServer:
                      
     # Now that we've gotten all the back results, create a single
     # DatabaseReader to read all the fields.
-    reader = DatabaseReader(fields, self.database, self.host,
+    reader = DatabaseReader(fields.keys(), self.database, self.host,
                             self.user, self.password)
     max_timestamp_seen = 0
     
@@ -161,8 +166,8 @@ class DataServer:
       # What's the timestamp of the most recent result we've seen?
       # Each value should be a list of (timestamp, value) pairs. Look
       # at the last timestamp in each value list.
-      for field in results:
-        last_timestamp = results[field][-1][0]
+      for field_name in results:
+        last_timestamp = results[field_name][-1][0]
         max_timestamp_seen = max(max_timestamp_seen, last_timestamp)
 
       # Bug's corner case: if we didn't retrieve any data on the first

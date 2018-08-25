@@ -81,7 +81,7 @@
 
   function initialize_widget() {
   // Widget-specific code
-    var num_secs = 30;
+    var num_secs = 1;
     var field_list = "{{ field_list }}";
     var  fields = field_list.split(',');
     if (fields.length == 1 && fields[0].length == 0) {
@@ -130,9 +130,9 @@
 
     // Create the initial message we want the websocket to send
     // on our behalf.
-    var message = [];
+    var message = {};
     for (var i = 0; i < fields.length; i++) {
-      message.push([fields[i], num_secs]);
+      message[fields[i]] = {seconds: num_secs};
     }
     console.log("Initialization message: " + JSON.stringify(message));
     return message;
