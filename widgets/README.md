@@ -23,27 +23,50 @@ functionality, attempting to connect to the data server and
 graphically displaying the data they receive in a table, line chart,
 map or dial.
 
+For example, when the logger manager is running a data server on the
+project's included test data, opening [demo.html](demo.html) in a web
+browser should generate the following live display, illustrating the
+use of a TimelineWidget, DialWidget, and a set of TextWidgets:
+
+![demo.html image](images/demo_html.png)
+
+A fourth widget type, MapWidget, is demonstrated by
+[map_demo.html](map_demo.html) (note: example image does not show an
+actual ship track):
+
+![map_demo.html image](images/map_demo_html.png)
+
 ## Demo files
 
 The demo files in this directory assume that a logger manager is
 running with a websocket server active on port 8765 and the sample
-cruise definition from test/configs/sample_cruise.json loaded and in
-underway mode:
+cruise definition from
+[test/configs/sample_cruise.json](../test/configs/sample_cruise.json)
+loaded and in underway mode:
 
   ```
+  # Create simulated serial ports and serve stored data in background
+  logger/utils/simulate_serial.py \
+      --config test/serial_sim.json  --loop &
+
+  # Start logger manager, tell it to initialize a server on port 8765,
+  # then load and run sample cruise in "underway" mode
   server/logger_manager.py --websocket :8765 \
       --config test/configs/sample_cruise.json \
       --mode underway
   ```
 
+Note that 'underway' mode attempts to create DatabaseWriters and write
+to whatever database has been configured in database/settings.py (see
+[database/README.md](../database/README.md) for details). The data
+server reads and serves its data from this database, so if none is
+configured, no data will be served and displayed.
+
 ## Sample Use
 
-When the logger manager script is running with a websocket, e.g.
-
-```server/logger_manager.py --websocket :8765```
-
-it will attempt to serve data requests (see the [OpenRVDAS server
-README.md](../server/README.md) for details).
+When the logger manager script is running as described above, it will
+attempt to serve data requests (see the [OpenRVDAS server
+README.md](../server/README.md) for details on running the logger manager).
 
 The widgets defined in this directory, when initialized, will attempt
 to connect to the server's websocket and retrieve data for display. To
@@ -245,7 +268,7 @@ OpenRVDAS is made available  under the MIT license:
 
   The above copyright notice and this permission notice shall be included in all
   copies or substantial portions of the Software.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -254,7 +277,7 @@ OpenRVDAS is made available  under the MIT license:
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
   ```
-  
+
 ## Additional Licenses
 
 Highcharts is a software library made available by
@@ -274,17 +297,17 @@ Creative Commons (CC) Attribution-NonCommercial licence.
   Copyright (c) 2010-2018, Vladimir Agafonkin
   Copyright (c) 2010-2011, CloudMade
   All rights reserved.
-  
+
   Redistribution and use in source and binary forms, with or without modification, are
   permitted provided that the following conditions are met:
-  
+
      1. Redistributions of source code must retain the above copyright notice, this list of
         conditions and the following disclaimer.
-  
+
      2. Redistributions in binary form must reproduce the above copyright notice, this list
         of conditions and the following disclaimer in the documentation and/or other materials
         provided with the distribution.
-  
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
   EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
@@ -295,4 +318,3 @@ Creative Commons (CC) Attribution-NonCommercial licence.
   TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   ```
-  

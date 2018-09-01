@@ -93,11 +93,29 @@ For full details on the use of listen.py, run:
   logger/listener/listen.py --help
 ```
 
-### Running logger_runner.py and logger_manager.py
-Server scripts for managing multiple loggers are described in the [server/README.md file](servers/README.md).
+### Running logger\_runner.py and logger\_manager.py
+
+Server scripts for managing multiple loggers are described in the
+[server/README.md file](servers/README.md).
 
 ### Running the Django-based web interface
-Installation and running of the Django-based web interface is described in the [django_gui/README.md file](django_gui/README.md).
+
+Installation and running of the Django-based web interface is
+described in the [django_gui/README.md file](django_gui/README.md):
+
+![Sample Django Cruise Edit s330](docs/images/sample_cruise_edit_s330.png)
+
+### Display widgets
+
+A still-rudimentary display functionality described in
+[widgets/README.md](widgets/README.md) allows display of live (or
+historical) data in web browser windows. Currently supported widget
+types are tabular text values, timeline charts, dials and map-based
+tracks:
+
+![demo.html image](widgets/images/demo_html.png)
+
+![map_demo.html image](widgets/images/map_demo_html.png)
 
 ## Contributing
 
@@ -108,7 +126,7 @@ opportunities for participating in code development.
 
 This code is made available under the MIT license:
 
-Copyright (c) 2017 David Pablo Cohn
+Copyright (c) 2017-2018 David Pablo Cohn
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -12,7 +12,7 @@
 
   <!-- Style sheet for this map demo -->
   <link rel="stylesheet" href="static/css/map_demo.css" />
-  
+
 </head>
 <body>
   <div id="map_container">
@@ -36,7 +36,7 @@
     }
 
     var tile_server = {
-        source: 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?' + 
+        source: 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?' +
             'access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVyc' +
             'TA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">' +
@@ -51,11 +51,11 @@
     // From Naesk: https://grokbase.com/t/gg/d3-js/1372gq18j9/geojson-maps
     //var map_overlays = ['sample_geojson/continent_Antarctica_subunits.json'];
 
- 
+
     var widget_list = [new MapWidget('map', map_fields,
                                      fields_to_lat_lon,
                                      tile_server, map_overlays)];
-      
+
     var widget_server = new WidgetServer(widget_list, 'localhost:8765');
     widget_server.serve();
   </script>

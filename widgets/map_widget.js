@@ -148,7 +148,7 @@ function MapWidget(container, fields, fields_to_lat_lon,
                                            "coordinates":[lat_lon[1],
                                                           lat_lon[0]]}}
                           ]
-                         };            
+                         };
             L.geoJson(points, {
                 pointToLayer: function (feature, latlng) {
                     return L.circleMarker(latlng,

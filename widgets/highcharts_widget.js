@@ -90,7 +90,6 @@ have two properties:
 
 ********************************************************************************/
 
-
 /**********************
 // DialWidget definition
 
@@ -323,4 +322,3 @@ function TimelineWidget(container, fields, y_label='',
     }
   }
 }
-

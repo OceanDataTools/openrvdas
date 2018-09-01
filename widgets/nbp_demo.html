@@ -64,7 +64,7 @@
         <td class="val_td"><span id="rel_stbd_speed"></span> kt</td>
       </tr>
 
-          
+
 
       <tr>
         <td class="name_td">Position</td>
@@ -133,7 +133,7 @@
   var WEBSOCKET_SERVER = "localhost:8765";
 
   var widget_list = [];
-  
+
 
   //////////////////
   // A dial
@@ -159,7 +159,7 @@
                                { MwxPortRelWindSpeed: {name: 'Port Rel Wind Speed'}}));
   widget_list.push(new TextWidget('rel_stbd_speed',
                                { MwxStbdRelWindSpeed: {name: 'Stbd Rel Wind Speed'}}));
-  
+
   var rel_wind_line_fields = {
     MwxPortRelWindSpeed: {
       name: 'Port Relative Wind Speed',
@@ -213,7 +213,7 @@
                                { RTMPTemp: {name: 'Remote Temp'}}));
   widget_list.push(new TextWidget('air_temp',
                                { MwxAirTemp: {name: 'Air Temp'}}));
- 
+
 
   widget_list.push(new TextWidget('eng_voltage',
                                { EngPowerVoltage: {name: 'Eng Power Voltage'}}));
@@ -238,7 +238,7 @@
                                { EngFreezer2C: {name: 'Freezer 2 Temp'}}));
 
   var widget_server = new WidgetServer(widget_list, 'localhost:8765');
-  widget_server.serve();  
+  widget_server.serve();
 </script>
 </body>
 </html>
