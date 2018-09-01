@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Highcharts Examples</title>
+
+    <script src="static/js/jquery/jquery-3.1.1.min.js"></script>
+
+    <!-- For highcharts-widget.js -->
+    <script src="static/js/highcharts/code/highstock.js"></script>
+    <script src="static/js/highcharts/code/highcharts-more.js"></script>
+    <script src="static/js/highcharts/code/modules/data.js"></script>
+    <script src="static/js/highcharts/code/modules/exporting.js"></script>
+    <script src="static/js/highcharts/code/modules/export-data.js"></script>
+
+    <script src="highcharts_widget.js"></script>    
+    <script src="text_widget.js"></script>
+    <script src="widget_server.js"></script>
+
+    <style type="text/css">
+      #ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      #ship_table td, #ship_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="line-container" style="height: 400px; min-width: 310px"></div>
+    <div id="dial-container" style="height: 400px; min-width: 310px"></div>
+    <table id=ship_table>
+      <tr>
+        <td>Position:</td>
+        <td><span id="gps_lat_container"></span></td>
+        <td><span id="gps_lon_container"></span></td>
+      </tr>
+      <tr>
+        <td>Attitude:</td>
+        <td><span id="pitch_container"></span></td>
+        <td><span id="roll_container"></span></td>
+      </tr>
+    </table>
+
+    <script type="text/javascript">
+      //////////////////////////////////////
+      // Start of widget code
+      var WEBSOCKET_SERVER = "localhost:8765";
+
+      var widget_list = [];
+  
+      //////////////////
+      // A line widget
+      var line_fields = {
+        S330Pitch: {
+          name: "Pitch",
+          seconds: 30
+        },
+        S330Roll: {
+          name: "Roll",
+          seconds: 30
+        }
+      };
+      widget_list.push(new TimelineWidget('line-container',
+                                          line_fields, 'Degrees'));
+
+      //////////////////
+      // A dial
+      var dial_fields = {
+        MwxPortRelWindDir: {
+          name: 'Port Relative Wind',
+          color: 'red',
+        },
+        MwxStbdRelWindDir: {
+          name: 'Stbd Relative Wind',
+          color: 'green',
+        }
+      };
+      widget_list.push(new DialWidget('dial-container', dial_fields));
+
+      //////////////////
+      // Some basic row data, both singular and compound
+      var gps_lat_fields = {
+        S330Lat: {
+          name: "Latitude",
+          transform: function(val) {
+            return 'Lat ' + Math.round(val*100)/10000  + '°';
+          }
+        },
+        S330NorS: {
+          name: "N/S",
+        }
+      };
+      widget_list.push(new TextWidget('gps_lat_container', gps_lat_fields));
+      
+      var gps_lon_fields = {
+        S330Lon: {
+          name: "Longitude",
+          transform: function(val) {
+            return 'Lon ' + Math.round(val*100)/10000  + '°';
+          }
+        },
+        S330EorW: {
+          name: "E/W",
+        }
+      };
+      widget_list.push(new TextWidget('gps_lon_container', gps_lon_fields));
+      
+      var pitch_fields = {
+        S330Pitch: {
+          name: "Pitch",
+          transform: function(val) { return 'Pitch ' + val + '°'; }
+        }
+      };
+      widget_list.push(new TextWidget('pitch_container',
+                                      pitch_fields, 'Degrees'));
+      
+      var roll_fields = {
+      S330Roll: {
+      name: "Roll",
+      transform: function(val) { return 'Roll ' + val + '°'; }
+      }
+      };
+      widget_list.push(new TextWidget('roll_container', roll_fields, 'Degrees'));
+      
+      var widget_server = new WidgetServer(widget_list, 'localhost:8765');
+      widget_server.serve();
+
+    </script>
+  </body>
+</html>

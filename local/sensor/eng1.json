@@ -8,7 +8,7 @@
         "fields": {
 	    "PowerVoltage": "EngPowerVoltage",
 	    "CaseTemp": "EngCaseTemp",
-	    "Pump1Float": "EngPump1Flow",
+	    "Pump1Flow": "EngPump1Flow",
 	    "Pump2Flow": "EngPump2Flow",
 	    "Pump3Flow": "EngPump3Flow",
 	    "SeisAirPressure": "EngSeisAirPressure",

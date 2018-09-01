@@ -1,0 +1,78 @@
+#map-container { position: relative; top:20; width: 100%; height: 800px; }
+#map { position: absolute; top:0; bottom:0; right:0; left:0; }
+
+.custom .leaflet-popup-tip,
+.custom .leaflet-popup-content-wrapper {
+    background: #e93434;
+    color: #ffffff;
+}
+.info {
+    background:#fff;
+    position:absolute;
+    width:400px;
+    top:10px;
+    right:10px;
+    border-radius:2px;
+}
+.info .item {
+    display:block;
+    border-bottom:1px solid #eee;
+    padding:10px;
+    text-decoration:none;
+}
+.info .item small { color:#888; }
+.info .item:hover,
+.info .item.active { background:#f8f8f8; }
+.info .item:last-child { border-bottom:none; }
+
+.leaflet-popup-content {
+    width:380px;
+}
+
+.tabs {
+    position:relative;
+    min-height:200px;
+    clear:both;
+    margin:25px 0;
+}
+.tab {
+    float:left;
+    display: none;
+}
+.tab:first-of-type {
+    display: inline-block;
+}
+.tabs-link {
+    position: relative;
+    top: -14px;
+    height: 20px;
+    left: -40px;
+}
+.tab-link {
+    background:#eee;
+    display: inline-block;
+    padding:10px;
+    border:1px solid #ccc;
+    margin-left:-1px;
+    position:relative;
+    list-style-type: none;
+    left:1px;
+    top:1px;
+    cursor:pointer;
+}
+.tab-link {
+    background:#f8f8f8;
+}
+.pointContent {
+    background:white;
+    position:absolute;
+    top:28px;
+    left:0;
+    right:0;
+    bottom:0;
+    padding:20px;
+    border:1px solid #ccc;
+}
+.tab:target {
+    display: block;
+}

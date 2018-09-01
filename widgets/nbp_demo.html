@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NBP UNOLS Widget Example</title>
+
+    <style type="text/css">
+      #ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      #ship_table td, #ship_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      #name_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+      }
+      #val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: right;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="static/js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="static/js/highcharts/code/highstock.js"></script>
+    <script src="static/js/highcharts/code/highcharts-more.js"></script>
+    <script src="static/js/highcharts/code/modules/data.js"></script>
+    <script src="static/js/highcharts/code/modules/exporting.js"></script>
+    <script src="static/js/highcharts/code/modules/export-data.js"></script>
+
+    <script src="highcharts_widget.js"></script>
+    <script src="text_widget.js"></script>
+    <script src="widget_server.js"></script>
+
+    <table class="ship_table">
+      <tr>
+        <td>
+
+    <table class="ship_table">
+      <tr>
+        <td colspan=4>
+          <div id="rel_wind_dial" style="min-width: 350px"></div>
+        </td>
+        <td colspan=4>
+          <div id="wind_speed_line" style="min-width: 300px"></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="name_td" style="color:red">Port Wind Dir</td>
+        <td class="val_td"><span id="rel_port_dir"></span>° M</td>
+        <td class="name_td" style="color:red">Speed</td>
+        <td class="val_td"><span id="rel_port_speed"></span> kt</td>
+      </tr>
+      <tr>
+        <td class="name_td" style="color:green">Stbd Wind Dir</td>
+        <td class="val_td"><span id="rel_stbd_dir">missing</span>° M</td>
+        <td class="name_td" style="color:green">Speed</td>
+        <td class="val_td"><span id="rel_stbd_speed"></span> kt</td>
+      </tr>
+
+          
+
+      <tr>
+        <td class="name_td">Position</td>
+        <td class="val_td"><span id="gps_lat"></span></td>
+        <td class="val_td"><span id="gps_lon"></span></td>
+      </tr>
+      <tr>
+        <td class="name_td">Heading</td>
+        <td class="val_td"><span id="heading_true"></span>° T</td>
+        <td class="name_td">SOG</td>
+        <td class="val_td"><span id="gps_sog"></span> kt</td>
+      </tr>
+      <tr>
+        <td class="name_td">Pitch</td>
+        <td class="val_td"><span id="pitch"></span>°</td>
+        <td class="name_td">Roll</td>
+        <td class="val_td"><span id="roll"></span>°</td>
+      </tr>
+      <tr>
+        <td class="name_td">RTemp</td>
+        <td class="val_td"><span id="remote_temp"></span>° C</td>
+        <td class="name_td">Air Temp</td>
+        <td class="val_td"><span id="air_temp"></span>° C</td>
+      </tr>
+      <tr>
+        <td class="name_td">Eng Voltage</td>
+        <td class="val_td"><span id="eng_voltage"></span>V</td>
+        <td class="name_td">Eng Case Temp</td>
+        <td class="val_td"><span id="eng_case_temp"></span>° C</td>
+      </tr>
+      <tr>
+        <td class="name_td">Aq Room Seawater Flow</td>
+        <td class="val_td"><span id="pump1_flow"></span></td>
+        <td class="name_td">Seis Air Pressure</td>
+        <td class="val_td"><span id="seis_air_pressure"></span> psi</td>
+      </tr>
+      <tr>
+        <td class="name_td">Helo Deck Flow</td>
+        <td class="val_td"><span id="pump2_flow"></span></td>
+        <td class="name_td">PIR Res</td>
+        <td class="val_td"><span id="pir_res"></span></td>
+      </tr>
+      <tr>
+        <td class="name_td">Hydro Lab Flow</td>
+        <td class="val_td"><span id="pump3_flow"></span></td>
+        <td class="name_td">PIR Out</td>
+        <td class="val_td"><span id="pir_mv_out"></span> mV</td>
+      </tr>
+      <tr>
+        <td class="name_td">Freezer 1</td>
+        <td class="val_td"><span id="freezer1_temp"></span>° C</td>
+        <td class="name_td">Freezer 2</td>
+        <td class="val_td"><span id="freezer2_temp"></span>° C</td>
+      </tr>
+
+
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+
+    <script type="text/javascript">
+
+  var WEBSOCKET_SERVER = "localhost:8765";
+
+  var widget_list = [];
+  
+
+  //////////////////
+  // A dial
+  var rel_wind_dial_fields = {
+    MwxPortRelWindDir: {
+      name: 'Port Relative Wind',
+      color: 'red',
+    },
+    MwxStbdRelWindDir: {
+      name: 'Stbd Relative Wind',
+      color: 'green',
+    }
+  };
+  widget_list.push(new DialWidget('rel_wind_dial', rel_wind_dial_fields,
+                                {title:{text:''}}
+                                ));
+
+  widget_list.push(new TextWidget('rel_port_dir',
+                               { MwxPortRelWindDir: {name: 'Port Rel Wind Dir'}}));
+  widget_list.push(new TextWidget('rel_stbd_dir',
+                               { MwxStbdRelWindDir: {name: 'Stbd Rel Wind Dir'}}));
+  widget_list.push(new TextWidget('rel_port_speed',
+                               { MwxPortRelWindSpeed: {name: 'Port Rel Wind Speed'}}));
+  widget_list.push(new TextWidget('rel_stbd_speed',
+                               { MwxStbdRelWindSpeed: {name: 'Stbd Rel Wind Speed'}}));
+  
+  var rel_wind_line_fields = {
+    MwxPortRelWindSpeed: {
+      name: 'Port Relative Wind Speed',
+      seconds: 45,
+      color: 'red',
+    },
+    MwxStbdRelWindSpeed: {
+      name: 'Stbd Relative Wind Speed',
+      seconds: 45,
+      color: 'green',
+    }
+  };
+  widget_list.push(new TimelineWidget('wind_speed_line', rel_wind_line_fields,
+                                    'Knots', {title:{text:''}}
+                                   ));
+
+  var gps_lat_fields = {
+    S330Lat: {
+      name: "Latitude",
+      transform: function(val) {
+        return Math.round(val*100)/10000  + '°';
+      }
+    },
+    S330NorS: {
+      name: "N/S",
+    }
+  };
+  widget_list.push(new TextWidget('gps_lat', gps_lat_fields));
+
+  var gps_lon_fields = {
+    S330Lon: {
+      name: "Longitude",
+      transform: function(val) {
+        return Math.round(val*100)/10000  + '°';
+      }
+    },
+    S330EorW: {
+      name: "E/W",
+    }
+  };
+  widget_list.push(new TextWidget('gps_lon', gps_lon_fields));
+  widget_list.push(new TextWidget('heading_true',
+                               { Gyro1HeadingTrue: {name: 'Heading (True)'}}));
+  widget_list.push(new TextWidget('gps_sog',
+                               { S330SOGKt: {name: 'Speed over Ground'}}));
+
+  widget_list.push(new TextWidget('pitch', { S330Pitch: {name: 'Pitch'}}));
+  widget_list.push(new TextWidget('roll', { S330Roll: {name: 'Roll'}}));
+
+  widget_list.push(new TextWidget('remote_temp',
+                               { RTMPTemp: {name: 'Remote Temp'}}));
+  widget_list.push(new TextWidget('air_temp',
+                               { MwxAirTemp: {name: 'Air Temp'}}));
+ 
+
+  widget_list.push(new TextWidget('eng_voltage',
+                               { EngPowerVoltage: {name: 'Eng Power Voltage'}}));
+  widget_list.push(new TextWidget('eng_case_temp',
+                               { EngCaseTemp: {name: 'Eng Case Temp'}}));
+  widget_list.push(new TextWidget('pump1_flow',
+                               { EngPump1Flow: {name: 'Eng Pump 1 Flow'}}));
+  widget_list.push(new TextWidget('pump2_flow',
+                               { EngPump2Flow: {name: 'Eng Pump 2 Flow'}}));
+  widget_list.push(new TextWidget('pump3_flow',
+                               { EngPump3Flow: {name: 'Eng Pump 3 Flow'}}));
+
+  widget_list.push(new TextWidget('seis_air_pressure',
+                               { EngSeisAirPressure: {name: 'Seismic Air Pressure'}}));
+  widget_list.push(new TextWidget('pir_res',
+                               { EngPIRRes: {name: 'PIR Res'}}));
+  widget_list.push(new TextWidget('pir_mv_out',
+                               { EngPIRmvOut: {name: 'PIR mV Out'}}));
+  widget_list.push(new TextWidget('freezer1_temp',
+                               { EngFreezer1C: {name: 'Freezer 1 Temp'}}));
+  widget_list.push(new TextWidget('freezer2_temp',
+                               { EngFreezer2C: {name: 'Freezer 2 Temp'}}));
+
+  var widget_server = new WidgetServer(widget_list, 'localhost:8765');
+  widget_server.serve();  
+</script>
+</body>
+</html>
