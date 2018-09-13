@@ -384,9 +384,9 @@
 
   ///////////////////////////////
   function message_window(cruise_id='') {
-    var path = "/server_messages/20";
+    var path = "/server_messages/20/";
     if (path.length > 0) {
-      path += "/" + cruise_id;
+      path += cruise_id + "/";
     }
     window.open(path, "_blank",
     "height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,copyhistory=no");
