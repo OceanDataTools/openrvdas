@@ -1,0 +1,417 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Winch Example</title>
+
+    <script src="static/js/jquery/jquery-3.1.1.min.js"></script>
+
+    <!-- For highcharts-widget.js -->
+    <script src="static/js/highcharts/code/highstock.js"></script>
+    <script src="static/js/highcharts/code/highcharts-more.js"></script>
+    <script src="static/js/highcharts/code/modules/data.js"></script>
+    <script src="static/js/highcharts/code/modules/exporting.js"></script>
+    <script src="static/js/highcharts/code/modules/export-data.js"></script>
+
+    <script src="static/js/highcharts/code/modules/solid-gauge.js"></script>
+
+    <script src="highcharts_widget.js"></script>
+    <script src="text_widget.js"></script>
+    <script src="widget_server.js"></script>
+
+    <style type="text/css">
+      #ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      #ship_table td, #ship_table th {
+        border: 0px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        vertical-align:middle;
+        min-width: 250px;
+      }
+      .td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 25%;
+        height: 100px;
+      }
+      .text_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        font-size: 25px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+<table id=ship_table>
+  <tr>
+    <td>
+      <div style="width: 600px; margin: 0 auto">
+        <div id="cwnc-speed-dial-container" style="width: 300px; height: 200px; float: left"></div>
+        <div id="cwnc-tension-dial-container" style="width: 300px; height: 200px; float: left"></div>
+      </div>
+    </td>
+    <td>
+      <span class="text_25">
+        Payout: <span id="cwnc-payout-container"></span> meters<br>
+        <span id="cwnc-warnings-container"></span>
+      </span>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div style="width: 600px; margin: 0 auto">
+        <div id="twnc-speed-dial-container" style="width: 300px; height: 200px; float: left"></div>
+        <div id="twnc-tension-dial-container" style="width: 300px; height: 200px; float: left"></div>
+      </div>
+    </td>
+    <td>
+      <span class="text_25">
+        Payout: <span id="twnc-payout-container"></span> meters<br>
+        <span id="twnc-warnings-container"></span>
+      </span>
+    </td>
+  </tr>
+</table>
+
+
+    <script type="text/javascript">
+      //////////////////////////////////////
+      // Start of widget code
+      var WEBSOCKET_SERVER = "localhost:8765";
+
+      var widget_list = [];
+
+      ///////////////////
+      var twnc_speed_gauge_options = {
+        chart: {
+          type: 'solidgauge'
+        },
+        series: [{
+          id: 'TWNCSpeed',
+          name: 'Speed',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> m / min</span></div>'
+          },
+          tooltip: {
+            valueSuffix: ' m/min'
+          }
+        }],
+        yAxis: {
+          min: 0,
+          max: 60,
+          title: {
+            text: 'Speed'
+          },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: {
+            y: -70
+          },
+          labels: {
+              y: 16
+            }
+          },
+         tooltip: {
+            valueSuffix: ' m/min'
+        },
+        credits: {
+          enabled: false
+        },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+       plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+      ///////////////////
+      var twnc_tension_gauge_options = {
+        chart: {
+          type: 'solidgauge'
+        },
+        series: [{
+          id: 'TWNCTension',
+          name: 'Payout',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> lbs</span></div>'
+          }
+        }],
+        yAxis: {
+          min: -10,
+          max: 1500,
+          title: {
+            text: 'Tension'
+          },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: {
+            y: -70
+          },
+          labels: {
+              y: 16
+          }
+        },
+        tooltip: {
+            valueSuffix: ' lbs'
+        },
+        credits: {
+          enabled: false
+        },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+        plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+      //////////////////
+      // Two dials
+      var twnc_speed_dial_fields = {
+        TWNCSpeed: { name: 'Speed' }
+      };
+      widget_list.push(new DialWidget('twnc-speed-dial-container',
+                                      twnc_speed_dial_fields,
+                                      twnc_speed_gauge_options));
+      var twnc_tension_dial_fields = {
+        TWNCTension: { name: 'Tension' }
+      };
+      widget_list.push(new DialWidget('twnc-tension-dial-container',
+                                      twnc_tension_dial_fields,
+                                      twnc_tension_gauge_options));
+
+      //////////////////
+      // Two rows
+      var twnc_payout_fields = {
+        TWNCPayout: { name: "Payout" }
+      };
+      widget_list.push(new TextWidget('twnc-payout-container',
+                                      twnc_payout_fields));
+      var twnc_warnings_fields = {
+        TWNCWarnings: {}
+      };
+      widget_list.push(new TextWidget('twnc-warnings-container',
+                                      twnc_warnings_fields));
+
+
+
+
+
+     ///////////////////
+      var cwnc_speed_gauge_options = {
+        chart: {
+          type: 'solidgauge'
+        },
+        series: [{
+          id: 'CWNCSpeed',
+          name: 'Speed',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> m / min</span></div>'
+          },
+          tooltip: {
+            valueSuffix: ' m/min'
+          }
+        }],
+        yAxis: {
+          min: 0,
+          max: 60,
+          title: {
+            text: 'Speed'
+          },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: {
+            y: -70
+          },
+          labels: {
+              y: 16
+            }
+          },
+         tooltip: {
+            valueSuffix: ' m/min'
+        },
+        credits: {
+          enabled: false
+        },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+       plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+      ///////////////////
+      var cwnc_tension_gauge_options = {
+        chart: {
+          type: 'solidgauge'
+        },
+        series: [{
+          id: 'CWNCTension',
+          name: 'Payout',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> lbs</span></div>'
+          }
+        }],
+        yAxis: {
+          min: -10,
+          max: 1500,
+          title: {
+            text: 'Tension'
+          },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: {
+            y: -70
+          },
+          labels: {
+              y: 16
+          }
+        },
+        tooltip: {
+            valueSuffix: ' lbs'
+        },
+        credits: {
+          enabled: false
+        },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+        plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+      //////////////////
+      // Two dials
+      var cwnc_speed_dial_fields = {
+        CWNCSpeed: { name: 'Speed' }
+      };
+      widget_list.push(new DialWidget('cwnc-speed-dial-container',
+                                      cwnc_speed_dial_fields,
+                                      cwnc_speed_gauge_options));
+      var cwnc_tension_dial_fields = {
+        CWNCTension: { name: 'Tension' }
+      };
+      widget_list.push(new DialWidget('cwnc-tension-dial-container',
+                                      cwnc_tension_dial_fields,
+                                      cwnc_tension_gauge_options));
+
+      //////////////////
+      // Two rows
+      var cwnc_payout_fields = {
+        CWNCPayout: { name: "Payout" }
+      };
+      widget_list.push(new TextWidget('cwnc-payout-container',
+                                      cwnc_payout_fields));
+      var cwnc_warnings_fields = {
+        CWNCWarnings: {}
+      };
+      widget_list.push(new TextWidget('cwnc-warnings-container',
+                                      cwnc_warnings_fields));
+
+      // Create and start up a WidgetServer
+      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+      widget_server.serve();
+
+    </script>
+  </body>
+</html>

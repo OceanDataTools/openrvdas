@@ -6,23 +6,40 @@
     <title>NBP UNOLS Widget Example</title>
 
     <style type="text/css">
-      #ship_table {
+      .ship_table {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         border-collapse: collapse;
         width: 100%;
       }
-      #ship_table td, #ship_table th {
+      .ship_table td, .ship_table th {
         border: 1px solid #ddd;
         padding: 8px;
       }
-      #name_td {
+      .td_70 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
+        width: 70%;
       }
-      #val_td {
+      .td_50 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: right;
+        text-align: left;
+        width: 50%;
+      }
+      .td_30 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .name_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 35%;
+      }
+      .val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
         font-weight: bold;
+        width: 15%;
       }
     </style>
   </head>
@@ -44,11 +61,11 @@
 
     <table class="ship_table">
       <tr>
-        <td colspan=4>
-          <div id="rel_wind_dial" style="min-width: 350px"></div>
+        <td colspan=2 class="td_50">
+          <div id="rel_wind_dial" style="min-width: 100px"></div>
         </td>
-        <td colspan=4>
-          <div id="wind_speed_line" style="min-width: 300px"></div>
+        <td colspan=2 class="td_50">
+          <div id="wind_speed_line" style="min-width: 100px"></div>
         </td>
       </tr>
       <tr>
@@ -64,11 +81,10 @@
         <td class="val_td"><span id="rel_stbd_speed"></span> kt</td>
       </tr>
 
-
-
       <tr>
-        <td class="name_td">Position</td>
+        <td class="name_td">Lat</td>
         <td class="val_td"><span id="gps_lat"></span></td>
+        <td class="name_td">Lon</td>
         <td class="val_td"><span id="gps_lon"></span></td>
       </tr>
       <tr>
@@ -96,7 +112,7 @@
         <td class="val_td"><span id="eng_case_temp"></span>° C</td>
       </tr>
       <tr>
-        <td class="name_td">Aq Room Seawater Flow</td>
+        <td class="name_td">Aq Room Flow</td>
         <td class="val_td"><span id="pump1_flow"></span></td>
         <td class="name_td">Seis Air Pressure</td>
         <td class="val_td"><span id="seis_air_pressure"></span> psi</td>
