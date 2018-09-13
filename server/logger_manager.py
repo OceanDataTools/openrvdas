@@ -141,6 +141,7 @@ import socket  # to get hostname
 import sys
 import threading
 import time
+from urllib.parse import unquote
 import websockets
 
 sys.path.append('.')
@@ -181,7 +182,8 @@ class WriteToAPILoggingHandler(logging.Handler):
     self.formatter = logging.Formatter(logger_format)
       
   def emit(self, record):
-    self.api.message_log('Logger', '(%s@%s)' % (USER, HOSTNAME), record.levelno,
+    self.api.message_log(source='Logger', user='(%s@%s)' % (USER, HOSTNAME),
+                         log_level=record.levelno, cruise_id=None,
                          message=self.formatter.format(record))
 
 
@@ -266,7 +268,6 @@ class LoggerManager:
 
     # Clients (such as web consoles) attached via /logger_status
     # path. We'll send them logger status updates.
-    # NOT YET IMPLEMENTED!!!
     self.logger_status_clients = set()
 
     # Clients attached via /server_status path. We'll send them
@@ -376,7 +377,7 @@ class LoggerManager:
     # little more complicated, as we want to process what we've
     # received as soon as we get it.
     if path.find('/logger_runner/') == 0:
-      host_id = path[len('/logger_runner/'):]
+      host_id = unquote(path[len('/logger_runner/'):])
       logging.info('New LoggerRunner %s, (id #%d)', host_id, client_id)
       with self.client_map_lock:
         self.logger_runner_clients.add(client_id)
@@ -396,7 +397,7 @@ class LoggerManager:
     elif path.find('/logger_status/') == 0:
       # Client wants logger status - this is what we serve to the main
       # cruise page.
-      cruise_id = path[len('/logger_status/'):]
+      cruise_id = unquote(path[len('/logger_status/'):])
       sender = self._logger_status_sender(client_id, cruise_id)
       
       with self.client_map_lock:
@@ -411,19 +412,16 @@ class LoggerManager:
     # Status message client has connected. Serve it status updates
     elif path.find('/messages/') == 0:
       # Client wants server log messages
-      log_level = logging.INFO
-      source = None
-      try:
-        path_parts = path.split('/')[2:]
-        if path_parts:
-          log_level_str = path_parts.pop(0)
-          log_level = int(log_level_str)
-        if path_parts:
-          source = path_parts.pop(0) or None
-      except ValueError:
-        pass
+      path_parts = path.split('/')
+      log_level = int(path_parts[2]) if len(path_parts) > 2 else logging.INFO
+      cruise_id = unquote(path_parts[3]) if len(path_parts) > 3 else None
+      source = unquote(path_parts[4]) if len(path_parts) > 4 else None
+
+      logging.info('New client requests server messages: level "%s", '
+                   'cruise_id "%s", source "%s"',
+                   log_level, cruise_id, source)
       
-      sender = self._log_message_sender(client_id, log_level, source)
+      sender = self._log_message_sender(client_id, log_level, cruise_id, source)
       await self._handle_client_connection(client_id=client_id, sender=sender)
 
     ##########################
@@ -597,7 +595,7 @@ class LoggerManager:
 
   ############################
   async def _log_message_sender(self, client_id, log_level=logging.INFO,
-                                source=None):
+                                cruise_id=None, source=None):
     """Iteratively grab log_messages of log_level and below and send to
     websocket. If source is not specified, retrieve from all
     sources. If log_level is not specified, retrieve all log levels.
@@ -614,6 +612,7 @@ class LoggerManager:
       logging.debug('last message timestamp: %s', last_timestamp)      
       messages = self.api.get_message_log(source=source, user=None,
                                           log_level=log_level,
+                                          cruise_id=cruise_id,
                                           since_timestamp=last_timestamp)
       if messages:
         logging.debug('got messages: %s', messages)
@@ -839,8 +838,9 @@ if __name__ == '__main__':
   if args.config:
     cruise_config = read_json(args.config)    
     api.load_cruise(cruise_config)
-    api.message_log(SOURCE_NAME, '(%s@%s)' % (USER, HOSTNAME),
-                    api.INFO, 'started with cruise: %s' % args.config)
+    api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
+                    log_level=api.INFO, cruise_id=cruise_id,
+                    message='started with cruise: %s' % args.config)
   if args.mode:
     if not args.config:
       raise ValueError('Argument --mode can only be used with --config')      
@@ -848,8 +848,8 @@ if __name__ == '__main__':
     if not cruise_id:
       raise ValueError('Unable to find cruise_id in config: %s' % args.config)
     api.set_mode(cruise_id, args.mode)
-    api.message_log(SOURCE_NAME, api.INFO,
-                    'initial mode (%s@%s): %s', (USER, HOSTNAME, args.mode))
+    api.message_log(source=SOURCE_NAME, log_level=api.INFO, cruise_id=cruise_id,
+                    message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
 
   try:
     # If no console, just wait for the configuration update thread to

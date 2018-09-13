@@ -191,7 +191,7 @@ class DataServer:
  ############################
 @asyncio.coroutine
 async def serve_websocket_data(websocket, path):
-  logging.warning('serve_websocket_data: %s', websocket)
+  logging.info('New data websocket client attached: %s', path)
   data_server = DataServer(websocket)
   await data_server.serve_data()
 

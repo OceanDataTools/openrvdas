@@ -418,6 +418,7 @@ if __name__ == '__main__':
         for filebase in new_args.logfile.split(','):
           readers.append(LogfileReader(
             filebase=filebase, use_timestamps=all_args.logfile_use_timestamps,
+            time_format=all_args.time_format,
             refresh_file_spec=all_args.refresh_file_spec))
 
       # For each comma-separated spec, parse out values for

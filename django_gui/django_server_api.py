@@ -418,24 +418,28 @@ class DjangoServerAPI(ServerAPI):
   ############################
   # Methods for storing/retrieving messages from servers/loggers/etc.
   ############################
-  def message_log(self, source, user, log_level, message):
+  def message_log(self, source, user, log_level, cruise_id, message):
     """Timestamp and store the passed message."""
+    
     LogMessage(source=source, user=user, log_level=log_level,
-               message=message).save()
+               cruise_id=cruise_id, message=message).save()
 
   ############################
   def get_message_log(self, source=None, user=None, log_level=logging.INFO,
-                      since_timestamp=None):
+                      cruise_id=None, since_timestamp=None):
     """Retrieve log messages from source at or above log_level since
     timestamp. If source is omitted, retrieve from all sources. If
     log_level is omitted, retrieve at all levels. If since_timestamp is
     omitted, only retrieve most recent message.
     """
     logs = LogMessage.objects.filter(log_level__gte=log_level)
-    if source is not None:
+    if source:
       logs = logs.filter(source=source)
-    if user is not None:
+    if user:
       logs = logs.filter(user=user)
+    if cruise_id:
+      logs = logs.filter(cruise_id=cruise_id) | logs.filter(cruise_id__isnull=True)
+
     if since_timestamp is None:
       message = logs.latest('timestamp')
       return [(message.timestamp.timestamp(), message.source,

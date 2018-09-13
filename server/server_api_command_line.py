@@ -68,8 +68,11 @@ class ServerAPICommandLine:
   def run(self):
     """Iterate, reading commands and processing them."""
     try:
-      self.api.message_log(SOURCE_NAME, '(%s@%s)' % (USER, HOSTNAME),
-                           self.api.INFO, 'started')
+      self.api.message_log(source=SOURCE_NAME,
+                           user='(%s@%s)' % (USER, HOSTNAME),
+                           log_level=self.api.INFO,
+                           cruise_id=None,
+                           message='started')
       while not self.quit_requested:
         command = input('command? ')
         if command:
@@ -256,7 +259,9 @@ class ServerAPICommandLine:
       elif command.find('server_log') == 0:
         (log_cmd, since_timestamp) = command.split(maxsplit=1)
         server_log = self.api.get_message_log(source=SOURCE_NAME, user=None,
-          log_level=self.api.DEBUG, since_timestamp=float(since_timestamp))
+                                              log_level=self.api.DEBUG,
+                                              cruise_id=None,
+                                              since_timestamp=float(since_timestamp))
         print('%s' % pprint.pformat(server_log))
 
       # Quit gracefully
@@ -274,8 +279,11 @@ class ServerAPICommandLine:
     except ValueError as e:
       logging.error('%s', e)
     finally:
-      self.api.message_log(SOURCE_NAME, '(%s@%s)' % (USER, HOSTNAME),
-                            self.api.INFO, 'command: '+ command)
+      self.api.message_log(source=SOURCE_NAME,
+                           user='(%s@%s)' % (USER, HOSTNAME),
+                           log_level=self.api.INFO,
+                           cruise_id=None,
+                           message='command: '+ command)
     
 ################################################################################
 if __name__ == '__main__':

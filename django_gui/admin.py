@@ -89,8 +89,9 @@ class ServerStateAdmin(admin.ModelAdmin):
   list_filter = ('server', 'running', 'desired')
 
 class LogMessageAdmin(admin.ModelAdmin):
-  list_display = ('timestamp', 'source', 'user', 'log_level', 'message')
-  list_filter = ('source', 'user', 'log_level')
+  list_display = ('timestamp', 'source', 'user', 'log_level',
+                  'cruise_id', 'message')
+  list_filter = ('source', 'user', 'log_level', 'cruise_id')
 
 class StatusUpdateAdmin(admin.ModelAdmin):
   list_display = ('timestamp', 'server', 'cruise', 'status')

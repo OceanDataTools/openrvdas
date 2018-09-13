@@ -257,13 +257,13 @@ class ServerAPI:
   DEBUG    = logging.DEBUG
 
   ############################
-  def message_log(self, source, log_level, user, message):
+  def message_log(self, source, user, log_level, cruise_id, message):
     """Timestamp and store the passed message."""
     raise NotImplementedError('message_log must be implemented by subclass')
 
   ############################
   def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
-                      since_timestamp=None):
+                      cruise_id=None, since_timestamp=None):
     """Retrieve log messages from source at or above log_level since
     timestamp. If source is omitted, retrieve from all sources. If
     log_level is omitted, retrieve at all levels. If since_timestamp is

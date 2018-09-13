@@ -157,7 +157,7 @@
       };
       widget_list.push(new TextWidget('gps_lon_container', gps_lon_fields));
 
-      var widget_server = new WidgetServer(widget_list, 'localhost:8765');
+      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
       widget_server.serve();
 
     </script>

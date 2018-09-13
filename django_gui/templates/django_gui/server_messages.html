@@ -3,7 +3,7 @@
 {% block content %}
 
 <head>
-  <title>Server messages</title>
+  <title>{{ cruise_id }} Server messages</title>
   {# <meta http-equiv="refresh" content="3"> #}
 
   <style>
@@ -25,14 +25,14 @@
   </style>
 </head>
 
-<h1>Server messages</h1>
+<h1>{{ cruise_id }} Server messages</h1>
 
 {# ######################################################################## #}
 <table>
   <tr>
     {% for level, level_name in log_levels.items %}
     <td>
-      <button onclick="window.location='/server_messages/{{ level }}/'"
+      <button onclick="window.location='/server_messages/{{ level }}/{{ cruise_id }}/{{ source }}'"
               {% if log_level == level %}
               style="background-color:gray"
               {% endif %}
@@ -61,10 +61,7 @@
   // Connect to the websocket
   // We're after messages statuses, so append '/messages' path followed
   // by name of server we want messages from.
-  var ws_addr = "ws://{{ websocket_server }}/messages/{{ log_level }}";
-  {% if source %}
-    ws_addr += "/{{ source }}";
-  {% endif %}
+  var ws_addr = "ws://{{ websocket_server }}/messages/{{ log_level }}/{{ cruise_id }}/{{ source }}";
   console.log("connecting to: " + ws_addr);
   var websocket_server = ws_addr;
 

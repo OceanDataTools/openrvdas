@@ -8,7 +8,7 @@ class Logger(models.Model):
   """Note that name may not be unique in the database - multiple cruises
   may have loggers named 'gyr1'. To distinguish conflicts, we use the
   implicit logger id."""
-  name = models.CharField(max_length=256, blank=True)
+  name = models.CharField(max_length=255, blank=True)
   cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
                              blank=True, null=True)
 
@@ -21,7 +21,7 @@ class Logger(models.Model):
    
 ##############################
 class LoggerConfig(models.Model):
-  name = models.CharField(max_length=256, blank=True)
+  name = models.CharField(max_length=255, blank=True)
   cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
                              blank=True, null=True)
   logger = models.ForeignKey('Logger', on_delete=models.CASCADE,
@@ -41,7 +41,7 @@ class LoggerConfig(models.Model):
 
 ##############################
 class Mode(models.Model):
-  name = models.CharField(max_length=256, blank=True)
+  name = models.CharField(max_length=255, blank=True)
   cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE,
                              blank=True, null=True)
   def __str__(self):
@@ -49,12 +49,12 @@ class Mode(models.Model):
   
 ##############################
 class Cruise(models.Model):
-  id = models.CharField(max_length=256, primary_key=True)
+  id = models.CharField(max_length=255, primary_key=True)
   start = models.DateTimeField(blank=True, null=True)
   end = models.DateTimeField(blank=True, null=True)
 
   # The file this cruise configuration has been loaded from
-  config_filename = models.CharField(max_length=256, blank=True, null=True)
+  config_filename = models.CharField(max_length=255, blank=True, null=True)
   config_text = models.TextField(blank=True, null=True)
   loaded_time = models.DateTimeField(auto_now_add=True, null=True)
 
@@ -108,11 +108,14 @@ class LoggerConfigState(models.Model):
   errors = models.TextField(default='', blank=True, null=True)
 
 ##############################
-# Messages that our servers log
+# Messages that our servers log. Note that, to avoid a lookup every
+# time we write a log message, we're storing cruise_id as a string
+# rather than a foreign key.
 class LogMessage(models.Model):
   source = models.CharField(max_length=80, blank=True, null=True)
   user = models.CharField(max_length=80, blank=True, null=True)
   log_level = models.IntegerField(default=0, blank=True, null=True)
+  cruise_id =  models.CharField(max_length=255, blank=True, null=True)
   message = models.TextField(blank=True, null=True)
   timestamp = models.DateTimeField(auto_now_add=True)
 

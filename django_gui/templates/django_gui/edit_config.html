@@ -9,6 +9,7 @@
 
 <form method="post" enctype="multipart/form-data">
   {% csrf_token %}
+  <input type="hidden" name="cruise_id" value="{{ cruise_id }}">
 
   Select config: <select name="select_config" id="select_config"
           onchange="update_select()">

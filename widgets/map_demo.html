@@ -21,6 +21,8 @@
   </div>
 
   <script type="text/javascript">
+    var WEBSOCKET_SERVER = "localhost:8765";
+
     // What fields we're looking for to get lon/lat values
     var map_fields = {S330Lat: {seconds:30}, S330Lon: {seconds:30},
                       S330NorS: {seconds:30}, S330EorW: {seconds:30}};
@@ -56,7 +58,7 @@
                                      fields_to_lat_lon,
                                      tile_server, map_overlays)];
 
-    var widget_server = new WidgetServer(widget_list, 'localhost:8765');
+    var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
     widget_server.serve();
   </script>
 </body>

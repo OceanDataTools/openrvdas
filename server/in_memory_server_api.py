@@ -322,13 +322,14 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   # Methods for storing/retrieving messages from servers/loggers/etc.
   ############################
-  def message_log(self, source, user, log_level, message):
+  def message_log(self, source, user, log_level, cruise_id, message):
     """Timestamp and store the passed message."""
-    self.server_messages.append((time.time(), source, user, log_level, message))
+    self.server_messages.append((time.time(), source, user,
+                                 log_level, cruise_id, message))
 
   ############################
   def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
-                     since_timestamp=None):
+                      cruise_id=None, since_timestamp=None):
     """Retrieve log messages from source at or above log_level since
     timestamp. If source is omitted, retrieve from all sources. If
     log_level is omitted, retrieve at all levels. If since_timestamp is
@@ -338,7 +339,8 @@ class InMemoryServerAPI(ServerAPI):
     messages = []
     while index >= 0:
       message = self.server_messages[index]
-      timestamp, mesg_source, mesg_user, mesg_log_level, mesg_message = message
+      (timestamp, mesg_source, mesg_user,
+       mesg_log_level, mesg_cruise_id,  mesg_message) = message
       
       # Have we gone back too far? If so, we're done.
       if since_timestamp is not None and timestamp <= since_timestamp:
@@ -346,10 +348,13 @@ class InMemoryServerAPI(ServerAPI):
 
       if mesg_log_level < log_level:
         continue
-      if user is not None and not mesg_user == user:
+      if user and not mesg_user == user:
         continue
-      if source is not None and not mesg_source == source:
+      if source and not mesg_source == source:
         continue
+      if (mesg_cruise_id and cruise_id and not mesg_cruise_id == cruise_id):
+        continue
+      
       messages.insert(0, message)
 
       # Are we only looking for last message, and do we have a message?

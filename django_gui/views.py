@@ -53,13 +53,15 @@ api = None
 
 def log_request(request, cmd):
   global api
-  user = request.user
-  host = request.get_host()
-  elements = ', '.join(['%s:%s' % (k,v) for k, v in request.POST.items()
-                        if k not in ['csrfmiddlewaretoken']])
   if api:
+    user = request.user
+    host = request.get_host()
+    cruise_id = request.POST.get('cruise_id', None)
+    elements = ', '.join(['%s:%s' % (k,v) for k, v in request.POST.items()
+                          if k not in ['csrfmiddlewaretoken', 'cruise_id']])
     api.message_log(source='Django', user='(%s@%s)' % (user, host),
-                    log_level=api.INFO, message='post: %s' % elements)
+                    log_level=api.INFO, cruise_id=cruise_id,
+                    message=elements)
   
 ################################################################################
 def index(request, cruise_id=None):
@@ -73,7 +75,7 @@ def index(request, cruise_id=None):
   # If we've gotten a POST request
   errors = []
   if request.method == 'POST':
-    logging.warning('POST: %s', request.POST)
+    logging.debug('POST: %s', request.POST)
     
     # First things first: log the request
     log_request(request, (cruise_id or 'no_cruise') + ' index')
@@ -152,12 +154,19 @@ def index(request, cruise_id=None):
 
 ################################################################################
 # Page to display messages from the specified server
-def server_messages(request, log_level=logging.INFO, source=None):
+#def server_messages(request, log_level=logging.INFO,
+#                    cruise_id=None, source=None):
+def server_messages(request, path):
+  path_pieces = path.split('/')
+  log_level = path_pieces[0] if len(path_pieces) > 0 else logging.INFO
+  cruise_id = path_pieces[1] if len(path_pieces) > 1 else None
+  source = path_pieces[2] if len(path_pieces) > 2 else None
 
   template_vars = {'websocket_server': WEBSOCKET_SERVER,
-                   'log_level': log_level,
+                   'log_level': int(log_level),
                    'log_levels': LOG_LEVELS,
                    'log_level_colors': LOG_LEVEL_COLORS,
+                   'cruise_id': cruise_id,
                    'source': source}
   return render(request, 'django_gui/server_messages.html', template_vars)
 
