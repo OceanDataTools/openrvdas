@@ -106,7 +106,6 @@ Create a Highcharts dial displaying one or more variables
 function DialWidget(container, fields, widget_options={}) {
   this.fields = fields;
 
-    console.log("Passed options: " + JSON.stringify(widget_options));
   // Create one series for each field
   var series = [];
   var title_list = [];
@@ -183,7 +182,6 @@ function DialWidget(container, fields, widget_options={}) {
       //console.log('With ' + JSON.stringify(widget_options[option]));
       this_widget_options[option] = widget_options[option];
   }
-    console.log('WIDGET OPTIONS: ' + JSON.stringify(this_widget_options, null, 2));
   this.chart = Highcharts.chart(container, this_widget_options);
 
   document.addEventListener('DOMContentLoaded', this.chart);
@@ -211,7 +209,6 @@ function DialWidget(container, fields, widget_options={}) {
           value = this.fields[field_name].transform(value);
         }
         //console.log(field_name + ": " + value);
-
         var point = field_series.points[0];
         point.update(value);
       }

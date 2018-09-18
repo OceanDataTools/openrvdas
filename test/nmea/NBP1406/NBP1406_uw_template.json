@@ -1,0 +1,300 @@
+// Sample JSON cruise definition template to a cruise/installation
+//
+// Usage:
+//
+//   logger/utils/build_config \
+//      --config test/config/sample_cruise_template.json \
+//         > test/config/sample_cruise.json
+//
+//   server/logger_manager.py \
+//      --config test/config/sample_cruise.json \
+//      --mode underway
+//
+// Programmatically, you can load the definition as
+//
+//   from logger.utils.read_json import read_json
+//   from logger.utils.build_config import BuildConfig
+//
+//   raw_config = read_json('test/configs/sample_cruise_template.json')
+//   config = BuildConfig.expand_config(raw_config)
+//
+// The expanded config dict will have a "modes" key. The value is a
+// dict mapping mode names ("off", "port", "underway") to a dictionary
+// mapping logger names to the configurations they should be in.
+//
+// Expansion involves two separate processes: string substitution from
+// the "vars" dict, and reference substitution from the "templates"
+// dict.
+//
+// 1. String substitution. The values of the "modes" and "templates"
+//    are recursively searched for any strings that contain any of the
+//    keys in the "vars" dict. If they are found, substitution is made
+//    via string replace.
+//
+//    E.g., given the variables
+//
+//      {
+//        "%CRUISE%" : "NBP1700",
+//        "%LOGFILE_BASE%": "/tmp/log/%CRUISE%"
+//      }
+//
+//    variable substitution will convert
+//
+//      "filebase": "%LOGFILE_BASE%/%INST%/raw/%CRUISE%_%INST%"
+//
+//    into
+//
+//      "filebase": "/tmp/log/NBP1700/%INST%/raw/NBP1700_%INST%"
+//
+//    The replacement has a special case where the the value may be a
+//    list of strings rather than a single string. If the string to be
+//    replaced appears in a list or dict key, string substitution will
+//    create and insert one replacement string for every value.
+//
+//    E.g., given
+//
+//      {
+//        "%CRUISE%" : "NBP1700",
+//        "%LOGFILE_BASE%": "/tmp/log/%CRUISE%",
+//        "%INST%": ["knud", "gyr1", "s330"]
+//      }
+//
+//    and the template
+//
+//      "writers": [
+//        "%INST%_LOGFILE_WRITER",
+//      ]
+//
+//    string substitution will produce
+//
+//      "writers": [
+//        "knud_LOGFILE_WRITER",
+//        "gyr1_LOGFILE_WRITER",
+//        "s330_LOGFILE_WRITER"
+//      ]
+//
+// 2. Reference substitution. Templates in the "templates" dict are
+//    expanded by searching for top-level keys in the dict that appear
+//    in the values of another key. If a top-level key appears
+//    elsewhere in the dict, the value of that top-level key is
+//    swapped as if by reference.
+//
+//    E.g., given a "templates" dict like the following:
+//
+//       {
+//         "SERIAL_READER": {serial reader definition},
+//         "LOGGER": {
+//            "readers": "SERIAL_READER",
+//            "writers": {writer definition}
+//         }
+//       }
+//   
+//    Reference substitution would expand it to
+//
+//       {
+//         "SERIAL_READER": {serial reader definition},
+//         "LOGGER": {
+//            "readers": {serial reader definition},
+//            "writers": {writer definition}
+//         }
+//       }
+//
+// The order of expansion is:
+//
+// 1. All inter-variable string substitutions are made within the
+//    variables.
+// 2. String substitutions are made within the modes.
+// 3. String substitutions are made withing the templates.
+// 4. Reference substitutions are made from templates into modes.
+//
+{
+    ////////////////////////////////////////////////////////
+    // These variables get filled in on the logger templates.
+    "vars": {
+        // Cruise ID
+        "%CRUISE%" : "NBP1406 UW",
+        "%START_DATE%" : "2014-06-01",
+        "%END_DATE%" : "2014-07-01",
+
+        // Where logfiles should be written
+        "%LOGFILE_BASE%": "/tmp/log/%CRUISE%",
+
+        // What port the UDP network writers should read/write
+        "%UDP_PORT%": ":6224",
+
+        // All instruments - these vars are expanded in the generic
+        // templates.
+        "%INST%": ["mwx1", "eng1", "rtmp", "pguv", "svp1", "tsg1", "tsg2",
+                   "knud", "grv1", "hdas", "mbdp", "pco2"],
+
+        // Instruments that should run while in port
+        "%PORT_INST%": ["mwx1", "eng1", "rtmp"],
+
+        // Instruments that should only run while underway
+        "%UW_INST%": ["knud", "pguv", "svp1", "tsg1", "tsg2",
+                      "grv1", "hdas", "mbdp", "pco2"]
+    },
+
+    "cruise": {
+        "id": "%CRUISE%",
+        "start": "%START_DATE%",
+        "end": "%END_DATE%"
+    },
+
+    "loggers": {
+        "%INST%": {
+            "configs": ["%INST%->off", "%INST%->net", "%INST%->file/net/db"]
+        }
+    },
+
+    "configs": {
+        "%INST%->off": {},
+        "%INST%->net": "%INST%_SERIAL_LOGGER_NO_WRITE",
+        "%INST%->file/net/db": "%INST%_SERIAL_LOGGER"
+    },
+
+    ////////////////////////////////////////////////////////
+    // Three different cruise modes: off, port, underway
+    "modes": {
+        // Nothing's running when off
+        "off": {
+            "%INST%": "%INST%->off"
+        },
+        
+        // In port, we only run certain instruments, and don't write to disk
+        "port": {
+            "%PORT_INST%": "%PORT_INST%->net",
+            "%UW_INST%": "%UW_INST%->off"
+        },
+        
+        // Underway, everything's in default mode of running/saving.
+        "underway": {
+            "%INST%": "%INST%->file/net/db"
+        }        
+    },
+
+    // By default, we should be in mode "off"
+    "default_mode": "off",
+
+
+    ////////////////////////////////////////////////////////
+    // Generic logger definition templates that we're going to draw on
+    // to fill in the actual configurations in the cruise modes
+    "templates": {        
+        // Generic logfile writer
+        "%INST%_LOGFILE_WRITER": {
+               "class": "LogfileWriter",
+            "kwargs": {"filebase": "%LOGFILE_BASE%/%INST%/raw/%CRUISE%_%INST%"}
+        },
+        
+        // Generic network writer - a ComposedWriter that prefixes
+        // instrument data_id before writing
+        "%INST%_NETWORK_WRITER": {
+            "class": "ComposedWriter",
+            "kwargs": {
+                "transforms": {
+                    "class": "PrefixTransform",
+                    "kwargs": {"prefix": "%INST%"}
+                },
+                "writers": {"class": "NetworkWriter",
+                            "kwargs": { "network": "%UDP_PORT%" }
+                           }
+            }
+        },
+
+        // Generic database writer - a ComposedWriter that prefixes
+        // instrument data_id then parses into DASRecord before writing
+        "%INST%_DATABASE_WRITER": {
+            "class": "ComposedWriter",
+            "kwargs": {
+                "transforms": [
+                    { "class": "PrefixTransform",
+                      "kwargs": {"prefix": "%INST%"}},
+                    { "class": "ParseNMEATransform"}
+                ],
+                "writers": {"class": "DatabaseWriter"}
+            }
+        },
+        
+        // Generic loggers
+        // Read from serial, write to network and logfile
+        "%INST%_SERIAL_LOGGER": {
+            "name": "%INST%->net/file/db",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {"class": "TimestampTransform"},
+            "writers": [
+                "%INST%_LOGFILE_WRITER",
+                "%INST%_NETWORK_WRITER",
+                "%INST%_DATABASE_WRITER"
+            ]
+        },
+        
+        // Read from serial, write to network, but not logfile
+        "%INST%_SERIAL_LOGGER_NO_WRITE": {
+            "name": "%INST%->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {"class": "TimestampTransform"},
+            "writers": "%INST%_NETWORK_WRITER"
+        },
+        
+        // Read from serial, write to network and logfile
+        "%INST%_SERIAL_LOGGER_NO_NETWORK": {
+            "name": "%INST%->file",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {"class": "TimestampTransform"},
+            "writers": "%INST%_LOGFILE_WRITER"
+        },
+
+        // Read from network, write to logfile
+        "%INST%_NETWORK_LOGGER": {
+            "name": "%INST%->file",
+            "readers":  {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_%INST%",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {"class": "TimestampTransform"},
+            "writers": "%INST%_LOGFILE_WRITER"
+        },
+        // Read from network, parse and look for broken bounds; write
+        // to stdout if they're exceeded
+        "%QC_LOGGER%": {
+            "name": "qc_logger",
+            "readers":  {
+                "class": "NetworkReader",
+                "kwargs": { "network": "%UDP_PORT%" }
+            },
+            "transforms": [
+                {"class": "ParseNMEATransform"},
+                {
+                    "class": "QCFilterTransform",
+                    "kwargs": {
+                        "bounds": "%QC_LIMITS%"
+                    }
+                }
+            ],
+            "writers": {"class": "TextFileWriter"}
+        }
+    }
+    
+}

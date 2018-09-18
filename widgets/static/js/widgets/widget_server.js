@@ -71,11 +71,13 @@ function WidgetServer(widget_list, websocket_server) {
         this.ws.onmessage = function (received_message) {
             var parsed_message = JSON.parse(received_message.data);
             
-            // Pass parsed message data to each widget's process_message() function
+            // Pass parsed message data to each widget's process_message() func
             for (widget_i = 0; widget_i < this.widget_list.length; widget_i++) {
                 var widget = this.widget_list[widget_i];
                 widget.process_message(parsed_message);
             }
+            // Let server know we're ready for our next message
+            this.ws.send('ready');
         }.bind(this);
 
         window.onbeforeunload = function(event) {

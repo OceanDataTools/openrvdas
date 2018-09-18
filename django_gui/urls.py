@@ -17,7 +17,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 from . import views
+from django.views.generic import TemplateView
 
 urlpatterns = [
   path('admin/', admin.site.urls),
@@ -40,4 +44,11 @@ urlpatterns = [
   path('cruise/', views.index, name='index'),
   path('cruise/<str:cruise_id>', views.index, name='index'),
 
-]
+  path('demo/', TemplateView.as_view(template_name='widgets/demo.html'),
+       name='demo'),
+  path('demo/', TemplateView.as_view(template_name='widgets/demo.html'),
+       name='demo'),
+  path('demo/', TemplateView.as_view(template_name='widgets/demo.html'),
+       name='demo'),
+  #path('demo/', include('widgets.urls')),
+]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

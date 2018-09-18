@@ -62,6 +62,9 @@
     ws.onmessage = function (received_message) {
       //console.log("message: " + received_message.data);
       process_message(JSON.parse(received_message.data));
+
+      // Let server know we're ready for our next message
+      ws.send('ready');
     };
   };
   

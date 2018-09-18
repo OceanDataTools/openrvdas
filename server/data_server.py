@@ -150,18 +150,28 @@ class DataServer:
     max_timestamp_seen = 0
     
     while not self.quit_flag:
+      now = time.time()
+
       # If we do have results, package them up and send them
       if results:
         send_message = json.dumps(results)
         logging.debug('Data server sending: %s', send_message)
         try:
           await self.websocket.send(send_message)
+          logging.debug('Websocket sent data, awaiting ready...')
+          ready_message = await self.websocket.recv()
+          if not ready_message == 'ready':
+            logging.error('DataServer non "ready" message: "%s"', ready_message)
+          logging.debug('Websocket got ready...')
         except websockets.exceptions.ConnectionClosed:
           return
 
+
       # New results or not, take a nap before trying to fetch more results
-      logging.debug('Sleeping %g seconds', self.interval)
-      await asyncio.sleep(self.interval)
+      elapsed = time.time() - now
+      time_to_sleep = max(0, self.interval - elapsed)
+      logging.debug('Sleeping %g seconds', time_to_sleep)
+      await asyncio.sleep(time_to_sleep)
 
       # What's the timestamp of the most recent result we've seen?
       # Each value should be a list of (timestamp, value) pairs. Look

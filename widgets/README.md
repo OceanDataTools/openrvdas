@@ -83,7 +83,10 @@ page's HTML. Below, we have defined three container DIVs:
   <table id=ship_table>
     <tr>
       <td>Position:</td>
-      <td><span id="gps_lat_container"></span></td>
+      <td>
+        <span id="gps_lat"></span>°
+        <span id="gps_n_or_s"></span>
+      </td>
     </tr>
   </table>
   ```
@@ -103,6 +106,7 @@ to a WidgetServer object and tell it to start serving:
   widget_list.push(new TimelineWidget('line-container', line_fields, 'Degrees'));
   widget_list.push(new DialWidget('dial-container', dial_fields));
   widget_list.push(new TextWidget('gps_lat_container', gps_lat_fields));
+  widget_list.push(new TextWidget('gps_n_or_s', gps_n_or_s_fields));
 
   var widget_server = new WidgetServer(widget_list, 'localhost:8765');
   widget_server.serve();
@@ -152,9 +156,11 @@ be displayed, and the values are arrays of properties:
       transform: function(val) {
         return 'Lat ' + Math.round(val*100)/10000  + '°';
       }
-    },
+    }
+  };
+  var gps_n_or_s_fields = {
     S330NorS: {
-      name: "N/S",
+      name: "N/S"
     }
   };
   ```
@@ -184,37 +190,37 @@ depends on which widgets we are using.
   need the following lines in your HTML to use them:
 
   ```
-  <script src="static/js/jquery/jquery-3.1.1.min.js"></script>
-  <script src="static/js/highcharts/stock/highstock.js"></script>
-  <script src="static/js/highcharts/stock/modules/exporting.js"></script>
-  <script src="static/js/highcharts/stock/modules/export-data.js"></script>
-  <script src="static/js/highcharts/code/highcharts-more.js"></script>
-  <script src="static/js/highcharts/code/modules/data.js"></script>
+  <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
+  <script src="/static/js/highcharts/stock/highstock.js"></script>
+  <script src="/static/js/highcharts/stock/modules/exporting.js"></script>
+  <script src="/static/js/highcharts/stock/modules/export-data.js"></script>
+  <script src="/static/js/highcharts/code/highcharts-more.js"></script>
+  <script src="/static/js/highcharts/code/modules/data.js"></script>
 
-  <script src="highcharts_widget.js"></script>
-  <script src="widget_server.js"></script>
+  <script src="/static/js/widgets/highcharts_widget.js"></script>
+  <script src="/static/js/widgets/widget_server.js"></script>
   ```
 
   For the TextWidget, you'll just need
 
   ```
-  <script src="text_widget.js"></script>
-  <script src="widget_server.js"></script>
+  <script src="/static/js/widgets/text_widget.js"></script>
+  <script src="/static/js/widgets/widget_server.js"></script>
   ```
 
   For the MapWidget, you'll need
 
   ```
   <!-- Basic leaflet/jquery scripts. Leaflet's JS must come *after* is CSS. -->
-  <script src="static/js/jquery/jquery-3.1.1.min.js"></script>
-  <link rel="stylesheet" href="static/css/leaflet/leaflet.css" />
-  <script src="static/js/leaflet/leaflet.js"></script>
+  <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
+  <link rel="stylesheet" href="/static/css/leaflet/leaflet.css" />
+  <script src="/static/js/leaflet/leaflet.js"></script>
 
-  <script src="map_widget.js"></script>
-  <script src="widget_server.js"></script>
+  <script src="/static/js/widgets/map_widget.js"></script>
+  <script src="/static/js/widgets/widget_server.js"></script>
 
   <!-- Style sheet for this map demo -->
-  <link rel="stylesheet" href="static/css/map_demo.css" />
+  <link rel="stylesheet" href="/static/css/map_demo.css" />
   ```
 
 ### Overriding widget options

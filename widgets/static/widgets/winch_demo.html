@@ -1,0 +1,437 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Winch Example</title>
+
+    <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
+
+    <!-- For highcharts-widget.js -->
+    <script src="/static/js/highcharts/code/highstock.js"></script>
+    <script src="/static/js/highcharts/code/highcharts-more.js"></script>
+    <script src="/static/js/highcharts/code/modules/data.js"></script>
+
+    <script src="/static/js/highcharts/code/modules/solid-gauge.js"></script>
+
+    <script src="/static/js/widgets/highcharts_widget.js"></script>
+    <script src="/static/js/widgets/text_widget.js"></script>
+    <script src="/static/js/widgets/widget_server.js"></script>
+
+    <style type="text/css">
+      #ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      #ship_table td, #ship_table th {
+        border: 0px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        vertical-align:top;
+        min-width: 250px;
+      }
+      .td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 25%;
+        height: 100px;
+      }
+      .text_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        text-align: left;
+      }
+      .warning_text {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        color: orangered;
+        font-size: 16px;
+        text-align: left;
+        overflow: scroll; 
+        overflow-x: scroll; 
+        overflow-y: scroll;
+        resize: none;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+<table id=ship_table>
+  <tr>
+    <td>
+      <div style="width: 600px; margin: 0 auto">
+        <div id="cwnc-speed-dial-container"
+         style="width: 300px; height: 200px; float: left"></div>
+        <div id="cwnc-tension-dial-container"
+         style="width: 300px; height: 200px; float: left"></div>
+      </div>
+    </td>
+    <td>
+      <span class="text_25">
+        Payout: <span id="cwnc-payout-container"></span> meters<br><br>
+        Warnings<br>
+        <textarea rows=6 cols=60 class="warning_text"
+         id="cwnc-warnings-container" readonly>
+        </textarea>
+      </span>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <div style="width: 600px; margin: 0 auto">
+        <div id="twnc-speed-dial-container"
+         style="width: 300px; height: 200px; float: left"></div>
+        <div id="twnc-tension-dial-container"
+         style="width: 300px; height: 200px; float: left"></div>
+      </div>
+    </td>
+    <td>
+      <span class="text_25">
+        Payout: <span id="twnc-payout-container"></span> meters<br><br>
+        Warnings<br>
+        <textarea rows=6 cols=60 class="warning_text"
+         id="twnc-warnings-container">
+        </textarea>
+      </span>
+    </td>
+  </tr>
+
+</table>
+
+
+    <script type="text/javascript">
+      //////////////////////////////////////
+      // Start of widget code
+      var WEBSOCKET_SERVER = "localhost:8765";
+
+      var widget_list = [];
+
+
+      ///////////////////
+      var cwnc_speed_gauge_options = {
+        chart: { type: 'solidgauge' },
+        series: [{
+          id: 'CWNCSpeed',
+          name: 'CWNC Speed',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> m / min</span></div>'
+          },
+          tooltip: { valueSuffix: ' m/min' }
+        }],
+        yAxis: {
+          min: 0,
+          max: 60,
+          title: { text: 'CWNC Speed' },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: { y: -70 },
+          labels: { y: 16 }
+          },
+         tooltip: { valueSuffix: ' m/min' },
+        credits: { enabled: false },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+       plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+
+      ///////////////////
+      var cwnc_tension_gauge_options = {
+        chart: { type: 'solidgauge' },
+        series: [{
+          id: 'CWNCTension',
+          name: 'Payout',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> lbs</span></div>'
+          }
+        }],
+        yAxis: {
+          min: -10,
+          max: 1500,
+          title: { text: 'Tension' },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: { y: -70 },
+          labels: { y: 16 }
+        },
+        tooltip: { valueSuffix: ' lbs' },
+        credits: { enabled: false },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+        plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+      //////////////////
+      // Two dials
+      var cwnc_speed_dial_fields = {
+        CWNCSpeed: { name: 'Waterfall Winch Speed' }
+      };
+      widget_list.push(new DialWidget('cwnc-speed-dial-container',
+                                      cwnc_speed_dial_fields,
+                                      cwnc_speed_gauge_options));
+      var cwnc_tension_dial_fields = {
+        CWNCTension: { name: 'Tension' }
+      };
+      widget_list.push(new DialWidget('cwnc-tension-dial-container',
+                                      cwnc_tension_dial_fields,
+                                      cwnc_tension_gauge_options));
+
+      function keep_element_scrolled_to_bottom(element_id) {
+        var element = document.getElementById(element_id);
+        if (!element) {
+          console.log('No element \'' + element + '\' found');
+        }
+        var page_bottom = element.scrollHeight;
+        var page_position = element.scrollTop + element.clientHeight;
+        var near_bottom = (page_position + 100 > page_bottom);
+        if (near_bottom) {
+          element.scrollTop = element.scrollHeight + element.clientHeight;
+        }
+      }
+
+
+      //////////////////
+      // Two rows: Payout and any alerts
+      var cwnc_payout_fields = {CWNCPayout: {name: "Payout" }};
+      widget_list.push(new TextWidget('cwnc-payout-container',
+                                      cwnc_payout_fields));
+      var cwnc_warnings_fields = {
+        AlertMessage: {
+          transform: function(val) {
+            if (val && val.search('CWNC') >= 0) {
+              // Before we return value, an ugly little hack to keep our 
+              // text area at bottom before we add text.
+              keep_element_scrolled_to_bottom('cwnc-warnings-container');
+              return val;
+            }
+            return '';
+          },
+          // Append new messages rather than overwriting
+          append: true,
+          separator: '\n'
+         }
+      };
+      widget_list.push(new TextWidget('cwnc-warnings-container',
+                                      cwnc_warnings_fields));
+
+      //////////////////////////////////////////////////////////////////////////
+
+     ///////////////////
+      var twnc_speed_gauge_options = {
+        chart: { type: 'solidgauge' },
+        series: [{
+          id: 'TWNCSpeed',
+          name: 'Trawl Winch Speed',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> m / min</span></div>'
+          },
+          tooltip: { valueSuffix: ' m/min' }
+        }],
+        yAxis: {
+          min: 0,
+          max: 60,
+          title: { text: 'TWNC Speed' },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: { y: -70 },
+          labels: { y: 16 }
+          },
+         tooltip: { valueSuffix: ' m/min' },
+        credits: { enabled: false },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+       plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+      ///////////////////
+      var twnc_tension_gauge_options = {
+        chart: { type: 'solidgauge' },
+        series: [{
+          id: 'TWNCTension',
+          name: 'Payout',
+          data: [0],
+          dataLabels: {
+            format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                   '<span style="font-size:12px;color:silver"> lbs</span></div>'
+          }
+        }],
+        yAxis: {
+          min: -10,
+          max: 1500,
+          title: { text: 'Tension' },
+          stops: [
+              [0.1, '#55BF3B'], // green
+              [0.5, '#DDDF0D'], // yellow
+              [0.9, '#DF5353'] // red
+          ],
+          lineWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          title: { y: -70 },
+          labels: { y: 16 }
+        },
+        tooltip: { valueSuffix: ' lbs' },
+        credits: { enabled: false },
+        pane: {
+          center: ['50%', '85%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+        plotOptions: {
+          solidgauge: {
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+          }
+        }
+      };
+      //////////////////
+      // Two dials
+      var twnc_speed_dial_fields = {
+        TWNCSpeed: { name: 'Trawl Winch Speed' }
+      };
+      widget_list.push(new DialWidget('twnc-speed-dial-container',
+                                      twnc_speed_dial_fields,
+                                      twnc_speed_gauge_options));
+      var twnc_tension_dial_fields = {
+        TWNCTension: { name: 'Tension' }
+      };
+      widget_list.push(new DialWidget('twnc-tension-dial-container',
+                                      twnc_tension_dial_fields,
+                                      twnc_tension_gauge_options));
+
+      function keep_element_scrolled_to_bottom(element_id) {
+        var element = document.getElementById(element_id);
+        if (!element) {
+          console.log('No element \'' + element + '\' found');
+        }
+        var page_bottom = element.scrollHeight;
+        var page_position = element.scrollTop + element.clientHeight;
+        var near_bottom = (page_position + 100 > page_bottom);
+        if (near_bottom) {
+          element.scrollTop = element.scrollHeight + element.clientHeight;
+        }
+      }
+
+
+      //////////////////
+      // Two rows: Payout and any alerts
+      var twnc_payout_fields = {TWNCPayout: {name: "Payout" }};
+      widget_list.push(new TextWidget('twnc-payout-container',
+                                      twnc_payout_fields));
+      var twnc_warnings_fields = {
+        AlertMessage: {
+          transform: function(val) {
+            if (val && val.search('TWNC') >= 0) {
+              // Before we return value, an ugly little hack to keep our 
+              // text area at bottom before we add text.
+              keep_element_scrolled_to_bottom('twnc-warnings-container');
+              return val;
+            }
+            return '';
+          },
+          // Append new messages rather than overwriting
+          append: true,
+          separator: '\n'
+         }
+      };
+      widget_list.push(new TextWidget('twnc-warnings-container',
+                                      twnc_warnings_fields));
+
+      //////////////////////////////////////////////////////////////////////////
+      // Create and start up a WidgetServer
+      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+      widget_server.serve();
+
+    </script>
+  </body>
+</html>

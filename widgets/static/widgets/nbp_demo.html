@@ -33,27 +33,27 @@
       .name_td {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 35%;
+        width: 30%;
       }
       .val_td {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
         font-weight: bold;
-        width: 15%;
+        width: 20%;
       }
     </style>
   </head>
   <body>
-    <script src="static/js/jquery/jquery-3.1.1.min.js"></script>
-    <script src="static/js/highcharts/code/highstock.js"></script>
-    <script src="static/js/highcharts/code/highcharts-more.js"></script>
-    <script src="static/js/highcharts/code/modules/data.js"></script>
-    <script src="static/js/highcharts/code/modules/exporting.js"></script>
-    <script src="static/js/highcharts/code/modules/export-data.js"></script>
+    <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="/static/js/highcharts/code/highstock.js"></script>
+    <script src="/static/js/highcharts/code/highcharts-more.js"></script>
+    <script src="/static/js/highcharts/code/modules/data.js"></script>
+    <script src="/static/js/highcharts/code/modules/exporting.js"></script>
+    <script src="/static/js/highcharts/code/modules/export-data.js"></script>
 
-    <script src="highcharts_widget.js"></script>
-    <script src="text_widget.js"></script>
-    <script src="widget_server.js"></script>
+    <script src="/static/js/widgets/highcharts_widget.js"></script>
+    <script src="/static/js/widgets/text_widget.js"></script>
+    <script src="/static/js/widgets/widget_server.js"></script>
 
     <table class="ship_table">
       <tr>
@@ -83,9 +83,15 @@
 
       <tr>
         <td class="name_td">Lat</td>
-        <td class="val_td"><span id="gps_lat"></span></td>
+        <td class="val_td">
+          <span id="gps_lat"></span>°
+          <span id="gps_n_or_s"></span>
+        </td>
         <td class="name_td">Lon</td>
-        <td class="val_td"><span id="gps_lon"></span></td>
+        <td class="val_td">
+          <span id="gps_lon"></span>°
+          <span id="gps_e_or_w"></span>
+        </td>
       </tr>
       <tr>
         <td class="name_td">Heading</td>
@@ -192,31 +198,30 @@
                                     'Knots', {title:{text:''}}
                                    ));
 
-  var gps_lat_fields = {
-    S330Lat: {
-      name: "Latitude",
-      transform: function(val) {
-        return Math.round(val*100)/10000  + '°';
-      }
-    },
-    S330NorS: {
-      name: "N/S",
-    }
-  };
-  widget_list.push(new TextWidget('gps_lat', gps_lat_fields));
 
-  var gps_lon_fields = {
-    S330Lon: {
-      name: "Longitude",
-      transform: function(val) {
-        return Math.round(val*100)/10000  + '°';
-      }
-    },
-    S330EorW: {
-      name: "E/W",
-    }
-  };
-  widget_list.push(new TextWidget('gps_lon', gps_lon_fields));
+  // Lat/Lon text widgets
+  widget_list.push(new TextWidget('gps_lat',
+                                  {S330Lat:
+                                    {
+                                      name: "Latitude",
+                                      transform: function(val) {
+                                        return Math.round(val*100)/10000;
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_n_or_s', {S330NorS: {name: "N/S"}}));
+
+  widget_list.push(new TextWidget('gps_lon',
+                                  {S330Lon:
+                                    {
+                                      name: "Longitude",
+                                      transform: function(val) {
+                                        return Math.round(val*100)/10000;
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_e_or_w', {S330EorW: {name: "E/W"}}));
+
   widget_list.push(new TextWidget('heading_true',
                                { S330HeadingTrue: {name: 'Heading (True)'}}));
   widget_list.push(new TextWidget('gps_sog',
