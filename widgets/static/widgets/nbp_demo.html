@@ -44,6 +44,9 @@
     </style>
   </head>
   <body>
+    <!-- This is where we define location of data server. -->
+    <script src="/static/js/widgets/settings.js"></script>
+
     <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
     <script src="/static/js/highcharts/code/highstock.js"></script>
     <script src="/static/js/highcharts/code/highcharts-more.js"></script>
@@ -150,12 +153,8 @@
     </table>
 
 
-    <script type="text/javascript">
-
-  var WEBSOCKET_SERVER = "localhost:8765";
-
+  <script type="text/javascript">
   var widget_list = [];
-
 
   //////////////////
   // A dial

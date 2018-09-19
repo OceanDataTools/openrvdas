@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Highcharts Examples</title>
 
+    <!-- This is where we define location of data server. -->
+    <script src="/static/js/widgets/settings.js"></script>
+    
     <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
 
     <!-- For highcharts-widget.js -->
@@ -48,14 +51,16 @@
           <span id="roll_container"></span>
         </td>
         <td>Relative Speed:
-          Port: <span id="port_rel_speed"></span> m/s,
-          Stbd: <span id="stbd_rel_speed"></span> m/s
+          Port: <span id="port_rel_speed" style="color:red"></span> m/s,
+          Stbd: <span id="stbd_rel_speed" style="color:green"></span> m/s
         </td>
       </tr>
       <tr>
         <td colspan=2>Position:
-          <span id="gps_lat_container"></span>,
-          <span id="gps_lon_container"></span>
+          <span id="gps_lat_container">-</span>°
+          <span id="gps_n_or_s_container"></span>, 
+          <span id="gps_lon_container">-</span>°
+          <span id="gps_e_or_w_container"></span>
         </td>
       </tr>
     </table>
@@ -63,8 +68,6 @@
     <script type="text/javascript">
       //////////////////////////////////////
       // Start of widget code
-      var WEBSOCKET_SERVER = "localhost:8765";
-
       var widget_list = [];
 
       //////////////////
@@ -119,7 +122,6 @@
       var port_rel_speed_fields = {
         MwxPortRelWindSpeed: {
           name: "Port Rel Wind Speed",
-          color: 'red',
         }
       };
       widget_list.push(new TextWidget('port_rel_speed', port_rel_speed_fields));
@@ -127,7 +129,6 @@
       var stbd_rel_speed_fields = {
         MwxStbdRelWindSpeed: {
           name: "Stbd Rel Wind Speed",
-          color: 'green',
         }
       };
       widget_list.push(new TextWidget('stbd_rel_speed', stbd_rel_speed_fields));
@@ -136,27 +137,35 @@
         S330Lat: {
           name: "Latitude",
           transform: function(val) {
-            return 'Lat ' + Math.round(val*100)/10000  + '°';
+            return 'Lat ' + Math.round(val*100)/10000;
           }
-        },
+        }
+      };
+      var gps_n_or_s_fields = {
         S330NorS: {
           name: "N/S",
         }
       };
       widget_list.push(new TextWidget('gps_lat_container', gps_lat_fields));
+      widget_list.push(new TextWidget('gps_n_or_s_container',
+                                      gps_n_or_s_fields));
 
       var gps_lon_fields = {
         S330Lon: {
           name: "Longitude",
           transform: function(val) {
-            return 'Lon ' + Math.round(val*100)/10000  + '°';
+            return 'Lon ' + Math.round(val*100)/10000;
           }
-        },
+        }
+      };
+      var gps_e_or_w_fields = {
         S330EorW: {
           name: "E/W",
         }
       };
       widget_list.push(new TextWidget('gps_lon_container', gps_lon_fields));
+      widget_list.push(new TextWidget('gps_e_or_w_container',
+                                      gps_e_or_w_fields));
 
       var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
       widget_server.serve();

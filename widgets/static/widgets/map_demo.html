@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
+  <!-- This is where we define location of data server. -->
+  <script src="/static/js/widgets/settings.js"></script>
+
   <!-- Basic leaflet/jquery scripts. Leaflet's JS must come *after* is CSS. -->
   <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
   <link rel="stylesheet" href="/static/css/leaflet/leaflet.css" />
@@ -21,8 +24,6 @@
   </div>
 
   <script type="text/javascript">
-    var WEBSOCKET_SERVER = "localhost:8765";
-
     // What fields we're looking for to get lon/lat values
     var map_fields = {S330Lat: {seconds:30}, S330Lon: {seconds:30},
                       S330NorS: {seconds:30}, S330EorW: {seconds:30}};
