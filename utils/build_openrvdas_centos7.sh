@@ -127,6 +127,9 @@ create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_PASSWORD';
 create database if not exists data character set utf8;
 GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
 
+create database if not exists openrvdas character set utf8;
+GRANT ALL PRIVILEGES ON openrvdas.* TO '$RVDAS_USER'@'localhost';
+
 create database if not exists test character set utf8;
 GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
 GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
