@@ -6,7 +6,7 @@
 // winds, and stores the results back in the database.
 {
     "cruise": {
-        "id": "TrueWinds Sample",
+        "id": "NBP1406 True Winds",
         "start": "2018-01-01",
         "end": "2018-02-01"        
     },
@@ -28,6 +28,11 @@
             "mwx1": "off",
             "s330": "off",
             "derived": "off"
+        },
+        "derived only": {
+            "mwx1": "off",
+            "s330": "off",
+            "derived": "derived->db"
         },
         "underway": {
             "mwx1": "mwx1->net/file/db",
@@ -170,6 +175,21 @@
                                 "true_speed_name": "PortTrueWindSpeed",
                                 "update_on_fields": ["MwxPortRelWindDir"],
                                 "apparent_dir_name": "PortApparentWindDir",
+                                "convert_speed_factor": 0.5144
+                            }
+                        },
+                        {
+                            "class": "TrueWindsTransform",
+                            "kwargs": {
+                                "course_field": "S330CourseTrue",
+                                "speed_field": "S330Speed",
+                                "heading_field": "S330HeadingTrue",
+                                "wind_dir_field": "MwxStbdRelWindDir",
+                                "wind_speed_field": "MwxStbdRelWindSpeed",
+                                "true_dir_name": "StbdTrueWindDir",
+                                "true_speed_name": "StbdTrueWindSpeed",
+                                "update_on_fields": ["MwxStbdRelWindDir"],
+                                "apparent_dir_name": "StbdApparentWindDir",
                                 "convert_speed_factor": 0.5144
                             }
                         }

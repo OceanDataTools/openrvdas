@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>True Winds - Derived Data Example</title>
+
+    <!-- This is where we define location of data server. -->
+    <script src="/static/js/widgets/settings.js"></script>
+    
+    <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
+
+    <!-- For highcharts-widget.js -->
+    <script src="/static/js/highcharts/code/highstock.js"></script>
+    <script src="/static/js/highcharts/code/highcharts-more.js"></script>
+    <script src="/static/js/highcharts/code/modules/data.js"></script>
+    <script src="/static/js/highcharts/code/modules/exporting.js"></script>
+    <script src="/static/js/highcharts/code/modules/export-data.js"></script>
+
+    <script src="/static/js/widgets/highcharts_widget.js"></script>
+    <script src="/static/js/widgets/text_widget.js"></script>
+    <script src="/static/js/widgets/widget_server.js"></script>
+
+    <style type="text/css">
+      .ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      .ship_table td, .ship_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        width: 16%;
+      }
+    </style>
+  </head>
+  <body>
+    <table class=ship_table>
+      <tr>
+        <td colspan=3>
+          <div id="rel-wind-container"
+               style="height: 400px; min-width: 310px"></div>
+        </td>
+        <td colspan=3>
+          <div id="true-wind-container"
+               style="height: 400px; min-width: 310px"></div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan=3>Relative Speed:
+          Port: <span id="port_rel_speed" style="color:red"></span> m/s,
+          Stbd: <span id="stbd_rel_speed" style="color:green"></span> m/s
+        </td colspan=3>
+        <td colspan=3>True Speed:
+          Port: <span id="port_true_speed" style="color:red"></span> m/s,
+          Stbd: <span id="stbd_true_speed" style="color:green"></span> m/s
+        </td>
+      </tr>
+      <tr>
+        <td colspan=2>
+          Course <span id="course_container">-</span>°
+        </td>
+        <td colspan=2>
+          Heading <span id="heading_container"></span>°
+        </td>
+        <td colspan=2>
+          Speed over ground <span id="sog_container">-</span> kts
+        </td>
+      </tr>
+    </table>
+
+    <script type="text/javascript">
+      //////////////////////////////////////
+      // Start of widget code
+      var widget_list = [];
+
+      //////////////////
+      // Relative winds
+      var rel_wind_fields = {
+        MwxPortRelWindDir: {
+          name: 'Port Relative Wind',
+          color: 'red',
+        },
+        MwxStbdRelWindDir: {
+          name: 'Stbd Relative Wind',
+          color: 'green',
+        }
+      };
+      widget_list.push(new DialWidget('rel-wind-container', rel_wind_fields));
+
+
+      //////////////////
+      // True winds
+      var true_wind_fields = {
+        PortTrueWindDir: {
+          name: 'Port True Wind',
+          color: 'red',
+        },
+        StbdTrueWindDir: {
+          name: 'Stbd True Wind',
+          color: 'green',
+        }
+      };
+      widget_list.push(new DialWidget('true-wind-container', true_wind_fields));
+
+      var port_rel_speed_fields = {
+        MwxPortRelWindSpeed: {
+          name: "Port Rel Wind Speed",
+        }
+      };
+      widget_list.push(new TextWidget('port_rel_speed', port_rel_speed_fields));
+
+      var stbd_rel_speed_fields = {
+        MwxStbdRelWindSpeed: {
+          name: "Stbd Rel Wind Speed",
+        }
+      };
+      widget_list.push(new TextWidget('stbd_rel_speed', stbd_rel_speed_fields));
+
+      var port_true_speed_fields = {
+        PortTrueWindSpeed: {
+          name: "Port True Wind Speed",
+        }
+      };
+      widget_list.push(new TextWidget('port_true_speed',
+                                      port_true_speed_fields));
+
+      var stbd_true_speed_fields = {
+        StbdTrueWindSpeed: {
+          name: "Stbd True Wind Speed",
+        }
+      };
+      widget_list.push(new TextWidget('stbd_true_speed',
+                                      stbd_true_speed_fields));
+
+      widget_list.push(new TextWidget('course_container',
+                                      {S330CourseTrue: {name: 'Course'}}));
+      widget_list.push(new TextWidget('heading_container',
+                                      {S330HeadingTrue: {name: 'Heading'}}));
+      widget_list.push(new TextWidget('sog_container',
+                                      {S330Speed: {name: 'Speed'}}));
+
+      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+      widget_server.serve();
+
+    </script>
+  </body>
+</html>

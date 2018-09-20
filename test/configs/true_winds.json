@@ -1,9 +1,18 @@
-// A sample derived-data transform to generate and store true winds from
-// database data. There are three "loggers" here: one that reads SeaPath330
-// data from serial port and store it in a logfile and in the database, one
-// that does the same for mast weather data, and a third that reads the
-// relevant fields from the database, uses them to compute true winds, and
-// stores the results back in the database.
+// A sample derived-data transform to generate and store true winds
+// from database data. Demonstrates the use of the completely
+// non-intuitive ComposedDerivedDataTransform. The non-intuitive bits
+// about the ComposedDerivedDataTransform (see the documentation in
+// logger/transforms/derived_data_transform.py) is that it takes as
+// its arguments a list of DerivedDataTransforms and runs them in
+// *parallel*. DerivedDataTransforms are special (again, see the
+// documentation in derived_data_transform.py) in that they must
+// implement a fields() method returning a list of fields in which the
+// transform is interested. The ComposedDerivedDataTransform then
+// looks for those fields in its input and feeds them to the relevant
+// DerivedDataTransforms it contains.
+
+// This particular logger reads from the database, computes port and
+// starboard true winds and writes them back into the database.
 {
     "name": "derived->db",
     "readers": {
@@ -32,9 +41,22 @@
                         "apparent_dir_name": "PortApparentWindDir",
                         "convert_speed_factor": 0.5144
                     }
+                },
+                {
+                    "class": "TrueWindsTransform",
+                    "kwargs": {
+                        "course_field": "S330CourseTrue",
+                        "speed_field": "S330Speed",
+                        "heading_field": "S330HeadingTrue",
+                        "wind_dir_field": "MwxStbdRelWindDir",
+                        "wind_speed_field": "MwxStbeRelWindSpeed",
+                        "true_dir_name": "StbdTrueWindDir",
+                        "true_speed_name": "StbdTrueWindSpeed",
+                        "apparent_dir_name": "StbdApparentWindDir",
+                        "convert_speed_factor": 0.5144
+                    }
                 }
-                //,
-                // Other derived data transforms should go here
+                 // Other derived data transforms should go here
             ]
         }
     },
