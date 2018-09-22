@@ -40,22 +40,20 @@
       <tr>
         <td colspan=3>
           <div id="rel-wind-container"
-               style="height: 400px; min-width: 310px"></div>
+               style="height: 300px; width: 310px"></div>
         </td>
         <td colspan=3>
           <div id="true-wind-container"
-               style="height: 400px; min-width: 310px"></div>
+               style="height: 300px; width: 310px"></div>
         </td>
       </tr>
       <tr>
-        <td colspan=3>Relative Speed:
-          Port: <span id="port_rel_speed" style="color:red"></span> m/s,
-          Stbd: <span id="stbd_rel_speed" style="color:green"></span> m/s
-        </td colspan=3>
-        <td colspan=3>True Speed:
-          Port: <span id="port_true_speed" style="color:red"></span> m/s,
-          Stbd: <span id="stbd_true_speed" style="color:green"></span> m/s
-        </td>
+        <td>Relative Speed</td>
+        <td>Port: <span id="port_rel_speed" style="color:red"></span> m/s,</td>
+        <td>Stbd: <span id="stbd_rel_speed" style="color:green"></span> m/s</td>
+        <td>True Speed</td>
+        <td>Port: <span id="port_true_speed" style="color:red"></span> m/s,</td>
+        <td>Stbd: <span id="stbd_true_speed" style="color:green"></span> m/s</td>
       </tr>
       <tr>
         <td colspan=2>
@@ -121,6 +119,7 @@
       var port_true_speed_fields = {
         PortTrueWindSpeed: {
           name: "Port True Wind Speed",
+          transform: function(val) { return Math.round(val*100)/100; }
         }
       };
       widget_list.push(new TextWidget('port_true_speed',
@@ -129,6 +128,7 @@
       var stbd_true_speed_fields = {
         StbdTrueWindSpeed: {
           name: "Stbd True Wind Speed",
+          transform: function(val) { return Math.round(val*100)/100; }
         }
       };
       widget_list.push(new TextWidget('stbd_true_speed',

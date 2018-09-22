@@ -156,6 +156,7 @@
                     "host": "localhost",
                     "user": "rvdas",
                     "password": "rvdas",
+                    "tail": true,
                     "sleep_interval": 1.0
                 }
             },

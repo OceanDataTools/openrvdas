@@ -47,14 +47,15 @@ class MySQLConnector:
   FIELD_TABLE = 'fields'
   SOURCE_TABLE = 'source'
 
-  def __init__(self, database, host, user, password, save_source=True):
+  def __init__(self, database, host, user, password,
+               tail=False, save_source=True):
     """Interface to MySQLConnector, to be imported by, e.g. DatabaseWriter."""
     if not MYSQL_ENABLED:
       logging.warning('MySQL not found, so MySQL functionality not available.')
       return
 
     self.connection = mysql.connector.connect(database=database, host=host,
-                                        user=user, password=password)
+                                              user=user, password=password)
     self.save_source = save_source
 
     # What's the next id we're supposed to read? Or if we've been
@@ -89,7 +90,10 @@ class MySQLConnector:
       ]
       logging.info('Creating table with command: %s', ' '.join(table_cmd))
       self.exec_sql_command(' '.join(table_cmd))
-    
+
+    # Once tables are initialized, seek to end if tail is True
+    if tail:
+      self.seek(offset=0, origin='end')
 
   ############################
   def exec_sql_command(self, command):
