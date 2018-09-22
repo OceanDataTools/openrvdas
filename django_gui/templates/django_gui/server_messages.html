@@ -25,11 +25,28 @@
   </style>
 </head>
 
-<h1>{{ cruise_id }} Server messages</h1>
+<h1>Server messages{% if cruise_id %} for {{ cruise_id }}{% endif %}</h1>
 
 {# ######################################################################## #}
 <table>
   <tr>
+    <td>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <select name="select_cruise" id="select_cruise"
+                onchange="change_cruise()">
+          <option value="" selected>all cruises</option>
+          {% for cruise_id_option in cruise_list %}
+          <option id="cruise_{{ cruise_id_option }}"
+                  {% if cruise_id_option == cruise_id %}
+                  selected
+                  {% endif %}>
+            {{ cruise_id_option }}
+          </option> 
+          {% endfor %}
+        </select>  
+      </form>
+    </td>
     {% for level, level_name in log_levels.items %}
     <td>
       <button onclick="window.location='/server_messages/{{ level }}/{{ cruise_id }}/{{ source }}'"
@@ -208,6 +225,16 @@
     }
   }
 
+  ///////////////////////////////
+  // Switch view to the selected cruise
+  function change_cruise() {
+    var select = document.getElementById("select_cruise");
+    var cruise = select.options[select.selectedIndex].value;
+    var url = "/server_messages/{{ log_level }}/" + cruise + "/{{ source }}";
+    console.log("Loading page: " + url);
+    history.pushState(cruise, cruise, url);
+    window.location.assign(url);
+  }  
 </script>
 
 {% endblock content %}

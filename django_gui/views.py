@@ -157,6 +157,7 @@ def index(request, cruise_id=None):
 #def server_messages(request, log_level=logging.INFO,
 #                    cruise_id=None, source=None):
 def server_messages(request, path):
+  global api
   path_pieces = path.split('/')
   log_level = path_pieces[0] if len(path_pieces) > 0 else logging.INFO
   cruise_id = path_pieces[1] if len(path_pieces) > 1 else None
@@ -167,6 +168,7 @@ def server_messages(request, path):
                    'log_levels': LOG_LEVELS,
                    'log_level_colors': LOG_LEVEL_COLORS,
                    'cruise_id': cruise_id,
+                   'cruise_list': api.get_cruises(),
                    'source': source}
   return render(request, 'django_gui/server_messages.html', template_vars)
 
