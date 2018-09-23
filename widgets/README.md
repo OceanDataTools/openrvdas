@@ -14,7 +14,7 @@ responsible for ensuring that they have the appropriate licenses to
 use those libraries.
 
 **NOTE #2:** In order for the widgets described here to work, you must
-copy the [settings.js.dist](static/js/widgets/settings.py.dist) file
+copy the [settings.js.dist](static/js/widgets/settings.js.dist) file
 in [static/js/widgets/](static/js/widgets/) over to settings.py and
 set the WEBSOCKET_SERVER definition in that file to match the name
 used by your installation (if you have used one of the installation
