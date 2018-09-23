@@ -265,7 +265,7 @@ cp database/settings.py.dist database/settings.py
 
 cp widgets/static/js/widgets/settings.js.dist \
    widgets/static/js/widgets/settings.js
-sed -i -e 's/localhost/${HOSTNAME}/g' widgets/static/js/widgets/settings.js
+sed -i .bak -e "s/localhost/${HOSTNAME}/g" widgets/static/js/widgets/settings.js
 
 python3 manage.py makemigrations django_gui
 python3 manage.py migrate
