@@ -13,6 +13,14 @@ widgets in HTML pages.
 responsible for ensuring that they have the appropriate licenses to
 use those libraries.
 
+**NOTE #2:** In order for the widgets described here to work, you must
+copy the [settings.js.dist](static/js/widgets/settings.py.dist) file
+in [static/js/widgets/](static/js/widgets/) over to settings.py and
+set the WEBSOCKET_SERVER definition in that file to match the name
+used by your installation (if you have used one of the installation
+scripts in the [utils directory](../utils), this will have already
+been done for you.)
+
 ## Overview
 
 The OpenRVDAS [logger_manager.py](../server/logger_manager.py) script

@@ -66,7 +66,7 @@ if id -u $RVDAS_USER > /dev/null; then
   echo User exists, skipping
 else
   echo Creating $RVDAS_USER
-  useradd $RVDAS_USER
+  adduser $RVDAS_USER
   passwd $RVDAS_USER
   usermod -a -G tty $RVDAS_USER
 fi
@@ -251,6 +251,10 @@ cd openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
 cp database/settings.py.dist database/settings.py
 
+cp widgets/static/js/widgets/settings.js.dist \
+   widgets/static/js/widgets/settings.js
+sed -i -e 's/localhost/${HOSTNAME}/g' widgets/static/js/widgets/settings.js
+
 python3 manage.py makemigrations django_gui
 python3 manage.py migrate
 echo yes | python3 manage.py collectstatic
@@ -424,7 +428,7 @@ while true; do
     read -p "Do you wish to reboot now? " yn
     case $yn in
         [Yy]* ) reboot now; break;;
-        [Nn]* ) exit;;
+        [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
     esac
 done

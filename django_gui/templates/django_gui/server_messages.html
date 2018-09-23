@@ -230,7 +230,8 @@
   function change_cruise() {
     var select = document.getElementById("select_cruise");
     var cruise = select.options[select.selectedIndex].value;
-    var url = "/server_messages/{{ log_level }}/" + cruise + "/{{ source }}";
+    var source = "{% if source %}{{ source }}{% endif %}";
+    var url = "/server_messages/{{ log_level }}/" + cruise + "/" + source;
     console.log("Loading page: " + url);
     history.pushState(cruise, cruise, url);
     window.location.assign(url);

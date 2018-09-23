@@ -158,6 +158,9 @@ def index(request, cruise_id=None):
 #                    cruise_id=None, source=None):
 def server_messages(request, path):
   global api
+  if api is None:
+    api = DjangoServerAPI()
+
   path_pieces = path.split('/')
   log_level = path_pieces[0] if len(path_pieces) > 0 else logging.INFO
   cruise_id = path_pieces[1] if len(path_pieces) > 1 else None

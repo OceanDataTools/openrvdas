@@ -66,8 +66,8 @@ if id -u $RVDAS_USER > /dev/null; then
   echo User exists, skipping
 else
   echo Creating $RVDAS_USER
-  useradd $RVDAS_USER
-  passwd $RVDAS_USER
+  adduser $RVDAS_USER
+  #passwd $RVDAS_USER
   usermod -a -G tty $RVDAS_USER
 fi
 
@@ -83,6 +83,8 @@ else
   echo "$ETC_HOSTS_LINE" >> /etc/hosts
 fi
 
+apt-get update
+
 # If openssh-server not installed, do that
 if dpkg -l | grep -q openssh-server ; then
   echo openssh-server already installed
@@ -95,8 +97,8 @@ fi
 # Install apt packages
 echo "#########################################################################"
 echo Installing required packages...
-apt-get install -y socat git nginx libreadline-dev libmysqlclient-dev \
-        libsqlite3-dev 
+apt-get install -y socat git nginx python3-dev libreadline-dev mysql-server \
+        mysql-common mysql-client libmysqlclient-dev libsqlite3-dev 
 
 # Install database stuff and set up as service.
 echo "#########################################################################"
@@ -261,6 +263,10 @@ cd openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
 cp database/settings.py.dist database/settings.py
 
+cp widgets/static/js/widgets/settings.js.dist \
+   widgets/static/js/widgets/settings.js
+sed -i -e 's/localhost/${HOSTNAME}/g' widgets/static/js/widgets/settings.js
+
 python3 manage.py makemigrations django_gui
 python3 manage.py migrate
 echo yes | python3 manage.py collectstatic
@@ -352,8 +358,8 @@ chgrp -R rvdas ${INSTALL_ROOT}/openrvdas
 
 # Set permissions
 echo "############################################################################"
-echo Setting SELINUX permissions \(permissive\) and firewall ports
-sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+#echo Setting SELINUX permissions \(permissive\) and firewall ports
+#sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 
 #iptables -A INPUT -p tcp --dport 80 -j ACCEPT
 #iptables -A INPUT -p tcp --dport 8000 -j ACCEPT
@@ -449,7 +455,7 @@ while true; do
     read -p "Do you wish to reboot now? " yn
     case $yn in
         [Yy]* ) reboot now; break;;
-        [Nn]* ) exit;;
+        [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
     esac
 done

@@ -1,5 +1,9 @@
 /*******************************************************************************
 Site-specific settings for display widgets.
+
+THIS FILE MUST BE COPIED OVER TO settings.js (and have the correct server
+name copied in) FOR WIDGETS TO BE OPERATIONAL.
+
 *******************************************************************************/
 
 // Location of data server
