@@ -202,16 +202,13 @@ function DialWidget(container, fields, widget_options={}) {
       }
       var value_list = message[field_name];
 
-      // Values are [timestamp, value] pairs. Add sequentially, inefficiently.
-      for (var list_i = 0; list_i < value_list.length; list_i++) {
-        var value = value_list[list_i][1];
-        if (this.fields[field_name].transform) {
-          value = this.fields[field_name].transform(value);
-        }
-        //console.log(field_name + ": " + value);
-        var point = field_series.points[0];
-        point.update(value);
+      // For dial, just get last value in list and use it for update
+      var value = value_list[value_list.length-1][1];
+      if (this.fields[field_name].transform) {
+        value = this.fields[field_name].transform(value);
       }
+      var point = field_series.points[0];
+      point.update(value);       
     }
   }
 }

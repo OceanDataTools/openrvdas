@@ -251,6 +251,7 @@
                                       cwnc_payout_fields));
       var cwnc_warnings_fields = {
         AlertMessage: {
+          seconds: 30,
           transform: function(val) {
             if (val && val.search('CWNC') >= 0) {
               // Before we return value, an ugly little hack to keep our 
@@ -411,6 +412,7 @@
                                       twnc_payout_fields));
       var twnc_warnings_fields = {
         AlertMessage: {
+          seconds: 30,
           transform: function(val) {
             if (val && val.search('TWNC') >= 0) {
               // Before we return value, an ugly little hack to keep our 

@@ -35,27 +35,35 @@ function TextWidget(container, fields) {
             if (!message[field_name]) {
                 continue;
             }
-            var value_list = message[field_name];
-            // Values are [timestamp, value] pairs. Add sequentially.
-            for (var list_i = 0; list_i < value_list.length; list_i++) {
-                var value = value_list[list_i][1];
-                if (this.fields[field_name].transform) {
-                    value = this.fields[field_name].transform(value);
-                }
+            var value_list = message[field_name],
+                value_str = '';
 
-                // If they've instructed us to append new values (and
-                // if new value is non-empty), append it. If they've
-                // specified a separator, use it; otherwise use
-                // semicolon.
-                if (this.fields[field_name].append) {
-                    if (value.length > 0) {
-                        var sep = this.fields[field_name].separator || ' ';
-                        container_div.innerHTML += sep + value;
+            // If they've instructed us to append new values (and
+            // if new value is non-empty), append it. If they've
+            // specified a separator, use it; otherwise use
+            // semicolon.
+            if (this.fields[field_name].append) {            
+                // Values are [timestamp, value] pairs. Add sequentially.
+                for (var list_i = 0; list_i < value_list.length; list_i++) {
+                    var value = value_list[list_i][1];
+                    if (this.fields[field_name].transform) {
+                        value = this.fields[field_name].transform(value);
                     }
-                } else {
-                    container_div.innerHTML = value;
+                    if (value.length > 0) {
+                        var sep = this.fields[field_name].separator || '; ';
+                        value_str += sep + value;
+                    }
                 }
             }
+            // If not appending, just set to last value in list
+            else {
+                value_str = value_list[value_list.length-1][1];
+                if (this.fields[field_name].transform) {
+                    value_str = this.fields[field_name].transform(value_str);
+                }
+            }
+            // Finally, assign to container html
+            container_div.innerHTML = value_str;
         }
     }
 }
