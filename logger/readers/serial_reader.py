@@ -50,10 +50,14 @@ class SerialReader(Reader):
 
   ############################
   def read(self):
-    if self.max_bytes:
-      record = self.serial.read(self.max_bytes)
-    else:
-      record = self.serial.readline()
-    if not record:
+    try:
+      if self.max_bytes:
+        record = self.serial.read(self.max_bytes)
+      else:
+        record = self.serial.readline()
+      if not record:
+        return None
+      return record.decode('utf-8').rstrip()
+    except serial.serialutil.SerialException as e:
+      logging.error(str(e))
       return None
-    return record.decode('utf-8').rstrip()

@@ -98,22 +98,25 @@ class SimSerial:
                                 use_timestamps=self.use_timestamps)
     self.strip = SliceTransform('1:') # strip off the first field)
     self.writer = TextFileWriter(self.write_port, truncate=True)
-    
+
     while not self.quit:
-      record = self.reader.read() # get the next record
-      logging.debug('SimSerial got: %s', record)
+      try:
+        record = self.reader.read() # get the next record
+        logging.debug('SimSerial got: %s', record)
 
-      # End of input? If loop==True, re-open the logfile from the start
-      if record is None:
-        if not loop:
-          break
-        self.reader = LogfileReader(filebase=self.source_file,
-                                    use_timestamps=self.use_timestamps)
+        # End of input? If loop==True, re-open the logfile from the start
+        if record is None:
+          if not loop:
+            break
+          self.reader = LogfileReader(filebase=self.source_file,
+                                      use_timestamps=self.use_timestamps)
 
-      record = self.strip.transform(record)  # strip the timestamp
-      if record: 
-        logging.debug('SimSerial writing: %s', record)
-        self.writer.write(record)   # and write it to the virtual port
+        record = self.strip.transform(record)  # strip the timestamp
+        if record: 
+          logging.debug('SimSerial writing: %s', record)
+          self.writer.write(record)   # and write it to the virtual port
+      except (OSError, KeyboardInterrupt):
+        break
 
     # If we're here, we got None from our input, and are done. Signal
     # for run_socat to exit
