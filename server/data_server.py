@@ -109,7 +109,7 @@ class DataServer:
     quick first pass, and will therefore follow me to my grave and haunt
     you for years to come. For the love of Guido, please clean this up.
     """
-    for (field_name) in fields:
+    for field_name in fields:
       logging.info('Requesting field: %s, %g secs.', field_name,
                    fields[field_name].get('seconds', 0))
       
@@ -154,6 +154,15 @@ class DataServer:
 
       # If we do have results, package them up and send them
       if results:
+        # If we've not asked for back seconds on a field, then
+        # assume(!) that user only wants most recent value at any
+        # time. So if database has returned a bunch of values, still
+        # only send user the most recent one for each field.
+        for field_name in results:
+          if len(results[field_name]) > 1:
+            if not fields.get(field_name, {}).get('seconds', 0):
+              results[field_name] = [results[field_name][-1]]
+
         send_message = json.dumps(results)
         logging.debug('Data server sending: %s', send_message)
         try:
