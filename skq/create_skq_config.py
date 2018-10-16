@@ -152,6 +152,8 @@ for line in lines:
   if ALL_USE_SAME_PORT:
     port = PORT
   
+  configs['%s->off' % inst] = {}
+
   config = file_db_config
   config = config.replace('INST', inst)
   config = config.replace('PORT', port)
@@ -172,9 +174,10 @@ for line in lines:
 
   loggers[inst] = {}
   loggers[inst]['configs'] = [
-    'off', '%s->file/db' % inst, '%s->file' % inst, '%s->db' % inst
+    '%s->off' % inst, '%s->file/db' % inst, '%s->file' % inst, '%s->db' % inst
   ]
 
+  modes['off'][inst] = '%s->off' % inst
   modes['file'][inst] = '%s->file' % inst
   modes['db'][inst] = '%s->db' % inst
   modes['file/db'][inst] = '%s->file/db' % inst

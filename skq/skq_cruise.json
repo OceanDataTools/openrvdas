@@ -7,7 +7,7 @@
     "loggers": {
         "cruiseid": {
             "configs": [
-                "off",
+                "cruiseid->off",
                 "cruiseid->file/db",
                 "cruiseid->file",
                 "cruiseid->db"
@@ -15,7 +15,7 @@
         },
         "met_ptu307": {
             "configs": [
-                "off",
+                "met_ptu307->off",
                 "met_ptu307->file/db",
                 "met_ptu307->file",
                 "met_ptu307->db"
@@ -23,7 +23,7 @@
         },
         "rain_rmy50202": {
             "configs": [
-                "off",
+                "rain_rmy50202->off",
                 "rain_rmy50202->file/db",
                 "rain_rmy50202->file",
                 "rain_rmy50202->db"
@@ -31,7 +31,7 @@
         },
         "rad_qsr2150a": {
             "configs": [
-                "off",
+                "rad_qsr2150a->off",
                 "rad_qsr2150a->file/db",
                 "rad_qsr2150a->file",
                 "rad_qsr2150a->db"
@@ -39,7 +39,7 @@
         },
         "rad_psp-pir": {
             "configs": [
-                "off",
+                "rad_psp-pir->off",
                 "rad_psp-pir->file/db",
                 "rad_psp-pir->file",
                 "rad_psp-pir->db"
@@ -47,7 +47,7 @@
         },
         "thermo_pyrometer-ct15": {
             "configs": [
-                "off",
+                "thermo_pyrometer-ct15->off",
                 "thermo_pyrometer-ct15->file/db",
                 "thermo_pyrometer-ct15->file",
                 "thermo_pyrometer-ct15->db"
@@ -55,7 +55,7 @@
         },
         "fluoro_turner-c6": {
             "configs": [
-                "off",
+                "fluoro_turner-c6->off",
                 "fluoro_turner-c6->file/db",
                 "fluoro_turner-c6->file",
                 "fluoro_turner-c6->db"
@@ -63,7 +63,7 @@
         },
         "grav_bgm3_222": {
             "configs": [
-                "off",
+                "grav_bgm3_222->off",
                 "grav_bgm3_222->file/db",
                 "grav_bgm3_222->file",
                 "grav_bgm3_222->db"
@@ -71,7 +71,7 @@
         },
         "pco2_ldeo_merge": {
             "configs": [
-                "off",
+                "pco2_ldeo_merge->off",
                 "pco2_ldeo_merge->file/db",
                 "pco2_ldeo_merge->file",
                 "pco2_ldeo_merge->db"
@@ -79,7 +79,7 @@
         },
         "tsg_sbe45_fwd": {
             "configs": [
-                "off",
+                "tsg_sbe45_fwd->off",
                 "tsg_sbe45_fwd->file/db",
                 "tsg_sbe45_fwd->file",
                 "tsg_sbe45_fwd->db"
@@ -87,7 +87,7 @@
         },
         "thermo_sbe38_fwd": {
             "configs": [
-                "off",
+                "thermo_sbe38_fwd->off",
                 "thermo_sbe38_fwd->file/db",
                 "thermo_sbe38_fwd->file",
                 "thermo_sbe38_fwd->db"
@@ -95,7 +95,7 @@
         },
         "thermo_sbe38_incubator": {
             "configs": [
-                "off",
+                "thermo_sbe38_incubator->off",
                 "thermo_sbe38_incubator->file/db",
                 "thermo_sbe38_incubator->file",
                 "thermo_sbe38_incubator->db"
@@ -103,7 +103,7 @@
         },
         "tsg_sbe45_fwd_2": {
             "configs": [
-                "off",
+                "tsg_sbe45_fwd_2->off",
                 "tsg_sbe45_fwd_2->file/db",
                 "tsg_sbe45_fwd_2->file",
                 "tsg_sbe45_fwd_2->db"
@@ -111,7 +111,7 @@
         },
         "flow_omega_fwd": {
             "configs": [
-                "off",
+                "flow_omega_fwd->off",
                 "flow_omega_fwd->file/db",
                 "flow_omega_fwd->file",
                 "flow_omega_fwd->db"
@@ -119,7 +119,7 @@
         },
         "flow_krohne_pco2": {
             "configs": [
-                "off",
+                "flow_krohne_pco2->off",
                 "flow_krohne_pco2->file/db",
                 "flow_krohne_pco2->file",
                 "flow_krohne_pco2->db"
@@ -127,7 +127,7 @@
         },
         "ssv_aml-svxchang_fwd": {
             "configs": [
-                "off",
+                "ssv_aml-svxchang_fwd->off",
                 "ssv_aml-svxchang_fwd->file/db",
                 "ssv_aml-svxchang_fwd->file",
                 "ssv_aml-svxchang_fwd->db"
@@ -135,7 +135,7 @@
         },
         "ins_seapath_position": {
             "configs": [
-                "off",
+                "ins_seapath_position->off",
                 "ins_seapath_position->file/db",
                 "ins_seapath_position->file",
                 "ins_seapath_position->db"
@@ -143,7 +143,7 @@
         },
         "gnss_cnav": {
             "configs": [
-                "off",
+                "gnss_cnav->off",
                 "gnss_cnav->file/db",
                 "gnss_cnav->file",
                 "gnss_cnav->db"
@@ -151,7 +151,7 @@
         },
         "gyro_1": {
             "configs": [
-                "off",
+                "gyro_1->off",
                 "gyro_1->file/db",
                 "gyro_1->file",
                 "gyro_1->db"
@@ -159,7 +159,7 @@
         },
         "gyro_2": {
             "configs": [
-                "off",
+                "gyro_2->off",
                 "gyro_2->file/db",
                 "gyro_2->file",
                 "gyro_2->db"
@@ -167,7 +167,7 @@
         },
         "wind_gill_fwdmast": {
             "configs": [
-                "off",
+                "wind_gill_fwdmast->off",
                 "wind_gill_fwdmast->file/db",
                 "wind_gill_fwdmast->file",
                 "wind_gill_fwdmast->db"
@@ -175,7 +175,7 @@
         },
         "wind_gill_fwdmast_true": {
             "configs": [
-                "off",
+                "wind_gill_fwdmast_true->off",
                 "wind_gill_fwdmast_true->file/db",
                 "wind_gill_fwdmast_true->file",
                 "wind_gill_fwdmast_true->db"
@@ -183,7 +183,7 @@
         },
         "speedlog": {
             "configs": [
-                "off",
+                "speedlog->off",
                 "speedlog->file/db",
                 "speedlog->file",
                 "speedlog->db"
@@ -191,7 +191,7 @@
         },
         "sb_echosounder_1": {
             "configs": [
-                "off",
+                "sb_echosounder_1->off",
                 "sb_echosounder_1->file/db",
                 "sb_echosounder_1->file",
                 "sb_echosounder_1->db"
@@ -199,7 +199,7 @@
         },
         "sb_echosounder_2": {
             "configs": [
-                "off",
+                "sb_echosounder_2->off",
                 "sb_echosounder_2->file/db",
                 "sb_echosounder_2->file",
                 "sb_echosounder_2->db"
@@ -207,7 +207,7 @@
         },
         "winch_rapp": {
             "configs": [
-                "off",
+                "winch_rapp->off",
                 "winch_rapp->file/db",
                 "winch_rapp->file",
                 "winch_rapp->db"
@@ -215,7 +215,7 @@
         },
         "flow_krohne_fwd": {
             "configs": [
-                "off",
+                "flow_krohne_fwd->off",
                 "flow_krohne_fwd->file/db",
                 "flow_krohne_fwd->file",
                 "flow_krohne_fwd->db"
@@ -223,7 +223,7 @@
         },
         "wind_mast_port": {
             "configs": [
-                "off",
+                "wind_mast_port->off",
                 "wind_mast_port->file/db",
                 "wind_mast_port->file",
                 "wind_mast_port->db"
@@ -231,7 +231,7 @@
         },
         "wind_mast_port_true": {
             "configs": [
-                "off",
+                "wind_mast_port_true->off",
                 "wind_mast_port_true->file/db",
                 "wind_mast_port_true->file",
                 "wind_mast_port_true->db"
@@ -239,7 +239,7 @@
         },
         "wind_mast_stbd": {
             "configs": [
-                "off",
+                "wind_mast_stbd->off",
                 "wind_mast_stbd->file/db",
                 "wind_mast_stbd->file",
                 "wind_mast_stbd->db"
@@ -247,7 +247,7 @@
         },
         "wind_mast_stbd_true": {
             "configs": [
-                "off",
+                "wind_mast_stbd_true->off",
                 "wind_mast_stbd_true->file/db",
                 "wind_mast_stbd_true->file",
                 "wind_mast_stbd_true->db"
@@ -255,7 +255,7 @@
         },
         "oxygen_sbe43_fwd": {
             "configs": [
-                "off",
+                "oxygen_sbe43_fwd->off",
                 "oxygen_sbe43_fwd->file/db",
                 "oxygen_sbe43_fwd->file",
                 "oxygen_sbe43_fwd->db"
@@ -263,7 +263,7 @@
         },
         "oxygen_sbe43_fwd_calc": {
             "configs": [
-                "off",
+                "oxygen_sbe43_fwd_calc->off",
                 "oxygen_sbe43_fwd_calc->file/db",
                 "oxygen_sbe43_fwd_calc->file",
                 "oxygen_sbe43_fwd_calc->db"
@@ -271,7 +271,7 @@
         },
         "mbari_isus_fwd": {
             "configs": [
-                "off",
+                "mbari_isus_fwd->off",
                 "mbari_isus_fwd->file/db",
                 "mbari_isus_fwd->file",
                 "mbari_isus_fwd->db"
@@ -279,7 +279,7 @@
         },
         "tsg_emssv": {
             "configs": [
-                "off",
+                "tsg_emssv->off",
                 "tsg_emssv->file/db",
                 "tsg_emssv->file",
                 "tsg_emssv->db"
@@ -287,7 +287,7 @@
         },
         "mb_em710_centerbeam": {
             "configs": [
-                "off",
+                "mb_em710_centerbeam->off",
                 "mb_em710_centerbeam->file/db",
                 "mb_em710_centerbeam->file",
                 "mb_em710_centerbeam->db"
@@ -295,7 +295,7 @@
         },
         "mb_em302_centerbeam": {
             "configs": [
-                "off",
+                "mb_em302_centerbeam->off",
                 "mb_em302_centerbeam->file/db",
                 "mb_em302_centerbeam->file",
                 "mb_em302_centerbeam->db"
@@ -303,7 +303,45 @@
         }
     },
     "modes": {
-        "off": {},
+        "off": {
+            "cruiseid": "cruiseid->off",
+            "met_ptu307": "met_ptu307->off",
+            "rain_rmy50202": "rain_rmy50202->off",
+            "rad_qsr2150a": "rad_qsr2150a->off",
+            "rad_psp-pir": "rad_psp-pir->off",
+            "thermo_pyrometer-ct15": "thermo_pyrometer-ct15->off",
+            "fluoro_turner-c6": "fluoro_turner-c6->off",
+            "grav_bgm3_222": "grav_bgm3_222->off",
+            "pco2_ldeo_merge": "pco2_ldeo_merge->off",
+            "tsg_sbe45_fwd": "tsg_sbe45_fwd->off",
+            "thermo_sbe38_fwd": "thermo_sbe38_fwd->off",
+            "thermo_sbe38_incubator": "thermo_sbe38_incubator->off",
+            "tsg_sbe45_fwd_2": "tsg_sbe45_fwd_2->off",
+            "flow_omega_fwd": "flow_omega_fwd->off",
+            "flow_krohne_pco2": "flow_krohne_pco2->off",
+            "ssv_aml-svxchang_fwd": "ssv_aml-svxchang_fwd->off",
+            "ins_seapath_position": "ins_seapath_position->off",
+            "gnss_cnav": "gnss_cnav->off",
+            "gyro_1": "gyro_1->off",
+            "gyro_2": "gyro_2->off",
+            "wind_gill_fwdmast": "wind_gill_fwdmast->off",
+            "wind_gill_fwdmast_true": "wind_gill_fwdmast_true->off",
+            "speedlog": "speedlog->off",
+            "sb_echosounder_1": "sb_echosounder_1->off",
+            "sb_echosounder_2": "sb_echosounder_2->off",
+            "winch_rapp": "winch_rapp->off",
+            "flow_krohne_fwd": "flow_krohne_fwd->off",
+            "wind_mast_port": "wind_mast_port->off",
+            "wind_mast_port_true": "wind_mast_port_true->off",
+            "wind_mast_stbd": "wind_mast_stbd->off",
+            "wind_mast_stbd_true": "wind_mast_stbd_true->off",
+            "oxygen_sbe43_fwd": "oxygen_sbe43_fwd->off",
+            "oxygen_sbe43_fwd_calc": "oxygen_sbe43_fwd_calc->off",
+            "mbari_isus_fwd": "mbari_isus_fwd->off",
+            "tsg_emssv": "tsg_emssv->off",
+            "mb_em710_centerbeam": "mb_em710_centerbeam->off",
+            "mb_em302_centerbeam": "mb_em302_centerbeam->off"
+        },
         "file": {
             "cruiseid": "cruiseid->file",
             "met_ptu307": "met_ptu307->file",
@@ -424,6 +462,7 @@
     },
     "default_mode": "off",
     "configs": {
+        "cruiseid->off": {},
         "cruiseid->file/db": {
             "name": "cruiseid->file/db",
             "readers": {
@@ -535,6 +574,7 @@
                 }
             }
         },
+        "met_ptu307->off": {},
         "met_ptu307->file/db": {
             "name": "met_ptu307->file/db",
             "readers": {
@@ -646,6 +686,7 @@
                 }
             }
         },
+        "rain_rmy50202->off": {},
         "rain_rmy50202->file/db": {
             "name": "rain_rmy50202->file/db",
             "readers": {
@@ -757,6 +798,7 @@
                 }
             }
         },
+        "rad_qsr2150a->off": {},
         "rad_qsr2150a->file/db": {
             "name": "rad_qsr2150a->file/db",
             "readers": {
@@ -868,6 +910,7 @@
                 }
             }
         },
+        "rad_psp-pir->off": {},
         "rad_psp-pir->file/db": {
             "name": "rad_psp-pir->file/db",
             "readers": {
@@ -979,6 +1022,7 @@
                 }
             }
         },
+        "thermo_pyrometer-ct15->off": {},
         "thermo_pyrometer-ct15->file/db": {
             "name": "thermo_pyrometer-ct15->file/db",
             "readers": {
@@ -1090,6 +1134,7 @@
                 }
             }
         },
+        "fluoro_turner-c6->off": {},
         "fluoro_turner-c6->file/db": {
             "name": "fluoro_turner-c6->file/db",
             "readers": {
@@ -1201,6 +1246,7 @@
                 }
             }
         },
+        "grav_bgm3_222->off": {},
         "grav_bgm3_222->file/db": {
             "name": "grav_bgm3_222->file/db",
             "readers": {
@@ -1312,6 +1358,7 @@
                 }
             }
         },
+        "pco2_ldeo_merge->off": {},
         "pco2_ldeo_merge->file/db": {
             "name": "pco2_ldeo_merge->file/db",
             "readers": {
@@ -1423,6 +1470,7 @@
                 }
             }
         },
+        "tsg_sbe45_fwd->off": {},
         "tsg_sbe45_fwd->file/db": {
             "name": "tsg_sbe45_fwd->file/db",
             "readers": {
@@ -1534,6 +1582,7 @@
                 }
             }
         },
+        "thermo_sbe38_fwd->off": {},
         "thermo_sbe38_fwd->file/db": {
             "name": "thermo_sbe38_fwd->file/db",
             "readers": {
@@ -1645,6 +1694,7 @@
                 }
             }
         },
+        "thermo_sbe38_incubator->off": {},
         "thermo_sbe38_incubator->file/db": {
             "name": "thermo_sbe38_incubator->file/db",
             "readers": {
@@ -1756,6 +1806,7 @@
                 }
             }
         },
+        "tsg_sbe45_fwd_2->off": {},
         "tsg_sbe45_fwd_2->file/db": {
             "name": "tsg_sbe45_fwd_2->file/db",
             "readers": {
@@ -1867,6 +1918,7 @@
                 }
             }
         },
+        "flow_omega_fwd->off": {},
         "flow_omega_fwd->file/db": {
             "name": "flow_omega_fwd->file/db",
             "readers": {
@@ -1978,6 +2030,7 @@
                 }
             }
         },
+        "flow_krohne_pco2->off": {},
         "flow_krohne_pco2->file/db": {
             "name": "flow_krohne_pco2->file/db",
             "readers": {
@@ -2089,6 +2142,7 @@
                 }
             }
         },
+        "ssv_aml-svxchang_fwd->off": {},
         "ssv_aml-svxchang_fwd->file/db": {
             "name": "ssv_aml-svxchang_fwd->file/db",
             "readers": {
@@ -2200,6 +2254,7 @@
                 }
             }
         },
+        "ins_seapath_position->off": {},
         "ins_seapath_position->file/db": {
             "name": "ins_seapath_position->file/db",
             "readers": {
@@ -2311,6 +2366,7 @@
                 }
             }
         },
+        "gnss_cnav->off": {},
         "gnss_cnav->file/db": {
             "name": "gnss_cnav->file/db",
             "readers": {
@@ -2422,6 +2478,7 @@
                 }
             }
         },
+        "gyro_1->off": {},
         "gyro_1->file/db": {
             "name": "gyro_1->file/db",
             "readers": {
@@ -2533,6 +2590,7 @@
                 }
             }
         },
+        "gyro_2->off": {},
         "gyro_2->file/db": {
             "name": "gyro_2->file/db",
             "readers": {
@@ -2644,6 +2702,7 @@
                 }
             }
         },
+        "wind_gill_fwdmast->off": {},
         "wind_gill_fwdmast->file/db": {
             "name": "wind_gill_fwdmast->file/db",
             "readers": {
@@ -2755,6 +2814,7 @@
                 }
             }
         },
+        "wind_gill_fwdmast_true->off": {},
         "wind_gill_fwdmast_true->file/db": {
             "name": "wind_gill_fwdmast_true->file/db",
             "readers": {
@@ -2866,6 +2926,7 @@
                 }
             }
         },
+        "speedlog->off": {},
         "speedlog->file/db": {
             "name": "speedlog->file/db",
             "readers": {
@@ -2977,6 +3038,7 @@
                 }
             }
         },
+        "sb_echosounder_1->off": {},
         "sb_echosounder_1->file/db": {
             "name": "sb_echosounder_1->file/db",
             "readers": {
@@ -3088,6 +3150,7 @@
                 }
             }
         },
+        "sb_echosounder_2->off": {},
         "sb_echosounder_2->file/db": {
             "name": "sb_echosounder_2->file/db",
             "readers": {
@@ -3199,6 +3262,7 @@
                 }
             }
         },
+        "winch_rapp->off": {},
         "winch_rapp->file/db": {
             "name": "winch_rapp->file/db",
             "readers": {
@@ -3310,6 +3374,7 @@
                 }
             }
         },
+        "flow_krohne_fwd->off": {},
         "flow_krohne_fwd->file/db": {
             "name": "flow_krohne_fwd->file/db",
             "readers": {
@@ -3421,6 +3486,7 @@
                 }
             }
         },
+        "wind_mast_port->off": {},
         "wind_mast_port->file/db": {
             "name": "wind_mast_port->file/db",
             "readers": {
@@ -3532,6 +3598,7 @@
                 }
             }
         },
+        "wind_mast_port_true->off": {},
         "wind_mast_port_true->file/db": {
             "name": "wind_mast_port_true->file/db",
             "readers": {
@@ -3643,6 +3710,7 @@
                 }
             }
         },
+        "wind_mast_stbd->off": {},
         "wind_mast_stbd->file/db": {
             "name": "wind_mast_stbd->file/db",
             "readers": {
@@ -3754,6 +3822,7 @@
                 }
             }
         },
+        "wind_mast_stbd_true->off": {},
         "wind_mast_stbd_true->file/db": {
             "name": "wind_mast_stbd_true->file/db",
             "readers": {
@@ -3865,6 +3934,7 @@
                 }
             }
         },
+        "oxygen_sbe43_fwd->off": {},
         "oxygen_sbe43_fwd->file/db": {
             "name": "oxygen_sbe43_fwd->file/db",
             "readers": {
@@ -3976,6 +4046,7 @@
                 }
             }
         },
+        "oxygen_sbe43_fwd_calc->off": {},
         "oxygen_sbe43_fwd_calc->file/db": {
             "name": "oxygen_sbe43_fwd_calc->file/db",
             "readers": {
@@ -4087,6 +4158,7 @@
                 }
             }
         },
+        "mbari_isus_fwd->off": {},
         "mbari_isus_fwd->file/db": {
             "name": "mbari_isus_fwd->file/db",
             "readers": {
@@ -4198,6 +4270,7 @@
                 }
             }
         },
+        "tsg_emssv->off": {},
         "tsg_emssv->file/db": {
             "name": "tsg_emssv->file/db",
             "readers": {
@@ -4309,6 +4382,7 @@
                 }
             }
         },
+        "mb_em710_centerbeam->off": {},
         "mb_em710_centerbeam->file/db": {
             "name": "mb_em710_centerbeam->file/db",
             "readers": {
@@ -4420,6 +4494,7 @@
                 }
             }
         },
+        "mb_em302_centerbeam->off": {},
         "mb_em302_centerbeam->file/db": {
             "name": "mb_em302_centerbeam->file/db",
             "readers": {
