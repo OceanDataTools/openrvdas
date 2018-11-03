@@ -57,7 +57,7 @@ class TextFileReader(StorageReader):
     # If interval != 0, we need to keep track of our last_read to know
     # how long to sleep
     self.last_read = 0
-    
+
     # Special case if file_spec is None
     if file_spec is None:
       self.current_file = sys.stdin
@@ -129,7 +129,7 @@ class TextFileReader(StorageReader):
       logging.debug('Sleeping %f seconds', sleep_time)
       if sleep_time:
         time.sleep(sleep_time)
-      
+
     record = None
     while not record:
       # If we've got a current file, or if _get_next_file() gets one
@@ -304,4 +304,3 @@ class TextFileReader(StorageReader):
         break
       records.append(record)
     return records
-

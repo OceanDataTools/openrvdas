@@ -63,7 +63,7 @@ class TrueWindsTransform(DerivedDataTransform):
     apparent_dir_name
              Names that should be given to transform output values.
 
-    update_on_fields              
+    update_on_fields
              If non-empty, a list of fields, any of whose arrival should
              trigger an output record. If None, generate output when any
              field is updated.
@@ -92,7 +92,7 @@ class TrueWindsTransform(DerivedDataTransform):
     self.true_dir_name = true_dir_name
     self.true_speed_name = true_speed_name
     self.apparent_dir_name = apparent_dir_name
-    
+
     self.update_on_fields = update_on_fields
 
     self.zero_line_reference = zero_line_reference
@@ -125,7 +125,7 @@ class TrueWindsTransform(DerivedDataTransform):
 
   ############################
   def transform(self, value_dict, timestamp_dict=None):
-    """Incorporate any useable fields in this record, and if it gives 
+    """Incorporate any useable fields in this record, and if it gives
     us a new true wind value, return the results."""
 
     if not value_dict or type(value_dict) is not dict:
@@ -148,7 +148,7 @@ class TrueWindsTransform(DerivedDataTransform):
                 wind_dir_val, wind_speed_val):
       logging.debug('Not all required values for true winds are present')
       return None
-    
+
     # If we have timestamps, check our most recent timestamps against
     # what's passed in the dictionary.
     if not timestamp_dict:
@@ -181,14 +181,14 @@ class TrueWindsTransform(DerivedDataTransform):
         if not self.update_on_fields or \
            self.wind_dir_field in self.update_on_fields:
           update = True
-          
+
       new_wind_speed_val_time = timestamp_dict.get(self.wind_speed_field, 0)
       if new_wind_speed_val_time > self.wind_speed_val_time:
         self.wind_speed_val_time = new_wind_speed_val_time
         if not self.update_on_fields or \
            self.wind_speed_field in self.update_on_fields:
           update = True
-          
+
     # If we've not seen anything that updates fields that would
     # trigger a new true winds value, return None.
     if not update:

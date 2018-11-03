@@ -216,7 +216,7 @@ if __name__ == '__main__':
   # Transforms
   parser.add_argument('--transform_prefix', dest='prefix', default='',
                       help='Prefix each record with this string')
-  
+
   parser.add_argument('--transform_timestamp', dest='timestamp',
                       action='store_true', default=False,
                       help='Timestamp each record as it is read')
@@ -280,7 +280,7 @@ if __name__ == '__main__':
                       action='store_true', default=False,
                       help='Display the most current DASRecord field values '
                       'on the terminal.')
-  
+
   ############################
   # Miscellaneous args
   parser.add_argument('--check_format', dest='check_format',
@@ -294,7 +294,7 @@ if __name__ == '__main__':
   ############################
   # Set up logging before we do any other argument parsing (so that we
   # can log problems with argument parsing.)
-  parsed_args = parser.parse_args() 
+  parsed_args = parser.parse_args()
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   logging.basicConfig(format=LOGGING_FORMAT)
 

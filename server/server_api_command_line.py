@@ -57,13 +57,13 @@ class ServerAPICommandLine:
       signal.signal(signal.SIGTERM, kill_handler)
     except ValueError:
       logging.info('ServerAPICommandLine not running in main thread; '
-                   'shutting down with Ctl-C may not work.')    
+                   'shutting down with Ctl-C may not work.')
 
   ############################
   def quit(self):
     logging.info('ServerAPICommandLine - quit requested')
     self.quit_requested = True
-    
+
   ############################
   def run(self):
     """Iterate, reading commands and processing them."""
@@ -118,7 +118,7 @@ class ServerAPICommandLine:
        'Print most recent log message for server, optionally all messages '
        'since specified timestamp\n'),
 
-      ('quit', 'Quit gracefully')      
+      ('quit', 'Quit gracefully')
     ]
     print('Valid commands:')
     for command, desc in commands:
@@ -131,7 +131,7 @@ class ServerAPICommandLine:
     try:
       if not command:
         logging.info('Empty command received')
-        
+
       elif command == 'cruises':
         cruises = self.api.get_cruises()
         if cruises:
@@ -284,7 +284,7 @@ class ServerAPICommandLine:
                            log_level=self.api.INFO,
                            cruise_id=None,
                            message='command: '+ command)
-    
+
 ################################################################################
 if __name__ == '__main__':
 
@@ -333,7 +333,3 @@ if __name__ == '__main__':
     raise ValueError('Illegal arg for --database: "%s"' % args.database)
   command_line_reader = ServerAPICommandLine(api)
   command_line_reader.run()
-
-
-  
-  

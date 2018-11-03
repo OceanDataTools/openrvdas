@@ -15,7 +15,7 @@ foreign keys.
       a foreign key in the data table. Something like:
 
         fields: id field_name field_type
-      
+
     source_record - an id indexing a table where raw source records are
       stored, so that we can re-parse and recreate whatever data we want
       if needed.
@@ -101,7 +101,7 @@ class MySQLConnector:
     cursor.execute(command)
     self.connection.commit()
     cursor.close()
-    
+
   ############################
   def table_exists(self, table_name):
     """Does the specified table exist in the database?"""
@@ -113,7 +113,7 @@ class MySQLConnector:
       exists = False
     cursor.close()
     return exists
-    
+
   ############################
   def write_record(self, record):
     """Write record to table."""
@@ -175,7 +175,7 @@ class MySQLConnector:
         value_array[5] = '%d' % ('1' if value else '0')
       elif value is None:
         continue
-      else:        
+      else:
         logging.error('Unknown record value type (%s) for %s: %s',
                       type(value), key, value)
         continue
@@ -189,7 +189,7 @@ class MySQLConnector:
       # we've already saved.
       value_str = '(%s)' % ','.join(value_array)
       values.append(value_str)
-      
+
     # Build the SQL query
     fields = ['timestamp',
               'field_name',
@@ -204,7 +204,7 @@ class MySQLConnector:
                   (self.DATA_TABLE, ','.join(fields), ','.join(values))
     logging.debug('Inserting record into table with command: %s', write_cmd)
     self.exec_sql_command(write_cmd)
-   
+
   ############################
   def read(self, field_list=None, start=None, num_records=1):
     """Read the next record from table. If start is specified, reset read
@@ -220,14 +220,14 @@ class MySQLConnector:
       condition += ' and (%s)' % ' or '.join(field_conditions)
 
     condition += ' order by id'
-    
+
     if num_records is not None:
       condition += ' limit %d' % num_records
-  
+
     query = 'select * from `%s` where %s' % (self.DATA_TABLE, condition)
     logging.debug('read query: %s', query)
     return self._process_query(query)
-  
+
   ############################
   def read_time(self, field_list=None, start_time=None, stop_time=None):
     """Read the next records from table based on timestamps. If start_time
@@ -248,11 +248,11 @@ class MySQLConnector:
       condition += ' and (%s)' % ' or '.join(field_conditions)
 
     condition += ' order by timestamp'
-  
+
     query = 'select * from `%s` where %s' % (self.DATA_TABLE, condition)
     logging.debug('read query: %s', query)
     return self._process_query(query)
-    
+
   ############################
   def seek(self, offset=0, origin='current'):
     """Behavior is intended to mimic file seek() behavior but with
@@ -269,7 +269,7 @@ class MySQLConnector:
       self.next_id = num_rows + offset + 1
 
     self._next_id = min(num_rows, self.next_id)
-    
+
     logging.debug('Seek: next position %d', self.next_id)
 
   ############################
@@ -293,7 +293,7 @@ class MySQLConnector:
 
       if not field_name in results:
         results[field_name] = []
-        
+
       if int_value is not None:
         val = int_value
       elif float_value is not None:
@@ -310,7 +310,7 @@ class MySQLConnector:
       self.last_timestamp = timestamp
     cursor.close()
     return results
-    
+
   ############################
   def delete_table(self,  table_name):
     """Delete a table."""

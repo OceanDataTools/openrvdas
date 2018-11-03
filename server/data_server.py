@@ -80,7 +80,7 @@ class DataServer:
   ############################
   def quit(self):
     """Exit the loop and shut down all loggers."""
-    self.quit_flag = True  
+    self.quit_flag = True
 
   ############################
   @asyncio.coroutine
@@ -98,7 +98,7 @@ class DataServer:
       return self.fields
     except json.JSONDecodeError:
       logging.info('get_fields(): unparseable JSON request: "%s"', message)
-    
+
   ############################
   @asyncio.coroutine
   async def serve_fields(self, fields):
@@ -112,7 +112,7 @@ class DataServer:
     for field_name in fields:
       logging.info('Requesting field: %s, %g secs.', field_name,
                    fields[field_name].get('seconds', 0))
-      
+
     # Get requested back data. Note that we may have had different
     # back data time spans for different fields. Because some of these
     # might be extremely voluminous (think 30 minutes of winch data),
@@ -142,13 +142,13 @@ class DataServer:
       num_sec_results = reader.read_time_range(start_time=now-num_secs)
       logging.debug('results: %s', num_sec_results)
       results.update(num_sec_results)
-                     
+
     # Now that we've gotten all the back results, create a single
     # DatabaseReader to read all the fields.
     reader = DatabaseReader(fields.keys(), self.database, self.host,
                             self.user, self.password)
     max_timestamp_seen = 0
-    
+
     while not self.quit_flag:
       now = time.time()
 
@@ -218,7 +218,7 @@ async def serve_websocket_data(websocket, path):
 ################################################################################
 if __name__ == '__main__':
   import argparse
-  
+
   parser = argparse.ArgumentParser()
 
   # Optional address for websocket server from which we'll accept
@@ -257,7 +257,7 @@ if __name__ == '__main__':
   except ValueError:
     logging.error('--websocket argument must be host:port')
     sys.exit(1)
-    
+
   try:
     event_loop = asyncio.get_event_loop()
     websocket_server = websockets.serve(serve_websocket_data, host, port)
@@ -265,6 +265,3 @@ if __name__ == '__main__':
     event_loop.run_forever()
   except OSError:
     logging.warning('Failed to open websocket %s:%s', host, port)
-
-  
-  

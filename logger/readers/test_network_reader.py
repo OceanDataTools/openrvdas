@@ -49,7 +49,7 @@ def write_network(addr, data, interval=0, delay=0):
     sock.send(line.encode('utf-8'))
     time.sleep(interval)
 
-    
+
 ################################################################################
 class TestNetworkReader(unittest.TestCase):
   ############################
@@ -76,14 +76,14 @@ class TestNetworkReader(unittest.TestCase):
     sock.connect((host, port))
 
     # Set timeout we can catch if things are taking too long
-    signal.signal(signal.SIGALRM, self._handler)    
+    signal.signal(signal.SIGALRM, self._handler)
     signal.alarm(5)
     try:
       for line in SAMPLE_DATA:
         sock.send(line.encode('utf-8'))
 
         time.sleep(0.2)
-        logging.debug('NetworkReader reading...')      
+        logging.debug('NetworkReader reading...')
         result = reader.read()
         logging.info('network wrote "%s", read "%s"', line, result)
         #self.assertEqual(line, result)
@@ -91,7 +91,7 @@ class TestNetworkReader(unittest.TestCase):
       self.assertTrue(False, 'NetworkReader timed out in test - is port '
                       '%s open?' % addr)
     signal.alarm(0)
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -107,5 +107,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

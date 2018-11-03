@@ -48,7 +48,7 @@ class TestComposedReader(unittest.TestCase):
     self.tmpdir = tempfile.TemporaryDirectory()
     self.tmpdirname = self.tmpdir.name
     logging.info('created temporary directory "%s"', self.tmpdirname)
-      
+
     self.tmpfilenames = []
     for f in sorted(SAMPLE_DATA):
       logging.debug('Creating sample file %s', f)
@@ -68,7 +68,7 @@ class TestComposedReader(unittest.TestCase):
     with self.assertRaises(ValueError):
       ComposedReader([TextFileReader(self.tmpfilenames[0]), Reader()],
                      check_format=True)
-    
+
   ############################
   def test_all_files(self):
     # Use TextFileReader's 'interval' flag to make sure we interleave
@@ -80,7 +80,7 @@ class TestComposedReader(unittest.TestCase):
       readers.append(TextFileReader(tmpfilename, interval=0.2))
 
     #readers.append(TextFileReader()) # read from stdin
-      
+
     prefix_1 = PrefixTransform('prefix_1')
     prefix_2 = PrefixTransform('prefix_2')
 
@@ -101,7 +101,7 @@ class TestComposedReader(unittest.TestCase):
       else:
         break
     logging.debug('Expected lines %s', expected_lines)
-      
+
     # Next line from each of the files can come in arbitrary order,
     # but within the file, lines should arrive in order, and we
     # should receive first line from each file before we receive
@@ -130,7 +130,6 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
-    

@@ -45,7 +45,7 @@ class LogfileWriter(Writer):
     """Note: Assume record begins with a timestamp string."""
     if record is None:
       return
-    
+
     # First things first: get the date string from the record
     try:
       time_str = record.split()[0]

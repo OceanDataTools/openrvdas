@@ -15,7 +15,7 @@ import unittest
 sys.path.append('.')
 
 from logger.utils.truewinds.truew import truew
-    
+
 CRSE=[0.0, 0.0, 0.0, 0.0, 180.0, 90.0, 90.0, 225.0, 270.0, 0.0]
 CSPD=[0.0, 0.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 3.0, 0.0]
 WDIR=[90.0, 90.0, 0.0, 0.0, 180.0, 90.0, 135.0, 270.0, 90.0, 0.0]
@@ -71,9 +71,9 @@ class TrueWindsTest(unittest.TestCase):
                         wspd=BAD_WSPD[i],
                         zlr=ZLR,
                         wmis=WMIS)
-        
+
       self.assertEqual(result, (None, None, None))
-      
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -89,5 +89,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

@@ -32,7 +32,7 @@ class NetworkWriter(Writer):
                        '\'host:port\' or \':port\' format. Found "%s"', network)
     self.network = network
     self.num_retry = num_retry
-    
+
     (host, port) = network.split(':')
     port = int(port)
 
@@ -43,7 +43,7 @@ class NetworkWriter(Writer):
                                   proto=socket.IPPROTO_TCP)
       # Should this be bind()?
       self.socket.connect((host, port))
-      
+
     # UDP broadcast if no host specified. Note that there's some
     # dodginess I don't understand about networks: if '<broadcast>' is
     # specified, socket tries to send on *all* interfaces. if '' is

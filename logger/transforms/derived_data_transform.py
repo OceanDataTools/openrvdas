@@ -96,7 +96,7 @@ class ComposedDerivedDataTransform(Transform):
         if not field in self.fields:
           self.fields[field] = set()
         self.fields[field].add(transform)
-    
+
     self.transforms = transforms
 
     self.values = {}
@@ -133,7 +133,7 @@ class ComposedDerivedDataTransform(Transform):
 
         self.values[field] = value
         self.timestamps[field] = record.timestamp
-        
+
       # Run all transforms that have registered interest in these
       # fields, then aggregate results into a single dict.
       results = {}
@@ -170,7 +170,7 @@ class ComposedDerivedDataTransform(Transform):
     for timestamp in sorted(values_by_timestamp):
       fields = values_by_timestamp[timestamp]
       logging.debug('timestamp %f, fields: %s', timestamp, fields)
-      
+
       # Which transforms are interested in values contained in this
       # particular timestamp?
       transforms_to_run = set()
@@ -186,19 +186,10 @@ class ComposedDerivedDataTransform(Transform):
         field_values = transform.transform(self.values, self.timestamps)
         if not field_values:
           continue
-        
+
         for field, value in field_values.items():
           if not field in results:
             results[field] = []
           results[field].append([timestamp, value])
 
     return results or None
-          
-
-      
-
-      
-
-    
-
-    

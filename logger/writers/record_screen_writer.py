@@ -24,7 +24,7 @@ class RecordScreenWriter(Writer):
   ############################
   def move_cursor(self, x, y):
     print('\033[{};{}f'.format(str(x), str(y)))
-    
+
   ############################
   # receives a DASRecord
   def write(self, record):
@@ -42,7 +42,7 @@ class RecordScreenWriter(Writer):
 
     # Get term size, in case it's been resized
     (cols, rows) = shutil.get_terminal_size()
-    self.move_cursor(0,0)    
+    self.move_cursor(0,0)
     # Redraw stuff
     keys =  sorted(self.values.keys())
     for i in range(rows):
@@ -58,6 +58,5 @@ class RecordScreenWriter(Writer):
       # Pad the lines out to screen width to overwrite old stuff
       pad_size = cols - len(line)
       line += ' ' * pad_size
-      
-      print(line)
 
+      print(line)

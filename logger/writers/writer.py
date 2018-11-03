@@ -39,7 +39,7 @@ class Writer:
     """
     self.input_format(input_format)
 
-  ############################    
+  ############################
   def input_format(self, new_format=None):
     """Return our input format, or set a new input format."""
     if new_format is not None:
@@ -56,7 +56,7 @@ class Writer:
     output_format = getattr(source, 'output_format', None)
     if not callable(output_format):
       return False
-    
+
     # Otherwise, check compatibility
     return self.input_format().can_accept(source.output_format())
 
@@ -80,4 +80,3 @@ class TimestampedWriter(Writer):
   def write_timestamp(self, record, timestamp=None):
     raise NotImplementedError('Abstract base class TimestampedWriter has no '
                               'implementation of write_timestamp() method.')
-  

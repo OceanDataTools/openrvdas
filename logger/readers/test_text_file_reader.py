@@ -111,7 +111,7 @@ class TestTextFileReader(unittest.TestCase):
       threading.Thread(target=create_file,
                        args=(tmpfilename, SAMPLE_DATA[target],
                              0.25, 0.5)).start()
-      
+
       time.sleep(0.05) # let the thread get started
 
       with self.assertLogs(logging.getLogger(), logging.WARNING):
@@ -127,7 +127,7 @@ class TestTextFileReader(unittest.TestCase):
     self.assertEqual(reader.output_format(), formats.Text)
     self.assertEqual(reader.output_format(formats.NMEA), formats.NMEA)
     self.assertEqual(reader.output_format(), formats.NMEA)
-    
+
     with self.assertRaises(TypeError):
       reader.output_format('not a format')
 

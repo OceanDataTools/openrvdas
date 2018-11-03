@@ -51,7 +51,7 @@ class TestListener(unittest.TestCase):
     self.tmpdir = tempfile.TemporaryDirectory()
     self.tmpdirname = self.tmpdir.name
     logging.info('created temporary directory "%s"', self.tmpdirname)
-      
+
     self.tmpfilenames = []
     for f in sorted(SAMPLE_DATA):
       logging.debug('Creating sample file %s', f)
@@ -96,7 +96,7 @@ class TestListener(unittest.TestCase):
       for line in f.readlines():
         out_lines.append(line.rstrip())
     out_lines.sort()
-    
+
     source_lines = []
     for f in SAMPLE_DATA:
       source_lines.extend(['prefix_2 prefix_1 ' + f for f in SAMPLE_DATA[f]])
@@ -104,7 +104,7 @@ class TestListener(unittest.TestCase):
 
     logging.debug('out: %s, source: %s', out_lines, source_lines)
     self.assertEqual(out_lines, source_lines)
-      
+
 
   ############################
   def test_read_one_write_all(self):
@@ -139,7 +139,6 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
-    

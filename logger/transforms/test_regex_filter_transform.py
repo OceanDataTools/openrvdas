@@ -28,7 +28,7 @@ class TestRegexFilterTransform(unittest.TestCase):
     transform = RegexFilterTransform(pattern='^\dfoo', negate=True)
     self.assertEqual(transform.transform('not foo'), 'not foo')
     self.assertIsNone(transform.transform('6foo bar'), 'foo bar')
-    
+
     #transform = RegexFilterTransform('RegexFilter', sep='\t')
     #self.assertEqual(transform.transform('foo'), 'prefix\tfoo')
 
@@ -46,5 +46,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

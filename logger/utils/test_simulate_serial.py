@@ -13,7 +13,7 @@ try:
 except ModuleNotFoundError:
   raise ModuleNotFoundError('Missing module "serial". Install with "pip3 '
                             'install pyserial"')
-  
+
 sys.path.append('.')
 
 from logger.transforms.slice_transform import SliceTransform
@@ -26,7 +26,7 @@ PORT = '%DIR%/tty_gyr1'
 
 SAMPLE_CONFIG = """{
     "gyr1": {"port": "%DIR%/tty_gyr1",
-             "logfile": "%DIR%/NBP1700_gyr1" 
+             "logfile": "%DIR%/NBP1700_gyr1"
             }
 }
 """
@@ -78,7 +78,7 @@ class TestSimulateSerial(unittest.TestCase):
     time.sleep(0.1)
 
     slice = SliceTransform('1:')  # we'll want to strip out timestamp
-    
+
     # Then read from serial port
     s = serial.Serial(port=port)
     last_read = time.time() - 0.15
@@ -103,7 +103,7 @@ class TestSimulateSerial(unittest.TestCase):
     time.sleep(0.1)
 
     slice = SliceTransform('1:')  # we'll want to strip out timestamp
-    
+
     # Then read from serial port
     s = serial.Serial(port=port)
     last_read = time.time() + 0.1
@@ -115,7 +115,7 @@ class TestSimulateSerial(unittest.TestCase):
       self.assertLess(now - last_read, 0.02)
       self.assertEqual(data, record)
       last_read = now
-      
+
 
 ################################################################################
 if __name__ == '__main__':
@@ -132,7 +132,6 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #unittest.main(warnings='ignore')
   unittest.main()
-    

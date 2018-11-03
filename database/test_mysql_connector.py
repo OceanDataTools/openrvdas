@@ -94,7 +94,7 @@ class TestDatabase(unittest.TestCase):
       self.assertTrue(False,'Unable to create database connection. Have you '
                       'set up the appropriate setup script in database/setup?')
 
-    records = [parser.parse_record(s) for s in SAMPLE_DATA]      
+    records = [parser.parse_record(s) for s in SAMPLE_DATA]
     for record in records:
       db.write_record(record)
 
@@ -119,10 +119,10 @@ class TestDatabase(unittest.TestCase):
       self.assertEqual(result, r)
       logging.info('Read record: %s', str(result))
     self.assertEqual(db.read('S330CourseTrue,S330CourseMag', num_records=None), {})
-    
+
     db.close()
 
-    
+
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
@@ -137,5 +137,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

@@ -42,7 +42,7 @@ class TestLogfileWriter(unittest.TestCase):
       lines = SAMPLE_DATA.split('\n')
 
       filebase = tmpdirname + '/logfile'
-      
+
       writer = LogfileWriter(filebase)
 
       with self.assertLogs(logging.getLogger(), logging.ERROR):
@@ -71,7 +71,7 @@ class TestLogfileWriter(unittest.TestCase):
       outfile = open(filebase + '-2017-11-05', 'r')
       for i in r:
         self.assertEqual(lines[i], outfile.readline().rstrip())
-      
+
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
@@ -86,5 +86,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

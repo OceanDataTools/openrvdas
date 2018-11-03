@@ -33,7 +33,7 @@ sample_1700 = {
     "off": {
       "knud": "off",
       "gyr1": "off",
-      "mwx1": "off", 
+      "mwx1": "off",
       "s330": "off"
     },
     "port": {
@@ -87,7 +87,7 @@ sample_1701 = {
     "off": {
       "knud": "off",
       "gyr1": "off",
-      "mwx1": "off", 
+      "mwx1": "off",
       "s330": "off"
     },
     "port": {
@@ -127,7 +127,7 @@ class TestInMemoryServerAPI(unittest.TestCase):
 
     api.load_cruise(sample_1700)
     api.load_cruise(sample_1701)
-    
+
     self.assertEqual(api.get_cruises(), ['NBP1700', 'NBP1701'])
 
     self.assertEqual(api.get_modes('NBP1700'), ['off', 'port', 'underway'])
@@ -180,7 +180,7 @@ class TestInMemoryServerAPI(unittest.TestCase):
                           'NBP1701:gyr1': {},
                           'NBP1701:mwx1': {},
                           'NBP1701:s330': {}})
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -196,7 +196,6 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
-    

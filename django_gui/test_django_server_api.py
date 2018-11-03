@@ -40,7 +40,7 @@ sample_test_0 = {
     "off": {
       "knud": "off",
       "gyr1": "off",
-      "mwx1": "off", 
+      "mwx1": "off",
       "s330": "off"
     },
     "port": {
@@ -94,7 +94,7 @@ sample_test_1 = {
     "off": {
       "knud": "off",
       "gyr1": "off",
-      "mwx1": "off", 
+      "mwx1": "off",
       "s330": "off"
     },
     "port": {
@@ -142,7 +142,7 @@ class TestDjangoServerAPI(TestCase):
       pass
     api.load_cruise(sample_test_0)
     api.load_cruise(sample_test_1)
-    
+
     self.assertEqual(api.get_cruises(), ['test_0', 'test_1'])
 
     self.assertEqual(api.get_modes('test_0'), ['off', 'port', 'underway'])
@@ -209,7 +209,7 @@ class TestDjangoServerAPI(TestCase):
                           'test_1:gyr1': {'name': 'off'},
                           'test_1:mwx1': {'name': 'off'},
                           'test_1:s330': {'name': 'off'}})
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -230,5 +230,3 @@ if __name__ == '__main__':
 
   from django.core.management import execute_from_command_line
   execute_from_command_line(['dummy', 'test', 'gui.test_django_server_api'])
-
-    

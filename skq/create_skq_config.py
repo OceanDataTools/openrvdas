@@ -12,7 +12,7 @@ Then either hand the config file to the command line logger_manager script:
 
    server/logger_manager.py \
        --config skq/skq_cruise.json \
-       --mode file/db -v 
+       --mode file/db -v
 
    (The above command starts loggers running in the config's "file/db"
    mode, which reads from UDP ports and writes the resulting data to
@@ -140,7 +140,7 @@ lines = [line.strip() for line in sys.stdin.readlines()]
 loggers = {}
 modes = {}
 configs = {}
-  
+
 modes['off'] = {}
 modes['file'] = {}
 modes['db'] = {}
@@ -151,7 +151,7 @@ for line in lines:
 
   if ALL_USE_SAME_PORT:
     port = PORT
-  
+
   configs['%s->off' % inst] = {}
 
   config = file_db_config
@@ -181,7 +181,7 @@ for line in lines:
   modes['file'][inst] = '%s->file' % inst
   modes['db'][inst] = '%s->db' % inst
   modes['file/db'][inst] = '%s->file/db' % inst
-  
+
 #pprint.pprint(loggers, width=40, compact=False)
 #pprint.pprint(modes, width=40, compact=False)
 

@@ -46,9 +46,9 @@ def truew(crse=None,
     """
     FUNCTION truew() - calculates true winds from vessel speed, course and
     relative wind
-  
+
     INPUTS
-  
+
     crse      real    Course TOWARD WHICH the vessel is moving over
                           the ground. Referenced to true north and the
                           fixed earth.
@@ -70,12 +70,12 @@ def truew(crse=None,
                           missing value specified in wmis for wdir.
                           Similarly, tspd uses the missing value assigned
                           to wmis for wspd.
-  
+
     *** WDIR MUST BE METEOROLOGICAL (DIRECTION FROM)! CRSE AND CSPD MUST
         BE RELATIVE TO A FIXED EARTH! ***
-  
+
     OUTPUT VALUES:
-  
+
     tdir      real    True wind direction - referenced to true north
                           and the fixed earth with a direction from which
                           the wind is blowing (meteorological).
@@ -90,7 +90,7 @@ def truew(crse=None,
                           reference angle.  NOTE:  The apparent wind speed
                           has a magnitude equal to the wind speed measured
                           by the anemometer.
-  
+
     """
     # INITIALIZE VARIABLES
     adir = 0
@@ -178,13 +178,3 @@ def truew(crse=None,
 ################################################################################
 if __name__ == '__main__':
     pass
-
-
-
-
-
-
-
-
-
-

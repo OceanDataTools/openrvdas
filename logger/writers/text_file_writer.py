@@ -26,7 +26,7 @@ class TextFileWriter(Writer):
     create_path  Create directory path to file if it doesn't exist
     """
     super().__init__(input_format=Text)
-      
+
     if filename:
       # If directory doesn't exist, try to create it
       file_dir = os.path.dirname(filename)

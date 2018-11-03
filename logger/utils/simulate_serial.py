@@ -25,7 +25,7 @@ class SimSerial:
     timestamps, and the standard parameters that a serial port takes."""
     self.source_file = source_file
     self.use_timestamps = use_timestamps
-    
+
     # We'll create two virtual ports: 'port' and 'port_in'; we will write
     # to port_in and read the values back out from port
     self.read_port = port
@@ -48,7 +48,7 @@ class SimSerial:
     if not subprocess.run(['which', 'socat'], stdout=subprocess.PIPE).stdout:
       raise NameError('Executable "socat" not found on path. Please refer '
                       'to installation guide to install socat.')
-    
+
   ############################
   def _run_socat(self):
     """Internal: run the actual command."""
@@ -73,7 +73,7 @@ class SimSerial:
           socat_process.wait(1)
         except subprocess.TimeoutExpired:
           pass
-  
+
     except Exception as e:
       logging.error('ERROR: socat command: %s', e)
 
@@ -112,7 +112,7 @@ class SimSerial:
                                       use_timestamps=self.use_timestamps)
 
         record = self.strip.transform(record)  # strip the timestamp
-        if record: 
+        if record:
           logging.debug('SimSerial writing: %s', record)
           self.writer.write(record)   # and write it to the virtual port
       except (OSError, KeyboardInterrupt):
@@ -129,13 +129,13 @@ if __name__ == '__main__':
 
   parser.add_argument('--config', dest='config', default=None,
                       help='Config file of JSON specs for port-file mappings.')
-  
+
   parser.add_argument('--logfile', dest='logfile',
                       help='Log file to read from.')
 
   parser.add_argument('--loop', dest='loop', action='store_true',
                       help='If True, loop when reaching end of sample data')
-  
+
   parser.add_argument('--port', dest='port', help='Virtual serial port to open')
   parser.add_argument('--baud', dest='baud', type=int,
                       help='Baud rate for port.')
@@ -179,4 +179,3 @@ if __name__ == '__main__':
   else:
     parser.error('Either --config or both --logfile and --port must '
                  'be specified')
-    

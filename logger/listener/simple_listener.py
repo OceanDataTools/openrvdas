@@ -44,7 +44,7 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   reader = TextFileReader(file_spec=args.read, tail=args.tail)
   writer = TextFileWriter(filename=args.write)
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     now = time.time()
 
     logging.info('Got record: %s', record)
-    
+
     if record is None:
       if not args.tail:
         break
@@ -69,11 +69,9 @@ if __name__ == '__main__':
 
       if args.prefix:
         record = prefix_transform.transform(record)
-        
+
       writer.write(record)
 
     if args.interval:
       time_to_sleep = max(0, args.interval - (time.time() - now))
       time.sleep(time_to_sleep)
-
-  

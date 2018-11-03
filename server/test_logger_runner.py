@@ -67,7 +67,7 @@ class TestLoggerRunner(unittest.TestCase):
     self.config = CONFIG
     self.config['modes']['on']['logger']['readers']['kwargs']['file_spec'] = self.source_name
     self.config['modes']['on']['logger']['writers']['kwargs']['filename'] = self.dest_name
-    
+
   ############################
   def test_basic(self):
 
@@ -79,9 +79,9 @@ class TestLoggerRunner(unittest.TestCase):
     runner_thread = threading.Thread(target=runner.run, daemon=True)
     runner_thread.start()
 
-    runner.set_configs(self.config['modes']['on'])  
+    runner.set_configs(self.config['modes']['on'])
     time.sleep(0.6)
-    
+
     reader = TextFileReader(self.dest_name)
     for line in SAMPLE_DATA:
       logging.info('Checking line: "%s"', line)
@@ -106,13 +106,13 @@ class TestLoggerRunner(unittest.TestCase):
     # Verify that the process has indeed shut down. This should throw
     # an exception if the process doesn't exist.
     with self.assertRaises(ProcessLookupError):
-      os.kill(pid, 0)    
-    
+      os.kill(pid, 0)
+
     # Try shutting down
     runner.quit()
     runner_thread.join(2.0)
     self.assertFalse(runner_thread.is_alive())
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -128,7 +128,6 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
-    

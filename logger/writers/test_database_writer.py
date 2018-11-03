@@ -73,12 +73,12 @@ class TestDatabaseWriter(unittest.TestCase):
     writer = DatabaseWriter(database='test', host='localhost',
                             user='test', password='test')
     writer.db.exec_sql_command('truncate table data')
-    
+
     test_num = random.randint(0,100000)
     records = [parser.parse_record(s) for s in SAMPLE_DATA]
 
     index = 0
-    
+
     for record in records:
       writer.write(record)
 
@@ -89,8 +89,8 @@ class TestDatabaseWriter(unittest.TestCase):
         if result:
           self.assertEqual(result, SINGLE_RESULTS[index])
           index += 1
-      
-     
+
+
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
@@ -105,6 +105,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
-  unittest.main(warnings='ignore')
 
+  unittest.main(warnings='ignore')

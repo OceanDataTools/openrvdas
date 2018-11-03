@@ -82,7 +82,7 @@ class LogfileReader(TimestampedReader):
                                  refresh_file_spec=refresh_file_spec,
                                  retry_interval=retry_interval,
                                  interval=interval)
-    
+
   ############################
   def read(self):
     """
@@ -183,8 +183,8 @@ class LogfileReader(TimestampedReader):
     After calling this, the next record read will be the first record
     whose timestamp is the same as or later than the requested time;
     if no such record is found, it will read to the end.
-    Exception: if the records are not in exact chronological order, 
-    records appearing before the current record but with a later 
+    Exception: if the records are not in exact chronological order,
+    records appearing before the current record but with a later
     timestamp might be missed.
 
     Args:
@@ -193,16 +193,16 @@ class LogfileReader(TimestampedReader):
 
     Returns:
       Requested time in msec, i.e. timestamp of (T0 + offset),
-      where T0 = timestamp(first record) if origin = 'start' 
+      where T0 = timestamp(first record) if origin = 'start'
                = timestamp(next record) if origin = 'current' and next record is not None
                = timestamp(last record) if origin = 'current' and next record is None
-               = timestamp(last record) if origin = 'end' 
+               = timestamp(last record) if origin = 'end'
       Returns None if no timestamps were found
     """
     if self.filebase is None:
       raise ValueError('seek_time() not allowed on stdin')
 
-    # TODO: Maybe these are OK, as long as 'end' is defined as the point where 
+    # TODO: Maybe these are OK, as long as 'end' is defined as the point where
     # read() returns None for the first time.
     if self.tail and origin == 'end':
       raise ValueError('tail=True incompatible with origin == "end"')
@@ -222,7 +222,7 @@ class LogfileReader(TimestampedReader):
         prev_timestamp = self._get_msec_timestamp(self.prev_record)
         if prev_timestamp >= desired_time:
           self._reset()
-      self._read_until(desired_time) 
+      self._read_until(desired_time)
       return desired_time
 
     elif origin == 'current':
@@ -237,7 +237,7 @@ class LogfileReader(TimestampedReader):
         self._reset()
       self._read_until(desired_time)
       return desired_time
-  
+
     elif origin == 'end':
       while self.read() is not None:
         pass
@@ -247,7 +247,7 @@ class LogfileReader(TimestampedReader):
       desired_time = end_timestamp + offset
       if offset < 0:
         self._reset()
-        self._read_until(desired_time) 
+        self._read_until(desired_time)
       return desired_time
 
     else:

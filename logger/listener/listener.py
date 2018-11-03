@@ -64,7 +64,7 @@ class Listener:
     self.interval = interval
     self.name = name or 'Unnamed listener'
     self.last_read = 0
-    
+
     self.quit_signalled = False
 
   ############################
@@ -74,7 +74,7 @@ class Listener:
     """
     self.quit_signalled = True
     logging.debug('Listener.quit() called')
-    
+
   ############################
   def run(self):
     """
@@ -87,7 +87,7 @@ class Listener:
       while not self.quit_signalled and record is not None:
         record = self.reader.read()
         self.last_read = time.time()
-      
+
         logging.debug('ComposedReader read: "%s"', record)
         if record:
           self.writer.write(record)
@@ -100,4 +100,3 @@ class Listener:
     except KeyboardInterrupt:
       logging.info('Listener %s received KeyboardInterrupt - exiting.',
                    self.name or '')
-

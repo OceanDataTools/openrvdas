@@ -21,7 +21,7 @@ PORT = '%DIR%/tty_gyr1'
 
 SAMPLE_CONFIG = """{
     "gyr1": {"port": "%DIR%/tty_gyr1",
-             "logfile": "%DIR%/NBP1700_gyr1" 
+             "logfile": "%DIR%/NBP1700_gyr1"
             }
 }
 """
@@ -96,7 +96,7 @@ class TestSerialReader(unittest.TestCase):
     time.sleep(0.1)
 
     slice = SliceTransform('1:')  # we'll want to strip out timestamp
-    
+
     # Then read from serial port
     s = SerialReader(port=port)
     for line in SAMPLE_DATA.split('\n'):
@@ -118,14 +118,14 @@ class TestSerialReader(unittest.TestCase):
     time.sleep(0.1)
 
     slice = SliceTransform('1:')  # we'll want to strip out timestamp
-    
+
     # Then read from serial port
     s = SerialReader(port=port, max_bytes=2)
     for data in SAMPLE_MAX_BYTES_2:
       record = s.read()
       logging.debug('data: %s, read: %s', data, record)
       self.assertEqual(data, record)
-  
+
   ############################
   # When timeout specified...
   def test_timeout(self):
@@ -138,7 +138,7 @@ class TestSerialReader(unittest.TestCase):
     time.sleep(0.05)
 
     slice = SliceTransform('1:')  # we'll want to strip out timestamp
-    
+
     # Then read from serial port
     s = SerialReader(port=port, timeout=0.1)
     for line in SAMPLE_TIMEOUT:
@@ -164,7 +164,6 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #unittest.main(warnings='ignore')
   unittest.main()
-    

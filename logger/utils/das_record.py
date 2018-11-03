@@ -31,7 +31,7 @@ class DASRecord:
       self.fields = parsed.get('fields', {})
       self.metadata = parsed.get('metadata', {})
     else:
-      #self.source = 
+      #self.source =
       self.data_id = data_id
       self.message_type = message_type
       self.timestamp = timestamp or timestamp_method()
@@ -74,5 +74,3 @@ class DASRecord:
             self.timestamp == other.timestamp and
             self.fields == other.fields and
             self.metadata == other.metadata)
-
-
