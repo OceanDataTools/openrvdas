@@ -21,7 +21,7 @@ class ComposedReader(Reader):
   """
   Read lines from one or more Readers (in parallel) and process their
   responses through zero or more Transforms (in series).
-  
+
   NOTE: we make the rash assumption that transforms are thread-safe,
   that is, that no mischief or corrupted internal state will result if
   more than one thread calls a transform at the same time. To be
@@ -77,7 +77,7 @@ class ComposedReader(Reader):
     # Make readers a list, even if it's only a single reader.
     self.readers = readers if type(readers) == type([]) else [readers]
     self.num_readers = len(self.readers)
-    
+
     # Transforms can be empty. But if not empty, make it a list, even
     # if it's only a single transform.
     if not type(transforms) == type([]):
@@ -181,7 +181,7 @@ class ComposedReader(Reader):
           return self._apply_transforms(record)
         else:
           self.queue_has_record.clear()
-  
+
       # If here, nothing in queue yet. Wait
       logging.debug('read() - clear of queue lock, waiting for record')
       self.queue_has_record.wait(READER_TIMEOUT_WAIT)
@@ -209,10 +209,10 @@ class ComposedReader(Reader):
       if not self.queue_needs_record.is_set():
         logging.debug('    Reader #%d timed out - exiting.', index)
         return
-        
+
       # Else someone needs a record - leap into action
       logging.debug('    Reader #%d waking up - record needed!', index)
-      
+
       # Guard against re-entry
       with self.reader_locks[index]:
         record = self.readers[index].read()
@@ -223,7 +223,7 @@ class ComposedReader(Reader):
           logging.info('    Reader #%d returned None, is done', index)
           self.reader_returned_eof[index] = True
           return
-        
+
       logging.debug('    Reader #%d has record, released reader_lock.', index)
 
       # Add record to queue and note that an append event has
@@ -239,7 +239,7 @@ class ComposedReader(Reader):
 
       # Now clear of queue_lock
       logging.debug('    Reader #%d released queue_lock - looping', index)
-          
+
   ############################
   def _apply_transforms(self, record):
     """
@@ -264,11 +264,11 @@ class ComposedReader(Reader):
        lowest_common = reader.output_format().common(lowest_common)
        if not lowest_common:
          return None
-  
+
     logging.debug('Lowest common format for readers is "%s"', lowest_common)
     if not self.transforms:
       return lowest_common
-    
+
     # Now check the transforms in series - output of each is input of
     # next one.
     for transform in self.transforms:

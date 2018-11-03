@@ -38,7 +38,7 @@ LOGGER_TEMPLATES = {
       "baudrate": 9600
     }
   },
-  
+
   # Generic logfile writer
   "%INST%_LOGFILE_WRITER": {
     "class": "LogfileWriter",
@@ -117,7 +117,7 @@ FULL_TEMPLATES = {
     "readers": "%INST%_SERIAL_READER",
     "transforms": {"class": "TimestampTransform"},
     "writers": "%INST%_NETWORK_WRITER"
-  }  
+  }
 }
 
 # This is what we should end up with when we expand LOGGERS
@@ -255,7 +255,7 @@ class TestBuildConfigs(unittest.TestCase):
     result = BuildConfig._recursive_str_replace(SAMPLE, 'PCOD', 'REP')
     logging.debug('\n###SAMPLE:\n%s, \n###result:\n%s',
                   pprint.pformat(SAMPLE), pprint.pformat(result))
-    
+
     self.assertEqual(result.get('PCOD', 'missing'), 'missing')
     self.assertEqual(result['REP']['port'], '/tmp/tty_REP')
 
@@ -273,7 +273,7 @@ class TestBuildConfigs(unittest.TestCase):
     result = BuildConfig._recursive_str_replace(SAMPLE, 'PCOD', ['p1', 'p2'])
     logging.debug('\n###SAMPLE:\n%s, \n###result:\n%s', pprint.pformat(SAMPLE),
                   pprint.pformat(result))
-    
+
 
   ############################
   def test_recursive_replace(self):
@@ -301,7 +301,7 @@ class TestBuildConfigs(unittest.TestCase):
     logger_def = BuildConfig.expand_config(CONFIG)
     logging.info('expanded config: %s', pprint.pformat(logger_def))
     self.assertDictEqual(logger_def, EXPANDED_CONFIG)
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -317,6 +317,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')
-    

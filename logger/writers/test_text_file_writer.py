@@ -55,7 +55,7 @@ class TestTextFileWriter(unittest.TestCase):
     self.assertEqual(writer.input_format(), formats.Text)
     self.assertEqual(writer.input_format(formats.NMEA), formats.NMEA)
     self.assertEqual(writer.input_format(), formats.NMEA)
-    
+
     with self.assertRaises(TypeError):
       writer.input_format('not a format')
 

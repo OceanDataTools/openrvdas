@@ -18,7 +18,7 @@ class Logger(models.Model):
                              blank=True, null=True)
   def __str__(self):
     return self.name
-   
+
 ##############################
 class LoggerConfig(models.Model):
   name = models.CharField(max_length=255, blank=True)
@@ -46,7 +46,7 @@ class Mode(models.Model):
                              blank=True, null=True)
   def __str__(self):
     return self.name
-  
+
 ##############################
 class Cruise(models.Model):
   id = models.CharField(max_length=255, primary_key=True)
@@ -69,7 +69,7 @@ class Cruise(models.Model):
 
   def __str__(self):
     return self.id
-  
+
 ##############################
 # Which is our current cruise? Since when?
 class CurrentCruise(models.Model):

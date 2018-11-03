@@ -42,7 +42,7 @@ class TestSliceTransform(unittest.TestCase):
     transform = SliceTransform('')
     self.assertEqual(transform.transform(alpha), alpha)
 
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -58,5 +58,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

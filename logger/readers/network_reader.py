@@ -49,7 +49,7 @@ class NetworkReader(Reader):
                                   proto=socket.IPPROTO_TCP)
       # Should this be bind()?
       self.socket.connect((host, port))
-      
+
     # UDP broadcast if no host specified. Note that there's some
     # dodginess I don't understand about networks: if '<broadcast>' is
     # specified, socket tries to send on *all* interfaces. if '' is

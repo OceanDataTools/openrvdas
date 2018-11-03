@@ -25,7 +25,7 @@ class TestQCFilterTransform(unittest.TestCase):
 
   ############################
   def test_default(self):
-    p = ParseNMEATransform()    
+    p = ParseNMEATransform()
     q = QCFilterTransform(bounds='Grav1ValueMg:22000:23000,Grav1Error::2')
 
     record = p.transform('grv1 2017-11-04T05:12:21.273413Z 01:022013 00')
@@ -56,7 +56,7 @@ class TestQCFilterTransform(unittest.TestCase):
     self.assertEqual(q.transform(record),
                      'KnudHFDepth: non-numeric value: "None"')
 
-  
+
   ############################
   def test_message(self):
     p = ParseNMEATransform()
@@ -65,7 +65,7 @@ class TestQCFilterTransform(unittest.TestCase):
 
     record = 'knud 2017-11-04T05:12:21.981359Z'
     self.assertEqual(q.transform(record), 'The sky is falling!')
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -81,5 +81,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

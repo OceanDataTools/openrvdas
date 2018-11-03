@@ -17,7 +17,7 @@ from logger.utils.das_record import DASRecord
 from logger.transforms.transform import Transform
 
 ################################################################################
-# 
+#
 class QCFilterTransform(Transform):
   """
   Transform that returns None unless values in passed DASRecord are out of
@@ -85,4 +85,3 @@ class QCFilterTransform(Transform):
       return self.message
     else:
       return '; '.join(errors)
-

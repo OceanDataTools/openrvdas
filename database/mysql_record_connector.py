@@ -40,7 +40,7 @@ class MySQLRecordConnector:
     cursor.execute(command)
     self.connection.commit()
     cursor.close()
-    
+
   ############################
   def table_name_from_record(self,  record):
     """Infer table name from record."""
@@ -61,7 +61,7 @@ class MySQLRecordConnector:
     if not self.table_exists(self.FIELD_NAME_MAPPING_TABLE):
       logging.info('Mapping table "%s" does not exist - is something wrong?')
       return None
-    
+
     query = 'select table_name from %s where (field_name = "%s")' % \
             (self.FIELD_NAME_MAPPING_TABLE, field)
     logging.debug('executing query "%s"', query)
@@ -91,7 +91,7 @@ class MySQLRecordConnector:
     str:   'text',
     bool:  'bool',
   }
-  
+
   ############################
   def _register_record_fields(self,  record):
     """Add a field_name->table_name entry for each field name in the record
@@ -157,7 +157,7 @@ class MySQLRecordConnector:
 
     # Register the fields in the record as being contained in this table.
     self._register_record_fields(record)
-    
+
   ############################
   def write_record(self, record):
     """Write record to table."""
@@ -182,7 +182,7 @@ class MySQLRecordConnector:
     write_cmd = 'insert into `%s` (`timestamp`,%s) values (%f,%s)' % \
                 (table_name, ','.join(keys), record.timestamp,
                  ','.join([map_value_to_str(record.fields[k]) for k in keys]))
-    
+
     logging.debug('Inserting record into table with command: %s', write_cmd)
     self.exec_sql_command(write_cmd)
 
@@ -214,7 +214,7 @@ class MySQLRecordConnector:
     cursor.execute(query)
     num_rows = next(cursor)[0]
     return num_rows
-  
+
   ############################
   def _fetch_and_parse_records(self, table_name, query):
     """Fetch records, give DB query, and parse into DASRecords."""
@@ -231,8 +231,8 @@ class MySQLRecordConnector:
       fields = dict(zip(columns, values))
       id = fields.pop('id')
       self.next_id[table_name] = id + 1
-      
-      timestamp = fields.pop('timestamp')      
+
+      timestamp = fields.pop('timestamp')
       results.append(DASRecord(data_id=data_id, message_type=message_type,
                                timestamp=timestamp, fields=fields))
     cursor.close()
@@ -253,7 +253,7 @@ class MySQLRecordConnector:
       fields = '*'
     else:
       fields = 'id,timestamp,' + ','.join(field_list)
-      
+
     query = 'select %s from `%s` where (id = %d)' % (fields, table_name, start)
     result = self._fetch_and_parse_records(table_name, query)
 
@@ -269,7 +269,7 @@ class MySQLRecordConnector:
 
     if not table_name in self.next_id:
       self.next_id[table_name] = 1
-    
+
     if origin == 'current':
       self.next_id[table_name] += offset
     elif origin == 'start':
@@ -277,7 +277,7 @@ class MySQLRecordConnector:
     elif origin == 'end':
       num_rows = self._num_rows(table_name)
       self.next_id[table_name] = num_rows + offset + 1
-      
+
     logging.debug('Seek: next position table %s %d',
                   table_name, self.next_id[table_name])
 
@@ -291,7 +291,7 @@ class MySQLRecordConnector:
       if not table_name in self.next_id:
         self.next_id[table_name] = 1
       start = self.next_id[table_name]
-      
+
     condition_list = ['id >= %d' % start]
     if stop is not None:
       condition_list.append('id < %d' % stop)
@@ -302,7 +302,7 @@ class MySQLRecordConnector:
       fields = '*'
     else:
       fields = 'id,timestamp,' + ','.join(field_list)
-    
+
     query = 'select %s from `%s` %s' % (fields, table_name, condition_clause)
     return self._fetch_and_parse_records(table_name, query)
 
@@ -332,7 +332,7 @@ class MySQLRecordConnector:
 
     query = 'select %s from `%s` %s' % (fields, table_name, condition_clause)
     return self._fetch_and_parse_records(table_name, query)
-    
+
   ############################
   def delete_table(self,  table_name):
     """Delete a table."""

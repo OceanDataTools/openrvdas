@@ -62,7 +62,7 @@ def log_request(request, cmd):
     api.message_log(source='Django', user='(%s@%s)' % (user, host),
                     log_level=api.INFO, cruise_id=cruise_id,
                     message=elements)
-  
+
 ################################################################################
 def index(request, cruise_id=None):
   """Home page - render logger states and cruise information.
@@ -70,13 +70,13 @@ def index(request, cruise_id=None):
   global api
   if api is None:
     api = DjangoServerAPI()
-   
+
   ############################
   # If we've gotten a POST request
   errors = []
   if request.method == 'POST':
     logging.debug('POST: %s', request.POST)
-    
+
     # First things first: log the request
     log_request(request, (cruise_id or 'no_cruise') + ' index')
 
@@ -100,7 +100,7 @@ def index(request, cruise_id=None):
     # cruise_id it defines.
     elif 'load_cruise' in request.POST and 'config_file' in request.FILES:
       config_file = request.FILES['config_file']
-      config_contents = config_file.read() 
+      config_contents = config_file.read()
       logging.warning('Uploading file "%s"...', config_file.name)
 
       try:
@@ -149,7 +149,7 @@ def index(request, cruise_id=None):
       loggers[logger_id] = logger_config
       logging.warning('config for %s is %s', logger_id, logger_config)
     template_vars['loggers'] = loggers
-    
+
   return render(request, 'django_gui/index.html', template_vars)
 
 ################################################################################
@@ -176,7 +176,7 @@ def server_messages(request, path):
   return render(request, 'django_gui/server_messages.html', template_vars)
 
 ################################################################################
-def edit_config(request, cruise_id, logger_id):  
+def edit_config(request, cruise_id, logger_id):
   global api
   if api is None:
     api = DjangoServerAPI()
@@ -191,7 +191,7 @@ def edit_config(request, cruise_id, logger_id):
     new_config = request.POST['select_config']
     logging.warning('selected config: %s', new_config)
     api.set_logger_config_name(cruise_id, logger_id, new_config)
-    
+
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 

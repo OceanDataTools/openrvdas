@@ -130,7 +130,7 @@ class BuildConfig:
       # If new_str is a simple string, just do replacement recursively
       if type(new_str) is str:
         return {k.replace(old_str, new_str):
-                self._recursive_str_replace(v, old_str, new_str) 
+                self._recursive_str_replace(v, old_str, new_str)
                 for k, v in source.items()}
 
       # Else new_str is a list; do replacements of each element, and insert
@@ -193,7 +193,7 @@ class BuildConfig:
     source_template, then swap in the variables. Return a new,
     expanded template dict. If source_template is omitted, template
     will be expanded with its own definitions."""
-  
+
     # Expand any vars embedded inside the vars values themselves
     new_vars = {}
     for k, v in vars.items():
@@ -277,7 +277,7 @@ class BuildConfig:
           "writers": "%INST%_LOGFILE_WRITER"
         }
       }
-    """    
+    """
     # First, expand the templates without variables, then expand modes
     # using the vars and expanded templates
     vars = config.get('vars', {})

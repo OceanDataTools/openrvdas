@@ -73,7 +73,7 @@ class SliceTransform(Transform):
         slice = in_record[field[0]:field[1]]
       else:
         slice = [in_record[field]]
-        
+
       logging.debug('SliceTransform.write() selecting %s: %s', field, slice)
       out_record.extend(slice)
     separator = self.sep or ' '

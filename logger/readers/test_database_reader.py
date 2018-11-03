@@ -99,7 +99,7 @@ class TestDatabaseReader(unittest.TestCase):
     self.assertEqual(results, {'S330GPSDay': [(1509778447.17313, 7)],
                                'S330GPSMonth': [(1509778447.17313, 8)],
                                'S330GPSYear': [(1509778447.17313, 2014)]})
-    
+
     # Next record should be one after that
     result = reader.read()
     self.assertEqual(result, {'S330GPSTime': [(1509778449.210395, 2034.17)]})
@@ -137,5 +137,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

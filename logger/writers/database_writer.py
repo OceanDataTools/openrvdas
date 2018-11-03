@@ -54,12 +54,12 @@ class DatabaseWriter(Writer):
   def _table_exists(self, table_name):
     """Does the specified table exist in the database?"""
     return self.db.table_exists(table_name)
-  
+
   ############################
   def _write_record(self, record):
     """Write record to table."""
     self.db.write_record(record)
-    
+
   ############################
   def _delete_table(self,  table_name):
     """Delete a table."""

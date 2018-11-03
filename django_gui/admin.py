@@ -10,7 +10,7 @@ class ModeInline(admin.TabularInline):
   extra = 0
   list_display = ('name', 'cruise')
   fieldsets = [(None,    {'fields':['name', 'cruise']})]
-  
+
   readonly_fields = ('name', 'cruise')
   can_delete = False
   show_change_link = True
@@ -33,7 +33,7 @@ class LoggerAdmin(admin.ModelAdmin):
 class LoggerConfigAdmin(admin.ModelAdmin):
   list_display = ('name', 'logger', 'get_modes', 'enabled', 'config_json')
   list_filter = ('logger', 'enabled')
-  
+
   def get_modes(self, obj):
         return "\n".join([m.name for m in obj.modes.all()])
 
@@ -44,7 +44,7 @@ class LoggerConfigStateAdmin(admin.ModelAdmin):
   list_display = ('timestamp', 'last_checked', 'logger', 'config',
                   'running', 'failed', 'pid', 'errors')
   list_filter = ('logger__cruise', 'logger', 'config', 'running')
-  
+
 #############################################
 class ModeAdmin(admin.ModelAdmin):
   def configs(self, obj):
@@ -110,7 +110,3 @@ admin.site.register(CruiseState, CruiseStateAdmin)
 admin.site.register(LogMessage, LogMessageAdmin)
 admin.site.register(StatusUpdate, StatusUpdateAdmin)
 admin.site.register(ServerState, ServerStateAdmin)
-
-
-
-

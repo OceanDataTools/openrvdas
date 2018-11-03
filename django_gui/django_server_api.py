@@ -420,7 +420,7 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def message_log(self, source, user, log_level, cruise_id, message):
     """Timestamp and store the passed message."""
-    
+
     LogMessage(source=source, user=user, log_level=log_level,
                cruise_id=cruise_id, message=message).save()
 

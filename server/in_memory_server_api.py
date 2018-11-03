@@ -50,7 +50,7 @@ class InMemoryServerAPI(ServerAPI):
     if not cruise_config:
       raise ValueError('No such cruise found: "%s"' % cruise_id)
     return cruise_config
-  
+
   ############################
   def get_mode(self, cruise_id):
     """Return cruise config for specified cruise id."""
@@ -286,14 +286,14 @@ class InMemoryServerAPI(ServerAPI):
     # termination is when we've grabbed all the statuses with a
     # timestamp greater than the specified number.
     status = {}
-    
+
     status_index = len(self.status)-1
     logging.debug('starting at status index %d', status_index)
     while logger_set and status_index >= 0:
       # record is a dict of 'cruise_id:logger' : {fields}
       (timestamp, record) = self.status[status_index]
       logging.debug('%d: %f: %s', status_index, timestamp, pprint.pformat(record))
-      
+
       # If we've been given a numeric timestamp and we've stepped back
       # in time to or before that timestamp, we're done - break out.
       if since_timestamp is not None and timestamp <= since_timestamp:
@@ -341,7 +341,7 @@ class InMemoryServerAPI(ServerAPI):
       message = self.server_messages[index]
       (timestamp, mesg_source, mesg_user,
        mesg_log_level, mesg_cruise_id,  mesg_message) = message
-      
+
       # Have we gone back too far? If so, we're done.
       if since_timestamp is not None and timestamp <= since_timestamp:
         break
@@ -354,7 +354,7 @@ class InMemoryServerAPI(ServerAPI):
         continue
       if (mesg_cruise_id and cruise_id and not mesg_cruise_id == cruise_id):
         continue
-      
+
       messages.insert(0, message)
 
       # Are we only looking for last message, and do we have a message?
@@ -368,7 +368,7 @@ class InMemoryServerAPI(ServerAPI):
   # Methods to modify the data store
   ############################
   def load_cruise(self, cruise_config):
-    """Add a complete cruise configuration (id, modes, configs, 
+    """Add a complete cruise configuration (id, modes, configs,
     default) to the data store."""
     if 'cruise' in cruise_config and 'id' in cruise_config['cruise']:
       cruise_id = cruise_config['cruise']['id']

@@ -114,9 +114,9 @@ class TestLogfileReader(unittest.TestCase):
         if then:
           self.assertAlmostEqual(now-then, interval, places=1)
         then = now
-        
+
       self.assertEqual(None, reader.read())
-  
+
   ############################
   def test_interval(self):
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -134,7 +134,7 @@ class TestLogfileReader(unittest.TestCase):
         if then:
           self.assertAlmostEqual(now-then, interval, places=1)
         then = now
-        
+
       self.assertEqual(None, reader.read())
 
   ############################
@@ -217,7 +217,7 @@ class TestLogfileReader(unittest.TestCase):
       self.assertEqual(START_TIMESTAMP + 1000, reader.seek_time(1000, 'current'))
 
       # the first record with t >= START_TIMESTAMP + 1000 (= 1509840000441.672) is sample_lines[4]
-      timestamp_of_expected_next_record = get_msec_timestamp(sample_lines[4]) # 1509840000460.595 
+      timestamp_of_expected_next_record = get_msec_timestamp(sample_lines[4]) # 1509840000460.595
       self.assertEqual(timestamp_of_expected_next_record, reader.seek_time(0, 'current'))
       self.assertEqual(timestamp_of_expected_next_record - 500, reader.seek_time(-500, 'current'))
 
@@ -319,5 +319,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

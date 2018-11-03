@@ -60,14 +60,14 @@ class TestDatabase(unittest.TestCase):
         db.delete_table(db.FIELD_NAME_MAPPING_TABLE)
       except ProgrammingError:
         pass
-      
+
     for record in records:
       table_name = db.table_name_from_record(record)
 
       self.assertFalse(db.table_exists(table_name))
       db.create_table_from_record(record)
       self.assertTrue(db.table_exists(table_name))
-      
+
       db.write_record(record)
       result = db.read(table_name)
       logging.info('Read record: %s', str(result))
@@ -80,7 +80,7 @@ class TestDatabase(unittest.TestCase):
 
       # Make sure we don't get anything when we try a second read
       self.assertFalse(db.read(table_name))
-      
+
     for record in records:
       table_name = db.table_name_from_record(record)
       db.write_record(record)
@@ -89,7 +89,7 @@ class TestDatabase(unittest.TestCase):
       self.assertEqual(len(results), 2)
 
     table_name = db.table_name_from_record(records[0])
-    
+
     db.seek(table_name, 0, 'start')
     self.assertEqual(db.read(table_name), records[0])
     self.assertEqual(db.read(table_name), records[0])
@@ -107,7 +107,7 @@ class TestDatabase(unittest.TestCase):
       table_name = db.table_name_from_record(record)
       db.delete_table(table_name)
       self.assertFalse(db.table_exists(table_name))
-      
+
     db.close()
 
 if __name__ == '__main__':
@@ -124,5 +124,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

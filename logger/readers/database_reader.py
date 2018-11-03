@@ -81,4 +81,3 @@ class DatabaseReader(TimestampedReader):
     read all records since then."""
     return self.db.read_time(self.fields, start_time=start_time,
                              stop_time=stop_time)
-

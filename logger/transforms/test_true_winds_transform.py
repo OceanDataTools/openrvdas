@@ -187,7 +187,7 @@ class TestTrueWindsTransform(unittest.TestCase):
     if type(val1) in (int, float) and type(val2) in (int, float):
       self.assertLess(abs(val1-val2), max_diff)
       return
-    
+
     if type(val1) in (str, bool, type(None)):
       self.assertEqual(val1, val2)
       return
@@ -196,7 +196,7 @@ class TestTrueWindsTransform(unittest.TestCase):
     self.assertTrue(type(val1) in (set, list, dict))
     self.assertEqual(type(val1), type(val2))
     self.assertEqual(len(val1), len(val2))
-    
+
     if type(val1) == list:
       for i in range(len(val1)):
         self.assertRecursiveAlmostEqual(val1[i], val2[i], max_diff)
@@ -214,7 +214,7 @@ class TestTrueWindsTransform(unittest.TestCase):
   def test_default(self):
     lines = LINES.copy()
     expected_results = RESULTS.copy()
-    
+
     # Use port wind speed, output in m/s
     tw = TrueWindsTransform(course_field='S330CourseTrue',
                             speed_field='S330Speed',
@@ -230,13 +230,13 @@ class TestTrueWindsTransform(unittest.TestCase):
 
     value_dict = {}
     timestamp_dict = {}
-    
+
     while lines:
       record = parse.transform(lines.pop(0))
       for field in record.fields:
         value_dict[field] = record.fields[field]
         timestamp_dict[field] = record.timestamp
-        
+
       result = tw.transform(value_dict, timestamp_dict)
       expected = expected_results.pop(0)
       logging.info('Got result: %s', result)
@@ -252,7 +252,7 @@ class TestTrueWindsTransform(unittest.TestCase):
   def test_no_timestamps(self):
     lines = LINES.copy()
     expected_results = NO_TIMESTAMP_RESULTS.copy()
-    
+
     # Use port wind speed, output in m/s
     tw = TrueWindsTransform(course_field='S330CourseTrue',
                             speed_field='S330Speed',
@@ -268,13 +268,13 @@ class TestTrueWindsTransform(unittest.TestCase):
 
     value_dict = {}
     timestamp_dict = {}
-    
+
     while lines:
       record = parse.transform(lines.pop(0))
       for field in record.fields:
         value_dict[field] = record.fields[field]
         timestamp_dict[field] = record.timestamp
-        
+
       result = tw.transform(value_dict)
       expected = expected_results.pop(0)
       logging.info('Got result: %s', result)
@@ -291,7 +291,7 @@ class TestTrueWindsTransform(unittest.TestCase):
     """Sanity check that the numbers coming out make sense."""
     check = SANITY_CHECK.copy()
     expected_results = SANITY_RESULTS.copy()
-    
+
     tw = TrueWindsTransform(course_field='CourseTrue',
                             speed_field='Speed',
                             heading_field='HeadingTrue',
@@ -311,7 +311,7 @@ class TestTrueWindsTransform(unittest.TestCase):
       self.assertRecursiveAlmostEqual(result, expected)
 
     return
-  
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -327,5 +327,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

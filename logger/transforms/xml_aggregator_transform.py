@@ -68,7 +68,7 @@ class _XMLHandler(ContentHandler):
   """
   Helper class here - _XMLHandler.endElement() will get called on
   closing tags, so we can detect when we've got a closing tag for
-  whatever XML element we're after. We're omitting startElement, 
+  whatever XML element we're after. We're omitting startElement,
   and characters methods to store data on a stack during processing.
   """
   ############################
@@ -77,7 +77,7 @@ class _XMLHandler(ContentHandler):
     self.tag = tag
     self.item_list = []
     self.element_complete = False
-    
+
   ############################
   def complete(self):
     return self.element_complete
@@ -91,4 +91,3 @@ class _XMLHandler(ContentHandler):
     if name == self.tag:
       # Create item from stored data on stack
       self.element_complete = True
-  

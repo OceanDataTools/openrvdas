@@ -33,7 +33,7 @@ urlpatterns = [
   # or all fields may be empty
   path('server_messages/<path:path>', views.server_messages,
        name='server_messages'),
-  
+
   path('edit_config/<str:cruise_id>/<str:logger_id>',
        views.edit_config, name='edit_config'),
 

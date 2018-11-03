@@ -69,13 +69,13 @@ class NMEAParser:
     except ValueError as e:
       logging.error(str(e))
       return None
-    
+
     # Finally, convert field values to variable names specific to sensor
     sensor_fields = sensor.get('fields', None)
     if not sensor_fields:
       logging.error('No "fields" definition found for sensor %s', data_id)
       return None
-    
+
     named_fields = {}
     for field_name in fields:
       var_name = sensor_fields.get(field_name, None)
@@ -104,7 +104,7 @@ class NMEAParser:
     logging.debug('Parsed "%s"', message)
     logging.debug('raw_fields "%s"', raw_fields)
     logging.debug('checksum "%s"', checksum)
-    
+
     # Proper NMEA uses commas to delimit fields, but some serial
     # instruments use spaces or other characters (Gravimeter, for
     # example, uses both spaces and ':'). Look up sensor model and see
@@ -142,8 +142,8 @@ class NMEAParser:
       # message out of our dictionary of messages we actually have.
       element = fields.pop(0)
       message_type = message_type + '-' + element if message_type else element
-        
-      definition = sensor_messages.get(element, None) 
+
+      definition = sensor_messages.get(element, None)
       if not definition:
         raise ValueError('Message "%s" is not one defined by model %s (%s)'
                          % (message_type, sensor_model_name, sensor_messages))
@@ -179,21 +179,21 @@ class NMEAParser:
     # End of while loop. If we're here, we darned well ought to have
     # field_definitions in our definition_base. Get them and make sure
     # they line up with the number of fields we have left.
-    field_definitions = definition_base.get('fields')    
+    field_definitions = definition_base.get('fields')
     if len(fields) != len(field_definitions):
       raise ValueError('Sensor model "%s": %s # of fields (%s) != '
                        '# field definitions (%s): "%s" != "%s"' % (
                          sensor_model_name, message_type,
                          len(fields), len(field_definitions),
                          fields, [f[0] for f in field_definitions]))
-      
+
     # If still okay, map field values to their definitions
     field_values = {}
     for i in range(len(fields)):
       (name, data_type) = field_definitions[i]
       field_values[name] = self._convert(fields[i], data_type)
     return (field_values, message_type)
-    
+
   ############################
   def _convert(self, value, data_type):
     if value is '':

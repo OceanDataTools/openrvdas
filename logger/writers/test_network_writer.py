@@ -61,7 +61,7 @@ class TestNetworkWriter(unittest.TestCase):
                      args=(addr, SAMPLE_DATA, 0.1)).start()
 
     # Set timeout we can catch if things are taking too long
-    signal.signal(signal.SIGALRM, self._handler)    
+    signal.signal(signal.SIGALRM, self._handler)
     signal.alarm(3)
     try:
       # Check that we get the lines we expect from it
@@ -75,7 +75,7 @@ class TestNetworkWriter(unittest.TestCase):
       self.assertTrue(False, 'NetworkReader timed out in test - is port '
                       '%s open?' % addr)
     signal.alarm(0)
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -91,5 +91,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')

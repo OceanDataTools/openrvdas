@@ -288,7 +288,7 @@ class ServerAPI:
     > api.add_cruise('NBP1702', '2017-02-02', '2017-03-01')
     """
     raise NotImplementedError('add_cruise must be implemented by subclass')
-  
+
   #############################
   def delete_cruise(self, cruise_id):
     """Remove the specified cruise from the data store.
@@ -316,7 +316,7 @@ class ServerAPI:
   #############################
   def add_logger(self, cruise_id, logger_id, logger_spec):
     """Associate a new logger with the specified cruise id in the
-    data store. 
+    data store.
 
     logger_spec - a dict defining:
       configs - list of config names that are valid for this logger
@@ -356,7 +356,7 @@ class ServerAPI:
 
   #############################
   def delete_config(self, cruise_id, config_id):
-    """Delete specified config from data store (and by extension,   
+    """Delete specified config from data store (and by extension,
     from the mode and logger with which it is associated.
     > api.delete_config('NBP1702', 'gyr2->net/file/db')
     """

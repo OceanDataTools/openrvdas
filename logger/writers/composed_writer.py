@@ -60,7 +60,7 @@ class ComposedWriter(Writer):
     # One lock per writer, to prevent us from accidental re-entry if a
     # new write is requested before the previous one has completed.
     self.writer_lock = [threading.Lock() for i in range(len(self.writers))]
-    
+
     # If they want, check that our writers and transforms have
     # compatible input/output formats.
     input_format = formats.Unknown
@@ -79,7 +79,7 @@ class ComposedWriter(Writer):
     write() method."""
     with self.writer_lock[index]:
       self.writers[index].write(record)
-          
+
   ############################
   def apply_transforms(self, record):
     """Internal: apply the transforms in series."""
@@ -102,7 +102,7 @@ class ComposedWriter(Writer):
     # plausible. Try to be accommodating.
     if not self.writers:
       return
-    
+
     # If we only have one writer, there's no point making things
     # complicated. Just write and return.
     if len(self.writers) == 1:
@@ -152,7 +152,6 @@ class ComposedWriter(Writer):
     for writer in self.writers:
        lowest_common = writer.input_format().common(lowest_common)
        if not lowest_common:
-         logging.error('No common input format among writers')         
+         logging.error('No common input format among writers')
          return None
     return lowest_common
-

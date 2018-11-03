@@ -26,14 +26,14 @@ class TestTransform(unittest.TestCase):
     self.assertEqual(transform.input_format(), formats.Text)
     self.assertEqual(transform.input_format(formats.NMEA), formats.NMEA)
     self.assertEqual(transform.input_format(), formats.NMEA)
-    
+
     with self.assertRaises(TypeError):
       transform.input_format('not a format')
 
     self.assertEqual(transform.output_format(), formats.Text)
     self.assertEqual(transform.output_format(formats.NMEA), formats.NMEA)
     self.assertEqual(transform.output_format(), formats.NMEA)
-    
+
     with self.assertRaises(TypeError):
       transform.output_format('not a format')
 

@@ -31,7 +31,7 @@ class ParseNMEATransform(Transform):
     self.parser = nmea_parser.NMEAParser(message_path, sensor_path,
                                          sensor_model_path,
                                          time_format=time_format)
-  
+
   ############################
   def transform(self, record):
     """Parse record and return DASRecord."""

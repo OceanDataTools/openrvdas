@@ -40,7 +40,7 @@ class Transform:
       self.out_format = new_format
     return self.out_format
 
-  ############################  
+  ############################
   def transform(self, record):
     """Should return None if the result of transformation is empty record"""
     raise NotImplementedError('Class %s (subclass of Transform) is missing '

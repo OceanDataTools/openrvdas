@@ -14,12 +14,12 @@ class TestTimestampTransform(unittest.TestCase):
     transform = TimestampTransform()
 
     self.assertIsNone(transform.transform(None))
-    
+
     result = transform.transform('blah')
     time_str = result.split()[0]
     then = timestamp.timestamp(time_str=time_str)
     now = timestamp.timestamp()
-    
+
     self.assertAlmostEqual(then, now, places=1)
     self.assertEqual(result.split()[1], 'blah')
 
@@ -30,9 +30,9 @@ class TestTimestampTransform(unittest.TestCase):
     transform = TimestampTransform(time_format=timestamp.DATE_FORMAT)
 
     self.assertIsNone(transform.transform(None))
-    
+
     result = transform.transform('blah')
-    today = timestamp.date_str()    
+    today = timestamp.date_str()
     self.assertEqual(result.split()[0], today)
     self.assertEqual(result.split()[1], 'blah')
 

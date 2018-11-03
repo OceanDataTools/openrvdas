@@ -43,7 +43,7 @@ class TestTimeoutReader(unittest.TestCase):
     # Create a file
     temp_dir = tempfile.TemporaryDirectory()
     temp_dir_name = temp_dir.name
-    test_file = temp_dir_name + '/test.txt' 
+    test_file = temp_dir_name + '/test.txt'
     logging.info('creating temporary file "%s"', test_file)
     create_file(test_file, SAMPLE_DATA)
 
@@ -58,18 +58,18 @@ class TestTimeoutReader(unittest.TestCase):
     end_time = time.time()
     self.assertEqual(record, 'Timeout')
     self.assertAlmostEqual(end_time - start_time, 2.5, delta=0.3)
-    
+
     logging.info('Got timeout record "%s" after %g seconds',
                  record, end_time - start_time)
 
   ############################
-  # Data with empty records  
+  # Data with empty records
   def test_empty_lines(self):
 
     # Create a file
     temp_dir = tempfile.TemporaryDirectory()
     temp_dir_name = temp_dir.name
-    test_file = temp_dir_name + '/test.txt' 
+    test_file = temp_dir_name + '/test.txt'
     logging.info('creating temporary file "%s"', test_file)
     create_file(test_file, SAMPLE_SPACE_DATA)
 
@@ -83,7 +83,7 @@ class TestTimeoutReader(unittest.TestCase):
     end_time = time.time()
     self.assertEqual(record, 'Space Timeout')
     self.assertAlmostEqual(end_time - start_time, 1.5, delta=0.3)
-    
+
     logging.info('Got timeout record "%s" after %g seconds',
                  record, end_time - start_time)
 
@@ -94,7 +94,7 @@ class TestTimeoutReader(unittest.TestCase):
     # Create a file
     temp_dir = tempfile.TemporaryDirectory()
     temp_dir_name = temp_dir.name
-    test_file = temp_dir_name + '/test.txt' 
+    test_file = temp_dir_name + '/test.txt'
     logging.info('creating temporary file "%s"', test_file)
     create_file(test_file, SAMPLE_SPACE_DATA)
 
@@ -109,10 +109,10 @@ class TestTimeoutReader(unittest.TestCase):
     end_time = time.time()
     self.assertEqual(record, 'Space Timeout')
     self.assertAlmostEqual(end_time - start_time, 3.5, delta=0.3)
-    
+
     logging.info('Got timeout record "%s" after %g seconds',
                  record, end_time - start_time)
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -128,7 +128,6 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
-    

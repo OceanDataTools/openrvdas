@@ -36,7 +36,7 @@ class Reader:
     raise NotImplementedError('Class %s (subclass of Reader) is missing '
                               'implementation of read() method.'
                               % self.__class__.__name__)
-  
+
 ################################################################################
 class StorageReader(Reader):
   """
@@ -89,6 +89,3 @@ class TimestampedReader(StorageReader):
     raise NotImplementedError('Class %s (subclass of TimestampedReader) is missing '
                               'implementation of read_range() method.'
                               % self.__class__.__name__)
-
-
-

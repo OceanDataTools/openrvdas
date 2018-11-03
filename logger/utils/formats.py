@@ -61,7 +61,7 @@ def is_format(format):
     return True
 
   return False
-  
+
 ########################################
 # 'Unknown' is a special case format - it can't accept anything, and
 # has no other common formats
@@ -120,5 +120,3 @@ class XML(Text):
 
 class XML_OSU(XML):
   pass
-
-

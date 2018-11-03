@@ -71,10 +71,10 @@ class TimeoutReader(Reader):
 
     # Set the handler that will provide the needed interrupt, raising
     # the (ever-obscure) StopIterationError if we exceed the timeout.
-    # TODO: should we create 
+    # TODO: should we create
     signal.signal(signal.SIGALRM, self._handler)
     last_read = time.time()
-    
+
     while True:
       signal.alarm(self.timeout)
 
@@ -101,10 +101,9 @@ class TimeoutReader(Reader):
         interval = time.time() - last_read
         logging.info('TimeoutReader no records after %2.2f seconds', interval)
         break
-        
+
     # If here, we've failed to get a record within the specified
     # timeout. Disable the timeout alarm and return our
     # complaint/warning.
     signal.alarm(0)
     return self.message
-

@@ -63,7 +63,7 @@ class TestComposedWriter(unittest.TestCase):
 
     f1 = open(f1_name, 'r')
     f2 = open(f2_name, 'r')
-    
+
     for line in SAMPLE_DATA:
       writer.write(line)
       time.sleep(0.1)
@@ -88,7 +88,7 @@ class TestComposedWriter(unittest.TestCase):
 
     f1 = open(f1_name, 'r')
     f2 = open(f2_name, 'r')
-    
+
     for line in SAMPLE_DATA:
       writer.write(line)
       time.sleep(0.1)
@@ -114,6 +114,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')
-    

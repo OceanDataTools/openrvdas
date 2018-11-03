@@ -17,16 +17,16 @@ from logger.utils import read_json
 SAMPLE_JSON = """{
     // Here's a sample comment on its own line
     "PCOD": {"port": "/tmp/tty_PCOD",   // Here's a comment at end of line
-             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
+             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD"
             },
     "cwnc": {"port": "/tmp/tty_cwnc",
-             "logfile": "test/nmea/NBP1700/cwnc/raw/NBP1700_cwnc" 
+             "logfile": "test/nmea/NBP1700/cwnc/raw/NBP1700_cwnc"
             },
     "gp02": {"port": "/tmp/tty_gp02",
-             "logfile": "test/nmea/NBP1700/gp02/raw/NBP1700_gp02" 
+             "logfile": "test/nmea/NBP1700/gp02/raw/NBP1700_gp02"
             },
     "gyr1": {"port": "/tmp/tty_gyr1",
-             "logfile": "test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1" 
+             "logfile": "test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1"
             }
 }
 """
@@ -34,7 +34,7 @@ SAMPLE_JSON = """{
 BAD_JSON1 = """{
     // Here's a sample comment on its own line
     "PCOD": {"port": "/tmp/tty_PCOD",   // Here's a comment at end of line
-             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
+             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD"
             },
 }
 """
@@ -42,7 +42,7 @@ BAD_JSON1 = """{
 BAD_JSON2 = """{
     // Here's a sample comment on its own line
     "PCOD": {"port": x "/tmp/tty_PCOD",   // Here's a comment at end of line
-             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
+             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD"
             }
 }
 """
@@ -55,7 +55,7 @@ def create_file(filename, lines):
     f.write(line + '\n')
     f.flush()
   f.close()
-  
+
 ################################################################################
 class TestReadJson(unittest.TestCase):
   ############################
@@ -98,6 +98,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')
-    

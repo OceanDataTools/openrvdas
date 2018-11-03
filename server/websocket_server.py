@@ -17,7 +17,7 @@ To run, try:
 In a second window, start up a LoggerRunner as a websocket client:
 
     server/logger_runner.py --websocket localhost:8765 \
-            --host_id client.host -v 
+            --host_id client.host -v
 
 You should see messages from the LoggerRunner appear on the
 websocket_server's console, beginning with an identifying message,
@@ -76,7 +76,7 @@ class WebsocketServer:
     self.client_map = {}
 
     self.quit_requested = False
-    
+
   ############################
   async def _consumer_handler(self, websocket, client_id):
     try:
@@ -114,7 +114,7 @@ class WebsocketServer:
       self.num_clients += 1
       if self.on_connect:
         self.on_connect(websocket, client_id, path)
-    
+
     tasks = []
 
     # Task that receives data from websocket and does something with it
@@ -203,7 +203,7 @@ async def queued_producer(client_id):
         return message
     except queue.Empty:
       await asyncio.sleep(0.1)
-      
+
 ############################
 def register_websocket_client(websocket, client_id, path):
   """We've been alerted that a websocket client has connected.
@@ -299,4 +299,3 @@ if __name__ == '__main__':
 
   read_command_thread.join()
   process_results_thread.join()
-  

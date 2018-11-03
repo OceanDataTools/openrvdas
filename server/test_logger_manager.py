@@ -99,7 +99,7 @@ class TestLoggerManagerAPI(unittest.TestCase):
     self.input_filename = self.tmpdirname + '/input.txt'
     self.output_filename = self.tmpdirname + '/output.txt'
     self.cruise_filename = self.tmpdirname + '/cruise.json'
-    
+
     sample_cruise['configs']['sample->net']['readers']['kwargs']['file_spec'] \
       = self.input_filename
     sample_cruise['configs']['sample->file']['readers']['kwargs']['filename'] \
@@ -113,7 +113,7 @@ class TestLoggerManagerAPI(unittest.TestCase):
     logging.info('Creating temp cruise file %s', self.cruise_filename)
     with open(self.cruise_filename, 'w') as f:
       f.write(json.dumps(sample_cruise, indent=4))
-    
+
   ############################
   def test_basic(self):
 
@@ -129,9 +129,9 @@ class TestLoggerManagerAPI(unittest.TestCase):
       time.sleep(1)
 
       runner = ServerAPICommandLine(api)
-      
+
       runner.process_command('load_cruise %s' % self.cruise_filename)
-      runner.process_command('set_mode NBP1700 port')      
+      runner.process_command('set_mode NBP1700 port')
       for i in range(4):
         self.assertEqual(reader.read(), 'TestLoggerManager ' + sample_data[i])
       logging.info('NetworkReader done')
@@ -142,7 +142,7 @@ class TestLoggerManagerAPI(unittest.TestCase):
     cmd_thread.start()
     logger_manager.start()
     cmd_thread.join()
-    
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -157,7 +157,6 @@ if __name__ == '__main__':
   logging.basicConfig(format=LOGGING_FORMAT)
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
-    

@@ -93,7 +93,7 @@ class EmailWriter(Writer):
     """Send record as email, or queue to send if have already sent recently."""
     if not record:
       return
-    
+
     with self.queue_lock:
       # Stash record in queue
       self.queue.append(record)

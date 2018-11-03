@@ -202,7 +202,7 @@ class TestComposedDerivedDataTransform(unittest.TestCase):
     if type(val1) in (int, float) and type(val2) in (int, float):
       self.assertLess(abs(val1-val2), max_diff)
       return
-    
+
     if type(val1) in (str, bool, type(None)):
       self.assertEqual(val1, val2)
       return
@@ -211,7 +211,7 @@ class TestComposedDerivedDataTransform(unittest.TestCase):
     self.assertTrue(type(val1) in (set, list, dict))
     self.assertEqual(type(val1), type(val2))
     self.assertEqual(len(val1), len(val2))
-    
+
     if type(val1) == list:
       for i in range(len(val1)):
         self.assertRecursiveAlmostEqual(val1[i], val2[i], max_diff)
@@ -265,7 +265,7 @@ class TestComposedDerivedDataTransform(unittest.TestCase):
       result = t.transform(record)
 
       expected = DAS_RECORD_RESULTS[i]
-      
+
       logging.info('Input fields: %s', record.fields)
       logging.info('Got result: %s', result)
       logging.info('Expected result: %s', expected)
@@ -320,7 +320,7 @@ class TestComposedDerivedDataTransform(unittest.TestCase):
     self.assertRecursiveAlmostEqual(results, FIELD_DICT_RESULT)
     """
     expected = DAS_RECORD_RESULTS[i]
-      
+
       logging.info('Input fields: %s', record.fields)
       logging.info('Got result: %s', result)
       logging.info('Expected result: %s', expected)
@@ -330,7 +330,7 @@ class TestComposedDerivedDataTransform(unittest.TestCase):
       else:
         self.assertDictEqual(result.fields, expected)
     """
-  
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -346,5 +346,5 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-  
+
   unittest.main(warnings='ignore')
