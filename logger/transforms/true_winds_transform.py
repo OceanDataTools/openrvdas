@@ -46,8 +46,7 @@ class TrueWindsTransform(DerivedDataTransform):
                update_on_fields=None,
                zero_line_reference=0,
                convert_wind_factor=1,
-               convert_speed_factor=1,
-               output_nmea=False):
+               convert_speed_factor=1):
     """
     course_field
     speed_field
@@ -99,7 +98,6 @@ class TrueWindsTransform(DerivedDataTransform):
 
     self.convert_wind_factor = convert_wind_factor
     self.convert_speed_factor = convert_speed_factor
-    self.output_nmea = output_nmea
 
     # TODO: It may make sense for us to cache most recent values so
     # that, for example, we can take single DASRecords in the
@@ -212,6 +210,7 @@ class TrueWindsTransform(DerivedDataTransform):
       return None
 
     # If here, we've got a valid new true wind result
-    return {self.true_dir_name: true_dir,
-            self.true_speed_name: true_speed,
-            self.apparent_dir_name: apparent_dir}
+    result = {self.true_dir_name: true_dir,
+              self.true_speed_name: true_speed,
+              self.apparent_dir_name: apparent_dir}
+    return result
