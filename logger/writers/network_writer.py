@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 import socket
 import sys
@@ -64,6 +65,18 @@ class NetworkWriter(Writer):
   ############################
   def write(self, record):
     """Write the record to the network."""
+
+    if not record:
+      return
+
+    # If record is not a string, try converting to JSON. If we don't know
+    # how, throw a hail Mary and force it into str format
+    if not type(record) is str:
+      if type(record) in [int, float, bool, list, dict]:
+        record = json.dumps(record)
+      else:
+        record = str(record)
+
     num_tries = 0
     bytes_sent = 0
     rec_len = len(record)
