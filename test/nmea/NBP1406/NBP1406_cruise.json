@@ -130,28 +130,36 @@
                 "seap->net",
                 "seap->file/net/db"
             ]
+        },
+        "true_winds": {
+            "configs": [
+                "true_winds->off",
+                "true_winds->net",
+                "true_winds->db"
+            ]
         }
     },
     "modes": {
         "off": {
+            "gyr1": "gyr1->off",
+            "rtmp": "rtmp->off",
+            "mwx1": "mwx1->off",
+            "s330": "s330->off",
+            "eng1": "eng1->off",
             "PCOD": "PCOD->off",
             "gp02": "gp02->off",
-            "gyr1": "gyr1->off",
             "knud": "knud->off",
-            "mwx1": "mwx1->off",
             "pguv": "pguv->off",
-            "s330": "s330->off",
             "svp1": "svp1->off",
             "tsg1": "tsg1->off",
             "tsg2": "tsg2->off",
             "adcp": "adcp->off",
-            "eng1": "eng1->off",
             "grv1": "grv1->off",
             "hdas": "hdas->off",
             "mbdp": "mbdp->off",
             "pco2": "pco2->off",
-            "rtmp": "rtmp->off",
-            "seap": "seap->off"
+            "seap": "seap->off",
+            "true_winds": "true_winds->off"
         },
         "port": {
             "gyr1": "gyr1->net",
@@ -171,27 +179,50 @@
             "hdas": "hdas->off",
             "mbdp": "mbdp->off",
             "pco2": "pco2->off",
-            "seap": "seap->off"
+            "seap": "seap->off",
+            "true_winds": "true_winds->off"
         },
-        "underway": {
+        "monitor": {
+            "gyr1": "gyr1->net",
+            "rtmp": "rtmp->net",
+            "mwx1": "mwx1->net",
+            "s330": "s330->net",
+            "eng1": "eng1->net",
+            "PCOD": "PCOD->net",
+            "gp02": "gp02->net",
+            "knud": "knud->net",
+            "pguv": "pguv->net",
+            "svp1": "svp1->net",
+            "tsg1": "tsg1->net",
+            "tsg2": "tsg2->net",
+            "adcp": "adcp->net",
+            "grv1": "grv1->net",
+            "hdas": "hdas->net",
+            "mbdp": "mbdp->net",
+            "pco2": "pco2->net",
+            "seap": "seap->net",
+            "true_winds": "true_winds->db"
+        },
+        "monitor and log": {
+            "gyr1": "gyr1->file/net/db",
+            "rtmp": "rtmp->file/net/db",
+            "mwx1": "mwx1->file/net/db",
+            "s330": "s330->file/net/db",
+            "eng1": "eng1->file/net/db",
             "PCOD": "PCOD->file/net/db",
             "gp02": "gp02->file/net/db",
-            "gyr1": "gyr1->file/net/db",
             "knud": "knud->file/net/db",
-            "mwx1": "mwx1->file/net/db",
             "pguv": "pguv->file/net/db",
-            "s330": "s330->file/net/db",
             "svp1": "svp1->file/net/db",
             "tsg1": "tsg1->file/net/db",
             "tsg2": "tsg2->file/net/db",
             "adcp": "adcp->file/net/db",
-            "eng1": "eng1->file/net/db",
             "grv1": "grv1->file/net/db",
             "hdas": "hdas->file/net/db",
             "mbdp": "mbdp->file/net/db",
             "pco2": "pco2->file/net/db",
-            "rtmp": "rtmp->file/net/db",
-            "seap": "seap->file/net/db"
+            "seap": "seap->file/net/db",
+            "true_winds": "true_winds->db"
         }
     },
     "default_mode": "off",
@@ -1779,6 +1810,126 @@
                     }
                 }
             ]
+        },
+        "true_winds->off": {},
+        "true_winds->net": {
+            "name": "true_winds->db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            },
+            "transforms": [
+                {
+                    "class": "ParseNMEATransform"
+                },
+                {
+                    "class": "ComposedDerivedDataTransform",
+                    "kwargs": {
+                        "transforms": [
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxPortRelWindDir",
+                                    "wind_speed_field": "MwxPortRelWindSpeed",
+                                    "true_dir_name": "PortTrueWindDir",
+                                    "true_speed_name": "PortTrueWindSpeed",
+                                    "update_on_fields": [
+                                        "MwxPortRelWindDir"
+                                    ],
+                                    "apparent_dir_name": "PortApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            },
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxStbdRelWindDir",
+                                    "wind_speed_field": "MwxStbdRelWindSpeed",
+                                    "true_dir_name": "StbdTrueWindDir",
+                                    "true_speed_name": "StbdTrueWindSpeed",
+                                    "update_on_fields": [
+                                        "MwxStbdRelWindDir"
+                                    ],
+                                    "apparent_dir_name": "StbdApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "writers": {
+                "class": "NetworkWriter",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            }
+        },
+        "true_winds->db": {
+            "name": "true_winds->db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            },
+            "transforms": [
+                {
+                    "class": "ParseNMEATransform"
+                },
+                {
+                    "class": "ComposedDerivedDataTransform",
+                    "kwargs": {
+                        "transforms": [
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxPortRelWindDir",
+                                    "wind_speed_field": "MwxPortRelWindSpeed",
+                                    "true_dir_name": "PortTrueWindDir",
+                                    "true_speed_name": "PortTrueWindSpeed",
+                                    "update_on_fields": [
+                                        "MwxPortRelWindDir"
+                                    ],
+                                    "apparent_dir_name": "PortApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            },
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxStbdRelWindDir",
+                                    "wind_speed_field": "MwxStbdRelWindSpeed",
+                                    "true_dir_name": "StbdTrueWindDir",
+                                    "true_speed_name": "StbdTrueWindSpeed",
+                                    "update_on_fields": [
+                                        "MwxStbdRelWindDir"
+                                    ],
+                                    "apparent_dir_name": "StbdApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "writers": {
+                "class": "DatabaseWriter"
+            }
         }
     }
 }

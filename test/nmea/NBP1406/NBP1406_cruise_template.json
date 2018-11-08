@@ -88,7 +88,7 @@
 //            "writers": {writer definition}
 //         }
 //       }
-//   
+//
 //    Reference substitution would expand it to
 //
 //       {
@@ -122,17 +122,21 @@
         // What port the UDP network writers should read/write
         "%UDP_PORT%": ":6224",
 
-        // All instruments - these vars are expanded in the generic
-        // templates.
-        "%INST%": ["PCOD", "gp02", "gyr1", "knud", "mwx1", "pguv", "s330", "svp1", "tsg1", "tsg2",
-                   "adcp", "eng1", "grv1", "hdas", "mbdp", "pco2", "rtmp", "seap"],
+        // All serial-port instruments - these vars are expanded in
+        // the generic templates.
+        "%SERIAL_INST%": ["PCOD", "gp02", "gyr1", "knud", "mwx1", "pguv", "s330",
+                          "svp1", "tsg1", "tsg2", "adcp", "eng1", "grv1", "hdas",
+                          "mbdp", "pco2", "rtmp", "seap"],
 
         // Instruments that should run while in port
         "%PORT_INST%": ["gyr1", "rtmp", "mwx1", "s330", "eng1"],
 
         // Instruments that should only run while underway
         "%UW_INST%": ["PCOD", "gp02", "knud", "pguv", "svp1", "tsg1", "tsg2",
-                      "adcp", "grv1", "hdas", "mbdp", "pco2", "seap"]
+                      "adcp", "grv1", "hdas", "mbdp", "pco2", "seap"],
+
+        // Instruments that should run while in port
+        "%DERIVED_INST%": ["true_winds"]
     },
 
     "cruise": {
@@ -142,15 +146,16 @@
     },
 
     "loggers": {
-        "%INST%": {
-            "configs": ["%INST%->off", "%INST%->net", "%INST%->file/net/db"]
+        "%SERIAL_INST%": {
+            "configs": ["%SERIAL_INST%->off",
+                        "%SERIAL_INST%->net",
+                        "%SERIAL_INST%->file/net/db"]
+        },
+        "true_winds": {
+            "configs": ["true_winds->off",
+                        "true_winds->net",
+                        "true_winds->db"]
         }
-    },
-
-    "configs": {
-        "%INST%->off": {},
-        "%INST%->net": "%INST%_SERIAL_LOGGER_NO_WRITE",
-        "%INST%->file/net/db": "%INST%_SERIAL_LOGGER"
     },
 
     ////////////////////////////////////////////////////////
@@ -158,43 +163,174 @@
     "modes": {
         // Nothing's running when off
         "off": {
-            "%INST%": "%INST%->off"
+            "%PORT_INST%": "%PORT_INST%->off",
+            "%UW_INST%": "%UW_INST%->off",
+            "true_winds": "true_winds->off"
         },
-        
+
         // In port, we only run certain instruments, and don't write to disk
         "port": {
             "%PORT_INST%": "%PORT_INST%->net",
-            "%UW_INST%": "%UW_INST%->off"
+            "%UW_INST%": "%UW_INST%->off",
+            "true_winds": "true_winds->off"
         },
-        
+
+        // Monitoring, we observe everything, but don't write to disk
+        "monitor": {
+            "%PORT_INST%": "%PORT_INST%->net",
+            "%UW_INST%": "%UW_INST%->net",
+            "true_winds": "true_winds->db"
+        },
+
         // Underway, everything's in default mode of running/saving.
-        "underway": {
-            "%INST%": "%INST%->file/net/db"
-        }        
+        "monitor and log": {
+            "%PORT_INST%": "%PORT_INST%->file/net/db",
+            "%UW_INST%": "%UW_INST%->file/net/db",
+            "true_winds": "true_winds->db"
+        }
     },
 
     // By default, we should be in mode "off"
     "default_mode": "off",
 
+    ///////////////////////////////////////////////////////
+    // Logger configurations - most of these, except the true winds,
+    // are templatized to keep them compact.
+    "configs": {
+        "%SERIAL_INST%->off": {},
+        "%SERIAL_INST%->net": "%SERIAL_INST%_LOGGER_NO_WRITE",
+        "%SERIAL_INST%->file/net/db": "%SERIAL_INST%_LOGGER",
+
+        "true_winds->off": {},
+
+        "true_winds->net": {
+            "name": "true_winds->db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            },
+            "transforms": [
+                { "class": "ParseNMEATransform" },
+                {
+                    "class": "ComposedDerivedDataTransform",
+                    "kwargs": {
+                        "transforms": [
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxPortRelWindDir",
+                                    "wind_speed_field": "MwxPortRelWindSpeed",
+                                    "true_dir_name": "PortTrueWindDir",
+                                    "true_speed_name": "PortTrueWindSpeed",
+                                    "update_on_fields": ["MwxPortRelWindDir"],
+                                    "apparent_dir_name": "PortApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            },
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxStbdRelWindDir",
+                                    "wind_speed_field": "MwxStbdRelWindSpeed",
+                                    "true_dir_name": "StbdTrueWindDir",
+                                    "true_speed_name": "StbdTrueWindSpeed",
+                                    "update_on_fields": ["MwxStbdRelWindDir"],
+                                    "apparent_dir_name": "StbdApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            }
+                            // Other derived data transforms should go here
+                        ]
+                    }
+                }
+            ],
+            "writers": {
+                "class": "NetworkWriter",
+                "kwargs": { "network": ":6224" }
+            }
+        },
+
+        "true_winds->db": {
+            "name": "true_winds->db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            },
+            "transforms": [
+                { "class": "ParseNMEATransform" },
+                {
+                    "class": "ComposedDerivedDataTransform",
+                    "kwargs": {
+                        "transforms": [
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxPortRelWindDir",
+                                    "wind_speed_field": "MwxPortRelWindSpeed",
+                                    "true_dir_name": "PortTrueWindDir",
+                                    "true_speed_name": "PortTrueWindSpeed",
+                                    "update_on_fields": ["MwxPortRelWindDir"],
+                                    "apparent_dir_name": "PortApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            },
+                            {
+                                "class": "TrueWindsTransform",
+                                "kwargs": {
+                                    "course_field": "S330CourseTrue",
+                                    "speed_field": "S330Speed",
+                                    "heading_field": "S330HeadingTrue",
+                                    "wind_dir_field": "MwxStbdRelWindDir",
+                                    "wind_speed_field": "MwxStbdRelWindSpeed",
+                                    "true_dir_name": "StbdTrueWindDir",
+                                    "true_speed_name": "StbdTrueWindSpeed",
+                                    "update_on_fields": ["MwxStbdRelWindDir"],
+                                    "apparent_dir_name": "StbdApparentWindDir",
+                                    "convert_speed_factor": 0.5144
+                                }
+                            }
+                            // Other derived data transforms should go here
+                        ]
+                    }
+                }
+            ],
+            "writers": {
+                "class": "DatabaseWriter"
+            }
+        }
+    },
 
     ////////////////////////////////////////////////////////
     // Generic logger definition templates that we're going to draw on
     // to fill in the actual configurations in the cruise modes
-    "templates": {        
+    "templates": {
         // Generic logfile writer
-        "%INST%_LOGFILE_WRITER": {
+        "%SERIAL_INST%_LOGFILE_WRITER": {
                "class": "LogfileWriter",
-            "kwargs": {"filebase": "%LOGFILE_BASE%/%INST%/raw/%CRUISE%_%INST%"}
+            "kwargs": {"filebase": "%LOGFILE_BASE%/%SERIAL_INST%/raw/%CRUISE%_%SERIAL_INST%"}
         },
-        
+
         // Generic network writer - a ComposedWriter that prefixes
         // instrument data_id before writing
-        "%INST%_NETWORK_WRITER": {
+        "%SERIAL_INST%_NETWORK_WRITER": {
             "class": "ComposedWriter",
             "kwargs": {
                 "transforms": {
                     "class": "PrefixTransform",
-                    "kwargs": {"prefix": "%INST%"}
+                    "kwargs": {"prefix": "%SERIAL_INST%"}
                 },
                 "writers": {"class": "NetworkWriter",
                             "kwargs": { "network": "%UDP_PORT%" }
@@ -204,77 +340,77 @@
 
         // Generic database writer - a ComposedWriter that prefixes
         // instrument data_id then parses into DASRecord before writing
-        "%INST%_DATABASE_WRITER": {
+        "%SERIAL_INST%_DATABASE_WRITER": {
             "class": "ComposedWriter",
             "kwargs": {
                 "transforms": [
                     { "class": "PrefixTransform",
-                      "kwargs": {"prefix": "%INST%"}},
+                      "kwargs": {"prefix": "%SERIAL_INST%"}},
                     { "class": "ParseNMEATransform"}
                 ],
                 "writers": {"class": "DatabaseWriter"}
             }
         },
-        
+
         // Generic loggers
         // Read from serial, write to network and logfile
-        "%INST%_SERIAL_LOGGER": {
-            "name": "%INST%->net/file/db",
+        "%SERIAL_INST%_LOGGER": {
+            "name": "%SERIAL_INST%->net/file/db",
             "readers": {
                 "class": "SerialReader",
                 "kwargs": {
-                    "port": "/tmp/tty_%INST%",
+                    "port": "/tmp/tty_%SERIAL_INST%",
                     "baudrate": 9600
                 }
             },
             "transforms": {"class": "TimestampTransform"},
             "writers": [
-                "%INST%_LOGFILE_WRITER",
-                "%INST%_NETWORK_WRITER",
-                "%INST%_DATABASE_WRITER"
+                "%SERIAL_INST%_LOGFILE_WRITER",
+                "%SERIAL_INST%_NETWORK_WRITER",
+                "%SERIAL_INST%_DATABASE_WRITER"
             ]
         },
-        
+
         // Read from serial, write to network, but not logfile
-        "%INST%_SERIAL_LOGGER_NO_WRITE": {
-            "name": "%INST%->net",
+        "%SERIAL_INST%_LOGGER_NO_WRITE": {
+            "name": "%SERIAL_INST%->net",
             "readers": {
                 "class": "SerialReader",
                 "kwargs": {
-                    "port": "/tmp/tty_%INST%",
+                    "port": "/tmp/tty_%SERIAL_INST%",
                     "baudrate": 9600
                 }
             },
             "transforms": {"class": "TimestampTransform"},
-            "writers": "%INST%_NETWORK_WRITER"
+            "writers": "%SERIAL_INST%_NETWORK_WRITER"
         },
-        
+
         // Read from serial, write to network and logfile
-        "%INST%_SERIAL_LOGGER_NO_NETWORK": {
-            "name": "%INST%->file",
+        "%SERIAL_INST%_LOGGER_NO_NETWORK": {
+            "name": "%SERIAL_INST%->file",
             "readers": {
                 "class": "SerialReader",
                 "kwargs": {
-                    "port": "/tmp/tty_%INST%",
+                    "port": "/tmp/tty_%SERIAL_INST%",
                     "baudrate": 9600
                 }
             },
             "transforms": {"class": "TimestampTransform"},
-            "writers": "%INST%_LOGFILE_WRITER"
+            "writers": "%SERIAL_INST%_LOGFILE_WRITER"
         },
 
         // Read from network, write to logfile
-        "%INST%_NETWORK_LOGGER": {
-            "name": "%INST%->file",
+        "%SERIAL_INST%_NETWORK_LOGGER": {
+            "name": "%SERIAL_INST%->file",
             "readers":  {
                 "class": "SerialReader",
                 "kwargs": {
-                    "port": "/tmp/tty_%INST%",
+                    "port": "/tmp/tty_%SERIAL_INST%",
                     "baudrate": 9600
                 }
             },
             "transforms": {"class": "TimestampTransform"},
-            "writers": "%INST%_LOGFILE_WRITER"
+            "writers": "%SERIAL_INST%_LOGFILE_WRITER"
         },
         // Read from network, parse and look for broken bounds; write
         // to stdout if they're exceeded
@@ -296,5 +432,5 @@
             "writers": {"class": "TextFileWriter"}
         }
     }
-    
+
 }
