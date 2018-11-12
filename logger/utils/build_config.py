@@ -216,12 +216,12 @@ class BuildConfig:
   @classmethod
   def expand_config(self, config):
     """A full configuration is a dict with a "modes" key that itself
-    contains a dict. Each key is the name of a cruise mode, and the
+    contains a dict. Each key is the name of a logging mode, and the
     corresponding value is (yet another) dict mapping logger names to
     the configuration that logger should have in that mode.
 
     An optional top-level "default_mode" key maps to the name of the
-    default cruise mode that the system should start in if not other
+    default logger mode that the system should start in if not other
     information is available.
 
         {
@@ -288,10 +288,6 @@ class BuildConfig:
     #new_config = config
     new_config = OrderedDict()
 
-    cruise = config.get('cruise', {})
-    if cruise:
-      new_config['cruise'] = self.expand_template(vars, cruise,
-                                                  expanded_templates)
     loggers = config.get('loggers', {})
     if loggers:
       new_config['loggers'] = self.expand_template(vars, loggers,
@@ -345,7 +341,7 @@ if __name__ == '__main__':
   parser.add_argument('--config', dest='config', action='store',
                       help='Name of config file to load and expand')
   parser.add_argument('--validate', dest='validate', action='store_true',
-                      help='Verify that the output is a fully-formed cruise '
+                      help='Verify that the output is a fully-formed logger '
                       'configuration')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',

@@ -23,51 +23,47 @@ class ServerAPI:
 
   Parameters below have the following semantics:
 
-  cruise_id     - unique string identifier for a cruise
-  cruise_config - dict definition of a cruise configuration
-  mode          - string name of mode, unique within cruise
+  configuration - dict definition of a OpenRVDAS configuration
+  mode          - dict name of mode, and logger_config_names associated with that mode
+  default_mode  - name of mode to use at startup or when returning to a default state
 
-  config        - string name of a logger configuration, unique within cruise
-  config_spec   - dict definition of a configuration
+  logger_config_name - string name of a logger configuration, unique within configration
+  logger_config - dict definition of a logger configuration
 
   logger_id     - string name of logger, unique within cruise
-  logger_spec   - dict definition of logger, including list of names of
+  logger        - dict definition of logger, including list of names of
                   valid configs and optional host restriction
 
-  configs       - dict of {config:config_spec,...}
+  logger_configs - dict of {logger_config_name:logger_config,...}
 
   For the purposes of documentation below, assume a sample
   cruise_config as follows:
 
-    {
-        "cruise": {
-            "id": "NBP1700",
-            "start": "2017-01-01",
-            "end": "2017-02-01"
-        },
-        "loggers": {
-            "knud": {
-                "host": "knud.pi",
-                "configs": ["off", "knud->net", "knud->file/net/db"]
-            },
-            "gyr1": {
-                "configs": ["off", "gyr1->net", "gyr1->file/net/db"]
-            },
-        "modes": {
-            "off": {"knud": "off", "gyr1": "off"},
-            "port": {"knud": "off", "gyr1": "gyr1->net"},
-            "underway": {"knud": "knud->file/net/db",
-                         "gyr1": "gyr1->file/net/db"}
-        },
-        "default_mode": "off",
-        "configs": {
-            "off": {},
-            "knud->net": { config_spec },
-            "knud->file/net/db": { config_spec },
-            "gyr1->net": { config_spec },
-            "gyr1->file/net/dbnet": { config_spec }
-        }
+  {
+    "loggers": {
+      "knud": {
+        "host": "knud.pi",
+        "configs": ["off", "knud->net", "knud->file/net/db"]
+      },
+      "gyr1": {
+        "configs": ["off", "gyr1->net", "gyr1->file/net/db"]
+      },
+    "modes": {
+      "off": {"knud": "off", "gyr1": "off"},
+      "port": {"knud": "off", "gyr1": "gyr1->net"},
+      "underway": { "knud": "knud->file/net/db",
+                    "gyr1": "gyr1->file/net/db"
+                  }
+    },
+    "default_mode": "off",
+    "configs": {
+      "off": {},
+      "knud->net": { config_spec },
+      "knud->file/net/db": { config_spec },
+      "gyr1->net": { config_spec },
+      "gyr1->file/net/dbnet": { config_spec }
     }
+  }
 
   """
 
@@ -79,118 +75,111 @@ class ServerAPI:
   # API methods below are used in querying/modifying the API for the
   # record of the running state of loggers.
   #############################
-  def get_cruises(self):
-    """Return list of cruise id's. Returns, e.g.
-    > api.get_cruises()
-          ["NBP1700", "NBP1701"]
-    """
-    raise NotImplementedError('get_cruises must be implemented by subclass')
+  # def get_cruises(self):
+  #   """Return list of cruise id's. Returns, e.g.
+  #   > api.get_cruises()
+  #       ["NBP1700", "NBP1701"]
+  #   """
+  #   raise NotImplementedError('get_cruises must be implemented by subclass')
 
   #############################
-  def get_cruise_config(self, cruise_id):
-    """Return cruise config for specified cruise id.
-    > api.get_cruise_config('NBP1700')
-          {"cruise": {"id":"NBP1700", "start":...},...}
+  def get_configuration(self):
+    """Get OpenRVDAS configuration from the data store.
     """
-    raise NotImplementedError('get_cruise must be implemented by subclass')
+    raise NotImplementedError('get_configuration must be implemented by subclass')
 
   #############################
-  def get_modes(self, cruise_id):
-    """Get the list of modes for the specified cruise_id from
-    the data store.
-    > api.get_modes('NBP1700')
-          ["off", "port", "underway"]
+  def get_modes(self):
+    """Get the list of modes from the data store.
+    > api.get_modes()
+        ["off", "port", "underway"]
     """
     raise NotImplementedError('get_modes must be implemented by subclass')
 
   #############################
-  def get_mode(self, cruise_id):
-    """Get the currently active mode for the specified cruise
-    from the data store.
-    > api.get_mode('NBP1700')
-          "port"
+  def get_active_mode(self):
+    """Get the currently active mode from the data store.
+    > api.get_active_mode()
+        "port"
     """
-    raise NotImplementedError('get_mode must be implemented by subclass')
+    raise NotImplementedError('get_active_mode must be implemented by subclass')
 
   #############################
-  def default_mode(self, cruise_id):
-    """Get the name of the default mode for the specified cruise
-    from the data store.
-    > api.default_mode('NBP1700')
-          "off"
+  def get_default_mode(self):
+    """Get the default mode from the data store.
+    > api.get_default_mode()
+        "off"
     """
-    raise NotImplementedError('default_mode must be implemented by subclass')
+    raise NotImplementedError('get_default_mode must be implemented by subclass')
 
   #############################
-  def get_loggers(self, cruise_id=None):
-    """Get a dict of {logger_id:logger_spec,...} defined for the
-    specified cruise id in the data store. If cruise_id=None, get
-    all loggers.
-    > api.get_loggers('NBP1700')
-          {"knud": {"host": "knud.pi", "configs":...},
-           "gyr1": {"configs":...}
+  def get_loggers(self):
+    """Get the dict of {logger_id:logger_spec,...} from the data store.
+    > api.get_loggers()
+        {
+          "knud": {"host": "knud.pi", "configs":...},
+          "gyr1": {"configs":...}
         }
     """
     raise NotImplementedError('get_loggers must be implemented by subclass')
 
   #############################
-  def get_logger(self, cruise_id, logger_id):
+  def get_logger(self, logger_id):
     """Retrieve the logger spec for the specified logger id.
-    > api.get_logger('NBP1700', 'knud')
-          {"host_id": "knud.pi", "configs":...}
+    > api.get_logger('knud')
+        {"name": "knud->net", "host_id": "knud.pi", "configs":...}
     """
     raise NotImplementedError('get_logger must be implemented by subclass')
 
   #############################
-  def get_config(self, cruise_id, config_name):
-    """Retrieve the config associated with the specified name.
-    > api.get_config('NBP1700', 'knud->net')
-           { config_spec }
+  def get_logger_config(self, config_name):
+    """Retrieve the logger config associated with the specified name.
+    > api.get_config('knud->net')
+           { "readers": [...], "transforms": [...], "writers": [...] }
     """
-    raise NotImplementedError('get_config must be implemented by subclass')
+    raise NotImplementedError('get_logger_config must be implemented by subclass')
 
   #############################
-  def get_configs(self, cruise_id=None, mode=None):
-    """Retrieve the configs associated with a cruise id and mode
-    from the data store. If mode is omitted, retrieve configs
-    associated with the cruise's current mode.
-    > api.get_configs('NBP1700')
+  def get_logger_configs_for_mode(self, mode=None):
+    """Retrieve the configs associated with a mode from the data store.
+    If mode is omitted, retrieve configs associated with the active mode.
+    > api.get_configs()
            {"knud": { config_spec },
             "gyr1": { config_spec }
            }
     """
-    raise NotImplementedError('get_configs must be implemented by subclass')
+    raise NotImplementedError('get_logger_configs_for_mode must be implemented by subclass')
 
   #############################
-  def get_logger_config_names(self, cruise_id, logger_id):
-    """Retrieve list of config names that are valid for the specified logger .
-    > api.get_logger_config_names('NBP1700', 'knud')
-          ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
+  def get_logger_config_names(self, logger_id):
+    """Retrieve list of logger config names for the specified logger.
+    > api.get_logger_config_names('knud')
+        ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
     """
     raise NotImplementedError(
       'get_logger_config_names must be implemented by subclass')
 
   #############################
-  def get_logger_config(self, cruise_id, logger_id, mode=None):
-    """Retrieve the config associated with the specified logger
-    in the specified mode. If mode is omitted, retrieve config
-    associated with the cruise's current mode.
-    > api.get_logger_config('NBP1700', 'knud')
-           { config_spec }
+  def get_logger_config_for_mode(self, logger_id, mode=None):
+    """Retrieve the logger config associated with the specified
+    logger for the specified mode. If mode is omitted, retrieve
+    logger config associated with the active mode.
+    > api.get_logger_config('knud')
+        { config_spec }
    """
     raise NotImplementedError(
-      'get_logger_config must be implemented by subclass')
+      'get_logger_config_for_mode must be implemented by subclass')
 
   #############################
-  def get_logger_config_name(self, cruise_id, logger_id, mode=None):
-    """Retrieve the name of the config associated with the specified logger
-    in the specified mode. If mode is omitted, retrieve config name
-    associated with the cruise's current mode.
-    > api.get_logger_config_name('NBP1700', 'knud')
-           knud->net
+  def get_logger_config_name_for_mode(self, logger_id, mode=None):
+    """Retrieve the name of the logger config associated with the 
+    specified logger in the specified mode. If mode is omitted, 
+    retrieve config name associated with the active mode.
+    > api.get_logger_config_name('knud')
+        knud->net
    """
     raise NotImplementedError(
-      'get_logger_config_name must be implemented by subclass')
+      'get_logger_config_name_for_mode must be implemented by subclass')
 
   ############################
   # Methods for manipulating the desired state via API to indicate
@@ -198,33 +187,34 @@ class ServerAPI:
   #
   # These are triggered from the user/API/web interface
   ############################
-  def set_mode(self, cruise_id, mode):
-    """Set the current mode of the specified cruise.
-    > api.set_mode('NBP1700', 'port')
+  def set_active_mode(self, mode):
+    """Set the active mode for OpenRVDAS.
+    > api.set_mode(port')
     """
-    raise NotImplementedError('set_mode must be implemented by subclass')
+    raise NotImplementedError('set_active_mode must be implemented by subclass')
 
   #############################
-  def set_logger_config_name(self, cruise_id, logger, config_name):
-    """Set specified logger to new config.
-    > api.set_logger_config_name('NBP1700', 'knud', 'knud->file/net/db')
+  def set_active_logger_config(self, logger, config_name):
+    """Set the active logger config for the specified logger to
+    the specific logger_config name.
+    > api.set_logger_config_name('knud', 'knud->file/net/db')
     """
     raise NotImplementedError(
-      'set_logger_config must be implemented by subclass')
+      'set_active_logger_config must be implemented by subclass')
 
   #############################
   # API method to register a callback. When the data store changes,
   # methods that are registered via on_update() will be called so they
   # can fetch updated results.
   #############################
-  def on_update(self, callback, kwargs=None, cruise_id=None):
+  def on_update(self, callback, kwargs=None):
     """Register a method to be called when datastore changes."""
     raise NotImplementedError('on_update must be implemented by subclass '
                               '(though this really should be implemented '
                               'at top level')
 
   #############################
-  def signal_update(self, cruise_id=None):
+  def signal_update(self):
     """Call the registered methods when an update has been signalled."""
     raise NotImplementedError('signal_update must be implemented by subclass '
                               '(though this really should be implemented '
@@ -240,7 +230,7 @@ class ServerAPI:
   ############################
   # Methods for getting logger status data from API
   ############################
-  def get_status(self, cruise_id, since_timestamp=None):
+  def get_status(self, since_timestamp=None):
     """Retrieve a dict of the most-recent status report from each
     logger. If since_timestamp is specified, retrieve all status reports
     since that time."""
@@ -257,13 +247,13 @@ class ServerAPI:
   DEBUG    = logging.DEBUG
 
   ############################
-  def message_log(self, source, user, log_level, cruise_id, message):
+  def message_log(self, source, user, log_level, message):
     """Timestamp and store the passed message."""
     raise NotImplementedError('message_log must be implemented by subclass')
 
   ############################
   def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
-                      cruise_id=None, since_timestamp=None):
+                      since_timestamp=None):
     """Retrieve log messages from source at or above log_level since
     timestamp. If source is omitted, retrieve from all sources. If
     log_level is omitted, retrieve at all levels. If since_timestamp is
@@ -275,89 +265,86 @@ class ServerAPI:
   """Methods below are used to load/create/modify the data store's model
   of a cruise."""
   #############################
-  def load_cruise(self, cruise_config):
+  def load_configuration(self, configuration):
     """Load a complete cruise configuration to the data store.
-    > api.load_cruise({ cruise_config })
+    > api.load_configuration({ configuration })
     """
-    raise NotImplementedError('load_cruise must be implemented by subclass')
+    raise NotImplementedError('load_configuration must be implemented by subclass')
 
   #############################
-  def add_cruise(self, cruise_id, start=None, end=None):
-    """Add a new cruise_id to the data store. Use methods below to build
-    it out.
-    > api.add_cruise('NBP1702', '2017-02-02', '2017-03-01')
-    """
-    raise NotImplementedError('add_cruise must be implemented by subclass')
-
+  # def add_cruise(self, cruise_id, start=None, end=None):
+  #   """Add a new cruise_id to the data store. Use methods below to build
+  #   it out.
+  #   > api.add_cruise('NBP1702', '2017-02-02', '2017-03-01')
+  #   """
+  #   raise NotImplementedError('add_cruise must be implemented by subclass')
+  
   #############################
-  def delete_cruise(self, cruise_id):
+  def delete_configuration(self):
     """Remove the specified cruise from the data store.
-    > api.delete_cruise('NBP1702')
+    > api.delete_configuration()
     """
-    raise NotImplementedError('delete_cruise must be implemented by subclass')
+    raise NotImplementedError('delete_configuration must be implemented by subclass')
 
   #############################
-  def add_mode(self, cruise_id, mode):
-    """Add a new mode to the specified cruise.
-    > api.add_mode('NBP1702', 'underway')
+  def add_mode(self, mode):
+    """Add a new mode to the OpenRVDAS configuration.
+    > api.add_mode('underway')
     """
     raise NotImplementedError('add_mode must be implemented by subclass')
 
   #############################
-  def delete_mode(self, cruise_id, mode):
+  def delete_mode(self, mode):
     """Delete the named mode (and all its configs) from the
-    specified cruise id in the data store. If the deleted mode
-    is the current mode, set the current mode to the cruise's
-    default mode.
-    > api.delete_mode('NBP1702', 'underway')
+    data store. If the deleted mode is the active mode, set
+    the active mode to the default mode.
+    > api.delete_mode('underway')
     """
     raise NotImplementedError('delete_mode must be implemented by subclass')
 
   #############################
-  def add_logger(self, cruise_id, logger_id, logger_spec):
-    """Associate a new logger with the specified cruise id in the
-    data store.
+  def add_logger(self, logger_id, logger_config):
+    """Add a new logger to the data store. 
 
-    logger_spec - a dict defining:
-      configs - list of config names that are valid for this logger
+    logger_config - a dict defining:
       host - optional restriction on which host logger must run
-    > api.add_logger('NBP1702', 'gyr2', {'configs':....})
+      configs - list of logger_config names
+    > api.add_logger(gyr2', { 'host_id': <host_id>, 'configs': [....] })
     """
     raise NotImplementedError('add_logger must be implemented by subclass')
 
   #############################
-  def delete_logger(self, cruise_id, logger_id):
-    """Remove a logger and all its associated configs from the data
-    store.
-    > api.delete_logger('NBP1702', 'gyr2')
+  def delete_logger(self, logger_id):
+    """Remove a logger and all its associated logger_configs from the data store.
+    > api.delete_logger(gyr2')
     """
     raise NotImplementedError('delete_logger must be implemented by subclass')
 
   #############################
-  def add_config(self, cruise_id, config, config_spec):
-    """Associate a new config with a cruise.
-    > api.add_config('NBP1702', 'gyr2->net/file/db', { config_spec })
+  def add_logger_config(self, logger_config_name, logger_config_spec):
+    """Add a new logger config to the data store.
+    > api.add_logger_config('gyr2->net/file/db', { logger_config_spec })
     """
     raise NotImplementedError('add_config must be implemented by subclass')
 
   #############################
-  def add_config_to_logger(self, cruise_id, config, logger_id):
+  def add_logger_config_to_logger(self, config, logger_id):
     """Associate a config with a logger.
-    > api.add_config_to_logger('NBP1702', 'gyr2->net/file/db', 'gyr2')
+    > api.add_logger_config_to_logger('gyr2->net/file/db', 'gyr2')
     """
-    raise NotImplementedError('add_config must be implemented by subclass')
+    raise NotImplementedError('add_logger_config_to_logger must be implemented by subclass')
 
   #############################
-  def add_config_to_mode(self, cruise_id, config, logger_id, mode):
+  def add_logger_config_to_mode(self, config, logger_id, mode):
     """Associate a config with a logger and mode.
-    > api.add_config_to_mode('NBP1702', 'gyr2->net/file/db', 'gyr2', 'underway')
+    > api.add_logger_config_to_mode('gyr2->net/file/db', 'gyr2', 'underway')
     """
-    raise NotImplementedError('add_config must be implemented by subclass')
+    raise NotImplementedError('add_logger_config_to_mode must be implemented by subclass')
 
   #############################
-  def delete_config(self, cruise_id, config_id):
-    """Delete specified config from data store (and by extension,
+  def delete_logger_config(self, config_id):
+    """Delete specified config from data store (and by extension,   
     from the mode and logger with which it is associated.
-    > api.delete_config('NBP1702', 'gyr2->net/file/db')
+    > api.delete_logger_config('gyr2->net/file/db')
     """
-    raise NotImplementedError('delete_config must be implemented by subclass')
+    raise NotImplementedError('delete_logger_config must be implemented by subclass')

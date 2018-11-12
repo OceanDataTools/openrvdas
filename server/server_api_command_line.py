@@ -71,7 +71,6 @@ class ServerAPICommandLine:
       self.api.message_log(source=SOURCE_NAME,
                            user='(%s@%s)' % (USER, HOSTNAME),
                            log_level=self.api.INFO,
-                           cruise_id=None,
                            message='started')
       while not self.quit_requested:
         command = input('command? ')
@@ -89,32 +88,32 @@ class ServerAPICommandLine:
   def show_commands(self):
     """Print summary of commands we can send to API."""
     commands = [
-      ('cruises', 'Show list of loaded cruises'),
-      ('load_cruise <cruise config file name>',
-       'Load a new cruise config from file'),
-      ('set_cruise <JSON encoding of a cruise>',
-       'Load a new cruise config from passed JSON encoding'),
-      ('delete_cruise <cruise id>',
-       'Delete a cruise from the server\n'),
+      # ('cruises', 'Show list of loaded cruises'),
+      ('load_configuration <configuration file name>',
+       'Load a new config from file'),
+      ('set_configuration <JSON encoding of a configuration>',
+       'Load a new configuration from passed JSON encoding'),
+      ('delete_configuration',
+       'Delete the current configuration from the server\n'),
 
-      ('mode <cruise_id>', 'Get current mode of specified cruise'),
-      ('modes <cruise_id>', 'Get all modes of specified cruise'),
-      ('set_mode <cruise_id>  <name of mode>', 'Set new current mode\n'),
+      ('get_active_mode', 'Get currently active mode'),
+      ('get_available_modes', 'Get all availale modes'),
+      ('set_active_mode <name of mode>', 'Set new current mode\n'),
 
-      ('loggers <cruise_id>', 'Get list of loggers for specified cruise'),
-      ('configs <cruise_id>', 'Get names of current configurations cruise id\n'),
+      ('get_available_loggers', 'Get list of available loggers'),
+      ('get_active_logger_configs', 'Get names of active logger configurations\n'),
 
-      ('logger_configs <cruise_id> <logger>',
+      ('get_available_logger_configs <logger>',
        'Get names of all configurations for specified logger'),
-      ('set_logger_config_name <cruise_id> <logger name> <name of logger config>',
+      ('set_active_logger_config <logger name> <name of logger config>',
        'Set logger to named configuration\n'),
 
-      ('status <cruise_id>',
-       'Print most recent status for each logger in cruise'),
-      ('status_since <cruise_id> <timestamp>',
+      ('get_status',
+       'Print most recent status for each logger'),
+      ('get_status_since <timestamp>',
        'Get all logger status updates since specified timestamp\n'),
 
-      ('server_log [timestamp]',
+      ('get_server_log [timestamp]',
        'Print most recent log message for server, optionally all messages '
        'since specified timestamp\n'),
 
@@ -131,136 +130,144 @@ class ServerAPICommandLine:
     try:
       if not command:
         logging.info('Empty command received')
-
-      elif command == 'cruises':
-        cruises = self.api.get_cruises()
-        if cruises:
-          print('Loaded cruises: ' + ', '.join(cruises))
-        else:
-          print('No cruises loaded')
+        
+      # elif command == 'cruises':
+      #   cruises = self.api.get_cruises()
+      #   if cruises:
+      #     print('Loaded cruises: ' + ', '.join(cruises))
+      #   else:
+      #     print('No cruises loaded')
 
       # load_cruise <cruise config file name>
-      elif command == 'load_cruise':
-        raise ValueError('format: load_cruise <cruise config file name>')
-      elif command.find('load_cruise ') == 0:
+      elif command == 'load_config':
+        raise ValueError('format: load_config <config file name>')
+      elif command.find('load_config ') == 0:
         (load_cmd, filename) = command.split(maxsplit=1)
-        logging.info('Loading cruise config from %s', filename)
+        logging.info('Loading config from %s', filename)
         try:
-          cruise_config = read_json(filename)
-          self.api.load_cruise(cruise_config)
+          config = read_json(filename)
+          self.api.load_configuration(config)
         except FileNotFoundError as e:
           logging.error('Unable to find file "%s"', filename)
 
       # set_cruise <JSON encoding of a cruise>
-      elif command == 'set_cruise':
-        raise ValueError('format: set_cruise <JSON encoding of a cruise')
-      elif command.find('set_cruise ') == 0:
-        (cruise_cmd, cruise_json) = command.split(maxsplit=1)
-        logging.info('Setting cruise config to %s', cruise_json)
-        self.api.load_cruise(json.loads(cruise_json))
+      elif command == 'set_config':
+        raise ValueError('format: set_config <JSON encoding of a config')
+      elif command.find('set_config ') == 0:
+        (cruise_cmd, config_json) = command.split(maxsplit=1)
+        logging.info('Setting config to %s', config_json)
+        self.api.load_configuration(json.loads(config_json))
 
       # delete_cruise <cruise_id>
-      elif command == 'delete_cruise':
-        raise ValueError('format: delete_cruise <cruise id>')
-      elif command.find('delete_cruise ') == 0:
-        (cruise_cmd, cruise_id) = command.split(maxsplit=1)
-        logging.info('Deleting cruise %s', cruise_id)
-        self.api.delete_cruise(cruise_id)
+      # elif command == 'delete_config':
+      #   raise ValueError('format: delete_config')
+      elif command.find('delete_config') == 0:
+        (config_cmd) = command.split(maxsplit=1)
+        logging.info('Deleting config')
+        self.api.delete_configuration()
+
+      # modes <cruise_id>
+      # elif command == 'modes':
+      #   raise ValueError('format: modes')
+      elif command.find('get_available_modes') == 0:
+        (mode_cmd) = command.split(maxsplit=1)
+        modes = self.api.get_modes()
+        if len(modes) > 0:
+          print('Available Modes: %s' % (', '.join(modes)))
+        else:
+          print('Available Modes: n/a')
 
       ############################
       # mode <cruise_id>
-      elif command == 'mode':
-        raise ValueError('format: mode <cruise id>')
-      elif command.find('mode ') == 0:
-        (mode_cmd, cruise_id) = command.split(maxsplit=1)
-        mode = self.api.get_mode(cruise_id)
-        print('Current mode for %s: %s' % (cruise_id, mode))
-
-      # modes <cruise_id>
-      elif command == 'modes':
-        raise ValueError('format: modes <cruise id>')
-      elif command.find('modes ') == 0:
-        (mode_cmd, cruise_id) = command.split(maxsplit=1)
-        modes = self.api.get_modes(cruise_id)
-        print('Modes for %s: %s' % (cruise_id, ', '.join(modes)))
+      # elif command == 'mode':
+      #   raise ValueError('format: mode')
+      elif command.find('get_active_mode') == 0:
+        (mode_cmd) = command.split(maxsplit=1)
+        mode = self.api.get_active_mode()
+        print('Current mode: %s' % (mode))
 
       # set_mode <cruise_id> <mode>
-      elif command == 'set_mode':
-        raise ValueError('format: set_mode <cruise id> <mode>')
-      elif command.find('set_mode ') == 0:
-        (mode_cmd, cruise_id, mode_name) = command.split(maxsplit=2)
+      elif command == 'set_active_mode':
+        raise ValueError('format: set_active_mode <mode>')
+      elif command.find('set_active_mode ') == 0:
+        (mode_cmd, mode_name) = command.split(maxsplit=1)
         logging.info('Setting mode to %s', mode_name)
-        self.api.set_mode(cruise_id, mode_name)
+        self.api.set_active_mode(mode_name)
 
       ############################
       # loggers <cruise_id>
-      elif command == 'loggers':
-        raise ValueError('format: loggers <cruise id>')
-      elif command.find('loggers ') == 0:
-        (loggers_cmd, cruise_id) = command.split(maxsplit=1)
-        loggers = self.api.get_loggers(cruise_id)
-        print('Loggers for %s: %s' % (cruise_id, ', '.join(loggers)))
+      # elif command == 'loggers':
+      #   raise ValueError('format: loggers')
+      elif command.find('get_available_loggers') == 0:
+        (loggers_cmd) = command.split(maxsplit=1)
+        loggers = self.api.get_loggers()
+        if len(loggers) > 0:
+          print('Loggers: %s' % (', '.join(loggers)))
+        else:
+          print('Loggers: n/a')
 
       # logger_configs <cruise_id> <logger>
-      elif command == 'logger_configs':
-        raise ValueError('format: logger_configs <cruise_id> <logger>')
-      elif command.find('logger_configs ') == 0:
-        (logger_cmd, cruise_id, logger_name) = command.split(maxsplit=2)
-        logger_configs = self.api.get_logger_config_names(cruise_id, logger_name)
-        print('Configs for %s:%s: %s' %
-              (cruise_id, logger_name, ', '.join(logger_configs)))
+      elif command == 'get_available_logger_configs':
+        raise ValueError('format: get_available_logger_configs <logger name>')
+      elif command.find('get_available_logger_configs ') == 0:
+        (logger_cmd, logger_name) = command.split(maxsplit=1)
+        logger_configs = self.api.get_logger_config_names(logger_name)
+        print('Configs for %s: %s' %
+              (logger_name, ', '.join(logger_configs)))
 
       # set_logger_config_name <cruise_id> <logger name> <name of logger config>
-      elif command == 'set_logger_config_name':
-        raise ValueError('format: set_logger_config_name <cruise_id> <logger name> <name of logger config>')
-      elif command.find('set_logger_config_name ') == 0:
-        (logger_cmd, cruise_id,
-         logger_name, config_name) = command.split(maxsplit=3)
+      elif command == 'set_active_logger_config':
+        raise ValueError('format: set_active_logger_config <logger name> <name of logger config>')
+      elif command.find('set_active_logger_config ') == 0:
+        (logger_cmd,
+         logger_name, config_name) = command.split(maxsplit=2)
         logging.info('Setting logger %s to config %s', logger_name, config_name)
 
         # Is this a valid config for this logger?
-        if not config_name in self.api.get_logger_config_names(cruise_id, logger_name):
+        if not config_name in self.api.get_logger_config_names(logger_name):
           raise ValueError('Config "%s" is not valid for logger "%s"'
                            % (config_name, logger_name))
-        self.api.set_logger_config_name(cruise_id, logger_name, config_name)
+        self.api.set_active_logger_config(logger_name, config_name)
 
       # configs <cruise_id>
-      elif command == 'configs':
-        raise ValueError('format: configs <cruise id>')
-      elif command.find('configs ') == 0:
-        (config_cmd, cruise_id) = command.split(maxsplit=1)
-        config_names = {logger_id:self.api.get_logger_config_name(cruise_id, logger_id)
-                   for logger_id in self.api.get_loggers(cruise_id)}
-        for logger_id, config_name in config_names.items():
-          print('%s: %s' % (logger_id, config_name))
+      # elif command == 'configs':
+      #   raise ValueError('format: configs')
+      elif command.find('get_active_logger_configs') == 0:
+        (config_cmd) = command.split(maxsplit=1)
+        config_names = {logger_id:self.api.get_logger_config_name_for_mode(logger_id)
+                   for logger_id in self.api.get_loggers()}
+        if len(config_names) > 0:                 
+          for logger_id, config_name in config_names.items():
+            print('%s: %s' % (logger_id, config_name))
+        else:
+          print("No configs found!")
 
       # status
-      elif command == 'status':
-        raise ValueError('format: status <cruise id>')
-      elif command.find('status ') == 0:
-        (status_cmd, cruise_id) = command.split(maxsplit=1)
-        status_dict = self.api.get_status(cruise_id)
+      # elif command == 'status':
+      #   raise ValueError('format: status')
+      elif command.find('get_status') == 0:
+        (status_cmd) = command.split(maxsplit=1)
+        status_dict = self.api.get_status()
         print('%s' % pprint.pformat(status_dict))
 
       # status_since
-      elif command == 'status_since':
-        raise ValueError('format: status_since <cruise id> <timestamp>')
-      elif command.find('status_since ') == 0:
-        (status_cmd, cruise_id, since_timestamp) = command.split(maxsplit=2)
-        status_dict = self.api.get_status(cruise_id, float(since_timestamp))
+      elif command == 'get_status_since':
+        raise ValueError('format: get_status_since <timestamp>')
+      elif command.find('get_status_since ') == 0:
+        (status_cmd, since_timestamp) = command.split(maxsplit=1)
+        status_dict = self.api.get_status(float(since_timestamp))
         print('%s' % pprint.pformat(status_dict))
 
       # server_log
-      elif command == 'server_log':
+      elif command == 'get_server_log':
         server_log = self.api.get_message_log(source=SOURCE_NAME)
         print('%s' % pprint.pformat(server_log))
 
       # server_log timestamp
-      elif command.find('server_log') == 0:
+      elif command.find('get_server_log') == 0:
         (log_cmd, since_timestamp) = command.split(maxsplit=1)
         server_log = self.api.get_message_log(source=SOURCE_NAME, user=None,
                                               log_level=self.api.DEBUG,
-                                              cruise_id=None,
                                               since_timestamp=float(since_timestamp))
         print('%s' % pprint.pformat(server_log))
 
@@ -282,7 +289,6 @@ class ServerAPICommandLine:
       self.api.message_log(source=SOURCE_NAME,
                            user='(%s@%s)' % (USER, HOSTNAME),
                            log_level=self.api.INFO,
-                           cruise_id=None,
                            message='command: '+ command)
 
 ################################################################################

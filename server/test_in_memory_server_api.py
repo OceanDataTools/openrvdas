@@ -9,12 +9,7 @@ sys.path.append('.')
 
 from server.in_memory_server_api import InMemoryServerAPI
 
-sample_1700 = {
-  "cruise": {
-    "id": "NBP1700",
-    "start": "2017-01-01",
-    "end": "2017-02-01"
-  },
+sample_1 = {
   "loggers": {
     "knud": {
       "configs": ["off", "knud->net", "knud->net/file"]
@@ -63,12 +58,7 @@ sample_1700 = {
   }
 }
 
-sample_1701 = {
-  "cruise": {
-    "id": "NBP1701",
-    "start": "2017-01-01",
-    "end": "2017-02-01"
-  },
+sample_2 = {
   "loggers": {
     "knud": {
       "configs": ["off", "knud->net", "knud->net/file"]
@@ -125,46 +115,34 @@ class TestInMemoryServerAPI(unittest.TestCase):
 
     api = InMemoryServerAPI()
 
-    api.load_cruise(sample_1700)
-    api.load_cruise(sample_1701)
+    api.load_configuration(sample_1)
 
-    self.assertEqual(api.get_cruises(), ['NBP1700', 'NBP1701'])
-
-    self.assertEqual(api.get_modes('NBP1700'), ['off', 'port', 'underway'])
-    self.assertEqual(api.get_mode('NBP1700'), 'off')
-    self.assertDictEqual(api.get_configs('NBP1700'),
+    self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
+    self.assertEqual(api.get_mode(), 'off')
+    self.assertDictEqual(api.get_configs(),
                          {'knud': {}, 'gyr1': {}, 'mwx1': {}, 's330': {}})
 
     with self.assertRaises(ValueError):
-      api.set_mode('NBP1700', 'invalid mode')
+      api.set_mode('invalid mode')
 
-    api.set_mode('NBP1700', 'underway')
-    self.assertEqual(api.get_mode('NBP1700'), 'underway')
-    self.assertDictEqual(api.get_configs('NBP1700'),
+    api.set_mode('underway')
+    self.assertEqual(api.get_mode(), 'underway')
+    self.assertDictEqual(api.get_configs(),
                          {'knud': {'config knud->net/file'},
                           'gyr1': {'config gyr1->net/file'},
                           'mwx1': {'config mwx1->net/file'},
                           's330': {'config s330->net/file'}})
-    self.assertDictEqual(api.get_configs(),
-                         {'NBP1700:knud': {'config knud->net/file'},
-                          'NBP1700:gyr1': {'config gyr1->net/file'},
-                          'NBP1700:mwx1': {'config mwx1->net/file'},
-                          'NBP1700:s330': {'config s330->net/file'},
-                          'NBP1701:knud': {},
-                          'NBP1701:gyr1': {},
-                          'NBP1701:mwx1': {},
-                          'NBP1701:s330': {}})
 
     with self.assertRaises(ValueError):
-      api.get_configs('NBP1701', 'invalid_mode')
-    self.assertEqual(api.get_configs('NBP1701', 'port'),
+      api.get_configs('invalid_mode')
+    self.assertEqual(api.get_configs('port'),
                       {'gyr1': {'config gyr1->net'},
                        'knud': {},
                        'mwx1': {'config mwx1->net'},
                        's330': {}
                       })
 
-    self.assertDictEqual(api.get_loggers('NBP1700'),
+    self.assertDictEqual(api.get_loggers(),
                          {'knud': {'configs': [
                            'off', 'knud->net', 'knud->net/file']},
                           'gyr1': {'configs': [
@@ -173,14 +151,10 @@ class TestInMemoryServerAPI(unittest.TestCase):
                             'off', 'mwx1->net', 'mwx1->net/file']},
                           's330': {'configs': [
                             'off', 's330->net', 's330->net/file']}})
-    api.delete_cruise('NBP1700')
-    self.assertEqual(api.get_cruises(), ['NBP1701'])
-    self.assertDictEqual(api.get_configs(),
-                         {'NBP1701:knud': {},
-                          'NBP1701:gyr1': {},
-                          'NBP1701:mwx1': {},
-                          'NBP1701:s330': {}})
-
+    api.delete_configuration()
+    # self.assertEqual(api.get_cruises(), ['NBP1701'])
+    self.assertDictEqual(api.get_configs(),{})
+    
 ################################################################################
 if __name__ == '__main__':
   import argparse

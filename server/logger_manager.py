@@ -157,7 +157,7 @@ DEFAULT_MAX_TRIES = 3
 
 # To keep logger/config names unique, we'll prepend cruise_id,
 # separating them by CRUISE_ID_SEPARATOR; e.g. NBP1700:knud
-CRUISE_ID_SEPARATOR = ':'
+# CRUISE_ID_SEPARATOR = ':'
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'
@@ -183,7 +183,7 @@ class WriteToAPILoggingHandler(logging.Handler):
 
   def emit(self, record):
     self.api.message_log(source='Logger', user='(%s@%s)' % (USER, HOSTNAME),
-                         log_level=record.levelno, cruise_id=None,
+                         log_level=record.levelno,
                          message=self.formatter.format(record))
 
 
@@ -397,9 +397,9 @@ class LoggerManager:
     elif path.find('/logger_status/') == 0:
       # Client wants logger status - this is what we serve to the main
       # cruise page.
-      cruise_id = unquote(path[len('/logger_status/'):])
-      sender = self._logger_status_sender(client_id, cruise_id)
-
+      # cruise_id = unquote(path[len('/logger_status/'):])
+      sender = self._logger_status_sender(client_id)
+      
       with self.client_map_lock:
         self.logger_status_clients.add(client_id)
 
@@ -414,14 +414,14 @@ class LoggerManager:
       # Client wants server log messages
       path_parts = path.split('/')
       log_level = int(path_parts[2]) if len(path_parts) > 2 else logging.INFO
-      cruise_id = unquote(path_parts[3]) if len(path_parts) > 3 else None
-      source = unquote(path_parts[4]) if len(path_parts) > 4 else None
+      # cruise_id = unquote(path_parts[3]) if len(path_parts) > 3 else None
+      source = unquote(path_parts[3]) if len(path_parts) > 3 else None
 
       logging.info('New client requests server messages: level "%s", '
-                   'cruise_id "%s", source "%s"',
-                   log_level, cruise_id, source)
-
-      sender = self._log_message_sender(client_id, log_level, cruise_id, source)
+                   'source "%s"',
+                   log_level, source)
+      
+      sender = self._log_message_sender(client_id, log_level, source)
       await self._handle_client_connection(client_id=client_id, sender=sender)
 
     ##########################
@@ -506,7 +506,7 @@ class LoggerManager:
         await asyncio.sleep(0.1)
 
   ############################
-  async def _logger_status_sender(self, client_id, cruise_id):
+  async def _logger_status_sender(self, client_id):
     """Iteratively grab status messages for a cruise_id and send to
     websocket. In theory we could be much more efficient and directly
     grab status updates in _process_logger_runner_messages() when we
@@ -518,22 +518,22 @@ class LoggerManager:
 
     # If they haven't specified a cruise_id, just send them empty
     # updates so they can tell they're connected.
-    if cruise_id == '':
-      while not self.quit_flag:
-        message = {'timestamp': 0}
-        logging.debug('Sending empty status to client %d', client_id)
-        try:
-          await websocket.send(json.dumps(message))
-        except websockets.ConnectionClosed:
-          logging.info('Client %d connection closed', client_id)
-          return
-        await asyncio.sleep(self.interval)
+    # if cruise_id == '':
+    while not self.quit_flag:
+      message = {'timestamp': 0}
+      logging.debug('Sending empty status to client %d', client_id)
+      try:
+        await websocket.send(json.dumps(message))
+      except websockets.ConnectionClosed:
+        logging.info('Client %d connection closed', client_id)
+        return
+      await asyncio.sleep(self.interval)
 
-    if not cruise_id in self.api.get_cruises():
-      logging.warning('Client %d: cruise id "%s" not found. Ignoring request',
-                      client_id, cruise_id)
-      asyncio.sleep(3)
-      return
+    # if not cruise_id in self.api.get_cruises():
+    #   logging.warning('Client %d: cruise id "%s" not found. Ignoring request',
+    #                   client_id, cruise_id)
+    #   asyncio.sleep(3)
+    #   return
 
     # If here, we've got a valid cruise_id to send updates for.
 
@@ -548,12 +548,12 @@ class LoggerManager:
     while not self.quit_flag:
       something_changed = False
       configs = {
-        'cruise_id': cruise_id,
-        'modes': self.api.get_modes(cruise_id),
-        'mode': self.api.get_mode(cruise_id),
+        # 'cruise_id': cruise_id,
+        'modes': self.api.get_modes(),
+        'mode': self.api.get_active_mode(),
         'loggers': {logger_id:
-                    self.api.get_logger_config_name(cruise_id, logger_id)
-                    for logger_id in self.api.get_loggers(cruise_id)}
+                    self.api.get_logger_config_name(logger_id)
+                    for logger_id in self.api.get_loggers()}
       }
       if not configs == previous_configs:
         something_changed = True
@@ -563,7 +563,7 @@ class LoggerManager:
       # dict} entries. We may have multiple entries if we have
       # multiple LoggerRunners, e.g., if some have connected via
       # websockets. If we don't have any yet, work with a dummy entry.
-      status = self.api.get_status(cruise_id) or {0: {}}
+      status = self.api.get_status() or {0: {}}
       timestamp = 0
       logger_status = {}
       for next_timestamp, next_logger_status in status.items():
@@ -595,7 +595,7 @@ class LoggerManager:
 
   ############################
   async def _log_message_sender(self, client_id, log_level=logging.INFO,
-                                cruise_id=None, source=None):
+                                source=None):
     """Iteratively grab log_messages of log_level and below and send to
     websocket. If source is not specified, retrieve from all
     sources. If log_level is not specified, retrieve all log levels.
@@ -612,7 +612,6 @@ class LoggerManager:
       logging.debug('last message timestamp: %s', last_timestamp)
       messages = self.api.get_message_log(source=source, user=None,
                                           log_level=log_level,
-                                          cruise_id=cruise_id,
                                           since_timestamp=last_timestamp)
       if messages:
         logging.debug('got messages: %s', messages)
@@ -674,49 +673,47 @@ class LoggerManager:
       logging.error('Errors from client %s: %s', client_id or 'local', errors)
 
   ############################
-  def update_configs_loop(self, cruise_id=None):
+  def update_configs_loop(self):
     """Iteratively check the API for updated configs for cruise_id and
     send them to the appropriate LoggerRunners.
     """
     while not self.quit_flag:
-      self.update_configs(cruise_id)
+      self.update_configs()
       time.sleep(self.interval)
 
   ############################
-  def update_configs(self, cruise_id=None):
+  def update_configs(self):
     """Check the API for updated configs for cruise_id, and send them to
     the appropriate LoggerRunners.
     """
     # Get latest configs.
     with self.config_lock:
-      if cruise_id:
-        new_configs = {cruise_id: self.api.get_configs(cruise_id) }
-      else:
-        new_configs = {cruise_id: self.api.get_configs(cruise_id)
-                       for cruise_id in self.api.get_cruises()}
+      # if cruise_id:
+      #   new_configs = {cruise_id: self.api.get_configs(cruise_id) }
+      # else:
+      new_configs = self.api.get_logger_configs_for_mode()
 
       # If configs haven't changed, we're done - go home.
       if new_configs == self.old_configs:
         return
+
       self.old_configs = new_configs
 
     # Sort our configurations for dispatch.
     config_map = {}
-    for cruise_id, cruise_configs in new_configs.items():
-      for logger, config in cruise_configs.items():
+    for logger, config in new_configs.items():
 
-        # If there is a host restriction, set up a dict for configs
-        # restricted to that host. If no restriction, file config
-        # under key self.host_id (which may be 'None') to run locally.
-        logging.debug('Config for logger %s, cruise %s: %s',
-                        logger, cruise_id, config)
-        if config is None:
-          continue
-        host_id = config.get('host_id', self.host_id)
-        if not host_id in config_map:
-          config_map[host_id] = {}
-        cruise_and_logger = cruise_id + CRUISE_ID_SEPARATOR + logger
-        config_map[host_id][cruise_and_logger] = config
+      # If there is a host restriction, set up a dict for configs
+      # restricted to that host. If no restriction, file config
+      # under key self.host_id (which may be 'None') to run locally.
+      logging.debug('Config for logger %s: %s',
+                      logger, config)
+      if config is None:
+        continue
+      host_id = config.get('host_id', self.host_id)
+      if not host_id in config_map:
+        config_map[host_id] = {}
+      config_map[host_id][logger] = config
 
     # Dispatch the partitioned configs to local/websocket-attached clients
     self.dispatch_configs(config_map)
@@ -756,12 +753,12 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store',
-                      help='Name of cruise configuration file to load.')
+                      help='Name of configuration file to load.')
   parser.add_argument('--mode', dest='mode', action='store', default=None,
                       help='Optional name of mode to start system in.')
 
   parser.add_argument('--database', dest='database', action='store',
-                      choices=['memory', 'django'],
+                      choices=['memory', 'django', 'hapi'],
                       default='memory', help='What backing store database '
                       'to use. Currently-implemented options are "memory" '
                       'and "django".')
@@ -800,6 +797,8 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
+  #### Added as a hack ####
+  # logging.getLogger().setLevel(logging.DEBUG)
 
   ############################
   # Instantiate API - a Are we using an in-memory store or Django
@@ -811,6 +810,9 @@ if __name__ == '__main__':
   elif args.database == 'memory':
     from server.in_memory_server_api import InMemoryServerAPI
     api = InMemoryServerAPI()
+  elif args.database == 'hapi':
+    from hapi.hapi_server_api import HapiServerAPI
+    api = HapiServerAPI()
   else:
     raise ValueError('Illegal arg for --database: "%s"' % args.database)
 
@@ -820,7 +822,8 @@ if __name__ == '__main__':
                                  host_id=args.host_id,
                                  interval=args.interval,
                                  max_tries=args.max_tries,
-                                 verbosity=args.verbosity,
+                                 verbosity=args.verbosity, #### orginial code
+                                 #verbosity=logging.DEBUG, #### added as a hack
                                  logger_verbosity=args.logger_verbosity)
 
   # Register a callback: when api.set_mode() or api.set_config() have
@@ -836,19 +839,19 @@ if __name__ == '__main__':
   ############################
   # If they've given us an initial cruise_config, get and load it.
   if args.config:
-    cruise_config = read_json(args.config)
-    api.load_cruise(cruise_config)
+    config = read_json(args.config)    
+    api.load_configuration(config)
     api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
-                    log_level=api.INFO, cruise_id=cruise_id,
-                    message='started with cruise: %s' % args.config)
+                    log_level=api.INFO,
+                    message='started with: %s' % args.config)
   if args.mode:
     if not args.config:
-      raise ValueError('Argument --mode can only be used with --config')
-    cruise_id = cruise_config.get('cruise', {}).get('id', None)
-    if not cruise_id:
-      raise ValueError('Unable to find cruise_id in config: %s' % args.config)
-    api.set_mode(cruise_id, args.mode)
-    api.message_log(source=SOURCE_NAME, log_level=api.INFO, cruise_id=cruise_id,
+      raise ValueError('Argument --mode can only be used with --config')      
+    # cruise_id = cruise_config.get('cruise', {}).get('id', None)
+    # if not cruise_id:
+    #   raise ValueError('Unable to find cruise_id in config: %s' % args.config)
+    api.set_active_mode(args.mode)
+    api.message_log(source=SOURCE_NAME, log_level=api.INFO,
                     message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
 
   try:
