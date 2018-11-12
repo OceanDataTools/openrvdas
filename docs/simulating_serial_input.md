@@ -26,7 +26,8 @@ command line script that invokes it:
 ```
 logger/utils/simulate_serial.py \
     --port /dev/ttyr15 \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04
+    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
+    --loop
 ```
 tries to create virtual serial port /dev/ttyr15 and feeds it with data
 from the specified logfile, timing the records to arrive at the same
@@ -46,7 +47,7 @@ test/serial\_sim.json, specifying a complete set of virtual serial
 port-log file pairings:
 
 ```
-logger/utils/simulate_serial.py --config test/serial_sim.json
+logger/utils/simulate_serial.py --config test/serial_sim.json --loop
 ```
 [^1]: Throughout the system, we use a slightly expanded form of JSON
     that allows Javascript-style "//-prefixed" comments for
