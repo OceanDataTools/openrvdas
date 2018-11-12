@@ -52,7 +52,7 @@ python3 server/logger_manager.py \
 The sample cruise configuration relies on simulated serial ports serving data stored in the test/ directory. To set up the simulated ports, run
 
 ```
-python3 logger/utils/simulate_serial.py --config test/serial_sim.json 
+python3 logger/utils/simulate_serial.py --config test/serial_sim.json --loop
 ```
 
 At this point you should be able to open a browser window to 
