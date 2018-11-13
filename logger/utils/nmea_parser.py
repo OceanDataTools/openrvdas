@@ -210,13 +210,15 @@ class NMEAParser:
       raise ValueError('Unknown data type in field definition: "%s"'%data_type)
 
   ############################
-  def _read_definitions(self, json_path):
+  def _read_definitions(self, filespec_paths):
     definitions = {}
-    for filename in glob.glob(json_path):
-      new_defs = read_json.read_json(filename)
-      for key in new_defs:
-        if key in definitions:
-          logging.warning('Duplicate definition for key "%s" found in %s',
-                          key, filename)
-        definitions[key] = new_defs[key]
+    for filespec in filespec_paths.split(','):
+      logging.debug('reading definitions from %s', filespec)
+      for filename in glob.glob(filespec):
+        new_defs = read_json.read_json(filename)
+        for key in new_defs:
+          if key in definitions:
+            logging.warning('Duplicate definition for key "%s" found in %s',
+                            key, filename)
+          definitions[key] = new_defs[key]
     return definitions

@@ -1,6 +1,6 @@
 {
     "cruise": {
-        "id": "SKQ_SAMPLE_6224",
+        "id": "SKQ_SAMPLE",
         "start": "2018-04-01",
         "end": "2018-05-01"
     },
@@ -468,7 +468,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54000"
                 }
             },
             "transforms": {
@@ -484,6 +484,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -517,7 +519,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54000"
                 }
             },
             "transforms": {
@@ -550,7 +552,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54000"
                 }
             },
             "transforms": {
@@ -565,6 +567,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -580,7 +584,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54100"
                 }
             },
             "transforms": {
@@ -596,6 +600,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -629,7 +635,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54100"
                 }
             },
             "transforms": {
@@ -662,7 +668,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54100"
                 }
             },
             "transforms": {
@@ -677,6 +683,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -692,7 +700,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54101"
                 }
             },
             "transforms": {
@@ -708,6 +716,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -741,7 +751,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54101"
                 }
             },
             "transforms": {
@@ -774,7 +784,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54101"
                 }
             },
             "transforms": {
@@ -789,6 +799,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -804,7 +816,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54104"
                 }
             },
             "transforms": {
@@ -820,6 +832,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -853,7 +867,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54104"
                 }
             },
             "transforms": {
@@ -886,7 +900,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54104"
                 }
             },
             "transforms": {
@@ -901,6 +915,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -916,7 +932,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54105"
                 }
             },
             "transforms": {
@@ -932,6 +948,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -965,7 +983,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54105"
                 }
             },
             "transforms": {
@@ -998,7 +1016,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54105"
                 }
             },
             "transforms": {
@@ -1013,6 +1031,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1028,7 +1048,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54106"
                 }
             },
             "transforms": {
@@ -1044,6 +1064,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1077,7 +1099,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54106"
                 }
             },
             "transforms": {
@@ -1110,7 +1132,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54106"
                 }
             },
             "transforms": {
@@ -1125,6 +1147,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1140,7 +1164,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54107"
                 }
             },
             "transforms": {
@@ -1156,6 +1180,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1189,7 +1215,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54107"
                 }
             },
             "transforms": {
@@ -1222,7 +1248,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54107"
                 }
             },
             "transforms": {
@@ -1237,6 +1263,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1252,7 +1280,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54108"
                 }
             },
             "transforms": {
@@ -1268,6 +1296,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1301,7 +1331,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54108"
                 }
             },
             "transforms": {
@@ -1334,7 +1364,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54108"
                 }
             },
             "transforms": {
@@ -1349,6 +1379,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1364,7 +1396,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54109"
                 }
             },
             "transforms": {
@@ -1380,6 +1412,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1413,7 +1447,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54109"
                 }
             },
             "transforms": {
@@ -1446,7 +1480,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54109"
                 }
             },
             "transforms": {
@@ -1461,6 +1495,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1476,7 +1512,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54110"
                 }
             },
             "transforms": {
@@ -1492,6 +1528,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1525,7 +1563,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54110"
                 }
             },
             "transforms": {
@@ -1558,7 +1596,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54110"
                 }
             },
             "transforms": {
@@ -1573,6 +1611,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1588,7 +1628,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54111"
                 }
             },
             "transforms": {
@@ -1604,6 +1644,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1637,7 +1679,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54111"
                 }
             },
             "transforms": {
@@ -1670,7 +1712,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54111"
                 }
             },
             "transforms": {
@@ -1685,6 +1727,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1700,7 +1744,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54112"
                 }
             },
             "transforms": {
@@ -1716,6 +1760,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1749,7 +1795,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54112"
                 }
             },
             "transforms": {
@@ -1782,7 +1828,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54112"
                 }
             },
             "transforms": {
@@ -1797,6 +1843,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1812,7 +1860,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54114"
                 }
             },
             "transforms": {
@@ -1828,6 +1876,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1861,7 +1911,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54114"
                 }
             },
             "transforms": {
@@ -1894,7 +1944,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54114"
                 }
             },
             "transforms": {
@@ -1909,6 +1959,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -1924,7 +1976,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54115"
                 }
             },
             "transforms": {
@@ -1940,6 +1992,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -1973,7 +2027,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54115"
                 }
             },
             "transforms": {
@@ -2006,7 +2060,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54115"
                 }
             },
             "transforms": {
@@ -2021,6 +2075,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2036,7 +2092,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54116"
                 }
             },
             "transforms": {
@@ -2052,6 +2108,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2085,7 +2143,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54116"
                 }
             },
             "transforms": {
@@ -2118,7 +2176,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54116"
                 }
             },
             "transforms": {
@@ -2133,6 +2191,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2148,7 +2208,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54117"
                 }
             },
             "transforms": {
@@ -2164,6 +2224,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2197,7 +2259,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54117"
                 }
             },
             "transforms": {
@@ -2230,7 +2292,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54117"
                 }
             },
             "transforms": {
@@ -2245,6 +2307,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2260,7 +2324,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54119"
                 }
             },
             "transforms": {
@@ -2276,6 +2340,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2309,7 +2375,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54119"
                 }
             },
             "transforms": {
@@ -2342,7 +2408,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54119"
                 }
             },
             "transforms": {
@@ -2357,6 +2423,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2372,7 +2440,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54121"
                 }
             },
             "transforms": {
@@ -2388,6 +2456,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2421,7 +2491,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54121"
                 }
             },
             "transforms": {
@@ -2454,7 +2524,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54121"
                 }
             },
             "transforms": {
@@ -2469,6 +2539,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2484,7 +2556,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54122"
                 }
             },
             "transforms": {
@@ -2500,6 +2572,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2533,7 +2607,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54122"
                 }
             },
             "transforms": {
@@ -2566,7 +2640,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54122"
                 }
             },
             "transforms": {
@@ -2581,6 +2655,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2596,7 +2672,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54125"
                 }
             },
             "transforms": {
@@ -2612,6 +2688,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2645,7 +2723,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54125"
                 }
             },
             "transforms": {
@@ -2678,7 +2756,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54125"
                 }
             },
             "transforms": {
@@ -2693,6 +2771,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2708,7 +2788,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54124"
                 }
             },
             "transforms": {
@@ -2724,6 +2804,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2757,7 +2839,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54124"
                 }
             },
             "transforms": {
@@ -2790,7 +2872,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54124"
                 }
             },
             "transforms": {
@@ -2805,6 +2887,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2820,7 +2904,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54124"
                 }
             },
             "transforms": {
@@ -2836,6 +2920,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2869,7 +2955,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54124"
                 }
             },
             "transforms": {
@@ -2902,7 +2988,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54124"
                 }
             },
             "transforms": {
@@ -2917,6 +3003,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -2932,7 +3020,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54125"
                 }
             },
             "transforms": {
@@ -2948,6 +3036,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -2981,7 +3071,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54125"
                 }
             },
             "transforms": {
@@ -3014,7 +3104,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54125"
                 }
             },
             "transforms": {
@@ -3029,6 +3119,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3044,7 +3136,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54126"
                 }
             },
             "transforms": {
@@ -3060,6 +3152,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3093,7 +3187,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54126"
                 }
             },
             "transforms": {
@@ -3126,7 +3220,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54126"
                 }
             },
             "transforms": {
@@ -3141,6 +3235,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3156,7 +3252,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54127"
                 }
             },
             "transforms": {
@@ -3172,6 +3268,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3205,7 +3303,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54127"
                 }
             },
             "transforms": {
@@ -3238,7 +3336,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54127"
                 }
             },
             "transforms": {
@@ -3253,6 +3351,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3268,7 +3368,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54128"
                 }
             },
             "transforms": {
@@ -3284,6 +3384,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3317,7 +3419,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54128"
                 }
             },
             "transforms": {
@@ -3350,7 +3452,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54128"
                 }
             },
             "transforms": {
@@ -3365,6 +3467,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3380,7 +3484,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54129"
                 }
             },
             "transforms": {
@@ -3396,6 +3500,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3429,7 +3535,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54129"
                 }
             },
             "transforms": {
@@ -3462,7 +3568,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54129"
                 }
             },
             "transforms": {
@@ -3477,6 +3583,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3492,7 +3600,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54130"
                 }
             },
             "transforms": {
@@ -3508,6 +3616,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3541,7 +3651,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54130"
                 }
             },
             "transforms": {
@@ -3574,7 +3684,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54130"
                 }
             },
             "transforms": {
@@ -3589,6 +3699,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3604,7 +3716,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54130"
                 }
             },
             "transforms": {
@@ -3620,6 +3732,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3653,7 +3767,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54130"
                 }
             },
             "transforms": {
@@ -3686,7 +3800,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54130"
                 }
             },
             "transforms": {
@@ -3701,6 +3815,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3716,7 +3832,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54131"
                 }
             },
             "transforms": {
@@ -3732,6 +3848,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3765,7 +3883,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54131"
                 }
             },
             "transforms": {
@@ -3798,7 +3916,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54131"
                 }
             },
             "transforms": {
@@ -3813,6 +3931,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3828,7 +3948,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54131"
                 }
             },
             "transforms": {
@@ -3844,6 +3964,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3877,7 +3999,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54131"
                 }
             },
             "transforms": {
@@ -3910,7 +4032,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54131"
                 }
             },
             "transforms": {
@@ -3925,6 +4047,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -3940,7 +4064,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54132"
                 }
             },
             "transforms": {
@@ -3956,6 +4080,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -3989,7 +4115,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54132"
                 }
             },
             "transforms": {
@@ -4022,7 +4148,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54132"
                 }
             },
             "transforms": {
@@ -4037,6 +4163,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -4052,7 +4180,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54132"
                 }
             },
             "transforms": {
@@ -4068,6 +4196,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -4101,7 +4231,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54132"
                 }
             },
             "transforms": {
@@ -4134,7 +4264,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54132"
                 }
             },
             "transforms": {
@@ -4149,6 +4279,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -4164,7 +4296,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54133"
                 }
             },
             "transforms": {
@@ -4180,6 +4312,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -4213,7 +4347,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54133"
                 }
             },
             "transforms": {
@@ -4246,7 +4380,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54133"
                 }
             },
             "transforms": {
@@ -4261,6 +4395,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -4276,7 +4412,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54001"
                 }
             },
             "transforms": {
@@ -4292,6 +4428,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -4325,7 +4463,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54001"
                 }
             },
             "transforms": {
@@ -4358,7 +4496,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":54001"
                 }
             },
             "transforms": {
@@ -4373,6 +4511,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -4388,7 +4528,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":55555"
                 }
             },
             "transforms": {
@@ -4404,6 +4544,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -4437,7 +4579,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":55555"
                 }
             },
             "transforms": {
@@ -4470,7 +4612,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":55555"
                 }
             },
             "transforms": {
@@ -4485,6 +4627,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },
@@ -4500,7 +4644,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":55005"
                 }
             },
             "transforms": {
@@ -4516,6 +4660,8 @@
                         "transforms": {
                             "class": "ParseNMEATransform",
                             "kwargs": {
+                                "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                                "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         },
@@ -4549,7 +4695,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":55005"
                 }
             },
             "transforms": {
@@ -4582,7 +4728,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":6224"
+                    "network": ":55005"
                 }
             },
             "transforms": {
@@ -4597,6 +4743,8 @@
                     "transforms": {
                         "class": "ParseNMEATransform",
                         "kwargs": {
+                            "sensor_path": "local/sensor/*.json,test/sikuliaq/sensors.json",
+                            "sensor_model_path": "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     },

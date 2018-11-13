@@ -217,3 +217,18 @@ DEFAULT_SENSOR_PATH = 'local/sensor/*.json'
 DEFAULT_SENSOR_MODEL_PATH = 'local/sensor_model/*.json'
 ```
 
+When using the `listen.py` script, alternate/additional definitions
+may be loaded by specifying a comma-separated list of file specs with
+the appropriate command line options:
+
+```
+  logger/listener/listen.py \
+      --network :6224 \
+      --parse_nmea_message_path local/message/\*.json,test/sikuliaq/messages.json \
+      --transform_parse_nmea \
+      --write_file -
+```
+
+Recall that, as with all command line arguments with `listen.py`, the
+arguments modifying `--transform_parse_nmea` must appear *before* it
+on the command line.

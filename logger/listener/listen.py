@@ -71,7 +71,7 @@ from logger.writers.logfile_writer import LogfileWriter
 from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
 
-from logger.utils import read_json, timestamp
+from logger.utils import read_json, timestamp, nmea_parser
 from logger.listener.listener import Listener
 
 ################################################################################
@@ -244,6 +244,24 @@ if __name__ == '__main__':
                       action='store_true', default=False,
                       help='Convert tagged, timestamped NMEA records into '
                       'Python DASRecords.')
+  parser.add_argument('--parse_nmea_message_path',
+                      dest='parse_nmea_message_path',
+                      default=nmea_parser.DEFAULT_MESSAGE_PATH,
+                      help='Comma-separated globs of NMEA message definition '
+                      'file names, e.g. '
+                      'local/message/*.json,test/skq/messages.json')
+  parser.add_argument('--parse_nmea_sensor_path',
+                      dest='parse_nmea_sensor_path',
+                      default=nmea_parser.DEFAULT_SENSOR_PATH,
+                      help='Comma-separated globs of NMEA sensor definition '
+                      'file names, e.g. '
+                      'local/sensor/*.json,test/skq/sensors.json')
+  parser.add_argument('--parse_nmea_sensor_model_path',
+                      dest='parse_nmea_sensor_model_path',
+                      default=nmea_parser.DEFAULT_SENSOR_MODEL_PATH,
+                      help='Comma-separated globs of NMEA sensor model '
+                      'definition file names, e.g. '
+                      'local/sensor_model/*.json,test/skq/sensor_models.json')
 
   parser.add_argument('--time_format', dest='time_format',
                       default=timestamp.TIME_FORMAT,
@@ -460,7 +478,13 @@ if __name__ == '__main__':
       if new_args.qc_filter:
         transforms.append(QCFilterTransform(new_args.qc_filter))
       if new_args.parse_nmea:
-        transforms.append(ParseNMEATransform(time_format=all_args.time_format))
+        transforms.append(
+          ParseNMEATransform(
+            message_path=all_args.parse_nmea_message_path,
+            sensor_path=all_args.parse_nmea_sensor_path,
+            sensor_model_path=all_args.parse_nmea_sensor_model_path,
+            time_format=all_args.time_format)
+        )
       if new_args.aggregate_xml:
         transforms.append(XMLAggregatorTransform(new_args.aggregate_xml))
 

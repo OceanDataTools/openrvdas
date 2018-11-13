@@ -837,6 +837,10 @@ if __name__ == '__main__':
   # If they've given us an initial cruise_config, get and load it.
   if args.config:
     cruise_config = read_json(args.config)
+    cruise_id = cruise_config.get('cruise', {}).get('id', None)
+    if not cruise_id:
+      raise ValueError('Unable to find cruise_id in config: %s' % args.config)
+
     api.load_cruise(cruise_config)
     api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
                     log_level=api.INFO, cruise_id=cruise_id,
@@ -844,11 +848,9 @@ if __name__ == '__main__':
   if args.mode:
     if not args.config:
       raise ValueError('Argument --mode can only be used with --config')
-    cruise_id = cruise_config.get('cruise', {}).get('id', None)
-    if not cruise_id:
-      raise ValueError('Unable to find cruise_id in config: %s' % args.config)
     api.set_mode(cruise_id, args.mode)
-    api.message_log(source=SOURCE_NAME, log_level=api.INFO, cruise_id=cruise_id,
+    api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
+                    log_level=api.INFO, cruise_id=cruise_id,
                     message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
 
   try:

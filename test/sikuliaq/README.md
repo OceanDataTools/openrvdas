@@ -11,8 +11,11 @@ the UDP ports listed in skq/skq_ports.txt and write to logfiles and/or
 an SQL database as specified.
 
 The configuration file was created using the quick-and-dirty script:
+
 ```
-   skq/create_skq_config.py < skq/skq_ports.txt > skq/skq_cruise.json
+   test/sikuliaq/create_skq_config.py \
+     < test/sikuliaq/skq_ports.txt \
+     > test/sikuliaq/skq_cruise.json
 ```
 
 The script generates a configuration with four modes:
@@ -26,8 +29,8 @@ When used by the command line utility server/logger_manager.py,
 you can specify the desired mode on the command line:
 
 ```
-    server/logger_manager.py
-      --config skq/skq_cruise.json
+    server/logger_manager.py \
+      --config test/sikuliaq/skq_cruise.json \
       --mode file/db
 ```
 
@@ -40,24 +43,26 @@ running.
 ```ALL_USE_SAME_PORT = False```
 
 that lets us specify that all loggers should read from the same
-port. This flag was used to create `skq/skq_cruise_6224.json`,
+port. This flag was used to create `skq_cruise_6224.json`,
 which specifies that all loggers should read from the same port
 (:6224), but then filter input to make sure each reader only keeps
 records that begin with their data id.
 
 This allows us to test by running, e.g.
+
 ```
-    server/logger_manager.py
-      --config skq/skq_cruise_6224.json
-      --mode file/db
+    server/logger_manager.py \
+      --config test/sikuliaq/skq_cruise_6224.json \
+      --mode file/db \
       -v
 ```
 
 and feeding with sample data written to a single network port:
+
 ```
-    logger/listener/listen.py
-      --file skq/sikuliaq.data
-      --write_network :6224
+    logger/listener/listen.py \
+      --file test/sikuliaq/sikuliaq.data \
+      --write_network :6224 \
       -v
 ```
 
@@ -66,10 +71,14 @@ described in the documentation under gui/, where in addition to
 selecting between modes, one may manually start/stop/reconfigure
 individual loggers as desired.
 
-Again, recall that create_skq_config.py is a quick and dirty hack for
+Again, recall that `create_skq_config.py` is a quick and dirty hack for
 creating a usable config file (and as such will probably outlive us
 all). But please don't expect too much out of it.
 
-Note: The sensor message format definitions are under the local/
-director in local/sensor/sikuliaq.json and
-local/sensor_model/sikuliaq.json
+*Note:* The configuration file specifies Sikuliaq-specific sensor
+definitions in test/sikuliaq/sensors.json and sensor model definitions
+in test/sikuliaq/sensor_models.json. Please see [Locations of Message,
+Sensor and Sensor Model Definitions in the NMEA Parsing
+document](../../docs/nmea_parser.md#locations-of-message-sensor-and-sensor-model-definitions)
+for more information on specifying deployment-specific sensor
+definitions.
