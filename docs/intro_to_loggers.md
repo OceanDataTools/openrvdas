@@ -169,7 +169,7 @@ where each config is in the format described above under [Running with configura
 Note that the provided test/config/sample_configs.json specifies configurations that read simulated data from virtual serial ports. To create those ports and begin feeding them with data, you'll need to run
 
 ```
-logger/utils/simulate_serial.py --config test/serial_sim.json
+logger/utils/simulate_serial.py --config test/serial_sim.json --loop
 ```
 in a separate terminal. To observe the data being logged by the above sample configs, you can start a Listener in yet another terminal:
 
@@ -362,7 +362,8 @@ Simulating a system that uses serial ports for its input is more involved. We pr
 ```
 logger/utils/simulate_serial.py \
     --port /dev/ttyr15 \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04
+    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
+    --loop
 ```
 tries to create virtual serial port /dev/ttyr15 and feeds it with data from the specified logfile, timing the records to arrive at the same intervals indicated between timestamps in the logfile.
 
@@ -373,7 +374,7 @@ Because of this, we recommend that you specify a different location for your sim
 To simplify the creation/testing, simulate_serial.py can also take a JSON-format[^6] configuration file such as the one in [test/serial\_sim.json](../test/serial_sim.json), specifying a complete set of virtual serial port-log file pairings:
 
 ```
-logger/utils/simulate_serial.py --config test/serial_sim.json
+logger/utils/simulate_serial.py --config test/serial_sim.json --loop
 ```
 Simulating a system that takes its input from serial ports is more involved. Please see [Simulating Serial Input](simulating_serial_input.md) for information on how to set up and feed virtual serial ports.
 

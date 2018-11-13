@@ -90,7 +90,8 @@ If your machine doesn't have any serial ports sending actual data, you can creat
 ```
 logger/utils/simulate_serial.py \
     --port /tmp/tty_gyr1 \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04
+    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
+    --loop
 ```
 in a separate terminal, in which case your listener command line would be
 

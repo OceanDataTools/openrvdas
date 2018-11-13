@@ -12,5 +12,5 @@ gui/migrations
 
 django_gui/settings.py
 database/settings.py
-
 hapi/settings.py
+widgets/static/js/widgets/settings.js
