@@ -79,7 +79,7 @@ class InMemoryServerAPI(ServerAPI):
     config = self.get_configuration()
 
     if not 'loggers' in config:
-      return {}
+      raise ValueError('No loggers found')
     return config['loggers']
 
   ############################
@@ -163,29 +163,21 @@ class InMemoryServerAPI(ServerAPI):
 
     # If mode is not specified, get logger's current config name
     if mode is None:
-      _configs = self.logger_config
-      if not _configs:
-        raise ValueError('No config defined?!?')
-      return _configs.get(logger_id, None)
+      mode = self.mode
 
-    # If mode is specified, look up the config associated with this
-    # logger in that mode. First, get map of configs
-    modes = _config.get('modes', None)
-    if not modes:
-      raise ValueError('Config has no modes?!?')
-    logger_config_dict = modes.get(mode, None)
-    if logger_config_dict is None:
-      raise ValueError('Config has no mode "%s"?!?' % (mode))
+    if not self.config:
+      raise ValueError('No configuration loaded')
 
-    # Should we return None here if no config is defined instead of
-    # raising an exception? That would be consistent with the
-    # philosphy of "no config == empty config"
-    config_name = logger_config_dict.get(logger_id, None)
-    if not config_name:
-      #raise ValueError('Cruise %s, logger %s mode %s no config name found' %
-      #                 (cruise_id, logger_id, mode))
-      return None
-    return config_name
+    modes = self.config.get('modes')
+    mode_configs = modes.get(mode, None)
+    if mode_configs is None:
+      raise ValueError('Requested mode %s is not defined (modes are: %s)' %
+                       (mode, [m for m in modes]))
+    logger_config_name = mode_configs.get(logger_id, None)
+    if logger_config_name is None:
+      raise ValueError('Logger %s has no config defined in mode %s' %
+                       (logger_id, mode))
+    return logger_config_name
 
   ############################
   # Methods for manipulating the desired state via API to indicate
@@ -251,8 +243,7 @@ class InMemoryServerAPI(ServerAPI):
     for (callback, kwargs) in self.callbacks:
       logging.debug('Executing update callback: %s',
                     callback)
-
-    callback(**kwargs)
+      callback(**kwargs)
 
     # If cruise_id is *not* None, then we've now done the callbacks
     # for that specified cruise. But we may also have callbacks (filed

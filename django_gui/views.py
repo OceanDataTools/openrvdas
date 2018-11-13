@@ -56,15 +56,13 @@ def log_request(request, cmd):
   if api:
     user = request.user
     host = request.get_host()
-    cruise_id = request.POST.get('cruise_id', None)
     elements = ', '.join(['%s:%s' % (k,v) for k, v in request.POST.items()
                           if k not in ['csrfmiddlewaretoken', 'cruise_id']])
     api.message_log(source='Django', user='(%s@%s)' % (user, host),
-                    log_level=api.INFO, cruise_id=cruise_id,
-                    message=elements)
+                    log_level=api.INFO, message=elements)
 
 ################################################################################
-def index(request, cruise_id=None):
+def index(request):
   """Home page - render logger states and cruise information.
   """
   global api
@@ -73,51 +71,43 @@ def index(request, cruise_id=None):
 
   ############################
   # If we've gotten a POST request
+  cruise_id = ''
   errors = []
   if request.method == 'POST':
     logging.debug('POST: %s', request.POST)
 
     # First things first: log the request
-    log_request(request, (cruise_id or 'no_cruise') + ' index')
-
-    # Did we get a cruise selection?
-    if 'select_cruise' in request.POST:
-      cruise_id = request.POST['select_cruise']
-      logging.info('switching to cruise "%s"', cruise_id)
+    log_request(request, 'index')
 
     # Are they deleting a cruise?(!)
     if 'delete_cruise' in request.POST:
-      logging.info('deleting cruise "%s"', cruise_id)
-      api.delete_cruise(request.POST['delete_cruise'])
+      logging.info('deleting cruise')
+      api.delete_cruise()
 
     # Did we get a mode selection?
     elif 'select_mode' in request.POST:
       new_mode_name = request.POST['select_mode']
       logging.info('switching to mode "%s"', new_mode_name)
-      api.set_mode(cruise_id, new_mode_name)
+      api.set_active_mode(new_mode_name)
 
     # Did we get a cruise definition file? Load it and switch to the
     # cruise_id it defines.
-    elif 'load_cruise' in request.POST and 'config_file' in request.FILES:
+    elif 'load_config' in request.POST and 'config_file' in request.FILES:
       config_file = request.FILES['config_file']
       config_contents = config_file.read()
       logging.warning('Uploading file "%s"...', config_file.name)
 
       try:
-        config = parse_json(config_contents.decode('utf-8'))
-        api.load_cruise(config, config_file.name)
+        configuration = parse_json(config_contents.decode('utf-8'))
+        api.load_configuration(configuration)
       except JSONDecodeError as e:
         errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
       except ValueError as e:
         errors.append(str(e))
 
-      # If there weren't any errors, switch to the cruise_id we've
+      # If there weren't any errors, switch to the configuration we've
       # just loaded.
-      if not errors:
-        cruise_id = config.get('cruise', {}).get('id', '')
-        return HttpResponse(
-          '<script>window.location.assign("/cruise/%s")</script>' % cruise_id)
-      else:
+      if errors:
         logging.warning('Errors! %s', errors)
 
     elif 'cancel' in request.POST:
@@ -131,24 +121,24 @@ def index(request, cruise_id=None):
   template_vars = {
     'cruise_id': cruise_id or '',
     'websocket_server': WEBSOCKET_SERVER,
-    'cruise_list': api.get_cruises(),
     'errors': errors,
+    'loggers': {},
   }
 
   # If we have a cruise id, assemble loggers and other cruise-specific
   # info from API.
-  if cruise_id:
-    #template_vars['is_superuser'] = True
-    template_vars['modes'] = api.get_modes(cruise_id)
-    template_vars['current_mode'] = api.get_mode(cruise_id)
+  #template_vars['is_superuser'] = True
+  try:
+    template_vars['modes'] = api.get_modes()
+    template_vars['current_mode'] = api.get_active_mode()
 
     # Get config corresponding to current mode for each logger
-    loggers = {}
-    for logger_id in api.get_loggers(cruise_id):
-      logger_config = api.get_logger_config_name(cruise_id, logger_id)
-      loggers[logger_id] = logger_config
+    for logger_id in api.get_loggers():
+      logger_config = api.get_logger_config_name_for_mode(logger_id)
+      template_vars['loggers'][logger_id] = logger_config
       logging.warning('config for %s is %s', logger_id, logger_config)
-    template_vars['loggers'] = loggers
+  except ValueError:
+    logging.info('No configuration loaded')
 
   return render(request, 'django_gui/index.html', template_vars)
 
@@ -163,20 +153,17 @@ def server_messages(request, path):
 
   path_pieces = path.split('/')
   log_level = path_pieces[0] if len(path_pieces) > 0 else logging.INFO
-  cruise_id = path_pieces[1] if len(path_pieces) > 1 else None
-  source = path_pieces[2] if len(path_pieces) > 2 else None
+  source = path_pieces[1] if len(path_pieces) > 1 else None
 
   template_vars = {'websocket_server': WEBSOCKET_SERVER,
                    'log_level': int(log_level),
                    'log_levels': LOG_LEVELS,
                    'log_level_colors': LOG_LEVEL_COLORS,
-                   'cruise_id': cruise_id,
-                   'cruise_list': api.get_cruises(),
                    'source': source}
   return render(request, 'django_gui/server_messages.html', template_vars)
 
 ################################################################################
-def edit_config(request, cruise_id, logger_id):
+def edit_config(request, logger_id):
   global api
   if api is None:
     api = DjangoServerAPI()
@@ -185,29 +172,28 @@ def edit_config(request, cruise_id, logger_id):
   # If we've gotten a POST request, they've selected a new config
   if request.method == 'POST':
     # First things first: log the request
-    log_request(request, '%s:%s edit_config' % (cruise_id, logger_id))
+    log_request(request, '%s edit_config' % logger_id)
 
     # Now figure out what they selected
     new_config = request.POST['select_config']
     logging.warning('selected config: %s', new_config)
-    api.set_logger_config_name(cruise_id, logger_id, new_config)
+    api.set_active_logger_config(logger_id, new_config)
 
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 
   # What's our current mode? What's the default config for this logger
   # in this mode?
-  config_options = api.get_logger_config_names(cruise_id, logger_id)
-  current_config = api.get_logger_config_name(cruise_id, logger_id)
-  current_mode = api.get_mode(cruise_id)
-  default_config = api.get_logger_config_name(cruise_id, logger_id,
-                                              current_mode)
+  config_options = api.get_logger_config_names(logger_id)
+  current_config = api.get_logger_config_name_for_mode(logger_id)
+  current_mode = api.get_active_mode()
+  default_config = api.get_logger_config_name_for_mode(logger_id, current_mode)
   return render(request, 'django_gui/edit_config.html',
-                {'cruise_id': cruise_id,
-                 'logger_id': logger_id,
-                 'current_config': current_config,
-                 'default_config': default_config,
-                 'config_options': config_options
+                {
+                  'logger_id': logger_id,
+                  'current_config': current_config,
+                  'default_config': default_config,
+                  'config_options': config_options
                 })
 
 ################################################################################

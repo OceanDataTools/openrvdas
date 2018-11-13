@@ -118,24 +118,29 @@ class TestInMemoryServerAPI(unittest.TestCase):
     api.load_configuration(sample_1)
 
     self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
-    self.assertEqual(api.get_mode(), 'off')
-    self.assertDictEqual(api.get_configs(),
+    self.assertEqual(api.get_active_mode(), 'off')
+    self.assertDictEqual(api.get_logger_configs_for_mode(),
                          {'knud': {}, 'gyr1': {}, 'mwx1': {}, 's330': {}})
-
-    with self.assertRaises(ValueError):
-      api.set_mode('invalid mode')
-
-    api.set_mode('underway')
-    self.assertEqual(api.get_mode(), 'underway')
-    self.assertDictEqual(api.get_configs(),
+    self.assertDictEqual(api.get_logger_configs_for_mode('underway'),
                          {'knud': {'config knud->net/file'},
                           'gyr1': {'config gyr1->net/file'},
                           'mwx1': {'config mwx1->net/file'},
                           's330': {'config s330->net/file'}})
 
     with self.assertRaises(ValueError):
-      api.get_configs('invalid_mode')
-    self.assertEqual(api.get_configs('port'),
+      api.set_active_mode('invalid mode')
+
+    api.set_active_mode('underway')
+    self.assertEqual(api.get_active_mode(), 'underway')
+    self.assertDictEqual(api.get_logger_configs_for_mode(),
+                         {'knud': {'config knud->net/file'},
+                          'gyr1': {'config gyr1->net/file'},
+                          'mwx1': {'config mwx1->net/file'},
+                          's330': {'config s330->net/file'}})
+
+    with self.assertRaises(ValueError):
+      api.get_logger_configs_for_mode('invalid_mode')
+    self.assertEqual(api.get_logger_configs_for_mode('port'),
                       {'gyr1': {'config gyr1->net'},
                        'knud': {},
                        'mwx1': {'config mwx1->net'},
@@ -153,7 +158,8 @@ class TestInMemoryServerAPI(unittest.TestCase):
                             'off', 's330->net', 's330->net/file']}})
     api.delete_configuration()
     # self.assertEqual(api.get_cruises(), ['NBP1701'])
-    self.assertDictEqual(api.get_configs(),{})
+    with self.assertRaises(ValueError):
+      api.get_logger_configs_for_mode()
     
 ################################################################################
 if __name__ == '__main__':

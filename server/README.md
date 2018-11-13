@@ -160,37 +160,34 @@ To try out the scripts, open four(!) terminal windows.
 
 #### Load a cruise configuration
 ```
-   command? load_cruise test/configs/sample_cruise.json
-
-   command? cruises
-     Loaded cruises: NBP1700
+   command? load_configuration test/configs/sample_cruise.json
 ```
 #### Change cruise modes
 ```
-   command? modes NBP1700
-     Modes for NBP1700: off, port, underway
+   command? get_available_modes
+     Modes: off, port, underway
 
-   command? set_mode NBP1700 port
+   command? set_active_mode port
      (You should notice data appearing in the Listener window.)
 
-   command? set_mode NBP1700 underway
+   command? set_active_mode underway
      (You should notice more data appearing in the Listener window, and
       the LoggerRunner in the second window should leap into action.)
 
-   command? set_mode NBP1700 off
+   command? set_active_mode off
 ```
 
 #### Manually change logger configurations
 ```
-   command? loggers NBP1700
-     Loggers for NBP1700: knud, gyr1, mwx1, s330, eng1, rtmp
+   command? get_available_loggers
+     Loggers: knud, gyr1, mwx1, s330, eng1, rtmp
 
-   command? logger_configs NBP1700 s330
-     Configs for NBP1700:s330: s330->off, s330->net, s330->file/net/db
+   command? get_available_logger_configs s330
+     Configs for s330: s330->off, s330->net, s330->file/net/db
    
-   command? set_logger_config_name NBP1700 s330 s330->net
+   command? set_active_logger_config NBP1700 s330 s330->net
 
-   command? set_mode NBP1700 off
+   command? set_active_mode off
 
    command? quit
 ```

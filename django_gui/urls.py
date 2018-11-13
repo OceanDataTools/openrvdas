@@ -34,15 +34,15 @@ urlpatterns = [
   path('server_messages/<path:path>', views.server_messages,
        name='server_messages'),
 
-  path('edit_config/<str:cruise_id>/<str:logger_id>',
+  path('edit_config/<str:logger_id>',
        views.edit_config, name='edit_config'),
 
   path('widget/<str:field_list>', views.widget, name='widget'),
   path('widget/', views.widget, name='widget'),
 
   path('', views.index, name='index'),
-  path('cruise/', views.index, name='index'),
-  path('cruise/<str:cruise_id>', views.index, name='index'),
+  #path('cruise/', views.index, name='index'),
+  #path('cruise/<str:cruise_id>', views.index, name='index'),
 
   path('demo/', TemplateView.as_view(template_name='widgets/demo.html'),
        name='demo'),

@@ -133,21 +133,18 @@ class TestDjangoServerAPI(TestCase):
     api = DjangoServerAPI()
 
     try:
-      api.delete_cruise('test_0')
+      api.delete_configuration()
     except ValueError:
       pass
     try:
-      api.delete_cruise('test_1')
+      api.delete_configuration()
     except ValueError:
       pass
-    api.load_cruise(sample_test_0)
-    api.load_cruise(sample_test_1)
+    api.load_configuration(sample_test_0)
 
-    self.assertEqual(api.get_cruises(), ['test_0', 'test_1'])
-
-    self.assertEqual(api.get_modes('test_0'), ['off', 'port', 'underway'])
-    self.assertEqual(api.get_mode('test_0'), 'off')
-    self.assertDictEqual(api.get_configs('test_0'),
+    self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
+    self.assertEqual(api.get_active_mode(), 'off')
+    self.assertDictEqual(api.get_logger_configs_for_mode(),
                          {'knud': {'name': 'off'},
                           'gyr1': {'name': 'off'},
                           'mwx1': {'name': 'off'},
@@ -155,11 +152,11 @@ class TestDjangoServerAPI(TestCase):
                          })
 
     with self.assertRaises(ValueError):
-      api.set_mode('test_0', 'invalid mode')
+      api.set_active_mode('invalid mode')
 
-    api.set_mode('test_0', 'underway')
-    self.assertEqual(api.get_mode('test_0'), 'underway')
-    self.assertDictEqual(api.get_configs('test_0'),
+    api.set_active_mode('underway')
+    self.assertEqual(api.get_active_mode(), 'underway')
+    self.assertDictEqual(api.get_logger_configs_for_mode(),
                          {'knud': {'knud':'config knud->net/file',
                                    'name': 'knud->net/file'},
                           'gyr1': {'gyr1':'config gyr1->net/file',
@@ -168,24 +165,13 @@ class TestDjangoServerAPI(TestCase):
                                    'name': 'mwx1->net/file'},
                           's330': {'s330':'config s330->net/file',
                                    'name': 's330->net/file'}})
-    self.assertDictEqual(api.get_configs(),
-                         {'test_0:knud': {'knud':'config knud->net/file',
-                                          'name': 'knud->net/file'},
-                          'test_0:gyr1': {'gyr1':'config gyr1->net/file',
-                                          'name': 'gyr1->net/file'},
-                          'test_0:mwx1': {'mwx1':'config mwx1->net/file',
-                                          'name': 'mwx1->net/file'},
-                          'test_0:s330': {'s330':'config s330->net/file',
-                                          'name': 's330->net/file'},
-                          'test_1:knud': {'name': 'off'},
-                          'test_1:gyr1': {'name': 'off'},
-                          'test_1:mwx1': {'name': 'off'},
-                          'test_1:s330': {'name': 'off'}})
 
     with self.assertRaises(ValueError):
-      api.get_configs('test_1', 'invalid_mode')
+      api.get_logger_configs_for_mode('invalid_mode')
 
-    self.assertEqual(api.get_configs('test_1', 'port'),
+    api.load_configuration(sample_test_1)
+
+    self.assertEqual(api.get_logger_configs_for_mode('port'),
                       {'gyr1': {'gyr1':'config gyr1->net',
                                 'name': 'gyr1->net'},
                        'knud': {'name': 'off'},
@@ -193,7 +179,7 @@ class TestDjangoServerAPI(TestCase):
                                 'name': 'mwx1->net'},
                        's330': {'name': 'off'}
                       })
-    self.assertDictEqual(api.get_loggers('test_0'),
+    self.assertDictEqual(api.get_loggers(),
                          {'knud': {'configs': [
                            'off', 'knud->net', 'knud->net/file']},
                           'gyr1': {'configs': [
@@ -202,13 +188,11 @@ class TestDjangoServerAPI(TestCase):
                             'off', 'mwx1->net', 'mwx1->net/file']},
                           's330': {'configs': [
                             'off', 's330->net', 's330->net/file']}})
-    api.delete_cruise('test_0')
-    self.assertEqual(api.get_cruises(), ['test_1'])
-    self.assertDictEqual(api.get_configs(),
-                         {'test_1:knud': {'name': 'off'},
-                          'test_1:gyr1': {'name': 'off'},
-                          'test_1:mwx1': {'name': 'off'},
-                          'test_1:s330': {'name': 'off'}})
+    api.delete_configuration()
+    with self.assertRaises(ValueError):
+      api.get_configuration()
+    with self.assertRaises(ValueError):
+      api.get_logger_configs_for_mode()
 
 ################################################################################
 if __name__ == '__main__':

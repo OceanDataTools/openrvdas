@@ -43,10 +43,6 @@ from database.settings import DEFAULT_DATABASE_PASSWORD
 DEFAULT_MAX_TRIES = 3
 EPSILON = 0.00001
 
-# To keep logger/config names unique, we'll prepend cruise_id,
-# separating them by CRUISE_ID_SEPARATOR; e.g. NBP1700:knud
-# CRUISE_ID_SEPARATOR = ':'
-
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 

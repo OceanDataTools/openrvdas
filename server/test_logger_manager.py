@@ -130,14 +130,15 @@ class TestLoggerManagerAPI(unittest.TestCase):
 
       runner = ServerAPICommandLine(api)
 
-      runner.process_command('load_cruise %s' % self.cruise_filename)
-      runner.process_command('set_mode NBP1700 port')
+      runner.process_command('load_configuration %s' % self.cruise_filename)
+      runner.process_command('set_active_mode port')
       for i in range(4):
         self.assertEqual(reader.read(), 'TestLoggerManager ' + sample_data[i])
       logging.info('NetworkReader done')
       logger_manager.quit()
 
-    cmd_thread = threading.Thread(target=run_commands, daemon=True,
+    cmd_thread = threading.Thread(name='run_commands',
+                                  target=run_commands, daemon=True,
                                   args=(logger_manager,))
     cmd_thread.start()
     logger_manager.start()

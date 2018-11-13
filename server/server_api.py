@@ -134,7 +134,7 @@ class ServerAPI:
   #############################
   def get_logger_config(self, config_name):
     """Retrieve the logger config associated with the specified name.
-    > api.get_config('knud->net')
+    > api.get_logger_config('knud->net')
            { "readers": [...], "transforms": [...], "writers": [...] }
     """
     raise NotImplementedError('get_logger_config must be implemented by subclass')
@@ -143,7 +143,7 @@ class ServerAPI:
   def get_logger_configs_for_mode(self, mode=None):
     """Retrieve the configs associated with a mode from the data store.
     If mode is omitted, retrieve configs associated with the active mode.
-    > api.get_configs()
+    > api.get_logger_configs_for_mode()
            {"knud": { config_spec },
             "gyr1": { config_spec }
            }
@@ -175,7 +175,7 @@ class ServerAPI:
     """Retrieve the name of the logger config associated with the 
     specified logger in the specified mode. If mode is omitted, 
     retrieve config name associated with the active mode.
-    > api.get_logger_config_name('knud')
+    > api.get_logger_config_name_for_mode('knud')
         knud->net
    """
     raise NotImplementedError(
@@ -189,7 +189,7 @@ class ServerAPI:
   ############################
   def set_active_mode(self, mode):
     """Set the active mode for OpenRVDAS.
-    > api.set_mode(port')
+    > api.set_active_mode(port')
     """
     raise NotImplementedError('set_active_mode must be implemented by subclass')
 
@@ -197,7 +197,7 @@ class ServerAPI:
   def set_active_logger_config(self, logger, config_name):
     """Set the active logger config for the specified logger to
     the specific logger_config name.
-    > api.set_logger_config_name('knud', 'knud->file/net/db')
+    > api.set_active_logger_config('knud', 'knud->file/net/db')
     """
     raise NotImplementedError(
       'set_active_logger_config must be implemented by subclass')

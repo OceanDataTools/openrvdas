@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 import sys
 import unittest
@@ -11,100 +12,100 @@ from server.server_api_command_line import *
 from server.in_memory_server_api import InMemoryServerAPI
 
 sample_1 = {
-  "loggers": {
-    "knud": {
-      "configs": ["off", "knud->net", "knud->net/file"]
+  'loggers': {
+    'knud': {
+      'configs': ['off', 'knud->net', 'knud->net/file']
     },
-    "gyr1": {
-      "configs": ["off",  "gyr1->net", "gyr1->net/file"]
+    'gyr1': {
+      'configs': ['off',  'gyr1->net', 'gyr1->net/file']
     },
-    "mwx1": {
-      "configs": ["off", "mwx1->net",  "mwx1->net/file"]
+    'mwx1': {
+      'configs': ['off', 'mwx1->net',  'mwx1->net/file']
     },
-    "s330": {
-      "configs": ["off", "s330->net", "s330->net/file"]
+    's330': {
+      'configs': ['off', 's330->net', 's330->net/file']
     }
   },
-  "modes": {
-    "off": {
-      "knud": "off",
-      "gyr1": "off",
-      "mwx1": "off",
-      "s330": "off"
+  'modes': {
+    'off': {
+      'knud': 'off',
+      'gyr1': 'off',
+      'mwx1': 'off',
+      's330': 'off'
     },
-    "port": {
-      "knud": "off",
-      "gyr1": "gyr1->net",
-      "mwx1": "mwx1->net",
-      "s330": "off"
+    'port': {
+      'knud': 'off',
+      'gyr1': 'gyr1->net',
+      'mwx1': 'mwx1->net',
+      's330': 'off'
     },
-    "underway": {
-      "knud": "knud->net/file",
-      "gyr1": "gyr1->net/file",
-      "mwx1": "mwx1->net/file",
-      "s330": "s330->net/file"
+    'underway': {
+      'knud': 'knud->net/file',
+      'gyr1': 'gyr1->net/file',
+      'mwx1': 'mwx1->net/file',
+      's330': 's330->net/file'
     }
   },
-  "default_mode": "off",
-  "configs": {
-    "off": {},
-    "knud->net": {"config knud->net"},
-    "gyr1->net": {"config gyr1->net"},
-    "mwx1->net": {"config mwx1->net"},
-    "s330->net": {"config s330->net"},
-    "knud->net/file": {"config knud->net/file"},
-    "gyr1->net/file": {"config gyr1->net/file"},
-    "mwx1->net/file": {"config mwx1->net/file"},
-    "s330->net/file": {"config s330->net/file"}
+  'default_mode': 'off',
+  'configs': {
+    'off': {'config': 'off'},
+    'knud->net': {'config': 'knud->net'},
+    'gyr1->net': {'config': 'gyr1->net'},
+    'mwx1->net': {'config': 'mwx1->net'},
+    's330->net': {'config': 's330->net'},
+    'knud->net/file': {'config': 'knud->net/file'},
+    'gyr1->net/file': {'config': 'gyr1->net/file'},
+    'mwx1->net/file': {'config': 'mwx1->net/file'},
+    's330->net/file': {'config': 's330->net/file'}
   }
 }
 
 sample_2 = {
-  "loggers": {
-    "knud": {
-      "configs": ["off", "knud->net", "knud->net/file"]
+  'loggers': {
+    'knud': {
+      'configs': ['off', 'knud->net', 'knud->net/file']
     },
-    "gyr1": {
-      "configs": ["off",  "gyr1->net", "gyr1->net/file"]
+    'gyr1': {
+      'configs': ['off',  'gyr1->net', 'gyr1->net/file']
     },
-    "mwx1": {
-      "configs": ["off", "mwx1->net",  "mwx1->net/file"]
+    'mwx1': {
+      'configs': ['off', 'mwx1->net',  'mwx1->net/file']
     },
-    "s330": {
-      "configs": ["off", "s330->net", "s330->net/file"]
+    's330': {
+      'configs': ['off', 's330->net', 's330->net/file']
     }
   },
-  "modes": {
-    "off": {
-      "knud": "off",
-      "gyr1": "off",
-      "mwx1": "off",
-      "s330": "off"
+  'modes': {
+    'off': {
+      'knud': 'off',
+      'gyr1': 'off',
+      'mwx1': 'off',
+      's330': 'off'
     },
-    "port": {
-      "knud": "off",
-      "gyr1": "gyr1->net",
-      "mwx1": "mwx1->net",
-      "s330": "off"
+    'port': {
+      'knud': 'off',
+      'gyr1': 'gyr1->net',
+      'mwx1': 'mwx1->net',
+      's330': 'off'
     },
-    "underway": {
-      "knud": "knud->net/file",
-      "gyr1": "gyr1->net/file",
-      "mwx1": "mwx1->net/file",
-      "s330": "s330->net/file"
+    'underway': {
+      'knud': 'knud->net/file',
+      'gyr1': 'gyr1->net/file',
+      'mwx1': 'mwx1->net/file',
+      's330': 's330->net/file'
     }
   },
-  "default_mode": "off",
-  "configs": {
-    "off": {},
-    "knud->net": {"config knud->net"},
-    "gyr1->net": {"config gyr1->net"},
-    "mwx1->net": {"config mwx1->net"},
-    "s330->net": {"config s330->net"},
-    "knud->net/file": {"config knud->net/file"},
-    "gyr1->net/file": {"config gyr1->net/file"},
-    "mwx1->net/file": {"config mwx1->net/file"},
-    "s330->net/file": {"config s330->net/file"}
+  'default_mode': 'off',
+  'configs': {
+    'off': {},
+    'knud->net': {'config': 'knud->net'},
+    'gyr1->net': {'config': 'gyr1->net'},
+    'mwx1->net': {'config': 'mwx1->net'},
+    's330->net': {'config': 's330->net'},
+    'knud->net/file': {'config': 'knud->net/file'},
+    'gyr1->net/file': {'config': 'gyr1->net/file'},
+    'mwx1->net/file': {'config': 'mwx1->net/file'},
+    's330->net/file': {'config': 's330->net/file'}
   }
 }
 
@@ -116,31 +117,34 @@ class TestInMemoryServerAPI(unittest.TestCase):
 
     api = InMemoryServerAPI()
 
-    api.load_configuration(sample1)
+    api.load_configuration(sample_1)
     
     self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
-    self.assertEqual(api.get_mode(), 'off')
-    self.assertDictEqual(api.get_configs(),
-                         {'knud': {}, 'gyr1': {}, 'mwx1': {}, 's330': {}})
+    self.assertEqual(api.get_active_mode(), 'off')
+    self.assertDictEqual(api.get_logger_configs_for_mode(),
+                         {'knud': {'config': 'off'},
+                          'gyr1': {'config': 'off'},
+                          'mwx1': {'config': 'off'},
+                          's330': {'config': 'off'}})
 
     with self.assertRaises(ValueError):
-      api.set_mode(, 'invalid mode')
+      api.set_active_mode('invalid mode')
 
-    api.set_mode('underway')
-    self.assertEqual(api.get_mode(), 'underway')
-    self.assertDictEqual(api.get_configs(),
-                         {'knud': {'config knud->net/file'},
-                          'gyr1': {'config gyr1->net/file'},
-                          'mwx1': {'config mwx1->net/file'},
-                          's330': {'config s330->net/file'}})
+    api.set_active_mode('underway')
+    self.assertEqual(api.get_active_mode(), 'underway')
+    self.assertDictEqual(api.get_logger_configs_for_mode(),
+                         {'knud': {'config': 'knud->net/file'},
+                          'gyr1': {'config': 'gyr1->net/file'},
+                          'mwx1': {'config': 'mwx1->net/file'},
+                          's330': {'config': 's330->net/file'}})
 
     with self.assertRaises(ValueError):
-      api.get_configs('invalid_mode')
-    self.assertEqual(api.get_configs('port'),
-                      {'gyr1': {'config gyr1->net'},
-                       'knud': {},
-                       'mwx1': {'config mwx1->net'},
-                       's330': {}
+      api.get_logger_configs_for_mode('invalid_mode')
+    self.assertEqual(api.get_logger_configs_for_mode('port'),
+                      {'gyr1': {'config': 'gyr1->net'},
+                       'knud': {'config': 'off'},
+                       'mwx1': {'config': 'mwx1->net'},
+                       's330': {'config': 'off'}
                       })
 
     self.assertDictEqual(api.get_loggers(),
@@ -152,8 +156,9 @@ class TestInMemoryServerAPI(unittest.TestCase):
                             'off', 'mwx1->net', 'mwx1->net/file']},
                           's330': {'configs': [
                             'off', 's330->net', 's330->net/file']}})
-    api.delete_config()
-    self.assertDictEqual(api.get_configs(),{})
+    api.delete_configuration()
+    with self.assertRaises(ValueError):
+      api.get_logger_configs_for_mode()
 
 ################################################################################
 if __name__ == '__main__':

@@ -126,7 +126,6 @@ class ServerAPICommandLine:
   ############################
   def process_command(self, command):
     """Parse and execute the command string we've received."""
-    # cruises
     try:
       if not command:
         logging.info('Empty command received')
@@ -139,9 +138,9 @@ class ServerAPICommandLine:
       #     print('No cruises loaded')
 
       # load_cruise <cruise config file name>
-      elif command == 'load_config':
-        raise ValueError('format: load_config <config file name>')
-      elif command.find('load_config ') == 0:
+      elif command == 'load_configuration':
+        raise ValueError('format: load_configuration <config file name>')
+      elif command.find('load_configuration ') == 0:
         (load_cmd, filename) = command.split(maxsplit=1)
         logging.info('Loading config from %s', filename)
         try:
@@ -151,17 +150,17 @@ class ServerAPICommandLine:
           logging.error('Unable to find file "%s"', filename)
 
       # set_cruise <JSON encoding of a cruise>
-      elif command == 'set_config':
-        raise ValueError('format: set_config <JSON encoding of a config')
-      elif command.find('set_config ') == 0:
+      elif command == 'set_configuration':
+        raise ValueError('format: set_configuration <JSON encoding of a config')
+      elif command.find('set_configuration ') == 0:
         (cruise_cmd, config_json) = command.split(maxsplit=1)
         logging.info('Setting config to %s', config_json)
         self.api.load_configuration(json.loads(config_json))
 
       # delete_cruise <cruise_id>
-      # elif command == 'delete_config':
-      #   raise ValueError('format: delete_config')
-      elif command.find('delete_config') == 0:
+      # elif command == 'delete_configuration':
+      #   raise ValueError('format: delete_configuration')
+      elif command.find('delete_configuration') == 0:
         (config_cmd) = command.split(maxsplit=1)
         logging.info('Deleting config')
         self.api.delete_configuration()
@@ -186,7 +185,7 @@ class ServerAPICommandLine:
         mode = self.api.get_active_mode()
         print('Current mode: %s' % (mode))
 
-      # set_mode <cruise_id> <mode>
+      # set_active_mode <mode>
       elif command == 'set_active_mode':
         raise ValueError('format: set_active_mode <mode>')
       elif command.find('set_active_mode ') == 0:

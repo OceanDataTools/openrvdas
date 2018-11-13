@@ -87,36 +87,33 @@ To try out the scripts, open four(!) terminal windows.
 
    # Load a cruise configuration
 
-   command? load_cruise test/configs/sample_cruise.json
-
-   command? cruises
-     Loaded cruises: NBP1700
+   command? load_configuration test/configs/sample_cruise.json
 
    # Change cruise modes
 
-   command? modes NBP1700
+   command? get_available_modes
      Modes for NBP1700: off, port, underway
 
-   command? set_mode NBP1700 port
+   command? set_active_mode port
      (You should notice data appearing in the Listener window.)
 
-   command? set_mode NBP1700 underway
+   command? set_active_mode underway
      (You should notice more data appearing in the Listener window, and
       the LoggerRunner in the second window should leap into action.)
 
-   command? set_mode NBP1700 off
+   command? set_active_mode off
 
    # Manually change logger configurations
 
-   command? loggers NBP1700
-     Loggers for NBP1700: knud, gyr1, mwx1, s330, eng1, rtmp
+   command? get_available_loggers
+     Loggers: knud, gyr1, mwx1, s330, eng1, rtmp
 
-   command? logger_configs NBP1700 s330
-     Configs for NBP1700:s330: s330->off, s330->net, s330->file/net/db
+   command? get_available_logger_configs s330
+     Configs for s330: s330->off, s330->net, s330->file/net/db
 
-   command? set_logger_config_name NBP1700 s330 s330->net
+   command? set_active_logger_config s330 s330->net
 
-   command? set_mode NBP1700 off
+   command? set_active_mode off
 
    command? quit
 
@@ -414,7 +411,6 @@ class LoggerManager:
       # Client wants server log messages
       path_parts = path.split('/')
       log_level = int(path_parts[2]) if len(path_parts) > 2 else logging.INFO
-      # cruise_id = unquote(path_parts[3]) if len(path_parts) > 3 else None
       source = unquote(path_parts[3]) if len(path_parts) > 3 else None
 
       logging.info('New client requests server messages: level "%s", '
@@ -516,27 +512,6 @@ class LoggerManager:
     if not websocket:
       raise ValueError('No websocket for client_id %s!' % client_id)
 
-    # If they haven't specified a cruise_id, just send them empty
-    # updates so they can tell they're connected.
-    # if cruise_id == '':
-    while not self.quit_flag:
-      message = {'timestamp': 0}
-      logging.debug('Sending empty status to client %d', client_id)
-      try:
-        await websocket.send(json.dumps(message))
-      except websockets.ConnectionClosed:
-        logging.info('Client %d connection closed', client_id)
-        return
-      await asyncio.sleep(self.interval)
-
-    # if not cruise_id in self.api.get_cruises():
-    #   logging.warning('Client %d: cruise id "%s" not found. Ignoring request',
-    #                   client_id, cruise_id)
-    #   asyncio.sleep(3)
-    #   return
-
-    # If here, we've got a valid cruise_id to send updates for.
-
     # We stash previous_configs so that we know not to send them if
     # they haven't changed since last check. We keep the raw
     # previous_status separately, because we have to do some
@@ -547,14 +522,16 @@ class LoggerManager:
 
     while not self.quit_flag:
       something_changed = False
-      configs = {
-        # 'cruise_id': cruise_id,
-        'modes': self.api.get_modes(),
-        'mode': self.api.get_active_mode(),
-        'loggers': {logger_id:
-                    self.api.get_logger_config_name(logger_id)
+      configs = {}
+      try:
+        configs['modes'] = self.api.get_modes()
+        configs['mode'] = self.api.get_active_mode()
+        configs['loggers'] = {logger_id:
+                    self.api.get_logger_config_name_for_mode(logger_id)
                     for logger_id in self.api.get_loggers()}
-      }
+      except ValueError:
+        logging.info('No config found')
+
       if not configs == previous_configs:
         something_changed = True
         previous_configs = configs
@@ -686,13 +663,14 @@ class LoggerManager:
     """Check the API for updated configs for cruise_id, and send them to
     the appropriate LoggerRunners.
     """
-    # Get latest configs.
+    # Get latest configs. The call will throw a value error if no
+    # configuration is loaded.
     with self.config_lock:
-      # if cruise_id:
-      #   new_configs = {cruise_id: self.api.get_configs(cruise_id) }
-      # else:
-      new_configs = self.api.get_logger_configs_for_mode()
-
+      try:
+        new_configs = self.api.get_logger_configs_for_mode()
+      except ValueError:
+        return
+      
       # If configs haven't changed, we're done - go home.
       if new_configs == self.old_configs:
         return
@@ -826,7 +804,7 @@ if __name__ == '__main__':
                                  #verbosity=logging.DEBUG, #### added as a hack
                                  logger_verbosity=args.logger_verbosity)
 
-  # Register a callback: when api.set_mode() or api.set_config() have
+  # Register a callback: when api.set_active_mode() or api.set_config() have
   # completed, they call api.signal_update(cruise_id). We're
   # registering update_configs() with the API so that it gets called
   # when the api signals that an update has occurred.

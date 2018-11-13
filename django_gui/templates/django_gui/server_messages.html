@@ -3,7 +3,7 @@
 {% block content %}
 
 <head>
-  <title>{{ cruise_id }} Server messages</title>
+  <title>Server messages</title>
   {# <meta http-equiv="refresh" content="3"> #}
 
   <style>
@@ -25,31 +25,14 @@
   </style>
 </head>
 
-<h1>Server messages{% if cruise_id %} for {{ cruise_id }}{% endif %}</h1>
+<h1>Server messages</h1>
 
 {# ######################################################################## #}
 <table>
   <tr>
-    <td>
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <select name="select_cruise" id="select_cruise"
-                onchange="change_cruise()">
-          <option value="" selected>all cruises</option>
-          {% for cruise_id_option in cruise_list %}
-          <option id="cruise_{{ cruise_id_option }}"
-                  {% if cruise_id_option == cruise_id %}
-                  selected
-                  {% endif %}>
-            {{ cruise_id_option }}
-          </option> 
-          {% endfor %}
-        </select>  
-      </form>
-    </td>
     {% for level, level_name in log_levels.items %}
     <td>
-      <button onclick="window.location='/server_messages/{{ level }}/{{ cruise_id }}/{{ source }}'"
+      <button onclick="window.location='/server_messages/{{ level }}/{{ source }}'"
               {% if log_level == level %}
               style="background-color:gray"
               {% endif %}
@@ -78,7 +61,7 @@
   // Connect to the websocket
   // We're after messages statuses, so append '/messages' path followed
   // by name of server we want messages from.
-  var ws_addr = "ws://{{ websocket_server }}/messages/{{ log_level }}/{{ cruise_id }}/{{ source }}";
+  var ws_addr = "ws://{{ websocket_server }}/messages/{{ log_level }}/{{ source }}";
   console.log("connecting to: " + ws_addr);
   var websocket_server = ws_addr;
 
@@ -224,18 +207,6 @@
       server_messages.scrollTop = server_messages.scrollHeight + server_messages.clientHeight;
     }
   }
-
-  ///////////////////////////////
-  // Switch view to the selected cruise
-  function change_cruise() {
-    var select = document.getElementById("select_cruise");
-    var cruise = select.options[select.selectedIndex].value;
-    var source = "{% if source %}{{ source }}{% endif %}";
-    var url = "/server_messages/{{ log_level }}/" + cruise + "/" + source;
-    console.log("Loading page: " + url);
-    history.pushState(cruise, cruise, url);
-    window.location.assign(url);
-  }  
 </script>
 
 {% endblock content %}
