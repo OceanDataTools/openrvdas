@@ -6,12 +6,14 @@ listening for UDP packets on the specified port.
 
 To run, first use this script to generate the config file:
 
-   skq/create_skq_config.py < skq/skq_ports.txt > skq/skq_cruise.json
+   test/sikuliaq/create_skq_config.py \
+     < test/sikuliaq/skq_ports.txt \
+     > test/sikuliaq/skq_cruise.json
 
 Then either hand the config file to the command line logger_manager script:
 
    server/logger_manager.py \
-       --config skq/skq_cruise.json \
+       --config test/sikuliaq/skq_cruise.json \
        --mode file/db -v
 
    (The above command starts loggers running in the config's "file/db"
@@ -61,7 +63,13 @@ file_db_config = """{
               "kwargs": {
                 "transforms": {
                   "class": "ParseNMEATransform",
-                  "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                  "kwargs": {
+                    "sensor_path":
+                      "local/sensor/*.json,test/sikuliaq/sensors.json",
+                    "sensor_model_path":
+                      "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
                 },
                 "writers": { "class": "DatabaseWriter" }
               }
@@ -128,7 +136,13 @@ db_config = """{
             "kwargs": {
               "transforms": {
                 "class": "ParseNMEATransform",
-                "kwargs": {"time_format": "%Y-%m-%dT%H:%M:%S.%fZ"}
+                "kwargs": {
+                  "sensor_path":
+                    "local/sensor/*.json,test/sikuliaq/sensors.json",
+                  "sensor_model_path":
+                    "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
+                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
               },
               "writers": { "class": "DatabaseWriter" }
             }

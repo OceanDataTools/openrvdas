@@ -9,14 +9,14 @@ of an InMemoryServerAPI):
 
   server/logger_manager.py
 
-If an initial cruise definition is specified on the command line, as
+If an initial configuration is specified on the command line, as
 below:
 
   server/logger_manager.py --config test/configs/sample_cruise.json
 
-the cruise definition will be loaded and set to its default
-mode. If a --mode argument is included, it will be used in place of
-the default mode.
+the configuration will be loaded and set to its default mode. If a
+--mode argument is included, it will be used in place of the default
+mode.
 
 If the LoggerManager is created with a websocket specification
 (host:port), it will accept connections from LoggerRunners. It
@@ -67,18 +67,19 @@ To try out the scripts, open four(!) terminal windows.
    "knud.host", meaning that our LoggerManager should try to dispatch
    those configs to this LoggerRunner.
 
-3. The sample cruise that we're going to load and run is configured to
-   read from simulated serial ports. To create those simulated ports
-   and start feeding data to them, use a third terminal window to run:
+3. The sample configuration that we're going to load and run is
+   configured to read from simulated serial ports. To create those
+   simulated ports and start feeding data to them, use a third
+   terminal window to run:
 
    logger/utils/simulate_serial.py --config test/serial_sim.json -v
 
 4. Finally, we'd like to be able to easily glimpse the data that the
-   loggers are producing. The sample cruise configuration tells the
-   loggers to write to UDP port 6224 when running, so use the fourth
-   terminal to run a Listener that will monitor that port. The '-'
-   filename tells the Listener to write to stdout (see listen.py
-   --help for all Listener options):
+   loggers are producing. The sample configuration tells the loggers
+   to write to UDP port 6224 when running, so use the fourth terminal
+   to run a Listener that will monitor that port. The '-' filename
+   tells the Listener to write to stdout (see listen.py --help for all
+   Listener options):
 
    logger/listener/listen.py --network :6224 --write_file -
 
@@ -151,10 +152,6 @@ from server.data_server import DataServer
 
 # Number of times we'll try a failing logger before giving up
 DEFAULT_MAX_TRIES = 3
-
-# To keep logger/config names unique, we'll prepend cruise_id,
-# separating them by CRUISE_ID_SEPARATOR; e.g. NBP1700:knud
-# CRUISE_ID_SEPARATOR = ':'
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'
@@ -390,11 +387,8 @@ class LoggerManager:
         self.logger_runner_clients.discard(client_id)
 
     ###########
-    # Logger status client has connected. Serve it logger status updates
+    # Logger status client has connected. Serve it logger status updates.
     elif path.find('/logger_status/') == 0:
-      # Client wants logger status - this is what we serve to the main
-      # cruise page.
-      # cruise_id = unquote(path[len('/logger_status/'):])
       sender = self._logger_status_sender(client_id)
       
       with self.client_map_lock:
@@ -503,7 +497,7 @@ class LoggerManager:
 
   ############################
   async def _logger_status_sender(self, client_id):
-    """Iteratively grab status messages for a cruise_id and send to
+    """Iteratively grab status messages for a configuration and send to
     websocket. In theory we could be much more efficient and directly
     grab status updates in _process_logger_runner_messages() when we
     get them from the LoggerRunners.
@@ -557,9 +551,6 @@ class LoggerManager:
       message = {'timestamp': timestamp}
       if something_changed:
         message.update(configs)
-        # NOTE: the keys of the 'status' here are concatenated
-        # cruise_id:logger_id strings. We save our cycles and leave
-        # them for the client to parse out.
         message['status'] = logger_status
 
       logging.debug('Sending logger status to client %d: %s', client_id,message)
@@ -633,9 +624,9 @@ class LoggerManager:
     message to be a dict of
     {
       'status': {
-        cruise_id:logger_id: {errors: [], running,  failed},
-        cruise_id:logger_id: {...},
-        cruise_id:logger_id: {...}
+        logger_id: {errors: [], running,  failed},
+        logger_id: {...},
+        logger_id: {...}
       },
       'errors': {}   # if any errors to report
     }
@@ -651,8 +642,8 @@ class LoggerManager:
 
   ############################
   def update_configs_loop(self):
-    """Iteratively check the API for updated configs for cruise_id and
-    send them to the appropriate LoggerRunners.
+    """Iteratively check the API for updated configs and send them to the
+    appropriate LoggerRunners.
     """
     while not self.quit_flag:
       self.update_configs()
@@ -660,8 +651,8 @@ class LoggerManager:
 
   ############################
   def update_configs(self):
-    """Check the API for updated configs for cruise_id, and send them to
-    the appropriate LoggerRunners.
+    """Check the API for updated configs and send them to the appropriate
+    LoggerRunners.
     """
     # Get latest configs. The call will throw a value error if no
     # configuration is loaded.
@@ -804,10 +795,10 @@ if __name__ == '__main__':
                                  #verbosity=logging.DEBUG, #### added as a hack
                                  logger_verbosity=args.logger_verbosity)
 
-  # Register a callback: when api.set_active_mode() or api.set_config() have
-  # completed, they call api.signal_update(cruise_id). We're
-  # registering update_configs() with the API so that it gets called
-  # when the api signals that an update has occurred.
+  # Register a callback: when api.set_active_mode() or api.set_config()
+  # have completed, they call api.signal_update(). We're registering
+  # update_configs() with the API so that it gets called when the api
+  # signals that an update has occurred.
   api.on_update(callback=logger_manager.update_configs)
 
   ############################
@@ -815,7 +806,7 @@ if __name__ == '__main__':
   logger_manager.start()
 
   ############################
-  # If they've given us an initial cruise_config, get and load it.
+  # If they've given us an initial configuration, get and load it.
   if args.config:
     config = read_json(args.config)    
     api.load_configuration(config)
@@ -825,9 +816,6 @@ if __name__ == '__main__':
   if args.mode:
     if not args.config:
       raise ValueError('Argument --mode can only be used with --config')      
-    # cruise_id = cruise_config.get('cruise', {}).get('id', None)
-    # if not cruise_id:
-    #   raise ValueError('Unable to find cruise_id in config: %s' % args.config)
     api.set_active_mode(args.mode)
     api.message_log(source=SOURCE_NAME, log_level=api.INFO,
                     message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
