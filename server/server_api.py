@@ -140,15 +140,26 @@ class ServerAPI:
     raise NotImplementedError('get_logger_config must be implemented by subclass')
 
   #############################
-  def get_logger_configs_for_mode(self, mode=None):
+  def get_logger_configs(self, mode=None):
     """Retrieve the configs associated with a mode from the data store.
     If mode is omitted, retrieve configs associated with the active mode.
-    > api.get_logger_configs_for_mode()
+    > api.get_logger_configs()
            {"knud": { config_spec },
             "gyr1": { config_spec }
            }
     """
-    raise NotImplementedError('get_logger_configs_for_mode must be implemented by subclass')
+    raise NotImplementedError('get_logger_configs must be implemented by subclass')
+
+  #############################
+  def get_logger_config_name(self, logger_id, mode=None):
+    """Retrieve the name of the logger config associated with the 
+    specified logger in the specified mode. If mode is omitted, 
+    retrieve config name associated with the active mode.
+    > api.get_logger_config_name('knud')
+        knud->net
+   """
+    raise NotImplementedError(
+      'get_logger_config_name must be implemented by subclass')
 
   #############################
   def get_logger_config_names(self, logger_id):
@@ -158,28 +169,6 @@ class ServerAPI:
     """
     raise NotImplementedError(
       'get_logger_config_names must be implemented by subclass')
-
-  #############################
-  def get_logger_config_for_mode(self, logger_id, mode=None):
-    """Retrieve the logger config associated with the specified
-    logger for the specified mode. If mode is omitted, retrieve
-    logger config associated with the active mode.
-    > api.get_logger_config('knud')
-        { config_spec }
-   """
-    raise NotImplementedError(
-      'get_logger_config_for_mode must be implemented by subclass')
-
-  #############################
-  def get_logger_config_name_for_mode(self, logger_id, mode=None):
-    """Retrieve the name of the logger config associated with the 
-    specified logger in the specified mode. If mode is omitted, 
-    retrieve config name associated with the active mode.
-    > api.get_logger_config_name_for_mode('knud')
-        knud->net
-   """
-    raise NotImplementedError(
-      'get_logger_config_name_for_mode must be implemented by subclass')
 
   ############################
   # Methods for manipulating the desired state via API to indicate

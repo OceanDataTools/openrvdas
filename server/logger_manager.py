@@ -91,7 +91,7 @@ To try out the scripts, open four(!) terminal windows.
 
    # Change cruise modes
 
-   command? get_available_modes
+   command? get_modes
      Modes for NBP1700: off, port, underway
 
    command? set_active_mode port
@@ -105,10 +105,10 @@ To try out the scripts, open four(!) terminal windows.
 
    # Manually change logger configurations
 
-   command? get_available_loggers
+   command? get_loggers
      Loggers: knud, gyr1, mwx1, s330, eng1, rtmp
 
-   command? get_available_logger_configs s330
+   command? get_logger_configs s330
      Configs for s330: s330->off, s330->net, s330->file/net/db
 
    command? set_active_logger_config s330 s330->net
@@ -527,7 +527,7 @@ class LoggerManager:
         configs['modes'] = self.api.get_modes()
         configs['mode'] = self.api.get_active_mode()
         configs['loggers'] = {logger_id:
-                    self.api.get_logger_config_name_for_mode(logger_id)
+                    self.api.get_logger_config_name(logger_id)
                     for logger_id in self.api.get_loggers()}
       except ValueError:
         logging.info('No config found')
@@ -667,7 +667,7 @@ class LoggerManager:
     # configuration is loaded.
     with self.config_lock:
       try:
-        new_configs = self.api.get_logger_configs_for_mode()
+        new_configs = self.api.get_logger_configs()
       except ValueError:
         return
       

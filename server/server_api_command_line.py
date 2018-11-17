@@ -97,13 +97,13 @@ class ServerAPICommandLine:
        'Delete the current configuration from the server\n'),
 
       ('get_active_mode', 'Get currently active mode'),
-      ('get_available_modes', 'Get all availale modes'),
+      ('get_modes', 'Get list of all defined modes'),
       ('set_active_mode <name of mode>', 'Set new current mode\n'),
 
-      ('get_available_loggers', 'Get list of available loggers'),
+      ('get_loggers', 'Get list of all defined loggers'),
       ('get_active_logger_configs', 'Get names of active logger configurations\n'),
 
-      ('get_available_logger_configs <logger>',
+      ('get_logger_configs <logger>',
        'Get names of all configurations for specified logger'),
       ('set_active_logger_config <logger name> <name of logger config>',
        'Set logger to named configuration\n'),
@@ -168,7 +168,7 @@ class ServerAPICommandLine:
       # modes <cruise_id>
       # elif command == 'modes':
       #   raise ValueError('format: modes')
-      elif command.find('get_available_modes') == 0:
+      elif command.find('get_modes') == 0:
         (mode_cmd) = command.split(maxsplit=1)
         modes = self.api.get_modes()
         if len(modes) > 0:
@@ -197,7 +197,7 @@ class ServerAPICommandLine:
       # loggers <cruise_id>
       # elif command == 'loggers':
       #   raise ValueError('format: loggers')
-      elif command.find('get_available_loggers') == 0:
+      elif command.find('get_loggers') == 0:
         (loggers_cmd) = command.split(maxsplit=1)
         loggers = self.api.get_loggers()
         if len(loggers) > 0:
@@ -206,9 +206,9 @@ class ServerAPICommandLine:
           print('Loggers: n/a')
 
       # logger_configs <cruise_id> <logger>
-      elif command == 'get_available_logger_configs':
-        raise ValueError('format: get_available_logger_configs <logger name>')
-      elif command.find('get_available_logger_configs ') == 0:
+      elif command == 'get_logger_configs':
+        raise ValueError('format: get_logger_configs <logger name>')
+      elif command.find('get_logger_configs ') == 0:
         (logger_cmd, logger_name) = command.split(maxsplit=1)
         logger_configs = self.api.get_logger_config_names(logger_name)
         print('Configs for %s: %s' %
@@ -233,7 +233,7 @@ class ServerAPICommandLine:
       #   raise ValueError('format: configs')
       elif command.find('get_active_logger_configs') == 0:
         (config_cmd) = command.split(maxsplit=1)
-        config_names = {logger_id:self.api.get_logger_config_name_for_mode(logger_id)
+        config_names = {logger_id:self.api.get_logger_config_name(logger_id)
                    for logger_id in self.api.get_loggers()}
         if len(config_names) > 0:                 
           for logger_id, config_name in config_names.items():

@@ -145,6 +145,11 @@ class DjangoServerAPI(ServerAPI):
     return None
 
   ############################
+  def get_logger(self, logger):
+    """Retrieve the logger spec for the specified logger id."""
+    return self.get_logger_object(logger_id)
+
+  ############################
   def get_loggers(self):
     """Get a dict of {logger_id:logger_spec,...} defined for the
     current cruise."""
@@ -157,18 +162,13 @@ class DjangoServerAPI(ServerAPI):
     }
 
   ############################
-  def get_logger(self, logger):
-    """Retrieve the logger spec for the specified logger id."""
-    return self.get_logger_object(logger_id)
-
-  ############################
   def get_logger_config(self, config_name):
     """Retrieve the config associated with the specified name."""
     config = self._get_logger_config_object_by_name(config_name)
     return json.loads(config.config_json)
 
   ############################
-  def get_logger_configs_for_mode(self, mode=None):
+  def get_logger_configs(self, mode=None):
     """Retrieve the configs associated with a mode from the
     data store. If mode is omitted, retrieve configs associated with
     the cruise's current logger configs."""
@@ -178,6 +178,17 @@ class DjangoServerAPI(ServerAPI):
       config_obj = self._get_logger_config_object(logger_id, mode)
       configs[logger_id] = json.loads(config_obj.config_json)
     return configs
+
+  ############################
+  def get_logger_config_name(self, logger_id, mode=None):
+    """Retrieve name of the config associated with the specified logger
+    in the specified mode. If mode is omitted, retrieve name of logger's
+    current config."""
+    config = self._get_logger_config_object(logger_id, mode)
+    if not config:
+      logging.debug('No config found for logger %s', logger_id)
+      return None
+    return config.name
 
   #############################
   def get_logger_config_names(self, logger_id):
@@ -190,17 +201,6 @@ class DjangoServerAPI(ServerAPI):
               LoggerConfig.objects.filter(logger__name=logger_id)]
     except LoggerConfig.DoesNotExist:
       raise ValueError('No configs found for logger %d' % logger_id)
-
-  ############################
-  def get_logger_config_name_for_mode(self, logger_id, mode=None):
-    """Retrieve name of the config associated with the specified logger
-    in the specified mode. If mode is omitted, retrieve name of logger's
-    current config."""
-    config = self._get_logger_config_object(logger_id, mode)
-    if not config:
-      logging.debug('No config found for logger %s', logger_id)
-      return None
-    return config.name
 
   ############################
   # Methods for manipulating the desired state via API to indicate

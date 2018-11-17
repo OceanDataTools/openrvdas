@@ -133,8 +133,11 @@ def index(request):
     template_vars['current_mode'] = api.get_active_mode()
 
     # Get config corresponding to current mode for each logger
+
+    # REPLACE WITH?
+    #template_vars['loggers'] = api.get_logger_configs()
     for logger_id in api.get_loggers():
-      logger_config = api.get_logger_config_name_for_mode(logger_id)
+      logger_config = api.get_logger_config_name(logger_id)
       template_vars['loggers'][logger_id] = logger_config
       logging.warning('config for %s is %s', logger_id, logger_config)
   except ValueError:
@@ -185,9 +188,9 @@ def edit_config(request, logger_id):
   # What's our current mode? What's the default config for this logger
   # in this mode?
   config_options = api.get_logger_config_names(logger_id)
-  current_config = api.get_logger_config_name_for_mode(logger_id)
+  current_config = api.get_logger_config_name(logger_id)
   current_mode = api.get_active_mode()
-  default_config = api.get_logger_config_name_for_mode(logger_id, current_mode)
+  default_config = api.get_logger_config_name(logger_id, current_mode)
   return render(request, 'django_gui/edit_config.html',
                 {
                   'logger_id': logger_id,

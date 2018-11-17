@@ -144,7 +144,7 @@ class TestDjangoServerAPI(TestCase):
 
     self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
     self.assertEqual(api.get_active_mode(), 'off')
-    self.assertDictEqual(api.get_logger_configs_for_mode(),
+    self.assertDictEqual(api.get_logger_configs(),
                          {'knud': {'name': 'off'},
                           'gyr1': {'name': 'off'},
                           'mwx1': {'name': 'off'},
@@ -156,7 +156,7 @@ class TestDjangoServerAPI(TestCase):
 
     api.set_active_mode('underway')
     self.assertEqual(api.get_active_mode(), 'underway')
-    self.assertDictEqual(api.get_logger_configs_for_mode(),
+    self.assertDictEqual(api.get_logger_configs(),
                          {'knud': {'knud':'config knud->net/file',
                                    'name': 'knud->net/file'},
                           'gyr1': {'gyr1':'config gyr1->net/file',
@@ -167,11 +167,11 @@ class TestDjangoServerAPI(TestCase):
                                    'name': 's330->net/file'}})
 
     with self.assertRaises(ValueError):
-      api.get_logger_configs_for_mode('invalid_mode')
+      api.get_logger_configs('invalid_mode')
 
     api.load_configuration(sample_test_1)
 
-    self.assertEqual(api.get_logger_configs_for_mode('port'),
+    self.assertEqual(api.get_logger_configs('port'),
                       {'gyr1': {'gyr1':'config gyr1->net',
                                 'name': 'gyr1->net'},
                        'knud': {'name': 'off'},
@@ -192,7 +192,7 @@ class TestDjangoServerAPI(TestCase):
     with self.assertRaises(ValueError):
       api.get_configuration()
     with self.assertRaises(ValueError):
-      api.get_logger_configs_for_mode()
+      api.get_logger_configs()
 
 ################################################################################
 if __name__ == '__main__':

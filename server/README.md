@@ -64,19 +64,19 @@ and assign it a host id by which to identify itself using the
     server/logger_manager.py --websocket localhost:8765 --host_id master.host
 ```
 
-When the LoggerManager identifies a config to be run that includes
-   a host_id restriction, e.g.
+When the LoggerManager identifies a logger to be run that includes
+a host_id restriction, e.g.
 ```
-    "knud->net": {
+    "knud": {
        "host_id": "knud.host",
-       "readers": ...
+       "configs": ...
         ...
     }
 ```
 
 it will attempt to dispatch that config to the LoggerRunner that has
-identified itself with that host id. (Note: configs with no host
-restriction will be run by the LoggerManager itself, and if a config
+identified itself with that host id. (Note: loggers with no host
+restriction will be run by the LoggerManager itself, and if a logger
 has a host restriction and no host by that name has connected, the
 LoggerManager will issue a warning and not run the configuration.)
 
@@ -164,7 +164,7 @@ To try out the scripts, open four(!) terminal windows.
 ```
 #### Change cruise modes
 ```
-   command? get_available_modes
+   command? get_modes
      Modes: off, port, underway
 
    command? set_active_mode port
@@ -179,10 +179,10 @@ To try out the scripts, open four(!) terminal windows.
 
 #### Manually change logger configurations
 ```
-   command? get_available_loggers
+   command? get_loggers
      Loggers: knud, gyr1, mwx1, s330, eng1, rtmp
 
-   command? get_available_logger_configs s330
+   command? get_logger_configs s330
      Configs for s330: s330->off, s330->net, s330->file/net/db
    
    command? set_active_logger_config NBP1700 s330 s330->net
@@ -195,10 +195,10 @@ When setting the mode to port, you should notice data appearing in
 the listener window, and should see diagnostic output in the
 LoggerManager window.
 
-When setting the mode to underway, you should see more data
-appearing in the listener window (due to more logger configs
-running), and should see the LoggerRunner leap into action as the
-LoggerManager dispatches the configs for "knud.host" to it.
+When setting the mode to underway, you should see more data appearing
+in the listener window (due to more loggers running), and should see
+the LoggerRunner leap into action as the LoggerManager dispatches the
+configs for "knud.host" to it.
 
 ## Server API
 

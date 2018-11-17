@@ -309,7 +309,7 @@ class HapiServerAPI(ServerAPI):
     return response.get(name)
 
   ############################
-  def get_logger_configs_for_mode(self, mode=None):
+  def get_logger_configs(self, mode=None):
     """Retrieve the configs associated with a cruise id and mode from the
     data store. If mode is omitted, retrieve configs associated with
     the cruise's current logger configs. If cruise_id is omitted,
@@ -362,7 +362,7 @@ class HapiServerAPI(ServerAPI):
     return logger_configs
 
   ############################
-  def get_logger_config_for_mode(self, logger_id, mode=None):
+  def get_logger_config(self, logger_id, mode=None):
     """Retrieve the config associated with the specified logger in the
     specified mode. If mode is omitted, retrieve logger's current
     config. If no config is defined, return empty config: {}."""
@@ -415,7 +415,7 @@ class HapiServerAPI(ServerAPI):
 
 
   ############################
-  def get_logger_config_name_for_mode(self, logger_id, mode=None):
+  def get_logger_config_name(self, logger_id, mode=None):
     """Retrieve name of the config associated with the specified logger
     in the specified mode. If mode is omitted, retrieve name of logger's
     current config."""
