@@ -1,0 +1,10 @@
+{
+    # data_id
+    "alrt": {
+        "name": "alrt",
+        "model": "Alert",    # references a definition in sensor_model/
+        "fields": {
+            "Message": "AlertMessage"
+         }
+    }
+}

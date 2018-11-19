@@ -11,7 +11,7 @@ from logger.readers.logfile_reader import LogfileReader
 from logger.transforms.slice_transform import SliceTransform
 from logger.writers.text_file_writer import TextFileWriter
 
-from logger.utils.read_json import read_json
+from logger.utils.read_config import read_config
 
 ################################################################################
 class SimSerial:
@@ -155,7 +155,7 @@ if __name__ == '__main__':
   # Okay - get to work here
 
   if args.config:
-    configs = read_json(args.config)
+    configs = read_config(args.config)
     logging.info('Read configs: %s', configs)
     thread_list = []
     for inst in configs:

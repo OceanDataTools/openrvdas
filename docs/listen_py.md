@@ -266,12 +266,12 @@ The first of these scripts timestamps records as they come in and saves them in 
 
 For logger workflows of non-trivial complexity, we recommend that users forgo specifying Readers, Transforms and Writers on the command line in favor of using configuration files.
 
-A configuration file is a JSON-like specification[^4] of components along with their parameters. It may be invoked using the `--config_file` argument:
+A configuration file is a YAML or JSON specification[^4] of components along with their parameters. It may be invoked using the `--config_file` argument:
 
 ```
-logger/listener/listen.py --config_file gyr_logger.json
+logger/listener/listen.py --config_file gyr_logger.yaml
 ```
-where gyr_logger.json consists of the JSON definition
+where gyr_logger.yaml consists of the JSON definition
 
 ```
 { 
@@ -310,7 +310,7 @@ where gyr_logger.json consists of the JSON definition
    ] 
 }
 ```
-The basic format of a logger configuration file is a JSON definition:
+The basic format of a logger configuration file is a YAML or JSON definition:
 
 ```
 { 
@@ -335,9 +335,9 @@ One major advantage of using configuration files is the ability to use ComposedR
 
 Please see [OpenRVDAS Configuration Files](configuration_files.md) for
 a more complete description of the configuration file model, and
-[simple_logger.py](../test/configs/simple_logger.json),
-[composed_logger.py](../test/configs/composed_logger.json) and
-[parallel_logger.py](../test/configs/parallel_logger.json) in the
+[simple_logger.py](../test/configs/simple_logger.yaml),
+[composed_logger.py](../test/configs/composed_logger.yaml) and
+[parallel_logger.py](../test/configs/parallel_logger.yaml) in the
 project's [test/configs](../test/configs) directory for examples.
 
-[^4]: Throughout the system, we use a slightly expanded form of JSON     that allows Javascript-style "//-prefixed" comments for     readability. The code for stripping comments and reading in this     format is in utils/read_json.py 
+[^1]: YAML is a strict superset of JSON, modulo the restriction that it may not use tabs as whitespace. 

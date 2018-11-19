@@ -28,7 +28,6 @@ from .settings import *
 
 # from logger.utils.timestamp import datetime_obj, datetime_obj_from_timestamp
 # from logger.utils.timestamp import DATE_FORMAT
-# from logger.utils.read_json import parse_json
 from server.server_api import ServerAPI
 
 DEFAULT_MAX_TRIES = 3

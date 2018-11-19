@@ -102,12 +102,12 @@ implements the following data flow:
 
 For logger workflows of non-trivial complexity, we recommend that users forgo specifying Readers, Transforms and Writers on the command line in favor of using configuration files.
 
-A configuration file is a JSON-like specification[^4] of components along with their parameters. It may be invoked using the `--config_file` argument:
+A configuration file is a YAML or JSON (a subset of YAML) specification of components along with their parameters. It may be invoked using the `--config_file` argument:
 
 ```
-logger/listener/listen.py --config_file gyr_logger.json
+logger/listener/listen.py --config_file gyr_logger.yaml
 ```
-where gyr_logger.json consists of the JSON definition
+where gyr_logger.yaml consists of the YAML/JSON definition
 
 ```
 { 
@@ -150,11 +150,11 @@ Use of listen.py script with and without configuration files is described in [Th
 
 ## Running multiple loggers with logger\_runner.py
 
-The listen.py script is handy for running a single logger from the command line. For more sophisticated logger management, the logger\_runner.py script is provided. The latter takes as its input a JSON file defining a dict of configurations that are to be run, where the keys are (convenient) configuration names, and the values are the different configurations themselves.
+The listen.py script is handy for running a single logger from the command line. For more sophisticated logger management, the logger\_runner.py script is provided. The latter takes as its input a YAML or JSON file defining a dict of configurations that are to be run, where the keys are (convenient) configuration names, and the values are the different configurations themselves.
 
-```server/logger_runner.py --config test/config/sample_configs.json -v```
+```server/logger_runner.py --config test/config/sample_configs.yaml -v```
 
-The sample_configs.json file should be a JSON-formatted dictionary:
+The sample_configs.yaml file should be a YAML or JSON-formatted dictionary:
 
 ```
 {
@@ -166,10 +166,10 @@ The sample_configs.json file should be a JSON-formatted dictionary:
 ```
 where each config is in the format described above under [Running with configuration files](#running-more-complicated-loggers-with-configuration-files).
 
-Note that the provided test/config/sample_configs.json specifies configurations that read simulated data from virtual serial ports. To create those ports and begin feeding them with data, you'll need to run
+Note that the provided test/config/sample_configs.yaml specifies configurations that read simulated data from virtual serial ports. To create those ports and begin feeding them with data, you'll need to run
 
 ```
-logger/utils/simulate_serial.py --config test/serial_sim.json --loop
+logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
 ```
 in a separate terminal. To observe the data being logged by the above sample configs, you can start a Listener in yet another terminal:
 
@@ -235,7 +235,7 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
     "underway": {...} 
   }
   ```
--   **Cruise** - in addition to containing cruise metadata (cruise id, provisional start and ending dates) a cruise definition contains a collection of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes in which those configurations are to be run. A cruise definition file (such as in [test/configs/sample\_cruise.json](../test/configs/sample\_cruise.json)) defines the loggers for a cruise and the configurations they may take, as well as the modes into which they are grouped.  
+-   **Cruise** - in addition to containing cruise metadata (cruise id, provisional start and ending dates) a cruise definition contains a collection of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes in which those configurations are to be run. A cruise definition file (such as in [test/configs/sample\_cruise.yaml](../test/configs/sample\_cruise.yaml)) defines the loggers for a cruise and the configurations they may take, as well as the modes into which they are grouped.  
   
     *NOTE: If a vessel is using an ROV, it is entirely reasonable for the ROV to have be its own cruise id and definition files. As a result, multiple cruises may be loaded at the same time and can be managed independently by the same logger\_manager: the vessel's cruise (e.g. id NBP1700) and the ROV's (e.g. id NBP1700-GL005).*
 
@@ -250,7 +250,7 @@ It is worth noting that in OpenRVDAS, a "logger" does not exist as a separate en
   ]
 }
 ```
-Perusing a complete cruise definition file, such as [test/configs/sample_cruise.json](../test/configs/sample_cruise.json) may be useful for newcomers to the system.
+Perusing a complete cruise definition file, such as [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml) may be useful for newcomers to the system.
 
 ### Running logger\_manager.py from the command line
 
@@ -264,7 +264,7 @@ and will prompt for command line input. You can type "help" for a full list of c
 **Load a cruise definition**
 
 ```
-command? load_cruise test/configs/sample_cruise.json
+command? load_cruise test/configs/sample_cruise.yaml
 command? cruises
 Loaded cruises: NBP1700
 ```
@@ -288,7 +288,7 @@ command? set_logger_config_name NBP1700 s330 s330->net
 command? set_mode NBP1700 off
 command? quit
 ```
-As with sample script for logger\_runner.py, sample\_cruise.json attempts to read from virtual serial ports, so you'll need to run logger/utils/simulate_serial.py for it to run without complaining.
+As with sample script for logger\_runner.py, sample\_cruise.yaml attempts to read from virtual serial ports, so you'll need to run logger/utils/simulate_serial.py for it to run without complaining.
 
 Please see the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_runner.py.
 
@@ -344,7 +344,7 @@ python3 -m unittest discover logging.readers
 ```
 To run all tests, just omit the module path.
 
-Note that some tests are timing dependent and may fail if all tests are run at once (via `python3 -m unittest discover` from the home directory) on slower systems.[^5] If you encounter test failures, try re-running just the tests the directory that failed.
+Note that some tests are timing dependent and may fail if all tests are run at once (via `python3 -m unittest discover` from the home directory) on slower systems.[^4] If you encounter test failures, try re-running just the tests the directory that failed.
 
 ### Using Stored/Simulated Data
 
@@ -371,10 +371,10 @@ Note that if you wish to actually create virtual serial ports in /dev (perhaps c
 
 Because of this, we recommend that you specify a different location for your simulated ports, such as /tmp/ttyr15, etc.
 
-To simplify the creation/testing, simulate_serial.py can also take a JSON-format[^6] configuration file such as the one in [test/serial\_sim.json](../test/serial_sim.json), specifying a complete set of virtual serial port-log file pairings:
+To simplify the creation/testing, simulate_serial.py can also take a YAML or JSON-format[^6] configuration file such as the one in [test/serial\_sim.yaml](../test/serial_sim.yaml), specifying a complete set of virtual serial port-log file pairings:
 
 ```
-logger/utils/simulate_serial.py --config test/serial_sim.json --loop
+logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
 ```
 Simulating a system that takes its input from serial ports is more involved. Please see [Simulating Serial Input](simulating_serial_input.md) for information on how to set up and feed virtual serial ports.
 
@@ -416,8 +416,5 @@ Some other relevant documents are:
 
 [^3]: */CRUISE/instrument/raw/MAKE_MODEL-DATE*
 
-[^4]: The configuration parsing code extends the JSON specification     slightly to allow the inclusion of Javascript-style "//"-prefixed     comments for enhanced readability.
+[^4]: Yes, this is a bug, but at present a relatively low priority one.
 
-[^5]: Yes, this is a bug, but at present a relatively low priority one.
-
-[^6]: Throughout the system, we use a slightly expanded form of JSON     that allows Javascript-style "//-prefixed" comments for     readability. The code for stripping comments and reading in this     format is in utils/read_json.py 

@@ -32,8 +32,6 @@ import websockets
 
 sys.path.append('.')
 
-from logger.utils.read_json import read_json, parse_json
-
 from logger.readers.database_reader import DatabaseReader
 from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
 from database.settings import DEFAULT_DATABASE_USER

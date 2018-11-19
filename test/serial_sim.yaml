@@ -1,0 +1,59 @@
+{
+    "PCOD": {"port": "/tmp/tty_PCOD",
+             "logfile": "test/nmea/NBP1700/PCOD/raw/NBP1700_PCOD" 
+            },
+    "cwnc": {"port": "/tmp/tty_cwnc",
+             "logfile": "test/nmea/NBP1700/cwnc/raw/NBP1700_cwnc" 
+            },
+    "gp02": {"port": "/tmp/tty_gp02",
+             "logfile": "test/nmea/NBP1700/gp02/raw/NBP1700_gp02" 
+            },
+    "gyr1": {"port": "/tmp/tty_gyr1",
+             "logfile": "test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1" 
+            },
+    "knud": {"port": "/tmp/tty_knud",
+             "logfile": "test/nmea/NBP1700/knud/raw/NBP1700_knud" 
+            },
+    "mwx1": {"port": "/tmp/tty_mwx1",
+             "logfile": "test/nmea/NBP1700/mwx1/raw/NBP1700_mwx1" 
+            },
+    "pguv": {"port": "/tmp/tty_pguv",
+             "logfile": "test/nmea/NBP1700/pguv/raw/NBP1700_pguv" 
+            },
+    "s330": {"port": "/tmp/tty_s330",
+             "logfile": "test/nmea/NBP1700/s330/raw/NBP1700_s330" 
+            },
+    "svp1": {"port": "/tmp/tty_svp1",
+             "logfile": "test/nmea/NBP1700/svp1/raw/NBP1700_svp1" 
+            },
+    "tsg2": {"port": "/tmp/tty_tsg2",
+             "logfile": "test/nmea/NBP1700/tsg2/raw/NBP1700_tsg2" 
+            },
+    "adcp": {"port": "/tmp/tty_adcp",
+             "logfile": "test/nmea/NBP1700/adcp/raw/NBP1700_adcp" 
+            },
+    "eng1": {"port": "/tmp/tty_eng1",
+             "logfile": "test/nmea/NBP1700/eng1/raw/NBP1700_eng1" 
+            },
+    "grv1": {"port": "/tmp/tty_grv1",
+             "logfile": "test/nmea/NBP1700/grv1/raw/NBP1700_grv1" 
+            },
+    "hdas": {"port": "/tmp/tty_hdas",
+             "logfile": "test/nmea/NBP1700/hdas/raw/NBP1700_hdas" 
+            },
+    "mbdp": {"port": "/tmp/tty_mbdp",
+             "logfile": "test/nmea/NBP1700/mbdp/raw/NBP1700_mbdp" 
+            },
+    "pco2": {"port": "/tmp/tty_pco2",
+             "logfile": "test/nmea/NBP1700/pco2/raw/NBP1700_pco2" 
+            },
+    "rtmp": {"port": "/tmp/tty_rtmp",
+             "logfile": "test/nmea/NBP1700/rtmp/raw/NBP1700_rtmp" 
+            },
+    "seap": {"port": "/tmp/tty_seap",
+             "logfile": "test/nmea/NBP1700/seap/raw/NBP1700_seap" 
+            },
+    "tsg1": {"port": "/tmp/tty_tsg1",
+             "logfile": "test/nmea/NBP1700/tsg1/raw/NBP1700_tsg1" 
+            }
+}

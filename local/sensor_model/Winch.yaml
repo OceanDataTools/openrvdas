@@ -1,0 +1,13 @@
+{
+    "Winch": {
+        "fields": [
+            ["LanID", "str"],
+            ["Time", "str"],
+            ["Name", "str"],
+            ["Tension", "float"],
+            ["Speed", "float"],
+            ["Payout", "float"],
+            ["NumericChecksum", "float"]
+        ]
+    }
+}

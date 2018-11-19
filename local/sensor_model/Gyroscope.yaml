@@ -1,0 +1,10 @@
+# A particular model of sensor, in this case, a generic Gyroscope that emits
+# $HEHDT and $HEROT messages.
+{
+    "Gyroscope": {
+        "messages": {
+            "$HEHDT": "$HEHDT",
+            "$HEROT": "$HEROT"
+        }
+    }
+}

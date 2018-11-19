@@ -20,7 +20,7 @@ strips the old timestamps off, prepends a new one, then the prefix
 's330', then writes the result to stdout.)
 
   logger/listener/listen.py \
-    --config_file test/configs/simple_logger.json
+    --config_file test/configs/simple_logger.yaml
 
 (Instantiates logger from config file that says to read from the
 project's LICENSE file, prepend a timestamp and the string "license:"
@@ -71,7 +71,7 @@ from logger.writers.logfile_writer import LogfileWriter
 from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
 
-from logger.utils import read_json, timestamp, nmea_parser
+from logger.utils import read_config, timestamp, nmea_parser
 from logger.listener.listener import Listener
 
 ################################################################################
@@ -143,7 +143,7 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
   ############################
   def __init__(self, config_file):
     """Create a Listener from a Python config file."""
-    config = read_json.read_json(config_file)
+    config = read_config.read_config(config_file)
     super().__init__(config)
 
 ################################################################################
@@ -161,8 +161,8 @@ if __name__ == '__main__':
   ############################
   # Set up from config file
   parser.add_argument('--config_file', dest='config_file', default=None,
-                      help='Read Listener configuration from JSON file. If '
-                      'specified, no other command line arguments (except '
+                      help='Read Listener configuration from YAML/JSON file. '
+                      'If specified, no other command line arguments (except '
                       '-v) are allowed.')
 
   ############################
@@ -249,19 +249,19 @@ if __name__ == '__main__':
                       default=nmea_parser.DEFAULT_MESSAGE_PATH,
                       help='Comma-separated globs of NMEA message definition '
                       'file names, e.g. '
-                      'local/message/*.json,test/skq/messages.json')
+                      'local/message/*.yaml,test/skq/messages.yaml')
   parser.add_argument('--parse_nmea_sensor_path',
                       dest='parse_nmea_sensor_path',
                       default=nmea_parser.DEFAULT_SENSOR_PATH,
                       help='Comma-separated globs of NMEA sensor definition '
                       'file names, e.g. '
-                      'local/sensor/*.json,test/skq/sensors.json')
+                      'local/sensor/*.yaml,test/skq/sensors.yaml')
   parser.add_argument('--parse_nmea_sensor_model_path',
                       dest='parse_nmea_sensor_model_path',
                       default=nmea_parser.DEFAULT_SENSOR_MODEL_PATH,
                       help='Comma-separated globs of NMEA sensor model '
                       'definition file names, e.g. '
-                      'local/sensor_model/*.json,test/skq/sensor_models.json')
+                      'local/sensor_model/*.yaml,test/skq/sensor_models.yaml')
 
   parser.add_argument('--time_format', dest='time_format',
                       default=timestamp.TIME_FORMAT,

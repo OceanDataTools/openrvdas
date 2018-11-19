@@ -42,14 +42,11 @@ Because of this, it is recommended that you specify a different location
 for your simulated ports, such as /tmp/ttyr15, etc.
 
 To simplify the creation/testing, simulate\_serial.py can also take a
-JSON-format[^1] configuration file such as the one in
-test/serial\_sim.json, specifying a complete set of virtual serial
+YAML or JSON-format[^1] configuration file such as the one in
+test/serial\_sim.yaml, specifying a complete set of virtual serial
 port-log file pairings:
 
 ```
-logger/utils/simulate_serial.py --config test/serial_sim.json --loop
+logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
 ```
-[^1]: Throughout the system, we use a slightly expanded form of JSON
-    that allows Javascript-style "//-prefixed" comments for
-    readability. The code for stripping comments and reading in this
-    format is in utils/read\_json.py
+[^1]: YAML is a superset of JSON, allowing Python-style comments preceded by '#'

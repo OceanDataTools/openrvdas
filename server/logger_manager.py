@@ -12,7 +12,7 @@ of an InMemoryServerAPI):
 If an initial configuration is specified on the command line, as
 below:
 
-  server/logger_manager.py --config test/configs/sample_cruise.json
+  server/logger_manager.py --config test/configs/sample_cruise.yaml
 
 the configuration will be loaded and set to its default mode. If a
 --mode argument is included, it will be used in place of the default
@@ -62,7 +62,7 @@ To try out the scripts, open four(!) terminal windows.
          --host_id knud.host -v
 
    Note that this LoggerRunner is identifies its host as "knud.host";
-   if you look at test/configs/sample_cruise.json, you'll notice that
+   if you look at test/configs/sample_cruise.yaml, you'll notice that
    the configs for the "knud" logger have a host restriction of
    "knud.host", meaning that our LoggerManager should try to dispatch
    those configs to this LoggerRunner.
@@ -72,7 +72,7 @@ To try out the scripts, open four(!) terminal windows.
    simulated ports and start feeding data to them, use a third
    terminal window to run:
 
-   logger/utils/simulate_serial.py --config test/serial_sim.json -v
+   logger/utils/simulate_serial.py --config test/serial_sim.yaml -v
 
 4. Finally, we'd like to be able to easily glimpse the data that the
    loggers are producing. The sample configuration tells the loggers
@@ -88,7 +88,7 @@ To try out the scripts, open four(!) terminal windows.
 
    # Load a cruise configuration
 
-   command? load_configuration test/configs/sample_cruise.json
+   command? load_configuration test/configs/sample_cruise.yaml
 
    # Change cruise modes
 
@@ -144,7 +144,7 @@ import websockets
 
 sys.path.append('.')
 
-from logger.utils.read_json import read_json, parse_json
+from logger.utils.read_config import read_config
 
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner, run_logging
@@ -808,7 +808,7 @@ if __name__ == '__main__':
   ############################
   # If they've given us an initial configuration, get and load it.
   if args.config:
-    config = read_json(args.config)    
+    config = read_config(args.config)    
     api.load_configuration(config)
     api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
                     log_level=api.INFO,

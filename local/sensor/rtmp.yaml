@@ -1,0 +1,10 @@
+{
+    # data_id
+    "rtmp": {
+        "name": "rtmp",
+        "model": "RTMP",
+        "fields": {
+            "Temp": "RTMPTemp"
+        }
+    }
+}

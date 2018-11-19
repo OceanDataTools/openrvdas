@@ -27,7 +27,6 @@ from .models import LogMessage, ServerState
 
 from logger.utils.timestamp import datetime_obj, datetime_obj_from_timestamp
 from logger.utils.timestamp import DATE_FORMAT
-from logger.utils.read_json import parse_json
 from server.server_api import ServerAPI
 
 DEFAULT_MAX_TRIES = 3
@@ -295,12 +294,16 @@ class DjangoServerAPI(ServerAPI):
           logger__name=logger_id).latest('timestamp')
       except LoggerConfigState.DoesNotExist:
         # If no existing LoggerConfigState for logger, create one
-        logger = Logger.objects.get(name=logger_id)
-        config = LoggerConfig.objects.get(name=logger_config, logger=logger)
-        stored_state = LoggerConfigState(logger=logger, config=config,
-                                         running=False, failed=False,
-                                         pid=0, errors='')
-        stored_state.save()
+        try:
+          logger = Logger.objects.get(name=logger_id)
+          config = LoggerConfig.objects.get(name=logger_config, logger=logger)
+          stored_state = LoggerConfigState(logger=logger, config=config,
+                                           running=False, failed=False,
+                                           pid=0, errors='')
+          stored_state.save()
+        except Logger.DoesNotExist:
+          logging.warning('Logger "%s" not found in update_status', logger_id)
+          continue
 
       # Compare stored LoggerConfigState with the new status. If there
       # have been changes, reset pk, which will create a new object

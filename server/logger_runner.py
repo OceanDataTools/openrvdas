@@ -10,7 +10,7 @@ command lines below)
 1. As a simple standalone logger runner: you give it an intial dict of
    logger configurations, and it tries to keep them running.
 
-     server/logger_runner.py --config test/configs/sample_configs.json
+     server/logger_runner.py --config test/configs/sample_configs.yaml
 
    Note: the LoggerRunner doesn't know anything about modes, and doesn't
    take a full cruise definition - it just takes a dict of logger
@@ -18,7 +18,7 @@ command lines below)
 
 2. As instantiated by a LoggerManager:
 
-     server/logger_manager.py --config test/configs/sample_cruise.json -v
+     server/logger_manager.py --config test/configs/sample_cruise.yaml -v
 
    When invoked as above, the LoggerManager will instantiate a LoggerRunner
    interpret commands from the command line and dispatch the requested
@@ -62,11 +62,11 @@ command lines below)
 
 Simulated Serial Ports:
 
-The sample_cruise.json and sample_configs.json files above specify
+The sample_cruise.yaml and sample_configs.yaml files above specify
 configs that read from simulated serial ports and write to UDP port
 6224. To get the configs to actually run, you'll need to run
 
-  logger/utils/serial_sim.py --config test/serial_sim.py
+  logger/utils/serial_sim.py --config test/serial_sim.yaml
 
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
@@ -94,7 +94,7 @@ except ImportError:
 
 sys.path.append('.')
 
-from logger.utils.read_json import read_json
+from logger.utils.read_config import read_config
 from logger.listener.listen import ListenerFromLoggerConfig
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
@@ -593,7 +593,7 @@ if __name__ == '__main__':
                   'tasks assigned to it - exiting.')
     exit(1)
 
-  initial_configs = read_json(args.config) if args.config else None
+  initial_configs = read_config(args.config) if args.config else None
 
   runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
                       initial_configs=initial_configs,

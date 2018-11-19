@@ -25,7 +25,7 @@ import sys
 
 sys.path.append('.')
 
-from logger.utils.read_json import read_json
+from logger.utils.read_config import read_config
 from server.server_api import ServerAPI
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
@@ -144,14 +144,14 @@ class ServerAPICommandLine:
         (load_cmd, filename) = command.split(maxsplit=1)
         logging.info('Loading config from %s', filename)
         try:
-          config = read_json(filename)
+          config = read_config(filename)
           self.api.load_configuration(config)
         except FileNotFoundError as e:
           logging.error('Unable to find file "%s"', filename)
 
       # set_cruise <JSON encoding of a cruise>
       elif command == 'set_configuration':
-        raise ValueError('format: set_configuration <JSON encoding of a config')
+        raise ValueError('format: set_configuration <JSON encoding of config>')
       elif command.find('set_configuration ') == 0:
         (cruise_cmd, config_json) = command.split(maxsplit=1)
         logging.info('Setting config to %s', config_json)

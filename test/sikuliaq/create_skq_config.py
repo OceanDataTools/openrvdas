@@ -8,12 +8,12 @@ To run, first use this script to generate the config file:
 
    test/sikuliaq/create_skq_config.py \
      < test/sikuliaq/skq_ports.txt \
-     > test/sikuliaq/skq_cruise.json
+     > test/sikuliaq/skq_cruise.yaml
 
 Then either hand the config file to the command line logger_manager script:
 
    server/logger_manager.py \
-       --config test/sikuliaq/skq_cruise.json \
+       --config test/sikuliaq/skq_cruise.yaml \
        --mode file/db -v
 
    (The above command starts loggers running in the config's "file/db"
@@ -34,8 +34,6 @@ import sys
 from collections import OrderedDict
 
 sys.path.append('.')
-
-from logger.utils.read_json import parse_json
 
 # Following line is for testing only (see README.md). Set
 # ALL_USE_SAME_PORT to False to generate a configuration where each
@@ -65,9 +63,9 @@ file_db_config = """{
                   "class": "ParseNMEATransform",
                   "kwargs": {
                     "sensor_path":
-                      "local/sensor/*.json,test/sikuliaq/sensors.json",
+                      "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
                     "sensor_model_path":
-                      "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
+                      "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
                     "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                   }
                 },
@@ -138,9 +136,9 @@ db_config = """{
                 "class": "ParseNMEATransform",
                 "kwargs": {
                   "sensor_path":
-                    "local/sensor/*.json,test/sikuliaq/sensors.json",
+                    "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
                   "sensor_model_path":
-                    "local/sensor_model/*.json,test/sikuliaq/sensor_models.json",
+                    "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
                   "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                   }
               },

@@ -117,9 +117,9 @@ Unsurprisingly, there is also a ComposedReader that takes a list of one or more 
 
 ## Using Configuration Files
 
-It is not necessary to write Python code to assemble your desired set of components. There are subclasses of Listener (ListenerFromLoggerConfig() and ListenerFromLoggerConfigFile()) that take read JSON-like configuration files and assemble the specified components for execution.
+It is not necessary to write Python code to assemble your desired set of components. There are subclasses of Listener (ListenerFromLoggerConfig() and ListenerFromLoggerConfigFile()) that take read YAML/JSON configuration files and assemble the specified components for execution.
 
-Let us say we have the following specification in file `gyr1_config.json`:
+Let us say we have the following specification in file `gyr1_config.yaml`:
 
 ```
 {
@@ -166,13 +166,13 @@ Let us say we have the following specification in file `gyr1_config.json`:
 We could then call the code
 
 ```
-listener = ListenerFromLoggerConfigFile('gyr1_config.json')
+listener = ListenerFromLoggerConfigFile('gyr1_config.yaml')
 listener.run()
 ```
 or execute
 
 ```
-logger/listener/listen.py --config_file gyr1_config.json
+logger/listener/listen.py --config_file gyr1_config.yaml
 ```
 from the command line to read the file and assemble the components as specified. Please see [OpenRVDAS Configuration Files](configuration_files.md) for more information on the syntax and use of configuration files.
 

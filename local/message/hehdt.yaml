@@ -1,0 +1,9 @@
+{
+    # Heading
+    "$HEHDT": {
+        "fields": [
+            ["HeadingTrue", "float"],
+            ["TrueConst", "str"]
+        ]
+    }
+}

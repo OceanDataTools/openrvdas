@@ -14,7 +14,7 @@ The static widget directory in
 [widgets/static/widgets](static/widgets) contains static demonstration
 widgets that are designed to read and display data produced when the
 logger manager is running the [NBP1406 test cruise
-definition](../test/nmea/NBP1406/NBP1406_cruise.json). They are provided as examples of how you or whatever webserving system you embrace, should invoke the JS widget_server.
+definition](../test/nmea/NBP1406/NBP1406_cruise.yaml). They are provided as examples of how you or whatever webserving system you embrace, should invoke the JS widget_server.
 
 The static widgets rely on the file
 [widgets/static/js/widgets/settings.js](static/js/widgets/settings.js)

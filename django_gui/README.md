@@ -79,7 +79,7 @@ as described in [the server README.md](../server/README.md), and you can type
 serving data stored in the test/ directory. To set up the simulated
 ports, run
 ```
-  python3 logger/utils/simulate_serial.py --config test/serial_sim.json 
+  python3 logger/utils/simulate_serial.py --config test/serial_sim.yaml 
 ```
 
 At this point in the browser window, you should see an indication that
@@ -87,12 +87,7 @@ no configuration is loaded, along with a prompt to log in. Log in
 using the rvdas account you created.
 
 Select "Load configuration file" to select and load the file
-```test/configs/sample_cruise.json```. This file is a complete cruise
-specification configuration created by the logger/utils/build_config.py
-script as follows:
-```
-  python3 logger/utils/build_config.py --config test/configs/sample_cruise.json > cruise.json
-```
+```test/configs/sample_cruise.yaml```.
 
 The GUI window should now update to show a set of loggers,
 configurations and mode selector in mode "off". Select the mode

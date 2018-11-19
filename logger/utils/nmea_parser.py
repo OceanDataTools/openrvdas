@@ -9,13 +9,13 @@ import re
 import sys
 
 sys.path.append('.')
-from logger.utils import read_json
+from logger.utils import read_config
 from logger.utils.das_record import DASRecord
 from logger.utils.timestamp import timestamp, TIME_FORMAT
 
-DEFAULT_MESSAGE_PATH = 'local/message/*.json'
-DEFAULT_SENSOR_PATH = 'local/sensor/*.json'
-DEFAULT_SENSOR_MODEL_PATH = 'local/sensor_model/*.json'
+DEFAULT_MESSAGE_PATH = 'local/message/*.yaml'
+DEFAULT_SENSOR_PATH = 'local/sensor/*.yaml'
+DEFAULT_SENSOR_MODEL_PATH = 'local/sensor_model/*.yaml'
 
 RAW_FIELDS_RE   = '(?P<raw_fields>[^*]+)'
 CHECKSUM_RE  = '(?:\*(?P<checksum>[0-9A-F]{2}))?'
@@ -215,7 +215,7 @@ class NMEAParser:
     for filespec in filespec_paths.split(','):
       logging.debug('reading definitions from %s', filespec)
       for filename in glob.glob(filespec):
-        new_defs = read_json.read_json(filename)
+        new_defs = read_config.read_config(filename)
         for key in new_defs:
           if key in definitions:
             logging.warning('Duplicate definition for key "%s" found in %s',

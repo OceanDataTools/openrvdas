@@ -48,10 +48,10 @@ After stripping those off, we are left with the NMEA message itself. To parse th
 
 ## Sensor definitions
 
-Sensor definitions, like the other definitions we'll cover below, are basically JSON-encoded Python dictionaries. The sensor definition for 'knud' is as follows (found in [local/sensor/knud.json](../local/sensor/knud.json)):
+Sensor definitions, like the other definitions we'll cover below, are basically YAML or JSON-encoded Python dictionaries. The sensor definition for 'knud' is as follows (found in [local/sensor/knud.yaml](../local/sensor/knud.yaml)):
 
 ```
-    // data_id
+    # data_id
     "knud": {
         "name": "knud",
         "model": "Knudsen",
@@ -75,7 +75,7 @@ We'll get back to the  fields definitions soon, but for now, we consider the mod
 
 ## Sensor model definitions
 
-The information we need to know about a Knudsen is encoded in the file [local/sensor\_model/Knudsen.json](../local/sensor_model/Knudsen.json):
+The information we need to know about a Knudsen is encoded in the file [local/sensor\_model/Knudsen.yaml](../local/sensor_model/Knudsen.yaml):
 
 ```
   {
@@ -97,7 +97,7 @@ The information we need to know about a Knudsen is encoded in the file [local/se
 ```
 Note that the choice of file name is for convenience - the dictionary key (as above) is what determines the information associated with a sensor model.
 
-A sensor model definition tells us, among other things, what kinds of messages that sensor can emit. Many sensors, such as our Knudsen, emit only one kind of message. In those cases, the message fields are included directly in the sensor definition, as above, as an ordered list of JSON-encoded [FieldName, format] pairs.
+A sensor model definition tells us, among other things, what kinds of messages that sensor can emit. Many sensors, such as our Knudsen, emit only one kind of message. In those cases, the message fields are included directly in the sensor definition, as above, as an ordered list of YAML or JSON-encoded [FieldName, format] pairs.
 
 Standard NMEA formatting specifies that fields are separated by a comma, but some instruments use non-standard separators. The Gravimeter below illustrates use of the field\_delimiter definition, which specifies a regex (in this case one that separates on both spaces and colons) to accommodate non-standard sensors.
 
@@ -114,7 +114,7 @@ Standard NMEA formatting specifies that fields are separated by a comma, but som
     }
 }
 ```
-Once it has a sensor model's fields and optional delimiter, the parser splits the message into its component values and assigns the values to the defined field names. It then returns to the sensor definition, and maps the field values to the name that they should bear when coming from the specific sensor (from [local/sensor/knud.json](../local/sensor/knud.json)):
+Once it has a sensor model's fields and optional delimiter, the parser splits the message into its component values and assigns the values to the defined field names. It then returns to the sensor definition, and maps the field values to the name that they should bear when coming from the specific sensor (from [local/sensor/knud.yaml](../local/sensor/knud.yaml)):
 
 ```
               "LFInUse": "KnudLFInUse",
@@ -167,7 +167,7 @@ To handle multiple message types, we encapsulate them in a "messages" definition
 
 ## Message definitions
 
-We can allow ourselves one more level of abstraction: the $GPVTG message is output by many different GPS models. Instead of explicitly including it in every individual definition, we can place it in a separate "message" file (e.g. [local/message/gpvtg.json](../local/message/gpvtg.json)):
+We can allow ourselves one more level of abstraction: the $GPVTG message is output by many different GPS models. Instead of explicitly including it in every individual definition, we can place it in a separate "message" file (e.g. [local/message/gpvtg.yaml](../local/message/gpvtg.yaml)):
 
 ```
 {
@@ -212,9 +212,9 @@ p = NMEAParser(message_path=DEFAULT_MESSAGE_PATH,
 where message\_path, sensor\_path and sensor\_model_path are wildcarded paths to the relevant files. The default values for each, encoded in [logger/utils/nmea\_parser.py](../logger/utils/nmea_parser.py) are
 
 ```
-DEFAULT_MESSAGE_PATH = 'local/message/*.json'
-DEFAULT_SENSOR_PATH = 'local/sensor/*.json'
-DEFAULT_SENSOR_MODEL_PATH = 'local/sensor_model/*.json'
+DEFAULT_MESSAGE_PATH = 'local/message/*.yaml'
+DEFAULT_SENSOR_PATH = 'local/sensor/*.yaml'
+DEFAULT_SENSOR_MODEL_PATH = 'local/sensor_model/*.yaml'
 ```
 
 When using the `listen.py` script, alternate/additional definitions
@@ -224,7 +224,7 @@ the appropriate command line options:
 ```
   logger/listener/listen.py \
       --network :6224 \
-      --parse_nmea_message_path local/message/\*.json,test/sikuliaq/messages.json \
+      --parse_nmea_message_path local/message/\*.yaml,test/sikuliaq/messages.yaml \
       --transform_parse_nmea \
       --write_file -
 ```

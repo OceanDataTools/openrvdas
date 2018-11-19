@@ -1,8 +1,8 @@
-A sensor.json definition contains:
+A sensor.yaml definition contains:
 
 name - name of sensor; typically also name of the corresponding logger
 
-model - string matching the model name, defined in sensor_models/*.json
+model - string matching the model name, defined in sensor_models/*.yaml
 
 fields - Mapping from all the variables that this sensor can produce
          (from all message types) to the name that variable should

@@ -6,19 +6,19 @@
 
 * [Overview](#overview)
 * [Logger Configurations](#logger-configurations)
-* [Cruise definitions](#cruise-definitions)
-  * [Cruise Modes](#cruise-modes)
-* [Templates and Variables](#templates-and-variables)
+* [Cruise configurations](#cruise-configurations)
+  * [Modes](#modes)
+* [Templates and Variables - DEPRECATED](#templates-and-variables)
   * [Templates](#templates)
   * [Variables](#variables)
-* [Expanding Configuration Files](#expanding-configuration-files)
+* [Expanding Configuration Files - DEPRECATED](#expanding-configuration-files)
 
 ## Overview
 
 Please see the [OpenRVDAS Introduction to Lggers](intro_to_loggers.md)
 for a general introduction to loggers.
 
-The workhorse utility of the OpenRVDAS system is the Listener class
+The workhorse utility of the OpenRVDAS system is the Listener class,
 which can be invoked either indirectly by manager/run\_loggers.py or
 directly via the listen.py script. When the listen.py script is run, it
 can take (among other things) a configuration file describing what
@@ -26,14 +26,25 @@ Readers, Transforms and Writers should be run together and with what
 parameters.
 
 ```
-logger/listener/listen.py --config_file gyr_logger.json
+logger/listener/listen.py --config_file gyr_logger.yaml
 ```
 This document describes the format and rationale behind those
 configuration files.
 
+## YAML vs JSON?
+
+Configuration files may be either in YAML or JSON format. YAML is a
+strict superset of JSON (with the caveat that it is unable to accept
+tab characters as whitespace), so either are acceptable.
+
+Historically, configurations were JSON, but JSON's lack of comments
+increased the inscrutability of configuration files. I believe we are
+following the growing consensus in the community that YAML is for
+configurations, and JSON is for serialization.
+
 ## Logger Configurations
 
-In the example above, the file gyr\_logger.json might contain the
+In the example above, the file gyr\_logger.yaml might contain the
 following text:
 
 ```
@@ -74,7 +85,7 @@ following text:
 }
 ```
 
-The configuration definition is a JSON-formatted dictionary with the
+The configuration definition is a YAML or JSON-formatted dictionary with the
 following workflow:
 
 ![Dual output configuration](images/dual_writer.png)
@@ -96,15 +107,15 @@ listener will run them in series, as in the following diagram:
 
 ![Generic listener data flow](images/generic_listener.png)
 
-In the case of gyr1_logger.json, the logger requires only a single
+In the case of gyr1_logger.yaml, the logger requires only a single
 reader, so it is defined directly as a dict; the two transforms and
 two writers are both defined by enclosing the pair in a list.
 
-## Cruise definitions
+## Cruise configuration
 
-A full cruise definition file (such as
-[sample_cruise.json](../test/configs/sample_cruise.json)) may define
-many logger configurations. They will will be contained in a "configs"
+A full configuration file (such as
+[sample_cruise.yaml](../test/configs/sample_cruise.yaml)) may define
+many logger configurations. They will be contained in a "configs"
 dict that maps from configuration names to the configuration
 definitions themselves:
 
@@ -126,15 +137,15 @@ definitions themselves:
 }
 ```
 
-### Cruise Modes
+### Modes
 
 Typically, a vessel will have sets of logger configurations that
 should all be run together: which should be running when in port, when
 underway, etc.
 
 To accommodate easy reference to these modes of operation, we include
-a "mode" dictionary in our cruise definition file:. Each mode
-definition is a dictm the keys of which are logger names, and the
+a "mode" dictionary in our configuration file:. Each mode
+definition is a dict the keys of which are logger names, and the
 values are the names of the configurations that logger should be in
 when the mode is selected. To illustrate:
 
@@ -184,7 +195,10 @@ Note also the additional (and optional) ```default_mode``` key
 in the cruise configuration. It specifies that, lacking any other
 information, which mode the system should be initialized to on startup.
 
-## Templates and Variables
+## Templates and Variables - DEPRECATED
+
+THIS SECTION IS DEPRECATED. We are exploring using a standardized
+templating language (such as Jinja) instead of this homebrew approach.
 
 The configuration definition for a non-trivial logger can be
 voluminous.  Multiplying that volume by the number of loggers and

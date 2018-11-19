@@ -22,7 +22,7 @@ from .models import LogMessage, ServerState
 from server.logger_manager import LoggerManager
 
 # Read in JSON with comments
-from logger.utils.read_json import parse_json
+from logger.utils.read_config import parse
 
 from django_gui.settings import HOSTNAME, WEBSOCKET_SERVER
 
@@ -91,14 +91,14 @@ def index(request):
       api.set_active_mode(new_mode_name)
 
     # Did we get a cruise definition file? Load it and switch to the
-    # cruise_id it defines.
+    # configuration it defines.
     elif 'load_config' in request.POST and 'config_file' in request.FILES:
       config_file = request.FILES['config_file']
       config_contents = config_file.read()
       logging.warning('Uploading file "%s"...', config_file.name)
 
       try:
-        configuration = parse_json(config_contents.decode('utf-8'))
+        configuration = parse(config_contents.decode('utf-8'))
         api.load_configuration(configuration)
       except JSONDecodeError as e:
         errors.append('Error loading "%s": %s' % (config_file.name, str(e)))

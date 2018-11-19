@@ -3,8 +3,8 @@
 import json
 import pprint
 
-from logger.utils.read_json import parse_json
 from logger.utils.timestamp import timestamp as timestamp_method
+from logger.utils.read_config import parse
 
 ################################################################################
 class DASRecord:
@@ -24,7 +24,7 @@ class DASRecord:
     If timestamp is not specified, the instance will use the current time.
     """
     if json:
-      parsed = parse_json(json)
+      parsed = parse(json)
       self.data_id = parsed.get('data_id', None)
       self.message_type = parsed.get('message_type', None)
       self.timestamp = parsed.get('timestamp', None)

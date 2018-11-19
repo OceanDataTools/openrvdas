@@ -1,0 +1,11 @@
+{
+    "Seapath200": {
+        "messages": {
+            "$GPGGA": "$GPGGA",
+            "$GPHDT": "$GPHDT",
+            "$GPVTG": "$GPVTG",
+            "$GPZDA": "$GPZDA",
+            "$PSXN" : "$PSXN"
+        }
+    }
+}

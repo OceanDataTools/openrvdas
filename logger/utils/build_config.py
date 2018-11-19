@@ -7,7 +7,7 @@ import pprint
 import threading
 
 from logger.utils.build_config import BuildConfig
-from logger.utils.read_json import read_json
+from logger.utils.read_config import read_config
 from logger.listener.listen import ListenerFromLoggerConfig
 
 vars = {
@@ -56,7 +56,7 @@ from collections import OrderedDict
 
 sys.path.append('.')
 
-from logger.utils.read_json import read_json
+from logger.utils.read_config import read_config
 from logger.listener.listen import ListenerFromLoggerConfig
 
 ################################################################################
@@ -355,7 +355,11 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-  config_json = read_json(args.config)
+  logging.warning('WARNING: this script, and the templating language that '
+                  'it reads, is deprecated. Please consider using a '
+                  'YAML-based configuration.')
+
+  config_json = read_config(args.config)
   expanded_config = BuildConfig.expand_config(config_json)
 
   if args.validate:

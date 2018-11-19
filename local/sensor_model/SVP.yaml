@@ -1,0 +1,7 @@
+{
+    "SVP": {
+        "fields": [
+            ["Velocity", "float"]
+        ]
+    }
+}

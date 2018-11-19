@@ -1,0 +1,12 @@
+{
+    # data_id
+    "mbdp": {
+        "name": "mbdp",
+        "model": "Multibeam",
+        "fields": {
+            "Depth": "MBDPDepth",
+            "WaterlineDist": "MBDPWaterlineDepth",
+            "MaxRange": "MBDPMaxRange"
+        }
+    }
+}

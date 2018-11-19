@@ -186,7 +186,7 @@ fi
 echo "#########################################################################"
 echo Installing Django, uWSGI and other Python-dependent packages
 #pip3 install --upgrade pip
-pip3 install Django==2.0 pyserial uwsgi websockets \
+pip3 install Django==2.0 pyserial uwsgi websockets PyYAML \
              mysqlclient mysql-connector==2.1.6
 
 # uWSGI configuration

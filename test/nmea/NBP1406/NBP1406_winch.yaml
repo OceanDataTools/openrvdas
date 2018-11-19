@@ -1,0 +1,344 @@
+{
+    "cruise": {
+        "id": "NBP1406 Winches",
+        "start": "2014-06-01",
+        "end": "2014-07-01"
+    },
+    "loggers": {
+        "cwnc": {
+            "configs": [
+                "cwnc->off",
+                "cwnc->net",
+                "cwnc->file/net/db"
+            ]
+        },
+        "twnc": {
+            "configs": [
+                "twnc->off",
+                "twnc->net",
+                "twnc->file/net/db"
+            ]
+        },
+        "cwnc_qc": {
+            "configs": [
+                "cwnc_qc->off",
+                "cwnc_qc->net",
+                "cwnc_qc->file/net/db"
+            ]
+        }
+    },
+    "modes": {
+        "off": {
+            "cwnc": "cwnc->off",
+            "twnc": "twnc->off",
+            "cwnc_qc": "cwnc_qc->off"
+        },
+        "monitor": {
+            "cwnc": "cwnc->net",
+            "twnc": "twnc->net",
+            "cwnc_qc": "cwnc_qc->net"
+        },
+        "monitor and log": {
+            "cwnc": "cwnc->file/net/db",
+            "twnc": "twnc->file/net/db",
+            "cwnc_qc": "cwnc_qc->file/net/db"
+        }
+    },
+    "default_mode": "off",
+    "configs": {
+        "cwnc->off": {},
+        "twnc->off": {},
+        "cwnc->net": {
+            "name": "cwnc->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_cwnc",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "cwnc"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        },
+        "twnc->net": {
+            "name": "twnc->net",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_twnc",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "PrefixTransform",
+                        "kwargs": {
+                            "prefix": "twnc"
+                        }
+                    },
+                    "writers": {
+                        "class": "NetworkWriter",
+                        "kwargs": {
+                            "network": ":6224"
+                        }
+                    }
+                }
+            }
+        },
+        "cwnc->file/net/db": {
+            "name": "cwnc->net/file/db",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_cwnc",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": [
+                {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1406/cwnc/raw/NBP1406_cwnc"
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "cwnc"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": [
+                            {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "cwnc"
+                                }
+                            },
+                            {
+                                "class": "ParseNMEATransform"
+                            }
+                        ],
+                        "writers": {
+                            "class": "DatabaseWriter"
+                        }
+                    }
+                }
+            ]
+        },
+        "twnc->file/net/db": {
+            "name": "twnc->net/file/db",
+            "readers": {
+                "class": "SerialReader",
+                "kwargs": {
+                    "port": "/tmp/tty_twnc",
+                    "baudrate": 9600
+                }
+            },
+            "transforms": {
+                "class": "TimestampTransform"
+            },
+            "writers": [
+                {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1406/twnc/raw/NBP1406_twnc"
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "twnc"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": [
+                            {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "twnc"
+                                }
+                            },
+                            {
+                                "class": "ParseNMEATransform"
+                            }
+                        ],
+                        "writers": {
+                            "class": "DatabaseWriter"
+                        }
+                    }
+                }
+            ]
+        },
+        "cwnc_qc->off": {},
+        "cwnc_qc->net": {
+            "name": "cwnc_qc->net",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            },
+            "transforms": [
+                {
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^cwnc "
+                    }
+                },
+                {
+                    "class": "ParseNMEATransform"
+                },
+                {
+                    "class": "QCFilterTransform",
+                    "kwargs": {
+                        "bounds": "CWNCTension:-15:10000,CWNCPayout:-6000:100000"
+                    }
+                },
+                {
+                    "class": "TimestampTransform"
+                },
+                {
+                    "class": "PrefixTransform",
+                    "kwargs": {
+                        "prefix": "alrt"
+                    }
+                }
+            ],
+            "writers": {
+                "class": "NetworkWriter",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            }
+        },
+        "cwnc_qc->file/net/db": {
+            "name": "cwnc_qc->file/net/db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":6224"
+                }
+            },
+            "transforms": [
+                {
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^cwnc "
+                    }
+                },
+                {
+                    "class": "ParseNMEATransform"
+                },
+                {
+                    "class": "QCFilterTransform",
+                    "kwargs": {
+                        "bounds": "CWNCTension:-15:10000,CWNCPayout:-6000:100000"
+                    }
+                },
+                {
+                    "class": "TimestampTransform"
+                }
+            ],
+            "writers": [
+                {
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/tmp/log/NBP1406/alrt/raw/NBP1406_alrt"
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "PrefixTransform",
+                            "kwargs": {
+                                "prefix": "alrt"
+                            }
+                        },
+                        "writers": {
+                            "class": "NetworkWriter",
+                            "kwargs": {
+                                "network": ":6224"
+                            }
+                        }
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": [
+                            {
+                                "class": "TimestampTransform"
+                            },
+                            {
+                                "class": "PrefixTransform",
+                                "kwargs": {
+                                    "prefix": "alrt"
+                                }
+                            },
+                            {
+                                "class": "ParseNMEATransform"
+                            }
+                        ],
+                        "writers": {
+                            "class": "DatabaseWriter"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -17,8 +17,6 @@ except ModuleNotFoundError:
 sys.path.append('.')
 
 from logger.transforms.slice_transform import SliceTransform
-
-from logger.utils import read_json
 from logger.utils.simulate_serial import SimSerial
 
 

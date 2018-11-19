@@ -5,7 +5,7 @@ definitions for a cruise configuration JSON for Sikuliaq sensors. The
 script sets up one logger for each instrument, each one listening for
 UDP packets on the specified port.
 
-The configuration file `skq/skq_cruise.json` defines a set of
+The configuration file `skq/skq_cruise.yaml` defines a set of
 loggers and modes (off, file, db, file/db) for loggers that read from
 the UDP ports listed in skq/skq_ports.txt and write to logfiles and/or
 an SQL database as specified.
@@ -15,7 +15,7 @@ The configuration file was created using the quick-and-dirty script:
 ```
    test/sikuliaq/create_skq_config.py \
      < test/sikuliaq/skq_ports.txt \
-     > test/sikuliaq/skq_cruise.json
+     > test/sikuliaq/skq_cruise.yaml
 ```
 
 The script generates a configuration with four modes:
@@ -30,7 +30,7 @@ you can specify the desired mode on the command line:
 
 ```
     server/logger_manager.py \
-      --config test/sikuliaq/skq_cruise.json \
+      --config test/sikuliaq/skq_cruise.yaml \
       --mode file/db
 ```
 
@@ -43,7 +43,7 @@ running.
 ```ALL_USE_SAME_PORT = False```
 
 that lets us specify that all loggers should read from the same
-port. This flag was used to create `skq_cruise_6224.json`,
+port. This flag was used to create `skq_cruise_6224.yaml`,
 which specifies that all loggers should read from the same port
 (:6224), but then filter input to make sure each reader only keeps
 records that begin with their data id.
@@ -52,7 +52,7 @@ This allows us to test by running, e.g.
 
 ```
     server/logger_manager.py \
-      --config test/sikuliaq/skq_cruise_6224.json \
+      --config test/sikuliaq/skq_cruise_6224.yaml \
       --mode file/db \
       -v
 ```
@@ -76,8 +76,8 @@ creating a usable config file (and as such will probably outlive us
 all). But please don't expect too much out of it.
 
 *Note:* The configuration file specifies Sikuliaq-specific sensor
-definitions in test/sikuliaq/sensors.json and sensor model definitions
-in test/sikuliaq/sensor_models.json. Please see [Locations of Message,
+definitions in test/sikuliaq/sensors.yaml and sensor model definitions
+in test/sikuliaq/sensor_models.yaml. Please see [Locations of Message,
 Sensor and Sensor Model Definitions in the NMEA Parsing
 document](../../docs/nmea_parser.md#locations-of-message-sensor-and-sensor-model-definitions)
 for more information on specifying deployment-specific sensor

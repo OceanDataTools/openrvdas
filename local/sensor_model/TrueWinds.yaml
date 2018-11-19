@@ -1,0 +1,10 @@
+# Derived sensor, as output by logger/transforms/true_winds_transform.
+{
+    "TrueWinds": {
+        "fields": [
+            ["TrueWindDir", "float"],
+            ["TrueWindSpeed", "float"],
+            ["ApparentWindDir", "float"]
+        ]
+    }
+}

@@ -18,7 +18,6 @@ from json import dumps as json_dumps
 
 sys.path.append('.')
 
-from logger.utils.read_json import parse_json
 from server.server_api import ServerAPI
 
 DEFAULT_MAX_TRIES = 3

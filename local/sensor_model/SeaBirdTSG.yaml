@@ -1,0 +1,11 @@
+{
+    "SeaBirdTSG": {
+        # 14.7965,  4.30679,  35.3214, 1506.405
+        "fields": [
+            ["Temp", "float"],
+            ["Conductivity", "float"],
+            ["Salinity", "float"],
+            ["SoundVelocity", "float"]
+        ]
+    }
+}

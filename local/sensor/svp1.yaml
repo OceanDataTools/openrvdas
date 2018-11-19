@@ -1,0 +1,10 @@
+{
+    # data_id
+    "svp1": {
+        "name": "svp1",
+        "model": "SVP",
+        "fields": {
+            "Velocity": "SVPVelocity"
+        }
+    }
+}

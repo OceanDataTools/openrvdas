@@ -49,10 +49,10 @@ In a separate window, run logger_manager.py
 python3 server/logger_manager.py \
     --database django --websocket :8765
 ```
-The sample cruise configuration relies on simulated serial ports serving data stored in the test/ directory. To set up the simulated ports, run
+The sample configuration relies on simulated serial ports serving data stored in the test/ directory. To set up the simulated ports, run
 
 ```
-python3 logger/utils/simulate_serial.py --config test/serial_sim.json --loop
+python3 logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
 ```
 
 At this point you should be able to open a browser window to 
@@ -67,7 +67,7 @@ Log in using the username (rvdas) and password that you specified; you should no
 
 ![No Configuration Loaded](images/no_configuration_loaded.png)
 
-Select the "Load configuration file" button and browse to find [test/configs/sample_cruise.json](../test/configs/sample_cruise.json). Select "Load", and you should be looking at a loaded and ready-to-run cruise management page.
+Select the "Load configuration file" button and browse to find [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml). Select "Load", and you should be looking at a loaded and ready-to-run cruise management page.
 
 ![Sample Cruise Off](images/sample_cruise_off.png)
 
@@ -92,7 +92,7 @@ If a logger configuration is specified that writes to a file, you can monitor th
 ```
 tail -f /tmp/log/NBP1700/*/*/*
 ```
-or examine the specific subdirectories of /tmp/log to perform a "tail -f" on one specific file (note that the directory path for log files is one of the things specified in cruise.json).
+or examine the specific subdirectories of /tmp/log to perform a "tail -f" on one specific file (note that the directory path for log files is one of the things specified in cruise.yaml).
 
 Loggers that are writing to the local network may be monitored using the listener script:
 

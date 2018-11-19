@@ -34,10 +34,10 @@ to start and keep the specified loggers running. It can be invoked
 from the command line as:
 
 ```
-    server/logger_runner.py --config test/configs/sample_configs.json
+    server/logger_runner.py --config test/configs/sample_configs.yaml
 ```
 
-*Note*: The sample_configs.json file above specifies configs that read
+*Note*: The sample_configs.yaml file above specifies configs that read
 from simulated serial ports and write to UDP port 6224. To get the
 configs to actually run, you'll need to run
 ```
@@ -87,10 +87,10 @@ of an InMemoryServerAPI):
 ```
     server/logger_manager.py
 ```
-If an initial cruise config is specified on the command line, as
+If an initial configuration is specified on the command line, as
 below:
 ```
-    server/logger_manager.py --config test/configs/sample_cruise.json
+    server/logger_manager.py --config test/configs/sample_cruise.yaml
 ```
 the cruise configuration will be loaded and set to its default
 mode. If a --mode argument is included, it will be used in place of
@@ -135,16 +135,16 @@ To try out the scripts, open four(!) terminal windows.
          --host_id knud.host -v
 ```
    Note that this LoggerRunner is identifies its host as "knud.host";
-   if you look at test/configs/sample_cruise.json, you'll notice that
-   the configs for the "knud" logger have a host restriction of
+   if you look at test/configs/sample_cruise.yaml, you'll notice that
+   the logger definition for the "knud" logger has a host restriction of
    "knud.host", meaning that our LoggerManager should try to dispatch
-   those configs to this LoggerRunner.
+   knud logger configs to this LoggerRunner.
 
 3. The sample cruise that we're going to load and run is configured to
    read from simulated serial ports. To create those simulated ports
    and start feeding data to them, use a third terminal window to run:
 ```
-    logger/utils/simulate_serial.py --config test/serial_sim.json -v
+    logger/utils/simulate_serial.py --config test/serial_sim.yaml -v
 ```
 4. Finally, we'd like to be able to easily glimpse the data that the
    loggers are producing. The sample cruise configuration tells the
@@ -160,7 +160,7 @@ To try out the scripts, open four(!) terminal windows.
 
 #### Load a cruise configuration
 ```
-   command? load_configuration test/configs/sample_cruise.json
+   command? load_configuration test/configs/sample_cruise.yaml
 ```
 #### Change cruise modes
 ```

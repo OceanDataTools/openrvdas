@@ -14,8 +14,6 @@ from json import dumps as json_dumps
 
 sys.path.append('.')
 
-from logger.utils.read_json import parse_json
-
 ################################################################################
 class ServerAPI:
   """Abstract base class defining an API through which a LoggerServer

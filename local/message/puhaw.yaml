@@ -1,0 +1,12 @@
+# ADCP output
+{
+    "$PUHAW": {
+        #"format": "%s,%f,%f,%f",
+        "fields": [
+            ["UVH", "str"],
+            ["EastVelocity", "float"],
+            ["NorthVelocity", "float"],
+            ["Heading", "float"]
+        ]
+    }
+}

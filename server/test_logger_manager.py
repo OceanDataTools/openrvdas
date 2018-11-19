@@ -98,7 +98,7 @@ class TestLoggerManagerAPI(unittest.TestCase):
 
     self.input_filename = self.tmpdirname + '/input.txt'
     self.output_filename = self.tmpdirname + '/output.txt'
-    self.cruise_filename = self.tmpdirname + '/cruise.json'
+    self.cruise_filename = self.tmpdirname + '/cruise.yaml'
 
     sample_cruise['configs']['sample->net']['readers']['kwargs']['file_spec'] \
       = self.input_filename
