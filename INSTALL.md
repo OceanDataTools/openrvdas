@@ -12,28 +12,46 @@ Goto <https://www.centos.org/download/>
 Download CentOS 7 for your hardware.  At the time of this writing we
 are using CentOS-7-x86_64-DVD-1611.iso
 
-NOTE: an experimental script in ```utils/build_openrvdas_centos7.sh``` is designed to perform a full
-installation of OpenRVDAS when run on a clean CentOS 7 system. You can download the script from GitHub and run it
-as root, and it will install and set up the core logging, database and GUI services (NGINX web server and uWSGI). The
-script provides the option of configuring the OpenRVDAS servers to start automatically on boot or manually, via
-```service openrvdas start``` (and shut down via ```service openrvdas stop```). But the script *is*
-still experimental and may break in inexplicable ways.
+### Scripted Installation
 
-As an alternative you can manually install OpenRVDAS as follows:
+_This is the recommended way to install for CentOS._
 
-Perform the default CentOS install. Once the installation has completed, open a terminal window and update the installed packages via
+Copy the script ```utils/build_openrvdas_centos7.sh``` into the /tmp
+directory of your new machine. When run as root, it will install and
+set up the core logging, database and GUI services (NGINX web server
+and uWSGI). The script also provides the option of configuring the
+OpenRVDAS servers to start automatically on boot or manually, via
+
+```service openrvdas start```
+
+and shut down via
+
+```service openrvdas stop```
+
+### Manual Installation
+
+As a (somewhat painful) alternative, you can manually install
+OpenRVDAS as follows:
+
+Perform the default CentOS install. Once the installation has
+completed, open a terminal window and update the installed packages
+via
+
 ```
 sudo yum -y install deltarpm
 sudo yum -y update
 ```
 
 Several packages are needed to simplify the installation of OpenRVDAS:
+
 ```
 sudo yum install -y wget gcc readline-devel zlib-devel openssl-devel 
+```
 
-# If you will be installing the Django GUI:
+If you will be installing the Django GUI:
+
+```
 sudo yum install -y sqlite-devel
-
 ```
 
 ### Prerequisites
@@ -59,7 +77,7 @@ Serial port functionality will require the pyserial.py package, which
 may be installed using pip3.  Open a terminal window:
 
 ```
-  sudo pip3 install pyserial
+  sudo pip3 install pyserial PyYAML
 ```
 
 #### Socat
@@ -83,11 +101,29 @@ Perform the default Ubuntu install.  For these instructions the default account 
 
 A few minutes after the install completes and the computer restarts, Ubuntu will ask to install any updates that have arrived since the install image was created.  Perform these now and do not continue with these instructions until the update has completed.
 
-Before OpenRVDAS can be installed serveral other software packaged that must be installed and configured.
+### Scripted Installation
 
-*Note that OpenRVDAS is still very much under development. The core logging functionality only relies on Python 3 (tested on Python 3.5 and above). You should be able to simply unpack the distribution and run*
+_This is the recommended way to install for Ubuntu._
+
+Copy the script ```utils/build_openrvdas_ubuntu16.sh``` into the /tmp
+directory of your new machine. When run as root, it will install and
+set up the core logging, database and GUI services (NGINX web server
+and uWSGI).
+
+Unlike the CentOS installation script, the Ubuntu script does not
+(yet) install OpenRVDAS as a service, so to run the logger_manager.py,
+you will need to invoke it manually:
+
+```
+  > server/logger_manager.py --websocket :8765 --database django
+```
+
+### Manual Installation
 
 ### Prerequisites
+
+Before OpenRVDAS can be installed several other software packaged that must be installed and configured.
+
 #### Python3
 Open a terminal window and run the following command:
 ```
