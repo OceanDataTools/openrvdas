@@ -278,51 +278,58 @@ class DjangoServerAPI(ServerAPI):
     """Save/register the loggers' retrieved status report with the API."""
     logging.info('Got status: %s', status)
     now = datetime_obj()
-    for logger_id, logger_report in status.items():
-      logger_config = logger_report.get('config', None)
-      logger_errors = logger_report.get('errors', None)
-      logger_pid = logger_report.get('pid', None)
-      logger_failed = logger_report.get('failed', None)
-      logger_running = logger_report.get('running', None)
+    try:
+      for logger_id, logger_report in status.items():
+        logger_config = logger_report.get('config', None)
+        logger_errors = logger_report.get('errors', None)
+        logger_pid = logger_report.get('pid', None)
+        logger_failed = logger_report.get('failed', None)
+        logger_running = logger_report.get('running', None)
 
-      # Get the most recent corresponding LoggerConfigState from
-      # datastore. If there isn't a most recent, create a dummy that
-      # will get filled in.
-      try:
-        # Get the latest LoggerConfigState for this logger
-        stored_state = LoggerConfigState.objects.filter(
-          logger__name=logger_id).latest('timestamp')
-      except LoggerConfigState.DoesNotExist:
-        # If no existing LoggerConfigState for logger, create one
+        # Get the most recent corresponding LoggerConfigState from
+        # datastore. If there isn't a most recent, create a dummy that
+        # will get filled in.
         try:
-          logger = Logger.objects.get(name=logger_id)
-          config = LoggerConfig.objects.get(name=logger_config, logger=logger)
-          stored_state = LoggerConfigState(logger=logger, config=config,
-                                           running=False, failed=False,
-                                           pid=0, errors='')
-          stored_state.save()
-        except Logger.DoesNotExist:
-          logging.warning('Logger "%s" not found in update_status', logger_id)
-          continue
+          # Get the latest LoggerConfigState for this logger
+          stored_state = LoggerConfigState.objects.filter(
+            logger__name=logger_id).latest('timestamp')
+        except LoggerConfigState.DoesNotExist:
+          # If no existing LoggerConfigState for logger, create one
+          try:
+            logger = Logger.objects.get(name=logger_id)
+            config = LoggerConfig.objects.get(name=logger_config, logger=logger)
+            stored_state = LoggerConfigState(logger=logger, config=config,
+                                             running=False, failed=False,
+                                             pid=0, errors='')
+            stored_state.save()
+          except Logger.DoesNotExist:
+            logging.warning('Logger "%s" not found in update_status', logger_id)
+            continue
 
-      # Compare stored LoggerConfigState with the new status. If there
-      # have been changes, reset pk, which will create a new object
-      # when we save.
-      if (logger_errors or
-          not stored_state.running == logger_running or
-          not stored_state.failed == logger_failed or
-          not stored_state.pid == logger_pid):
-        # Otherwise, add changes and save as a new object
-        stored_state.pk = None
-        stored_state.running = logger_running
-        stored_state.failed = logger_failed
-        stored_state.pid = logger_pid
-        stored_state.errors = '\n'.join(logger_errors)
+        # Compare stored LoggerConfigState with the new status. If there
+        # have been changes, reset pk, which will create a new object
+        # when we save.
+        if (logger_errors or
+            not stored_state.running == logger_running or
+            not stored_state.failed == logger_failed or
+            not stored_state.pid == logger_pid):
+          # Otherwise, add changes and save as a new object
+          stored_state.pk = None
+          stored_state.running = logger_running
+          stored_state.failed = logger_failed
+          stored_state.pid = logger_pid
+          stored_state.errors = '\n'.join(logger_errors)
 
-      # Update last_checked field and save, regardless of whether we
-      # made other changes.
-      stored_state.last_checked = now
-      stored_state.save()
+        # Update last_checked field and save, regardless of whether we
+        # made other changes.
+        stored_state.last_checked = now
+        stored_state.save()
+    except django.core.exceptions.ObjectDoesNotExist:
+      logging.warning('Got Django DoesNotExist Error on attempted status '
+                      'update; database may be changing - skipping update.')
+    except django.db.utils.IntegrityError:
+      logging.warning('Got Django Integrity Error on attempted status '
+                      'update; database may be changing - skipping update.')
 
   ############################
   # Methods for getting logger status data from API
