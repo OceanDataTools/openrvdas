@@ -82,7 +82,7 @@ file_db_config = """{
                 "writers": {
                   "class": "LogfileWriter",
                   "kwargs": {
-                    "filebase": "/tmp/log/CRUISE/INST/raw/CRUISE_INST",
+                    "filebase": "/var/tmp/log/CRUISE/INST/raw/CRUISE_INST",
                     "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                   }
                 }
@@ -111,7 +111,7 @@ file_config = """{
               "writers": {
                 "class": "LogfileWriter",
                 "kwargs": {
-                  "filebase": "/tmp/log/CRUISE/INST/raw/CRUISE_INST",
+                  "filebase": "/var/tmp/log/CRUISE/INST/raw/CRUISE_INST",
                   "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                 }
               }

@@ -524,7 +524,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/mwx1/raw/NBP1406_mwx1"
+                        "filebase": "/var/tmp/log/NBP1406/mwx1/raw/NBP1406_mwx1"
                     }
                 },
                 {
@@ -581,7 +581,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/eng1/raw/NBP1406_eng1"
+                        "filebase": "/var/tmp/log/NBP1406/eng1/raw/NBP1406_eng1"
                     }
                 },
                 {
@@ -638,7 +638,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/rtmp/raw/NBP1406_rtmp"
+                        "filebase": "/var/tmp/log/NBP1406/rtmp/raw/NBP1406_rtmp"
                     }
                 },
                 {
@@ -695,7 +695,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/pguv/raw/NBP1406_pguv"
+                        "filebase": "/var/tmp/log/NBP1406/pguv/raw/NBP1406_pguv"
                     }
                 },
                 {
@@ -752,7 +752,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/svp1/raw/NBP1406_svp1"
+                        "filebase": "/var/tmp/log/NBP1406/svp1/raw/NBP1406_svp1"
                     }
                 },
                 {
@@ -809,7 +809,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/tsg1/raw/NBP1406_tsg1"
+                        "filebase": "/var/tmp/log/NBP1406/tsg1/raw/NBP1406_tsg1"
                     }
                 },
                 {
@@ -866,7 +866,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/tsg2/raw/NBP1406_tsg2"
+                        "filebase": "/var/tmp/log/NBP1406/tsg2/raw/NBP1406_tsg2"
                     }
                 },
                 {
@@ -923,7 +923,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/knud/raw/NBP1406_knud"
+                        "filebase": "/var/tmp/log/NBP1406/knud/raw/NBP1406_knud"
                     }
                 },
                 {
@@ -980,7 +980,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/grv1/raw/NBP1406_grv1"
+                        "filebase": "/var/tmp/log/NBP1406/grv1/raw/NBP1406_grv1"
                     }
                 },
                 {
@@ -1037,7 +1037,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/hdas/raw/NBP1406_hdas"
+                        "filebase": "/var/tmp/log/NBP1406/hdas/raw/NBP1406_hdas"
                     }
                 },
                 {
@@ -1094,7 +1094,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/mbdp/raw/NBP1406_mbdp"
+                        "filebase": "/var/tmp/log/NBP1406/mbdp/raw/NBP1406_mbdp"
                     }
                 },
                 {
@@ -1151,7 +1151,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/pco2/raw/NBP1406_pco2"
+                        "filebase": "/var/tmp/log/NBP1406/pco2/raw/NBP1406_pco2"
                     }
                 },
                 {

@@ -506,7 +506,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -540,7 +540,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -622,7 +622,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -656,7 +656,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -738,7 +738,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -772,7 +772,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -854,7 +854,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -888,7 +888,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -970,7 +970,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1004,7 +1004,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1086,7 +1086,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1120,7 +1120,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1202,7 +1202,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1236,7 +1236,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1318,7 +1318,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1352,7 +1352,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1434,7 +1434,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1468,7 +1468,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1550,7 +1550,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1584,7 +1584,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1666,7 +1666,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1700,7 +1700,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1782,7 +1782,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1816,7 +1816,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1898,7 +1898,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1932,7 +1932,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2014,7 +2014,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2048,7 +2048,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2130,7 +2130,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2164,7 +2164,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2246,7 +2246,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2280,7 +2280,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2362,7 +2362,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2396,7 +2396,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2478,7 +2478,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2512,7 +2512,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2594,7 +2594,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2628,7 +2628,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2710,7 +2710,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2744,7 +2744,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2826,7 +2826,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2860,7 +2860,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2942,7 +2942,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2976,7 +2976,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3058,7 +3058,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3092,7 +3092,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3174,7 +3174,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3208,7 +3208,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3290,7 +3290,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3324,7 +3324,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3406,7 +3406,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3440,7 +3440,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3522,7 +3522,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3556,7 +3556,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3638,7 +3638,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3672,7 +3672,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3754,7 +3754,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3788,7 +3788,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3870,7 +3870,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3904,7 +3904,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3986,7 +3986,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4020,7 +4020,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4102,7 +4102,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4136,7 +4136,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4218,7 +4218,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4252,7 +4252,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4334,7 +4334,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4368,7 +4368,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4450,7 +4450,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4484,7 +4484,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4566,7 +4566,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4600,7 +4600,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4682,7 +4682,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
+                                "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4716,7 +4716,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
+                            "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }

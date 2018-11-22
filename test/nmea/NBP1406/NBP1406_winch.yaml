@@ -124,7 +124,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/cwnc/raw/NBP1406_cwnc"
+                        "filebase": "/var/tmp/log/NBP1406/cwnc/raw/NBP1406_cwnc"
                     }
                 },
                 {
@@ -181,7 +181,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/twnc/raw/NBP1406_twnc"
+                        "filebase": "/var/tmp/log/NBP1406/twnc/raw/NBP1406_twnc"
                     }
                 },
                 {
@@ -296,7 +296,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1406/alrt/raw/NBP1406_alrt"
+                        "filebase": "/var/tmp/log/NBP1406/alrt/raw/NBP1406_alrt"
                     }
                 },
                 {

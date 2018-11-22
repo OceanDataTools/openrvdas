@@ -217,7 +217,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/PCOD/raw/NBP1406_PCOD
+        filebase: /var/tmp/log/NBP1406/PCOD/raw/NBP1406_PCOD
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -270,7 +270,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/adcp/raw/NBP1406_adcp
+        filebase: /var/tmp/log/NBP1406/adcp/raw/NBP1406_adcp
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -323,7 +323,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/eng1/raw/NBP1406_eng1
+        filebase: /var/tmp/log/NBP1406/eng1/raw/NBP1406_eng1
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -376,7 +376,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/gp02/raw/NBP1406_gp02
+        filebase: /var/tmp/log/NBP1406/gp02/raw/NBP1406_gp02
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -429,7 +429,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/grv1/raw/NBP1406_grv1
+        filebase: /var/tmp/log/NBP1406/grv1/raw/NBP1406_grv1
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -482,7 +482,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/gyr1/raw/NBP1406_gyr1
+        filebase: /var/tmp/log/NBP1406/gyr1/raw/NBP1406_gyr1
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -535,7 +535,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/hdas/raw/NBP1406_hdas
+        filebase: /var/tmp/log/NBP1406/hdas/raw/NBP1406_hdas
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -588,7 +588,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/knud/raw/NBP1406_knud
+        filebase: /var/tmp/log/NBP1406/knud/raw/NBP1406_knud
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -641,7 +641,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/mbdp/raw/NBP1406_mbdp
+        filebase: /var/tmp/log/NBP1406/mbdp/raw/NBP1406_mbdp
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -694,7 +694,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/mwx1/raw/NBP1406_mwx1
+        filebase: /var/tmp/log/NBP1406/mwx1/raw/NBP1406_mwx1
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -747,7 +747,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/pco2/raw/NBP1406_pco2
+        filebase: /var/tmp/log/NBP1406/pco2/raw/NBP1406_pco2
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -800,7 +800,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/pguv/raw/NBP1406_pguv
+        filebase: /var/tmp/log/NBP1406/pguv/raw/NBP1406_pguv
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -853,7 +853,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/rtmp/raw/NBP1406_rtmp
+        filebase: /var/tmp/log/NBP1406/rtmp/raw/NBP1406_rtmp
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -906,7 +906,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/s330/raw/NBP1406_s330
+        filebase: /var/tmp/log/NBP1406/s330/raw/NBP1406_s330
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -959,7 +959,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/seap/raw/NBP1406_seap
+        filebase: /var/tmp/log/NBP1406/seap/raw/NBP1406_seap
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -1012,7 +1012,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/svp1/raw/NBP1406_svp1
+        filebase: /var/tmp/log/NBP1406/svp1/raw/NBP1406_svp1
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -1146,7 +1146,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/tsg1/raw/NBP1406_tsg1
+        filebase: /var/tmp/log/NBP1406/tsg1/raw/NBP1406_tsg1
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -1199,7 +1199,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /tmp/log/NBP1406/tsg2/raw/NBP1406_tsg2
+        filebase: /var/tmp/log/NBP1406/tsg2/raw/NBP1406_tsg2
     - class: ComposedWriter
       kwargs:
         transforms:

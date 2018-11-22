@@ -35,7 +35,7 @@
 #
 #      {
 #        "%CRUISE%" : "NBP1700",
-#        "%LOGFILE_BASE%": "/tmp/log/%CRUISE%"
+#        "%LOGFILE_BASE%": "/var/tmp/log/%CRUISE%"
 #      }
 #
 #    variable substitution will convert
@@ -44,7 +44,7 @@
 #
 #    into
 #
-#      "filebase": "/tmp/log/NBP1700/%INST%/raw/NBP1700_%INST%"
+#      "filebase": "/var/tmp/log/NBP1700/%INST%/raw/NBP1700_%INST%"
 #
 #    The replacement has a special case where the the value may be a
 #    list of strings rather than a single string. If the string to be
@@ -55,7 +55,7 @@
 #
 #      {
 #        "%CRUISE%" : "NBP1700",
-#        "%LOGFILE_BASE%": "/tmp/log/%CRUISE%",
+#        "%LOGFILE_BASE%": "/var/tmp/log/%CRUISE%",
 #        "%INST%": ["knud", "gyr1", "s330"]
 #      }
 #
@@ -117,7 +117,7 @@
         "%END_DATE%" : "2014-07-01",
 
         # Where logfiles should be written
-        "%LOGFILE_BASE%": "/tmp/log/%CRUISE%",
+        "%LOGFILE_BASE%": "/var/tmp/log/%CRUISE%",
 
         # What port the UDP network writers should read/write
         "%UDP_PORT%": ":6224",

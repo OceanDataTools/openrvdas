@@ -275,7 +275,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1700/knud/raw/NBP1700_knud"
+                        "filebase": "/var/tmp/log/NBP1700/knud/raw/NBP1700_knud"
                     }
                 },
                 {
@@ -332,7 +332,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1700/gyr1/raw/NBP1700_gyr1"
+                        "filebase": "/var/tmp/log/NBP1700/gyr1/raw/NBP1700_gyr1"
                     }
                 },
                 {
@@ -389,7 +389,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1700/mwx1/raw/NBP1700_mwx1"
+                        "filebase": "/var/tmp/log/NBP1700/mwx1/raw/NBP1700_mwx1"
                     }
                 },
                 {
@@ -446,7 +446,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1700/s330/raw/NBP1700_s330"
+                        "filebase": "/var/tmp/log/NBP1700/s330/raw/NBP1700_s330"
                     }
                 },
                 {
@@ -503,7 +503,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1700/eng1/raw/NBP1700_eng1"
+                        "filebase": "/var/tmp/log/NBP1700/eng1/raw/NBP1700_eng1"
                     }
                 },
                 {
@@ -560,7 +560,7 @@
                 {
                     "class": "LogfileWriter",
                     "kwargs": {
-                        "filebase": "/tmp/log/NBP1700/rtmp/raw/NBP1700_rtmp"
+                        "filebase": "/var/tmp/log/NBP1700/rtmp/raw/NBP1700_rtmp"
                     }
                 },
                 {
