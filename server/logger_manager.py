@@ -523,7 +523,7 @@ class LoggerManager:
         configs['loggers'] = {logger_id:
                     self.api.get_logger_config_name(logger_id)
                     for logger_id in self.api.get_loggers()}
-      except ValueError:
+      except (AttributeError, ValueError):
         logging.info('No config found')
 
       if not configs == previous_configs:
@@ -659,7 +659,7 @@ class LoggerManager:
     with self.config_lock:
       try:
         new_configs = self.api.get_logger_configs()
-      except ValueError:
+      except (AttributeError, ValueError):
         return
       
       # If configs haven't changed, we're done - go home.
