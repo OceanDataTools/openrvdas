@@ -98,9 +98,13 @@ class MySQLConnector:
   ############################
   def exec_sql_command(self, command):
     cursor = self.connection.cursor()
-    cursor.execute(command)
-    self.connection.commit()
-    cursor.close()
+    try:
+      cursor.execute(command)
+      self.connection.commit()
+      cursor.close()
+    except mysql.connector.errors.Error as e:
+      logging.error('Executing command: "%s", encountered error "%s"',
+                    command, str(e))
 
   ############################
   def table_exists(self, table_name):
@@ -174,7 +178,7 @@ class MySQLConnector:
       elif type(value) is bool:
         value_array[5] = '%d' % ('1' if value else '0')
       elif value is None:
-        continue
+        value_array[4] = '""'
       else:
         logging.error('Unknown record value type (%s) for %s: %s',
                       type(value), key, value)
@@ -200,6 +204,9 @@ class MySQLConnector:
     if source_id:
       fields.append('source')
 
+    if not values:
+      logging.warning('No values found in record %s', str(record))
+                      
     write_cmd = 'insert into `%s` (%s) values %s' % \
                   (self.DATA_TABLE, ','.join(fields), ','.join(values))
     logging.debug('Inserting record into table with command: %s', write_cmd)
