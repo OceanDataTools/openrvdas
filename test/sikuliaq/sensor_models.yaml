@@ -213,7 +213,9 @@
             "$GNRMC": "$GPRMC",
             "$GNVTG": "$GPVTG",
             "$GNGGA": "$GPGGA",
-            "$GNGST": "$GPGST"
+            "$GNGST": "$GPGST",
+
+            "$PNCTR": "$PNCTR"
         }
     },
 
@@ -229,7 +231,7 @@
 #   Sample rate: 1 per second
 # 
 #   Example data lines:
-#    grav_bgm3_222	2014-11-17T20:18:10.3194Z	04:024671 00
+#    grav_bgm3_222    2014-11-17T20:18:10.3194Z    04:024671 00
 # 
 #   Field Descriptions:
 #     LDS Logger ID
@@ -245,11 +247,11 @@
 
     "grav_bgm3": {
         "field_delimiter": "[ :]",  # uses both spaces and colon. Sigh.
-	"fields": [
-	    ["counter_period", "int"],
-	    ["raw_counts", "int"],
-	    ["status", "int"]
-	]
+    "fields": [
+        ["counter_period", "int"],
+        ["raw_counts", "int"],
+        ["status", "int"]
+    ]
     },
 
 # ------------------------------------------------------------------------------------------------
@@ -277,9 +279,10 @@
 #     $--ROT,rate of turn,status*checksum
 
     "gyroscope": {
-	"messages": {
+    "messages": {
             "$HEHDT": "$HEHDT",
-            "$TIROT": "$HEROT"
+            "$TIROT": "$HEROT",
+            "$PPLAN": "$PPLAN"
         }
     },
 
@@ -373,7 +376,20 @@
             "$GNGGA": "$GPGGA",
             "$GNGST": "$GPGST",
             "$GNHDT": "$GPHDT",
-            "$GNGBS": "$GPGBS"
+            "$GNGBS": "$GPGBS",
+
+            "$GPGLL": {
+                "fields": [
+                    ["Latitude", "float"],
+                    ["NorS", "str"],
+                    ["Longitude", "float"],
+                    ["EorW", "str"],
+                    ["FixTime", "float"],
+                    ["Mode", "str"],
+                    ["Unknown", "str"]
+                ]
+            }
+
         }
     },
 
@@ -543,19 +559,19 @@
 
     "rad_psp-pir": {
         "field_delimiter": "\\s*,",  # variable whitespace before comma
-	"fields": [
-	    ["id", "str"],
-	    ["date", "str"],
-	    ["time", "str"],
-	    ["num_samples", "int"],
-	    ["pir", "float"],
-	    ["lw", "float"],
-	    ["tcase", "float"],
-	    ["tdome", "float"],
-	    ["sw", "float"],
-	    ["t_avg", "float"],
-	    ["batt", "float"]
-	]
+    "fields": [
+        ["id", "str"],
+        ["date", "str"],
+        ["time", "str"],
+        ["num_samples", "int"],
+        ["pir", "float"],
+        ["lw", "float"],
+        ["tcase", "float"],
+        ["tdome", "float"],
+        ["sw", "float"],
+        ["t_avg", "float"],
+        ["batt", "float"]
+    ]
     },
 
 # ------------------------------------------------------------------------------------------------
@@ -591,11 +607,11 @@
 
     "rad_qsr2150a": {
         "field_delimiter": "\\s*,",  # variable whitespace before comma
-	"fields": [
-	    ["par", "float"],
-	    ["temp", "float"],
-	    ["voltage", "float"]
-	]
+    "fields": [
+        ["par", "float"],
+        ["temp", "float"],
+        ["voltage", "float"]
+    ]
     },
 
 # ------------------------------------------------------------------------------------------------
@@ -629,9 +645,9 @@
 # 
 
     "rain_org815ds": {
-	"fields": [
-	    ["data_string", "str"]
-	]
+    "fields": [
+        ["data_string", "str"]
+    ]
     },
 
 # ------------------------------------------------------------------------------------------------
@@ -694,11 +710,11 @@
 #     See included document RMYoung-RainGauge.pdf for more information.
 
     "rain_rmy50202": {
-	"fields": [
-	    ["id", "str"],
-	    ["voltage", "float"],
-	    ["precip_column", "float"]
-	]
+    "fields": [
+        ["id", "str"],
+        ["voltage", "float"],
+        ["precip_column", "float"]
+    ]
     },
 
 # ------------------------------------------------------------------------------------------------
@@ -851,6 +867,31 @@
         }
     },
 
+    # Apparently speedlog has fewer values in its $VDVBW than adcp_speedlog
+    "adcp_speedlog": {
+        "messages": {
+            "$VDVLW": {
+                "fields": [
+                    ["total_water_distance", "float"],
+                    ["total_water_indicator", "str"],
+                    ["total_ground_distance", "float"],
+                    ["total_ground_indicator", "str"]
+                ]
+            },
+            "$VDVBW": {
+                "fields": [
+                    ["lon_water_speed", "float"],
+                    ["transverse_water_speed", "float"],
+                    ["water_speed_status", "str"],
+
+                    ["lon_ground_speed", "float"],
+                    ["transverse_ground_speed", "float"],
+                    ["ground_speed_status", "str"],
+                ]
+            }
+        }
+    },
+
 # ------------------------------------------------------------------------------------------------
 # sv_aml-svxchang_fwd:
 # 
@@ -883,6 +924,32 @@
     },
  
 # ------------------------------------------------------------------------------------------------
+#thermo_sbe38_fwd:
+#  
+#  Sea-Bird SBE 38 Temperature sensor.
+#  Measures surface seawater temperature from forward seachest for the UNCSW system.
+#
+#  Model: SBE38
+#  Serial Number: 3869615-0668
+#  Location: Forward seachest in bow thruster room
+#  Sample rate: 1 second
+#
+#  Example data line:
+#    thermo_sbe38_fwd  2016-03-12T00:00:16.7036Z  16.7103
+#
+#  Field Descriptions:
+#    LDS Logger ID
+#    LDS Time Stamp [UTC]
+#    Temperature [C]
+
+    "thermo_sbe38": {
+        "fields": [
+            ["temp", "float"]
+        ]
+    },
+ 
+
+# ------------------------------------------------------------------------------------------------
 # thermo_pyrometer-ct15:
 # 
 #   Heitronics infrared radiation pyrometer. Measures seasurface skin temperature.
@@ -902,10 +969,10 @@
  
     "thermo_pyrometer-ct15": {
         "field_delimiter": "\\s+",  # whitespace
-	"fields": [
-	    ["temp", "float"],
-	    ["temp_indicator", "str"]
-	]
+    "fields": [
+        ["temp", "float"],
+        ["temp_indicator", "str"]
+    ]
     },
 
 # ------------------------------------------------------------------------------------------------
@@ -1015,14 +1082,25 @@
 #   Note: Sensor was not installed so no data for this cruise. 
 # 
 
-    "wind_gill": {
+    "wind_gill_rel": {
         "fields": [
             ["id", "str"],
             ["direction", "float"],
             ["speed", "float"],
             ["units", "str"],
-            ["status", "int"],
-            ["checksum", "str"]
+            ["status", "str"],
+            ["checksum", "str"],
+        ]
+    },
+
+    "wind_rel": {
+        "fields": [
+            ["id", "str"],
+            ["direction", "float"],
+            ["relative", "str"],
+            ["speed", "float"],
+            ["units", "str"],
+            ["status", "str"]
         ]
     },
 
@@ -1053,7 +1131,7 @@
 # 
 #   Note: Sensor was not installed so no data for this cruise. 
 #
-    "wind_gill_true": {
+    "wind_true": {
         "fields": [
             ["id", "str"],
             ["true_direction", "float"],
@@ -1065,5 +1143,40 @@
             ["speed_meters", "float"],
             ["meters_indicator", "str"]
         ]
+    },
+
+
+    # AIS reports
+    # !AIVDO,1,1,,,152gEJ0sAemVOA>Och065lqN0000,0*73
+    # $PSTT,10A,20181130,032848*62
+    "ais_r4-navigator": {
+        "messages": {
+            "!AIVDO": {
+                "fields": [
+                    ["Unknown1", "str"],
+                    ["Unknown2", "str"],
+                    ["Unknown3", "str"],
+                    ["Unknown4", "str"],
+                    ["Unknown5", "str"],
+                    ["Unknown6", "str"]
+                ]
+            },
+            "$PSTT": {
+                "fields": [
+                    ["Unknown1", "str"],
+                    ["Unknown2", "str"],
+                    ["Unknown3", "str"]
+                ]
+            },
+            "$AIALR": {
+                "fields": [
+                    ["Unknown1", "str"],
+                    ["Unknown2", "str"],
+                    ["Unknown3", "str"],
+                    ["Unknown4", "str"],
+                    ["Unknown5", "str"]
+                ]
+            }
+        }
     }
 }

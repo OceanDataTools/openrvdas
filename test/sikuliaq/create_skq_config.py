@@ -28,8 +28,10 @@ subdirectory.
 
 """
 import json
+import logging
 import pprint
 import sys
+import yaml
 
 from collections import OrderedDict
 
@@ -43,7 +45,7 @@ ALL_USE_SAME_PORT = False
 PORT = '6224'
 
 # Set to desired cruise ID
-cruise = 'SKQ_SAMPLE'
+cruise = 'SKQ201822S'
 
 file_db_config = """{
           "name": "INST->file/db",
@@ -159,6 +161,7 @@ modes['db'] = {}
 modes['file/db'] = {}
 
 for line in lines:
+  logging.warning(line)
   (inst, port) = line.split('\t', maxsplit=2)
 
   if ALL_USE_SAME_PORT:
@@ -170,19 +173,19 @@ for line in lines:
   config = config.replace('INST', inst)
   config = config.replace('PORT', port)
   config = config.replace('CRUISE', cruise)
-  configs['%s->file/db' % inst] = parse_json(config)
+  configs['%s->file/db' % inst] = yaml.load(config)
 
   config = file_config
   config = config.replace('INST', inst)
   config = config.replace('PORT', port)
   config = config.replace('CRUISE', cruise)
-  configs['%s->file' % inst] = parse_json(config)
+  configs['%s->file' % inst] = yaml.load(config)
 
   config = db_config
   config = config.replace('INST', inst)
   config = config.replace('PORT', port)
   config = config.replace('CRUISE', cruise)
-  configs['%s->db' % inst] = parse_json(config)
+  configs['%s->db' % inst] = yaml.load(config)
 
   loggers[inst] = {}
   loggers[inst]['configs'] = [

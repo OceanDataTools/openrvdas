@@ -250,7 +250,20 @@
             "GPSTime": "gnss_cnav_gps_time",
             "GPSDay": "gnss_cnav_gps_day",
             "GPSMonth": "gnss_cnav_gps_month",
-            "GPSYear": "gnss_cnav_gps_year"
+            "GPSYear": "gnss_cnav_gps_year",
+
+            # $PCNTR,NAVQ
+            "UTCTime": "gnss_cnav_gps_time",
+            "NavMode": "gnss_cnav_nav_mode",
+            "GcGPSCorrSignalType": "gnss_cnav_corr_signal_type",
+            "SolutionMode": "gnss_cnav_solution_mode",
+
+            # $PCNTR,RXQ
+            "UTCTime": "gnss_cnav_gps_time",
+            "CNavSignalLock": "gnss_cnav_signal_lock",
+            "CNavSNR": "gnss_cnav_snr",
+            "IdlePercent": "gnss_cnav_idle_percent",
+            "BadPercent": "gnss_cnav_bad_percent"
         }
     },
 
@@ -266,7 +279,7 @@
 #   Sample rate: 1 per second
 # 
 #   Example data lines:
-#    grav_bgm3_222	2014-11-17T20:18:10.3194Z	04:024671 00
+#    grav_bgm3_222    2014-11-17T20:18:10.3194Z    04:024671 00
 # 
 #   Field Descriptions:
 #     LDS Logger ID
@@ -283,11 +296,11 @@
     "grav_bgm3_222": {
         "name": "grav_bgm3_222",
         "model": "grav_bgm3",
-	"fields": {
-	    "counter_period": "grav_bgm3_222_period",
-	    "raw_counts": "grav_bgm3_222_raw_counts",
-	    "status": "grav_bgm3_222_status"
-	}
+    "fields": {
+        "counter_period": "grav_bgm3_222_period",
+        "raw_counts": "grav_bgm3_222_raw_counts",
+        "status": "grav_bgm3_222_status"
+    }
     },
 # ------------------------------------------------------------------------------------------------
 # gyro_1:
@@ -430,6 +443,14 @@
             "AntennaHeight": "ins_seapath_position_antenna_height",
             #"LastDGPSUpdate": "",
             #"DGPSStationID": "",
+
+            # $GPGLL
+            "Latitude": "ins_seapath_position_lat",
+            "NorS": "ins_seapath_position_n_or_s",
+            "Longitude": "ins_seapath_position_lon",
+            "EorW": "ins_seapath_position_e_or_w",
+            "FixTime": "ins_seapath_position_fix_time",
+            "Mode": "ins_seapath_position_mode",
 
             # $GPRMC
             "GPSTime": "ins_seapath_position_gps_time",
@@ -661,18 +682,18 @@
     "rad_psp-pir": {
         "name": "rad_psp-pir",
         "model": "rad_psp-pir",
-	"fields": {
+    "fields": {
             #"id": "rad_psp-pir_id",
-	    "date": "rad_psp-pir_date",
-	    "time": "rad_psp-pir_time",
+        "date": "rad_psp-pir_date",
+        "time": "rad_psp-pir_time",
             "num_samples": "rad_psp-pir_num_samples",
-	    "pir": "rad_psp-pir_pir",
-	    "lw": "rad_psp-pir_lw",
-	    "tcase": "rad_psp-pir_tcase",
-	    "tdome": "rad_psp-pir_tdome",
-	    "sw": "rad_psp-pir_sw",
-	    "t_avg": "rad_psp-pir_t_avg",
-	    "batt": "rad_psp-pir_batt"
+        "pir": "rad_psp-pir_pir",
+        "lw": "rad_psp-pir_lw",
+        "tcase": "rad_psp-pir_tcase",
+        "tdome": "rad_psp-pir_tdome",
+        "sw": "rad_psp-pir_sw",
+        "t_avg": "rad_psp-pir_t_avg",
+        "batt": "rad_psp-pir_batt"
         }
     },
 
@@ -710,10 +731,10 @@
     "rad_qsr2150a": {
         "name": "rad_qsr2150a",
         "model": "rad_qsr2150a",
-	"fields": {
+    "fields": {
             "par": "rad_qsr2150a_par",
-	    "temp": "rad_qsr2150a_temp",
-	    "voltage": "rad_qsr2150a_voltage"
+        "temp": "rad_qsr2150a_temp",
+        "voltage": "rad_qsr2150a_voltage"
         }
     },
 
@@ -747,8 +768,8 @@
 #     concept of "across" and "forward" meaningless. 
 
     "rain_org815ds_across": {
-	"name": "rain_org815ds_across",
-	"model": "rain_org815ds",
+    "name": "rain_org815ds_across",
+    "model": "rain_org815ds",
         "fields": {
             "rain_org815ds_data_string": "rain_org815ds_across_data_string"  
         }
@@ -784,8 +805,8 @@
 # 
 
     "rain_org815ds_forward": {
-	"name": "rain_org815ds_forward",
-	"model": "rain_org815ds",
+    "name": "rain_org815ds_forward",
+    "model": "rain_org815ds",
         "fields": {
             "rain_org815ds_data_string": "rain_org815ds_forward_data_string"  
         }
@@ -823,8 +844,8 @@
 #     See included document RMYoung-RainGauge.pdf for more information.
 
     "rain_rmy50202": {
-	"name": "rain_rmy50202",
-	"model": "rain_rmy50202",
+    "name": "rain_rmy50202",
+    "model": "rain_rmy50202",
         "fields": {
             "voltage": "rain_rmy50202_voltage",
             "precip_column": "rain_rmy50202_precip_column"
@@ -863,8 +884,8 @@
 # 
 
     "sb_echosounder_1": {
-	"name": "sb_echosounder_1",
-	"model": "sb_echosounder",
+    "name": "sb_echosounder_1",
+    "model": "sb_echosounder",
         "fields": {
             "rel_depth": "sb_echosounder_1_rel_depth",
             "transducer_offset": "sb_echosounder_1_transducer_offset",
@@ -907,8 +928,8 @@
 # 
  
     "sb_echosounder_2": {
-	"name": "sb_echosounder_2",
-	"model": "sb_echosounder",
+    "name": "sb_echosounder_2",
+    "model": "sb_echosounder",
         "fields": {
             "rel_depth": "sb_echosounder_2_rel_depth",
             "transducer_offset": "sb_echosounder_2_transducer_offset",
@@ -979,6 +1000,29 @@
         }
     },
           
+
+    "adcp_speedlog": {
+        "name": "adcp_speedlog",
+        "model": "adcp_speedlog",
+        "fields": {
+            "total_water_distance": "adcp_speedlog_total_water_distance",
+            "total_ground_distance": "adcp_speedlog_total_ground_distance",
+            
+            "lon_water_speed": "adcp_speedlog_lon_water_speed",
+            "transverse_water_speed": "adcp_speedlog_transverse_water_speed",
+            "water_speed_status": "adcp_speedlog_water_speed_status",
+            
+            "lon_ground_speed": "adcp_speedlog_lon_ground_speed",
+            "transverse_ground_speed": "adcp_speedlog_transverse_ground_speed",
+            "ground_speed_status": "adcp_speedlog_ground_speed_status",
+            
+            "stern_transverse_water_speed": "adcp_speedlog_stern_transverse_water_speed",
+            "stern_water_speed_status": "adcp_speedlog_stern_water_speed_status",
+            "stern_transverse_ground_speed": "adcp_speedlog_stern_transverse_ground_speed",
+            "stern_ground_speed_status": "adcp_speedlog_stern_ground_speed_status"
+        }
+    },
+          
 # ------------------------------------------------------------------------------------------------
 # sv_aml-svxchang_fwd:
 # 
@@ -1010,6 +1054,33 @@
         "model": "sv_aml-svxchang",
         "fields": {
             "speed_of_sound": "sv_aml-svxchang_fwd_speed_of_sound"
+        }
+    },
+
+# ------------------------------------------------------------------------------------------------
+#thermo_sbe38_fwd:
+#  
+#  Sea-Bird SBE 38 Temperature sensor.
+#  Measures surface seawater temperature from forward seachest for the UNCSW system.
+#
+#  Model: SBE38
+#  Serial Number: 3869615-0668
+#  Location: Forward seachest in bow thruster room
+#  Sample rate: 1 second
+#
+#  Example data line:
+#    thermo_sbe38_fwd  2016-03-12T00:00:16.7036Z  16.7103
+#
+#  Field Descriptions:
+#    LDS Logger ID
+#    LDS Time Stamp [UTC]
+#    Temperature [C]
+
+    "thermo_sbe38_fwd": {
+        "name": "thermo_sbe38_fwd",
+        "model": "thermo_sbe38",
+        "fields": {
+            "temp": "thermo_sbe_38_fwd_temp"
         }
     },
 
@@ -1121,6 +1192,17 @@
         }
     },
 
+    "tsg_sbe45_fwd_2": {
+        "name": "tsg_sbe45_fwd_2",
+        "model": "tsg_sbe45",
+        "fields": {
+            "temp": "tsg_sbe45_fwd_2_temp",
+            "conductivity": "tsg_sbe45_fwd_2_conductivity",
+            "salinity": "tsg_sbe45_fwd_2_salinity",
+            "speed_of_sound": "tsg_sbe45_fwd_2_speed_of_sound"
+        }
+    },
+
 # ------------------------------------------------------------------------------------------------
 # wind_gill_fwdmast:
 # 
@@ -1152,12 +1234,33 @@
 
     "wind_gill_fwdmast": {
         "name": "wind_gill_fwdmast",
-        "model": "wind_gill",
+        "model": "wind_gill_rel",
         "fields": {
             "direction": "wind_gill_fwdmast_direction",
             "speed": "wind_gill_fwdmast_speed",
             "units": "wind_gill_fwdmast_units",
             "status": "wind_gill_fwdmast_status"
+        }
+    },
+
+    "wind_mast_port": {
+        "name": "wind_mast_port",
+        "model": "wind_rel",
+        "fields": {
+            "direction": "wind_mast_port_direction",
+            "speed": "wind_mast_port_speed",
+            "units": "wind_mast_port_units",
+            "status": "wind_mast_port_status"
+        }
+    },
+    "wind_mast_stbd": {
+        "name": "wind_mast_stbd",
+        "model": "wind_rel",
+        "fields": {
+            "direction": "wind_mast_stbd_direction",
+            "speed": "wind_mast_stbd_speed",
+            "units": "wind_mast_stbd_units",
+            "status": "wind_mast_stbd_status"
         }
     },
 
@@ -1190,13 +1293,46 @@
 #
     "wind_gill_fwdmast_true": {
         "name": "wind_gill_fwdmast_true",
-        "model": "wind_gill_true",
+        "model": "wind_true",
         "fields": {
             "true_direction": "wind_gill_fwdmast_true_direction",
             "magnetic_direction": "wind_gill_fwdmast_magnetic_direction",
             "speed_knots": "wind_gill_fwdmast_true_speed_knots",
             "speed_meters": "wind_gill_fwdmast_true_speed_meters"
         }
-    }
+    },
 
+    "wind_mast_port_true": {
+        "name": "wind_mast_port_true",
+        "model": "wind_true",
+        "fields": {
+            "true_direction": "wind_mast_port_true_direction",
+            "magnetic_direction": "wind_mast_port_magnetic_direction",
+            "speed_knots": "wind_mast_port_true_speed_knots",
+            "speed_meters": "wind_mast_port_true_speed_meters"
+        }
+    },
+
+    "wind_mast_stbd_true": {
+        "name": "wind_mast_stbd_true",
+        "model": "wind_true",
+        "fields": {
+            "true_direction": "wind_mast_stbd_true_direction",
+            "magnetic_direction": "wind_mast_stbd_magnetic_direction",
+            "speed_knots": "wind_mast_stbd_true_speed_knots",
+            "speed_meters": "wind_mast_stbd_true_speed_meters"
+        }
+    },
+
+# ------------------------------------------------------------------------------------------------
+# AIS - we don't actually have an information about parsing one of these.
+
+   "ais_r4-navigator_bridge": {
+        "name": "ais_r4-navigator_bridge",
+        "model": "ais_r4-navigator",
+        "fields": {
+            # Unknown what any of these fields are
+            "DummyField": "DummyMappedField"
+        }
+    }
 }

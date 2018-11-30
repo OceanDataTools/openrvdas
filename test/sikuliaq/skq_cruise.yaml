@@ -1,18 +1,10 @@
 {
     "cruise": {
-        "id": "SKQ_SAMPLE",
+        "id": "SKQ201822S",
         "start": "2018-04-01",
         "end": "2018-05-01"
     },
     "loggers": {
-        "cruiseid": {
-            "configs": [
-                "cruiseid->off",
-                "cruiseid->file/db",
-                "cruiseid->file",
-                "cruiseid->db"
-            ]
-        },
         "met_ptu307": {
             "configs": [
                 "met_ptu307->off",
@@ -109,14 +101,6 @@
                 "tsg_sbe45_fwd_2->db"
             ]
         },
-        "flow_omega_fwd": {
-            "configs": [
-                "flow_omega_fwd->off",
-                "flow_omega_fwd->file/db",
-                "flow_omega_fwd->file",
-                "flow_omega_fwd->db"
-            ]
-        },
         "flow_krohne_pco2": {
             "configs": [
                 "flow_krohne_pco2->off",
@@ -125,12 +109,12 @@
                 "flow_krohne_pco2->db"
             ]
         },
-        "ssv_aml-svxchang_fwd": {
+        "ssv_aml": {
             "configs": [
-                "ssv_aml-svxchang_fwd->off",
-                "ssv_aml-svxchang_fwd->file/db",
-                "ssv_aml-svxchang_fwd->file",
-                "ssv_aml-svxchang_fwd->db"
+                "ssv_aml->off",
+                "ssv_aml->file/db",
+                "ssv_aml->file",
+                "ssv_aml->db"
             ]
         },
         "ins_seapath_position": {
@@ -277,20 +261,36 @@
                 "mbari_isus_fwd->db"
             ]
         },
+        "ais_r4-navigator_bridge": {
+            "configs": [
+                "ais_r4-navigator_bridge->off",
+                "ais_r4-navigator_bridge->file/db",
+                "ais_r4-navigator_bridge->file",
+                "ais_r4-navigator_bridge->db"
+            ]
+        },
+        "adcp_speedlog": {
+            "configs": [
+                "adcp_speedlog->off",
+                "adcp_speedlog->file/db",
+                "adcp_speedlog->file",
+                "adcp_speedlog->db"
+            ]
+        },
+        "cruiseid": {
+            "configs": [
+                "cruiseid->off",
+                "cruiseid->file/db",
+                "cruiseid->file",
+                "cruiseid->db"
+            ]
+        },
         "tsg_emssv": {
             "configs": [
                 "tsg_emssv->off",
                 "tsg_emssv->file/db",
                 "tsg_emssv->file",
                 "tsg_emssv->db"
-            ]
-        },
-        "mb_em710_centerbeam": {
-            "configs": [
-                "mb_em710_centerbeam->off",
-                "mb_em710_centerbeam->file/db",
-                "mb_em710_centerbeam->file",
-                "mb_em710_centerbeam->db"
             ]
         },
         "mb_em302_centerbeam": {
@@ -304,7 +304,6 @@
     },
     "modes": {
         "off": {
-            "cruiseid": "cruiseid->off",
             "met_ptu307": "met_ptu307->off",
             "rain_rmy50202": "rain_rmy50202->off",
             "rad_qsr2150a": "rad_qsr2150a->off",
@@ -317,9 +316,8 @@
             "thermo_sbe38_fwd": "thermo_sbe38_fwd->off",
             "thermo_sbe38_incubator": "thermo_sbe38_incubator->off",
             "tsg_sbe45_fwd_2": "tsg_sbe45_fwd_2->off",
-            "flow_omega_fwd": "flow_omega_fwd->off",
             "flow_krohne_pco2": "flow_krohne_pco2->off",
-            "ssv_aml-svxchang_fwd": "ssv_aml-svxchang_fwd->off",
+            "ssv_aml": "ssv_aml->off",
             "ins_seapath_position": "ins_seapath_position->off",
             "gnss_cnav": "gnss_cnav->off",
             "gyro_1": "gyro_1->off",
@@ -338,12 +336,13 @@
             "oxygen_sbe43_fwd": "oxygen_sbe43_fwd->off",
             "oxygen_sbe43_fwd_calc": "oxygen_sbe43_fwd_calc->off",
             "mbari_isus_fwd": "mbari_isus_fwd->off",
+            "ais_r4-navigator_bridge": "ais_r4-navigator_bridge->off",
+            "adcp_speedlog": "adcp_speedlog->off",
+            "cruiseid": "cruiseid->off",
             "tsg_emssv": "tsg_emssv->off",
-            "mb_em710_centerbeam": "mb_em710_centerbeam->off",
             "mb_em302_centerbeam": "mb_em302_centerbeam->off"
         },
         "file": {
-            "cruiseid": "cruiseid->file",
             "met_ptu307": "met_ptu307->file",
             "rain_rmy50202": "rain_rmy50202->file",
             "rad_qsr2150a": "rad_qsr2150a->file",
@@ -356,9 +355,8 @@
             "thermo_sbe38_fwd": "thermo_sbe38_fwd->file",
             "thermo_sbe38_incubator": "thermo_sbe38_incubator->file",
             "tsg_sbe45_fwd_2": "tsg_sbe45_fwd_2->file",
-            "flow_omega_fwd": "flow_omega_fwd->file",
             "flow_krohne_pco2": "flow_krohne_pco2->file",
-            "ssv_aml-svxchang_fwd": "ssv_aml-svxchang_fwd->file",
+            "ssv_aml": "ssv_aml->file",
             "ins_seapath_position": "ins_seapath_position->file",
             "gnss_cnav": "gnss_cnav->file",
             "gyro_1": "gyro_1->file",
@@ -377,12 +375,13 @@
             "oxygen_sbe43_fwd": "oxygen_sbe43_fwd->file",
             "oxygen_sbe43_fwd_calc": "oxygen_sbe43_fwd_calc->file",
             "mbari_isus_fwd": "mbari_isus_fwd->file",
+            "ais_r4-navigator_bridge": "ais_r4-navigator_bridge->file",
+            "adcp_speedlog": "adcp_speedlog->file",
+            "cruiseid": "cruiseid->file",
             "tsg_emssv": "tsg_emssv->file",
-            "mb_em710_centerbeam": "mb_em710_centerbeam->file",
             "mb_em302_centerbeam": "mb_em302_centerbeam->file"
         },
         "db": {
-            "cruiseid": "cruiseid->db",
             "met_ptu307": "met_ptu307->db",
             "rain_rmy50202": "rain_rmy50202->db",
             "rad_qsr2150a": "rad_qsr2150a->db",
@@ -395,9 +394,8 @@
             "thermo_sbe38_fwd": "thermo_sbe38_fwd->db",
             "thermo_sbe38_incubator": "thermo_sbe38_incubator->db",
             "tsg_sbe45_fwd_2": "tsg_sbe45_fwd_2->db",
-            "flow_omega_fwd": "flow_omega_fwd->db",
             "flow_krohne_pco2": "flow_krohne_pco2->db",
-            "ssv_aml-svxchang_fwd": "ssv_aml-svxchang_fwd->db",
+            "ssv_aml": "ssv_aml->db",
             "ins_seapath_position": "ins_seapath_position->db",
             "gnss_cnav": "gnss_cnav->db",
             "gyro_1": "gyro_1->db",
@@ -416,12 +414,13 @@
             "oxygen_sbe43_fwd": "oxygen_sbe43_fwd->db",
             "oxygen_sbe43_fwd_calc": "oxygen_sbe43_fwd_calc->db",
             "mbari_isus_fwd": "mbari_isus_fwd->db",
+            "ais_r4-navigator_bridge": "ais_r4-navigator_bridge->db",
+            "adcp_speedlog": "adcp_speedlog->db",
+            "cruiseid": "cruiseid->db",
             "tsg_emssv": "tsg_emssv->db",
-            "mb_em710_centerbeam": "mb_em710_centerbeam->db",
             "mb_em302_centerbeam": "mb_em302_centerbeam->db"
         },
         "file/db": {
-            "cruiseid": "cruiseid->file/db",
             "met_ptu307": "met_ptu307->file/db",
             "rain_rmy50202": "rain_rmy50202->file/db",
             "rad_qsr2150a": "rad_qsr2150a->file/db",
@@ -434,9 +433,8 @@
             "thermo_sbe38_fwd": "thermo_sbe38_fwd->file/db",
             "thermo_sbe38_incubator": "thermo_sbe38_incubator->file/db",
             "tsg_sbe45_fwd_2": "tsg_sbe45_fwd_2->file/db",
-            "flow_omega_fwd": "flow_omega_fwd->file/db",
             "flow_krohne_pco2": "flow_krohne_pco2->file/db",
-            "ssv_aml-svxchang_fwd": "ssv_aml-svxchang_fwd->file/db",
+            "ssv_aml": "ssv_aml->file/db",
             "ins_seapath_position": "ins_seapath_position->file/db",
             "gnss_cnav": "gnss_cnav->file/db",
             "gyro_1": "gyro_1->file/db",
@@ -455,136 +453,22 @@
             "oxygen_sbe43_fwd": "oxygen_sbe43_fwd->file/db",
             "oxygen_sbe43_fwd_calc": "oxygen_sbe43_fwd_calc->file/db",
             "mbari_isus_fwd": "mbari_isus_fwd->file/db",
+            "ais_r4-navigator_bridge": "ais_r4-navigator_bridge->file/db",
+            "adcp_speedlog": "adcp_speedlog->file/db",
+            "cruiseid": "cruiseid->file/db",
             "tsg_emssv": "tsg_emssv->file/db",
-            "mb_em710_centerbeam": "mb_em710_centerbeam->file/db",
             "mb_em302_centerbeam": "mb_em302_centerbeam->file/db"
         }
     },
     "default_mode": "off",
     "configs": {
-        "cruiseid->off": {},
-        "cruiseid->file/db": {
-            "name": "cruiseid->file/db",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":54000"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^cruiseid"
-                }
-            },
-            "writers": [
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "ParseNMEATransform",
-                            "kwargs": {
-                                "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
-                                "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
-                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                            }
-                        },
-                        "writers": {
-                            "class": "DatabaseWriter"
-                        }
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "SliceTransform",
-                            "kwargs": {
-                                "fields": "1:"
-                            }
-                        },
-                        "writers": {
-                            "class": "LogfileWriter",
-                            "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
-                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "cruiseid->file": {
-            "name": "cruiseid->file",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":54000"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^cruiseid"
-                }
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "SliceTransform",
-                        "kwargs": {
-                            "fields": "1:"
-                        }
-                    },
-                    "writers": {
-                        "class": "LogfileWriter",
-                        "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/cruiseid/raw/SKQ_SAMPLE_cruiseid",
-                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                        }
-                    }
-                }
-            }
-        },
-        "cruiseid->db": {
-            "name": "cruiseid->db",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":54000"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^cruiseid"
-                }
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "ParseNMEATransform",
-                        "kwargs": {
-                            "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
-                            "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
-                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                        }
-                    },
-                    "writers": {
-                        "class": "DatabaseWriter"
-                    }
-                }
-            }
-        },
         "met_ptu307->off": {},
         "met_ptu307->file/db": {
             "name": "met_ptu307->file/db",
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54100"
+                    "network": ":53100"
                 }
             },
             "transforms": {
@@ -622,7 +506,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
+                                "filebase": "/var/tmp/log/SKQ201822S/met_ptu307/raw/SKQ201822S_met_ptu307",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -635,7 +519,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54100"
+                    "network": ":53100"
                 }
             },
             "transforms": {
@@ -656,7 +540,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/met_ptu307/raw/SKQ_SAMPLE_met_ptu307",
+                            "filebase": "/var/tmp/log/SKQ201822S/met_ptu307/raw/SKQ201822S_met_ptu307",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -668,7 +552,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54100"
+                    "network": ":53100"
                 }
             },
             "transforms": {
@@ -700,7 +584,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54101"
+                    "network": ":53101"
                 }
             },
             "transforms": {
@@ -738,7 +622,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
+                                "filebase": "/var/tmp/log/SKQ201822S/rain_rmy50202/raw/SKQ201822S_rain_rmy50202",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -751,7 +635,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54101"
+                    "network": ":53101"
                 }
             },
             "transforms": {
@@ -772,7 +656,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/rain_rmy50202/raw/SKQ_SAMPLE_rain_rmy50202",
+                            "filebase": "/var/tmp/log/SKQ201822S/rain_rmy50202/raw/SKQ201822S_rain_rmy50202",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -784,7 +668,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54101"
+                    "network": ":53101"
                 }
             },
             "transforms": {
@@ -816,7 +700,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54104"
+                    "network": ":53104"
                 }
             },
             "transforms": {
@@ -854,7 +738,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
+                                "filebase": "/var/tmp/log/SKQ201822S/rad_qsr2150a/raw/SKQ201822S_rad_qsr2150a",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -867,7 +751,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54104"
+                    "network": ":53104"
                 }
             },
             "transforms": {
@@ -888,7 +772,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_qsr2150a/raw/SKQ_SAMPLE_rad_qsr2150a",
+                            "filebase": "/var/tmp/log/SKQ201822S/rad_qsr2150a/raw/SKQ201822S_rad_qsr2150a",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -900,7 +784,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54104"
+                    "network": ":53104"
                 }
             },
             "transforms": {
@@ -932,7 +816,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54105"
+                    "network": ":53105"
                 }
             },
             "transforms": {
@@ -970,7 +854,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
+                                "filebase": "/var/tmp/log/SKQ201822S/rad_psp-pir/raw/SKQ201822S_rad_psp-pir",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -983,7 +867,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54105"
+                    "network": ":53105"
                 }
             },
             "transforms": {
@@ -1004,7 +888,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/rad_psp-pir/raw/SKQ_SAMPLE_rad_psp-pir",
+                            "filebase": "/var/tmp/log/SKQ201822S/rad_psp-pir/raw/SKQ201822S_rad_psp-pir",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1016,7 +900,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54105"
+                    "network": ":53105"
                 }
             },
             "transforms": {
@@ -1048,7 +932,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54106"
+                    "network": ":53106"
                 }
             },
             "transforms": {
@@ -1086,7 +970,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
+                                "filebase": "/var/tmp/log/SKQ201822S/thermo_pyrometer-ct15/raw/SKQ201822S_thermo_pyrometer-ct15",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1099,7 +983,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54106"
+                    "network": ":53106"
                 }
             },
             "transforms": {
@@ -1120,7 +1004,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_pyrometer-ct15/raw/SKQ_SAMPLE_thermo_pyrometer-ct15",
+                            "filebase": "/var/tmp/log/SKQ201822S/thermo_pyrometer-ct15/raw/SKQ201822S_thermo_pyrometer-ct15",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1132,7 +1016,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54106"
+                    "network": ":53106"
                 }
             },
             "transforms": {
@@ -1164,7 +1048,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54107"
+                    "network": ":53107"
                 }
             },
             "transforms": {
@@ -1202,7 +1086,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
+                                "filebase": "/var/tmp/log/SKQ201822S/fluoro_turner-c6/raw/SKQ201822S_fluoro_turner-c6",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1215,7 +1099,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54107"
+                    "network": ":53107"
                 }
             },
             "transforms": {
@@ -1236,7 +1120,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/fluoro_turner-c6/raw/SKQ_SAMPLE_fluoro_turner-c6",
+                            "filebase": "/var/tmp/log/SKQ201822S/fluoro_turner-c6/raw/SKQ201822S_fluoro_turner-c6",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1248,7 +1132,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54107"
+                    "network": ":53107"
                 }
             },
             "transforms": {
@@ -1280,7 +1164,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54108"
+                    "network": ":53108"
                 }
             },
             "transforms": {
@@ -1318,7 +1202,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
+                                "filebase": "/var/tmp/log/SKQ201822S/grav_bgm3_222/raw/SKQ201822S_grav_bgm3_222",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1331,7 +1215,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54108"
+                    "network": ":53108"
                 }
             },
             "transforms": {
@@ -1352,7 +1236,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/grav_bgm3_222/raw/SKQ_SAMPLE_grav_bgm3_222",
+                            "filebase": "/var/tmp/log/SKQ201822S/grav_bgm3_222/raw/SKQ201822S_grav_bgm3_222",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1364,7 +1248,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54108"
+                    "network": ":53108"
                 }
             },
             "transforms": {
@@ -1434,7 +1318,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
+                                "filebase": "/var/tmp/log/SKQ201822S/pco2_ldeo_merge/raw/SKQ201822S_pco2_ldeo_merge",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1468,7 +1352,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/pco2_ldeo_merge/raw/SKQ_SAMPLE_pco2_ldeo_merge",
+                            "filebase": "/var/tmp/log/SKQ201822S/pco2_ldeo_merge/raw/SKQ201822S_pco2_ldeo_merge",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1512,7 +1396,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54110"
+                    "network": ":53110"
                 }
             },
             "transforms": {
@@ -1550,7 +1434,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
+                                "filebase": "/var/tmp/log/SKQ201822S/tsg_sbe45_fwd/raw/SKQ201822S_tsg_sbe45_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1563,7 +1447,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54110"
+                    "network": ":53110"
                 }
             },
             "transforms": {
@@ -1584,7 +1468,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd/raw/SKQ_SAMPLE_tsg_sbe45_fwd",
+                            "filebase": "/var/tmp/log/SKQ201822S/tsg_sbe45_fwd/raw/SKQ201822S_tsg_sbe45_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1596,7 +1480,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54110"
+                    "network": ":53110"
                 }
             },
             "transforms": {
@@ -1628,7 +1512,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54111"
+                    "network": ":53111"
                 }
             },
             "transforms": {
@@ -1666,7 +1550,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
+                                "filebase": "/var/tmp/log/SKQ201822S/thermo_sbe38_fwd/raw/SKQ201822S_thermo_sbe38_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1679,7 +1563,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54111"
+                    "network": ":53111"
                 }
             },
             "transforms": {
@@ -1700,7 +1584,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_fwd/raw/SKQ_SAMPLE_thermo_sbe38_fwd",
+                            "filebase": "/var/tmp/log/SKQ201822S/thermo_sbe38_fwd/raw/SKQ201822S_thermo_sbe38_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1712,7 +1596,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54111"
+                    "network": ":53111"
                 }
             },
             "transforms": {
@@ -1744,7 +1628,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54112"
+                    "network": ":53112"
                 }
             },
             "transforms": {
@@ -1782,7 +1666,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
+                                "filebase": "/var/tmp/log/SKQ201822S/thermo_sbe38_incubator/raw/SKQ201822S_thermo_sbe38_incubator",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1795,7 +1679,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54112"
+                    "network": ":53112"
                 }
             },
             "transforms": {
@@ -1816,7 +1700,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/thermo_sbe38_incubator/raw/SKQ_SAMPLE_thermo_sbe38_incubator",
+                            "filebase": "/var/tmp/log/SKQ201822S/thermo_sbe38_incubator/raw/SKQ201822S_thermo_sbe38_incubator",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1828,7 +1712,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54112"
+                    "network": ":53112"
                 }
             },
             "transforms": {
@@ -1860,7 +1744,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54114"
+                    "network": ":53114"
                 }
             },
             "transforms": {
@@ -1898,7 +1782,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
+                                "filebase": "/var/tmp/log/SKQ201822S/tsg_sbe45_fwd_2/raw/SKQ201822S_tsg_sbe45_fwd_2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -1911,7 +1795,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54114"
+                    "network": ":53114"
                 }
             },
             "transforms": {
@@ -1932,7 +1816,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_sbe45_fwd_2/raw/SKQ_SAMPLE_tsg_sbe45_fwd_2",
+                            "filebase": "/var/tmp/log/SKQ201822S/tsg_sbe45_fwd_2/raw/SKQ201822S_tsg_sbe45_fwd_2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -1944,129 +1828,13 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54114"
+                    "network": ":53114"
                 }
             },
             "transforms": {
                 "class": "RegexFilterTransform",
                 "kwargs": {
                     "pattern": "^tsg_sbe45_fwd_2"
-                }
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "ParseNMEATransform",
-                        "kwargs": {
-                            "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
-                            "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
-                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                        }
-                    },
-                    "writers": {
-                        "class": "DatabaseWriter"
-                    }
-                }
-            }
-        },
-        "flow_omega_fwd->off": {},
-        "flow_omega_fwd->file/db": {
-            "name": "flow_omega_fwd->file/db",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":54115"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^flow_omega_fwd"
-                }
-            },
-            "writers": [
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "ParseNMEATransform",
-                            "kwargs": {
-                                "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
-                                "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
-                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                            }
-                        },
-                        "writers": {
-                            "class": "DatabaseWriter"
-                        }
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "SliceTransform",
-                            "kwargs": {
-                                "fields": "1:"
-                            }
-                        },
-                        "writers": {
-                            "class": "LogfileWriter",
-                            "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
-                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "flow_omega_fwd->file": {
-            "name": "flow_omega_fwd->file",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":54115"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^flow_omega_fwd"
-                }
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "SliceTransform",
-                        "kwargs": {
-                            "fields": "1:"
-                        }
-                    },
-                    "writers": {
-                        "class": "LogfileWriter",
-                        "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_omega_fwd/raw/SKQ_SAMPLE_flow_omega_fwd",
-                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                        }
-                    }
-                }
-            }
-        },
-        "flow_omega_fwd->db": {
-            "name": "flow_omega_fwd->db",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":54115"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^flow_omega_fwd"
                 }
             },
             "writers": {
@@ -2092,7 +1860,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54116"
+                    "network": ":53116"
                 }
             },
             "transforms": {
@@ -2130,7 +1898,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
+                                "filebase": "/var/tmp/log/SKQ201822S/flow_krohne_pco2/raw/SKQ201822S_flow_krohne_pco2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2143,7 +1911,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54116"
+                    "network": ":53116"
                 }
             },
             "transforms": {
@@ -2164,7 +1932,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_pco2/raw/SKQ_SAMPLE_flow_krohne_pco2",
+                            "filebase": "/var/tmp/log/SKQ201822S/flow_krohne_pco2/raw/SKQ201822S_flow_krohne_pco2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2176,7 +1944,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54116"
+                    "network": ":53116"
                 }
             },
             "transforms": {
@@ -2202,19 +1970,19 @@
                 }
             }
         },
-        "ssv_aml-svxchang_fwd->off": {},
-        "ssv_aml-svxchang_fwd->file/db": {
-            "name": "ssv_aml-svxchang_fwd->file/db",
+        "ssv_aml->off": {},
+        "ssv_aml->file/db": {
+            "name": "ssv_aml->file/db",
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54117"
+                    "network": ":53117"
                 }
             },
             "transforms": {
                 "class": "RegexFilterTransform",
                 "kwargs": {
-                    "pattern": "^ssv_aml-svxchang_fwd"
+                    "pattern": "^ssv_aml"
                 }
             },
             "writers": [
@@ -2246,7 +2014,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
+                                "filebase": "/var/tmp/log/SKQ201822S/ssv_aml/raw/SKQ201822S_ssv_aml",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2254,18 +2022,18 @@
                 }
             ]
         },
-        "ssv_aml-svxchang_fwd->file": {
-            "name": "ssv_aml-svxchang_fwd->file",
+        "ssv_aml->file": {
+            "name": "ssv_aml->file",
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54117"
+                    "network": ":53117"
                 }
             },
             "transforms": {
                 "class": "RegexFilterTransform",
                 "kwargs": {
-                    "pattern": "^ssv_aml-svxchang_fwd"
+                    "pattern": "^ssv_aml"
                 }
             },
             "writers": {
@@ -2280,25 +2048,25 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/ssv_aml-svxchang_fwd/raw/SKQ_SAMPLE_ssv_aml-svxchang_fwd",
+                            "filebase": "/var/tmp/log/SKQ201822S/ssv_aml/raw/SKQ201822S_ssv_aml",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
                 }
             }
         },
-        "ssv_aml-svxchang_fwd->db": {
-            "name": "ssv_aml-svxchang_fwd->db",
+        "ssv_aml->db": {
+            "name": "ssv_aml->db",
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54117"
+                    "network": ":53117"
                 }
             },
             "transforms": {
                 "class": "RegexFilterTransform",
                 "kwargs": {
-                    "pattern": "^ssv_aml-svxchang_fwd"
+                    "pattern": "^ssv_aml"
                 }
             },
             "writers": {
@@ -2324,7 +2092,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54119"
+                    "network": ":53119"
                 }
             },
             "transforms": {
@@ -2362,7 +2130,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
+                                "filebase": "/var/tmp/log/SKQ201822S/ins_seapath_position/raw/SKQ201822S_ins_seapath_position",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2375,7 +2143,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54119"
+                    "network": ":53119"
                 }
             },
             "transforms": {
@@ -2396,7 +2164,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/ins_seapath_position/raw/SKQ_SAMPLE_ins_seapath_position",
+                            "filebase": "/var/tmp/log/SKQ201822S/ins_seapath_position/raw/SKQ201822S_ins_seapath_position",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2408,7 +2176,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54119"
+                    "network": ":53119"
                 }
             },
             "transforms": {
@@ -2440,7 +2208,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54121"
+                    "network": ":53121"
                 }
             },
             "transforms": {
@@ -2478,7 +2246,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
+                                "filebase": "/var/tmp/log/SKQ201822S/gnss_cnav/raw/SKQ201822S_gnss_cnav",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2491,7 +2259,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54121"
+                    "network": ":53121"
                 }
             },
             "transforms": {
@@ -2512,7 +2280,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/gnss_cnav/raw/SKQ_SAMPLE_gnss_cnav",
+                            "filebase": "/var/tmp/log/SKQ201822S/gnss_cnav/raw/SKQ201822S_gnss_cnav",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2524,7 +2292,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54121"
+                    "network": ":53121"
                 }
             },
             "transforms": {
@@ -2556,7 +2324,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54122"
+                    "network": ":53122"
                 }
             },
             "transforms": {
@@ -2594,7 +2362,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
+                                "filebase": "/var/tmp/log/SKQ201822S/gyro_1/raw/SKQ201822S_gyro_1",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2607,7 +2375,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54122"
+                    "network": ":53122"
                 }
             },
             "transforms": {
@@ -2628,7 +2396,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_1/raw/SKQ_SAMPLE_gyro_1",
+                            "filebase": "/var/tmp/log/SKQ201822S/gyro_1/raw/SKQ201822S_gyro_1",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2640,7 +2408,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54122"
+                    "network": ":53122"
                 }
             },
             "transforms": {
@@ -2672,7 +2440,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54125"
+                    "network": ":53123"
                 }
             },
             "transforms": {
@@ -2710,7 +2478,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
+                                "filebase": "/var/tmp/log/SKQ201822S/gyro_2/raw/SKQ201822S_gyro_2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2723,7 +2491,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54125"
+                    "network": ":53123"
                 }
             },
             "transforms": {
@@ -2744,7 +2512,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/gyro_2/raw/SKQ_SAMPLE_gyro_2",
+                            "filebase": "/var/tmp/log/SKQ201822S/gyro_2/raw/SKQ201822S_gyro_2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2756,7 +2524,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54125"
+                    "network": ":53123"
                 }
             },
             "transforms": {
@@ -2788,7 +2556,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54124"
+                    "network": ":53124"
                 }
             },
             "transforms": {
@@ -2826,7 +2594,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
+                                "filebase": "/var/tmp/log/SKQ201822S/wind_gill_fwdmast/raw/SKQ201822S_wind_gill_fwdmast",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2839,7 +2607,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54124"
+                    "network": ":53124"
                 }
             },
             "transforms": {
@@ -2860,7 +2628,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast/raw/SKQ_SAMPLE_wind_gill_fwdmast",
+                            "filebase": "/var/tmp/log/SKQ201822S/wind_gill_fwdmast/raw/SKQ201822S_wind_gill_fwdmast",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -2872,7 +2640,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54124"
+                    "network": ":53124"
                 }
             },
             "transforms": {
@@ -2942,7 +2710,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
+                                "filebase": "/var/tmp/log/SKQ201822S/wind_gill_fwdmast_true/raw/SKQ201822S_wind_gill_fwdmast_true",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -2976,7 +2744,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_gill_fwdmast_true/raw/SKQ_SAMPLE_wind_gill_fwdmast_true",
+                            "filebase": "/var/tmp/log/SKQ201822S/wind_gill_fwdmast_true/raw/SKQ201822S_wind_gill_fwdmast_true",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3020,7 +2788,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54125"
+                    "network": ":53125"
                 }
             },
             "transforms": {
@@ -3058,7 +2826,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
+                                "filebase": "/var/tmp/log/SKQ201822S/speedlog/raw/SKQ201822S_speedlog",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3071,7 +2839,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54125"
+                    "network": ":53125"
                 }
             },
             "transforms": {
@@ -3092,7 +2860,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/speedlog/raw/SKQ_SAMPLE_speedlog",
+                            "filebase": "/var/tmp/log/SKQ201822S/speedlog/raw/SKQ201822S_speedlog",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3104,7 +2872,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54125"
+                    "network": ":53125"
                 }
             },
             "transforms": {
@@ -3136,7 +2904,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54126"
+                    "network": ":53126"
                 }
             },
             "transforms": {
@@ -3174,7 +2942,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
+                                "filebase": "/var/tmp/log/SKQ201822S/sb_echosounder_1/raw/SKQ201822S_sb_echosounder_1",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3187,7 +2955,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54126"
+                    "network": ":53126"
                 }
             },
             "transforms": {
@@ -3208,7 +2976,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_1/raw/SKQ_SAMPLE_sb_echosounder_1",
+                            "filebase": "/var/tmp/log/SKQ201822S/sb_echosounder_1/raw/SKQ201822S_sb_echosounder_1",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3220,7 +2988,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54126"
+                    "network": ":53126"
                 }
             },
             "transforms": {
@@ -3252,7 +3020,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54127"
+                    "network": ":53127"
                 }
             },
             "transforms": {
@@ -3290,7 +3058,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
+                                "filebase": "/var/tmp/log/SKQ201822S/sb_echosounder_2/raw/SKQ201822S_sb_echosounder_2",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3303,7 +3071,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54127"
+                    "network": ":53127"
                 }
             },
             "transforms": {
@@ -3324,7 +3092,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/sb_echosounder_2/raw/SKQ_SAMPLE_sb_echosounder_2",
+                            "filebase": "/var/tmp/log/SKQ201822S/sb_echosounder_2/raw/SKQ201822S_sb_echosounder_2",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3336,7 +3104,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54127"
+                    "network": ":53127"
                 }
             },
             "transforms": {
@@ -3368,7 +3136,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54128"
+                    "network": ":53128"
                 }
             },
             "transforms": {
@@ -3406,7 +3174,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
+                                "filebase": "/var/tmp/log/SKQ201822S/winch_rapp/raw/SKQ201822S_winch_rapp",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3419,7 +3187,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54128"
+                    "network": ":53128"
                 }
             },
             "transforms": {
@@ -3440,7 +3208,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/winch_rapp/raw/SKQ_SAMPLE_winch_rapp",
+                            "filebase": "/var/tmp/log/SKQ201822S/winch_rapp/raw/SKQ201822S_winch_rapp",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3452,7 +3220,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54128"
+                    "network": ":53128"
                 }
             },
             "transforms": {
@@ -3484,7 +3252,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54129"
+                    "network": ":53129"
                 }
             },
             "transforms": {
@@ -3522,7 +3290,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
+                                "filebase": "/var/tmp/log/SKQ201822S/flow_krohne_fwd/raw/SKQ201822S_flow_krohne_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3535,7 +3303,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54129"
+                    "network": ":53129"
                 }
             },
             "transforms": {
@@ -3556,7 +3324,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/flow_krohne_fwd/raw/SKQ_SAMPLE_flow_krohne_fwd",
+                            "filebase": "/var/tmp/log/SKQ201822S/flow_krohne_fwd/raw/SKQ201822S_flow_krohne_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3568,7 +3336,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54129"
+                    "network": ":53129"
                 }
             },
             "transforms": {
@@ -3600,7 +3368,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54130"
+                    "network": ":53130"
                 }
             },
             "transforms": {
@@ -3638,7 +3406,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
+                                "filebase": "/var/tmp/log/SKQ201822S/wind_mast_port/raw/SKQ201822S_wind_mast_port",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3651,7 +3419,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54130"
+                    "network": ":53130"
                 }
             },
             "transforms": {
@@ -3672,7 +3440,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port/raw/SKQ_SAMPLE_wind_mast_port",
+                            "filebase": "/var/tmp/log/SKQ201822S/wind_mast_port/raw/SKQ201822S_wind_mast_port",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3684,7 +3452,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54130"
+                    "network": ":53130"
                 }
             },
             "transforms": {
@@ -3754,7 +3522,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
+                                "filebase": "/var/tmp/log/SKQ201822S/wind_mast_port_true/raw/SKQ201822S_wind_mast_port_true",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3788,7 +3556,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_port_true/raw/SKQ_SAMPLE_wind_mast_port_true",
+                            "filebase": "/var/tmp/log/SKQ201822S/wind_mast_port_true/raw/SKQ201822S_wind_mast_port_true",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3832,7 +3600,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54131"
+                    "network": ":53131"
                 }
             },
             "transforms": {
@@ -3870,7 +3638,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
+                                "filebase": "/var/tmp/log/SKQ201822S/wind_mast_stbd/raw/SKQ201822S_wind_mast_stbd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -3883,7 +3651,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54131"
+                    "network": ":53131"
                 }
             },
             "transforms": {
@@ -3904,7 +3672,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd/raw/SKQ_SAMPLE_wind_mast_stbd",
+                            "filebase": "/var/tmp/log/SKQ201822S/wind_mast_stbd/raw/SKQ201822S_wind_mast_stbd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -3916,7 +3684,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54131"
+                    "network": ":53131"
                 }
             },
             "transforms": {
@@ -3986,7 +3754,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
+                                "filebase": "/var/tmp/log/SKQ201822S/wind_mast_stbd_true/raw/SKQ201822S_wind_mast_stbd_true",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4020,7 +3788,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/wind_mast_stbd_true/raw/SKQ_SAMPLE_wind_mast_stbd_true",
+                            "filebase": "/var/tmp/log/SKQ201822S/wind_mast_stbd_true/raw/SKQ201822S_wind_mast_stbd_true",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4064,7 +3832,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54132"
+                    "network": ":53132"
                 }
             },
             "transforms": {
@@ -4102,7 +3870,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
+                                "filebase": "/var/tmp/log/SKQ201822S/oxygen_sbe43_fwd/raw/SKQ201822S_oxygen_sbe43_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4115,7 +3883,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54132"
+                    "network": ":53132"
                 }
             },
             "transforms": {
@@ -4136,7 +3904,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd/raw/SKQ_SAMPLE_oxygen_sbe43_fwd",
+                            "filebase": "/var/tmp/log/SKQ201822S/oxygen_sbe43_fwd/raw/SKQ201822S_oxygen_sbe43_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4148,7 +3916,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54132"
+                    "network": ":53132"
                 }
             },
             "transforms": {
@@ -4218,7 +3986,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
+                                "filebase": "/var/tmp/log/SKQ201822S/oxygen_sbe43_fwd_calc/raw/SKQ201822S_oxygen_sbe43_fwd_calc",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4252,7 +4020,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/oxygen_sbe43_fwd_calc/raw/SKQ_SAMPLE_oxygen_sbe43_fwd_calc",
+                            "filebase": "/var/tmp/log/SKQ201822S/oxygen_sbe43_fwd_calc/raw/SKQ201822S_oxygen_sbe43_fwd_calc",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4296,7 +4064,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54133"
+                    "network": ":53133"
                 }
             },
             "transforms": {
@@ -4334,7 +4102,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
+                                "filebase": "/var/tmp/log/SKQ201822S/mbari_isus_fwd/raw/SKQ201822S_mbari_isus_fwd",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4347,7 +4115,7 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54133"
+                    "network": ":53133"
                 }
             },
             "transforms": {
@@ -4368,7 +4136,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/mbari_isus_fwd/raw/SKQ_SAMPLE_mbari_isus_fwd",
+                            "filebase": "/var/tmp/log/SKQ201822S/mbari_isus_fwd/raw/SKQ201822S_mbari_isus_fwd",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4380,13 +4148,361 @@
             "readers": {
                 "class": "NetworkReader",
                 "kwargs": {
-                    "network": ":54133"
+                    "network": ":53133"
                 }
             },
             "transforms": {
                 "class": "RegexFilterTransform",
                 "kwargs": {
                     "pattern": "^mbari_isus_fwd"
+                }
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "ParseNMEATransform",
+                        "kwargs": {
+                            "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                            "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                        }
+                    },
+                    "writers": {
+                        "class": "DatabaseWriter"
+                    }
+                }
+            }
+        },
+        "ais_r4-navigator_bridge->off": {},
+        "ais_r4-navigator_bridge->file/db": {
+            "name": "ais_r4-navigator_bridge->file/db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":53134"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^ais_r4-navigator_bridge"
+                }
+            },
+            "writers": [
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "ParseNMEATransform",
+                            "kwargs": {
+                                "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                                "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                            }
+                        },
+                        "writers": {
+                            "class": "DatabaseWriter"
+                        }
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "SliceTransform",
+                            "kwargs": {
+                                "fields": "1:"
+                            }
+                        },
+                        "writers": {
+                            "class": "LogfileWriter",
+                            "kwargs": {
+                                "filebase": "/var/tmp/log/SKQ201822S/ais_r4-navigator_bridge/raw/SKQ201822S_ais_r4-navigator_bridge",
+                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "ais_r4-navigator_bridge->file": {
+            "name": "ais_r4-navigator_bridge->file",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":53134"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^ais_r4-navigator_bridge"
+                }
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "SliceTransform",
+                        "kwargs": {
+                            "fields": "1:"
+                        }
+                    },
+                    "writers": {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/var/tmp/log/SKQ201822S/ais_r4-navigator_bridge/raw/SKQ201822S_ais_r4-navigator_bridge",
+                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                        }
+                    }
+                }
+            }
+        },
+        "ais_r4-navigator_bridge->db": {
+            "name": "ais_r4-navigator_bridge->db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":53134"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^ais_r4-navigator_bridge"
+                }
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "ParseNMEATransform",
+                        "kwargs": {
+                            "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                            "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                        }
+                    },
+                    "writers": {
+                        "class": "DatabaseWriter"
+                    }
+                }
+            }
+        },
+        "adcp_speedlog->off": {},
+        "adcp_speedlog->file/db": {
+            "name": "adcp_speedlog->file/db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":53135"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^adcp_speedlog"
+                }
+            },
+            "writers": [
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "ParseNMEATransform",
+                            "kwargs": {
+                                "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                                "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                            }
+                        },
+                        "writers": {
+                            "class": "DatabaseWriter"
+                        }
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "SliceTransform",
+                            "kwargs": {
+                                "fields": "1:"
+                            }
+                        },
+                        "writers": {
+                            "class": "LogfileWriter",
+                            "kwargs": {
+                                "filebase": "/var/tmp/log/SKQ201822S/adcp_speedlog/raw/SKQ201822S_adcp_speedlog",
+                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "adcp_speedlog->file": {
+            "name": "adcp_speedlog->file",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":53135"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^adcp_speedlog"
+                }
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "SliceTransform",
+                        "kwargs": {
+                            "fields": "1:"
+                        }
+                    },
+                    "writers": {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/var/tmp/log/SKQ201822S/adcp_speedlog/raw/SKQ201822S_adcp_speedlog",
+                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                        }
+                    }
+                }
+            }
+        },
+        "adcp_speedlog->db": {
+            "name": "adcp_speedlog->db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":53135"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^adcp_speedlog"
+                }
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "ParseNMEATransform",
+                        "kwargs": {
+                            "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                            "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                        }
+                    },
+                    "writers": {
+                        "class": "DatabaseWriter"
+                    }
+                }
+            }
+        },
+        "cruiseid->off": {},
+        "cruiseid->file/db": {
+            "name": "cruiseid->file/db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":54000"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^cruiseid"
+                }
+            },
+            "writers": [
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "ParseNMEATransform",
+                            "kwargs": {
+                                "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                                "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                            }
+                        },
+                        "writers": {
+                            "class": "DatabaseWriter"
+                        }
+                    }
+                },
+                {
+                    "class": "ComposedWriter",
+                    "kwargs": {
+                        "transforms": {
+                            "class": "SliceTransform",
+                            "kwargs": {
+                                "fields": "1:"
+                            }
+                        },
+                        "writers": {
+                            "class": "LogfileWriter",
+                            "kwargs": {
+                                "filebase": "/var/tmp/log/SKQ201822S/cruiseid/raw/SKQ201822S_cruiseid",
+                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "cruiseid->file": {
+            "name": "cruiseid->file",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":54000"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^cruiseid"
+                }
+            },
+            "writers": {
+                "class": "ComposedWriter",
+                "kwargs": {
+                    "transforms": {
+                        "class": "SliceTransform",
+                        "kwargs": {
+                            "fields": "1:"
+                        }
+                    },
+                    "writers": {
+                        "class": "LogfileWriter",
+                        "kwargs": {
+                            "filebase": "/var/tmp/log/SKQ201822S/cruiseid/raw/SKQ201822S_cruiseid",
+                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                        }
+                    }
+                }
+            }
+        },
+        "cruiseid->db": {
+            "name": "cruiseid->db",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":54000"
+                }
+            },
+            "transforms": {
+                "class": "RegexFilterTransform",
+                "kwargs": {
+                    "pattern": "^cruiseid"
                 }
             },
             "writers": {
@@ -4450,7 +4566,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
+                                "filebase": "/var/tmp/log/SKQ201822S/tsg_emssv/raw/SKQ201822S_tsg_emssv",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4484,7 +4600,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/tsg_emssv/raw/SKQ_SAMPLE_tsg_emssv",
+                            "filebase": "/var/tmp/log/SKQ201822S/tsg_emssv/raw/SKQ201822S_tsg_emssv",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
@@ -4503,122 +4619,6 @@
                 "class": "RegexFilterTransform",
                 "kwargs": {
                     "pattern": "^tsg_emssv"
-                }
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "ParseNMEATransform",
-                        "kwargs": {
-                            "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
-                            "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
-                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                        }
-                    },
-                    "writers": {
-                        "class": "DatabaseWriter"
-                    }
-                }
-            }
-        },
-        "mb_em710_centerbeam->off": {},
-        "mb_em710_centerbeam->file/db": {
-            "name": "mb_em710_centerbeam->file/db",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":55555"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^mb_em710_centerbeam"
-                }
-            },
-            "writers": [
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "ParseNMEATransform",
-                            "kwargs": {
-                                "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
-                                "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
-                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                            }
-                        },
-                        "writers": {
-                            "class": "DatabaseWriter"
-                        }
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "SliceTransform",
-                            "kwargs": {
-                                "fields": "1:"
-                            }
-                        },
-                        "writers": {
-                            "class": "LogfileWriter",
-                            "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
-                                "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "mb_em710_centerbeam->file": {
-            "name": "mb_em710_centerbeam->file",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":55555"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^mb_em710_centerbeam"
-                }
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "SliceTransform",
-                        "kwargs": {
-                            "fields": "1:"
-                        }
-                    },
-                    "writers": {
-                        "class": "LogfileWriter",
-                        "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em710_centerbeam/raw/SKQ_SAMPLE_mb_em710_centerbeam",
-                            "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                        }
-                    }
-                }
-            }
-        },
-        "mb_em710_centerbeam->db": {
-            "name": "mb_em710_centerbeam->db",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":55555"
-                }
-            },
-            "transforms": {
-                "class": "RegexFilterTransform",
-                "kwargs": {
-                    "pattern": "^mb_em710_centerbeam"
                 }
             },
             "writers": {
@@ -4682,7 +4682,7 @@
                         "writers": {
                             "class": "LogfileWriter",
                             "kwargs": {
-                                "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
+                                "filebase": "/var/tmp/log/SKQ201822S/mb_em302_centerbeam/raw/SKQ201822S_mb_em302_centerbeam",
                                 "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                             }
                         }
@@ -4716,7 +4716,7 @@
                     "writers": {
                         "class": "LogfileWriter",
                         "kwargs": {
-                            "filebase": "/var/tmp/log/SKQ_SAMPLE/mb_em302_centerbeam/raw/SKQ_SAMPLE_mb_em302_centerbeam",
+                            "filebase": "/var/tmp/log/SKQ201822S/mb_em302_centerbeam/raw/SKQ201822S_mb_em302_centerbeam",
                             "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                         }
                     }
