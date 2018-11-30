@@ -45,7 +45,7 @@ class DASRecord:
         self.metadata = metadata
 
   ############################
-  def as_json(self):
+  def as_json(self, pretty=False):
     """Return DASRecord as a JSON string."""
     json_dict = {
       'data_id': self.data_id,
@@ -54,7 +54,10 @@ class DASRecord:
       'fields': self.fields,
       'metadata': self.metadata
     }
-    return json.dumps(json_dict)
+    if pretty:
+      return json.dumps(json_dict, sort_keys=True, indent=4)
+    else:
+      return json.dumps(json_dict)
 
   ############################
   def __str__(self):

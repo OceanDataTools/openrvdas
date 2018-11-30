@@ -8,7 +8,7 @@ __pycache__
 *.bak
 
 db.sqlite3
-gui/migrations
+django_gui/migrations
 
 django_gui/settings.py
 database/settings.py

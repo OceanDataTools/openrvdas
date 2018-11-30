@@ -63,6 +63,10 @@ from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform
 from logger.transforms.true_winds_transform import TrueWindsTransform
 from logger.transforms.derived_data_transform import DerivedDataTransform
 from logger.transforms.derived_data_transform import ComposedDerivedDataTransform
+from logger.transforms.max_min_transform import MaxMinTransform
+from logger.transforms.from_json_transform import FromJSONTransform
+from logger.transforms.to_json_transform import ToJSONTransform
+from logger.transforms.count_transform import CountTransform
 
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
@@ -272,6 +276,38 @@ if __name__ == '__main__':
                       'completed XML record whose outer element matches '
                       'the specified tag has been seen, then pass it along '
                       'as a single record.')
+
+  parser.add_argument('--transform_max_min', dest='max_min',
+                      action='store_true', default=False,
+                      help='Return only values that exceed the '
+                      'previously-seen max or min for a field, annotated by '
+                      'the name "field:max" or "field:min".')
+
+  parser.add_argument('--transform_count', dest='count',
+                      action='store_true', default=False,
+                      help='Return the count of number of times fields in '
+                      'the passed record have been seen, annotated by '
+                      'the name "field:count".')
+
+  parser.add_argument('--transform_to_json', dest='to_json',
+                      action='store_true', default=False,
+                      help='Convert the passed value to a JSON string')
+
+  parser.add_argument('--transform_to_json_pretty', dest='to_json_pretty',
+                      action='store_true', default=False,
+                      help='Convert the passed value to a pretty-printed '
+                      'JSON string')
+
+  parser.add_argument('--transform_from_json', dest='from_json',
+                      action='store_true', default=False,
+                      help='Convert the passed string, assumed to be JSON '
+                      'to a dict.')
+
+  parser.add_argument('--transform_from_json_to_das_record',
+                      dest='from_json_to_das_record',
+                      action='store_true', default=False,
+                      help='Convert the passed string, assumed to be JSON '
+                      'to a DASRecord.')
 
   ############################
   # Writers
@@ -487,6 +523,24 @@ if __name__ == '__main__':
         )
       if new_args.aggregate_xml:
         transforms.append(XMLAggregatorTransform(new_args.aggregate_xml))
+
+      if new_args.max_min:
+        transforms.append(MaxMinTransform())
+
+      if new_args.count:
+        transforms.append(CountTransform())
+
+      if new_args.to_json:
+        transforms.append(ToJSONTransform())
+
+      if new_args.to_json_pretty:
+        transforms.append(ToJSONTransform(pretty=True))
+        
+      if new_args.from_json:
+        transforms.append(FromJSONTransform())
+
+      if new_args.from_json_to_das_record:
+        transforms.append(FromJSONTransform(das_record=True))
 
       ##########################
       # Writers
