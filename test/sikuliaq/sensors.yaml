@@ -644,12 +644,49 @@
         }
     },
 
-# ------------------------------------------------------------------------------------------------
-# pco2_ldeo_merge:
-# 
-#   Sensor was not run during this cruise. 
-# 
-# 
+#------------------------------------------------------------------------------------------------
+#pco2_ldeo_merge:
+#
+#  LDEO pCO2 seawater sensor
+#  Location: Wet lab. Water source forward seachest in bow thruster room
+#  Sample rate: 1 every 3 minutes
+#
+#  The original sensor format has been modified by pre-pending the logger name and logger timestamp and appending the 
+#  additional ship supplied parameters lat, lon, cog, sog, sst, salinity, baro, wind speed, and wind dir.
+#
+#  Field Descriptions:
+#    Log_Name Log_Time Date-Time, CO2(mvolts),Cell Temp(C),Baro Pr,Flow(ccm),CO2(ppm),pCO2(uatm),Equil T(C),SBE38 T(C),ID#, ID,lat,lon,cog(D),sog(knots),sst(C),salinity(psu),baro(hPa),wind speed(knots),wind dir(D)
+#    pco2_ldeo_merge	2018-12-01T16:08:20.5022Z	2018335.67227, 2458.72,   43.33, 1026.30,   63.71,  436.82,  437.21,   10.29,   10.64,    1.00, Atmos, 5051.613807 N,14145.110577 W,94.30,0.1,10.2500,  32.1133,1024.9 ,10.7,293.4
+#
+#  Note: This sensor was not running during the cruise.
+
+  "pco2_ldeo_merge": {
+    "name": "pco2_ldeo_merge",
+    "model": "pco2_ldeo_merge",
+    "fields": {
+        "jdate_time": "pco2_ldeo_merge_jdate_time",
+        "co2_mvolts": "pco2_ldeo_merge_co2_mvolts",
+        "cell_temp_c": "pco2_ldeo_merge_cell_temp_c",
+        "baro_pr": "pco2_ldeo_merge_baro_pr",
+        "flow_ccm": "pco2_ldeo_merge_flow_ccm",
+        "co2_ppm": "pco2_ldeo_merge_co2_ppm",
+        "pco2_atm": "pco2_ldeo_merge_pco2_atm",
+        "equil_temp_c": "pco2_ldeo_merge_equil_temp_c",
+        "sbe38_temp_c": "pco2_ldeo_merge_sbe38_temp_c",
+        "id_num": "pco2_ldeo_merge_id_num",
+        "id": "pco2_ldeo_merge_id",
+        "lat": "pco2_ldeo_merge_lat",
+        "lon": "pco2_ldeo_merge_lon",
+        "cog": "pco2_ldeo_merge_cog",
+        "sog": "pco2_ldeo_merge_sog",
+        "sst_c": "pco2_ldeo_merge_sst_c",
+        "salinity": "pco2_ldeo_merge_salinity",
+        "baro": "pco2_ldeo_merge_baro",
+        "wind_speed": "pco2_ldeo_merge_wind_speed",
+        "wind_dir": "pco2_ldeo_merge_wind_dir",
+    }
+  },
+
 # ------------------------------------------------------------------------------------------------
 # rad_psp-pir:
 # 
