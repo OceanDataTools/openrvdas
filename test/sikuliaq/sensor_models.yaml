@@ -1052,7 +1052,55 @@
             ["speed_of_sound", "float"]
         ]
     },
- 
+
+# ------------------------------------------------------------------------------------------------
+# winch_rapp:
+# 
+# 	Sikuliaq is equipped with a suite of electric winches manufactured by Rapp Marine,
+# 	consisting of two hydrographic winches with .322 EM cable and a traction winch with two
+# 	storage reels containing .680 EM cable and 9/16 3x19 trawl wire. The PLC interfaces with
+# 	a databroker that outputs NMEA data at 20 Hz using ZeroMQ distributed messaging.
+# 	
+# 	Sample rate: 20 per second
+# 	
+# 	Example data line:
+# 	winch_rapp	2017-06-01T12:26:37.6783Z	@RCWD,2,3,103.64,0.42,-29.95,0,102.96,0.294791*3d
+# 
+# 	Field Descriptions:
+#     LDS Logger ID
+#     LDS Time Stamp [UTC]
+#     ID [@RCWD]
+# 	Winch Number [1, 2, 6, 7] - see note below
+# 	Winch Mode [1=manual, 2=auto_payout, 3=auto_haulin]
+# 	Length [meters] - motor calculated
+# 	Tension [metric tons] - motor calculated
+# 	Velocity [meters per minute]
+# 	Alarm
+# 	Length [meters] - block counting
+# 	Tension [metric tons] - load cell
+#     CheckSum
+# 	
+# 	Note: The ship's typical arrangement is to use Winch #1 for .322 ops off the stern A-frame
+# 		  and Winch #2 for .322 ops off the starboard Load Handling System for CTD casts.
+# 		  Winch #6 refers to Storage Drum 1 which houses the .680, and Winch #7 refers to
+# 		  Storage Drum 2 which houses the 9/16 trawl wire.
+#
+
+
+    "winch_rapp": {
+        "fields": [
+            ["id", "str"],
+            ["number", "int"],
+            ["mode", "int"],
+            ["length", "float"],
+            ["tension", "float"],
+            ["velocity", "float"],
+            ["alarm", "str"],
+            ["length_block", "float"],
+            ["tension_load_cell", "float"],
+        ]
+    },
+
 # ------------------------------------------------------------------------------------------------
 # wind_gill_fwdmast:
 # 
