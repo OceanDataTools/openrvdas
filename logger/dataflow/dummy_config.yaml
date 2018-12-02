@@ -1,0 +1,24 @@
+# Dummy dataflow configuration file. Run using:
+#
+#   logger/dataflow/run_dataflow.py \
+#      --config logger/dataflow/dummy_config.yaml 
+{
+  "reader_1": {
+    "class": "dummy_reader"
+  },
+  "reader_2": {
+    "class": "dummy_reader"
+  },
+  "transform_1": {
+    "class": "dummy_transform",
+    "subscription_list": ["reader_1"]
+  },
+  "transform_12": {
+    "class": "dummy_transform",
+    "subscription_list": ["reader_1", "reader_2"]
+  },
+  "writer_1_12": {
+    "class": "dummy_writer",
+    "subscription_list": ["transform_1", "transform_12"]
+  }
+}
