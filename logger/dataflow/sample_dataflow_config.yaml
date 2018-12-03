@@ -1,0 +1,30 @@
+# Dummy dataflow configuration file. Run using:
+#
+#   logger/dataflow/run_dataflow.py \
+#      --config logger/dataflow/sample_dataflow_config.yaml 
+#
+# Will listen on the specified network ports, parse the received records
+# and print them to stdout.
+{
+  "ins_seapath": {
+    "class": "NetworkReader",
+    "kwargs": { "network": ":53119" }
+  },
+  "gnss_cnav": {
+    "class": "NetworkReader",
+    "kwargs": { "network": ":53121" }
+  },
+  "parse_nmea": {
+    "subscription_list": ["ins_seapath", "gnss_cnav"],
+    "class": "ParseNMEATransform",
+    "kwargs": {
+      "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+      "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+    }
+  },
+  "writer": {
+    "subscription_list": ["parse_nmea"],
+    "class": "TextFileWriter",
+    #"kwargs": { "filename": "./dummy_output" } # if no spec, write to stdout
+  }
+}

@@ -20,7 +20,7 @@ strips the old timestamps off, prepends a new one, then the prefix
 's330', then writes the result to stdout.)
 
   logger/listener/listen.py \
-    --config_file test/configs/simple_logger.yaml
+    --config test/configs/simple_logger.yaml
 
 (Instantiates logger from config file that says to read from the
 project's LICENSE file, prepend a timestamp and the string "license:"
@@ -77,6 +77,9 @@ from logger.writers.record_screen_writer import RecordScreenWriter
 
 from logger.utils import read_config, timestamp, nmea_parser
 from logger.listener.listener import Listener
+
+# If they want to use a dataflow configuration (see logger/dataflow)
+from logger.dataflow.run_dataflow import DataflowRunner
 
 ################################################################################
 class ListenerFromLoggerConfig(Listener):
@@ -164,8 +167,16 @@ if __name__ == '__main__':
 
   ############################
   # Set up from config file
-  parser.add_argument('--config_file', dest='config_file', default=None,
+  parser.add_argument('--config', dest='config_file', default=None,
                       help='Read Listener configuration from YAML/JSON file. '
+                      'If specified, no other command line arguments (except '
+                      '-v) are allowed.')
+
+  ############################
+  # Set up from dataflow config file
+  parser.add_argument('--dataflow', dest='dataflow_file', default=None,
+                      help='Read configuration from a YAML-formatted '
+                      'dataflow file and instantiate a DataflowRunner. '
                       'If specified, no other command line arguments (except '
                       '-v) are allowed.')
 
@@ -357,16 +368,14 @@ if __name__ == '__main__':
   logging.getLogger().setLevel(LOG_LEVELS[verbosity])
 
   ############################
-  # If --config_file present, create Listener from config file. If
-  # not, manually parse and create from all other arguments on command
-  # line.
+  # If --config_file present, create Listener from config file.
   if parsed_args.config_file:
     # Ensure that no other flags have been specified.
     i = 1
     while i < len(sys.argv):
       if sys.argv[i] in ['-v', '--verbosity']:
         i += 1
-      elif sys.argv[i] == '--config_file':
+      elif sys.argv[i] == '--config':
         i += 2
       else:
         raise ValueError(
@@ -376,7 +385,27 @@ if __name__ == '__main__':
     # Read config file and instantiate
     listener = ListenerFromLoggerConfigFile(parsed_args.config_file)
 
-  # If not --config, go parse all those crazy command line arguments manually
+  ############################
+  # If --dataflow present, create DataflowRunner from config file.
+  if parsed_args.dataflow_file:
+    # Ensure that no other flags have been specified.
+    i = 1
+    while i < len(sys.argv):
+      if sys.argv[i] in ['-v', '--verbosity']:
+        i += 1
+      elif sys.argv[i] == '--dataflow':
+        i += 2
+      else:
+        raise ValueError(
+          'When --dataflow is specified, no other command '
+          'line arguments (except -v) may be used: {}'.format(sys.argv[i]))
+
+    # Read config file and instantiate
+    dataflow_config = read_config.read_config(parsed_args.dataflow_file)
+    listener = DataflowRunner(config=dataflow_config)
+
+  # If not --config and not --dataflow, go parse all those crazy
+  # command line arguments manually.
   else:
     ############################
     # Where we'll store our components

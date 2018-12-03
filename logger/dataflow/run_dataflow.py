@@ -1,49 +1,59 @@
 #!/usr/bin/env python3
-"""Reads and runs a dataflow configuration.
-
+"""Read and run a dataflow configuration.
 """
 import argparse
 import asyncio
 import logging
-import re
 import sys
 import time
 
 sys.path.append('.')
 
+from logger.utils.create_component import create_component
 from logger.utils.read_config import read_config
+
 from logger.dataflow.asyncio_queue_node import AsyncioQueueNode as Node
 
-######
-# Dummy assignments to test getting started with workflow
-class DummyReader:
-  def __init__(self, name='no_name_reader'):
-    self.name = name
+run_logging = logging.getLogger(__name__)
+#run_logging.setLevel(logging.DEBUG)
+
+################################################################################
+class AsyncWrapper:
+  """Helper class for wrapping non-async Readers, Writers and Transforms
+  into async versions."""
+  def __init__(self, component):
+    self.component = component
+
   async def read(self):
-    await asyncio.sleep(0.5)
-    return 'Dummy record from ' + self.name
+    """Call the component's read() method, but put an itsy bitsy asyncio
+    sleep() in to allow it to yield execution and give other nodes a
+    chance to run.
+    """
+    logging.debug('Called read() on %s', str(self.component))
+    await asyncio.sleep(0.0001)
+    return self.component.read()
 
-class DummyProcessor:
-  def __init__(self, name='no_name_transform'):
-    self.name = name
   async def process(self, record):
-    return self.name + ' Transformed this record: ' + record
-
-class DummyWriter:
-  def __init__(self, name='no_name_writer'):
-    self.name = name
-  async def process(self, record):
-    print('{} got output: {}'.format(self.name, record))
-    return None
+    """Call the component's transform() method if it has one on the
+    passed record, otherwise look for and call its write() method.
+    """
+    logging.debug('Called process() on %s', str(self.component))
+    if hasattr(self.component, 'transform'):
+      return self.component.transform(record)
+    if hasattr(self.component, 'write'):
+      return self.component.write(record)      
+    else:
+      raise ValueError('Component has neither transform() nor write() method')
 
 ################################################################################
 class DataflowRunner:
   """Parse a dataflow definition, instantiate and begin running the nodes."""
   ############################
-  def __init__(self, config):
+  def __init__(self, config, name='no_name'):
     """Create a dataflow from a Python config dict."""
     self.config = config
-    self.nodes = self.instantiate_nodes(config)
+    self.name = name
+    self.nodes = None
 
   ############################
   def instantiate_nodes(self, config):
@@ -58,22 +68,11 @@ class DataflowRunner:
         logging.warning('Node "%s" is not reading from any other node',
                         node_name)
 
-      # What class is it implementing? With what arguments?
-      class_name = node_config.get('class', None)
-      if class_name is None:
-        raise ValueError('Node definition {} missing "class" '
-                         'specification.'.format(name))
-      kwargs = node_config.get('kwargs', None)
+      # For now, assume components are not async, so after we've
+      # created them, wrap it in an async class.
+      component = create_component(component_def=node_config, name=node_name)
+      processor = AsyncWrapper(component)
 
-      if class_name == 'dummy_reader':
-        processor = DummyReader(node_name)
-      elif class_name == 'dummy_transform':
-        processor = DummyProcessor(node_name)
-      elif class_name == 'dummy_writer':
-        processor = DummyWriter(node_name)
-      else:
-        raise ValueError('Node "{}" unknown processor: '
-                         '"{}"'.format(node_name, class_name))
       # Create the node
       nodes[node_name] = Node(node_name, processor, subscription_list)
 
@@ -91,88 +90,54 @@ class DataflowRunner:
 
   ############################
   def run(self):
+    loop = asyncio.get_event_loop()
+    loop.set_debug(enabled=True)
+
+    self.nodes = self.instantiate_nodes(self.config)
 
     futures = {}
     for node_name, node in self.nodes.items():
       logging.info('Creating future for %s', node_name)
-      futures[node_name] = asyncio.Future()
+      futures[node_name] = asyncio.Future(loop=loop)
       asyncio.ensure_future(node.run(futures[node_name]))
 
-    loop = asyncio.get_event_loop()
-    loop.set_debug(enabled=True)
-
-    logging.info('Getting ready to run forever...')
     try:
       loop.run_forever()
+    except KeyboardInterrupt as e:
+      # Grabbed from
+      # https://stackoverflow.com/questions/30765606/whats-the-correct-way-to-clean-up-after-an-interrupted-event-loop
+      logging.warning('Received keyboard interrupt; attempting shutdown...')
+
+      # Do not show `asyncio.CancelledError` exceptions during shutdown
+      # (a lot of these may be generated, skip this if you prefer to see them)
+      def shutdown_exception_handler(loop, context):
+        if "exception" not in context \
+        or not isinstance(context["exception"], asyncio.CancelledError):
+            loop.default_exception_handler(context)
+      loop.set_exception_handler(shutdown_exception_handler)
+
+      # Handle shutdown gracefully by waiting for all tasks to be cancelled
+      tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=loop),
+                             loop=loop, return_exceptions=True)
+      tasks.add_done_callback(lambda t: loop.stop())
+      tasks.cancel()
+
+      # Keep the event loop running until it is either destroyed or all
+      # tasks have really terminated
+      while not tasks.done() and not loop.is_closed():
+        loop.run_forever()
+
     finally:
-      logging.warning('In "finally" section of run')
+      logging.warning('All tasks terminated - exiting.')
       loop.close()
   
-
-  ############################
-  ############################
-  ############################
-  ############################
-  def _kwargs_from_config(self, config_json):
-    """Parse a kwargs from a JSON string, making exceptions for keywords
-    'readers', 'transforms', and 'writers' as internal class references."""
-    kwargs = {}
-    for key, value in config_json.items():
-
-      # Declaration of readers, transforms and writers. Note that the
-      # singular "reader" is a special case for TimeoutReader that
-      # takes a single reader.
-      if key in ['reader', 'readers', 'transforms', 'writers']:
-        kwargs[key] = self._class_kwargs_from_config(value)
-
-      # If value is a simple float/int/string/etc, just add to keywords
-      elif type(value) in [float, bool, int, str, list]:
-        kwargs[key] = value
-
-      # Else what do we have?
-      else:
-        raise ValueError('unexpected key:value in configuration: '
-                         '{}: {}'.format(key, str(value)))
-    return kwargs
-
-  ############################
-  def _class_kwargs_from_config(self, class_json):
-    """Parse a class's kwargs from a JSON string."""
-    if not type(class_json) in [list, dict]:
-      raise ValueError('class_kwargs_from_config expected dict or list; '
-                       'got: "{}"'.format(class_json))
-
-    # If we've got a list, recurse on each element
-    if type(class_json) is list:
-      return [self._class_kwargs_from_config(c) for c in class_json]
-
-    # Get name and constructor for component we're going to instantiate
-    class_name = class_json.get('class', None)
-    if class_name is None:
-      raise ValueError('missing "class" definition in "{}"'.format(class_json))
-    class_const = globals().get(class_name, None)
-    if not class_const:
-      raise ValueError('No component class "{}" found: "{}"'.format(
-        class_name, class_json))
-
-    # Get the keyword args for the component
-    kwarg_dict = class_json.get('kwargs', {})
-    kwargs = self._kwargs_from_config(kwarg_dict)
-    if not kwargs:
-      logging.info('No kwargs found for component {}'.format(class_name))
-
-    # Instantiate!
-    logging.info('Instantiating {}({})'.format(class_name, kwargs))
-    component = class_const(**kwargs)
-    return component
-
 ################################################################################
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
 
   ############################
   # Set up from config file
-  parser.add_argument('--config', dest='config', default=None,
+  parser.add_argument('--config', dest='config_file', default=None,
                       help='YAML-formatted node configuration file to read.')
 
   parser.add_argument('-v', '--verbosity', dest='verbosity',
@@ -189,7 +154,7 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   #run_logging.setLevel(LOG_LEVELS[args.verbosity])
 
-  config = read_config(args.config) if args.config else None
+  config = read_config(args.config_file) if args.config_file else None
 
   dataflow_runner = DataflowRunner(config=config)
   dataflow_runner.run()

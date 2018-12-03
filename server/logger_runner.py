@@ -96,6 +96,7 @@ sys.path.append('.')
 
 from logger.utils.read_config import read_config
 from logger.listener.listen import ListenerFromLoggerConfig
+from logger.dataflow.run_dataflow import DataflowRunner
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
@@ -114,7 +115,8 @@ def runnable(config):
   """Is this logger configuration runnable? (Or, e.g. does it just have
   a name and no readers/transforms/writers?)
   """
-  return config and ('readers' in config or 'writers' in config)
+  return config and ('readers' in config or 'writers' in config
+                     or 'dataflow' in config)
 
 ################################################################################
 class LoggerRunner:
@@ -264,9 +266,20 @@ class LoggerRunner:
     """Create a new process running a Listener/Logger using the passed
     config, and return the Process object."""
 
+    logger_name = config.get('name', '--no-name--')
     try:
-      run_logging.debug('Starting config:\n%s', pprint.pformat(config))
-      listener = ListenerFromLoggerConfig(config)
+      run_logging.debug('Starting config: %s', pprint.pformat(config))
+
+      # If the particular logger_config has a 'dataflow' key, use its
+      # corresponding value as a dataflow config. Otherwise,
+      # instantiate a listener.
+      if 'dataflow' in config:
+        logging.info('Starting dataflow logger %s', logger_name)
+        listener = DataflowRunner(config['dataflow'], name=logger_name)
+      else:
+        logging.info('Starting listener logger %s', logger_name)
+        listener = ListenerFromLoggerConfig(config)
+
       proc = multiprocessing.Process(target=listener.run, daemon=True)
       proc.start()
       errors = []

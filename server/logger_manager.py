@@ -817,8 +817,8 @@ if __name__ == '__main__':
     if not args.config:
       raise ValueError('Argument --mode can only be used with --config')      
     api.set_active_mode(args.mode)
-    api.message_log(source=SOURCE_NAME, log_level=api.INFO,
-                    message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
+    api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
+                    log_level=api.INFO, message='initial mode %s' % args.mode)
 
   try:
     # If no console, just wait for the configuration update thread to
