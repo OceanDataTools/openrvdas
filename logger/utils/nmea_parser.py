@@ -21,7 +21,6 @@ RAW_FIELDS_RE   = '(?P<raw_fields>[^*]+)'
 CHECKSUM_RE  = '(?:\*(?P<checksum>[0-9A-F]{2}))?'
 NMEA_RE = re.compile(RAW_FIELDS_RE + CHECKSUM_RE)
 
-
 ################################################################################
 class NMEAParser:
   ############################
@@ -39,14 +38,14 @@ class NMEAParser:
     """Receive an id-prefixed, timestamped NMEA record."""
     if not nmea_record:
       return None
-    if not type(nmea_record) == type(''):
-      logging.error('Record is not NMEA string: "%s"', nmea_record)
+    if not type(nmea_record) is str:
+      logging.info('Record is not NMEA string: "%s"', nmea_record)
       return None
     try:
       (data_id, raw_ts, message) = nmea_record.strip().split(maxsplit=2)
       ts = timestamp(raw_ts, time_format=self.time_format)
     except ValueError:
-      logging.error('Record not in <data_id> <timestamp> <NMEA> format: "%s"',
+      logging.info('Record not in <data_id> <timestamp> <NMEA> format: "%s"',
                     nmea_record)
       return None
 

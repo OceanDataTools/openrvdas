@@ -1244,6 +1244,16 @@
                     ["Unknown6", "str"]
                 ]
             },
+            "!AIVDM": {
+                "fields": [
+                    ["Unknown1", "str"],
+                    ["Unknown2", "str"],
+                    ["Unknown3", "str"],
+                    ["Unknown4", "str"],
+                    ["Unknown5", "str"],
+                    ["Unknown6", "str"]
+                ]
+            },
             "$PSTT": {
                 "fields": [
                     ["Unknown1", "str"],
