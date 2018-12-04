@@ -194,7 +194,10 @@ class CachedDataServer:
           logging.info('No cached data for %s', field_name)
           continue
 
-        # Do we have any results later than the ones we've already sent?
+        # Do we have any results? Are they later than the ones we've
+        # already sent?
+        if not field_cache[-1]:
+          continue
         if not field_cache[-1][0] > latest_timestamp_sent[field_name]:
           continue
 
@@ -236,8 +239,13 @@ class CachedDataServer:
         # variable so that we don't repeat ourselves.  Each value
         # should be a list of (timestamp, value) pairs. Look at the
         # last timestamp in each value list.
-        for field_name in results:
-          latest_result_timestamp = results[field_name][-1][0]
+        for field_name, field_results in results.items():
+          if not field_results:
+            continue
+          latest_result = field_results[-1]
+          if not latest_result:
+            continue
+          latest_result_timestamp = latest_result[0]
           if latest_result_timestamp > latest_timestamp_sent[field_name]:
             latest_timestamp_sent[field_name] = latest_result_timestamp
 
