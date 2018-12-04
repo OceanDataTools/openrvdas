@@ -18,7 +18,7 @@ definition](../test/nmea/NBP1406/NBP1406_cruise.yaml). They are provided as exam
 
 The static widgets rely on the file
 [widgets/static/js/widgets/settings.js](static/js/widgets/settings.js)
-for the definition of WEBSOCKET_SERVER. The settings.py file must be
+for the definition of WEBSOCKET_DATA_SERVER. The settings.py file must be
 copied over from
 [widgets/static/js/widgets/settings.js.dist](static/js/widgets/settings.js.dist) and modified to match your installation.
 
@@ -65,7 +65,8 @@ copied over from
       widget_list.push(new TimelineWidget('line-container',
                                           line_fields, 'Degrees'));
 
-      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+      var widget_server = new WidgetServer(widget_list,
+                                           WEBSOCKET_DATA_SERVER);
       widget_server.serve();
     </script>
   </body>

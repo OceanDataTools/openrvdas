@@ -24,7 +24,8 @@ from server.logger_manager import LoggerManager
 # Read in JSON with comments
 from logger.utils.read_config import parse
 
-from django_gui.settings import HOSTNAME, WEBSOCKET_SERVER
+from django_gui.settings import HOSTNAME
+from django_gui.settings import WEBSOCKET_STATUS_SERVER, WEBSOCKET_DATA_SERVER
 
 # Convenience dicts we pass to the server_message page to
 # translate logging levels to names and colors.
@@ -120,7 +121,7 @@ def index(request):
   # Assemble information to draw page
   template_vars = {
     'cruise_id': cruise_id or '',
-    'websocket_server': WEBSOCKET_SERVER,
+    'websocket_server': WEBSOCKET_STATUS_SERVER,
     'errors': errors,
     'loggers': {},
   }
@@ -158,7 +159,7 @@ def server_messages(request, path):
   log_level = path_pieces[0] if len(path_pieces) > 0 else logging.INFO
   source = path_pieces[1] if len(path_pieces) > 1 else None
 
-  template_vars = {'websocket_server': WEBSOCKET_SERVER,
+  template_vars = {'websocket_server': WEBSOCKET_STATUS_SERVER,
                    'log_level': int(log_level),
                    'log_levels': LOG_LEVELS,
                    'log_level_colors': LOG_LEVEL_COLORS,
@@ -206,7 +207,7 @@ def widget(request, field_list=''):
   template_vars = {
     'field_list': field_list,
     'is_superuser': True,
-    'websocket_server': WEBSOCKET_SERVER,
+    'websocket_data_server': WEBSOCKET_DATA_SERVER,
   }
 
   # Render what we've ended up with

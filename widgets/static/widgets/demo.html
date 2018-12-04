@@ -167,7 +167,8 @@
       widget_list.push(new TextWidget('gps_e_or_w_container',
                                       gps_e_or_w_fields));
 
-      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+      var widget_server = new WidgetServer(widget_list,
+                                           WEBSOCKET_DATA_SERVER);
       widget_server.serve();
 
     </script>
