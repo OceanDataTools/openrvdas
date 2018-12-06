@@ -112,7 +112,7 @@ WSGI_APPLICATION = 'django_gui.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'CONN_MAX_AGE': 3600,
+        'CONN_MAX_AGE': 280,
         'NAME': 'openrvdas',
         'USER': 'rvdas',
         'PASSWORD': 'rvdas',
