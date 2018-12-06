@@ -196,7 +196,7 @@ class CachedDataServer:
 
         # Do we have any results? Are they later than the ones we've
         # already sent?
-        if not field_cache[-1]:
+        if not field_cache or not field_cache[-1]:
           continue
         if not field_cache[-1][0] > latest_timestamp_sent[field_name]:
           continue
@@ -224,7 +224,7 @@ class CachedDataServer:
               results[field_name] = [results[field_name][-1]]
 
         send_message = json.dumps(results)
-        logging.info('Data server sending: %s', send_message)
+        logging.info('Data server sending %d bytes', len(send_message))
         try:
           await self.websocket.send(send_message)
           logging.debug('Websocket sent data, awaiting ready...')

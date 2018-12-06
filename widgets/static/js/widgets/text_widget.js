@@ -31,6 +31,11 @@ function TextWidget(container, fields) {
     // fields and updates any series with matching field names.
     this.process_message = function(message) {
         var container_div = document.getElementById(this.container);
+        if (!container_div) {
+            console.log('Unable to find container id "' + this.container
+                        + '" in page?')
+            return;
+        }
         for (var field_name in this.fields) {
             if (!message[field_name]) {
                 continue;
