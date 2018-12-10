@@ -4,7 +4,8 @@
 Run with, e.g.
 
     logger/utils/simulate_network.py \
-         --config test/nmea/SKQ201822S/network_sim_SKQ201822S.yaml
+         --config test/nmea/SKQ201822S/network_sim_SKQ201822S.yaml \
+         --loop
 
 and you should be able to listen on the various ports that Sikuliaq
 instruments post data to:
@@ -51,6 +52,7 @@ class SimNetwork:
     self.prefix = PrefixTransform(instrument)
     self.writer = NetworkWriter(network=network)
     self.instrument = instrument
+    self.first_time = True
     self.quit_flag = False
     
   ############################
@@ -63,11 +65,14 @@ class SimNetwork:
       while not self.quit_flag:
         record = self.reader.read()
 
-        # If we don't have a record, we're (probably) at the end of the
-        # file. Either break out, or restart, depending on whether or
-        # not we're looping.
+        # If we don't have a record, we're (probably) at the end of
+        # the file. If it's the first time we've tried reading, it
+        # means we probably didn't get a usable file. Either break out
+        # (if we're not looping, or if we don't have a usable file),
+        # or start reading from the beginning (if we are looping and
+        # have a usable file).
         if not record:
-          if not loop:
+          if not loop or self.first_time:
             break
           logging.info('Looping instrument %s', self.instrument)
           self.reader = LogfileReader(filebase=self.filebase,
@@ -81,6 +86,7 @@ class SimNetwork:
         # Add instrument name back on, and write to specified network
         record = self.prefix.transform(record)
         self.writer.write(record)
+        self.first_time = False
 
     except (OSError, KeyboardInterrupt):
       self.quit_flag = True

@@ -1,3 +1,10 @@
+# This configuration file allows simulation of the dataflow setup on Sikulia
+# using a small slice of data from one day of a cruise.
+#
+# To run, use the following invocation:
+#     logger/utils/simulate_network.py \
+#       --config test/nmea/SKQ201822S/network_sim_SKQ201822S.yaml \
+#       --loop
 {
     "met_ptu307": {
         "network": ":53100",
