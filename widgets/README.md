@@ -13,14 +13,79 @@ display the data they receive on a web page.
 The static widget directory in
 [widgets/static/widgets](static/widgets) contains static demonstration
 widgets that are designed to read and display data produced when the
-logger manager is running the [NBP1406 test cruise
-definition](../test/nmea/NBP1406/NBP1406_cruise.yaml). They are provided as examples of how you or whatever webserving system you embrace, should invoke the JS widget_server.
+appropriate server is running.
 
 The static widgets rely on the file
 [widgets/static/js/widgets/settings.js](static/js/widgets/settings.js)
-for the definition of WEBSOCKET_DATA_SERVER. The settings.py file must be
+for the definition of WEBSOCKET\_DATA\_SERVER. The settings.py file must be
 copied over from
 [widgets/static/js/widgets/settings.js.dist](static/js/widgets/settings.js.dist) and modified to match your installation.
+
+## Data Servers
+
+There are currently two ways to feed the widgets live data.
+
+### server/logger\_manager.py
+
+The logger\_manager.py script runs a data server off its default
+websocket. If the value of ```WEBSOCKET_DATA_SERVER``` defined in
+[widgets/static/js/widgets/settings.js.dist](static/js/widgets/settings.js.dist)
+is the same as the value provided as the script's ```--websocket```
+argument, then the widgets will connect to that server when it is
+running. Note that by default the server is configured to draw the
+data it serves from the default database, so it will only be able to
+provide data when whatever loggers it is running are writing to the
+database (e.g., mode "file/db" in the case of the sample configs
+included with this distribution).
+
+### server/network_data\_server.py
+
+The network\_data\_server.py script is a standalone script that listens
+for UDP broadcasts of NMEA logger strings, parses them, and makes them
+available via a websocket.
+
+For the NBP, where NMEA strings are broadcast via UDP on ports 6221
+and 6224, a sample invocation might be
+
+```
+    server/network_data_server.py \
+      --read_network :6221,:6224 \
+      --websocket :8766
+```
+
+Assuming that the value for WEBSOCKET_DATA_SERVER in
+[widgets/static/js/widgets/settings.js.dist](static/js/widgets/settings.js.dist)
+was set to 'HOSTNAME:8766'.
+
+On the Sikuliaq, where each instrument broadcasts on its own port, the invocation would be a bit more complicated:
+
+```
+    server/network_data_server.py \
+      --read_network :53100,:53104,:53105,:53106,... \
+      --parse_nmea_sensor_path test/sikuliaq/sensors.yaml \
+      --parse_nmea_sensor_model_path test/sikuliaq/sensor_models.yaml \
+      --websocket :8766
+```
+
+Note the flags in this invocation pointing the NMEA parser to
+Sikuliaq-specific sensor and sensor model definitions.
+
+## Widget content
+
+The provided static widgets are intended to be pedagogical,
+demonstrating how to create custom widgets that meet your
+installation's specific needs.
+
+They are:
+* For use with the ```test/nmea/NBP1406/NBP1406_cruise.yaml``` configuration:
+  * [nbp\_demo.html](static/widgets/nbp_demo.html)
+  * [true\_winds\_demo.html](static/widgets/true_winds_demo.html)
+  * [winch\_demo.html](static/widgets/winch_demo.html)
+  * [map\_demo.html](static/widgets/map_demo.html)
+* For use with the ```test/nmea/SKQ201822S/SKQ201822S_cruise.yaml``` configuration:
+  * [skq\_bridge.html](static/widgets/skq_bridge.html)
+
+A simple widget might be constructed as follows
 
 ```
 <!DOCTYPE HTML>

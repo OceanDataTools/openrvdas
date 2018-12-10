@@ -3,7 +3,7 @@
 parse and cache the values received and serve them to websocket
 clients who have requested them.
 
-A typical invocation might be:
+A typical invocation aboard Sikuliaq might be:
 
     server/network_data_server.py \
       --read_network :53100,:53104,:53105,:53106,... \
@@ -11,13 +11,19 @@ A typical invocation might be:
       --parse_nmea_sensor_model_path test/sikuliaq/sensor_models.yaml \
       --websocket :8766
 
-   (the above example is for operation aboard Sikuliaq, where each
-    instrument has its own UDP port, and Sikuliaq-specific sensor
-    definitions are in test/sikuliaq)
+Note that aboard Sikuliaq, each instrument has its own UDP port, and
+Sikuliaq-specific sensor definitions are in test/sikuliaq. Aboard the
+NBP, where all instrument strings are broadcast on either 6221 or
+6224, the invocation would be
 
-which says to
 
-1. Listen on the UDP ports specified by --dataports for timestamped
+    server/network_data_server.py \
+      --read_network :6221,:6224 \
+      --websocket :8766
+
+Both of these invocations say to 
+
+1. Listen on the UDP ports specified by --read_network for timestamped
    NMEA sentences
 
 2. Parse those sentences using definitions in test/sikuliaq/....yaml
@@ -26,7 +32,7 @@ which says to
 
 3. Store the resulting field-value-timestamps in an in-memory cache
 
-4. Wait for clients to connect to the websocket at port 8765 and
+4. Wait for clients to connect to the websocket at port 8766 and
    serve them the requested data.
 
 The server listens for two types of requests:
@@ -55,7 +61,7 @@ The server listens for two types of requests:
        ...
      }
 
-It will then await a "ready" message from the client, and when
+The server will then await a "ready" message from the client, and when
 received, will loop and send a JSON-encoded dict of all the
 (timestamp, value) tuples that have come in since the previous
 request. It will continue this behavior indefinitely, waiting for a
