@@ -186,7 +186,7 @@ The logger\_runner.py script will run a set of loggers and retry them if they fa
 
 Before we dive into the use of logger\_manager.py, it's worth pausing for a moment to introduce some concepts that underlie the structure of the logger manager. _(Note: much of this section should be moved to [OpenRVDAS Configuration Files](configuration_files.md))._
 
--   **Logger configuration** - sometimes called just a "configuration" when we're getting sloppy. This is a definition for a set of Readers, Transforms and Writers feeding into each other, such as would be read using the --config argument of the listen.py script. In OpenRVDAS, each logger configuration that is active runs as its own daemon process.  The sample logger configuration below ("knud-\>net") reads NMEA data from the Knudsen serial port, timestamps and labels the record, then broadcasts it via UDP:
+-   **Logger configuration** - This is a definition for a set of Readers, Transforms and Writers feeding into each other, such as would be read using the --config argument of the listen.py script. In OpenRVDAS, each logger configuration that is active runs as its own daemon process.  The sample logger configuration below ("knud-\>net") reads NMEA data from the Knudsen serial port, timestamps and labels the record, then broadcasts it via UDP:
 
   ```
   "knud->net": {
@@ -235,10 +235,8 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
     "underway": {...} 
   }
   ```
--   **Cruise** - in addition to containing cruise metadata (cruise id, provisional start and ending dates) a cruise definition contains a collection of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes in which those configurations are to be run. A cruise definition file (such as in [test/configs/sample\_cruise.yaml](../test/configs/sample\_cruise.yaml)) defines the loggers for a cruise and the configurations they may take, as well as the modes into which they are grouped.  
+-   **Cruise configuration** - (or just "configuration" when we're being sloppy). This is the file/JSON/YAML structure that contains everything the logger manager needs to know about running a cruise. In addition to containing cruise metadata (cruise id, provisional start and ending dates) a cruise configuration contains a collection of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes in which those configurations are to be run. A cruise configuration file (such as in [test/configs/sample\_cruise.yaml](../test/configs/sample\_cruise.yaml)) defines the loggers for a cruise and the configurations they may take, as well as the modes into which they are grouped.  
   
-    *NOTE: If a vessel is using an ROV, it is entirely reasonable for the ROV to have be its own cruise id and definition files. As a result, multiple cruises may be loaded at the same time and can be managed independently by the same logger\_manager: the vessel's cruise (e.g. id NBP1700) and the ROV's (e.g. id NBP1700-GL005).*
-
 It is worth noting that in OpenRVDAS, a "logger" does not exist as a separate entity. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the sample cruise definition file, as the logger definition ("knud") is just a list of the configurations that are responsible for handling the
 
 ```
@@ -250,47 +248,107 @@ It is worth noting that in OpenRVDAS, a "logger" does not exist as a separate en
   ]
 }
 ```
-Perusing a complete cruise definition file, such as [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml) may be useful for newcomers to the system.
+Perusing a complete cruise configuration file, such as [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml) may be useful for newcomers to the system.
+
+### What the logger manager does
+
+In short, a bunch of stuff.
+
+* On startup, it consults a database (either a transient in-memory one, or a Django-based one, depending on the value of the ```--database``` flag) to determine what loggers, logger configurations and cruise modes exist, and which cruise mode or combination of logger configurations the user wishes to have running. If a cruise configuration and/or mode are specified on startup via the ```--config``` and ```--mode``` flags, it stores those in the database as the new logger configuration definitions and desired cruise mode.
+
+* It starts/stops logger processes using the desired logger configurations specified by the database and records the new logger states in the database. Once started, it monitors the health of theses processes, recording failures in the database and restarting processes as necessary.
+
+* If the ```--websocket :[port]``` flag has been specified, it provides several services to clients that connect via the websocket:
+
+  * Logger status updates via connections to a websocket at ```hostname:port/logger_status```. This service may be used by web clients, such as the logger monitoring/control page provided by the Django GUI.
+
+      ![Django GUI Logger Status](images/django_gui_logger_status.png)
+
+  * Logger messages, warnings and errors to clients that connect to ```hostname:port/messages/[log level]/[source]```, where log level and source are optional arguments.
+
+      ![Django GUI Logger Messages](images/django_gui_messages.png)
+
+  * Access to a DataServer that provides logged data for clients that connect to ```hostname:port/data```. Such clients might be web display widgets or independent loggers that produce derived data (such as true winds, or computed wind chill temperature). Note that this functionality is somewhat rudimentary, and assumes that the desired data is being logged to a DatabaseWriter using the default settings. A recommended alternative is to have web display widgets and derived data loggers connect to an independently-running DataServer, such as the [network_data\_server.py](../server/network_data_server.py).
+
+      ![Django GUI Static Widget Example](images/django_gui_static_widget.png)
+
+  * Control of remote logger runner processes. A cruise configuration file may specify that certain loggers may only run on certain machines (via a ```host_id``` field in the definition). This may be desirable if, for example, the required serial ports are only available on a particular machine. A remote host like this may connect to a logger manager via the invocation
+      
+      ```
+      server/logger_runner.py --websocket <logger manager host>:<port> \
+          --host_id knud.host
+      ```
+      
+      to indicate that it is available to run logger configurations that are restricted to host ```knud.host```. The logger manager will dispatch any such logger configurations to this logger runner process.
+
+      Note that this also provides a mechanism for manual load sharing if, for example, some logger processes are particularly compute intensive.
 
 ### Running logger\_manager.py from the command line
 
-The logger\_manager.py script can be run with no arguments:
+The logger\_manager.py script can be run with no arguments and will default to using an in-memory data store:
 
 ```
 server/logger_manager.py
 ```
-and will prompt for command line input. You can type "help" for a full list of commands, but a sample of the available functionality is
+You can type "help" for a full list of commands, but a sample of the available functionality is
 
-**Load a cruise definition**
-
-```
-command? load_cruise test/configs/sample_cruise.yaml
-command? cruises
-Loaded cruises: NBP1700
-```
-**Change cruise modes**
+**Load a cruise configuration**
 
 ```
-command? modes NBP1700
-Modes for NBP1700: off, port, underway
-command? set_mode NBP1700 port
-command? set_mode NBP1700 underway
-command? set_mode NBP1700 off
+command? load_configuration test/nmea/NBP1406/NBP1406_cruise.yaml
+command? 
 ```
+
+**See what loggers are defined**
+
+```
+command? get_loggers
+Loggers: PCOD, adcp, eng1, gp02, grv1, gyr1, hdas, knud, mbdp, mwx1, pco2, pguv, rtmp, s330, seap, svp1, true_winds, tsg1, tsg2
+command?
+
+**Get and change cruise modes**
+
+```
+command? get_modes
+Available Modes: off, port, monitor, monitor and log
+command? get_active_mode
+Current mode: off
+command? set_active_mode port
+command? 
+```
+
 **Manually change logger configurations**
 
 ```
-command? loggers NBP1700
-Loggers for NBP1700: knud, gyr1, mwx1, s330, eng1, rtmp
-command? logger_configs NBP1700 s330
-Configs for NBP1700:s330: s330->off, s330->net, s330->file/net/db
-command? set_logger_config_name NBP1700 s330 s330->net
-command? set_mode NBP1700 off
+command? get_logger_configs gyr1
+Configs for gyr1: gyr1->off, gyr1->net, gyr1->file/net/db
+command? set_active_logger_config gyr1 gyr1->file/net/db
 command? quit
 ```
-As with sample script for logger\_runner.py, sample\_cruise.yaml attempts to read from virtual serial ports, so you'll need to run logger/utils/simulate_serial.py for it to run without complaining.
+As with sample script for logger\_runner.py, test/nmea/NBP1406/NBP1406\_cruise.yaml attempts to read from virtual serial ports, so you'll need to run logger/utils/simulate\_serial.py for it to run without complaining.
 
-Please see the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_runner.py.
+### Other invocation options
+
+If Django is installed and configured, you may also direct the logger manager to use the Django database when you invoke it. This has several advantages, the chief one being that desired logger states and modes will be preserved between runs of the logger manager (so that, for example, if the machine on which it is running is rebooted, the logger manager will restart the loggers that were running at the time.)
+
+```
+    server/logger_manager.py --database django
+```
+
+The logger manager may also be invoked with a websocket specification, which will allow communicating with it via the Django interface, and will enable the additional websocket-based services described above:
+
+```
+    server/logger_manager.py --database django --websocket :8765
+```
+
+Finally, the logger manager may be invoked with a cruise configuration and/or cruise mode, and will attempt to load and run the loggers specified in it:
+
+```
+    server/logger_manager.py --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+        --mode monitor
+```
+
+Please see the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_manager.py.
 
 ### Managing loggers via a web interface
 
@@ -304,14 +362,7 @@ There is a still-rudimentary Django-based GUI for controlling logger\_manager.py
 
 There are rudimentary but complete system installation/configuration scripts available for CentOS 7 and Ubuntu 16 in [the project's utils directory](../utils). When copied over to a "bare" operating system installation and run, they will prompt for configuration information and download/install/configure all the files needed to run the complete OpenRVDAS system, including database and web interface.
 
-As of this writing, the CentOS script provides a fairly complete installation, not only installing and configuring all database and web components, but configuring the logger\_manager.py as a system service and giving the option of having it automatically run on boot.
-
-The Ubuntu script configures database and web components, but still requires logger\_manager.py to be run manually, via
-
-```
-server/logger_manager.py --websocket :8765 --database django
-```
-(If the logger\_manager.py script is going to be run as a service without access to STDIN, you may also need to specify `--no-console` on the command line.)
+As of this writing, the CentOS and Ubuntu scripts provide a fairly complete installation, not only installing and configuring all database and web components, but configuring the logger\_manager.py as a system service and giving the option of having it automatically run on boot.
 
 #### Manual installation
 
