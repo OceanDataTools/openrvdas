@@ -18,7 +18,7 @@ This document describes two scripts that allow running, controlling and monitori
 
 ## logger\_runner.py
 
-The [listen.py](listen.py.md) script is handy for running a single logger from the command line. For more sophisticated logger management, the [logger\_runner.py](../server/logger_runner.py) script is provided. It takes as its input a YAML or JSON file defining a dict of configurations that are to be run, where the keys are (convenient) configuration names, and the values are the logger configurations themselves.
+The [listen.py](listen_py.md) script is handy for running a single logger from the command line. For more sophisticated logger management, the [logger\_runner.py](../server/logger_runner.py) script is provided. It takes as its input a YAML or JSON file defining a dict of configurations that are to be run, where the keys are (convenient) configuration names, and the values are the logger configurations themselves.
 
 ```server/logger_runner.py --config test/config/sample_configs.yaml -v```
 
@@ -132,7 +132,7 @@ In short, a bunch of stuff.
 
 Additionally, if the ```--websocket :[port]``` flag has been specified, a running logger\_manager.py provides several services to clients that connect via the websocket:
 
-* **Logger status updates** via connections to a websocket at ```hostname:port/logger_status```. This service may be used by web clients, such as the logger monitoring/control page provided by the Django GUI.
+* **Logger status updates** via connections to a websocket at ```hostname:port/logger_status```. This service may be used by web clients, such as the logger monitoring/control page provided by the Django GUI. (See the documentation for the [Django Web Interface](django_interface.md) for more information on this.)
 
     ![Django GUI Logger Status](images/django_gui_logger_status.png)
 
@@ -142,9 +142,9 @@ Additionally, if the ```--websocket :[port]``` flag has been specified, a runnin
 
 * **Access to a DataServer** that provides logged data for clients that connect to ```hostname:port/data```. Such clients might be web display widgets or independent loggers that produce derived data (such as true winds, or computed wind chill temperature). Note that this functionality is somewhat rudimentary, and assumes that the desired data is being logged to a DatabaseWriter using the default settings. A recommended alternative is to have web display widgets and derived data loggers connect to an independently-running DataServer, such as the [network_data\_server.py](../server/network_data_server.py).
 
-    Please see [Display Widgets](display_widgets.md) for more information on writing, configuring and feeding web display widgets.
-
     ![Django GUI Static Widget Example](images/django_gui_static_widget.png)
+
+    Please see [Display Widgets](display_widgets.md) for more information on writing, configuring and feeding web display widgets.
 
 * **Control of remote logger runner processes.** A cruise configuration file may specify that certain loggers may only run on certain machines (via a ```host_id``` field in the definition). This may be desirable if, for example, the required serial ports are only available on a particular machine. A remote host like this may connect to a logger manager via the invocation
       
@@ -155,7 +155,7 @@ Additionally, if the ```--websocket :[port]``` flag has been specified, a runnin
       
     to indicate that it is available to run logger configurations that are restricted to host ```knud.host```. The logger manager will dispatch any such logger configurations to this logger runner process.
 
-    Note that this also provides a mechanism for manual load sharing if, for example, some logger processes are particularly compute intensive. Please see the header documentation in [server/logger\_runner.py](../server/logger_runner.py) for more details.
+    Note that this also provides a mechanism for manual load sharing if, for example, some logger processes are particularly compute intensive. Please see the header documentation in [server/logger\_runner.py](../server/logger_runner.py) for more details on how to use this functionality.
 
 ### Running logger\_manager.py from the command line
 
@@ -190,6 +190,12 @@ command? get_active_mode
 Current mode: off
 command? set_active_mode port
 command? 
+```
+
+**Note**: the NBP1406 sample cruise directs UDP output to port 6224, so you can monitor the logger manager's network output by running the following listener command in a separate window to read from port 6224 and write to standard output:
+
+```
+    logger/listener/listen.py --network :6224 --write_file -
 ```
 
 **Manually change logger configurations**
@@ -236,6 +242,6 @@ Please see the [server/README.md](../server/README.md) file and [logger_manager.
 
 ### Managing loggers via a web interface
 
-There is a still-rudimentary Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [OpenRVDAS Web Interface](django_interface.md) and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
+There is a still-rudimentary Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [Django Web Interface](django_interface.md) document and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
 
 

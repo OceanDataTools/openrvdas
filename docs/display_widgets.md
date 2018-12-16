@@ -1,4 +1,5 @@
 # OpenRVDAS Display Widgets
+© 2018 David Pablo Cohn - DRAFT 2018-12-15
 
 ## Overview
 
@@ -7,9 +8,10 @@ for an introduction to the OpenRVDAS system.
 
 ![Django GUI Static Widget Example](images/django_gui_static_widget.png)
 
-At present, there are two general types of widgets supported by the OpenRVDAS framework:
 
-  * **"dynamic" widgets** which vary their display based on the parameters in the requested URL. At present, the only such widget supported is the Django display widget at [http://localhost:8000/widget](http://localhost:8000/widget)
+The above diagram illustrates three widget types in an excerpt from the "static" page defined in [widgets/static/widgets/nbp_demo.html](../widgets/static/widgets/nbp_demo.html). At present, there are two general classes of widgets supported by the OpenRVDAS framework:
+
+  * **"dynamic" widgets** which vary their display based on the parameters in the requested URL. At present, the only such widget supported is the Django display widget at [http://localhost:8000/widget](http://localhost:8000/widget).
 
   * **"static" widgets** coded in HTML with fixed content and layout. These all currently live in the [widgets/static/widgets](../widgets/static/widgets) directory. The figure above is an example of a static widget demonstrating dial, line chart and text elements.
   
@@ -26,7 +28,7 @@ arguments on its command line, it will attempt to run a data server
 off that websocket port.  Note that by default this server is
 configured to draw the data it serves from the database defined in
 [database/settings.py](../database/settings.py) (which should be
-copied over from settings.py.dist and modified as necessary for the
+copied over from [database/settings.py.dist](../database/settings.py.dist) and modified as necessary for the
 local installation).
 
 One consequence of this default is that it will
@@ -63,7 +65,7 @@ server/network_data_server.py --websocket :8766 \
   --parse_nmea_sensor_model_path test/sikuliaq/sensor_models.yaml
 ```
 
-(For more information about running OpenRVDAS in a Sikuliaq-compatible installation, please see [test/sikuliaq/README.md](../test/sikuliaq/README.md).
+(For more information about running OpenRVDAS in a Sikuliaq-compatible installation, please see [test/sikuliaq/README.md](../test/sikuliaq/README.md).)
 
 ## Connecting Data Servers to Widgets
 
@@ -71,14 +73,15 @@ The Django-based dynamic widget looks in [django_gui/settings.py](../django_gui/
 
 The static widgets rely on the file
 [widgets/static/js/widgets/settings.js](static/js/widgets/settings.js)
-for their definition of WEBSOCKET\_DATA\_SERVER. The settings.py file must be
+for their definition of ```WEBSOCKET_DATA_SERVER```. The settings.py file must be
 copied over from
 [widgets/static/js/widgets/settings.js.dist](static/js/widgets/settings.js.dist) and modified to match your installation.
 
-In either case, the Django server should be restarted whenever either of these definitions are changed to ensure that the latest values are retrieved.
+In either case, the Django server and web server should be restarted whenever either of these definitions are changed to ensure that the latest values are retrieved.
 
-Note that, with Django, there is a further complication with the static files. For efficiency, Django can be directed to collect the static files for all its subprojects into a single directory (via the ```./manage.py collectstatic``` command). If your installation was built using one of the installation scripts, these static files have been copied into the ```openrvdas/static/``` directory, and you will need to change the definition of ```WEBSOCKET_DATA_SERVER``` in the ```settings.py``` file contained there.
+Note that, with Django, there is a further complication with the static files. For efficiency, Django can be directed to collect the static files for all its subprojects into a single directory (via the ```./manage.py collectstatic``` command). If your instance was built using one of the installation scripts in the [utils/](../utils/) directory, these static files have been copied into the ```openrvdas/static/``` directory, and you will need to change the definition of ```WEBSOCKET_DATA_SERVER``` in the ```settings.py``` file contained there.
 
+If you are running a data server and displaying widgets that are not updating, a good first step is to open a Javascript console on the browser page displaying the widget to check that the widget is attempting to connect to the data server you think is should be.
 
 ## Widget content
 
@@ -120,6 +123,8 @@ A simple widget might be constructed as follows
   </head>
   <body>
     <div id="line-container" style="height: 400px; min-width: 310px"></div>
+    Heading: <span id="heading-container"></span>,
+    Speed over Ground: <span id="speed-container"></span>
 
     <script type="text/javascript">
       //////////////////////////////////////
@@ -140,13 +145,56 @@ A simple widget might be constructed as follows
       };
       widget_list.push(new TimelineWidget('line-container',
                                           line_fields, 'Degrees'));
-
+      widget_list.push(
+          new TextWidget('heading-container',
+                         {S330HeadingTrue: {name: 'Heading (True)'}}));
+      widget_list.push(
+          new TextWidget('speed-container',
+                         {S330SOGKt: {name: 'Speed over Ground'}}));
+                         
       var widget_server = new WidgetServer(widget_list,
                                            WEBSOCKET_DATA_SERVER);
       widget_server.serve();
     </script>
   </body>
 </html>
+```
+
+### Supported static widgets
+
+The types of static widgets that are currently supported are
+
+* ```TimelineWidget(container, field_dict, [y_label], [widget_options])``` - produces a sliding timeline, as in the above example. May include any number of fields and each field may specify the name to be displayed (via "name:"), how many seconds of "back" data should be displayed (via "seconds:"), a transform (described below) and in what color to draw the line (via "color:"). Users proficient with Highcharts may specify additional Highcharts timeline widget options to override the defaults defined in [widgets/static/js/highcharts_widget.js](../widgets/static/js/highcharts_widget.js).
+
+* ```DialWidget(container, field_dict, [widget_options])``` - produces a dial gauge with as many dial hands as fields provided.  May include any number of fields and each field may specify the name to be displayed (via "name:"), a transform (described below) and in what color to draw the line (via "color:"). Users proficient with Highcharts may specify additional Highcharts dial widget options to override the defaults defined in [widgets/static/js/highcharts_widget.js](../widgets/static/js/highcharts_widget.js).
+
+* ```TextWidget(container, field_dict)``` - inserts the text value of the fields in question. Field dict may specify a "separator: <str>" value to indicate what string should separate the retrieved fields, and may also specify "append: true" if new values are to be appended to prior ones rather than replacing them. As above, a transform may also be specified.
+
+Again, we recommend looking at the sample static widgets in [widgets/static/widgets/](../widgets/static/widgets/) to better understand widget construction and available options.
+
+### Static widget transforms
+
+Sometimes an available value may not be in the form in which we would like to display it. The desired transformation may be a question of formatting or of mathematical manipulation. To support this, all static widgets are able to parse and apply a "transform" definition in the field dict.
+
+For example:
+
+```
+  widget_list.push(new TextWidget('gps_lat',
+                                  {S330Lat: {
+                                      name: "Latitude",
+                                      // Round latitude to two digits
+                                      transform: function(val) {
+                                        return Math.round(val*100)/10000;
+                                      }
+                                  }}));
+
+  widget_list.push(new TextWidget('air_temp',
+                                  { MwxAirTemp: {
+                                      name: 'Air Temp',
+                                      // Convert C to F
+                                      transform: function(val) {
+                                        return ((val*9/5) + 32) + "°F";
+                                  }}));
 ```
 
 ## Contributing
