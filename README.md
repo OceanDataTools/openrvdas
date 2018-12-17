@@ -15,6 +15,8 @@ OpenRVDAS is designed to be modular and extensible, relying on simple
 composition of Readers, Transforms and Writers to achieve the needed
 datalogging functionality.
 
+![Sample Display Widgets](docs/images/display_widgets_small.png)
+
 ## Motivation
 
 The primary purpose of an oceanographic research vessel is to gather
@@ -45,77 +47,21 @@ vessel operators with a modular and extensible toolset for developing
 and deploying a custom underway datalogging solution tailored to the
 vessel's individual needs.
 
-DISCLAIMER: THIS CODE IS EXPERIMENTAL AND STILL IN THE *VERY* EARLY
-STAGES OF DEVELOPMENT. IT SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON,
-ESPECIALLY NOT IN ANY APPLICATION WHERE ITS FAILURE COULD RESULT IN
-INJURY, LOSS OF LIFE, PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS
-WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
+![Sample Django Cruise Edit s330](docs/images/sample_cruise_edit_s330_small.png)
+
+DISCLAIMER: THIS CODE IS EXPERIMENTAL AND STILL UNDER DEVELOPMENT. IT
+SHOULD UNDER NO CIRCUMSTANCES BE RELIED ON, ESPECIALLY NOT IN ANY
+APPLICATION WHERE ITS FAILURE COULD RESULT IN INJURY, LOSS OF LIFE,
+PROPERTY, SANITY OR CREDIBILITY AMONG YOUR PEERS WHO WILL TELL YOU
+THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
+
+## Documentation
+
+Most OpenRVDAS documentation is gathered in the [docs/](docs/) subdirectory of this project. We recommend beginning with [OpenRVDAS Introduction and Overview](intro_and_overview.md), [Introduction to Loggers](intro_to_loggers.md) and [Controlling Loggers](controlling_loggers.md) to get started.
 
 ## Installation
 
-Please refer to [INSTALL.md](./INSTALL.md) for details on how to install OpenRVDAS
-
-## Data logging
-
-### Writing a custom logging script
-Individual logging modules can be composed using a few lines of
-Python, e.g.
-
-```
-    reader = SerialReader(port='/dev/ttyr15', baudrate=9600)
-    timestamp_transform = TimestampTransform()
-    prefix_transform = PrefixTransform(prefix=‘knud’)
-    logfilewriter = LogfileWriter(filebase=‘/data/logs/current/knud’)
-    while True:
-      in_record = reader.read()
-      ts_record = timestamp_transform.transform(in_record)
-      out_record = prefix_transform.transform(ts_record)
-      writer.write_record(out_record)
-```
-
-#### Full API Reference
-Documentation (also still incomplete) for the code is available online
-in a shared Google Doc folder via the shortcut url
-<http://tinyurl.com/openrvdas-docs>.
-
-### Logging with listen.py
-The listen.py script is included to provide access to the most
-commonly used Readers, Transforms and Writers from the command line,
-e.g.
-```
-  listen.py --serial port=/dev/ttyr15,baudrate=9600 \
-      --timestamp --prefix knud \
-      --write_logfile /data/logs/current/knud
-```
-#### More information on listen.py
-For full details on the use of listen.py, run:
-```
-  logger/listener/listen.py --help
-```
-
-### Running logger\_runner.py and logger\_manager.py
-
-Server scripts for managing multiple loggers are described in the
-[server/README.md file](servers/README.md).
-
-### Running the Django-based web interface
-
-Installation and running of the Django-based web interface is
-described in the [django_gui/README.md file](django_gui/README.md):
-
-![Sample Django Cruise Edit s330](docs/images/sample_cruise_edit_s330.png)
-
-### Display widgets
-
-A still-rudimentary display functionality described in
-[widgets/README.md](widgets/README.md) allows display of live (or
-historical) data in web browser windows. Currently supported widget
-types are tabular text values, timeline charts, dials and map-based
-tracks:
-
-![demo.html image](widgets/images/demo_html.png)
-
-![map_demo.html image](widgets/images/map_demo_html.png)
+OpenRVDAS is written primarily in Python 3.[^1] There are currently installation scripts for CentOS 7 and Ubuntu 16, but it may be manually installed on other systems. Please refer to [INSTALL.md](./INSTALL.md) for details.
 
 ## Contributing
 
@@ -147,7 +93,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Additional Licenses
-
 
 Highcharts is a software library made available by
 [http://www.highcharts.com](http://www.highcharts.com) under the
@@ -187,4 +132,5 @@ Creative Commons (CC) Attribution-NonCommercial licence.
   TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   ```
-  
+
+[^1]: Recommended version of Python is 3.6 or higher, but most listener     code has been verified to run on 3.5 and higher. Server code such as     logger\_runner.py and logger\_manager.py may experience problems on     3.5 due to changes in the async module.
