@@ -387,56 +387,51 @@ service uwsgi start
 systemctl enable nginx.service
 service nginx start
 
+echo "#########################################################################"
+echo Installing OpenRVDAS server as a service
+cat > /etc/systemd/system/openrvdas.service <<EOF
+[Unit]
+Description = Run openrvdas/server/logger_manager.py as service
+After = network.target
 
-## Commented out stuff about setting OpenRVDAS logger_manager.py
-## running as a server.
-#
-#echo "#########################################################################"
-#echo Installing OpenRVDAS server as a service
-#cat > /etc/systemd/system/openrvdas.service <<EOF
-#[Unit]
-#Description = Run openrvdas/server/logger_manager.py as service
-#After = network.target
-#
-#[Service]
-#ExecStart = /root/scripts/start_openrvdas.sh
-#ExecStop = /root/scripts/stop_openrvdas.sh
-#
-#[Install]
-#WantedBy = multi-user.target
-#EOF
-#
-#cat > /root/scripts/start_openrvdas.sh <<EOF
-##!/bin/bash
-## Start openrvdas servers as service
-#OPENRVDAS_LOGFILE=/var/log/openrvdas.log
-#touch \$OPENRVDAS_LOGFILE
-#chown $RVDAS_USER \$OPENRVDAS_LOGFILE
-#chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
-#sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v &>> \$OPENRVDAS_LOGFILE"
-#EOF
-#
-#cat > /root/scripts/stop_openrvdas.sh <<EOF
-##!/bin/bash
-#USER=rvdas
-#sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 server/logger_manager.py"'
-#EOF
-#
-#chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh
-#
-#echo "############################################################################"
-#echo The OpenRVDAS server can be configured to start on boot. Otherwise you will
-#echo need to either run it manually from a terminal \('server/logger_manager.py' from the
-#echo openrvdas base directory\) or start as a service \('service openrvdas start'\).
-#echo
-#while true; do
-#    read -p "Do you wish to start the OpenRVDAS server on boot? " yn
-#    case $yn in
-#        [Yy]* ) systemctl enable openrvdas.service; break;;
-#        [Nn]* ) break;;
-#        * ) echo "Please answer yes or no.";;
-#    esac
-#done
+[Service]
+ExecStart = /root/scripts/start_openrvdas.sh
+
+[Install]
+WantedBy = multi-user.target
+EOF
+
+cat > /root/scripts/start_openrvdas.sh <<EOF
+#!/bin/bash
+# Start openrvdas servers as service
+OPENRVDAS_LOGFILE=/var/log/openrvdas.log
+touch \$OPENRVDAS_LOGFILE
+chown $RVDAS_USER \$OPENRVDAS_LOGFILE
+chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
+sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v"
+EOF
+
+cat > /root/scripts/stop_openrvdas.sh <<EOF
+#!/bin/bash
+USER=rvdas
+sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 server/logger_manager.py"'
+EOF
+
+chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh
+
+echo "############################################################################"
+echo The OpenRVDAS server can be configured to start on boot. Otherwise you will
+echo need to either run it manually from a terminal \('server/logger_manager.py' from the
+echo openrvdas base directory\) or start as a service \('service openrvdas start'\).
+echo
+while true; do
+    read -p "Do you wish to start the OpenRVDAS server on boot? " yn
+    case $yn in
+        [Yy]* ) systemctl enable openrvdas.service; break;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 
 echo "#########################################################################"
 echo "#########################################################################"

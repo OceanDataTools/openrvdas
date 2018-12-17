@@ -257,7 +257,8 @@
   widget_list.push(new TextWidget('freezer2_temp',
                                { EngFreezer2C: {name: 'Freezer 2 Temp'}}));
 
-  var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+  var widget_server = new WidgetServer(widget_list,
+                                       WEBSOCKET_DATA_SERVER);
   widget_server.serve();
 </script>
 </body>

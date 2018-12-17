@@ -49,9 +49,17 @@ HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
-WEBSOCKET_HOST = HOSTNAME
-WEBSOCKET_PORT = 8765
-WEBSOCKET_SERVER = '%s:%d' % (WEBSOCKET_HOST, WEBSOCKET_PORT)
+# Websocket we'll connect to for logger status updates.
+WEBSOCKET_STATUS_HOST = HOSTNAME
+WEBSOCKET_STATUS_PORT = 8765
+WEBSOCKET_STATUS_SERVER = '%s:%d' % (WEBSOCKET_STATUS_HOST,
+                                     WEBSOCKET_STATUS_PORT)
+
+# Websocket we'll connect to for logger data updates.
+WEBSOCKET_DATA_HOST = HOSTNAME
+WEBSOCKET_DATA_PORT = 8765
+WEBSOCKET_DATA_SERVER = '%s:%d' % (WEBSOCKET_DATA_HOST,
+                                   WEBSOCKET_DATA_PORT)
 
 # Application definition
 
@@ -104,7 +112,7 @@ WSGI_APPLICATION = 'django_gui.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'CONN_MAX_AGE': 3600,
+        'CONN_MAX_AGE': 280,
         'NAME': 'openrvdas',
         'USER': 'rvdas',
         'PASSWORD': 'rvdas',

@@ -353,8 +353,9 @@ firewall-cmd --zone=public --permanent --add-port=80/tcp
 firewall-cmd --zone=public --permanent --add-port=8000/tcp
 firewall-cmd --zone=public --permanent --add-port=8001/tcp
 
-# Websocket port
-firewall-cmd --zone=public --permanent --add-port=8765/tcp
+# Websocket ports
+firewall-cmd --zone=public --permanent --add-port=8765/tcp # status
+firewall-cmd --zone=public --permanent --add-port=8766/tcp # data
 
 # Our favorite UDP port for network data
 firewall-cmd --zone=public --permanent --add-port=6224/udp

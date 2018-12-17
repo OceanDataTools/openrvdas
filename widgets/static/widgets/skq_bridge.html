@@ -1,0 +1,421 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sikuliaq Bridge Display Example</title>
+
+    <style type="text/css">
+      .ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      .ship_table td, .ship_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      .td_70 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 70%;
+      }
+      .td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 50%;
+      }
+      .td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 25%;
+      }
+      .td_30 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .name_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 20%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- This is where we define location of data server. -->
+    <script src="/static/js/widgets/settings.js"></script>
+
+    <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="/static/js/highcharts/code/highstock.js"></script>
+    <script src="/static/js/highcharts/code/highcharts-more.js"></script>
+    <script src="/static/js/highcharts/code/modules/data.js"></script>
+    <script src="/static/js/highcharts/code/modules/exporting.js"></script>
+    <script src="/static/js/highcharts/code/modules/export-data.js"></script>
+
+    <script src="/static/js/widgets/highcharts_widget.js"></script>
+    <script src="/static/js/widgets/text_widget.js"></script>
+    <script src="/static/js/widgets/widget_server.js"></script>
+
+    <table class="ship_table">
+      <tr>
+        <td>
+
+    <table class="ship_table">
+      <tr>
+        <td class="td_25">
+          Date: <span id="year"></span>-<span id="month"></span>-<span id="day"></span><br>
+          Time: <span id="time"></span>
+        </td>
+        <td class="td_25">
+          <b>R/V Sikuliaq</b>
+        </td>
+        <td class="td_25">
+          <b>Underway Bridge Display</b>
+        </td>
+        <td class="td_25">
+          Water Depth: <span id="water_depth"></span> m
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          Speed Over Ground and Through Water
+        </td>
+        <td>
+          <span style="color:blue;">SOG: <span id="sog"></span> kts</span>,
+          <span style="color:green;">STW: <span id="stw"></span> kts</span>
+        </td>
+        <td>
+          Barometric Pressure (@sea level)
+        </td>
+        <td>
+          <span id="baro_pressure"></span> hPA
+        </td>
+      </tr>
+      
+      <tr>
+        <td colspan=2>
+          <div id="speed_over_ground_and_water_hist"></div>
+        </td>
+        <td colspan=2>
+          <div id="baro_pressure_hist"></div>
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan=2>
+          Heading and Course Over Ground:
+          <span style="color:blue;">HDG: <span id="heading"></span>°</span>,
+          <span style="color:green;">COG: <span id="course"></span>°</span>
+        </td>
+        <td colspan=2>
+          Wind Speed (true):
+          <span style="color:blue;">FWD: <span id="fwd_wind_speed"></span> kts</span>,
+          <span style="color:green;">STBD: <span id="stbd_wind_speed"></span> kts</span>,
+          <span style="color:red;">PORT: <span id="port_wind_speed"></span> kts</span>
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan=2>
+          <div id="heading_and_course"></div>
+        </td>
+        <td colspan=2>
+          <div id="wind_speed_true"></div>
+        </td>
+      </tr>
+
+
+      <tr>
+        <td colspan=2>
+          Temperature:
+          <span style="color:blue;">Sea: <span id="sea_temp"></span>°F</span>,
+          <span style="color:green;">Air: <span id="air_temp"></span>°F</span>
+          <span style="color:black;">Wind Chill: <span id="wind_chill"></span>°F</span>
+        </td>
+        <td colspan=2>
+          Wind Direction (true):
+          <span style="color:blue;">FWD: <span id="fwd_wind_direction"></span>°</span>,
+          <span style="color:green;">STBD: <span id="stbd_wind_direction"></span>°</span>,
+          <span style="color:red;">PORT: <span id="port_wind_direction"></span>°</span>
+        </td>
+      </tr>
+
+
+      <tr>
+        <td colspan=2>
+          <div id="temperature"></div>
+        </td>
+        <td colspan=2>
+          <div id="wind_dir_true"></div>
+        </td>
+      </tr>
+
+    </table>
+
+  <script type="text/javascript">
+  function pad(n, width, z) {
+      z = z || '0';
+      n = n + '';
+      return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+  }
+
+  var widget_list = [];
+
+  widget_list.push(
+     new TextWidget('year', { ins_seapath_position_gps_year: {
+         name: 'Year',
+         transform: function(val) { return pad(val, 4); }
+       }}));
+  widget_list.push(
+     new TextWidget('month', { ins_seapath_position_gps_month: {
+         name: 'Month',
+         transform: function(val) { return pad(val, 2); }
+       }}));
+  widget_list.push(
+     new TextWidget('day', { ins_seapath_position_gps_day: {
+         name: 'Day',
+         transform: function(val) { return pad(val, 2); }
+       }}));
+  widget_list.push(
+     new TextWidget('time', { ins_seapath_position_gps_time: {
+         name: 'Time',
+         transform: function(val) {
+             var hour = Math.floor(val/10000);
+             var minute = Math.floor((val-(hour*10000))/100);
+             var second = Math.round(100*(val - (hour*10000) - (minute*100)))/100;
+             return pad(hour, 2) + ':' + pad(minute, 2) + ':' + pad(second, 5)
+         }
+     }}));
+
+  widget_list.push(
+     new TextWidget('water_depth', {
+         sb_echosounder_2_rel_depth_meters: {name: 'Water Depth'}}));
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // Next cluster: SOG, STW and Baro pressure
+  widget_list.push(
+     new TextWidget('sog', {
+         ins_seapath_position_sog_kt: {name: 'SOG', color: 'blue'}}));
+
+  widget_list.push(
+     new TextWidget('stw', {
+         speedlog_lon_water_speed: {
+             name: 'lon STW',
+             transform: function(val) {
+                 return Math.abs(val);
+             },
+             color: 'green'}}));
+
+  widget_list.push(
+     new TextWidget('baro_pressure', {
+         met_ptu307_pressure  : {name: 'Barometric Pressure'}}));
+
+  var sog_stw_fields = {
+      ins_seapath_position_sog_kt: {
+          name: 'SOG',
+          seconds: 1200,
+          color: 'blue'
+      },
+      speedlog_lon_water_speed: {
+          name: 'STW',
+          seconds: 1200,
+          color: 'green'
+      },
+  };
+  widget_list.push(new TimelineWidget('speed_over_ground_and_water_hist',
+                                      sog_stw_fields,
+                                      'Knots',
+                                      {title:{text:''},
+                                       chart: {type: 'line', height:200},
+                                       yAxis:{title:{text:'Knots'},min:0, max:15, tickInterval:5},
+                                      }));
+  var baro_pressure_fields = {
+      met_ptu307_pressure: {
+          name: 'Barometric Pressure',
+          seconds: 1200,
+          color: 'blue'
+      },
+  };
+  widget_list.push(new TimelineWidget('baro_pressure_hist',
+                                      baro_pressure_fields,
+                                      'hPA',
+                                      {title:{text:''},
+                                       chart: {type: 'line', height:200},
+                                       yAxis:{title:{text:'hPA'},min:1019, max:1023, tickInterval:1},
+                                      }
+                                   ));
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Next cluster: heading, course and wind speed
+  widget_list.push(
+     new TextWidget('heading', { ins_seapath_position_heading_true: {name: 'Heading'}}));
+  widget_list.push(
+     new TextWidget('course', { ins_seapath_position_course_true: {name: 'Course'}}));
+
+  widget_list.push(
+     new TextWidget('fwd_wind_speed', { 
+         wind_gill_fwdmast_true_speed_knots: {name: 'Forward Wind Speed'}}));
+  widget_list.push(
+     new TextWidget('stbd_wind_speed', { 
+         wind_mast_stbd_true_speed_knots: {name: 'Starboard Wind Speed'}}));
+  widget_list.push(
+     new TextWidget('port_wind_speed', { 
+         wind_mast_port_true_speed_knots: {name: 'Port Wind Speed'}}));
+
+  var heading_and_course_fields = {
+    ins_seapath_position_heading_true: {
+      name: 'Heading',
+      seconds: 1200,
+      color: 'blue',
+    },
+    ins_seapath_position_course_true: {
+      name: 'Course over Ground',
+      seconds: 1200,
+      color: 'green',
+    }
+  };
+  widget_list.push(new TimelineWidget('heading_and_course',
+                                      heading_and_course_fields,
+                                      'Degrees, True',
+                                      {title:{text:''},
+                                       chart: {type: 'line', height:200},
+                                       yAxis:{title:{text:'Degrees, True'},min:0, max:359, tickInterval:30},}
+                                   ));
+
+  var wind_speed_fields = {
+    wind_gill_fwdmast_true_speed_knots: {
+      name: 'Wind Gill True Wind',
+      seconds: 1200,
+      color: 'blue',
+    },
+    wind_mast_port_true_speed_knots: {
+      name: 'Port True Wind',
+      seconds: 1200,
+      color: 'red',
+    },
+    wind_mast_stbd_true_speed_knots: {
+      name: 'Stbd True Wind',
+      seconds: 1200,
+      color: 'green',
+    },
+  };
+  widget_list.push(new TimelineWidget('wind_speed_true',
+                                      wind_speed_fields,
+                                      'Knots',
+                                      {title:{text:''},
+                                       chart: {type: 'line', height:200},
+                                       yAxis:{title:{text:'Knots'},min:0, max:40, tickInterval:10},
+                                      }
+                                   ));
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Next cluster: temperature and wind direction
+  widget_list.push(
+     new TextWidget('sea_temp', { 
+         "fluoro_turner-c6_temp": {
+             name: 'Turner Sea Temp',
+             transform: function(val) {
+                 return Math.round(val*90/5.0)/10+32;
+             }
+         }
+    }));
+  widget_list.push(
+     new TextWidget('air_temp', { 
+         met_ptu307_temp: {name: 'Vaisala Air Temp',
+             transform: function(val) {
+                 return Math.round(val*90/5.0)/10+32;
+             }
+         }
+    }));
+  widget_list.push(
+     new TextWidget('wind_chill', { 
+         missing_variable_for_wind_chill: {name: 'Wind Chill',
+             transform: function(val) {
+                 return Math.round(val*90/5.0)/10+32;
+             }
+         }
+    }));
+
+  widget_list.push(
+     new TextWidget('fwd_wind_direction', { 
+         wind_gill_fwdmast_true_direction: {name: 'Forward Wind Dir'}}));
+  widget_list.push(
+     new TextWidget('stbd_wind_direction', { 
+         wind_mast_stbd_true_direction: {name: 'Starboard Wind Dir'}}));
+  widget_list.push(
+     new TextWidget('port_wind_direction', { 
+         wind_mast_port_true_direction: {name: 'Port Wind Dir'}}));
+
+  var temperature_fields = {
+      "fluoro_turner-c6_temp": {
+          name: 'Turner Sea Temp',
+          color: 'blue',
+          seconds: 1200,
+          transform: function(val) {
+              return Math.round(val*90/5.0)/10+32;
+          }
+      },
+      met_ptu307_temp: {
+          name: 'Vaisala Air Temp',
+          color: 'green',
+          seconds: 1200,
+          transform: function(val) {
+              return Math.round(val*90/5.0)/10+32;
+          }
+      },
+      missing_variable_for_wind_chill: {
+          name: 'Wind Chill',
+          seconds: 1200,
+          transform: function(val) {
+              return Math.round(val*90/5.0)/10+32;
+          }
+      }
+  };
+  widget_list.push(new TimelineWidget('temperature',
+                                      temperature_fields,
+                                      'Degrees F',
+                                      {title:{text:''},
+                                       chart: {type: 'line', height:200},
+                                       yAxis:{title:{text:'Degrees F'},min:30, max:60, tickInterval:5},
+}
+                                   ));
+  var wind_dir_fields = {
+    wind_gill_fwdmast_true_direction: {
+      name: 'Wind Gill True Wind',
+      seconds: 1200,
+      color: 'blue',
+    },
+    wind_mast_port_true_direction: {
+      name: 'Port True Wind',
+      seconds: 1200,
+      color: 'red',
+    },
+    wind_mast_stbd_true_direction: {
+      name: 'Stbd True Wind',
+      seconds: 1200,
+      color: 'green',
+    },
+  };
+  widget_list.push(new TimelineWidget('wind_dir_true',
+                                      wind_dir_fields,
+                                      'Degrees',
+                                      {title:{text:''},
+                                       chart: {type: 'line', height:200},
+                                       yAxis:{title:{text:'Degrees'},min:0, max:359, tickInterval:30},
+                                      }
+                                   ));
+  ////////////////////////
+  var widget_server = new WidgetServer(widget_list,
+                                       WEBSOCKET_DATA_SERVER);
+  widget_server.serve();
+</script>
+</body>
+</html>

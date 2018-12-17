@@ -59,7 +59,8 @@
                                      fields_to_lat_lon,
                                      tile_server, map_overlays)];
 
-    var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+    var widget_server = new WidgetServer(widget_list,
+                                         WEBSOCKET_DATA_SERVER);
     widget_server.serve();
   </script>
 </body>

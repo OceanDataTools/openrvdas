@@ -3,74 +3,13 @@
 ## Overview
 
 Please see the [README.md file in the parent directory](../README.md)
-for an introduction to the OpenRVDAS system. This document discusses
-specifically setting up the demo static widgets in this directory.
+for an introduction to the OpenRVDAS system, and [OpenRVDAS Display Widgets](../docs/display_widgets.md) for a description of code in this directory.
 
 This directory contains Javascript code and libraries (Highcharts and
 Leaflet) that are able to connect to a DataServer via websocket and
-display the data they receive on a web page.
-
-The static widget directory in
-[widgets/static/widgets](static/widgets) contains static demonstration
-widgets that are designed to read and display data produced when the
-logger manager is running the [NBP1406 test cruise
-definition](../test/nmea/NBP1406/NBP1406_cruise.yaml). They are provided as examples of how you or whatever webserving system you embrace, should invoke the JS widget_server.
-
-The static widgets rely on the file
-[widgets/static/js/widgets/settings.js](static/js/widgets/settings.js)
-for the definition of WEBSOCKET_SERVER. The settings.py file must be
-copied over from
-[widgets/static/js/widgets/settings.js.dist](static/js/widgets/settings.js.dist) and modified to match your installation.
-
-```
-<!DOCTYPE HTML>
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- This is where we define location of data server. -->
-    <script src="/static/js/widgets/settings.js"></script>
-    
-    <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
-
-    <!-- For highcharts-widget.js -->
-    <script src="/static/js/highcharts/code/highstock.js"></script>
-    <script src="/static/js/highcharts/code/highcharts-more.js"></script>
-    <script src="/static/js/highcharts/code/modules/data.js"></script>
-
-    <script src="/static/js/widgets/highcharts_widget.js"></script>
-    <script src="/static/js/widgets/widget_server.js"></script>
-  </head>
-  <body>
-    <div id="line-container" style="height: 400px; min-width: 310px"></div>
-
-    <script type="text/javascript">
-      //////////////////////////////////////
-      // Start of widget code
-      var widget_list = [];
-
-      //////////////////
-      // A line widget
-      var line_fields = {
-        S330Pitch: {
-          name: "Pitch",
-          seconds: 30
-        },
-        S330Roll: {
-          name: "Roll",
-          seconds: 30
-        }
-      };
-      widget_list.push(new TimelineWidget('line-container',
-                                          line_fields, 'Degrees'));
-
-      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
-      widget_server.serve();
-    </script>
-  </body>
-</html>
-```
+display the data they receive on a web page. It is the obligation of
+the user to ensure that they have the appropriate licenses and
+rights to use the code in the included libraries.
 
 ## Contributing
 

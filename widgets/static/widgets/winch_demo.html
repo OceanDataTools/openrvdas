@@ -432,7 +432,8 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Create and start up a WidgetServer
-      var widget_server = new WidgetServer(widget_list, WEBSOCKET_SERVER);
+      var widget_server = new WidgetServer(widget_list,
+                                           WEBSOCKET_DATA_SERVER);
       widget_server.serve();
 
     </script>

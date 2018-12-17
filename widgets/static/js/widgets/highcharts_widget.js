@@ -231,7 +231,7 @@ Create a Highcharts line widget displaying one or more variables
 **********************/
 function TimelineWidget(container, fields, y_label='',
                         widget_options={},
-                        max_points=50) {
+                        max_points=500) {
   this.fields = fields;
 
   // Create one series for each field
@@ -251,7 +251,7 @@ function TimelineWidget(container, fields, y_label='',
 
     this_widget_options = {
     chart: {
-        type: 'spline'
+        type: 'line'
     },
     title: {
         // Just all the field names, comma separated
@@ -315,8 +315,9 @@ function TimelineWidget(container, fields, y_label='',
               field_series.points[0].x < new_point[0] - msecs_to_keep)
              || field_series.data.length > this.max_points;
 
-        field_series.addPoint(new_point, true, shift);
+        field_series.addPoint(new_point, false, shift);
       }
+      this.chart.redraw();
     }
   }
 }

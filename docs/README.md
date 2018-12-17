@@ -8,7 +8,7 @@ OpenRVDAS is designed to be modular and extensible, relying on simple compositio
 
 The project code repository is at [https://github.com/davidpablocohn/openrvdas](https://github.com/davidpablocohn/openrvdas).
 
-Please see the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md) to get started.
+Please see the [OpenRVDAS Introduction and Overview](intro_and_overview.md), the [Introduction to Loggers](intro_to_loggers.md) and [Controlling Loggers](controlling_loggers.md) to get started.
 
 Other relevant documents are:
 
@@ -17,7 +17,7 @@ Other relevant documents are:
 * [OpenRVDAS Components](components.md) - what components exist and what they do
 * [Simulating Serial Input](simulating_serial_input.md) - using the simulate_serial.py script to create virtual serial ports for development and testing
 * [OpenRVDAS Django Web User Interface](django_interface.md) - an introduction to the web-based GUI
-* [Data Display Widgets](../widgets/README.md) - an introduction to widgets for data display
+* [Data Display Widgets](display_widgets.md) - an introduction to widgets for data display
 * [NMEA Parsing](nmea_parser.md) - how to work with the included NMEA parser 
 
 A very rudimentary project website is available at [OpenRVDAS.org](http://openrvdas.org)

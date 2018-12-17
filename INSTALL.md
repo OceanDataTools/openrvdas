@@ -108,15 +108,14 @@ _This is the recommended way to install for Ubuntu._
 Copy the script ```utils/build_openrvdas_ubuntu16.sh``` into the /tmp
 directory of your new machine. When run as root, it will install and
 set up the core logging, database and GUI services (NGINX web server
-and uWSGI).
+and uWSGI). The script also provides the option of configuring the
+OpenRVDAS servers to start automatically on boot or manually, via
 
-Unlike the CentOS installation script, the Ubuntu script does not
-(yet) install OpenRVDAS as a service, so to run the logger_manager.py,
-you will need to invoke it manually:
+service openrvdas start
 
-```
-  > server/logger_manager.py --websocket :8765 --database django
-```
+and shut down via
+
+service openrvdas stop
 
 ### Manual Installation
 
