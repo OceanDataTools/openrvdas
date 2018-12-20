@@ -1,0 +1,48 @@
+# A simple dataflow logger configuration, intended to be used in an
+# invocation like
+#
+#    logger/listener/listen.py \
+#        --dataflow test/sikuliaq/ins_seapath_logger_dataflow.yaml
+#
+# Currently only works in the project branch 'dataflow' where we're
+# beginning to implement a dataflow architecture.
+#
+# Also requires that something is sending SeaPath data to UDP port 53119;
+# either the actual instrument on Sikuliaq (for example) or via the invocation
+#
+#     logger/utils/simulate_network.py \
+#       --config test/nmea/SKQ201822S/network_sim_SKQ201822S.yaml \
+#       --loop
+
+
+{
+ 'network_reader': {'class': 'NetworkReader', 'kwargs': {'network': ':53119'}},
+
+ 'filter_transform': {'class': 'RegexFilterTransform',
+                      'kwargs': {'pattern': '^ins_seapath_position'},
+                      'subscription_list': ['network_reader']},
+
+ 'parser_transform': {
+     'class': 'ParseNMEATransform',
+     'kwargs': {
+        'sensor_model_path': 'local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml',
+        'sensor_path': 'local/sensor/*.yaml,test/sikuliaq/sensors.yaml'
+     },
+     'subscription_list': ['filter_transform']
+  },
+                      
+ 'slice_transform': {'class': 'SliceTransform',
+                     'kwargs': {'fields': '1:'},
+                     'subscription_list': ['filter_transform']},
+
+  'stdout_writer': {
+      'class': 'TextFileWriter',
+      'subscription_list': ['parser_transform']},
+
+  'logfile_writer': {
+      'class': 'LogfileWriter',
+      'kwargs': {
+        'filebase': '/var/tmp/log/SKQ201822S/ins_seapath_position/raw/SKQ201822S_ins_seapath_position'
+      },
+      'subscription_list': ['slice_transform']},
+}

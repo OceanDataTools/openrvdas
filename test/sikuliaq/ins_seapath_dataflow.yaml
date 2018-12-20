@@ -1,0 +1,66 @@
+# A dict of dataflow loggers (which happens to have only one logger),
+# intended to be used in an invocation like
+#
+#    server/logger_runner.py \
+#        --config test/sikuliaq/ins_seapath_logger_dataflow.yaml
+#
+# Currently only works in the project branch 'dataflow' where we're
+# beginning to implement a dataflow architecture.
+#
+# Also requires that something is sending SeaPath data to UDP port 53119;
+# either the actual instrument on Sikuliaq (for example) or via the invocation
+#
+#     logger/utils/simulate_network.py \
+#       --config test/nmea/SKQ201822S/network_sim_SKQ201822S.yaml \
+#       --loop
+
+{
+        "ins_seapath_position->file": {
+            "name": "ins_seapath_position->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53119"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^ins_seapath_position"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writers": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/ins_seapath_position/raw/SKQ201822S_ins_seapath_position"
+                    }
+                }
+            }
+        }
+}

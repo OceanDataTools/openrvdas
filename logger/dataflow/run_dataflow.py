@@ -25,13 +25,25 @@ class AsyncWrapper:
     self.component = component
 
   async def read(self):
-    """Call the component's read() method, but put an itsy bitsy asyncio
-    sleep() in to allow it to yield execution and give other nodes a
-    chance to run.
+    """Call the component's read() method. If it's a read() and is not
+    async, it may block, so put an itsy bitsy asyncio sleep() in to
+    allow it to yield execution and give other nodes a chance to run.
     """
     logging.debug('Called read() on %s', str(self.component))
-    await asyncio.sleep(0.0001)
-    return self.component.read()
+
+    # If component supports async reads, await it, otherwise insert a
+    # dummy one to allow other components to get some work done.
+    #
+    # Additional complication: only async components will have any
+    # idea what to do with an event loop, so handing it in on object
+    # creation would be a mess. Instead, we hand it in on the first
+    # async call.
+    if hasattr(self.component, 'is_async') and self.component.is_async:
+      logging.debug('Calling async read()!')
+      return await self.component.read()
+    else:
+      await asyncio.sleep(0.0001)
+      return self.component.read()
 
   async def process(self, record):
     """Call the component's transform() method if it has one on the
@@ -65,8 +77,8 @@ class DataflowRunner:
       # Who, if anyone, will this node be reading from?
       subscription_list = node_config.get('subscription_list', [])
       if not subscription_list:
-        logging.warning('Node "%s" is not reading from any other node',
-                        node_name)
+        logging.warning('Node "%s" is not reading from any other node. '
+                        'Config: %s', node_name, node_config)
 
       # For now, assume components are not async, so after we've
       # created them, wrap it in an async class.

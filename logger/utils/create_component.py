@@ -52,6 +52,8 @@ from logger.readers.text_file_reader import TextFileReader
 from logger.readers.database_reader import DatabaseReader
 from logger.readers.timeout_reader import TimeoutReader
 
+from logger.readers.async_network_reader import AsyncNetworkReader
+
 from logger.transforms.prefix_transform import PrefixTransform
 from logger.transforms.regex_filter_transform import RegexFilterTransform
 from logger.transforms.qc_filter_transform import QCFilterTransform

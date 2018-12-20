@@ -1,0 +1,1779 @@
+{
+        "met_ptu307->file": {
+            "name": "met_ptu307->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53100"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^met_ptu307"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/met_ptu307/raw/SKQ201822S_met_ptu307"
+                    }
+                }
+            }
+        },
+        "rain_rmy50202->file": {
+            "name": "rain_rmy50202->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53101"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^rain_rmy50202"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/rain_rmy50202/raw/SKQ201822S_rain_rmy50202"
+                    }
+                }
+            }
+        },
+        "rad_qsr2150a->file": {
+            "name": "rad_qsr2150a->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53104"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^rad_qsr2150a"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/rad_qsr2150a/raw/SKQ201822S_rad_qsr2150a"
+                    }
+                }
+            }
+        },
+        "rad_psp-pir->file": {
+            "name": "rad_psp-pir->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53105"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^rad_psp-pir"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/rad_psp-pir/raw/SKQ201822S_rad_psp-pir"
+                    }
+                }
+            }
+        },
+        "thermo_pyrometer-ct15->file": {
+            "name": "thermo_pyrometer-ct15->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53106"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^thermo_pyrometer-ct15"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/thermo_pyrometer-ct15/raw/SKQ201822S_thermo_pyrometer-ct15"
+                    }
+                }
+            }
+        },
+        "fluoro_turner-c6->file": {
+            "name": "fluoro_turner-c6->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53107"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^fluoro_turner-c6"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/fluoro_turner-c6/raw/SKQ201822S_fluoro_turner-c6"
+                    }
+                }
+            }
+        },
+        "grav_bgm3_222->file": {
+            "name": "grav_bgm3_222->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53108"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^grav_bgm3_222"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/grav_bgm3_222/raw/SKQ201822S_grav_bgm3_222"
+                    }
+                }
+            }
+        },
+        "pco2_ldeo_merge->file": {
+            "name": "pco2_ldeo_merge->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":54109"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^pco2_ldeo_merge"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/pco2_ldeo_merge/raw/SKQ201822S_pco2_ldeo_merge"
+                    }
+                }
+            }
+        },
+        "tsg_sbe45_fwd->file": {
+            "name": "tsg_sbe45_fwd->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53110"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^tsg_sbe45_fwd"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/tsg_sbe45_fwd/raw/SKQ201822S_tsg_sbe45_fwd"
+                    }
+                }
+            }
+        },
+        "thermo_sbe38_fwd->file": {
+            "name": "thermo_sbe38_fwd->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53111"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^thermo_sbe38_fwd"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/thermo_sbe38_fwd/raw/SKQ201822S_thermo_sbe38_fwd"
+                    }
+                }
+            }
+        },
+
+        "thermo_sbe38_incubator->file": {
+            "name": "thermo_sbe38_incubator->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53112"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^thermo_sbe38_incubator"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/thermo_sbe38_incubator/raw/SKQ201822S_thermo_sbe38_incubator"
+                    }
+                }
+            }
+        },
+        "tsg_sbe45_fwd_2->file": {
+            "name": "tsg_sbe45_fwd_2->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53114"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^tsg_sbe45_fwd_2"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/tsg_sbe45_fwd_2/raw/SKQ201822S_tsg_sbe45_fwd_2"
+                    }
+                }
+            }
+        },
+        "flow_krohne_pco2->file": {
+            "name": "flow_krohne_pco2->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53116"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^flow_krohne_pco2"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/flow_krohne_pco2/raw/SKQ201822S_flow_krohne_pco2"
+                    }
+                }
+            }
+        },
+        "ssv_aml->file": {
+            "name": "ssv_aml->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53117"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^ssv_aml"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/ssv_aml/raw/SKQ201822S_ssv_aml"
+                    }
+                }
+            }
+        },
+        "ins_seapath_position->file": {
+            "name": "ins_seapath_position->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53119"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^ins_seapath_position"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/ins_seapath_position/raw/SKQ201822S_ins_seapath_position"
+                    }
+                }
+            }
+        },
+        "gnss_cnav->file": {
+            "name": "gnss_cnav->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53121"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^gnss_cnav"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/gnss_cnav/raw/SKQ201822S_gnss_cnav"
+                    }
+                }
+            }
+        },
+        "gyro_1->file": {
+            "name": "gyro_1->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53122"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^gyro_1"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/gyro_1/raw/SKQ201822S_gyro_1"
+                    }
+                }
+            }
+        },
+        "gyro_2->file": {
+            "name": "gyro_2->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53123"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^gyro_2"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/gyro_2/raw/SKQ201822S_gyro_2"
+                    }
+                }
+            }
+        },
+        "wind_gill_fwdmast->file": {
+            "name": "wind_gill_fwdmast->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53124"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^wind_gill_fwdmast"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/wind_gill_fwdmast/raw/SKQ201822S_wind_gill_fwdmast"
+                    }
+                }
+            }
+        },
+        "wind_gill_fwdmast_true->file": {
+            "name": "wind_gill_fwdmast_true->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":54124"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^wind_gill_fwdmast_true"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/wind_gill_fwdmast_true/raw/SKQ201822S_wind_gill_fwdmast_true"
+                    }
+                }
+            }
+        },
+        "speedlog->file": {
+            "name": "speedlog->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53125"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^speedlog"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/speedlog/raw/SKQ201822S_speedlog"
+                    }
+                }
+            }
+        },
+        "sb_echosounder_1->file": {
+            "name": "sb_echosounder_1->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53126"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^sb_echosounder_1"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/sb_echosounder_1/raw/SKQ201822S_sb_echosounder_1"
+                    }
+                }
+            }
+        },
+        "sb_echosounder_2->file": {
+            "name": "sb_echosounder_2->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53127"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^sb_echosounder_2"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/sb_echosounder_2/raw/SKQ201822S_sb_echosounder_2"
+                    }
+                }
+            }
+        },
+        "winch_rapp->file": {
+            "name": "winch_rapp->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53128"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^winch_rapp"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/winch_rapp/raw/SKQ201822S_winch_rapp"
+                    }
+                }
+            }
+        },
+        "flow_krohne_fwd->file": {
+            "name": "flow_krohne_fwd->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53129"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^flow_krohne_fwd"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/flow_krohne_fwd/raw/SKQ201822S_flow_krohne_fwd"
+                    }
+                }
+            }
+        },
+        "wind_mast_port->file": {
+            "name": "wind_mast_port->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53130"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^wind_mast_port"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/wind_mast_port/raw/SKQ201822S_wind_mast_port"
+                    }
+                }
+            }
+        },
+        "wind_mast_port_true->file": {
+            "name": "wind_mast_port_true->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":54130"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^wind_mast_port_true"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/wind_mast_port_true/raw/SKQ201822S_wind_mast_port_true"
+                    }
+                }
+            }
+        },
+        "wind_mast_stbd->file": {
+            "name": "wind_mast_stbd->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53131"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^wind_mast_stbd"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/wind_mast_stbd/raw/SKQ201822S_wind_mast_stbd"
+                    }
+                }
+            }
+        },
+        "wind_mast_stbd_true->file": {
+            "name": "wind_mast_stbd_true->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":54131"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^wind_mast_stbd_true"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/wind_mast_stbd_true/raw/SKQ201822S_wind_mast_stbd_true"
+                    }
+                }
+            }
+        },
+        "oxygen_sbe43_fwd->file": {
+            "name": "oxygen_sbe43_fwd->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53132"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^oxygen_sbe43_fwd"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/oxygen_sbe43_fwd/raw/SKQ201822S_oxygen_sbe43_fwd"
+                    }
+                }
+            }
+        },
+        "oxygen_sbe43_fwd_calc->file": {
+            "name": "oxygen_sbe43_fwd_calc->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":54132"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^oxygen_sbe43_fwd_calc"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/oxygen_sbe43_fwd_calc/raw/SKQ201822S_oxygen_sbe43_fwd_calc"
+                    }
+                }
+            }
+        },
+        "mbari_isus_fwd->file": {
+            "name": "mbari_isus_fwd->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53133"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^mbari_isus_fwd"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/mbari_isus_fwd/raw/SKQ201822S_mbari_isus_fwd"
+                    }
+                }
+            }
+        },
+        "ais_r4-navigator_bridge->file": {
+            "name": "ais_r4-navigator_bridge->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53134"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^ais_r4-navigator_bridge"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/ais_r4-navigator_bridge/raw/SKQ201822S_ais_r4-navigator_bridge"
+                    }
+                }
+            }
+        },
+        "adcp_speedlog->file": {
+            "name": "adcp_speedlog->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":53135"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^adcp_speedlog"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/adcp_speedlog/raw/SKQ201822S_adcp_speedlog"
+                    }
+                }
+            }
+        },
+        "cruiseid->file": {
+            "name": "cruiseid->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":54000"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^cruiseid"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/cruiseid/raw/SKQ201822S_cruiseid"
+                    }
+                }
+            }
+        },
+        "tsg_emssv->file": {
+            "name": "tsg_emssv->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":54001"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^tsg_emssv"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/tsg_emssv/raw/SKQ201822S_tsg_emssv"
+                    }
+                }
+            }
+        },
+        "mb_em302_centerbeam->file": {
+            "name": "mb_em302_centerbeam->file",
+            "dataflow": {
+                "network_reader": {
+                    "class": "AsyncNetworkReader",
+                    "kwargs": {
+                        "network": ":55005"
+                    }
+                },
+                "filter_transform": {
+                    "subscription_list": [
+                        "network_reader"
+                    ],
+                    "class": "RegexFilterTransform",
+                    "kwargs": {
+                        "pattern": "^mb_em302_centerbeam"
+                    }
+                },
+                "parser_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "ParseNMEATransform",
+                    "kwargs": {
+                        "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                        "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml"
+                    }
+                },
+                "slice_transform": {
+                    "subscription_list": [
+                        "filter_transform"
+                    ],
+                    "class": "SliceTransform",
+                    "kwargs": {
+                        "fields": "1:"
+                    }
+                },
+                "logfile_writer": {
+                    "subscription_list": [
+                        "slice_transform"
+                    ],
+                    "class": "LogfileWriter",
+                    "kwargs": {
+                        "filebase": "/var/tmp/log/SKQ201822S/mb_em302_centerbeam/raw/SKQ201822S_mb_em302_centerbeam"
+                    }
+                }
+          }
+    }
+}
