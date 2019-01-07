@@ -67,7 +67,7 @@ class ServerAPI:
 
   ############################
   def __init__(self):
-    pass
+    self.quit_callbacks = []
 
   #############################
   # API methods below are used in querying/modifying the API for the
@@ -190,13 +190,27 @@ class ServerAPI:
       'set_active_logger_config must be implemented by subclass')
 
   #############################
+  def quit(self):
+    """Execute any callbacks that were registered to run on quit."""
+    for (callback, kwargs) in self.quit_callbacks:
+      logging.debug('Executing quit callback: %s', callback)
+      callback(**kwargs)
+
+  #############################
   # API method to register a callback. When the data store changes,
   # methods that are registered via on_update() will be called so they
   # can fetch updated results.
   #############################
+  def on_quit(self, callback, kwargs=None):
+    """Register a method to be called when quit is signaled changes."""
+    if kwargs is None:
+      kwargs = {}
+    self.quit_callbacks.append((callback, kwargs))
+
+  #############################
   def on_update(self, callback, kwargs=None):
     """Register a method to be called when datastore changes."""
-    raise NotImplementedError('on_update must be implemented by subclass '
+    raise NotImplementedError('on_update() must be implemented by subclass '
                               '(though this really should be implemented '
                               'at top level')
 

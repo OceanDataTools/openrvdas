@@ -100,3 +100,5 @@ class Listener:
     except KeyboardInterrupt:
       logging.info('Listener %s received KeyboardInterrupt - exiting.',
                    self.name or '')
+    except Exception as e:
+      logging.error('Listener %s received exception: %s', str(e))

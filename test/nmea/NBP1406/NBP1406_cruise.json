@@ -137,6 +137,12 @@
                 "true_winds->net",
                 "true_winds->db"
             ]
+        },
+        "display": {
+            "configs": [
+                "display->off",
+                "display->on"
+            ]
         }
     },
     "modes": {
@@ -159,7 +165,8 @@
             "mbdp": "mbdp->off",
             "pco2": "pco2->off",
             "seap": "seap->off",
-            "true_winds": "true_winds->off"
+            "true_winds": "true_winds->off",
+            "display": "display->off"
         },
         "port": {
             "gyr1": "gyr1->net",
@@ -180,7 +187,8 @@
             "mbdp": "mbdp->off",
             "pco2": "pco2->off",
             "seap": "seap->off",
-            "true_winds": "true_winds->off"
+            "true_winds": "true_winds->off",
+            "display": "display->on"
         },
         "monitor": {
             "gyr1": "gyr1->net",
@@ -201,7 +209,8 @@
             "mbdp": "mbdp->net",
             "pco2": "pco2->net",
             "seap": "seap->net",
-            "true_winds": "true_winds->db"
+            "true_winds": "true_winds->net",
+            "display": "display->on"
         },
         "monitor and log": {
             "gyr1": "gyr1->file/net/db",
@@ -222,7 +231,8 @@
             "mbdp": "mbdp->file/net/db",
             "pco2": "pco2->file/net/db",
             "seap": "seap->file/net/db",
-            "true_winds": "true_winds->db"
+            "true_winds": "true_winds->file/net/db",
+            "display": "display->on"
         }
     },
     "default_mode": "off",
@@ -245,6 +255,7 @@
         "pco2->off": {},
         "rtmp->off": {},
         "seap->off": {},
+        "display->off": {},
         "PCOD->net": {
             "name": "PCOD->net",
             "readers": {
@@ -782,6 +793,24 @@
                             "network": ":6224"
                         }
                     }
+                }
+            }
+        },
+        "display->on": {
+            "name": "display->on",
+            "readers": {
+                "class": "NetworkReader",
+                "kwargs": {
+                    "network": ":6224",
+                }
+            },
+            "transforms": {
+                "class": "ParseNMEATransform"
+            },
+            "writers": {
+                "class": "CachedDataWriter",
+                "kwargs": {
+                    "websocket": ":8766"
                 }
             }
         },

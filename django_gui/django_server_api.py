@@ -36,7 +36,7 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def __init__(self):
     super().__init__()
-    self.callbacks = []
+    self.update_callbacks = []
 
     # Test whether Django is in fact initialized. If we get a DoesNotExist
     # error, that means that our tables are working.
@@ -228,7 +228,7 @@ class DjangoServerAPI(ServerAPI):
       LoggerConfigState(logger=logger, config=new_config, pid=0,
                         running=False).save()
 
-    # Notify any callbacks that wanted to be called when the state of
+    # Notify any update_callbacks that wanted to be called when the state of
     # the world changes.
     logging.info('Signaling update')
     self.signal_update()
@@ -248,7 +248,7 @@ class DjangoServerAPI(ServerAPI):
     LoggerConfigState(logger=logger, config=new_config, pid=0,
                       running=False).save()
 
-    # Notify any callbacks that wanted to be called when the state of
+    # Notify any update_callbacks that wanted to be called when the state of
     # the world changes.
     logging.info('Signaling update')
     self.signal_update()
@@ -262,12 +262,12 @@ class DjangoServerAPI(ServerAPI):
     """Register a method to be called when datastore changes."""
     if kwargs is None:
       kwargs = {}
-    self.callbacks.append((callback, kwargs))
+    self.update_callbacks.append((callback, kwargs))
 
   #############################
   def signal_update(self):
     """Call the registered methods when an update has been signalled."""
-    for (callback, kwargs) in self.callbacks:
+    for (callback, kwargs) in self.update_callbacks:
       logging.debug('Executing update callback: %s', callback)
       callback(**kwargs)
 

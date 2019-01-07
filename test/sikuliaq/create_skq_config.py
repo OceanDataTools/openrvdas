@@ -149,6 +149,25 @@ db_config = """{
           }
         }"""
 
+display_on_config =  {
+          "name": "display->on",
+          "readers": [],
+          "transforms": {
+            "class": "ParseNMEATransform",
+            "kwargs": {
+              "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+              "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+            }
+          },
+          "writers": {
+            "class": "CachedDataWriter",
+            "kwargs": {
+              "back_seconds": 640,
+              "websocket": ":8766"
+            }
+          }
+        }
+
 lines = [line.strip() for line in sys.stdin.readlines()]
 
 loggers = {}
@@ -199,6 +218,23 @@ for line in lines:
 
 #pprint.pprint(loggers, width=40, compact=False)
 #pprint.pprint(modes, width=40, compact=False)
+
+# Add the display logger
+loggers['display'] = {'configs': ['display->off', 'display->on']}
+
+modes['off']['display'] = 'display->off'
+modes['file']['display'] = 'display->on'
+modes['db']['display'] = 'display->on'
+modes['file/db']['display'] = 'display->on'
+
+# Add the display configs
+configs['display->off'] = {}
+for line in lines:
+  (inst, port) = line.split('\t', maxsplit=2)
+  display_on_config['readers'].append(
+    {"class": "NetworkReader", "kwargs": {"network": ":"+port} })
+configs['display->on'] = display_on_config
+
 
 skq_cruise = OrderedDict()
 skq_cruise['cruise'] = {

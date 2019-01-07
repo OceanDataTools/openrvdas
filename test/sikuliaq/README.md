@@ -47,7 +47,7 @@ Again, recall that `create_skq_config.py` is a quick and dirty hack for
 creating a usable config file (and as such will probably outlive us
 all). But please don't expect too much out of it.
 
-### Loading/Running the configuration
+### Manually loading/running the configuration
 
 If using the command line interface for server/logger_manager.py,
 you can specify the desired mode on the command line:
@@ -75,21 +75,46 @@ document](../../docs/nmea_parser.md#locations-of-message-sensor-and-sensor-model
 for more information on specifying deployment-specific sensor
 definitions.
 
+### Loading/Running the configuration via the Django GUI
+
+If you've used one of the standard build scripts to create you
+OpenRVDAS installation, you will have the Django-based GUI
+available. Assuming the OpenRVDAS service is running (```service
+openrvdas start```), you should be able to point a browser at
+
+   [http://localhost:8000](http://localhost:8000)
+
+and see the default cruise management page. After logging in, you
+should be able to select the 'Load configuration file' button at the
+bottom, select a file and load it using the 'Load' button. Please see
+the [Django Web Interface](../../docs/django_interface.md) document
+for more information on using the web interface.
+
 ## Running OpenRVDAS Displays
 
 The OpenRVDAS display widgets draw data from a data server. While the
 logger\_manager.py script runs a dataserver that feeds off of values
 written to the database, the currently recommended approach is to rely
 on the standalone
-[network_data_server.py](../server/network_data_server.py) script.
+[cached\_data\_server.py](../../logger/utils/cached_data_server.py) script
+or to incorporate a [CachedDataWriter](../../logger/writers/cached_data_writer.py) in your cruise configuration.
 
-To run the script, you will need to tell it what ports to listen to
+A CachedDataWriter has been incorporated into a logger in the sample cruise configuration at [test/nmea/SKQ201822S/SKQ201822S\_cruise.yaml](test/nmea/SKQ201822S/SKQ201822S_cruise.yaml) with the name 'display server', which should be running in all modes other than 'off'.
+
+Simply setting the cruise mode to 'file' or any other mode should be enough to start the display logger, after which the sample display at
+
+   [http://localhost:8000/static/widgets/](http://localhost:8000/static/widgets/)
+
+should be active and updating.
+
+If you want to manually run the cached\_data\_server.py script, you will need to tell it what ports to listen to
 for NMEA data strings, and where to look for any non-standard sensor
-and sensor model definitions. In the case of Sikuliaq, the invocation
+and sensor model definitions. In the case of Sikuliaq, the manual invocation
 would be:
 
 ```
-server/network_data_server.py --websocket :8766 \
+logger/utils/cached_data_server.py \
+  --websocket :8766 \
   --read_network :53100,:53104,:53105,:53106,:53107,:53108,:53110,:53111,:53112,:53114,:53116,:53117,:53119,:53121,:53122,:53123,:53124,:53125,:53126,:53127,:53128,:53129,:53130,:53131,:53134,:53135,:54000,:54001,:54109,:54124,:54130,:54131,:55005,:55006,:55007,:58989 \
   --parse_nmea_sensor_path test/sikuliaq/sensors.yaml \
   --parse_nmea_sensor_model_path test/sikuliaq/sensor_models.yaml
@@ -104,8 +129,7 @@ You will have copied this file over from [widgets/static/js/widgets/settings.js.
 
 Regardless of its location, you'll want the definition of
 ```WEBSOCKET_DATA_SERVER``` in settings.py to refer to the hostname
-and port that you've used for your ```server/network_data_server.py```
-call.
+and port that you've used for your DataServer invocation.
 
 Once you've verified that the server name and port match, you'll need
 to make sure that you have something running that can serve the static
@@ -117,7 +141,7 @@ If you don't have OpenRVDAS installed as a service, you can still run
 the Django test server with:
 
 ```
-    ./manage.py runserver localhost:800
+    ./manage.py runserver localhost:8000
 ```
 
 in which case, you'll want ```WEBSOCKET_DATA_SERVER =

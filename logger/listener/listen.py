@@ -74,6 +74,7 @@ from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.logfile_writer import LogfileWriter
 from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
+from logger.writers.cached_data_writer import CachedDataWriter
 
 from logger.utils import read_config, timestamp, nmea_parser
 from logger.listener.listener import Listener
@@ -88,11 +89,11 @@ class ListenerFromLoggerConfig(Listener):
     super().__init__(**kwargs)
 
   ############################
-  def _kwargs_from_config(self, config_json):
+  def _kwargs_from_config(self, config_dict):
     """Parse a kwargs from a JSON string, making exceptions for keywords
     'readers', 'transforms', and 'writers' as internal class references."""
     kwargs = {}
-    for key, value in config_json.items():
+    for key, value in config_dict.items():
 
       # Declaration of readers, transforms and writers. Note that the
       # singular "reader" is a special case for TimeoutReader that
@@ -142,6 +143,15 @@ class ListenerFromLoggerConfig(Listener):
     return component
 
 ################################################################################
+class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
+  """Helper class for instantiating a Listener object from a JSON/YAML string"""
+  ############################
+  def __init__(self, config_str):
+    """Create a Listener from a JSON config string."""
+    config = read_config.parse(config_str)
+    super().__init__(config)
+
+################################################################################
 class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
   """Helper class for instantiating a Listener object from a JSON config."""
   ############################
@@ -166,6 +176,11 @@ if __name__ == '__main__':
   # Set up from config file
   parser.add_argument('--config_file', dest='config_file', default=None,
                       help='Read Listener configuration from YAML/JSON file. '
+                      'If specified, no other command line arguments (except '
+                      '-v) are allowed.')
+
+  parser.add_argument('--config_string', dest='config_string', default=None,
+                      help='Read Listener configuration from YAML/JSON string. '
                       'If specified, no other command line arguments (except '
                       '-v) are allowed.')
 
@@ -330,6 +345,12 @@ if __name__ == '__main__':
                       default=None, help='Password for database specified by '
                       '--write_database and/or --read_database.')
 
+  parser.add_argument('--write_cached_data_server',
+                      dest='write_cached_data_server', default=None,
+                      help='instantiate a CachedDataServer to serve the '
+                      'passed data via a websocket server at the specified '
+                      'host:port')
+
   parser.add_argument('--write_record_screen', dest='write_record_screen',
                       action='store_true', default=False,
                       help='Display the most current DASRecord field values '
@@ -349,7 +370,7 @@ if __name__ == '__main__':
   # Set up logging before we do any other argument parsing (so that we
   # can log problems with argument parsing.)
   parsed_args = parser.parse_args()
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d :%(levelname)s: %(message)s'
   logging.basicConfig(format=LOGGING_FORMAT)
 
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
@@ -357,24 +378,32 @@ if __name__ == '__main__':
   logging.getLogger().setLevel(LOG_LEVELS[verbosity])
 
   ############################
-  # If --config_file present, create Listener from config file. If
-  # not, manually parse and create from all other arguments on command
-  # line.
-  if parsed_args.config_file:
+  # If --config_file/--config_string present, create Listener from
+  # config file/string. If not, manually parse and create from all
+  # other arguments on command line.
+  if parsed_args.config_file and parsed_args.config_string:
+    parser.error('You may not specify both --config_file and --config_string')
+
+  if parsed_args.config_file or parsed_args.config_string:
     # Ensure that no other flags have been specified.
     i = 1
     while i < len(sys.argv):
       if sys.argv[i] in ['-v', '--verbosity']:
         i += 1
-      elif sys.argv[i] == '--config_file':
+      elif '--config_file'.find(sys.argv[i]) == 0:
+        i += 2
+      elif '--config_string'.find(sys.argv[i]) == 0:
         i += 2
       else:
-        raise ValueError(
-          'When --config is specified, no other command '
-          'line arguments (except -v) may be used: {}'.format(sys.argv[i]))
+        parser.error('When --config_file or --config_string are '
+                     'specified, no other command line args (except -v) '
+                     'may be used: {}'.format(sys.argv[i]))
 
-    # Read config file and instantiate
-    listener = ListenerFromLoggerConfigFile(parsed_args.config_file)
+    # Read config file or JSON string and instantiate
+    if parsed_args.config_file:
+      listener = ListenerFromLoggerConfigFile(parsed_args.config_file)
+    else:
+      listener = ListenerFromLoggerConfigString(parsed_args.config_string)
 
   # If not --config, go parse all those crazy command line arguments manually
   else:
@@ -535,7 +564,7 @@ if __name__ == '__main__':
 
       if new_args.to_json_pretty:
         transforms.append(ToJSONTransform(pretty=True))
-        
+
       if new_args.from_json:
         transforms.append(FromJSONTransform())
 
@@ -564,6 +593,9 @@ if __name__ == '__main__':
         (host, database) = host_db.split(':')
         writers.append(DatabaseWriter(database=database, host=host,
                                       user=user, password=password))
+      if new_args.write_cached_data_server:
+        websocket = new_args.write_cached_data_server
+        writers.append(CachedDataWriter(websocket=websocket))
 
     ##########################
     # Now that we've got our readers, transforms and writers defined,

@@ -1,5 +1,20 @@
 # OpenRVDAS Display Widgets
-© 2018 David Pablo Cohn - DRAFT 2018-12-15
+© 2018 David Pablo Cohn - DRAFT 2019-01-03
+
+## Table of Contents
+
+* [Overview](#overview)
+* [Data Servers](#data-servers)
+   * [Via the Logger Manager](#via-the-logger-manager)
+   * [Via a CachedDataServer](#via-a-cacheddataserver)
+   * [Via a CachedDataWriter](#via-a-cacheddatawriter)
+* [Connecting Data Servers to Widgets](#connecting-data-servers-to-widgets)
+* [Widget content](#widget-content)
+   * [Supported static widgets](#supported-static-widgets)
+   * [Static widget transforms](#static-widget-transforms)
+* [Contributing](#contributing)
+* [License](#license)
+* [Additional Licenses](#additional-licenses)
 
 ## Overview
 
@@ -19,17 +34,20 @@ The above diagram illustrates three widget types in an excerpt from the "static"
 
 ## Data Servers
 
-Both kinds of widgets attempt to open a websocket connection to a data server to request and receive the data they display. At present, there are two ways to run data servers that will feed this need.
+Both kinds of widgets attempt to open a websocket connection to a data
+server to request and receive the data they display. At present, there
+are three ways to run data servers that will feed this need.
 
-### server/logger\_manager.py
+### Via the Logger Manager
 
 If the logger\_manager.py script is run with ```--websocket :[port]```
 arguments on its command line, it will attempt to run a data server
 off that websocket port.  Note that by default this server is
 configured to draw the data it serves from the database defined in
 [database/settings.py](../database/settings.py) (which should be
-copied over from [database/settings.py.dist](../database/settings.py.dist) and modified as necessary for the
-local installation).
+copied over from
+[database/settings.py.dist](../database/settings.py.dist) and modified
+as necessary for the local installation).
 
 One consequence of this default is that it will
 only be able to provide data when whatever loggers it is running are
@@ -41,35 +59,109 @@ logger manager is a concentration of both bandwidth and computational
 requirements on a single process and machine. For that reason, when
 practical, we advocate using a standalone data server, as below.
 
-### server/network_data\_server.py
+### Via a CachedDataServer
 
-The network\_data\_server.py script is a standalone script that listens
-for UDP broadcasts of NMEA logger strings, parses them, and makes them
-available via a websocket.
-
-For the NBP, where NMEA strings are broadcast via UDP on ports 6221
-and 6224, a sample invocation might be
+You may invoke a standalone CachedDataServer directly from the command
+line. The following invocation
 
 ```
-    server/network_data_server.py \
-      --read_network :6221,:6224 \
-      --websocket :8766
+    logger/utils/cached_data_server.py \
+      --network :6221,:6224 \
+      --websocket :8766 \
+      --back_seconds 480 \
+      --cleanup 60 \
+      --v
 ```
 
-The invocation is a bit more complicated for Sikuliaq, where each instrument communicates via its own port, and which uses sensor and sensor model definitions not included in the standard set:
+says to
+
+1. Listen on the UDP ports specified by --network for timestamped
+   NMEA sentences
+
+2. Parse those sentences into DASRecords
+
+3. Store the resulting field-value-timestamps in an in-memory cache
+
+4. Wait for clients to connect to the websocket at port 8766 and
+   serve them the requested data.
+
+If your data contain NMEA records that are not defined in
+[local/](../local/), you can modify the default sensor, sensor\_model
+and message definition paths with the
+```--parse_nmea_[sensor,sensor_model,message]_path``` arguments, such
+as
 
 ```
-server/network_data_server.py --websocket :8766 \
-  --read_network :53100,:53104,:53105,:53106,:53107,:53108,:53110,:53111,:53112,:53114,:53116,:53117,:53119,:53121,:53122,:53123,:53124,:53125,:53126,:53127,:53128,:53129,:53130,:53131,:53134,:53135,:54000,:54001,:54109,:54124,:54130,:54131,:55005,:55006,:55007,:58989 \
-  --parse_nmea_sensor_path test/sikuliaq/sensors.yaml \
-  --parse_nmea_sensor_model_path test/sikuliaq/sensor_models.yaml
+    logger/utils/cached_data_server.py \
+      --network :6221,:6224 \
+      --websocket :8766 \
+      --back_seconds 480 \
+      --parse_nmea_sensor_path local/sensor/*.yaml,test/sikuliaq/sensors.yaml \
+      --parse_nmea_sensor_model_path local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml \
+      --v
 ```
 
-(For more information about running OpenRVDAS in a Sikuliaq-compatible installation, please see [test/sikuliaq/README.md](../test/sikuliaq/README.md).)
+### Via a CachedDataWriter
+
+The CachedDataWriter is a thin wrapper around the CachedDataServer
+class. You may invoke it as part of a listen.py call:
+
+```
+    logger/listener/listen.py \
+      --network :6221,:6224 \
+      --transform_parse_nmea \
+      --write_cached_data_server :8766
+```
+
+This command line creates a CachedDataWriter that performs the same
+function as the cached\_data\_server.py invocation above.
+
+Note that the listen.py script currently provides no way to override
+the default values for back_seconds (480) and cleanup (60). But a
+contributor who wished could easily add the appropriate flags to the
+listen.py script.
+
+Finally, it may be incorporated (again, within its CachedDataWriter
+wrapper) into a logger via a configuration file:
+
+```
+    logger/listener/listen.py --config_file data_server_config.yaml
+```
+
+where data\_server\_config.yaml contains:
+
+```
+    {
+        "readers": [
+            { "class": "NetworkReader",
+              "kwargs": { "network": ":6221" }
+            },
+            { "class": "NetworkReader",
+              "kwargs": { "network": ":6224" }
+            }
+        ],
+        "transforms": [
+            { "class": "ParseNMEATransform" }
+        ],
+        "writers": [
+            { "class": "CachedDataWriter",
+              "kwargs": { "websocket": ":8766",
+                          "back_seconds": 480,
+                          "cleanup": 60"
+                        }
+            }
+        ]
+    }
+```
+
+Again, this will perform the same functionality as the original call.
 
 ## Connecting Data Servers to Widgets
 
-The Django-based dynamic widget looks in [django_gui/settings.py](../django_gui/settings.py) for the value of ```WEBSOCKET_DATA_SERVER``` and attempts to connect to a data server at that address.
+The trick with connecting a data server with a widget is telling it to
+what websocket it should try to connect.
+
+The Django-based dynamic widget is coded to look in [django_gui/settings.py](../django_gui/settings.py) for the value of ```WEBSOCKET_DATA_SERVER``` and attempts to connect to a data server at that address.
 
 The static widgets rely on the file
 [widgets/static/js/widgets/settings.js](static/js/widgets/settings.js)

@@ -104,7 +104,6 @@ loggers:
   true_winds:
     configs:
     - true_winds->off
-    - true_winds->net
     - true_winds->db
   tsg1:
     configs:
@@ -116,6 +115,10 @@ loggers:
     - tsg2->off
     - tsg2->net
     - tsg2->file/net/db
+  display:
+    configs:
+    - display->off
+    - display->on
 
 ########################################
 modes:
@@ -139,6 +142,7 @@ modes:
     true_winds: true_winds->off
     tsg1: tsg1->off
     tsg2: tsg2->off
+    display: display->off
   port:
     PCOD: PCOD->off
     adcp: adcp->off
@@ -159,6 +163,7 @@ modes:
     true_winds: true_winds->off
     tsg1: tsg1->off
     tsg2: tsg2->off
+    display: display->on
   monitor:
     PCOD: PCOD->net
     adcp: adcp->net
@@ -176,9 +181,10 @@ modes:
     s330: s330->net
     seap: seap->net
     svp1: svp1->net
-    true_winds: true_winds->db
+    true_winds: true_winds->off
     tsg1: tsg1->net
     tsg2: tsg2->net
+    display: display->on
   monitor and log:
     PCOD: PCOD->file/net/db
     adcp: adcp->file/net/db
@@ -199,6 +205,7 @@ modes:
     true_winds: true_winds->db
     tsg1: tsg1->file/net/db
     tsg2: tsg2->file/net/db
+    display: display->on
 
 ########################################
 default_mode: 'off'
@@ -1093,7 +1100,7 @@ configs:
     writers:
       class: DatabaseWriter
   true_winds->net:
-    name: true_winds->db
+    name: true_winds->net
     readers:
       class: NetworkReader
       kwargs:
@@ -1240,3 +1247,75 @@ configs:
           kwargs:
             network: :6224
   tsg2->off: {}
+  display->on:
+    name: display->on
+    readers:
+      class: NetworkReader
+      kwargs:
+        network: :6224
+    transforms:
+      class: ParseNMEATransform
+    writers:
+      class: CachedDataWriter
+      kwargs:
+        websocket: :8766
+        back_seconds: 640
+
+  # When we're monitoring, our display logger does its own true wind
+  # calculations.
+  display->on:
+    name: display->on
+    readers:
+    - class: ComposedReader
+      kwargs:
+        readers:
+          class: NetworkReader
+          kwargs:
+            network: :6224
+        transforms:
+          class: ParseNMEATransform
+
+    - class: ComposedReader
+      kwargs:
+        readers:
+          - class: NetworkReader
+            kwargs:
+              network: :6224
+        transforms:
+        - class: ParseNMEATransform
+        - class: ComposedDerivedDataTransform
+          kwargs:
+            transforms:
+            - class: TrueWindsTransform
+              kwargs:
+                apparent_dir_name: PortApparentWindDir
+                convert_speed_factor: 0.5144
+                course_field: S330CourseTrue
+                heading_field: S330HeadingTrue
+                speed_field: S330Speed
+                true_dir_name: PortTrueWindDir
+                true_speed_name: PortTrueWindSpeed
+                update_on_fields:
+                - MwxPortRelWindDir
+                wind_dir_field: MwxPortRelWindDir
+                wind_speed_field: MwxPortRelWindSpeed
+            - class: TrueWindsTransform
+              kwargs:
+                apparent_dir_name: StbdApparentWindDir
+                convert_speed_factor: 0.5144
+                course_field: S330CourseTrue
+                heading_field: S330HeadingTrue
+                speed_field: S330Speed
+                true_dir_name: StbdTrueWindDir
+                true_speed_name: StbdTrueWindSpeed
+                update_on_fields:
+                - MwxStbdRelWindDir
+                wind_dir_field: MwxStbdRelWindDir
+                wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+      class: CachedDataWriter
+      kwargs:
+        websocket: :8766
+        back_seconds: 640
+
+  display->off: {}

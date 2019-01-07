@@ -39,13 +39,21 @@ class SerialReader(Reader):
     if not SERIAL_MODULE_FOUND:
       raise RuntimeError('Serial port functionality not available. Please '
                          'install Python module pyserial.')
+    try:
+      self.serial = serial.Serial(port=port, baudrate=baudrate,
+                                  bytesize=bytesize, parity=parity,
+                                  stopbits=stopbits, timeout=timeout,
+                                  xonxoff=xonxoff, rtscts=rtscts,
+                                  write_timeout=write_timeout, dsrdtr=dsrdtr,
+                                  inter_byte_timeout=inter_byte_timeout,
+                                  exclusive=exclusive)
+    except serial.serialutil.SerialException as e:
+      logging.error(str(e))
+      sys.exit(1)
+    except Exception as e:
+      logging.fatal('Failed to open serial port %s: %s', port, str(e))
+      sys.exit(1)
 
-    self.serial = serial.Serial(port=port, baudrate=baudrate, bytesize=bytesize,
-                                parity=parity, stopbits=stopbits,
-                                timeout=timeout, xonxoff=xonxoff, rtscts=rtscts,
-                                write_timeout=write_timeout, dsrdtr=dsrdtr,
-                                inter_byte_timeout=inter_byte_timeout,
-                                exclusive=exclusive)
     self.max_bytes = max_bytes
 
   ############################
@@ -61,3 +69,5 @@ class SerialReader(Reader):
     except serial.serialutil.SerialException as e:
       logging.error(str(e))
       return None
+    except KeyboardInterrupt as e:
+      raise e

@@ -22,6 +22,7 @@ import readline
 import signal
 import socket  # to get hostname
 import sys
+import time
 
 sys.path.append('.')
 
@@ -63,7 +64,8 @@ class ServerAPICommandLine:
   def quit(self):
     logging.info('ServerAPICommandLine - quit requested')
     self.quit_requested = True
-
+    self.api.quit()
+    
   ############################
   def run(self):
     """Iterate, reading commands and processing them."""
@@ -80,6 +82,8 @@ class ServerAPICommandLine:
 
     except (KeyboardInterrupt, EOFError):
       logging.warning('ServerAPICommandLine.run() received Keyboard Interrupt')
+    except Exception as e:
+      logging.error(str(e))
 
     # Signal cleanup
     self.quit()
@@ -205,6 +209,7 @@ class ServerAPICommandLine:
         else:
           print('Loggers: n/a')
 
+      ############################
       # logger_configs <cruise_id> <logger>
       elif command == 'get_logger_configs':
         raise ValueError('format: get_logger_configs <logger name>')
@@ -214,6 +219,7 @@ class ServerAPICommandLine:
         print('Configs for %s: %s' %
               (logger_name, ', '.join(logger_configs)))
 
+      ############################
       # set_logger_config_name <cruise_id> <logger name> <name of logger config>
       elif command == 'set_active_logger_config':
         raise ValueError('format: set_active_logger_config <logger name> <name of logger config>')
@@ -228,6 +234,7 @@ class ServerAPICommandLine:
                            % (config_name, logger_name))
         self.api.set_active_logger_config(logger_name, config_name)
 
+      ############################
       # configs <cruise_id>
       # elif command == 'configs':
       #   raise ValueError('format: configs')
@@ -241,6 +248,7 @@ class ServerAPICommandLine:
         else:
           print("No configs found!")
 
+      ############################
       # status
       # elif command == 'status':
       #   raise ValueError('format: status')
@@ -249,6 +257,7 @@ class ServerAPICommandLine:
         status_dict = self.api.get_status()
         print('%s' % pprint.pformat(status_dict))
 
+      ############################
       # status_since
       elif command == 'get_status_since':
         raise ValueError('format: get_status_since <timestamp>')
@@ -257,11 +266,13 @@ class ServerAPICommandLine:
         status_dict = self.api.get_status(float(since_timestamp))
         print('%s' % pprint.pformat(status_dict))
 
+      ############################
       # server_log
       elif command == 'get_server_log':
         server_log = self.api.get_message_log(source=SOURCE_NAME)
         print('%s' % pprint.pformat(server_log))
 
+      ############################
       # server_log timestamp
       elif command.find('get_server_log') == 0:
         (log_cmd, since_timestamp) = command.split(maxsplit=1)
@@ -270,14 +281,17 @@ class ServerAPICommandLine:
                                               since_timestamp=float(since_timestamp))
         print('%s' % pprint.pformat(server_log))
 
+      ############################
       # Quit gracefully
       elif command == 'quit':
         logging.info('Got quit command')
         self.quit()
 
+      ############################
       elif command == 'help':
         self.show_commands()
 
+      ############################
       else:
         print('Got unknown command: "{}"'.format(command))
         print('Type "help" for help')

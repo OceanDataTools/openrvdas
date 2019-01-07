@@ -1,5 +1,5 @@
 # OpenRVDAS Controlling Loggers
-© 2018 David Pablo Cohn - DRAFT 2018-12-15
+© 2018 David Pablo Cohn - DRAFT 2019-01-03
 
 ## Overview
 
@@ -140,11 +140,11 @@ Additionally, if the ```--websocket :[port]``` flag has been specified, a runnin
 
     ![Django GUI Logger Messages](images/django_gui_messages.png)
 
-* **Access to a DataServer** that provides logged data for clients that connect to ```hostname:port/data```. Such clients might be web display widgets or independent loggers that produce derived data (such as true winds, or computed wind chill temperature). Note that this functionality is somewhat rudimentary, and assumes that the desired data is being logged to a DatabaseWriter using the default settings. A recommended alternative is to have web display widgets and derived data loggers connect to an independently-running DataServer, such as the [network_data\_server.py](../server/network_data_server.py).
+* **Access to a DataServer** that provides logged data for clients that connect to ```hostname:port/data```. Such clients might be web display widgets or independent loggers that produce derived data (such as true winds, or computed wind chill temperature). *Note that this functionality is somewhat rudimentary*, and assumes that the desired data are being logged to a DatabaseWriter using the default settings.
+
+   A recommended alternative is to have web display widgets and derived data loggers connect to an independently-running data server, such as the [CachedDataServer](../logger/utils/cached_data_server.py), either invoked from the command line or as part of a Listener when wrapped in [CachedDataWriterver](../logger/writers/cached_data_writer.py).  Please see [Display Widgets](display_widgets.md) for more information on these alternatives and for general information on writing, configuring and feeding web display widgets.
 
     ![Django GUI Static Widget Example](images/django_gui_static_widget.png)
-
-    Please see [Display Widgets](display_widgets.md) for more information on writing, configuring and feeding web display widgets.
 
 * **Control of remote logger runner processes.** A cruise configuration file may specify that certain loggers may only run on certain machines (via a ```host_id``` field in the definition). This may be desirable if, for example, the required serial ports are only available on a particular machine. A remote host like this may connect to a logger manager via the invocation
       

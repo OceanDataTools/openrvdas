@@ -180,7 +180,6 @@ class WriteToAPILoggingHandler(logging.Handler):
                          log_level=record.levelno,
                          message=self.formatter.format(record))
 
-
 ################################################################################
 class LoggerManager:
   ############################
@@ -247,6 +246,10 @@ class LoggerManager:
     # LoggerRunners can connect?
     self.websocket = websocket
 
+    # If so, we're going to want to make sure it and our LoggerRunner
+    # (run in a separate thread) can use the same event loop
+    self.event_loop = asyncio.get_event_loop()
+
     # Websocket-related stuff below. Client_id 0 refers to our local
     # LoggerRunner process, which we manage in a separate thread.
     self.client_map_lock = threading.Lock()
@@ -296,15 +299,14 @@ class LoggerManager:
     # If we've got a websocket specification, launch websocket
     # server in its own separate thread.
     if self.websocket:
-      event_loop = asyncio.get_event_loop()
       try:
         host, port_str = self.websocket.split(':')
         if not host:
           host = '0.0.0.0'
         self.websocket_server = websockets.serve(self._serve_websocket,
                                                  host, int(port_str))
-        event_loop.run_until_complete(self.websocket_server)
-        event_loop_thread = threading.Thread(target=event_loop.run_forever,
+        self.event_loop.run_until_complete(self.websocket_server)
+        event_loop_thread = threading.Thread(target=self.event_loop.run_forever,
                                              daemon=True)
         event_loop_thread.start()
       except OSError:
@@ -319,6 +321,7 @@ class LoggerManager:
   def quit(self):
     """Exit the loop and shut down all loggers."""
     self.quit_flag = True
+    self.logger_runner.quit()
 
   ##########################
   def local_logger_runner(self):
@@ -330,7 +333,11 @@ class LoggerManager:
       self.receive_queue[client_id] = queue.Queue()
       self.logger_runner_clients.add(client_id)
 
-    logger_runner = LoggerRunner(max_tries=self.max_tries)
+    # Some of the loggers may require an event loop. We're running in
+    # a separate thread, so we need to explicitly set our event loop,
+    # using the one we stored during init().
+    self.logger_runner = LoggerRunner(max_tries=self.max_tries,
+                                      event_loop=self.event_loop)
     # Instead of calling the LoggerRunner.run(), we iterate ourselves,
     # checking whether there are commands we want to push to the
     # LoggerRunner and doing updates to retrieve status reports.
@@ -339,13 +346,13 @@ class LoggerManager:
         message = self.send_queue[client_id].get_nowait()
         if message.strip():
           logging.debug('Got message: %s', message.strip())
-          logger_runner.parse_command(message)
+          self.logger_runner.parse_command(message)
       except queue.Empty:
         logging.debug('No messages for local LoggerRunner')
       except ValueError:
         pass
 
-      status = logger_runner.check_loggers(manage=True, clear_errors=True)
+      status = self.logger_runner.check_loggers(manage=True, clear_errors=False)
       message = {'status': status}
       self._process_logger_runner_message(client_id, message)
 
@@ -390,7 +397,7 @@ class LoggerManager:
     # Logger status client has connected. Serve it logger status updates.
     elif path.find('/logger_status/') == 0:
       sender = self._logger_status_sender(client_id)
-      
+
       with self.client_map_lock:
         self.logger_status_clients.add(client_id)
 
@@ -410,7 +417,7 @@ class LoggerManager:
       logging.info('New client requests server messages: level "%s", '
                    'source "%s"',
                    log_level, source)
-      
+
       sender = self._log_message_sender(client_id, log_level, source)
       await self._handle_client_connection(client_id=client_id, sender=sender)
 
@@ -661,7 +668,7 @@ class LoggerManager:
         new_configs = self.api.get_logger_configs()
       except (AttributeError, ValueError):
         return
-      
+
       # If configs haven't changed, we're done - go home.
       if new_configs == self.old_configs:
         return
@@ -800,6 +807,7 @@ if __name__ == '__main__':
   # update_configs() with the API so that it gets called when the api
   # signals that an update has occurred.
   api.on_update(callback=logger_manager.update_configs)
+  api.on_quit(callback=logger_manager.quit)
 
   ############################
   # Start all the various LoggerManager threads running
@@ -808,16 +816,17 @@ if __name__ == '__main__':
   ############################
   # If they've given us an initial configuration, get and load it.
   if args.config:
-    config = read_config(args.config)    
+    config = read_config(args.config)
     api.load_configuration(config)
     api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
                     log_level=api.INFO,
                     message='started with: %s' % args.config)
   if args.mode:
     if not args.config:
-      raise ValueError('Argument --mode can only be used with --config')      
+      raise ValueError('Argument --mode can only be used with --config')
     api.set_active_mode(args.mode)
-    api.message_log(source=SOURCE_NAME, log_level=api.INFO,
+    api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
+                    log_level=api.INFO,
                     message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
 
   try:
