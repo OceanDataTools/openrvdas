@@ -54,7 +54,7 @@ you can specify the desired mode on the command line:
 
 ```
     server/logger_manager.py \
-      --config test/nmea/SKQ201822S/SKQ201822S_cruise.yaml
+      --config test/nmea/SKQ201822S/SKQ201822S_cruise.yaml \
       --mode file/db
 ```
 
@@ -92,6 +92,8 @@ for more information on using the web interface.
 
 ## Running OpenRVDAS Displays
 
+### Running a data server
+
 The OpenRVDAS display widgets draw data from a data server. While the
 logger\_manager.py script runs a dataserver that feeds off of values
 written to the database, the currently recommended approach is to rely
@@ -99,9 +101,7 @@ on the standalone
 [cached\_data\_server.py](../../logger/utils/cached_data_server.py) script
 or to incorporate a [CachedDataWriter](../../logger/writers/cached_data_writer.py) in your cruise configuration.
 
-A CachedDataWriter has been incorporated into a logger in the sample cruise configuration at [test/nmea/SKQ201822S/SKQ201822S\_cruise.yaml](test/nmea/SKQ201822S/SKQ201822S_cruise.yaml) with the name 'display server', which should be running in all modes other than 'off'.
-
-Simply setting the cruise mode to 'file' or any other mode should be enough to start the display logger, after which the sample display at
+A CachedDataWriter has been incorporated into a logger in the sample cruise configuration at [test/nmea/SKQ201822S/SKQ201822S\_cruise.yaml](test/nmea/SKQ201822S/SKQ201822S_cruise.yaml) with the name 'display server', which should be running in all modes other than 'off'. Simply setting the cruise mode to 'file' or any other mode should be enough to start the display logger, after which the sample display at
 
    [http://localhost:8000/static/widgets/](http://localhost:8000/static/widgets/)
 
@@ -115,10 +115,12 @@ would be:
 ```
 logger/utils/cached_data_server.py \
   --websocket :8766 \
-  --read_network :53100,:53104,:53105,:53106,:53107,:53108,:53110,:53111,:53112,:53114,:53116,:53117,:53119,:53121,:53122,:53123,:53124,:53125,:53126,:53127,:53128,:53129,:53130,:53131,:53134,:53135,:54000,:54001,:54109,:54124,:54130,:54131,:55005,:55006,:55007,:58989 \
+  --network :53100,:53104,:53105,:53106,:53107,:53108,:53110,:53111,:53112,:53114,:53116,:53117,:53119,:53121,:53122,:53123,:53124,:53125,:53126,:53127,:53128,:53129,:53130,:53131,:53134,:53135,:54000,:54001,:54109,:54124,:54130,:54131,:55005,:55006,:55007,:58989 \
   --parse_nmea_sensor_path test/sikuliaq/sensors.yaml \
   --parse_nmea_sensor_model_path test/sikuliaq/sensor_models.yaml
 ``` 
+
+### Pointing display widgets at the server
 
 Once the data server is running, you need to make sure the widgets are
 looking for it in the right place. They will look for a server
