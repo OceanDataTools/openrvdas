@@ -8,7 +8,7 @@ import time
 import unittest
 import warnings
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.nmea_parser import NMEAParser
 from logger.writers.record_screen_writer import RecordScreenWriter

@@ -4,7 +4,7 @@ import logging
 import sys
 import threading
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.transforms.transform import Transform
 from logger.writers.writer import Writer

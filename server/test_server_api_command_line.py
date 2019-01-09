@@ -6,7 +6,7 @@ import sys
 import unittest
 import warnings
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from server.server_api_command_line import *
 from server.in_memory_server_api import InMemoryServerAPI

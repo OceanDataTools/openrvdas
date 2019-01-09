@@ -5,7 +5,7 @@ import logging
 import sys
 import time
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.reader import StorageReader
 from logger.utils.formats import Text

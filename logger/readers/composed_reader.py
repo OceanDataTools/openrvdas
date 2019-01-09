@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.reader import Reader
 from logger.transforms.transform import Transform

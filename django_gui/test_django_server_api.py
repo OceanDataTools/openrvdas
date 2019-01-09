@@ -12,7 +12,7 @@ import warnings
 
 from django.test import TestCase
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from django_gui.django_server_api import DjangoServerAPI
 

@@ -21,7 +21,7 @@ initialized.
 import logging
 import pprint
 import sys
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from collections import OrderedDict
 

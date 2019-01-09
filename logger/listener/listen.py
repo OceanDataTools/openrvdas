@@ -43,7 +43,7 @@ import re
 import sys
 import time
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.composed_reader import ComposedReader
 from logger.readers.logfile_reader import LogfileReader

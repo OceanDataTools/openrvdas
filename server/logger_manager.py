@@ -142,7 +142,7 @@ import time
 from urllib.parse import unquote
 import websockets
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
 

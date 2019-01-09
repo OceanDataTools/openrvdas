@@ -30,7 +30,7 @@ import threading
 import time
 import websockets
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.readers.database_reader import DatabaseReader
 from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST

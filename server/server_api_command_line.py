@@ -24,7 +24,7 @@ import socket  # to get hostname
 import sys
 import time
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
 from server.server_api import ServerAPI

@@ -5,7 +5,7 @@ import sys
 import unittest
 import warnings
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.transforms.from_json_transform import FromJSONTransform
 from logger.transforms.to_json_transform import ToJSONTransform

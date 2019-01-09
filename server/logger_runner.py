@@ -93,7 +93,7 @@ except ImportError:
   logging.info('Unable to import "websockets" - websocket functionality '
                'will not be available.')
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
 from logger.listener.listen import ListenerFromLoggerConfig

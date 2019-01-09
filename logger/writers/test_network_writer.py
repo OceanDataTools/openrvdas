@@ -9,7 +9,7 @@ import time
 import unittest
 import warnings
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.writers.network_writer import NetworkWriter
 

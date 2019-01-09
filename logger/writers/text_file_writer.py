@@ -3,7 +3,7 @@
 import os.path
 import sys
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.formats import Text
 from logger.writers.writer import Writer

@@ -14,7 +14,7 @@ except ModuleNotFoundError:
   raise ModuleNotFoundError('Missing module "serial". Install with "pip3 '
                             'install pyserial"')
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.transforms.slice_transform import SliceTransform
 from logger.utils.simulate_serial import SimSerial

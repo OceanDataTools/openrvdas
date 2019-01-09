@@ -8,7 +8,7 @@ import logging
 import re
 import sys
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import read_config
 from logger.utils.das_record import DASRecord
 from logger.utils.timestamp import timestamp, TIME_FORMAT

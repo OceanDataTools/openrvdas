@@ -2,7 +2,7 @@
 
 import logging
 import sys
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils import timestamp
 from logger.utils.formats import Text

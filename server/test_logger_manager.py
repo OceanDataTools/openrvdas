@@ -9,7 +9,7 @@ import time
 import unittest
 import warnings
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.readers.network_reader import NetworkReader
 from server.logger_manager import LoggerManager

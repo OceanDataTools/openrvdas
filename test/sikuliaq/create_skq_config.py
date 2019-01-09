@@ -35,7 +35,7 @@ import yaml
 
 from collections import OrderedDict
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 # Following line is for testing only (see README.md). Set
 # ALL_USE_SAME_PORT to False to generate a configuration where each

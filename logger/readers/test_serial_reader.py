@@ -9,7 +9,7 @@ import threading
 import unittest
 import warnings
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.serial_reader import SerialReader
 from logger.transforms.slice_transform import SliceTransform

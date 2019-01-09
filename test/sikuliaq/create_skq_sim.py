@@ -35,7 +35,7 @@ import yaml
 
 from collections import OrderedDict
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 # Set to desired cruise ID
 cruise = 'SKQ201822S'

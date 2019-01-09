@@ -3,7 +3,7 @@
 import sys
 import unittest
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils import formats
 

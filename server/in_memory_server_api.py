@@ -16,7 +16,7 @@ import time
 
 from json import dumps as json_dumps
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from server.server_api import ServerAPI
 

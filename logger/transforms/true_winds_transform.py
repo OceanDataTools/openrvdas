@@ -26,7 +26,7 @@ readings?).
 import logging
 import sys
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.timestamp import time_str
 from logger.utils.truewinds.truew import truew

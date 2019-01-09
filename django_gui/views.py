@@ -13,7 +13,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise, CurrentCruise, CruiseState

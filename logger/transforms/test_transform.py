@@ -7,7 +7,7 @@ import threading
 import time
 import unittest
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.transforms.transform import Transform
 from logger.readers.text_file_reader import TextFileReader

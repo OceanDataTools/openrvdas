@@ -54,7 +54,7 @@ import sys
 
 from collections import OrderedDict
 
-sys.path.append('.')
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.read_config import read_config
 from logger.listener.listen import ListenerFromLoggerConfig
