@@ -1,0 +1,280 @@
+################################################################################
+# Device definitions
+
+######################################
+grv1:
+  category: "device"
+  device_type: "Gravimeter"
+
+ # Map from device type field names to names specific for this
+  # specific device. Device type fields that are not mapped are
+  # ignored.
+  fields:
+    timestamp: "timestamp"
+    GravityValue: "Grv1Value"
+    GravityError: "Grv1Error"
+
+  ########
+  # Optional fields - properties of this physical unit
+  serial_number: "22301-15"
+  description: "Mounted on transverse frabnatz bulkhead. Probably haunted."
+
+  # List of calibrations that have been performed on this unit, and
+  # what the results of were.
+  calibration:
+    "2019-02-11":
+      name: "David Pablo Cohn"
+      values:
+        bias: 0.13113
+
+    "2018-05-21":
+      name: "David Pablo Cohn"
+      values:
+        bias: 0.13426
+
+######################################
+knud:
+  category: "device"
+  device_type: "Knudsen"
+
+  # Map from device_type field names to names specific for this
+  # specific device.
+  fields:
+    timestamp: "timestamp"
+    LFDepth: "KnudDepthLF"
+    LFValid: "KnudValidLF"
+    HFDepth: "KnudDepthHF"
+    HFValid: "KnudValidHF"
+    SoundSpeed: "KnudSoundSpeed"
+    Latitude: "KnudLatitude"
+    Longitude: "KnudLongitude"
+
+  ########
+  serial_number: "0001AXK"
+  description: "Forward depth sonar. Mounted under Bosun's mattress. Allergic to cheese."
+
+######################################
+seap:
+  category: "device"
+  device_type: "Seapath200"
+  serial_number: "unknown"
+  description: "Just another device description."
+
+  # Map from device_type field names to names specific for this
+  # specific device.
+  fields:
+    timestamp: "timestamp"
+    GPSTime: "Seap200GPSTime"
+    FixQuality: "Seap200FixQuality"
+    NumSats: "Seap200NumSats"
+    HDOP: "Seap200HDOP"
+    AntennaHeight: "Seap200AntennaHeight"
+    GeoidHeight: "Seap200GeoidHeight"
+    LastDGPSUpdate: "Seap200LastDGPSUpdate"
+    DGPSStationID: "Seap200DGPSStationID"
+    CourseTrue: "Seap200CourseTrue"
+    CourseMag: "Seap200CourseMag"
+    SpeedKt: "Seap200SpeedKt"
+    SpeedKm: "Seap200SpeedKm"
+    Mode: "Seap200Mode"
+    GPSTime: "Seap200GPSTime"
+    GPSDay: "Seap200GPSDay"
+    GPSMonth: "Seap200GPSMonth"
+    GPSYear: "Seap200GPSYear"
+    LocalHours: "Seap200LocalHours"
+    LocalZone: "Seap200LocalZone"
+    HorizQual: "Seap200HorizQual"
+    HeightQual: "Seap200HeightQual"
+    HeadingQual: "Seap200HeadingQual"
+    RollPitchQual: "Seap200RollPitchQual"
+    GyroCal: "Seap200GyroCal"
+    GyroOffset: "Seap200GyroOffset"
+    Roll: "Seap200Roll"
+    Pitch: "Seap200Pitch"
+    HeadingTrue: "Seap200HeadingTrue"
+    Heave: "Seap200Heave"
+    Latitude: "Seap200Latitude"
+    NorS: "Seap200NorS"
+    Longitude: "Seap200Longitude"
+    EorW: "Seap200EorW"
+
+################################################################################
+# Device type definitions
+
+######################################
+Gravimeter:
+  category: "device_type"
+
+  format: "{timestamp:ti} {CounterUnits:d}:{GravityValue:d} {GravityError:d}"
+
+  ########
+  # Optional metadata to help make sense of the parsed values.
+  fields:
+    CounterUnits:
+      description: "apparently a constant 01"
+    GravityValue:
+      units: "Flit Count"
+      description: "mgal = flit count x 4.994072552 + bias"
+    GravityError:
+      description: "unknown semantics"
+
+######################################
+Knudsen:
+  category: "device_type"
+  description: "Hobnotz Model 3047"
+
+  # If device type can output multiple formats, include them as a
+  # list. Parser will use the first one that matches the whole line.
+  # 2014-08-01T00:02:35.805000Z 3.5kHz,473.25,0,,,,1500,-75.938191,176.672195
+  format:
+    - "{timestamp:ti} 3.5kHz,{LFDepth:f},{LFValid:d},12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - "{timestamp:ti} ,,,12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - "{timestamp:ti} 3.5kHz,{LFDepth:f},{LFValid:d},,,,{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+
+  ########
+  # Optional metadata to help make sense of the parsed values.
+  fields:
+    LFDepth:
+      units: "meters"
+      description:  Depth in meters from transducer"
+    LFValid:
+      units: "0"
+      description: "Valid if present (value may always be zero?)"
+    HFDepth:
+      units: "meters"
+      description:  Depth in meters from transducer"
+    HFValid:
+      units: "0"
+      description: "Valid if present (value may always be zero?)"
+    SoundSpeed:
+      units: "meters/second"
+      description: "Sound speed velocity"
+    Latitude:
+      units: "degrees north"
+      description: "Latitude in degrees north"
+    Longitude:
+      units: "degrees west"
+      description: "Longitude in degrees west"
+
+######################################
+Seapath200:
+  category: "device_type"
+
+  # If device type can output multiple formats, include them as a
+  # list. Parser will use the first one that matches the whole line.
+  format:
+    - "{timestamp:ti} $GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+    - "{timestamp:ti} $GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    - "{timestamp:ti} $GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+    - "{timestamp:ti} $GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
+    - "{timestamp:ti} $PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    - "{timestamp:ti} $PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+    - "{timestamp:ti} $PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+    
+    # Additional Formats with missing fields to pick up slack for
+    # devices that don't emit all fields. TODO: tweak parser to allow
+    # for missing values.
+    - "{timestamp:ti} $GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
+    - "{timestamp:ti} $GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
+    - "{timestamp:ti} $GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
+
+  ########
+  # Optional metadata to help make sense of the parsed values.
+  fields:
+    GPSTime:
+      units: ""
+      description: ""
+    FixQuality:
+      units: ""
+      description: ""
+    NumSats:
+      units: "count"
+      description: ""
+    HDOP:
+      units: ""
+      description: ""
+    AntennaHeight:
+      units: "meters"
+      description: ""
+    GeoidHeight:
+      units: "meters"
+      description: ""
+    LastDGPSUpdate:
+      units: ""
+      description: ""
+    DGPSStationID:
+      units: ""
+      description: ""
+    CourseTrue:
+      units: "degrees"
+      description: "True course"    
+    CourseMag:
+      units: "degrees"
+      description: "Magnetic course"
+    SpeedKt:
+      units: "knots"
+      description: "Speed over ground in knots"
+    SpeedKm:
+      units: "km/hour"
+      description: "Speed over ground in kilometers per hour"
+    Mode:
+      units: ""
+      description: ""
+    GPSTime:
+      units: ""
+      description: ""
+    GPSDay:
+      units: ""
+      description: ""
+    GPSMonth:
+      units: ""
+      description: ""
+    GPSYear:
+      units: ""
+      description: ""
+    LocalHours:
+      units: ""
+      description: ""
+    LocalZone:
+      units: ""
+      description: ""
+    HorizQual:
+      units: ""
+      description: ""
+    HeightQual:
+      units: ""
+      description: ""
+    HeadingQual:
+      units: ""
+      description: ""
+    RollPitchQual:
+      units: ""
+      description: ""
+    GyroCal:
+      units: ""
+      description: ""
+    GyroOffset:
+      units: ""
+      description: ""
+    Roll:
+      units: "degrees"
+      description: "Roll, port side up is positive"
+    Pitch:
+      units: "degrees"
+      description: "Roll, bow up is positive"
+    HeadingTrue:
+      units: "degrees"
+      description: "True heading"
+    Heave:
+      units: "meters"
+      description: "Positive is down"
+    Latitude:
+      units: "degrees"
+      description: "Latitude in degrees; north or south depends on NorS"
+    NorS:
+      description: "N if Latitude value is north, S otherwise"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in degrees; east or west depends on value of EorW"
+    EorW:
+      description: "E if Longitude value is east, W otherwise"
