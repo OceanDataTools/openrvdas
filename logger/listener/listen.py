@@ -59,6 +59,7 @@ from logger.transforms.qc_filter_transform import QCFilterTransform
 from logger.transforms.slice_transform import SliceTransform
 from logger.transforms.timestamp_transform import TimestampTransform
 from logger.transforms.parse_nmea_transform import ParseNMEATransform
+from logger.transforms.parse_transform import ParseTransform
 from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform
 from logger.transforms.true_winds_transform import TrueWindsTransform
 from logger.transforms.derived_data_transform import DerivedDataTransform
@@ -76,7 +77,7 @@ from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
 from logger.writers.cached_data_writer import CachedDataWriter
 
-from logger.utils import read_config, timestamp, nmea_parser
+from logger.utils import read_config, timestamp, nmea_parser, record_parser
 from logger.listener.listener import Listener
 
 ################################################################################
@@ -281,6 +282,24 @@ if __name__ == '__main__':
                       help='Comma-separated globs of NMEA sensor model '
                       'definition file names, e.g. '
                       'local/sensor_model/*.yaml,test/skq/sensor_models.yaml')
+
+  parser.add_argument('--transform_parse', dest='parse',
+                      action='store_true', default=False,
+                      help='Convert tagged, records into dict of values (or'
+                      'JSON or DASRecords if --parse_to_json or '
+                      '--parse_to_das_record are specified).')
+  parser.add_argument('--parse_definition_path',
+                      dest='parse_definition_path',
+                      default=record_parser.DEFAULT_DEFINITION_PATH,
+                      help='Comma-separated globs of device definition '
+                      'file names, e.g. '
+                      'local/devices/*.yaml,test/skq/devices.yaml')
+  parser.add_argument('--parse_to_json',
+                      dest='parse_to_json', action='store_true',
+                      help='If specified, parser outputs JSON.')
+  parser.add_argument('--parse_to_das_record',
+                      dest='parse_to_das_record', action='store_true',
+                      help='If specified, parser outputs DASRecords.')
 
   parser.add_argument('--time_format', dest='time_format',
                       default=timestamp.TIME_FORMAT,
@@ -549,6 +568,13 @@ if __name__ == '__main__':
             sensor_path=all_args.parse_nmea_sensor_path,
             sensor_model_path=all_args.parse_nmea_sensor_model_path,
             time_format=all_args.time_format)
+        )
+      if new_args.parse:
+        transforms.append(
+          ParseTransform(
+            definition_path=all_args.parse_definition_path,
+            return_json=all_args.parse_to_json,
+            return_das_record=all_args.parse_to_das_record)
         )
       if new_args.aggregate_xml:
         transforms.append(XMLAggregatorTransform(new_args.aggregate_xml))

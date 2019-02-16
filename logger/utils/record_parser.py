@@ -27,8 +27,8 @@ class RecordParser:
   def __init__(self, definition_path=DEFAULT_DEFINITION_PATH,
                return_das_record=False, return_json=False):
     """Create a parser that will parse field values out of a text record
-    and return either a Python dict, a JSON encoding of that dict, or
-    a binary DASRecord.
+    and return either a Python dict of data_id, timestamp and fields,
+    a JSON encoding of that dict, or a binary DASRecord.
 
     definition_path - a comma-separated set of file globs in which to look
         for device and device_type definitions.
@@ -36,6 +36,7 @@ class RecordParser:
     return_json - return the parsed fields as a JSON encoded dict
 
     return_das_record - return the parsed fields as a DASRecord object
+
     """
     self.return_das_record = return_das_record
     self.return_json = return_json
@@ -78,7 +79,9 @@ class RecordParser:
 
   ############################
   def parse_record(self, record):
-    """Parse an id-prefixed text record into a Python dict."""
+    """Parse an id-prefixed text record into a Python dict of data_id,
+    timestamp and fields.
+    """
     if not record:
       return None
     if not type(record) is str:
@@ -99,13 +102,13 @@ class RecordParser:
 
     device_type = device.get('device_type', None)
     if not device_type:
-      logging.error('Internal error: No "device_type" for device %s?!?', device)
+      logging.error('Internal error: No "device_type" for device %s!', device)
       return None
 
-    # If something goes wrong during parsing, we'll get a ValueError
+    # If something goes wrong during parsing, expect a ValueError
     try:
-      fields = self.parse(device_type=device_type, message=message)
-      logging.debug('Got fields: %s', pprint.pformat(fields))
+      parsed_fields = self.parse(device_type=device_type, message=message)
+      logging.debug('Got fields: %s', pprint.pformat(parsed_fields))
     except ValueError as e:
       logging.error(str(e))
       return None
@@ -118,32 +121,45 @@ class RecordParser:
 
     # Assign the named field values to the appropriate
     # variable. Datetime objects need to be converted into timestamps
-    # to be portable.
-    variables = {'data_id': data_id}
-    for field_name,variable_name in device_fields.items():
+    # to be portable. If it's a datetime object called 'timestamp'
+    # treat it separately and pull it out into the enclosing record.
+    timestamp = None
+    fields = {}
+    for field_name, value in parsed_fields.items():
       try:
-        value = fields[field_name]
-        if type(value) is datetime.datetime:
+        variable_name = device_fields[field_name]
+        is_timestamp = type(value) is datetime.datetime
+        if is_timestamp:
           value = value.timestamp()
-        variables[variable_name] = value
+
+        # If it walks like a timestamp and quacks like a timestamp
+        if field_name == 'timestamp' and is_timestamp:
+          timestamp = value
+        else:
+          fields[variable_name] = value
       except KeyError:
         pass
-    logging.debug('Returning parsed record: %s', pprint.pformat(variables))
+
+    record = {'data_id': data_id, 'timestamp': timestamp, 'fields': fields}
+    logging.debug('Returning parsed record: %s', pprint.pformat(record))
         
     if self.return_das_record:
-      timestamp = variables.get('timestamp', None)
-      del variables['data_id']
-      del variables['timestamp']
-      return DASRecord(data_id=data_id, timestamp=timestamp, fields=variables)
+      try:
+        timestamp = record.get('timestamp', None)
+        return DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+      except KeyError:
+        return None
+
     elif self.return_json:
-      return json.dumps(variables)
+      return json.dumps(record)
     else:
-      return variables
+      return record
 
   ############################
   def parse(self, device_type, message):
-    """Parse a text message; raise ValueError if there are problems,
-    return empty dict if there is no match to the provided formats.
+    """Parse a text message of device_type into a flat Python dict; raise
+    ValueError if there are problems, return empty dict if there is no
+    match to the provided formats.
     """
     device_definition = self.device_types.get(device_type, None)
     if not device_definition:
@@ -153,7 +169,7 @@ class RecordParser:
     for trial_format in compiled_format:
       fields = trial_format.parse(message)
       if fields:
-        return fields
+        return fields.named
 
     # Nothing matched, go home empty-handed
     logging.warning('No formats for %s matched message %s',

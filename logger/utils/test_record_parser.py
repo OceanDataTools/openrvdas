@@ -388,26 +388,26 @@ class TestRecordParser(unittest.TestCase):
 
     r = p.parse_record(GRV1_RECORDS[0])
     self.assertDictEqual(r, {'data_id': 'grv1', 'timestamp': 1510275606.572,
-                             'Grv1Error': 0, 'Grv1Value': 24557})
+                             'fields':{'Grv1Error': 0, 'Grv1Value': 24557}})
     r = p.parse_record(SEAP_RECORDS[0])
     self.assertDictEqual(r, {'data_id': 'seap',
                              'timestamp': 1509778839.291859,
-                             'Seap200HeightQual': 0,
-                             'Seap200RollPitchQual': 0,
-                             'Seap200HorizQual': 1,
-                             'Seap200HeadingQual': 0})
+                             'fields':{'Seap200HeightQual': 0,
+                                       'Seap200RollPitchQual': 0,
+                                       'Seap200HorizQual': 1,
+                                       'Seap200HeadingQual': 0}})
     r = p.parse_record(SEAP_RECORDS[1])
     self.assertDictEqual(r, {'data_id': 'seap',
                              'timestamp': 1509778839.547251,
-                             'Seap200GyroOffset': 0.74,
-                             'Seap200GyroCal': 0.44})
+                             'fields':{'Seap200GyroOffset': 0.74,
+                                       'Seap200GyroCal': 0.44}})
 
     r = p.parse_record(SEAP_RECORDS[2])
     self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
-                             'Seap200Roll': -1.47,
-                             'Seap200Heave': -0.38,
-                             'Seap200HeadingTrue': 235.77,
-                             'Seap200Pitch': 0.01})
+                             'fields':{'Seap200Roll': -1.47,
+                                       'Seap200Heave': -0.38,
+                                       'Seap200HeadingTrue': 235.77,
+                                       'Seap200Pitch': 0.01}})
 
   ############################
   def test_parse_records_json(self):
@@ -416,28 +416,28 @@ class TestRecordParser(unittest.TestCase):
     r = p.parse_record(GRV1_RECORDS[0])
     self.assertDictEqual(json.loads(r),
                          {'data_id': 'grv1', 'timestamp': 1510275606.572,
-                          'Grv1Error': 0, 'Grv1Value': 24557})
+                          'fields':{'Grv1Error': 0, 'Grv1Value': 24557}})
     r = p.parse_record(SEAP_RECORDS[0])
     self.assertDictEqual(json.loads(r),
                          {'data_id': 'seap',
                           'timestamp': 1509778839.291859,
-                          'Seap200HeightQual': 0,
-                          'Seap200RollPitchQual': 0,
-                          'Seap200HorizQual': 1,
-                          'Seap200HeadingQual': 0})
+                          'fields':{'Seap200HeightQual': 0,
+                                    'Seap200RollPitchQual': 0,
+                                    'Seap200HorizQual': 1,
+                                    'Seap200HeadingQual': 0}})
     r = p.parse_record(SEAP_RECORDS[1])
     self.assertDictEqual(json.loads(r),
                          {'data_id': 'seap',
                           'timestamp': 1509778839.547251,
-                          'Seap200GyroOffset': 0.74,
-                          'Seap200GyroCal': 0.44})
+                          'fields':{'Seap200GyroOffset': 0.74,
+                                    'Seap200GyroCal': 0.44}})
     r = p.parse_record(SEAP_RECORDS[2])
     self.assertDictEqual(json.loads(r),
                          {'data_id': 'seap', 'timestamp': 1509778839.802690,
-                          'Seap200Roll': -1.47,
-                          'Seap200Heave': -0.38,
-                          'Seap200HeadingTrue': 235.77,
-                          'Seap200Pitch': 0.01})
+                          'fields':{'Seap200Roll': -1.47,
+                                    'Seap200Heave': -0.38,
+                                    'Seap200HeadingTrue': 235.77,
+                                    'Seap200Pitch': 0.01}})
 
   ############################
   def test_parse_records_das_record(self):
