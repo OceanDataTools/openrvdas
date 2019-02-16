@@ -20,24 +20,32 @@ from logger.utils import read_config
 from logger.utils.das_record import DASRecord
 
 DEFAULT_DEFINITION_PATH = 'local/devices/*.yaml'
+DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {message}'
 
 ################################################################################
 class RecordParser:
   ############################
-  def __init__(self, definition_path=DEFAULT_DEFINITION_PATH,
+  def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
+               definition_path=DEFAULT_DEFINITION_PATH,
                return_das_record=False, return_json=False):
     """Create a parser that will parse field values out of a text record
     and return either a Python dict of data_id, timestamp and fields,
     a JSON encoding of that dict, or a binary DASRecord.
 
+    record_format - string for parse.parse() to use to break out data_id
+        and timestamp from the rest of the message. By default this will
+        look for 'data_id timestamp device_message'.
+
     definition_path - a comma-separated set of file globs in which to look
-        for device and device_type definitions.
+        for device and device_type definitions with which to parse message.
 
     return_json - return the parsed fields as a JSON encoded dict
 
     return_das_record - return the parsed fields as a DASRecord object
 
     """
+    self.record_format = record_format
+    self.compiled_record_format = parse.compile(record_format)
     self.return_das_record = return_das_record
     self.return_json = return_json
     if return_das_record and return_json:
@@ -88,15 +96,28 @@ class RecordParser:
       logging.info('Record is not string: "%s"', record)
       return None
     try:
-      (data_id, message) = record.strip().split(maxsplit=1)
-    except ValueError:
-      logging.warning('Record not in <data_id> <message> format: "%s"', record)
+      parsed_record = self.compiled_record_format.parse(record).named
+    except (ValueError, AttributeError):
+      logging.warning('Unable to parse record into "%s"', self.record_format)
+      logging.warning('Record: %s', record)
       return None
+    
+    # Convert timestamp to numeric, if it's there
+    timestamp = parsed_record.get('timestamp', None)
+    if timestamp is not None and type(timestamp) is datetime.datetime:
+      timestamp = timestamp.timestamp()
+      parsed_record['timestamp'] = timestamp
 
     # Figure out what kind of message we're expecting, based on data_id
+    data_id = parsed_record.get('data_id', None)
+    if data_id is None:
+      logging.warning('No data id found in record: %s', record)
+      return None
+
+    # Get device and device_type definitions for data_id
     device = self.devices.get(data_id, None)
     if not device:
-      logging.warning('Unrecognized data id "%s" in record: %s',data_id, record)
+      logging.warning('Unrecognized data id "%s" in record: %s', data_id,record)
       logging.warning('Devices are: %s', ', '.join(self.devices.keys()))
       return None
 
@@ -105,7 +126,15 @@ class RecordParser:
       logging.error('Internal error: No "device_type" for device %s!', device)
       return None
 
-    # If something goes wrong during parsing, expect a ValueError
+    # Extract the message we're going to parse
+    message = parsed_record.get('message', None)
+    if message is None:
+      logging.warning('No message found in record: %s', record)
+      return None
+    del parsed_record['message']
+
+    # Now parse the message, based on device type. If something goes
+    # wrong during parsing, expect a ValueError.      
     try:
       parsed_fields = self.parse(device_type=device_type, message=message)
       logging.debug('Got fields: %s', pprint.pformat(parsed_fields))
@@ -119,41 +148,33 @@ class RecordParser:
       logging.error('No "fields" definition found for device %s', data_id)
       return None
 
-    # Assign the named field values to the appropriate
-    # variable. Datetime objects need to be converted into timestamps
-    # to be portable. If it's a datetime object called 'timestamp'
-    # treat it separately and pull it out into the enclosing record.
-    timestamp = None
+    # Assign field values to the appropriate named variable.
     fields = {}
     for field_name, value in parsed_fields.items():
-      try:
-        variable_name = device_fields[field_name]
-        is_timestamp = type(value) is datetime.datetime
-        if is_timestamp:
-          value = value.timestamp()
+      # If it's a datetime, convert to numeric timestamp
+      if type(value) is datetime.datetime:
+        value = value.timestamp()
 
-        # If it walks like a timestamp and quacks like a timestamp
-        if field_name == 'timestamp' and is_timestamp:
-          timestamp = value
-        else:
-          fields[variable_name] = value
-      except KeyError:
-        pass
+      variable_name = device_fields.get(field_name, None)
+      if variable_name is None:
+        logging.debug('Got unrecognized field "%s" for %s; ignoring',
+                      field_name, device_type)
+      else:
+        fields[variable_name] = value
 
-    record = {'data_id': data_id, 'timestamp': timestamp, 'fields': fields}
-    logging.debug('Returning parsed record: %s', pprint.pformat(record))
+    parsed_record['fields'] = fields
+    logging.debug('Returning parsed record: %s', pprint.pformat(parsed_record))
         
     if self.return_das_record:
       try:
-        timestamp = record.get('timestamp', None)
         return DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
       except KeyError:
         return None
 
     elif self.return_json:
-      return json.dumps(record)
+      return json.dumps(parsed_record)
     else:
-      return record
+      return parsed_record
 
   ############################
   def parse(self, device_type, message):
@@ -164,7 +185,7 @@ class RecordParser:
     device_definition = self.device_types.get(device_type, None)
     if not device_definition:
       raise ValueError('No definition found for device_type "%s"', device_type)
-
+                      
     compiled_format = device_definition.get('compiled_format', None)
     for trial_format in compiled_format:
       fields = trial_format.parse(message)

@@ -25,7 +25,6 @@ grv1:
   # specific device. Device type fields that are not mapped are
   # ignored.
   fields:
-    timestamp: "timestamp"
     GravityValue: "Grv1Value"
     GravityError: "Grv1Error"
 
@@ -55,7 +54,6 @@ knud:
   # Map from device_type field names to names specific for this
   # specific device.
   fields:
-    timestamp: "timestamp"
     LFDepth: "KnudDepthLF"
     LFValid: "KnudValidLF"
     HFDepth: "KnudDepthHF"
@@ -78,7 +76,6 @@ seap:
   # Map from device_type field names to names specific for this
   # specific device.
   fields:
-    timestamp: "timestamp"
     GPSTime: "Seap200GPSTime"
     FixQuality: "Seap200FixQuality"
     NumSats: "Seap200NumSats"
@@ -120,7 +117,7 @@ seap:
 Gravimeter:
   category: "device_type"
 
-  format: "{timestamp:ti} {CounterUnits:d}:{GravityValue:d} {GravityError:d}"
+  format: "{CounterUnits:d}:{GravityValue:d} {GravityError:d}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -142,9 +139,9 @@ Knudsen:
   # list. Parser will use the first one that matches the whole line.
   # 2014-08-01T00:02:35.805000Z 3.5kHz,473.25,0,,,,1500,-75.938191,176.672195
   format:
-    - "{timestamp:ti} 3.5kHz,{LFDepth:f},{LFValid:d},12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
-    - "{timestamp:ti} ,,,12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
-    - "{timestamp:ti} 3.5kHz,{LFDepth:f},{LFValid:d},,,,{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - "3.5kHz,{LFDepth:f},{LFValid:d},12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - ",,,12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - "3.5kHz,{LFDepth:f},{LFValid:d},,,,{SoundSpeed:d},{Latitude:f},{Longitude:f}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -178,20 +175,20 @@ Seapath200:
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    - "{timestamp:ti} $GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-    - "{timestamp:ti} $GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
-    - "{timestamp:ti} $GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
-    - "{timestamp:ti} $GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
-    - "{timestamp:ti} $PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
-    - "{timestamp:ti} $PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    - "{timestamp:ti} $PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+    - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    - "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+    - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
+    - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+    - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
 
     # Additional Formats with missing fields to pick up slack for
     # devices that don't emit all fields. TODO: tweak parser to allow
     # for missing values.
-    - "{timestamp:ti} $GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
-    - "{timestamp:ti} $GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
-    - "{timestamp:ti} $GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
+    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
+    - "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
+    - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.

@@ -12,7 +12,6 @@ grv1:
   # specific device. Device type fields that are not mapped are
   # ignored.
   fields:
-    timestamp: "timestamp"
     GravityValue: "Grv1Value"
     GravityError: "Grv1Error"
 
@@ -42,7 +41,6 @@ knud:
   # Map from device_type field names to names specific for this
   # specific device.
   fields:
-    timestamp: "timestamp"
     LFDepth: "KnudDepthLF"
     LFValid: "KnudValidLF"
     HFDepth: "KnudDepthHF"
@@ -63,7 +61,7 @@ knud:
 Gravimeter:
   category: "device_type"
 
-  format: "{timestamp:ti} {CounterUnits:d}:{GravityValue:d} {GravityError:d}"
+  format: "{CounterUnits:d}:{GravityValue:d} {GravityError:d}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -85,9 +83,9 @@ Knudsen:
   # list. Parser will use the first one that matches the whole line.
   # 2014-08-01T00:02:35.805000Z 3.5kHz,473.25,0,,,,1500,-75.938191,176.672195
   format:
-    - "{timestamp:ti} 3.5kHz,{LFDepth:f},{LFValid:d},12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
-    - "{timestamp:ti} ,,,12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
-    - "{timestamp:ti} 3.5kHz,{LFDepth:f},{LFValid:d},,,,{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - "3.5kHz,{LFDepth:f},{LFValid:d},12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - ",,,12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+    - "3.5kHz,{LFDepth:f},{LFValid:d},,,,{SoundSpeed:d},{Latitude:f},{Longitude:f}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
