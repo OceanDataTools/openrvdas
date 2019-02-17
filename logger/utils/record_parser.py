@@ -22,6 +22,65 @@ from logger.utils.das_record import DASRecord
 DEFAULT_DEFINITION_PATH = 'local/devices/*.yaml'
 DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {message}'
 
+############################
+"""We want to expand the default repertoire of the parse() function to
+be able to handle ints/floats/strings that *might* be omitted. To do
+that, we define some additional named types for it that we can use in
+format definitions.
+
+These might be used, for example, in the following pattern where we
+might have either, both or neither of speed in knots and/or km/hour.
+
+  "{SpeedKt:of},N,{SpeedKm:of},K"
+
+The recognized format types we add are:
+  od = optional integer
+  of = optional generalized float
+  ow = optional sequence of letters, numbers, underscores
+  nc = any ASCII text that is not a comma
+
+See 'Custom Type Conversions' in https://pypi.org/project/parse/ for a
+discussion of how format types work.
+
+TODO: allow device_type definitions to hand in their own format types.
+"""
+
+def optional_d(text):
+  """Method for parsing an 'optional' integer."""
+  if text:
+    return int(text)
+  else:
+    return None
+optional_d.pattern = r'\d*'
+
+def optional_f(text):
+  """Method for parsing an 'optional' generalized float."""
+  if text:
+    return float(text)
+  else:
+    return None
+optional_f.pattern = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'
+
+def optional_w(text):
+  """Method for parsing an 'optional' letters/numbers/underscore
+  string."""
+  if text:
+    return text
+  else:
+    return None
+optional_w.pattern = r'\w*'
+
+def not_comma(text):
+  """Method for parsing a string (or anything) between commas
+  string."""
+  if text:
+    return text
+  else:
+    return None
+not_comma.pattern = r'[^,]*'
+
+parser_dict = dict(od=optional_d, of=optional_f, ow=optional_w, nc=not_comma)
+
 ################################################################################
 class RecordParser:
   ############################
@@ -45,7 +104,8 @@ class RecordParser:
 
     """
     self.record_format = record_format
-    self.compiled_record_format = parse.compile(record_format)
+    self.compiled_record_format = parse.compile(format=record_format,
+                                                extra_types=parser_dict)
     self.return_das_record = return_das_record
     self.return_json = return_json
     if return_das_record and return_json:
@@ -80,9 +140,11 @@ class RecordParser:
       if format is None:
         raise ValueError('Device type %s has no format definition' %device_type)
       if type(format) is str:
-        compiled_format = [parse.compile(format)]
+        compiled_format = [parse.compile(format=format,
+                                         extra_types=parser_dict)]
       else:
-        compiled_format = [parse.compile(f) for f in format]
+        compiled_format = [parse.compile(format=f, extra_types=parser_dict)
+                           for f in format]
       self.device_types[device_type]['compiled_format'] = compiled_format
 
   ############################
@@ -151,14 +213,17 @@ class RecordParser:
     # Assign field values to the appropriate named variable.
     fields = {}
     for field_name, value in parsed_fields.items():
+      # None means we didn't have a value for this field; omit it.
+      if value is None:
+        continue
       # If it's a datetime, convert to numeric timestamp
       if type(value) is datetime.datetime:
         value = value.timestamp()
 
       variable_name = device_fields.get(field_name, None)
       if variable_name is None:
-        logging.debug('Got unrecognized field "%s" for %s; ignoring',
-                      field_name, device_type)
+        logging.debug('Field "%s" (%s) not converted to variable in %s',
+                      field_name, device_type, message)
       else:
         fields[variable_name] = value
 
@@ -185,7 +250,20 @@ class RecordParser:
     device_definition = self.device_types.get(device_type, None)
     if not device_definition:
       raise ValueError('No definition found for device_type "%s"', device_type)
-                      
+
+    """
+    logging.warning('#########')
+    format = device_definition.get('format', None)
+    if type(format) is str:
+      format = [format]
+    for trial_format in format:
+      logging.warning('trying parse.parse("%s", "%s")', trial_format, message)
+      fields = parse.parse(trial_format, message)
+      if fields:
+        logging.warning('Matched!')
+        return fields.named
+    logging.warning('No match!')
+    """
     compiled_format = device_definition.get('compiled_format', None)
     for trial_format in compiled_format:
       fields = trial_format.parse(message)
