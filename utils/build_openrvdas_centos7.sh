@@ -178,7 +178,7 @@ echo "##########################################################################
 echo Installing Django, uWSGI and other Python-dependent packages
 pip3 install --upgrade pip
 pip3 install Django==2.0 pyserial uwsgi websockets PyYAML \
-             mysqlclient mysql-connector==2.1.6
+             parse mysqlclient mysql-connector==2.1.6
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
 echo "############################################################################"
