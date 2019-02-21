@@ -241,7 +241,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: PCOD
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   PCOD->net:
@@ -294,7 +294,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: adcp
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   adcp->net:
@@ -347,7 +347,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: eng1
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   eng1->net:
@@ -400,7 +400,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: gp02
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   gp02->net:
@@ -453,7 +453,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: grv1
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   grv1->net:
@@ -506,7 +506,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: gyr1
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   gyr1->net:
@@ -559,7 +559,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: hdas
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   hdas->net:
@@ -612,7 +612,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: knud
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   knud->net:
@@ -665,7 +665,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: mbdp
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   mbdp->net:
@@ -718,7 +718,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: mwx1
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   mwx1->net:
@@ -771,7 +771,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: pco2
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   pco2->net:
@@ -824,7 +824,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: pguv
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   pguv->net:
@@ -877,7 +877,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: rtmp
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   rtmp->net:
@@ -930,7 +930,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: s330
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   s330->net:
@@ -983,7 +983,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: seap
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   seap->net:
@@ -1036,7 +1036,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: svp1
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   svp1->net:
@@ -1067,7 +1067,7 @@ configs:
       kwargs:
         network: :6224
     transforms:
-    - class: ParseNMEATransform
+    - class: ParseTransform
     - class: ComposedDerivedDataTransform
       kwargs:
         transforms:
@@ -1077,7 +1077,7 @@ configs:
             convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
-            speed_field: S330Speed
+            speed_field: S330SpeedKt
             true_dir_name: PortTrueWindDir
             true_speed_name: PortTrueWindSpeed
             update_on_fields:
@@ -1090,7 +1090,7 @@ configs:
             convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
-            speed_field: S330Speed
+            speed_field: S330SpeedKt
             true_dir_name: StbdTrueWindDir
             true_speed_name: StbdTrueWindSpeed
             update_on_fields:
@@ -1106,7 +1106,7 @@ configs:
       kwargs:
         network: :6224
     transforms:
-    - class: ParseNMEATransform
+    - class: ParseTransform
     - class: ComposedDerivedDataTransform
       kwargs:
         transforms:
@@ -1116,7 +1116,7 @@ configs:
             convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
-            speed_field: S330Speed
+            speed_field: S330SpeedKt
             true_dir_name: PortTrueWindDir
             true_speed_name: PortTrueWindSpeed
             update_on_fields:
@@ -1129,7 +1129,7 @@ configs:
             convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
-            speed_field: S330Speed
+            speed_field: S330SpeedKt
             true_dir_name: StbdTrueWindDir
             true_speed_name: StbdTrueWindSpeed
             update_on_fields:
@@ -1170,7 +1170,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: tsg1
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   tsg1->net:
@@ -1223,7 +1223,7 @@ configs:
         - class: PrefixTransform
           kwargs:
             prefix: tsg2
-        - class: ParseNMEATransform
+        - class: ParseTransform
         writers:
           class: DatabaseWriter
   tsg2->net:
@@ -1254,7 +1254,7 @@ configs:
       kwargs:
         network: :6224
     transforms:
-      class: ParseNMEATransform
+      class: ParseTransform
     writers:
       class: CachedDataWriter
       kwargs:
@@ -1273,7 +1273,7 @@ configs:
           kwargs:
             network: :6224
         transforms:
-          class: ParseNMEATransform
+          class: ParseTransform
 
     - class: ComposedReader
       kwargs:
@@ -1282,7 +1282,7 @@ configs:
             kwargs:
               network: :6224
         transforms:
-        - class: ParseNMEATransform
+        - class: ParseTransform
         - class: ComposedDerivedDataTransform
           kwargs:
             transforms:
@@ -1292,7 +1292,7 @@ configs:
                 convert_speed_factor: 0.5144
                 course_field: S330CourseTrue
                 heading_field: S330HeadingTrue
-                speed_field: S330Speed
+                speed_field: S330SpeedKt
                 true_dir_name: PortTrueWindDir
                 true_speed_name: PortTrueWindSpeed
                 update_on_fields:
@@ -1305,7 +1305,7 @@ configs:
                 convert_speed_factor: 0.5144
                 course_field: S330CourseTrue
                 heading_field: S330HeadingTrue
-                speed_field: S330Speed
+                speed_field: S330SpeedKt
                 true_dir_name: StbdTrueWindDir
                 true_speed_name: StbdTrueWindSpeed
                 update_on_fields:

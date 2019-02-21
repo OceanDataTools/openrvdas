@@ -8,7 +8,6 @@ in, to allow the caller (typically a ComposedDerivedDataTransform) to
 call it only when new values are available for fields in which it is
 interested.
 
-
 A ComposedDerivedDataTransform is initialized with a list of
 DerivedDataTransforms. The transform() method then takes either
 DASRecords or {field:[[timestamp, value],...]} dictionaries, caches
@@ -16,8 +15,15 @@ the received values, distributes them among the contained
 DerivedDataTransforms, and aggregates their outputs, either into an
 anonymous DASRecord or a field dictionary, depending on how it was
 initialized.
-"""
 
+The transforms can take data in one of three formats (and will return
+data in the same format as the input:
+ - DASRecord
+ - a single record dict with keys 'timestamp' and 'fields'
+ - a field dict of format {data_id: [(timestamp, value), 
+                                     (timestamp, value),
+                                     ...)]}
+"""
 import logging
 import pprint
 import sys
@@ -26,7 +32,6 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from collections import OrderedDict
 
 from logger.transforms.transform import Transform
-
 from logger.utils import formats
 from logger.utils.das_record import DASRecord
 
@@ -104,27 +109,37 @@ class ComposedDerivedDataTransform(Transform):
 
   ############################
   def transform(self, record):
-    """Take either a DASRecord or a field dictionary and returns transformed
-    values in the same format."""
+    """Take input in one of three formats, transform it appropriately, and
+    return data in that same format as received:
+       - DASRecord
+       - a single record dict with keys 'timestamp' and 'fields'
+       - a field dict of format {data_id: [(timestamp, value), 
+                                           (timestamp, value),
+                                           ...]}
+    """
     if not record:
       return
 
     # What type of record is this?
     if type(record) is DASRecord:
-      is_das_record = True
+      record_type = 'DASRecord'
+      timestamp = record.timestamp
       fields = record.fields
+    elif type(record) is dict and 'timestamp' in record and 'fields' in record:
+      record_type = 'SingleDict'
+      timestamp = record.get('timestamp', None)
+      fields = record.get('fields', {})
     elif type(record) is dict:
-      is_das_record = False
+      record_type = 'FieldDict'
       fields = record
     else:
       raise TypeError('ComposedDerivedDataTransform.transform(record) '
-                      'received record of inappropriate type: %s',
-                      type(record))
+                      'received record of inappropriate type: %s\n%s',
+                      type(record), pprint.pformat(record))
 
-    # DASRecords are easy - we only have one timestamp to deal with,
-    # so only have to run each transform once.
-    if is_das_record:
-
+    # DASRecords and SingleDicts are easy - we only have one timestamp
+    # to deal with, so only have to run each transform once.
+    if record_type in ('DASRecord', 'SingleDict'):
       # Which transforms are interested in values contained in record?
       transforms_to_run = set()
       for field, value in fields.items():
@@ -132,7 +147,7 @@ class ComposedDerivedDataTransform(Transform):
         transforms_to_run.update(field_transforms)
 
         self.values[field] = value
-        self.timestamps[field] = record.timestamp
+        self.timestamps[field] = timestamp
 
       # Run all transforms that have registered interest in these
       # fields, then aggregate results into a single dict.
@@ -142,10 +157,19 @@ class ComposedDerivedDataTransform(Transform):
         if t_results:
           results.update(t_results)
 
-      # Return an anonymous DASRecord with the results we've aggregated
+      if len(transforms_to_run):
+        logging.warning('Running %d transforms on:\n%s\nDerived result: %s',
+                        len(transforms_to_run), pprint.pformat(fields), results)
+
+      # Return an anonymous DASRecord or single dict with the results
+      # we've aggregated.
       if not results:
         return None
-      return DASRecord(timestamp=record.timestamp, fields=results)
+
+      if record_type == 'DASRecord':
+        return DASRecord(timestamp=timestamp, fields=results)
+      else:
+        return {'timestamp': timestamp, 'fields': results}
 
     # If here, we believe we've received a field dict, in which each
     # field may have multiple [timestamp, value] pairs. First thing we

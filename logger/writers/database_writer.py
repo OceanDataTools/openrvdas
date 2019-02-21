@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import pprint
 import sys
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -57,7 +58,19 @@ class DatabaseWriter(Writer):
 
   ############################
   def _write_record(self, record):
-    """Write record to table."""
+    """Write record to table. Connectors assume we've got a DASRecord, but
+    check; if we don't see if it's a suitably-formatted dict that we can
+    convert into a DASRecord.
+    """
+    if type(record) is dict:
+      try:
+        data_id = record.get('data_id', 'no_data_id')
+        timestamp = record.get('timestamp', None)
+        fields = record['fields']
+        record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+      except KeyError:
+        logging.error('Unable to create DASRecord from dict:\n%s',
+                      pprint.pformat(record))
     self.db.write_record(record)
 
   ############################
@@ -67,13 +80,26 @@ class DatabaseWriter(Writer):
 
   ############################
   def write(self, record):
-    """ Write out record, appending a newline at end."""
+    """Write out record, appending a newline at end. Connectors assume
+    we've got a DASRecord, but check; if we don't see if it's a
+    suitably-formatted dict that we can convert into a DASRecord.
+    """
     if not record:
       return
 
     # If input purports to not be a field dict, it should be a
-    # DASRecord. Just write it out.
+    # single record dict or a DASRecord. Just write it out.
     if not self.field_dict_input:
+      if type(record) is dict:
+        try:
+          data_id = record.get('data_id', None)
+          timestamp = record.get('timestamp', None)
+          fields = record['fields']
+          record = DASRecord(data_id=data_id, timestamp=timestamp,
+                             fields=fields)
+        except KeyError:
+          logging.error('Unable to create DASRecord from dict:\n%s',
+                        pprint.pformat(record))
       if type(record) is DASRecord:
         self._write_record(record)
       else:
