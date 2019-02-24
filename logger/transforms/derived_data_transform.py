@@ -157,10 +157,6 @@ class ComposedDerivedDataTransform(Transform):
         if t_results:
           results.update(t_results)
 
-      if len(transforms_to_run):
-        logging.warning('Running %d transforms on:\n%s\nDerived result: %s',
-                        len(transforms_to_run), pprint.pformat(fields), results)
-
       # Return an anonymous DASRecord or single dict with the results
       # we've aggregated.
       if not results:
