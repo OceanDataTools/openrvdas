@@ -1,0 +1,69 @@
+"""
+Settings for database operations.
+
+THIS FILE MUST BE COPIED OVER TO database/settings.py to be
+operational.
+
+To set up MongoDB connectivity, install, configure and start
+MongoDB server, and set up appropriate mysql user:
+
+   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+   echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list
+   sudo apt-get update
+   sudo apt-get install -y mongodb-org
+
+   or
+
+   sudo yum install -y mongodb-org-3.6.9 mongodb-org-server-3.6.9 mongodb-org-shell-3.6.9 mongodb-org-mongos-3.6.9 mongodb-org-tools-3.6.9
+
+   
+     then
+
+   pip3 install pymongo
+
+   # Create 'data' and 'test' databases and mysql_user
+   database/setup_mongo_connector.sh <root_pwd> <mongo_user> <mongo_user_pwd>
+
+"""
+import logging
+import sys
+
+sys.path.append('.')
+
+DEFAULT_DATABASE = 'data'
+DEFAULT_DATABASE_HOST = '127.0.0.1:27017'
+DEFAULT_DATABASE_USER = 'rvdas'
+DEFAULT_DATABASE_PASSWORD = 'rvdas'
+
+# Which database connector to use. When selecting a new connector, you may
+# need to run the corresponding database/setup_xxx_connector.sh script.
+
+Connector = None
+DATABASE_ENABLED = False
+MONGO_ENABLED = False
+
+try:
+  # Specify/uncomment the database you're using here
+
+  # To set up MongoDB connectivity, install, configure and start
+  # Mongo server, and set up appropriate mongo user:
+  #   apt-get install mongodb-org # ubuntu
+  #
+  #   pip3 install pymongo
+  #
+  #   # Create 'data' and 'test' databases and mysql_user
+  #   database/setup_mongo_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
+  #
+  from database.mongo_connector import MONGO_ENABLED, MongoConnector as Connector
+  #from database.mongo_record_connector import MONGO_ENABLED, MongoRecordConnector as Connector
+  if MONGO_ENABLED:
+      DATABASE_ENABLED = True
+
+  # Put instructions and imports for other databases here
+
+except ImportError:
+  pass
+
+if not DATABASE_ENABLED:
+  logging.warning('Settings in database/settings.py not configured; database '
+                  'functionality may not be available.')
