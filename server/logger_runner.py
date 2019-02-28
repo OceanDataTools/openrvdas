@@ -410,16 +410,16 @@ class LoggerRunner:
         # main thread, process.terminate() is propagating to the main
         # thread in our own process and killing everything. Using the
         # heavier-handed os.kill() seems to not have this problem.
-        if USE_MULTIPROCESSING:
-          try:
+        try:
+          if USE_MULTIPROCESSING:
             os.kill(process.pid, signal.SIGKILL)
             process.terminate()
-          except:
-            pass
-          process.join()
-        else:
-          process.terminate()
-          os.kill(process.pid, signal.SIGKILL)
+            process.join()
+          else:
+            process.terminate()
+            os.kill(process.pid, signal.SIGKILL)
+        except:
+          pass
 
       else:
         logging.info('Attempted to kill process for %s, but no '
