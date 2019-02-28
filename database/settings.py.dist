@@ -37,6 +37,7 @@ DEFAULT_DATABASE_PASSWORD = 'rvdas'
 Connector = None
 DATABASE_ENABLED = False
 MYSQL_ENABLED = False
+MONGO_ENABLED = False
 
 try:
   # Specify/uncomment the database you're using here
