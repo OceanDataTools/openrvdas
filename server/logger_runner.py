@@ -314,6 +314,7 @@ class LoggerRunner:
     while True:
       try:
         line = stream.readline().decode().strip()
+        line = 'Logger ' + logger + ': ' + line
       except KeyboardInterrupt:
         return
 
@@ -416,8 +417,14 @@ class LoggerRunner:
             process.terminate()
             process.join()
           else:
-            process.terminate()
-            os.kill(process.pid, signal.SIGKILL)
+            try:
+              process.terminate()
+            except:
+              logging.warning('process.terminate threw error')
+            try:
+              os.kill(process.pid, signal.SIGKILL)
+            except:
+              logging.warning('os.kill threw error')
         except:
           pass
 
