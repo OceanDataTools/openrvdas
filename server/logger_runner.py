@@ -314,7 +314,8 @@ class LoggerRunner:
     while True:
       try:
         line = stream.readline().decode().strip()
-        line = 'Logger ' + logger + ': ' + line
+        if line:
+          line = 'Logger ' + logger + ': ' + line
       except KeyboardInterrupt:
         return
 

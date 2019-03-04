@@ -276,7 +276,7 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def update_status(self, status):
     """Save/register the loggers' retrieved status report with the API."""
-    logging.info('Got status: %s', status)
+    logging.debug('Got status: %s', status)
     now = datetime_obj()
     try:
       for logger_id, logger_report in status.items():

@@ -7,4 +7,4 @@ name copied in) FOR WIDGETS TO BE OPERATIONAL.
 *******************************************************************************/
 
 // Location of data server
-var WEBSOCKET_DATA_SERVER = "localhost:8765";
+var WEBSOCKET_DATA_SERVER = "localhost:8766";

@@ -53,7 +53,7 @@ eng1:
     Pump1Flow: "EngPump1Flow"
     Pump2Flow: "EngPump2Flow"
     Pump3Flow: "EngPump3Flow"
-    SeismicPressure: "SeismicPressure"
+    SeismicPressure: "EngSeismicPressure"
     PIRCaseRes: "EngPIRCaseRes"
     PIRCaseMv: "EngPIRCaseMv"
     Freezer1Temp: "EngFreezer1Temp"

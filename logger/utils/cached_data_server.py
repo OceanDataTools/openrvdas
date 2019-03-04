@@ -106,6 +106,7 @@ See note in _serve_websocket_data() for site of behavior.
 import asyncio
 import json
 import logging
+import pprint
 import sys
 import threading
 import time
@@ -384,10 +385,14 @@ class CachedDataServer:
     Expects passed records to either be DASRecords or simple dicts. If
     type(record) is dict, expect it to be in one of the following
     formats:
-
-       {field_name: value,    # use default timestamp of 'now'
-        field_name: value,
-        ...
+       {
+         'data_id': ...,
+         'timestamp': ...,
+         'fields': {
+           field_name: value,    # use default timestamp of 'now'
+           field_name: value,
+           ...
+         }
        }
     or
        {field_name: [(timestamp, value), (timestamp, value),...],
@@ -399,22 +404,25 @@ class CachedDataServer:
     if not record:
       logging.debug('CachedDataServer.cache_record() received empty record.')
       return
-    if not type(record) in [DASRecord, dict]:
-      logging.error('CachedDataServer.cache_record() received record of type '
-                    '"%s" - must be either dict or DASRecord', type(record))
-      return
-
-    #logging.warning('Caching record')
 
     # If we've been passed a DASRecord, the field:value pairs are in a
-    # field called, uh, 'fields'; if we've been passed a dict, we'll
-    # assume that the field:value pairs are the top level.
+    # field called, uh, 'fields'; if we've been passed a dict, it
+    # could be either of the above formats. Try for the first, and if
+    # it fails, assume the second.
     if type(record) is DASRecord:
       fields = record.fields
-      default_timestamp = record.timestamp
+      timestamp = record.timestamp
+    elif type(record) is dict:
+      data_id = record.get('data_id', None)
+      timestamp = record.get('timestamp', time.time())
+
+      # If we don't find a 'fields' entry in the dict, assume
+      # (dangerously) that the entire record is a field dict.
+      fields = record.get('fields', record)
     else:
-      fields = record
-      default_timestamp = time.time()
+      logging.error('Record passed to CachedDataServer is not of type '
+                    '"DASRecord" or dict; is type "%s"', type(record))
+      return
 
     # Add values from record to cache
     with self.cache_lock:
@@ -431,11 +439,11 @@ class CachedDataServer:
             if type(val) in [list, tuple]:
               self.cache[field].append(val)
             else:
-              self.cache[field].append((default_timestamp, value))
+              self.cache[field].append((timestamp, value))
         else:
           # If type(value) is *not* a list, assume it's the value
           # itself. Add it using the default timestamp.
-          self.cache[field].append((default_timestamp, value))
+          self.cache[field].append((timestamp, value))
 
   ############################
   def cleanup(self, oldest):

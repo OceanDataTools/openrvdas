@@ -3,6 +3,7 @@
 import logging
 import pprint
 import sys
+import time
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
@@ -87,36 +88,51 @@ class DatabaseWriter(Writer):
     if not record:
       return
 
-    # If input purports to not be a field dict, it should be a
-    # single record dict or a DASRecord. Just write it out.
-    if not self.field_dict_input:
-      if type(record) is dict:
-        try:
-          data_id = record.get('data_id', None)
-          timestamp = record.get('timestamp', None)
-          fields = record['fields']
-          record = DASRecord(data_id=data_id, timestamp=timestamp,
-                             fields=fields)
-        except KeyError:
-          logging.error('Unable to create DASRecord from dict:\n%s',
-                        pprint.pformat(record))
-      if type(record) is DASRecord:
-        self._write_record(record)
-      else:
-        logging.error('Record passed to DatabaseWriter is not of type '
-                      '"DASRecord"; is type "%s"', type(record))
+    # If we've been passed a DASRecord, the field:value pairs are in a
+    # field called, uh, 'fields'; if we've been passed a dict, it
+    # could be either of the above formats. Try for the first, and if
+    # it fails, assume the second.
+    if type(record) is DASRecord:
+      self._write_record(record)
+      return
+    
+    if not type(record) is dict:
+      logging.error('Record passed to CachedDataServer is not of type '
+                    '"DASRecord" or dict; is type "%s"', type(record))
       return
 
-    # If here, we believe we've received a field dict, in which each
-    # field may have multiple [timestamp, value] pairs. First thing we
-    # do is reformat the data into a map of
+    # If here, our record is a dict, figure out whether it is a top-level
+    # field dict or not.
+    data_id = record.get('data_id', None)
+    timestamp = record.get('timestamp', time.time())
+
+    # If we don't find a 'fields' entry in the dict, assume
+    # (dangerously) that the entire record is a field dict.
+    fields = record.get('fields', record)
+    if not type(fields) is dict:
+      logging.error('Fields of non-DASRecord passed to CachedDataServer are '
+                    'not of type dict; type is "%s"', type(fields))
+      return
+      
+    # Now figure out whether our fields are simple key:value pairs or
+    #  key: [(timestamp, value), (timestamp, value),...] pairs.
+    if not fields:
+      logging.debug('Received empty fields in DatabaseWriter')
+      return
+    first_key = next(iter(fields))
+    first_value = fields[first_key]
+    if not type(first_value) is list:
+      das_record = DASRecord(data_id=data_id, timestamp=timestamp,fields=fields)
+      self._write_record(das_record)
+      return
+
+    # If here our we've got a field dict in which each field/key may
+    # have multiple (timestamp, value) pairs. First thing we do is
+    # reformat the data into a map of
     #        {timestamp: {field:value, field:value],...}}
-    if not type(record) is dict:
-      raise ValueError('DatabaseWriter.write() received record purporting '
-                         'to be a field dict but of type %s' % type(record))
     values_by_timestamp = {}
     try:
-      for field, ts_value_list in record.items():
+      for field, ts_value_list in fields.items():
         for (timestamp, value) in ts_value_list:
           if not timestamp in values_by_timestamp:
             values_by_timestamp[timestamp] = {}

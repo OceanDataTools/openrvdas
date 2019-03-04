@@ -200,7 +200,7 @@
 
   // Lat/Lon text widgets
   widget_list.push(new TextWidget('gps_lat',
-                                  {S330Lat:
+                                  {S330Latitude:
                                     {
                                       name: "Latitude",
                                       transform: function(val) {
@@ -211,7 +211,7 @@
   widget_list.push(new TextWidget('gps_n_or_s', {S330NorS: {name: "N/S"}}));
 
   widget_list.push(new TextWidget('gps_lon',
-                                  {S330Lon:
+                                  {S330Longitude:
                                     {
                                       name: "Longitude",
                                       transform: function(val) {
@@ -224,7 +224,7 @@
   widget_list.push(new TextWidget('heading_true',
                                { S330HeadingTrue: {name: 'Heading (True)'}}));
   widget_list.push(new TextWidget('gps_sog',
-                               { S330SOGKt: {name: 'Speed over Ground'}}));
+                               { S330SpeedKt: {name: 'Speed over Ground'}}));
 
   widget_list.push(new TextWidget('pitch', { S330Pitch: {name: 'Pitch'}}));
   widget_list.push(new TextWidget('roll', { S330Roll: {name: 'Roll'}}));
@@ -247,15 +247,15 @@
                                { EngPump3Flow: {name: 'Eng Pump 3 Flow'}}));
 
   widget_list.push(new TextWidget('seis_air_pressure',
-                               { EngSeisAirPressure: {name: 'Seismic Air Pressure'}}));
+                               { EngSeismicPressure: {name: 'Seismic Air Pressure'}}));
   widget_list.push(new TextWidget('pir_res',
-                               { EngPIRRes: {name: 'PIR Res'}}));
+                               { EngPIRCaseRes: {name: 'PIR Res'}}));
   widget_list.push(new TextWidget('pir_mv_out',
-                               { EngPIRmvOut: {name: 'PIR mV Out'}}));
+                               { EngPIRCaseMv: {name: 'PIR mV Out'}}));
   widget_list.push(new TextWidget('freezer1_temp',
-                               { EngFreezer1C: {name: 'Freezer 1 Temp'}}));
+                               { EngFreezer1Temp: {name: 'Freezer 1 Temp'}}));
   widget_list.push(new TextWidget('freezer2_temp',
-                               { EngFreezer2C: {name: 'Freezer 2 Temp'}}));
+                               { EngFreezer2Temp: {name: 'Freezer 2 Temp'}}));
 
   var widget_server = new WidgetServer(widget_list,
                                        WEBSOCKET_DATA_SERVER);

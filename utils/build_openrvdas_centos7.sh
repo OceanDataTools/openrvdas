@@ -85,7 +85,9 @@ yum install -y epel-release
 yum -y update
 
 yum install -y socat git nginx sqlite-devel readline-devel \
-               wget gcc zlib-devel openssl-devel
+    wget gcc zlib-devel openssl-devel \
+    python36 python36-devel python36-pip 
+ln -s /usr/bin/python36 /usr/bin/python3
 
 # Install database stuff and set up as service.
 # Problem is that the Mariadb version that ships with CentOS 7
@@ -139,46 +141,11 @@ flush privileges;
 EOF
 echo Done setting up database
 
-# Install Python
-echo "############################################################################"
-PYTHON_VERSION=3.6.3
-PYTHON_NAME=Python-${PYTHON_VERSION}
-if [[ `python3 -V` == "Python $PYTHON_VERSION" ]]; then
-    echo Already have $PYTHON_NAME - skipping installation
-else
-  echo Installing $PYTHON_NAME
-  while true; do
-    read -p "Run Python optimizations? " yn
-    case $yn in
-        [Yy]* ) PYTHON_OPT=" --enable-optimizations"; break;;
-        [Nn]* ) PYTHON_OPT=""; break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-  done
-
-  cd /tmp
-  if [ ! -e /tmp/${PYTHON_NAME}.tgz ]; then
-    echo Fetching ${PYTHON_NAME}
-    wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_NAME}.tgz
-  fi
-  if [ ! -e /tmp/${PYTHON_NAME} ]; then
-    echo Unpacking Python
-    tar xzf ${PYTHON_NAME}.tgz
-  fi
-  echo Configuring and building Python
-  cd ${PYTHON_NAME}
-  ./configure $PYTHON_OPT --enable-loadable-sqlite-extensions
-  make install
-  ln -sf /usr/local/bin/python3 /usr/local/bin/python
-  echo Done making Python
-fi
-
 # Django and uWSGI
 echo "############################################################################"
 echo Installing Django, uWSGI and other Python-dependent packages
-pip3 install --upgrade pip
-pip3 install Django==2.0 pyserial uwsgi websockets PyYAML \
-             parse mysqlclient mysql-connector==2.1.6
+pip3.6 install Django==2.0 pyserial uwsgi websockets PyYAML \
+       parse mysqlclient mysql-connector==2.1.6
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
 echo "############################################################################"
@@ -236,7 +203,7 @@ else
      server_names_hash_bucket_size 64; 
 }
 EOF
-  mv /tmp/nginx.conf /etc/nginx/nginx.conf
+  mv -f /tmp/nginx.conf /etc/nginx/nginx.conf
   echo Done setting up NGINX
 fi
 
@@ -318,7 +285,7 @@ chdir           = ${INSTALL_ROOT}/openrvdas
 module          = django_gui.wsgi
 # the base directory from which bin/python is available
 # Do an ln -s bin/python3 bin/python in this dir!!!
-home            = /usr/local
+home            = /usr
 
 # process-related settings
 # master
@@ -396,13 +363,13 @@ OPENRVDAS_LOGFILE=/var/log/openrvdas.log
 touch \$OPENRVDAS_LOGFILE
 chown $RVDAS_USER \$OPENRVDAS_LOGFILE
 chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v &>> \$OPENRVDAS_LOGFILE"
+sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v &>> \$OPENRVDAS_LOGFILE"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF
 #!/bin/bash
 USER=rvdas
-sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 server/logger_manager.py"'
+sudo -u $USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
 EOF
 
 chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh

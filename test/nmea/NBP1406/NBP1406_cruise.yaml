@@ -118,6 +118,7 @@ loggers:
   display:
     configs:
     - display->off
+    - display->monitor
     - display->on
 
 ########################################
@@ -184,7 +185,7 @@ modes:
     true_winds: true_winds->off
     tsg1: tsg1->net
     tsg2: tsg2->net
-    display: display->on
+    display: display->monitor
   monitor and log:
     PCOD: PCOD->file/net/db
     adcp: adcp->file/net/db
@@ -1263,8 +1264,8 @@ configs:
 
   # When we're monitoring, our display logger does its own true wind
   # calculations.
-  display->on:
-    name: display->on
+  display->monitor:
+    name: display->monitor
     readers:
     - class: ComposedReader
       kwargs:
@@ -1274,7 +1275,6 @@ configs:
             network: :6224
         transforms:
           class: ParseTransform
-
     - class: ComposedReader
       kwargs:
         readers:

@@ -157,7 +157,9 @@ class ComposedReader(Reader):
       # Some threads may have timed out while waiting to be called to
       # action; restart them.
       for i in range(len(self.readers)):
-        if not self.reader_threads[i] or not self.reader_threads[i].is_alive():
+        if not self.reader_threads[i] \
+           or not self.reader_threads[i].is_alive() \
+           and not self.reader_returned_eof[i]:
           logging.info('read() - starting thread for Reader #%d', i)
           self.reader_returned_eof[i] = False
           thread = threading.Thread(target=self._run_reader, args=(i,))

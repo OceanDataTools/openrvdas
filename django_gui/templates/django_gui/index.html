@@ -206,7 +206,7 @@
   function flag_timeout() {
     document.getElementById("time_row").style.backgroundColor = "orangered";
     document.getElementById("time_warning_td").innerHTML = Date();
-    document.getElementById("time_warning_row").style.display = "";
+    //document.getElementById("time_warning_row").style.display = "";
   }
 
   var timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
