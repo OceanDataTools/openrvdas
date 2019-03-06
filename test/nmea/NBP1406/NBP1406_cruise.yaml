@@ -104,7 +104,7 @@ loggers:
   true_winds:
     configs:
     - true_winds->off
-    - true_winds->db
+    - true_winds->net
   tsg1:
     configs:
     - tsg1->off
@@ -115,10 +115,19 @@ loggers:
     - tsg2->off
     - tsg2->net
     - tsg2->file/net/db
+
+  # Two special loggers - one parses raw NMEA data on :6224 and
+  # broadcasts it on :6225 and the other listens for parsed JSON
+  # records on :6225 and feeds them to a CachedDataServer that serves
+  # them on a websocket at :8766.
+  parser:
+    configs:
+    - parser->off
+    - parser->on
+
   display:
     configs:
     - display->off
-    - display->monitor
     - display->on
 
 ########################################
@@ -143,6 +152,7 @@ modes:
     true_winds: true_winds->off
     tsg1: tsg1->off
     tsg2: tsg2->off
+    parser: parser->off
     display: display->off
   port:
     PCOD: PCOD->off
@@ -161,9 +171,10 @@ modes:
     s330: s330->net
     seap: seap->off
     svp1: svp1->off
-    true_winds: true_winds->off
+    true_winds: true_winds->net
     tsg1: tsg1->off
     tsg2: tsg2->off
+    parser: parser->on
     display: display->on
   monitor:
     PCOD: PCOD->net
@@ -182,10 +193,12 @@ modes:
     s330: s330->net
     seap: seap->net
     svp1: svp1->net
-    true_winds: true_winds->off
+    true_winds: true_winds->net
     tsg1: tsg1->net
     tsg2: tsg2->net
-    display: display->monitor
+    parser: parser->on
+    display: display->on
+ 
   monitor and log:
     PCOD: PCOD->file/net/db
     adcp: adcp->file/net/db
@@ -203,9 +216,10 @@ modes:
     s330: s330->file/net/db
     seap: seap->file/net/db
     svp1: svp1->file/net/db
-    true_winds: true_winds->db
+    true_winds: true_winds->net
     tsg1: tsg1->file/net/db
     tsg2: tsg2->file/net/db
+    parser: parser->on
     display: display->on
 
 ########################################
@@ -1140,7 +1154,7 @@ configs:
     writers:
       class: NetworkWriter
       kwargs:
-        network: :6224
+        network: :6225  # Network for parsed JSON records
   true_winds->off: {}
   tsg1->file/net/db:
     name: tsg1->net/file/db
@@ -1248,70 +1262,29 @@ configs:
           kwargs:
             network: :6224
   tsg2->off: {}
+ 
+  parser->on:
+    name: parse->on
+    readers:
+      class: NetworkReader
+      kwargs:
+        network: :6224   # Port 6224 is where unparsed NMEA records are
+    transforms:
+      class: ParseTransform
+    writers:
+      class: NetworkWriter
+      kwargs:
+        network: :6225   # Port 6225 is where parsed JSON records are
+  parser->off: {}
+
   display->on:
     name: display->on
     readers:
       class: NetworkReader
       kwargs:
-        network: :6224
+        network: :6225   # Port 6225 is where parsed JSON records are
     transforms:
-      class: ParseTransform
-    writers:
-      class: CachedDataWriter
-      kwargs:
-        websocket: :8766
-        back_seconds: 640
-
-  # When we're monitoring, our display logger does its own true wind
-  # calculations.
-  display->monitor:
-    name: display->monitor
-    readers:
-    - class: ComposedReader
-      kwargs:
-        readers:
-          class: NetworkReader
-          kwargs:
-            network: :6224
-        transforms:
-          class: ParseTransform
-    - class: ComposedReader
-      kwargs:
-        readers:
-          - class: NetworkReader
-            kwargs:
-              network: :6224
-        transforms:
-        - class: ParseTransform
-        - class: ComposedDerivedDataTransform
-          kwargs:
-            transforms:
-            - class: TrueWindsTransform
-              kwargs:
-                apparent_dir_name: PortApparentWindDir
-                convert_speed_factor: 0.5144
-                course_field: S330CourseTrue
-                heading_field: S330HeadingTrue
-                speed_field: S330SpeedKt
-                true_dir_name: PortTrueWindDir
-                true_speed_name: PortTrueWindSpeed
-                update_on_fields:
-                - MwxPortRelWindDir
-                wind_dir_field: MwxPortRelWindDir
-                wind_speed_field: MwxPortRelWindSpeed
-            - class: TrueWindsTransform
-              kwargs:
-                apparent_dir_name: StbdApparentWindDir
-                convert_speed_factor: 0.5144
-                course_field: S330CourseTrue
-                heading_field: S330HeadingTrue
-                speed_field: S330SpeedKt
-                true_dir_name: StbdTrueWindDir
-                true_speed_name: StbdTrueWindSpeed
-                update_on_fields:
-                - MwxStbdRelWindDir
-                wind_dir_field: MwxStbdRelWindDir
-                wind_speed_field: MwxStbdRelWindSpeed
+      class: FromJSONTransform
     writers:
       class: CachedDataWriter
       kwargs:
