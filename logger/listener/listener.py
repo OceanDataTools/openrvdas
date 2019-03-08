@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 
 import logging
+import logging.handlers
 import sys
 import time
 
+from os import makedirs
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.composed_reader import ComposedReader
 from logger.writers.composed_writer import ComposedWriter
-
+from logger.utils.stderr_logging import setUpStdErrLogging
+    
 ################################################################################
 class Listener:
   """Listener is a simple, yet relatively self-contained class that
@@ -21,9 +24,9 @@ class Listener:
   """
   ############################
   def __init__(self, readers, transforms=[], writers=[], host_id='',
-               interval=0, name=None, check_format=False):
-    """
-    listener = Listener(readers, transforms=[], writers=[],
+               interval=0, name=None, check_format=False,
+               stderr_file=None, stderr_path=None, log_level=None):
+    """listener = Listener(readers, transforms=[], writers=[],
                         interval=0, check_format=False)
 
     readers        A single Reader or a list of Readers.
@@ -45,6 +48,14 @@ class Listener:
                    are not. If check_format is False (the default) the
                    output_format() of the whole reader will be
                    formats.Unknown.
+
+    stderr_file    File to log stderr messages to. Try to create if it
+                   does not exist.  If a full path (beginning with
+                   '/'), use that. If they only a file name or partial
+                   path (anything not beginning with '/'), append the
+                   stderr_file name to DEFAULT_STDERR_PATH, defined
+                   above.
+
     Sample use:
 
     listener = Listener(readers=[NetworkReader(':6221'),
@@ -58,6 +69,13 @@ class Listener:
     Calling listener.quit() from another thread will cause the run() loop
     to exit.
     """
+    # Set up logging first of all
+    setUpStdErrLogging(stderr_file=stderr_file,
+                       stderr_path=stderr_path,
+                       log_level=log_level)
+    
+    ###########
+    # Create readers, writers, etc.
     self.reader = ComposedReader(readers=readers, check_format=check_format)
     self.writer = ComposedWriter(transforms=transforms, writers=writers,
                                  check_format=check_format)
@@ -87,7 +105,6 @@ class Listener:
       while not self.quit_signalled and record is not None:
         record = self.reader.read()
         self.last_read = time.time()
-
         logging.debug('ComposedReader read: "%s"', record)
         if record:
           self.writer.write(record)

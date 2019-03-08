@@ -96,9 +96,8 @@ except ImportError:
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
+from logger.utils.stderr_logging import setUpStdErrLogging
 from logger.listener.listen import ListenerFromLoggerConfig
-
-run_logging = logging.getLogger(__name__)
 
 # We have a few different ways we can start up a process. Using the
 # multiprocessing module seems like the Right Way to do it, but while
@@ -132,7 +131,8 @@ def runnable(config):
 class LoggerRunner:
   ############################
   def __init__(self, interval=0.5, max_tries=3, initial_configs=None,
-               websocket=None, host_id=None, event_loop=None):
+               websocket=None, host_id=None, event_loop=None,
+               logger_log_level=logging.WARNING, stderr_path=None):
     """Create a LoggerRunner.
     interval - number of seconds to sleep between checking/updating loggers
 
@@ -145,12 +145,18 @@ class LoggerRunner:
                 for updates.
 
     host_id - Optional string by which this instance will identify itself
-              to websocket server.
+                to websocket server.
 
     event_loop - Optional event loop, if we're instantiated in a thread
-                 that doesn't have its own.
+                that doesn't have its own.
 
+    logger_log_level - At what logging level our component loggers
+                should operate.
+
+    stderr_path - Base path of logfile to which loggers should
+                write; if logger has name, append this to path.
     """
+    logging.info('Starting LoggerRunner')
     # Map logger name to config, process running it, and any errors
     self.logger_configs = {}
     self.processes = {}
@@ -166,6 +172,9 @@ class LoggerRunner:
 
     self.interval = interval
     self.max_tries = max_tries
+    self.logger_log_level = logger_log_level
+    self.stderr_path =  stderr_path
+
     self.quit_flag = False
 
     # If we've had an event loop passed in, use it
@@ -278,11 +287,11 @@ class LoggerRunner:
       if current_config == new_config:
         if not process:
           warning = 'No process found for "%s"' % config_name
-          run_logging.warning(warning)
+          logging.warning(warning)
           self.errors[logger].append(warning)
         elif not self.process_is_alive(process):
           warning = 'Process for "%s" unexpectedly dead!' % config_name
-          run_logging.warning(warning)
+          logging.warning(warning)
           self.errors[logger].append(warning)
         else:
           # Config hasn't changed, we have process and it's alive. All
@@ -296,7 +305,7 @@ class LoggerRunner:
 
       # Finally, if we have a new config, start up the new process for it
       if runnable(new_config):
-        run_logging.debug('Starting up new process for %s', config_name)
+        logging.debug('Starting up new process for %s', config_name)
         self._start_logger(logger, new_config)
         self.num_tries[logger] = 1
 
@@ -341,18 +350,26 @@ class LoggerRunner:
   ############################
   def _start_logger(self, logger, config):
     """Create a new process running a Listener/Logger using the passed
-    config, and return the Process object."""
+    config, and return the Process object.
+    """
+    #### Convenience routine so that Listener can be created in  own process
+    def _create_listener(config, stderr_path, logger_log_level):
+      listener = ListenerFromLoggerConfig(
+        config=config, stderr_path=stderr_path, log_level=logger_log_level)
+      listener.run()
 
+    logging.info('Starting logger %s, config: %s',
+                 logger, config.get('name', 'no-name'))
+    logging.debug('Starting config:\n%s', pprint.pformat(config))
+
+    #########
+    # We have a few different ways we can start up a process. Using
+    # the multiprocessing module seems like the Right Way to do it,
+    # but while it works fine when logger_runner.py is run from the
+    # command line, any CachedDataWriters instantiated within it
+    # fail mysteriously ('Unable to bind to address') when a
+    # LoggerRunner is invoked from the logger_manager.py script.
     try:
-      run_logging.debug('Starting config:\n%s', pprint.pformat(config))
-
-      #########
-      # We have a few different ways we can start up a process. Using
-      # the multiprocessing module seems like the Right Way to do it,
-      # but while it works fine when logger_runner.py is run from the
-      # command line, any CachedDataWriters instantiated within it
-      # fail mysteriously ('Unable to bind to address') when a
-      # LoggerRunner is invoked from the logger_manager.py script.
 
       #########
       # The multiprocessing way of starting a process
@@ -365,21 +382,28 @@ class LoggerRunner:
         # Another way of starting a listener, more directly, using the
         # multiprocessing module. This is the approach we were originally
         # using.
-        listener = ListenerFromLoggerConfig(config)
-        proc = multiprocessing.Process(target=listener.run, daemon=True)
+        proc = multiprocessing.Process(
+          target=_create_listener,
+          args=(config, self.stderr_path, self.logger_log_level),
+          daemon=True)
         proc.start()
-
       else:
         # An old-fangled but apparently more robust way of launching new
-        # listeners, using subprocess. We capture the logger output by
-        # starting a separate thread that copies the logger's stderr to
-        # our own stderr.
+        # listeners, using subprocess.
         cmd_line = [
           'logger/listener/listen.py',
           '--config_string',
           json.dumps(config),
-          '-v'
         ]
+        # Add logging fields to config
+        if self.stderr_path:
+          cmd_line.append('--stderr_path')
+          cmd_line.append(self.stderr_path)
+        if self.logger_log_level < logging.WARNING:
+          cmd_line.append('-v')
+        if self.logger_log_level < logging.INFO:
+          cmd_line.append('-v')
+          
         proc = subprocess.Popen(cmd_line, stderr=subprocess.PIPE)
         threading.Thread(target=self._process_logger_output,
                          args=(logger, proc.stderr), daemon=True).start()
@@ -407,7 +431,7 @@ class LoggerRunner:
     with self.config_lock:
       process = self.processes.get(logger, None)
       if process:
-        run_logging.info('Shutting down %s (pid %d)', logger, process.pid)
+        logging.info('Shutting down %s (pid %d)', logger, process.pid)
         # For reasons I can't fathom, when LoggerRunner isn't in the
         # main thread, process.terminate() is propagating to the main
         # thread in our own process and killing everything. Using the
@@ -527,7 +551,7 @@ class LoggerRunner:
                           'not retrying', logger, config_name, self.max_tries)
           elif self.max_tries and self.num_tries[logger] == self.max_tries:
             self.failed_loggers.add(logger)
-            run_logging.warning(
+            logging.warning(
               'Logger %s (config %s) has failed %d times; '
               'not retrying', logger, config_name, self.max_tries)
             logging.warning('FAILED %s: errors: %s', logger, self.errors[logger])
@@ -535,7 +559,7 @@ class LoggerRunner:
             # If we've not used up all our tries, try starting it again
             warning = 'Process for %s (config %s) unexpectedly dead; ' \
                       'restarting' % (logger, config_name)
-            run_logging.warning(warning)
+            logging.warning(warning)
             self.errors[logger].append(warning)
             self._start_logger(logger, self.logger_configs[logger])
             self.num_tries[logger] += 1
@@ -680,7 +704,7 @@ class LoggerRunner:
     # NOTE: because set_config(logger, None) deletes the logger in
     # question, we need to copy the keys into a list, otherwise we get
     # a "dictionary changed size during iteration" error.
-    run_logging.info('Received quit request - shutting loggers down.')
+    logging.info('Received quit request - shutting loggers down.')
     [logging.info('Shutting down logger %s', logger)
      for logger in list(self.logger_configs.keys())]
     [self.set_config(logger, None)
@@ -714,21 +738,32 @@ if __name__ == '__main__':
                       type=int, default=1,
                       help='How many seconds to sleep between logger checks.')
 
+  parser.add_argument('--stderr_file', dest='stderr_file', default=None,
+                      help='Optional file to which stderr messages should '
+                      'be written.')
+  parser.add_argument('--stderr_path', dest='stderr_path', default=None,
+                      help='Optional file path to which logger_runner and '
+                      'component loggers should write their stderr messages. '
+                      'If loggers have a "stderr_file" field in their '
+                      'config, they will append that file name to this path.')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
                       help='Increase output verbosity')
   parser.add_argument('-V', '--logger_verbosity', dest='logger_verbosity',
                       default=0, action='count',
                       help='Increase output verbosity of component loggers')
+
   args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d: %(message)s'
+  # Set up logging first of all
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
+  setUpStdErrLogging(stderr_file=args.stderr_file,
+                     stderr_path=args.stderr_path,
+                     log_level=log_level)
 
-  # Set our logging verbosity
-  logging.basicConfig(format=LOGGING_FORMAT)
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  run_logging.setLevel(LOG_LEVELS[args.verbosity])
+  # What level do we want our component loggers to write?
+  logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
   if not args.websocket and not args.config:
     logging.error('No initial configs and no websocket to take commands from, '
@@ -743,6 +778,8 @@ if __name__ == '__main__':
   initial_configs = read_config(args.config) if args.config else None
 
   runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
-                      initial_configs=initial_configs,
-                      websocket=args.websocket, host_id=args.host_id)
+                        initial_configs=initial_configs,
+                        websocket=args.websocket, host_id=args.host_id,
+                        logger_log_level=logger_log_level,
+                        stderr_path=args.stderr_path)
   runner.run()

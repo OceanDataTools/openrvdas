@@ -13,7 +13,7 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(
 
 from logger.readers.text_file_reader import TextFileReader
 from logger.writers.text_file_writer import TextFileWriter
-from server.logger_runner import LoggerRunner, run_logging
+from server.logger_runner import LoggerRunner
 
 CONFIG = {
   "modes": {
