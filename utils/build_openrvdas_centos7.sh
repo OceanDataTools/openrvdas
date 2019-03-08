@@ -359,11 +359,13 @@ EOF
 cat > /root/scripts/start_openrvdas.sh <<EOF
 #!/bin/bash
 # Start openrvdas servers as service
-OPENRVDAS_LOGFILE=/var/log/openrvdas.log
-touch \$OPENRVDAS_LOGFILE
-chown $RVDAS_USER \$OPENRVDAS_LOGFILE
-chgrp $RVDAS_USER \$OPENRVDAS_LOGFILE
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v &>> \$OPENRVDAS_LOGFILE"
+OPENRVDAS_LOG_DIR=/var/log/openrvdas
+mkdir -p $OPENRVDAS_LOG_DIR
+chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
+chgrp $RVDAS_USER \$OPENRVDAS_LOG_DOR
+
+OPENRVDAS_LOGFILE=openrvdas.log
+sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v --stderr_file  \$OPENRVDAS_LOGFILE"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF

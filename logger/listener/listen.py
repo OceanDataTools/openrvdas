@@ -78,14 +78,30 @@ from logger.writers.record_screen_writer import RecordScreenWriter
 from logger.writers.cached_data_writer import CachedDataWriter
 
 from logger.utils import read_config, timestamp, nmea_parser, record_parser
+from logger.utils.stderr_logging import setUpStdErrLogging
 from logger.listener.listener import Listener
+
 
 ################################################################################
 class ListenerFromLoggerConfig(Listener):
   """Helper class for instantiating a Listener object from a Python dict."""
   ############################
-  def __init__(self, config):
+  def __init__(self, config, stderr_file=None, stderr_path=None,log_level=None):
     """Create a Listener from a Python config dict."""
+
+    # Set up stderr logging. We do this inside Listener(), too, but
+    # doing it here allows us to pick up diagnostic messages created
+    # before we actually create the Listener object. If we've been
+    # handed a file/path/log_level, use those; otherwise, look for
+    # them in the config.
+    stderr_file = stderr_file or config.get('stderr_file', None)
+    stderr_path = stderr_path or config.get('stderr_path', None)
+    log_level = log_level or config.get('log_level', None)
+    setUpStdErrLogging(stderr_file=stderr_file,
+                       stderr_path=stderr_path,
+                       log_level=log_level)
+
+    # Extract keyword args from config and instantiate.
     kwargs = self._kwargs_from_config(config)
     super().__init__(**kwargs)
 
@@ -147,19 +163,29 @@ class ListenerFromLoggerConfig(Listener):
 class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
   """Helper class for instantiating a Listener object from a JSON/YAML string"""
   ############################
-  def __init__(self, config_str):
+  def __init__(self, config_str,
+               stderr_file=None,
+               stderr_path=None,
+               log_level=None):
     """Create a Listener from a JSON config string."""
     config = read_config.parse(config_str)
-    super().__init__(config)
+    super().__init__(config=config,
+                     stderr_file=stderr_file, stderr_path=stderr_path,
+                     log_level=log_level)
 
 ################################################################################
 class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
   """Helper class for instantiating a Listener object from a JSON config."""
   ############################
-  def __init__(self, config_file):
+  def __init__(self, config_file,
+               stderr_path=None,
+               stderr_file=None,
+               log_level=None):
     """Create a Listener from a Python config file."""
     config = read_config.read_config(config_file)
-    super().__init__(config)
+    super().__init__(config=config,
+                     stderr_file=stderr_file, stderr_path=stderr_path,
+                     log_level=log_level)
 
 ################################################################################
 if __name__ == '__main__':
@@ -385,16 +411,25 @@ if __name__ == '__main__':
                       default=0, action='count',
                       help='Increase output verbosity')
 
+  parser.add_argument('--stderr_path', dest='stderr_path', default=None,
+                      help='Base path for file to which stderr messages '
+                      'should be written.')
+
+  parser.add_argument('--stderr_file', dest='stderr_file', default=None,
+                      help='File name to which stderr messages should be '
+                      'written.')
+
+  parsed_args = parser.parse_args()
+
   ############################
   # Set up logging before we do any other argument parsing (so that we
-  # can log problems with argument parsing.)
-  parsed_args = parser.parse_args()
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d :%(levelname)s: %(message)s'
-  logging.basicConfig(format=LOGGING_FORMAT)
+  # can log problems with argument parsing).
 
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
-  verbosity = min(parsed_args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[verbosity])
+  LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  log_level = LOG_LEVELS[min(parsed_args.verbosity, max(LOG_LEVELS))]
+  setUpStdErrLogging(stderr_file=parsed_args.stderr_file,
+                     stderr_path=parsed_args.stderr_path,
+                     log_level=log_level)
 
   ############################
   # If --config_file/--config_string present, create Listener from
@@ -409,20 +444,33 @@ if __name__ == '__main__':
     while i < len(sys.argv):
       if sys.argv[i] in ['-v', '--verbosity']:
         i += 1
+      elif sys.argv[i] in ['--stderr_file', '--stderr_path']:
+        i += 2
       elif '--config_file'.find(sys.argv[i]) == 0:
         i += 2
       elif '--config_string'.find(sys.argv[i]) == 0:
         i += 2
       else:
         parser.error('When --config_file or --config_string are '
-                     'specified, no other command line args (except -v) '
-                     'may be used: {}'.format(sys.argv[i]))
+                     'specified, no other command line args except -v, '
+                     '--stderr_file and --stderr_path may be used: '
+                     '{}'.format(sys.argv[i]))
 
-    # Read config file or JSON string and instantiate
+    # Read config file or JSON string and instantiate. Allow command
+    # line specification of stderr_path and/or stderr_file to override
+    # whatever is in the config.
     if parsed_args.config_file:
-      listener = ListenerFromLoggerConfigFile(parsed_args.config_file)
+      listener = ListenerFromLoggerConfigFile(
+        parsed_args.config_file,
+        stderr_file=parsed_args.stderr_file,
+        stderr_path=parsed_args.stderr_path,
+        log_level=log_level)
     else:
-      listener = ListenerFromLoggerConfigString(parsed_args.config_string)
+      listener = ListenerFromLoggerConfigString(
+        parsed_args.config_string,
+        stderr_file=parsed_args.stderr_file,
+        stderr_path=parsed_args.stderr_path,
+        log_level=log_level)
 
   # If not --config, go parse all those crazy command line arguments manually
   else:
@@ -628,7 +676,10 @@ if __name__ == '__main__':
     # create the Listener.
     listener = Listener(readers=readers, transforms=transforms, writers=writers,
                         interval=all_args.interval,
-                        check_format=all_args.check_format)
+                        check_format=all_args.check_format,
+                        stderr_file=parsed_args.stderr_file,
+                        stderr_path=parsed_args.stderr_path,
+                        log_level=log_level)
 
   ############################
   # Whichever way we created the listener, run it.

@@ -145,17 +145,13 @@ import websockets
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
-
+from logger.utils.stderr_logging import setUpStdErrLogging
 from server.server_api import ServerAPI
-from server.logger_runner import LoggerRunner, run_logging
+from server.logger_runner import LoggerRunner
 from server.data_server import DataServer
 
 # Number of times we'll try a failing logger before giving up
 DEFAULT_MAX_TRIES = 3
-
-LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'
-LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
 SOURCE_NAME = 'LoggerManager'
 USER = getpass.getuser()
@@ -170,10 +166,12 @@ def kill_handler(self, signum):
 ############################
 class WriteToAPILoggingHandler(logging.Handler):
   """Allow us to save Python logging.* messages to API backing store."""
-  def __init__(self, api, logger_format):
+  def __init__(self, api):
     super().__init__()
+
+    API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'    
     self.api = api
-    self.formatter = logging.Formatter(logger_format)
+    self.formatter = logging.Formatter(API_LOGGING_FORMAT)
 
   def emit(self, record):
     self.api.message_log(source='Logger', user='(%s@%s)' % (USER, HOSTNAME),
@@ -185,7 +183,7 @@ class LoggerManager:
   ############################
   def __init__(self, api=None, websocket=None, host_id=None,
                interval=0.5, max_tries=3,
-               verbosity=0, logger_verbosity=0):
+               logger_log_level=logging.WARNING, stderr_path=None):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
 
@@ -204,20 +202,13 @@ class LoggerManager:
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a failed server before giving up
+
+    logger_log_level - At what logging level our component loggers
+                should operate.
+
+    stderr_path - Base path of logfile to which loggers should
+                write; if logger has name, append this to path.
     """
-    # Set up logging levels for both ourselves and for the loggers we
-    # start running. Attach a Handler that will write log messages to
-    # Django database.
-    logging.basicConfig(format=LOGGING_FORMAT)
-
-    log_verbosity = LOG_LEVELS[min(verbosity, max(LOG_LEVELS))]
-    log_logger_verbosity = LOG_LEVELS[min(logger_verbosity, max(LOG_LEVELS))]
-    run_logging.setLevel(log_verbosity)
-    run_logging.addHandler(WriteToAPILoggingHandler(api, API_LOGGING_FORMAT))
-
-    logging.getLogger().setLevel(log_logger_verbosity)
-    logging.getLogger().addHandler(WriteToAPILoggingHandler(api,LOGGING_FORMAT))
-
     # Set signal to catch SIGTERM and convert it into a
     # KeyboardInterrupt so we can shut things down gracefully.
     try:
@@ -233,6 +224,9 @@ class LoggerManager:
     self.host_id = host_id or None
     self.interval = interval
     self.max_tries = max_tries
+    self.logger_log_level = logger_log_level
+    self.stderr_path = stderr_path
+
     self.quit_flag = False
 
     # Keep track of old configs so we only send updates to the
@@ -337,7 +331,9 @@ class LoggerManager:
     # a separate thread, so we need to explicitly set our event loop,
     # using the one we stored during init().
     self.logger_runner = LoggerRunner(max_tries=self.max_tries,
-                                      event_loop=self.event_loop)
+                                      event_loop=self.event_loop,
+                                      logger_log_level=self.logger_log_level,
+                                      stderr_path=self.stderr_path)
     # Instead of calling the LoggerRunner.run(), we iterate ourselves,
     # checking whether there are commands we want to push to the
     # LoggerRunner and doing updates to retrieve status reports.
@@ -762,19 +758,31 @@ if __name__ == '__main__':
                       action='store_true', help='Run without a console '
                       'that reads commands from stdin.')
 
-  parser.add_argument('-v', '--verbosity', dest='verbosity', default=0,
-                      action='count', help='Increase output verbosity')
+  parser.add_argument('--stderr_file', dest='stderr_file', default=None,
+                      help='Optional file to which stderr messages should '
+                      'be written.')
+  parser.add_argument('--stderr_path', dest='stderr_path', default=None,
+                      help='Optional file path to which logger_runner and '
+                      'component loggers should write their stderr messages. '
+                      'If loggers have a "stderr_file" field in their '
+                      'config, they will append that file name to this path.')
+  parser.add_argument('-v', '--verbosity', dest='verbosity',
+                      default=0, action='count',
+                      help='Increase output verbosity')
   parser.add_argument('-V', '--logger_verbosity', dest='logger_verbosity',
                       default=0, action='count',
-                      help='Increase output verbosity of local loggers')
+                      help='Increase output verbosity of component loggers')
   args = parser.parse_args()
 
-  # Set logging verbosity
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-
-  #### Added as a hack ####
-  # logging.getLogger().setLevel(logging.DEBUG)
+  # Set up logging first of all
+  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
+  setUpStdErrLogging(stderr_file=args.stderr_file,
+                     stderr_path=args.stderr_path,
+                     log_level=log_level)
+  
+  # What level do we want our component loggers to write?
+  logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
   ############################
   # Instantiate API - a Are we using an in-memory store or Django
@@ -792,15 +800,19 @@ if __name__ == '__main__':
   else:
     raise ValueError('Illegal arg for --database: "%s"' % args.database)
 
+  # Now that API is defined, tack on one more logging handler: one
+  # that passes messages to API.
+  # TODO: decide if we even need this.
+  logging.getLogger().addHandler(WriteToAPILoggingHandler(api))
+
   ############################
   # Create our LoggerManager
   logger_manager = LoggerManager(api=api, websocket=args.websocket,
                                  host_id=args.host_id,
                                  interval=args.interval,
                                  max_tries=args.max_tries,
-                                 verbosity=args.verbosity, #### orginial code
-                                 #verbosity=logging.DEBUG, #### added as a hack
-                                 logger_verbosity=args.logger_verbosity)
+                                 logger_log_level=logger_log_level,
+                                 stderr_path=args.stderr_path)
 
   # Register a callback: when api.set_active_mode() or api.set_config()
   # have completed, they call api.signal_update(). We're registering

@@ -229,6 +229,7 @@ default_mode: 'off'
 configs:
   PCOD->file/net/db:
     name: PCOD->net/file/db
+    stderr_file: PCOD.log
     readers:
       class: SerialReader
       kwargs:
@@ -261,6 +262,7 @@ configs:
           class: DatabaseWriter
   PCOD->net:
     name: PCOD->net
+    stderr_file: PCOD.log
     readers:
       class: SerialReader
       kwargs:
@@ -282,6 +284,7 @@ configs:
   PCOD->off: {}
   adcp->file/net/db:
     name: adcp->net/file/db
+    stderr_file: adcp.log
     readers:
       class: SerialReader
       kwargs:
@@ -314,6 +317,7 @@ configs:
           class: DatabaseWriter
   adcp->net:
     name: adcp->net
+    stderr_file: adcp.log
     readers:
       class: SerialReader
       kwargs:
@@ -335,6 +339,7 @@ configs:
   adcp->off: {}
   eng1->file/net/db:
     name: eng1->net/file/db
+    stderr_file: eng1.log
     readers:
       class: SerialReader
       kwargs:
@@ -367,6 +372,7 @@ configs:
           class: DatabaseWriter
   eng1->net:
     name: eng1->net
+    stderr_file: eng1.log
     readers:
       class: SerialReader
       kwargs:
@@ -388,6 +394,7 @@ configs:
   eng1->off: {}
   gp02->file/net/db:
     name: gp02->net/file/db
+    stderr_file: gp02.log
     readers:
       class: SerialReader
       kwargs:
@@ -420,6 +427,7 @@ configs:
           class: DatabaseWriter
   gp02->net:
     name: gp02->net
+    stderr_file: gp02.log
     readers:
       class: SerialReader
       kwargs:
@@ -441,6 +449,7 @@ configs:
   gp02->off: {}
   grv1->file/net/db:
     name: grv1->net/file/db
+    stderr_file: grv1.log
     readers:
       class: SerialReader
       kwargs:
@@ -473,6 +482,7 @@ configs:
           class: DatabaseWriter
   grv1->net:
     name: grv1->net
+    stderr_file: grv1.log
     readers:
       class: SerialReader
       kwargs:
@@ -494,6 +504,7 @@ configs:
   grv1->off: {}
   gyr1->file/net/db:
     name: gyr1->net/file/db
+    stderr_file: gyr1.log
     readers:
       class: SerialReader
       kwargs:
@@ -526,6 +537,7 @@ configs:
           class: DatabaseWriter
   gyr1->net:
     name: gyr1->net
+    stderr_file: gyr1.log
     readers:
       class: SerialReader
       kwargs:
@@ -547,6 +559,7 @@ configs:
   gyr1->off: {}
   hdas->file/net/db:
     name: hdas->net/file/db
+    stderr_file: hdas.log
     readers:
       class: SerialReader
       kwargs:
@@ -579,6 +592,7 @@ configs:
           class: DatabaseWriter
   hdas->net:
     name: hdas->net
+    stderr_file: hdas.log
     readers:
       class: SerialReader
       kwargs:
@@ -600,6 +614,7 @@ configs:
   hdas->off: {}
   knud->file/net/db:
     name: knud->net/file/db
+    stderr_file: knud.log
     readers:
       class: SerialReader
       kwargs:
@@ -632,6 +647,7 @@ configs:
           class: DatabaseWriter
   knud->net:
     name: knud->net
+    stderr_file: knud.log
     readers:
       class: SerialReader
       kwargs:
@@ -653,6 +669,7 @@ configs:
   knud->off: {}
   mbdp->file/net/db:
     name: mbdp->net/file/db
+    stderr_file: mbdp.log
     readers:
       class: SerialReader
       kwargs:
@@ -685,6 +702,7 @@ configs:
           class: DatabaseWriter
   mbdp->net:
     name: mbdp->net
+    stderr_file: mbdp.log
     readers:
       class: SerialReader
       kwargs:
@@ -706,6 +724,7 @@ configs:
   mbdp->off: {}
   mwx1->file/net/db:
     name: mwx1->net/file/db
+    stderr_file: mwx1.log
     readers:
       class: SerialReader
       kwargs:
@@ -738,6 +757,7 @@ configs:
           class: DatabaseWriter
   mwx1->net:
     name: mwx1->net
+    stderr_file: mwx1.log
     readers:
       class: SerialReader
       kwargs:
@@ -759,6 +779,7 @@ configs:
   mwx1->off: {}
   pco2->file/net/db:
     name: pco2->net/file/db
+    stderr_file: pco2.log
     readers:
       class: SerialReader
       kwargs:
@@ -791,6 +812,7 @@ configs:
           class: DatabaseWriter
   pco2->net:
     name: pco2->net
+    stderr_file: pco2.log
     readers:
       class: SerialReader
       kwargs:
@@ -812,6 +834,7 @@ configs:
   pco2->off: {}
   pguv->file/net/db:
     name: pguv->net/file/db
+    stderr_file: pguv.log
     readers:
       class: SerialReader
       kwargs:
@@ -844,6 +867,7 @@ configs:
           class: DatabaseWriter
   pguv->net:
     name: pguv->net
+    stderr_file: pguv.log
     readers:
       class: SerialReader
       kwargs:
@@ -865,6 +889,7 @@ configs:
   pguv->off: {}
   rtmp->file/net/db:
     name: rtmp->net/file/db
+    stderr_file: rtmp.log
     readers:
       class: SerialReader
       kwargs:
@@ -897,6 +922,7 @@ configs:
           class: DatabaseWriter
   rtmp->net:
     name: rtmp->net
+    stderr_file: rtmp.log
     readers:
       class: SerialReader
       kwargs:
@@ -918,6 +944,7 @@ configs:
   rtmp->off: {}
   s330->file/net/db:
     name: s330->net/file/db
+    stderr_file: s330.log
     readers:
       class: SerialReader
       kwargs:
@@ -950,6 +977,7 @@ configs:
           class: DatabaseWriter
   s330->net:
     name: s330->net
+    stderr_file: s330.log
     readers:
       class: SerialReader
       kwargs:
@@ -971,6 +999,7 @@ configs:
   s330->off: {}
   seap->file/net/db:
     name: seap->net/file/db
+    stderr_file: seap.log
     readers:
       class: SerialReader
       kwargs:
@@ -1003,6 +1032,7 @@ configs:
           class: DatabaseWriter
   seap->net:
     name: seap->net
+    stderr_file: seap.log
     readers:
       class: SerialReader
       kwargs:
@@ -1024,6 +1054,7 @@ configs:
   seap->off: {}
   svp1->file/net/db:
     name: svp1->net/file/db
+    stderr_file: svp1.log
     readers:
       class: SerialReader
       kwargs:
@@ -1056,6 +1087,7 @@ configs:
           class: DatabaseWriter
   svp1->net:
     name: svp1->net
+    stderr_file: svp1.log
     readers:
       class: SerialReader
       kwargs:
@@ -1077,6 +1109,7 @@ configs:
   svp1->off: {}
   true_winds->db:
     name: true_winds->db
+    stderr_file: true_winds.log
     readers:
       class: NetworkReader
       kwargs:
@@ -1116,6 +1149,7 @@ configs:
       class: DatabaseWriter
   true_winds->net:
     name: true_winds->net
+    stderr_file: true_winds.log
     readers:
       class: NetworkReader
       kwargs:
@@ -1158,6 +1192,7 @@ configs:
   true_winds->off: {}
   tsg1->file/net/db:
     name: tsg1->net/file/db
+    stderr_file: tsg1.log
     readers:
       class: SerialReader
       kwargs:
@@ -1190,6 +1225,7 @@ configs:
           class: DatabaseWriter
   tsg1->net:
     name: tsg1->net
+    stderr_file: tsg1.log
     readers:
       class: SerialReader
       kwargs:
@@ -1211,6 +1247,7 @@ configs:
   tsg1->off: {}
   tsg2->file/net/db:
     name: tsg2->net/file/db
+    stderr_file: tsg2.log
     readers:
       class: SerialReader
       kwargs:
@@ -1243,6 +1280,7 @@ configs:
           class: DatabaseWriter
   tsg2->net:
     name: tsg2->net
+    stderr_file: tsg2.log
     readers:
       class: SerialReader
       kwargs:
@@ -1265,6 +1303,7 @@ configs:
  
   parser->on:
     name: parse->on
+    stderr_file: parse.log
     readers:
       class: NetworkReader
       kwargs:
@@ -1279,6 +1318,7 @@ configs:
 
   display->on:
     name: display->on
+    stderr_file: display.log
     readers:
       class: NetworkReader
       kwargs:
