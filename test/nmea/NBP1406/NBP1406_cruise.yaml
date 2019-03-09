@@ -1302,8 +1302,8 @@ configs:
   tsg2->off: {}
  
   parser->on:
-    name: parse->on
-    stderr_file: parse.log
+    name: parser->on
+    stderr_file: parser.log
     readers:
       class: NetworkReader
       kwargs:
