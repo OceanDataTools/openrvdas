@@ -97,8 +97,8 @@ fi
 # Install apt packages
 echo "#########################################################################"
 echo Installing required packages...
-apt-get install -y socat git nginx python3-dev libreadline-dev mysql-server \
-        mysql-common mysql-client libmysqlclient-dev libsqlite3-dev 
+apt install -y socat git nginx python3-dev python3-pip libreadline-dev \
+    mysql-server mysql-common mysql-client libmysqlclient-dev libsqlite3-dev 
 
 # Install database stuff and set up as service.
 echo "#########################################################################"
@@ -143,44 +143,6 @@ flush privileges;
 \q
 EOF
 echo Done setting up database
-
-# Install Python
-echo "#########################################################################"
-#PYTHON_VERSION=3.5.2
-PYTHON_VERSION=3.6.3
-PYTHON_NAME=Python-${PYTHON_VERSION}
-if [[ `python3 -V` == "Python $PYTHON_VERSION" ]]; then
-    echo Already have $PYTHON_NAME - skipping installation
-else
-  echo Installing $PYTHON_NAME
-  while true; do
-    read -p "Run Python optimizations? " yn
-    case $yn in
-        [Yy]* ) PYTHON_OPT=" --enable-optimizations"; break;;
-        [Nn]* ) PYTHON_OPT=""; break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-  done
-
-  apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
-          libsqlite3-dev python3-dev python3-pip python3-openssl
-  
-  cd /tmp
-  if [ ! -e /tmp/${PYTHON_NAME}.tgz ]; then
-    echo Fetching ${PYTHON_NAME}
-    wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_NAME}.tgz
-  fi
-  if [ ! -e /tmp/${PYTHON_NAME} ]; then
-    echo Unpacking Python
-    tar xzf ${PYTHON_NAME}.tgz
-  fi
-  echo Configuring and building Python
-  cd ${PYTHON_NAME}
-  ./configure $PYTHON_OPT --enable-loadable-sqlite-extensions
-  make install
-  ln -sf /usr/local/bin/python3 /usr/local/bin/python
-  echo Done making Python
-fi
 
 # Django and uWSGI
 echo "#########################################################################"
@@ -330,7 +292,7 @@ chdir           = ${INSTALL_ROOT}/openrvdas
 module          = django_gui.wsgi
 # the base directory from which bin/python is available
 # Do an ln -s bin/python3 bin/python in this dir!!!
-home            = /usr/local
+home            = /usr
 
 # process-related settings
 # master
@@ -410,13 +372,13 @@ chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
 OPENRVDAS_LOGFILE=openrvdas.log
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v --stderr_file  \$OPENRVDAS_LOGFILE"
+sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF
 #!/bin/bash
 USER=rvdas
-sudo -u $USER sh -c 'pkill -f "/usr/local/bin/python3 server/logger_manager.py"'
+sudo -u $USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
 EOF
 
 chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh
@@ -452,7 +414,7 @@ echo "#########################################################################"
 echo "#########################################################################"
 echo Installation complete.
 echo 
-echo To run server, go to install directory and run logger_manager.py
+echo To manually run server, go to install directory and run logger_manager.py
 echo 
 echo '  cd $INSTALL_ROOT/openrvdas'
 echo '  python3 server/logger_manager.py --websocket :8765 --database django -v'

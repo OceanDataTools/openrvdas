@@ -360,9 +360,9 @@ cat > /root/scripts/start_openrvdas.sh <<EOF
 #!/bin/bash
 # Start openrvdas servers as service
 OPENRVDAS_LOG_DIR=/var/log/openrvdas
-mkdir -p $OPENRVDAS_LOG_DIR
+mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
-chgrp $RVDAS_USER \$OPENRVDAS_LOG_DOR
+chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
 OPENRVDAS_LOGFILE=openrvdas.log
 sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v --stderr_file  \$OPENRVDAS_LOGFILE"
@@ -384,13 +384,34 @@ echo
 while true; do
     read -p "Do you wish to start the OpenRVDAS server on boot? " yn
     case $yn in
-        [Yy]* ) systemctl enable openrvdas.service; break;;
-        [Nn]* ) break;;
+        [Yy]* )
+            systemctl enable openrvdas.service;
+            echo
+            echo "#########################################################################"
+            echo Enabled openrvdas server run on boot.
+            break;;
+        [Nn]* )
+            echo
+            echo "#########################################################################"
+            echo To manually run server, go to install directory and run logger_manager.py
+            echo 
+            echo '  cd $INSTALL_ROOT/openrvdas'
+            echo '  python3 server/logger_manager.py --websocket :8765 --database django -v'
+            echo
+            break;;
         * ) echo "Please answer yes or no.";;
     esac
 done
 
-echo
+echo "#########################################################################"
+echo "#########################################################################"
+echo Installation complete.
+echo 
+echo To manually run server, go to install directory and run logger_manager.py
+echo 
+echo '  cd $INSTALL_ROOT/openrvdas'
+echo '  python3 server/logger_manager.py --websocket :8765 --database django -v'
+echo 
 echo "############################################################################"
 echo Finished installation and configuration. You must reboot before some
 echo changes take effect.
