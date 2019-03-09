@@ -152,10 +152,10 @@ class ListenerFromLoggerConfig(Listener):
     kwarg_dict = class_json.get('kwargs', {})
     kwargs = self._kwargs_from_config(kwarg_dict)
     if not kwargs:
-      logging.info('No kwargs found for component {}'.format(class_name))
+      logging.debug('No kwargs found for component {}'.format(class_name))
 
     # Instantiate!
-    logging.info('Instantiating {}({})'.format(class_name, kwargs))
+    logging.debug('Instantiating {}({})'.format(class_name, kwargs))
     component = class_const(**kwargs)
     return component
 

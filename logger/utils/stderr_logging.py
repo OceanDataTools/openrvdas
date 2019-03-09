@@ -18,8 +18,8 @@ def setUpStdErrLogging(stderr_file=None, stderr_path=None, log_level=None):
   fully-qualified path (i.e. starts with '/'), use that; if not append
   it to the string stderr_path.
   """
-  logging.info('setUpStdErrLogging file %s, path %s, level %s',
-               stderr_file, stderr_path, log_level)
+  logging.debug('setUpStdErrLogging file %s, path %s, level %s',
+                stderr_file, stderr_path, log_level)
   
   logging.basicConfig(format=LOGGING_FORMAT)
   if log_level:

@@ -73,6 +73,7 @@ class Listener:
     setUpStdErrLogging(stderr_file=stderr_file,
                        stderr_path=stderr_path,
                        log_level=log_level)
+    logging.info('Instantiating %s logger', name or 'unnamed')
     
     ###########
     # Create readers, writers, etc.
@@ -91,7 +92,7 @@ class Listener:
     Signal 'quit' to all the readers.
     """
     self.quit_signalled = True
-    logging.debug('Listener.quit() called')
+    logging.info('Shutting down %s', self.name)
 
   ############################
   def run(self):
@@ -100,6 +101,7 @@ class Listener:
     thread, or ComposedReader returns None, indicating that all its
     component readers have returned EOF.
     """
+    logging.info('Running %s', self.name)
     record = ''
     try:
       while not self.quit_signalled and record is not None:

@@ -195,7 +195,7 @@ class TrueWindsTransform(DerivedDataTransform):
     speed_val *= self.convert_speed_factor
     wind_speed_val *= self.convert_wind_factor
 
-    logging.info('Computing new true winds')
+    logging.debug('Computing new true winds')
     (true_dir, true_speed, apparent_dir) = truew(crse=course_val,
                                                  cspd=speed_val,
                                                  hd=heading_val,
@@ -203,7 +203,7 @@ class TrueWindsTransform(DerivedDataTransform):
                                                  zlr=self.zero_line_reference,
                                                  wspd=wind_speed_val)
 
-    logging.info('Got true winds: dir: %s, speed: %s, apparent_dir: %s',
+    logging.debug('Got true winds: dir: %s, speed: %s, apparent_dir: %s',
                  true_dir, true_speed, apparent_dir)
     if None in (true_dir, true_speed, apparent_dir):
       logging.info('Got invalid true winds')

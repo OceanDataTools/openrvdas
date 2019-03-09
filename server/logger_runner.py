@@ -431,7 +431,7 @@ class LoggerRunner:
     with self.config_lock:
       process = self.processes.get(logger, None)
       if process:
-        logging.info('Shutting down %s (pid %d)', logger, process.pid)
+        logging.debug('Shutting down %s (pid %d)', logger, process.pid)
         # For reasons I can't fathom, when LoggerRunner isn't in the
         # main thread, process.terminate() is propagating to the main
         # thread in our own process and killing everything. Using the
@@ -444,17 +444,17 @@ class LoggerRunner:
           else:
             try:
               process.terminate()
-            except:
-              logging.warning('process.terminate threw error')
+            except Exception as e:
+              logging.warning('process.terminate threw error: %s', str(e))
             try:
               os.kill(process.pid, signal.SIGKILL)
-            except:
-              logging.warning('os.kill threw error')
+            except Exception as e:
+              logging.warning('os.kill threw error: %s', str(e))
         except:
           pass
 
       else:
-        logging.info('Attempted to kill process for %s, but no '
+        logging.debug('Attempted to kill process for %s, but no '
                      'associated process found.', logger)
 
     # Clean out debris from old logger process
@@ -492,7 +492,7 @@ class LoggerRunner:
 
     elif command.find('set_configs ') == 0:
       (configs_cmd, configs_str) = command.split(maxsplit=1)
-      logging.info('Setting configs to %s', configs_str)
+      logging.debug('Setting configs to %s', configs_str)
       self.set_configs(json.loads(configs_str))
 
     else:
