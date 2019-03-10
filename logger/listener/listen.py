@@ -48,6 +48,7 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.readers.composed_reader import ComposedReader
 from logger.readers.logfile_reader import LogfileReader
 from logger.readers.network_reader import NetworkReader
+from logger.readers.redis_reader import RedisReader
 from logger.readers.serial_reader import SerialReader
 from logger.readers.text_file_reader import TextFileReader
 from logger.readers.database_reader import DatabaseReader
@@ -71,6 +72,7 @@ from logger.transforms.count_transform import CountTransform
 
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
+from logger.writers.redis_writer import RedisWriter
 from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.logfile_writer import LogfileWriter
 from logger.writers.database_writer import DatabaseWriter
@@ -239,6 +241,9 @@ if __name__ == '__main__':
                       'corresponding to the intervals indicated by the stored '
                       'record timestamps.')
 
+  parser.add_argument('--redis', dest='redis', default=None,
+                      help='Redis pubsub channel@host:port to read from.')
+
   parser.add_argument('--serial', dest='serial', default=None,
                       help='Comma-separated serial port spec containing at '
                       'least port=[port], but also optionally baudrate, '
@@ -381,6 +386,9 @@ if __name__ == '__main__':
 
   parser.add_argument('--write_network', dest='write_network', default=None,
                       help='Network address(es) to write to')
+
+  parser.add_argument('--write_redis', dest='write_redis', default=None,
+                      help='Redis pubsub channel@host:port to write to.')
 
   parser.add_argument('--write_database', dest='write_database', default=None,
                       help='user@host:database to write to. Should be '
@@ -564,6 +572,10 @@ if __name__ == '__main__':
         for addr in new_args.network.split(','):
           readers.append(NetworkReader(network=addr))
 
+      if new_args.redis:
+        for channel in new_args.redis.split(','):
+          readers.append(RedisReader(channel=channel))
+
       if new_args.logfile:
         for filebase in new_args.logfile.split(','):
           readers.append(LogfileReader(
@@ -657,6 +669,9 @@ if __name__ == '__main__':
       if new_args.write_network:
         for addr in new_args.write_network.split(','):
           writers.append(NetworkWriter(network=addr))
+      if new_args.write_redis:
+        for channel in new_args.write_redis.split(','):
+          writers.append(RedisWriter(channel=channel))
       if new_args.write_record_screen:
         writers.append(RecordScreenWriter())
       if new_args.write_database:

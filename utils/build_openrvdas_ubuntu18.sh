@@ -410,6 +410,33 @@ while true; do
     esac
 done
 
+echo "############################################################################"
+while true; do
+    read -p "Do you wish to install Redis? " yn
+    case $yn in
+        [Yy]* )
+            apt-get install -y redis-server;
+            pip3 install redis;
+
+            while true; do
+                read -p "Do you wish to start a Redis server on boot? " ynb
+                case $ynb in
+                    [Yy]* )
+                        systemctl start redis
+                        #systemctl enable redis.service;
+                        break;;
+                    [Nn]* )
+                        break;;
+                    * ) echo "Please answer yes or no.";;
+                esac
+            done
+            break;;
+        [Nn]* )
+            break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 echo "#########################################################################"
 echo "#########################################################################"
 echo Installation complete.
