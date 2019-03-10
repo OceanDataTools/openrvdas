@@ -18,6 +18,9 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.utils.formats import Text
 from logger.writers.writer import Writer
 
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = '6379'
+
 ################################################################################
 class RedisWriter(Writer):
   """Write to redis server pubsub channel."""
@@ -25,28 +28,22 @@ class RedisWriter(Writer):
     """
     Write text records to a Redis pubsub server channel.
 
-    channel      Redis channel to write to, format channel@hostname:port
-
-    num_retry    Number of times to retry if write fails.
+    channel      Redis channel to write to, format channel[@hostname[:port]]
     """
     super().__init__(input_format=Text)
 
     if not REDIS_ENABLED:
       raise ModuleNotFoundError('RedisReader(): Redis is not installed. Please '
-                                'try "pip3 install redis" prior to use.')
-    try:
-      (self.channel, server) = channel.split(sep='@', maxsplit=1)
-    except ValueError as e:
-      logging.error('RedisWriter channel "%s" must be in format '
-                    'channel@hostname:port', channel)
-      raise e
-    try:
-      (self.hostname, self.port) = server.split(sep=':', maxsplit=1)
-      self.port = int(self.port)
-    except ValueError as e:
-      logging.error('RedisWriter channel "%s" must be in format '
-                    'channel@hostname:port', channel)
-      raise e
+                                'try "pip3 install redis" prior to use.')    
+    self.channel = channel
+    self.hostname = DEFAULT_HOST
+    self.port = DEFAULT_PORT
+
+    if channel.find('@') > 0:
+      (self.channel, self.hostname) = channel.split(sep='@', maxsplit=1)
+    if self.hostname.find(':') > 0:
+      (self.hostname, self.port) = self.hostname.split(sep=':', maxsplit=1)
+    self.port = int(self.port)
 
     # Connect to the specified server
     try:
@@ -55,7 +52,8 @@ class RedisWriter(Writer):
       self.redis.ping()
       self.pubsub = self.redis.pubsub()
     except redis.exceptions.ConnectionError as e:
-      logging.error('Unable to connect to server at %s', server)
+      logging.error('Unable to connect to server at %s:%d',
+                    self.hostname, self.port)
       raise e
 
   ############################

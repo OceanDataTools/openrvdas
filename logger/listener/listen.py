@@ -242,7 +242,8 @@ if __name__ == '__main__':
                       'record timestamps.')
 
   parser.add_argument('--redis', dest='redis', default=None,
-                      help='Redis pubsub channel@host:port to read from.')
+                      help='Redis pubsub channel[@host[:port]] to read from. '
+                      'Defaults to localhost:6379.')
 
   parser.add_argument('--serial', dest='serial', default=None,
                       help='Comma-separated serial port spec containing at '
@@ -388,7 +389,8 @@ if __name__ == '__main__':
                       help='Network address(es) to write to')
 
   parser.add_argument('--write_redis', dest='write_redis', default=None,
-                      help='Redis pubsub channel@host:port to write to.')
+                      help='Redis pubsub channel[@host[:port]] to write to. '
+                      'Defaults to localhost:6379.')
 
   parser.add_argument('--write_database', dest='write_database', default=None,
                       help='user@host:database to write to. Should be '

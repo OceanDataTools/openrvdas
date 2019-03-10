@@ -7,6 +7,14 @@ import time
 import unittest
 import warnings
 
+# Don't barf if they don't have redis installed. Only complain if
+# they actually try to use it, below
+try:
+  import redis
+  REDIS_ENABLED = True
+except ImportException:
+  REDIS_ENABLED = False
+
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.das_record import DASRecord
@@ -32,14 +40,21 @@ class TestRedisReader(unittest.TestCase):
   """Also tests RedisWriter."""
   
   ##################
-  def setUp(self):
-    # start redis server!
-    cmd_line = ['redis-server', '--port', str(port)]
-    self.server_proc = subprocess.Popen(cmd_line, stdout=subprocess.DEVNULL)
-    time.sleep(0.25)
-
-  ##################
+  @unittest.skipUnless(REDIS_ENABLED, 'Redis not installed; tests of Redis '
+                       'functionality will not be run.')
   def test_read(self):
+    # Check whether there's already a server on default port before we
+    # try to start one up.
+    try:
+      rs = redis.Redis(host=host, port=port)
+      response = rs.client_list()
+      server_proc = None
+    except redis.ConnectionError:
+      # No server, create one of our own
+      cmd_line = ['redis-server', '--port', str(port)]
+      server_proc = subprocess.Popen(cmd_line, stdout=subprocess.DEVNULL)
+      time.sleep(0.25)
+
     writer = RedisWriter('%s@%s:%d' % (channel, host, port))
     reader = RedisReader('%s@%s:%d' % (channel, host, port))
 
@@ -47,9 +62,34 @@ class TestRedisReader(unittest.TestCase):
       writer.write(SAMPLE_DATA[i])
       self.assertEqual(SAMPLE_DATA[i], reader.read())
 
+    if server_proc:
+      server_proc.kill()
+
   ##################
-  def tearDown(self):
-    self.server_proc.kill()
+  @unittest.skipUnless(REDIS_ENABLED, 'Redis not installed; tests of Redis '
+                       'functionality will not be run.')
+  def test_read_defaults(self):
+    # Check whether there's already a server on default port before we
+    # try to start one up.
+    try:
+      rs = redis.Redis()
+      response = rs.client_list()
+      server_proc = None
+    except redis.ConnectionError:
+      # No server, create one of our own
+      cmd_line = ['redis-server']
+      server_proc = subprocess.Popen(cmd_line, stdout=subprocess.DEVNULL)
+      time.sleep(0.25)
+
+    writer = RedisWriter('%s' % channel)
+    reader = RedisReader('%s' % channel)
+
+    for i in range(len(SAMPLE_DATA)):
+      writer.write(SAMPLE_DATA[i])
+      self.assertEqual(SAMPLE_DATA[i], reader.read())
+
+    if server_proc:
+      server_proc.kill()
 
 ################################################################################
 if __name__ == '__main__':
