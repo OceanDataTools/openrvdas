@@ -10,7 +10,7 @@ import sys
 try:
   import redis
   REDIS_ENABLED = True
-except ImportException:
+except ModuleNotFoundError:
   REDIS_ENABLED = False
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
