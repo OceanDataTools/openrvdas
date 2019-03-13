@@ -117,7 +117,10 @@ class ListenerFromLoggerConfig(Listener):
       # Declaration of readers, transforms and writers. Note that the
       # singular "reader" is a special case for TimeoutReader that
       # takes a single reader.
-      if key in ['reader', 'readers', 'transforms', 'writers']:
+      if key in ['readers', 'transforms', 'writers',
+                 'reader',            # special case for TimeoutReader
+                 'stderr_writer',     # writer to use for stderr messages
+                ]:
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords
@@ -165,29 +168,19 @@ class ListenerFromLoggerConfig(Listener):
 class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
   """Helper class for instantiating a Listener object from a JSON/YAML string"""
   ############################
-  def __init__(self, config_str,
-               stderr_file=None,
-               stderr_path=None,
-               log_level=None):
+  def __init__(self, config_str, log_level=None):
     """Create a Listener from a JSON config string."""
     config = read_config.parse(config_str)
-    super().__init__(config=config,
-                     stderr_file=stderr_file, stderr_path=stderr_path,
-                     log_level=log_level)
+    super().__init__(config=config, log_level=log_level)
 
 ################################################################################
 class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
   """Helper class for instantiating a Listener object from a JSON config."""
   ############################
-  def __init__(self, config_file,
-               stderr_path=None,
-               stderr_file=None,
-               log_level=None):
+  def __init__(self, config_file, log_level=None):
     """Create a Listener from a Python config file."""
     config = read_config.read_config(config_file)
-    super().__init__(config=config,
-                     stderr_file=stderr_file, stderr_path=stderr_path,
-                     log_level=log_level)
+    super().__init__(config=config, log_level=log_level)
 
 ################################################################################
 if __name__ == '__main__':
@@ -437,9 +430,7 @@ if __name__ == '__main__':
 
   LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   log_level = LOG_LEVELS[min(parsed_args.verbosity, max(LOG_LEVELS))]
-  setUpStdErrLogging(stderr_file=parsed_args.stderr_file,
-                     stderr_path=parsed_args.stderr_path,
-                     log_level=log_level)
+  setUpStdErrLogging(log_level=log_level)
 
   ############################
   # If --config_file/--config_string present, create Listener from
@@ -454,8 +445,6 @@ if __name__ == '__main__':
     while i < len(sys.argv):
       if sys.argv[i] in ['-v', '--verbosity']:
         i += 1
-      elif sys.argv[i] in ['--stderr_file', '--stderr_path']:
-        i += 2
       elif '--config_file'.find(sys.argv[i]) == 0:
         i += 2
       elif '--config_string'.find(sys.argv[i]) == 0:
@@ -470,17 +459,11 @@ if __name__ == '__main__':
     # line specification of stderr_path and/or stderr_file to override
     # whatever is in the config.
     if parsed_args.config_file:
-      listener = ListenerFromLoggerConfigFile(
-        parsed_args.config_file,
-        stderr_file=parsed_args.stderr_file,
-        stderr_path=parsed_args.stderr_path,
-        log_level=log_level)
+      listener = ListenerFromLoggerConfigFile(parsed_args.config_file,
+                                              log_level=log_level)
     else:
-      listener = ListenerFromLoggerConfigString(
-        parsed_args.config_string,
-        stderr_file=parsed_args.stderr_file,
-        stderr_path=parsed_args.stderr_path,
-        log_level=log_level)
+      listener = ListenerFromLoggerConfigString(parsed_args.config_string,
+                                                log_level=log_level)
 
   # If not --config, go parse all those crazy command line arguments manually
   else:
@@ -489,7 +472,8 @@ if __name__ == '__main__':
     readers = []
     transforms = []
     writers = []
-
+    stderr_writer = None
+    
     ############################
     # Parse args out. We do this in a rather non-standard way to use the
     # order of args on the command line to determine the order of our
@@ -688,14 +672,18 @@ if __name__ == '__main__':
         websocket = new_args.write_cached_data_server
         writers.append(CachedDataWriter(websocket=websocket))
 
+      ##########################
+      # Stderr Writer
+      if new_args.stderr_file:
+        stderr_writer = TextFileWriter(filename=new_args.stderr_file)
+        #stderr_writer = LogfileWriter(filebase=new_args.stderr_file)
+
     ##########################
     # Now that we've got our readers, transforms and writers defined,
     # create the Listener.
     listener = Listener(readers=readers, transforms=transforms, writers=writers,
-                        interval=all_args.interval,
+                        stderr_writer=stderr_writer, interval=all_args.interval,
                         check_format=all_args.check_format,
-                        stderr_file=parsed_args.stderr_file,
-                        stderr_path=parsed_args.stderr_path,
                         log_level=log_level)
 
   ############################

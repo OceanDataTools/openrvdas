@@ -145,7 +145,8 @@ import websockets
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
-from logger.utils.stderr_logging import setUpStdErrLogging
+from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
+from logger.writers.text_file_writer import TextFileWriter
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 from server.data_server import DataServer
@@ -182,8 +183,7 @@ class WriteToAPILoggingHandler(logging.Handler):
 class LoggerManager:
   ############################
   def __init__(self, api=None, websocket=None, host_id=None,
-               interval=0.5, max_tries=3,
-               logger_log_level=logging.WARNING, stderr_path=None):
+               interval=0.5, max_tries=3, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
 
@@ -205,9 +205,6 @@ class LoggerManager:
 
     logger_log_level - At what logging level our component loggers
                 should operate.
-
-    stderr_path - Base path of logfile to which loggers should
-                write; if logger has name, append this to path.
     """
     # Set signal to catch SIGTERM and convert it into a
     # KeyboardInterrupt so we can shut things down gracefully.
@@ -225,7 +222,6 @@ class LoggerManager:
     self.interval = interval
     self.max_tries = max_tries
     self.logger_log_level = logger_log_level
-    self.stderr_path = stderr_path
 
     self.quit_flag = False
 
@@ -332,8 +328,7 @@ class LoggerManager:
     # using the one we stored during init().
     self.logger_runner = LoggerRunner(max_tries=self.max_tries,
                                       event_loop=self.event_loop,
-                                      logger_log_level=self.logger_log_level,
-                                      stderr_path=self.stderr_path)
+                                      logger_log_level=self.logger_log_level)
     # Instead of calling the LoggerRunner.run(), we iterate ourselves,
     # checking whether there are commands we want to push to the
     # LoggerRunner and doing updates to retrieve status reports.
@@ -761,11 +756,6 @@ if __name__ == '__main__':
   parser.add_argument('--stderr_file', dest='stderr_file', default=None,
                       help='Optional file to which stderr messages should '
                       'be written.')
-  parser.add_argument('--stderr_path', dest='stderr_path', default=None,
-                      help='Optional file path to which logger_runner and '
-                      'component loggers should write their stderr messages. '
-                      'If loggers have a "stderr_file" field in their '
-                      'config, they will append that file name to this path.')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
                       help='Increase output verbosity')
@@ -777,10 +767,11 @@ if __name__ == '__main__':
   # Set up logging first of all
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-  setUpStdErrLogging(stderr_file=args.stderr_file,
-                     stderr_path=args.stderr_path,
-                     log_level=log_level)
-  
+  setUpStdErrLogging(log_level=log_level)
+  if args.stderr_file:
+    stderr_writer = TextFileWriter(args.stderr_file)
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
+    
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
@@ -811,8 +802,7 @@ if __name__ == '__main__':
                                  host_id=args.host_id,
                                  interval=args.interval,
                                  max_tries=args.max_tries,
-                                 logger_log_level=logger_log_level,
-                                 stderr_path=args.stderr_path)
+                                 logger_log_level=logger_log_level)
 
   # Register a callback: when api.set_active_mode() or api.set_config()
   # have completed, they call api.signal_update(). We're registering

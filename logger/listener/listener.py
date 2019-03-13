@@ -10,7 +10,8 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 
 from logger.readers.composed_reader import ComposedReader
 from logger.writers.composed_writer import ComposedWriter
-from logger.utils.stderr_logging import setUpStdErrLogging
+from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
+
     
 ################################################################################
 class Listener:
@@ -23,9 +24,9 @@ class Listener:
 
   """
   ############################
-  def __init__(self, readers, transforms=[], writers=[], host_id='',
-               interval=0, name=None, check_format=False,
-               stderr_file=None, stderr_path=None, log_level=None):
+  def __init__(self, readers, transforms=[], writers=[], stderr_writer=None,
+               host_id='', interval=0, name=None, check_format=False,
+               log_level=None):
     """listener = Listener(readers, transforms=[], writers=[],
                         interval=0, check_format=False)
 
@@ -34,6 +35,8 @@ class Listener:
     transforms     A single Transform or a list of zero or more Transforms
 
     writers        A single Writer or a list of zero or more Writers
+
+    stderr_writer  An optional writer to which stderr should be written.
 
     host_id        Optional host_id on which Listener is to be run. Ignored
                    here, but it may show up as part of a config, so we need
@@ -49,13 +52,6 @@ class Listener:
                    output_format() of the whole reader will be
                    formats.Unknown.
 
-    stderr_file    File to log stderr messages to. Try to create if it
-                   does not exist.  If a full path (beginning with
-                   '/'), use that. If they only a file name or partial
-                   path (anything not beginning with '/'), append the
-                   stderr_file name to DEFAULT_STDERR_PATH, defined
-                   above.
-
     Sample use:
 
     listener = Listener(readers=[NetworkReader(':6221'),
@@ -70,9 +66,10 @@ class Listener:
     to exit.
     """
     # Set up logging first of all
-    setUpStdErrLogging(stderr_file=stderr_file,
-                       stderr_path=stderr_path,
-                       log_level=log_level)
+    setUpStdErrLogging(log_level=log_level)
+    if stderr_writer is not None:
+      logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
+
     logging.info('Instantiating %s logger', name or 'unnamed')
     
     ###########

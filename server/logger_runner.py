@@ -96,7 +96,8 @@ except ImportError:
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
-from logger.utils.stderr_logging import setUpStdErrLogging
+from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
+from logger.writers.text_file_writer import TextFileWriter
 from logger.listener.listen import ListenerFromLoggerConfig
 
 # We have a few different ways we can start up a process. Using the
@@ -132,7 +133,7 @@ class LoggerRunner:
   ############################
   def __init__(self, interval=0.5, max_tries=3, initial_configs=None,
                websocket=None, host_id=None, event_loop=None,
-               logger_log_level=logging.WARNING, stderr_path=None):
+               logger_log_level=logging.WARNING):
     """Create a LoggerRunner.
     interval - number of seconds to sleep between checking/updating loggers
 
@@ -152,9 +153,6 @@ class LoggerRunner:
 
     logger_log_level - At what logging level our component loggers
                 should operate.
-
-    stderr_path - Base path of logfile to which loggers should
-                write; if logger has name, append this to path.
     """
     logging.info('Starting LoggerRunner')
     # Map logger name to config, process running it, and any errors
@@ -173,7 +171,6 @@ class LoggerRunner:
     self.interval = interval
     self.max_tries = max_tries
     self.logger_log_level = logger_log_level
-    self.stderr_path =  stderr_path
 
     self.quit_flag = False
 
@@ -250,6 +247,11 @@ class LoggerRunner:
         for logger in self.disappeared_loggers:
           self._kill_and_delete_logger(logger)
 
+      # Aggregate names of old (current) configs so that we don't
+      # unnecessarily start/stop a config that's where it should be.
+      #old_config_names = [config.get('name', None)
+      #                    for config in self.logger_configs.values()]
+
       # Now set all the other loggers in their new configs. This
       # includes starting them up if new config is running and
       # shutting them down if it isn't.
@@ -264,11 +266,14 @@ class LoggerRunner:
 
     new_config - dict containing Listener configuration.
     """
-    config_name = new_config.get('name', 'Unknown') if new_config else None
-    logging.info('Setting logger %s to config %s', logger, config_name)
-
     with self.config_lock:
       current_config = self.logger_configs.get(logger, None)
+      if new_config == current_config:
+        logging.debug('Logger %s config didn\'t change. Skipping', logger)
+        return
+      
+      config_name = new_config.get('name', 'Unknown') if new_config else None
+      logging.info('Setting logger %s to config %s', logger, config_name)
 
       # Save new config and reset our various flags it *seems*
       # reasonable to reset errors and number of tries if user has
@@ -353,9 +358,9 @@ class LoggerRunner:
     config, and return the Process object.
     """
     #### Convenience routine so that Listener can be created in  own process
-    def _create_listener(config, stderr_path, logger_log_level):
-      listener = ListenerFromLoggerConfig(
-        config=config, stderr_path=stderr_path, log_level=logger_log_level)
+    def _create_listener(config, logger_log_level):
+      listener = ListenerFromLoggerConfig(config=config,
+                                          log_level=logger_log_level)
       listener.run()
 
     logging.info('Starting logger %s, config: %s',
@@ -384,7 +389,7 @@ class LoggerRunner:
         # using.
         proc = multiprocessing.Process(
           target=_create_listener,
-          args=(config, self.stderr_path, self.logger_log_level),
+          args=(config, self.logger_log_level),
           daemon=True)
         proc.start()
       else:
@@ -396,9 +401,6 @@ class LoggerRunner:
           json.dumps(config),
         ]
         # Add logging fields to config
-        if self.stderr_path:
-          cmd_line.append('--stderr_path')
-          cmd_line.append(self.stderr_path)
         if self.logger_log_level < logging.WARNING:
           cmd_line.append('-v')
         if self.logger_log_level < logging.INFO:
@@ -741,11 +743,6 @@ if __name__ == '__main__':
   parser.add_argument('--stderr_file', dest='stderr_file', default=None,
                       help='Optional file to which stderr messages should '
                       'be written.')
-  parser.add_argument('--stderr_path', dest='stderr_path', default=None,
-                      help='Optional file path to which logger_runner and '
-                      'component loggers should write their stderr messages. '
-                      'If loggers have a "stderr_file" field in their '
-                      'config, they will append that file name to this path.')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
                       help='Increase output verbosity')
@@ -758,9 +755,10 @@ if __name__ == '__main__':
   # Set up logging first of all
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-  setUpStdErrLogging(stderr_file=args.stderr_file,
-                     stderr_path=args.stderr_path,
-                     log_level=log_level)
+  setUpStdErrLogging(log_level=log_level)
+  if args.stderr_file:
+    stderr_writer = TextFileWriter(args.stderr_file)
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
 
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
@@ -780,6 +778,5 @@ if __name__ == '__main__':
   runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
                         initial_configs=initial_configs,
                         websocket=args.websocket, host_id=args.host_id,
-                        logger_log_level=logger_log_level,
-                        stderr_path=args.stderr_path)
+                        logger_log_level=logger_log_level)
   runner.run()
