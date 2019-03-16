@@ -101,7 +101,7 @@ In addition to the documents referenced above, some other relevant documents are
 -   [OpenRVDAS Components](components.md)
 -   [Simulating Serial Input](simulating_serial_input.md)
 -   [Running OpenRVDAS Loggers (web - deprecated)](https://docs.google.com/document/d/1w_wkdprtA31Fx4yTHLL6WoTtFrPmE3jskTeV6YSuOJI/edit)
--   [NMEA Parsing](nmea_parser.md)
+-   [Parsing](parsing.md)
 
 [^1]: Recommended version of Python is 3.6 or higher, but most listener     code has been verified to run on 3.5 and higher. Server code such as     logger\_runner.py and logger\_manager.py may experience problems on     3.5 due to changes in the async module.
 

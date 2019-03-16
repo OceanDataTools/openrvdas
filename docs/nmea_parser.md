@@ -1,6 +1,8 @@
-# NMEA Parsing
+# NMEA Parsing - DEPRECATED
 © David Pablo Cohn - (david.cohn@gmail)  
-DRAFT 2018-08-10
+DRAFT 2019-03-16
+
+**Please see the [Parsing](parsing.md) document that supercedes this one and the module described here.**
 
 This document provides some introductory background on the NMEAParser of the OpenRVDAS architecture. For a more general introduction to the architecture, please refer to the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md).
 

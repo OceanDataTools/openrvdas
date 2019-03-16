@@ -32,7 +32,7 @@ The core of OpenRVDAS are three types of simple components designed to be
   record = reader.read()
   ```
 
-* **Transforms** (e.g. TimestampTransform, ParseNMEATransform, FilterTransform) implement a `transform()` method that takes a record as input and returns some transformed version of it.
+* **Transforms** (e.g. TimestampTransform, ParseTransform, FilterTransform) implement a `transform()` method that takes a record as input and returns some transformed version of it.
 
   ```
   ts_transform = TimestampTransform()
@@ -297,14 +297,18 @@ Below, we list and briefly describe (most of) the currently-implemented Reader, 
   ```
   Accept text records that (presumably) constitute individual lines of an XML definition and return None until it has received an entire XML entity definition, at which point it returns the full definition as a single string.
 
-#### [ParseNMEATransform](../logger/transforms/parse_nmea_transform.py)
+#### [ParseTransform](../logger/transforms/parse_transform.py)
   ```
-  ParseNMEATransform(json=False,
-                     message_path=nmea_parser.DEFAULT_MESSAGE_PATH,
-                     sensor_path=nmea_parser.DEFAULT_SENSOR_PATH,
-                     sensor_model_path=nmea_parser.DEFAULT_SENSOR_MODEL_PATH)
+  ParseTransform(definition_path=record_parser.DEFAULT_DEFINITION_PATH,
+                 return_json=False, return_das_record=False)
   ```
-  Accept NMEA text records in "wire" format (with data\_id and timestamp prefixed) and return a DASRecord instance containing a dictionary of the record's field name/value pairs. If json=True, output a JSON-encoded string for the DASRecord. Takes optional arguments indicating location of sensor, sensor\_model and message definitions. If initialized with json=True, return a JSON encoding of the DASRecord rather that the Python object. See [NMEA Parsing](https://docs.google.com/document/d/1WHrORXoImrc5yULegoyN-mutmfdn4E5XtUuF7mWt_lY/edit#heading=h.3fk0rim4ow8h) for more details.
+  Accept text records in "wire" format (with data\_id and timestamp prefixed) and return a Python dict of the record's field name/value pairs. Takes optional argument indicating location of device and device type definition files as a string of comma-separated paths, such as
+
+  ```
+  parser = RecordParser(definition_path='local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml')
+  ```
+
+  If ```return_json=True```, output a JSON-encoded string for the dict; if ```return_das_record=True```, return a [DASRecord](../logger/utils/das_record.py) for it. See [Parsing](parsing.md) for more details.
 
 #### [TrueWindsTransform](../logger/transforms/true_winds_transform.py)
   ```

@@ -1,5 +1,5 @@
 # OpenRVDAS Configuration Files
-© 2018 David Pablo Cohn - DRAFT 2018-08-09
+© 2018-2019 David Pablo Cohn - DRAFT 2019-03-15
 
 
 ## Table of Contents
@@ -8,22 +8,18 @@
 * [Logger Configurations](#logger-configurations)
 * [Cruise configurations](#cruise-configurations)
   * [Modes](#modes)
-* [Templates and Variables - DEPRECATED](#templates-and-variables)
-  * [Templates](#templates)
-  * [Variables](#variables)
-* [Expanding Configuration Files - DEPRECATED](#expanding-configuration-files)
 
 ## Overview
 
-Please see the [OpenRVDAS Introduction to Lggers](intro_to_loggers.md)
+Please see the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md)
 for a general introduction to loggers.
 
 The workhorse utility of the OpenRVDAS system is the Listener class,
-which can be invoked either indirectly by manager/run\_loggers.py or
-directly via the listen.py script. When the listen.py script is run, it
-can take (among other things) a configuration file describing what
-Readers, Transforms and Writers should be run together and with what
-parameters.
+which can be invoked either indirectly by ```server/run_loggers.py```
+or ```server/logger_manager.py``` or directly via the ```listen.py```
+script. When the listen.py script is run, it can take (among other
+things) a configuration file describing what Readers, Transforms and
+Writers should be run together and with what parameters.
 
 ```
 logger/listener/listen.py --config_file gyr_logger.yaml
@@ -48,44 +44,26 @@ In the example above, the file gyr\_logger.yaml might contain the
 following text:
 
 ```
-{
-  "readers": {
-    "class": "SerialReader",
-    "kwargs": {
-      "port": "/dev/ttyr15",
-      "baudrate": 9600
-    }
-  },
-  "transforms": [
-    {
-      "class": "TimestampTransform"
-      // NOTE: no keyword args
-    },
-    {
-      "class": "PrefixTransform",
-      "kwargs": {
-        "prefix": "gyr1"
-      }
-    }
-  ],
-  "writers": [
-    {
-      "class": "LogfileWriter",
-      "kwargs": {
-        "filebase": "/log/current/gyr1"
-      }
-    },
-    {
-      "class": "NetworkWriter",
-      "kwargs": {
-        "network": ":6224"
-      }
-    }
-  ]
-}
+readers: # A single reader in this case
+  class: SerialReader
+  kwargs:
+    baudrate: 9600
+    port: /dev/ttyr15
+transforms:  # List of transforms - these will be applied in series
+- class: TimestampTransform  # no kwargs needed for TimestampTransform
+- class: PrefixTransform
+  kwargs:
+    prefix: gyr1
+writers:  # List of writers - these will be called in parallel
+- class: LogfileWriter
+  kwargs:
+    filebase: /log/current/gyr1
+- class: NetworkWriter
+  kwargs:
+    network: ':6224'
 ```
 
-The configuration definition is a YAML or JSON-formatted dictionary with the
+The configuration definition is a YAML-formatted dictionary with the
 following workflow:
 
 ![Dual output configuration](images/dual_writer.png)
@@ -111,30 +89,33 @@ In the case of gyr1_logger.yaml, the logger requires only a single
 reader, so it is defined directly as a dict; the two transforms and
 two writers are both defined by enclosing the pair in a list.
 
-## Cruise configuration
+## Cruise Definitions
 
-A full configuration file (such as
+A full cruise definition file (such as
 [sample_cruise.yaml](../test/configs/sample_cruise.yaml)) may define
-many logger configurations. They will be contained in a "configs"
-dict that maps from configuration names to the configuration
-definitions themselves:
+many logger configurations. They will be contained in a "configs" dict
+that maps from configuration names to the configuration definitions
+themselves.
 
 ```
-{
-  "configs": {
-    "gyr1->off": {},
-    "gyr1->net": {
-      "name": "gyr1->net",
-      "readers": {
-        "class": "SerialReader",
-        ...
-      },
-    "gyr1->file/net/db": {
+configs:
+  gyr1->off:
+    name: gyr1->off  # config name; no readers/writers etc. means it's off
+  gyr1->net:
+    name: gyr1->net  # config name
+    readers:
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr15
+    transforms:
       ...
-    },
+    writers:
+      ...
+  gyr1->file/net/db:
+    name: gyr1->file/net/db  # config name
     ...
-  }
-}
+  ...
 ```
 
 ### Modes
@@ -150,41 +131,79 @@ values are the names of the configurations that logger should be in
 when the mode is selected. To illustrate:
 
 ```
-{
-  "configs": {
-    "gyr1->off": {},
-    "gyr1->net": { ... },
-    "gyr1->file/net/db": { ... },
+# Optional cruise metadata
+cruise:
+  id: NBP1406
+  start: "2014-06-01"  # Quoted so YAML doesn't auto-convert to a datetime
+  end: "2014-07-01"
+
+# Which configs are associated with which (abstract) logger
+loggers:
+  eng1:
+    configs:
+    - eng1->off
+    - eng1->net
+    - eng1->file/net/db
+  gyr1:
+    configs:
+    - gyr1->off
+    - gyr1->net
+    - gyr1->file/net/db
+  knud:
+    configs:
+    - knud->off
+    - knud->net
+    - knud->file/net/db
+  mwx1:
+    configs:
+    - mwx1->off
+    - mwx1->net
+    - mwx1->file/net/db
+  rtmp:
+    configs:
+    - rtmp->off
+    - rtmp->net
+    - rtmp->file/net/db
+  s330:
+    configs:
+    - s330->off
+    - s330->net
+    - s330->file/net/db
+
+# Definitions of the configs themselves
+configs:
+  gyr1->off:
     ...
-  },
-  "modes": {
-    "off": {
-      "knud": "knud->off",
-      "gyr1": "gyr1->off",
-      "mwx1": "mwx1->off",
-      "s330": "s330->off",
-      "eng1": "eng1->off",
-      "rtmp": "rtmp->off"
-    },
-    "port": {
-      "gyr1": "gyr1->net",
-      "mwx1": "mwx1->net",
-      "s330": "s330->net",
-      "eng1": "eng1->net",
-      "knud": "knud->off",
-      "rtmp": "rtmp->off"
-    },
-    "underway": {
-      "knud": "knud->file/net/db",
-      "gyr1": "gyr1->file/net/db",
-      "mwx1": "mwx1->file/net/db",
-      "s330": "s330->file/net/db",
-      "eng1": "eng1->file/net/db",
-      "rtmp": "rtmp->file/net/db"
-    }
-  },
-  "default_mode": "off"
-}
+  gyr1->net:
+    ...
+  gyr1->file/net/db:
+    ...
+  ...
+
+# Which configs should be running when in which mode
+modes:
+  off:
+    eng1: eng1->off
+    gyr1: gyr1->off
+    knud: knud->off
+    mwx1: mwx1->off
+    rtmp: rtmp->off
+    s330: s330->off
+  port:
+    eng1: eng1->net
+    gyr1: gyr1->net
+    knud: knud->off
+    mwx1: mwx1->net
+    rtmp: rtmp->off
+    s330: s330->net
+  underway:
+    eng1: eng1->file/net/db
+    gyr1: gyr1->file/net/db
+    knud: knud->file/net/db
+    mwx1: mwx1->file/net/db
+    rtmp: rtmp->file/net/db
+    s330: s330->file/net/db
+default_mode: "off"  # In quotes because 'off' is a YAML keyword
 ```
 
 For accounting purposes, our convention is to include an empty
@@ -194,185 +213,3 @@ logger that isn't running.
 Note also the additional (and optional) ```default_mode``` key
 in the cruise configuration. It specifies that, lacking any other
 information, which mode the system should be initialized to on startup.
-
-## Templates and Variables - DEPRECATED
-
-THIS SECTION IS DEPRECATED. We are exploring using a standardized
-templating language (such as Jinja) instead of this homebrew approach.
-
-The configuration definition for a non-trivial logger can be
-voluminous.  Multiplying that volume by the number of loggers and
-configurations in a cruise, and you quickly arrive at a cruise
-definition that is unreadably large and error-prone. To simplify
-the creation and modification of cruise definitions, we introduce
-the idea of templates and variables.
-
-### Templates
-
-To keep representations concise and readable, we allow components of a
-configuration to be included by reference to a template. A cruise
-definition may include a "templates" key with a set of definitions
-like the following:
-
-```
-  "templates": {
-    "GYR1_SERIAL_READER": {
-      "class": "SerialReader",
-      "kwargs": {
-        "port": "/dev/ttyr15",
-        "baudrate": 9600
-      }
-    },
-    "GYR1_TRANSFORMS": [
-      {
-        "class": "TimestampTransform"
-        // NOTE: no keyword args
-      },
-      {
-      "class": "PrefixTransform",
-        "kwargs": {
-          "prefix": "gyr1"
-        }
-      }
-    ],
-    "GYR1_LOGFILE_WRITER": {
-      "class": "LogfileWriter",
-      "kwargs": {
-        "filebase": "/log/current/gyr1"
-      }
-    },
-    "GYR1_NETWORK_WRITER": {
-      "class": "NetworkWriter",
-      "kwargs": {
-        "network": ":6224"
-      }
-    },
-    // Logger components included by reference
-    "GYR1_LOGGER": {
-      "readers": "GYR1_SERIAL_READER",
-      "transfoms": "GYR1_TRANSFORMS",
-      "writers": ["GYR1_LOGFILE_WRITER","GYR1_NETWORK_WRITER"]
-    }
-  }
-```
-Given these definitions, the configs section may define its gyr1
-logger and its siblings by reference to the appropriate template
-names:
-
-```
-  "configs": {
-    "gyr1": "GYR1_LOGGER",
-    "mwx1": "MWX1_LOGGER",
-    "s330": "S330_LOGGER"
-  },
-```
-
-### Variables
-
-We expect there to be a lot of duplication between logger components
-which, for a given installation, may differ only in a few strings here
-and there. Tor reduce duplication, we can use variable substitution.
-Consider the dictionary below:
-
-```
-{
-  "vars": {
-    "%CRUISE_ID%": "NBP1700",
-    "%INST%": "gyr1"
-  },
-
-  "templates": {
-    ...
-
-    "%INST%_LOGFILE_WRITER": {
-      "class": "LogfileWriter",
-      "kwargs": {
-        "filebase": "/log/%CRUISE_ID%/docs/%INST%/raw/%CRUISE_ID%_%INST%"
-      }
-    },
-    ...,
-    "%INST%_LOGGER": {
-      "readers": "%INST%_SERIAL_READER",
-      "transfoms": "%INST%_TRANSFORMS",
-      "writers": ["%INST%_LOGFILE_WRITER","%INST%_NETWORK_WRITER"]
-    }
-  },
-```
-
-Now, when a string in the "vars" section is found elsewhere in the
-cruise definition, its value is substituted in. So given the above variables and templates, the following definition
-
-```
-  "modes": {
-    "underway": {
-      "gyr1": "%INST%_LOGGER",
-    }
-  }
-```
-would be expanded into a full definition for a gyr1 configuration that
-reads from a serial port, transforms its input and writes to both the
-network and a logfile.
-
-IMPORTANT: **Template references** are only applied if the key in the
-template dict matches an entire string exactly elsewhere in the
-definition file. **Variable substitution** is applied as a str.replace()
-operation on all strings in the definition.
-
-To further reduce duplication, var string replacements may be lists:
-
-```
-  "vars": {
-    "%CRUISE_ID%": "NBP1700",
-    "%INST%": ["gyr1", "mwx1", "s330"]
-  }
-```
-In this case, an entry is created for each of the values in the list.
-When that variable appears as the key of a dict, it will result in one
-new dictionary entry for each value, with
-
-```
-  "%INST%_LOGGER": {
-    "readers": "%INST%_SERIAL_READER",
-    "transfoms": "%INST%_TRANSFORMS",
-    "writers": ["%INST%_LOGFILE_WRITER","%INST%_NETWORK_WRITER"]
-  }
-```
-becoming
-
-```
-  "gyr1_LOGGER": {
-    "readers": "gyr1_SERIAL_READER",
-    "transfoms": "gyr1_TRANSFORMS",
-    "writers": ["gyr1_LOGFILE_WRITER","gyr1_NETWORK_WRITER"]
-  },
-    "mwx1_LOGGER": {
-    "readers": "mwx1_SERIAL_READER",
-    "transfoms": "mwx1_TRANSFORMS",
-    "writers": ["mwx1_LOGFILE_WRITER","mwx1_NETWORK_WRITER"]
-  },
-  "s330_LOGGER": {
-    "readers": "s330_SERIAL_READER",
-    "transfoms": "s330_TRANSFORMS",
-    "writers": ["s330_LOGFILE_WRITER","s330_NETWORK_WRITER"]
-  }
-```
-## Expanding Configuration Files
-
-The logger\_manager.py script takes an "expanded" cruise configuration;
-to perform the expansion that makes variable replacements and reference
-swaps, we need to process a raw cruise config file through the build\_configs.py script:
-
-```
-logger/utils/build_config.py \
-    --config test/configs/sample_cruise_templat.json > sample_cruise.json
-```
-We can then start logger\_manager.py with the expanded configuration:
-
-```
-server/logger_manager.py --config sample_cruise.json
-```
-
-Please see the sample cruise template file in
-[test/configs/sample\_cruise\_template.json](../test/configs/sample_cruise_template.json)
-and compiled sample cruise definition in
-[test/configs/sample\_cruise.json](../test/configs/sample_cruise.json)

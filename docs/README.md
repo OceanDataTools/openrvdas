@@ -18,7 +18,7 @@ Other relevant documents are:
 * [Simulating Serial Input](simulating_serial_input.md) - using the simulate_serial.py script to create virtual serial ports for development and testing
 * [OpenRVDAS Django Web User Interface](django_interface.md) - an introduction to the web-based GUI
 * [Data Display Widgets](display_widgets.md) - an introduction to widgets for data display
-* [NMEA Parsing](nmea_parser.md) - how to work with the included NMEA parser 
+* [Parsing](parsing.md) - how to work with the included RecordParser to turn raw text records into structured data fields
 
 A very rudimentary project website is available at [OpenRVDAS.org](http://openrvdas.org)
 
