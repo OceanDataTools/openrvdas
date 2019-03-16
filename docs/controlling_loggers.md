@@ -22,19 +22,40 @@ The [listen.py](listen_py.md) script is handy for running a single logger from t
 
 ```server/logger_runner.py --config test/config/sample_configs.yaml -v```
 
-The sample_configs.yaml file should be a YAML or JSON-formatted dictionary:
+The sample_configs.yaml file should be a YAML-formatted dictionary:
 
 ```
-{
-  "gyr1": {...logger configuration for gyr1...},
-  "mwx1": {...logger configuration for mwx1...},
-  "s330": {...logger configuration for s330...},
+eng1->net:
+  name: eng1->net
+  readers:
+    class: SerialReader
+    kwargs:
+      baudrate: 9600
+      port: /tmp/tty_eng1
+  transforms:
+  - class: TimestampTransform
+  - class: PrefixTransform
+    kwargs:
+      prefix: eng1
+  writers:
+    class: NetworkWriter
+    kwargs:
+      network: ':6224'
+gyr1->net:
   ...
-}
+knud->net:
+  ...
+s330->net:
+  ...
 ```
-where each logger configuration is in the format described in the [Configuration Files](configuration_files.md) document.
 
-Note that the provided test/config/sample_configs.yaml specifies configurations that read simulated data from virtual serial ports. To create those ports and begin feeding them with data, you'll need to run
+where each logger configuration is in the format described in the
+[Configuration Files](configuration_files.md) document.
+
+Note that the provided test/config/sample_configs.yaml specifies
+configurations that read simulated data from virtual serial ports. To
+create those ports and begin feeding them with data, you'll need to
+run
 
 ```
 logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
@@ -56,65 +77,61 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
 
 -   **Logger configuration** - This is a definition for a set of Readers, Transforms and Writers feeding into each other, such as would be read using the --config argument of the listen.py script. In OpenRVDAS, each logger configuration that is active runs as its own daemon process.  The sample logger configuration below ("knud-\>net") reads NMEA data from the Knudsen serial port, timestamps and labels the record, then broadcasts it via UDP:
 
-  ```
-  "knud->net": {
-    "host_id": "knud.host",
-    "name": "knud->net",
-    "readers": {
-      "class": "SerialReader",
-      "kwargs": {
-        "port": "/tmp/tty_knud",
-        "baudrate": 9600
-      }
-    },
-    "transforms": {
-      "class": "TimestampTransform"
-    },
-    "writers": {
-    "class": "ComposedWriter",
-      "kwargs": {
-        "transforms": {
-          "class": "PrefixTransform",
-          "kwargs": {
-            "prefix": "knud"
-          }
-        },
-        "writers": {
-          "class": "NetworkWriter",
-          "kwargs": {
-            "network": ":6224"
-      }
-    }
-  }
-  ```
+```
+  knud->net: 
+    host_id: knud.host
+    name: knud->net
+    readers: 
+      class: SerialReader
+      kwargs: 
+        port: /tmp/tty_knud
+        baudrate: 9600
+    transforms: 
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs: 
+        prefix: knud
+    writers: 
+      class: NetworkWriter
+      kwargs: 
+        network: ":6224"
+```
 -   **Cruise mode (or just "mode")** - Logger configurations can be grouped into logical collections that will be active at any given time. Certain logger configurations will be running when a vessel is in port; another set may be running while the vessel is at sea, but within territorial waters; yet another when it is fully underway. The mode definition below indicates that when "port" mode is active, the configurations "gyr1-\>net", "mwx1-\>net", "s330-\>net" and "eng1-\>net" should be running:
 
-  ```
-  "modes": { 
-    "off": {}, 
-    "port": { 
-      "gyr1": "gyr1->net", 
-      "mwx1": "mwx1->net", 
-      "s330": "s330->net", 
-      "eng1": "eng1->net", 
-      "knud": "knud->off", 
-      "rtmp": "rtmp->off" 
-    }, 
-    "underway": {...} 
-  }
-  ```
+```
+  modes:  
+    off:  
+      gyr1: gyr1->off 
+      mwx1: mwx1->off 
+      s330: s330->off 
+      eng1: eng1->off 
+      knud: knud->off 
+      rtmp: rtmp->off 
+    port:  
+      gyr1: gyr1->net 
+      mwx1: mwx1->net 
+      s330: s330->net 
+      eng1: eng1->net 
+      knud: knud->off 
+      rtmp: rtmp->off 
+    underway:
+      gyr1: gyr1->file/net/db 
+      mwx1: mwx1->file/net/db 
+      s330: s330->file/net/db 
+      eng1: eng1->file/net/db 
+      knud: knud->file/net/db 
+      rtmp: rtmp->file/net/db
+```
 -   **Cruise configuration** - (or just "configuration" when we're being sloppy). This is the file/JSON/YAML structure that contains everything the logger manager needs to know about running a cruise. In addition to containing cruise metadata (cruise id, provisional start and ending dates), a cruise configuration file (such as in [test/configs/sample\_cruise.yaml](../test/configs/sample\_cruise.yaml)), contains a dict of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes into which those logger configurations are grouped.
   
 It is worth noting that strictly speaking, a "logger" does not exist as a separate entity in OpenRVDAS. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the [sample cruise definition file](../test/configs/sample\_cruise.yaml), as the logger definition ("knud") is just a list of the configurations that are responsible for handling the data that comes in from a particular serial port.
 
 ```
-"knud": {
-  "configs": [
-    "knud->off",
-    "knud->net",
-    "knud->file/net/db"
-  ]
-}
+knud:
+  configs:
+  - knud->off,
+  - knud->net,
+  - knud->file/net/db
 ```
 Perusing a complete cruise configuration file such as [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml) may be useful for newcomers to the system.
 
@@ -139,12 +156,6 @@ Additionally, if the ```--websocket :[port]``` flag has been specified, a runnin
 * **Logger messages, warnings and errors** to clients that connect to ```hostname:port/messages/[log level]/[source]```, where log level and source are optional arguments.
 
     ![Django GUI Logger Messages](images/django_gui_messages.png)
-
-* **Access to a DataServer** that provides logged data for clients that connect to ```hostname:port/data```. Such clients might be web display widgets or independent loggers that produce derived data (such as true winds, or computed wind chill temperature). *Note that this functionality is somewhat rudimentary*, and assumes that the desired data are being logged to a DatabaseWriter using the default settings.
-
-   A recommended alternative is to have web display widgets and derived data loggers connect to an independently-running data server, such as the [CachedDataServer](../logger/utils/cached_data_server.py), either invoked from the command line or as part of a Listener when wrapped in [CachedDataWriterver](../logger/writers/cached_data_writer.py).  Please see [Display Widgets](display_widgets.md) for more information on these alternatives and for general information on writing, configuring and feeding web display widgets.
-
-    ![Django GUI Static Widget Example](images/django_gui_static_widget.png)
 
 * **Control of remote logger runner processes.** A cruise configuration file may specify that certain loggers may only run on certain machines (via a ```host_id``` field in the definition). This may be desirable if, for example, the required serial ports are only available on a particular machine. A remote host like this may connect to a logger manager via the invocation
       

@@ -149,7 +149,7 @@ from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 from logger.writers.text_file_writer import TextFileWriter
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
-from server.data_server import DataServer
+#from server.data_server import DataServer
 
 # Number of times we'll try a failing logger before giving up
 DEFAULT_MAX_TRIES = 3
@@ -412,15 +412,15 @@ class LoggerManager:
       sender = self._log_message_sender(client_id, log_level, source)
       await self._handle_client_connection(client_id=client_id, sender=sender)
 
-    ##########################
-    # Display client has connected.
-    elif path == '/data':
-      # Client wants logger data - this is what we serve widgets. This
-      # is a messy and fraught bit of code, so we've isolated it into
-      # its own class.
-      websocket = self.client_map[client_id]
-      data_server = DataServer(websocket)
-      await data_server.serve_data()
+    ###########################
+    ## Display client has connected. - DEPRECATED. Use CachedDataServer instead.
+    #elif path == '/data':
+    #  # Client wants logger data - this is what we serve widgets. This
+    #  # is a messy and fraught bit of code, so we've isolated it into
+    #  # its own class.
+    #  websocket = self.client_map[client_id]
+    #  data_server = DataServer(websocket)
+    #  await data_server.serve_data()
 
     ##########################
     else:

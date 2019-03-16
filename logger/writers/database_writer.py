@@ -26,18 +26,43 @@ except ModuleNotFoundError:
 ################################################################################
 class DatabaseWriter(Writer):
   def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
-               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-               field_dict_input=False):
-    """Write to the passed DASRecord to a database table.
+               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD):
+    """Write to the passed record to a database table. Expects passed
+    records to be in one of two formats:
 
-    If flag field_dict_input is true, expect input in the format
+    1) DASRecord
 
-       {field_name: [(timestamp, value), (timestamp, value),...],
-        field_name: [(timestamp, value), (timestamp, value),...],
-        ...
+    2) a dict encoding optionally a source data_id and timestamp and a
+       mandatory 'fields' key of field_name: value pairs. This is the format
+       emitted by default by ParseTransform:
+
+       {
+         'data_id': ...,
+         'timestamp': ...,
+         'fields': {
+           field_name: value,    # use default timestamp of 'now'
+           field_name: value,
+           ...
+         }
        }
 
-    Otherwise expect input to be a DASRecord."""
+    A twist on format (2) is that the values may either be a singleton
+    (int, float, string, etc) or a list. If the value is a singleton,
+    it is taken at face value. If it is a list, it is assumed to be a
+    list of (value, timestamp) tuples, in which case the top-level
+    timestamp, if any, is ignored.
+
+       {
+         'data_id': ...,
+         'timestamp': ...,
+         'fields': {
+            field_name: [(timestamp, value), (timestamp, value),...],
+            field_name: [(timestamp, value), (timestamp, value),...],
+            ...
+         }
+       }
+
+    """
     super().__init__(input_format=Python_Record)
 
     if not DATABASE_SETTINGS_FOUND:
@@ -50,7 +75,6 @@ class DatabaseWriter(Writer):
 
     self.db = Connector(database=database, host=host,
                         user=user, password=password)
-    self.field_dict_input = field_dict_input
 
   ############################
   def _table_exists(self, table_name):
@@ -81,23 +105,19 @@ class DatabaseWriter(Writer):
 
   ############################
   def write(self, record):
-    """Write out record, appending a newline at end. Connectors assume
-    we've got a DASRecord, but check; if we don't see if it's a
-    suitably-formatted dict that we can convert into a DASRecord.
+    """Write out record. Connectors assume we've got a DASRecord, so check
+    what we've got and convert as necessary.
     """
     if not record:
       return
 
-    # If we've been passed a DASRecord, the field:value pairs are in a
-    # field called, uh, 'fields'; if we've been passed a dict, it
-    # could be either of the above formats. Try for the first, and if
-    # it fails, assume the second.
+    # If we've been passed a DASRecord, things are easy: write it and return.
     if type(record) is DASRecord:
       self._write_record(record)
       return
     
     if not type(record) is dict:
-      logging.error('Record passed to CachedDataServer is not of type '
+      logging.error('Record passed to DatabaseWriter is not of type '
                     '"DASRecord" or dict; is type "%s"', type(record))
       return
 
@@ -105,30 +125,36 @@ class DatabaseWriter(Writer):
     # field dict or not.
     data_id = record.get('data_id', None)
     timestamp = record.get('timestamp', time.time())
+    fields = record.get('fields', None)
+    if fields is None:
+      logging.error('Dict record passed to CachedDataServer has no "fields" '
+                    'key, which either means it\'s not a dict you should be '
+                    'passing, or it is in the old "field_dict" format that '
+                    'assumes key:value pairs are at the top level.')
+      logging.error('The record in question: %s', str(record))
+      return
 
-    # If we don't find a 'fields' entry in the dict, assume
-    # (dangerously) that the entire record is a field dict.
-    fields = record.get('fields', record)
-    if not type(fields) is dict:
-      logging.error('Fields of non-DASRecord passed to CachedDataServer are '
-                    'not of type dict; type is "%s"', type(fields))
+    # Now check whether our 'values' are singletons (in which case
+    # we've got a single record) or lists of tuples. Shortcut by
+    # checking only the first value in our 'fields' dict.
+    try:
+      first_key, first_value = next(iter(fields.items()))
+    except StopIteration:
+      # Empty fields
+      logging.debug('Empty "fields" dict in record: %s', str(record))
       return
-      
-    # Now figure out whether our fields are simple key:value pairs or
-    #  key: [(timestamp, value), (timestamp, value),...] pairs.
-    if not fields:
-      logging.debug('Received empty fields in DatabaseWriter')
-      return
-    first_key = next(iter(fields))
-    first_value = fields[first_key]
+
+    # If we've got a singleton, it's a single record. Convert to
+    # DASRecord and write it out.
     if not type(first_value) is list:
-      das_record = DASRecord(data_id=data_id, timestamp=timestamp,fields=fields)
+      das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
       self._write_record(das_record)
       return
 
-    # If here our we've got a field dict in which each field/key may
-    # have multiple (timestamp, value) pairs. First thing we do is
+    # If we're here, our values (or at least our first one) are lists
+    # of (value, timestamp) pairs. First thing we do is
     # reformat the data into a map of
+    #
     #        {timestamp: {field:value, field:value],...}}
     values_by_timestamp = {}
     try:
@@ -144,6 +170,6 @@ class DatabaseWriter(Writer):
     # Now go through each timestamp, generate a DASRecord from its
     # values, and write them.
     for timestamp in sorted(values_by_timestamp):
-      das_record = DASRecord(timestamp=timestamp,
+      das_record = DASRecord(data_id=data_id, timestamp=timestamp,
                              fields=values_by_timestamp[timestamp])
       self._write_record(das_record)

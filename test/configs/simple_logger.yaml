@@ -8,38 +8,29 @@
 # Listener. The keys "reader", "transform" and "writer" are special-cased to
 # indicate that the respective entities should be instantiated (recursively,
 # if necessary).
-{
-# One reader, enclosed in a list
-    "readers": [
-        {
-            "class": "TextFileReader",
-            "kwargs": {   # initialization kwargs
-                          "file_spec": "LICENSE"
-                      }
-        }
-    ],
-    # Timestamp and label
-    "transforms": [
-        {
-            "class": "TimestampTransform",
-            "kwargs": {}
-        },
-        {
-            "class": "PrefixTransform",
-            "kwargs": {
-                "prefix": "license:"
-            }
-        }        
-    ],
+
+# One reader. If we had multiple readers, we'd list them sequentially
+# in a list, and they would be executed in parallel.
+
+readers:
+  class: TextFileReader
+  kwargs:  # initialization kwargs
+    file_spec: LICENSE
+
+# Timestamp and label. We have two transforms; they are encapsulated
+# in a list and will be executed sequentially.
+transforms:
+- class: TimestampTransform # TimestampTransform has no kwargs
+- class: PrefixTransform
+  kwargs:
+    prefix: "license:"  # enclose in quotes because the ":" can confuse YAML
     
-    # Only a single writer, not enclosed in a list, to demonstrate/test
-    # that lists are only needed if we've got multiple components.
-    "writers": {
-        "class": "TextFileWriter",
-        "kwargs": {   # initialization kwargs
-                      # no filename, so write to stdout
-                  }
-    },
-    "interval": 0.2,
-    "check_format": false
-}
+# Only a single writer. If there were multiple writers, they would be
+# called in parallel.
+writers:
+  class: TextFileWriter
+  # No initialization kwargs; no filename, so TextFileWriter
+  # will write to stdout
+
+interval: 0.2
+check_format: false

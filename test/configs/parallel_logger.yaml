@@ -8,34 +8,25 @@
 # Listener. The keys "reader", "transform" and "writer" are special-cased to
 # indicate that the respective entities should be instantiated (recursively,
 # if necessary).
-{
-    # Multiple readers, enclosed in a list.
-    "readers": [
-        {
-            "class": "TextFileReader",
-            "kwargs": {   # initialization kwargs
-                          "file_spec": "LICENSE"
-                      }
-        },
-        {
-            "class": "TextFileReader",
-            "kwargs": {   # initialization kwargs
-                          "file_spec": "README.md"
-                      }
-        }    
-    ],
-    # No transforms
-    "transforms": [
-    ],
-    
-    # Only a single writer, not enclosed in a list, to demonstrate/test
-    # that lists are only needed if we've got multiple components.
-    "writers": {
-        "class": "TextFileWriter",
-        "kwargs": {   # initialization kwargs
-                      # no filename, so write to stdout
-                  }
-    },
-    "interval": 1,
-    "check_format": false
-}
+
+# We have two readers, enclosed in a list. They will be run in
+# parallel. The "interval" kwarg tells the TextFileReader to read one
+# line from its file every interval seconds.
+readers:
+- class: TextFileReader
+  kwargs:    # initialization kwargs
+    file_spec: LICENSE
+    interval: 1
+- class: TextFileReader
+  kwargs:    # initialization kwargs
+    file_spec: README.md
+    interval: 0.5
+
+# No transforms
+
+# Only a single writer, not enclosed in a list, to demonstrate/test
+# that lists are only needed if we've got multiple components.
+writers:
+  class: TextFileWriter
+   # no initialization kwargs; no filename, so write to stdout
+

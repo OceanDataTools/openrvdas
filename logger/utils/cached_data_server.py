@@ -2,13 +2,14 @@
 """NOTE: See below for mysterious cache behavior when invoked via
 logger_manager.py
 
-Accept data in DASRecord or dict format via the cache_record()
-method, then serve it to anyone who connects via a websocket. A
+Accept data in DASRecord or dict format via the cache_record() method,
+then serve it to anyone who connects via a websocket. A
 CachedDataServer can be instantiated by running this script from the
 command line and providing one or more UDP ports on which to listen
-for NMEA-formatted data. It may also be instantiated as part of a
-CachedDataWriter that can be invoked on the command line via the
-listen.py script of via a configuration file.
+for timestamped text data that it can parse into key:value pairs. It
+may also be instantiated as part of a CachedDataWriter that can be
+invoked on the command line via the listen.py script of via a
+configuration file.
 
 The following direct invocation of this script
 
@@ -21,34 +22,38 @@ The following direct invocation of this script
 says to
 
 1. Listen on the UDP ports specified by --network for timestamped
-   NMEA sentences
+   records
 
-2. Parse those sentences into DASRecords
+2. Parse those records into sentences into key:value pairs
 
-3. Store the resulting field-value-timestamps in an in-memory cache
+3. Store the resulting key-value-timestamps in an in-memory cache
 
 4. Wait for clients to connect to the websocket at port 8766 and
    serve them the requested data.
 
-If your data contain NMEA records that are not defined in local/, you
-can modify the default sensor, sensor_model and message definition
-paths with the --parse_nmea_[sensor,sensor_model,message]_path
-arguments, such as
+If your data contain records in formats that are not defined in
+local/devices/*.yaml, you can modify the default sensor, sensor_model
+and message definition paths with the
+--parse_definition_path arguments, such as
 
     logger/utils/cached_data_server.py \
       --network :6221,:6224 \
       --websocket :8766 \
       --back_seconds 480 \
-      --parse_nmea_sensor_path local/sensor/*.yaml,test/sikuliaq/sensors.yaml \
-      --parse_nmea_sensor_model_path local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml \
+      --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
       --v
 
-When invoked via the listen.py script, fewer options are currently
-available:
+A CachedDataServer may also be created by invoking the listen.py
+script and creating a CachedDataWriter (which is just a wrapper around
+CachedDataServer). It may be invoked with the same options, and has
+the added benefit that you can have your server take data from a wider
+variety of sources (by using a LogfileReader, DatabaseReader,
+RedisReader or the like):
 
     logger/listener/listen.py \
       --network :6221,:6224 \
-      --transform_parse_nmea \
+      --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
+      --transform_parse \
       --write_cached_data_server :8766
 
 This command line creates a CachedDataWriter that performs the same
@@ -66,27 +71,19 @@ wrapper) into a logger via a configuration file:
 
 where data_server_config.yaml contains:
 
-    {
-        "readers": [
-            { "class": "NetworkReader",
-              "kwargs": { "network": ":6221" }
-            },
-            { "class": "NetworkReader",
-              "kwargs": { "network": ":6224" }
-            }
-        ],
-        "transforms": [
-            { "class": "ParseNMEATransform" }
-        ],
-        "writers": [
-            { "class": "CachedDataWriter",
-              "kwargs": { "websocket": ":8766",
-                          "back_seconds": 480,
-                          "cleanup": 60"
-                        }
-            }
-        ]
-    }
+readers:
+- class: NetworkReader
+  kwargs: {network: ':6221'}
+- class: NetworkReader
+  kwargs: {network: ':6224'}
+transforms:
+- {class: ParseTransform}
+writers:
+- class: CachedDataWriter
+  kwargs:
+    back_seconds: 480
+    cleanup: 60
+     websocket: ':8766'
 
 *****************
 NOTE: We get have some inexplicable behavior here. When called
@@ -382,9 +379,14 @@ class CachedDataServer:
   def cache_record(self, record):
     """Add the passed record to the cache.
 
-    Expects passed records to either be DASRecords or simple dicts. If
-    type(record) is dict, expect it to be in one of the following
-    formats:
+    Expects passed records to be in one of two formats:
+
+    1) DASRecord
+
+    2) a dict encoding optionally a source data_id and timestamp and a
+       mandatory 'fields' key of field_name: value pairs. This is the format
+       emitted by default by ParseTransform:
+
        {
          'data_id': ...,
          'timestamp': ...,
@@ -394,11 +396,23 @@ class CachedDataServer:
            ...
          }
        }
-    or
-       {field_name: [(timestamp, value), (timestamp, value),...],
-        field_name: [(timestamp, value), (timestamp, value),...],
-        ...
+
+    A twist on format (2) is that the values may either be a singleton
+    (int, float, string, etc) or a list. If the value is a singleton,
+    it is taken at face value. If it is a list, it is assumed to be a
+    list of (value, timestamp) tuples, in which case the top-level
+    timestamp, if any, is ignored.
+
+       {
+         'data_id': ...,
+         'timestamp': ...,
+         'fields': {
+            field_name: [(timestamp, value), (timestamp, value),...],
+            field_name: [(timestamp, value), (timestamp, value),...],
+            ...
+         }
        }
+
     """
     logging.debug('CachedDataServer.cache_record() received: %s', record)
     if not record:
@@ -406,23 +420,22 @@ class CachedDataServer:
       return
 
     # If we've been passed a DASRecord, the field:value pairs are in a
-    # field called, uh, 'fields'; if we've been passed a dict, it
-    # could be either of the above formats. Try for the first, and if
-    # it fails, assume the second.
+    # field called, uh, 'fields'; if we've been passed a dict, look
+    # for its 'fields' key.
     if type(record) is DASRecord:
+      record_timestamp = record.timestamp
       fields = record.fields
-      timestamp = record.timestamp
     elif type(record) is dict:
-      data_id = record.get('data_id', None)
-      timestamp = record.get('timestamp', time.time())
-
-      # If we don't find a 'fields' entry in the dict, assume
-      # (dangerously) that the entire record is a field dict.
-      fields = record.get('fields', record)
-    else:
-      logging.error('Record passed to CachedDataServer is not of type '
-                    '"DASRecord" or dict; is type "%s"', type(record))
-      return
+      record_timestamp = record.get('timestamp', time.time())
+      fields = record.get('fields', None)
+      if fields is None:
+        logging.error('Dict record passed to CachedDataServer has no '
+                      '"fields" key, which either means it\'s not a dict '
+                      'you should be passing, or it is in the old "field_dict" '
+                      'format that assumes key:value pairs are at the top '
+                      'level.')
+        logging.error('The record in question: %s', str(record))
+        return
 
     # Add values from record to cache
     with self.cache_lock:
@@ -443,7 +456,7 @@ class CachedDataServer:
         else:
           # If type(value) is *not* a list, assume it's the value
           # itself. Add it using the default timestamp.
-          self.cache[field].append((timestamp, value))
+          self.cache[field].append((record_timestamp, value))
 
   ############################
   def cleanup(self, oldest):
@@ -539,8 +552,8 @@ if __name__ == '__main__':
 
   from logger.readers.composed_reader import ComposedReader
   from logger.readers.network_reader import NetworkReader
-  from logger.transforms.parse_nmea_transform import ParseNMEATransform
-  from logger.utils import nmea_parser
+  from logger.transforms.parse_transform import ParseTransform
+  from logger.utils import record_parser
 
   parser = argparse.ArgumentParser()
   parser.add_argument('--network', dest='network', required=True,
@@ -552,24 +565,12 @@ if __name__ == '__main__':
                       action='store',
                       help='Host:port on which to serve data')
 
-  parser.add_argument('--parse_nmea_message_path',
-                      dest='parse_nmea_message_path',
-                      default=nmea_parser.DEFAULT_MESSAGE_PATH,
-                      help='Comma-separated globs of NMEA message definition '
-                      'file names, e.g. '
-                      'local/message/*.yaml,test/skq/messages.yaml')
-  parser.add_argument('--parse_nmea_sensor_path',
-                      dest='parse_nmea_sensor_path',
-                      default=nmea_parser.DEFAULT_SENSOR_PATH,
-                      help='Comma-separated globs of NMEA sensor definition '
-                      'file names, e.g. '
-                      'local/sensor/*.yaml,test/skq/sensors.yaml')
-  parser.add_argument('--parse_nmea_sensor_model_path',
-                      dest='parse_nmea_sensor_model_path',
-                      default=nmea_parser.DEFAULT_SENSOR_MODEL_PATH,
-                      help='Comma-separated globs of NMEA sensor model '
+  parser.add_argument('--parse_definition_path',
+                      dest='parse_definition_path',
+                      default=record_parser.DEFAULT_DEFINITION_PATH,
+                      help='Comma-separated globs of device and device type '
                       'definition file names, e.g. '
-                      'local/sensor_model/*.yaml,test/skq/sensor_models.yaml')
+                      'local/devices/*.yaml,test/skq/devices.yaml')
 
   parser.add_argument('--back_seconds', dest='back_seconds', action='store',
                       type=float, default=480,
@@ -596,10 +597,7 @@ if __name__ == '__main__':
 
   readers = [NetworkReader(network=network)
              for network in args.network.split(',')]
-  transform = ParseNMEATransform(
-    message_path=args.parse_nmea_message_path,
-    sensor_path=args.parse_nmea_sensor_path,
-    sensor_model_path=args.parse_nmea_sensor_model_path)
+  transform = ParseTransform(definition_path=args.parse_definition_path)
 
   reader = ComposedReader(readers=readers, transforms=[transform])
   writer = CachedDataServer(args.websocket, args.interval)
