@@ -1,11 +1,10 @@
 # OpenRVDAS Display Widgets
-© 2018 David Pablo Cohn - DRAFT 2019-01-03
+© 2018-2019 David Pablo Cohn - DRAFT 2019-03-16
 
 ## Table of Contents
 
 * [Overview](#overview)
 * [Data Servers](#data-servers)
-   * [Via the Logger Manager](#via-the-logger-manager)
    * [Via a CachedDataServer](#via-a-cacheddataserver)
    * [Via a CachedDataWriter](#via-a-cacheddatawriter)
 * [Connecting Data Servers to Widgets](#connecting-data-servers-to-widgets)
@@ -36,28 +35,10 @@ The above diagram illustrates three widget types in an excerpt from the "static"
 
 Both kinds of widgets attempt to open a websocket connection to a data
 server to request and receive the data they display. At present, there
-are three ways to run data servers that will feed this need.
-
-### Via the Logger Manager
-
-If the logger\_manager.py script is run with ```--websocket :[port]```
-arguments on its command line, it will attempt to run a data server
-off that websocket port.  Note that by default this server is
-configured to draw the data it serves from the database defined in
-[database/settings.py](../database/settings.py) (which should be
-copied over from
-[database/settings.py.dist](../database/settings.py.dist) and modified
-as necessary for the local installation).
-
-One consequence of this default is that it will
-only be able to provide data when whatever loggers it is running are
-actually writing to that database (e.g., mode "file/db" in the case of the
-sample configs included with this distribution).
-
-Another consequence of using the data server associated with the
-logger manager is a concentration of both bandwidth and computational
-requirements on a single process and machine. For that reason, when
-practical, we advocate using a standalone data server, as below.
+are two ways to run data servers that will feed this need. (One used
+to be able to connect to a database-backed DataServer via the
+LoggerManager, but we have disabled and deprecated that functionality
+to simplify code. It was pretty dodgy, anyways.)
 
 ### Via a CachedDataServer
 
@@ -85,19 +66,17 @@ says to
 4. Wait for clients to connect to the websocket at port 8766 and
    serve them the requested data.
 
-If your data contain NMEA records that are not defined in
-[local/](../local/), you can modify the default sensor, sensor\_model
-and message definition paths with the
-```--parse_nmea_[sensor,sensor_model,message]_path``` arguments, such
-as
+If your data contain records whose formats are not defined in
+[local/devices/*.yaml](../local/devices), you can modify the default
+device and device_type definition paths with the
+```--parse_definition_path``` argument, such as
 
 ```
     logger/utils/cached_data_server.py \
       --network :6221,:6224 \
       --websocket :8766 \
       --back_seconds 480 \
-      --parse_nmea_sensor_path local/sensor/*.yaml,test/sikuliaq/sensors.yaml \
-      --parse_nmea_sensor_model_path local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml \
+      --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
       --v
 ```
 
@@ -109,7 +88,7 @@ class. You may invoke it as part of a listen.py call:
 ```
     logger/listener/listen.py \
       --network :6221,:6224 \
-      --transform_parse_nmea \
+      --transform_parse \
       --write_cached_data_server :8766
 ```
 
@@ -131,27 +110,23 @@ wrapper) into a logger via a configuration file:
 where data\_server\_config.yaml contains:
 
 ```
-    {
-        "readers": [
-            { "class": "NetworkReader",
-              "kwargs": { "network": ":6221" }
-            },
-            { "class": "NetworkReader",
-              "kwargs": { "network": ":6224" }
-            }
-        ],
-        "transforms": [
-            { "class": "ParseNMEATransform" }
-        ],
-        "writers": [
-            { "class": "CachedDataWriter",
-              "kwargs": { "websocket": ":8766",
-                          "back_seconds": 480,
-                          "cleanup": 60"
-                        }
-            }
-        ]
-    }
+readers:
+- class: NetworkReader
+  kwargs:
+    network: :6221 
+- class: NetworkReader
+  kwargs:
+    network: :6224 
+
+transforms:
+  class: ParseNMEATransform 
+
+writers:
+  class: CachedDataWriter
+  kwargs:
+    websocket: :8766
+    back_seconds: 480
+    cleanup: 60
 ```
 
 Again, this will perform the same functionality as the original call.
@@ -298,7 +273,7 @@ opportunities for participating in code development.
 
 This code is made available under the MIT license:
 
-Copyright (c) 2017 David Pablo Cohn
+Copyright (c) 2017-2019 David Pablo Cohn
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
