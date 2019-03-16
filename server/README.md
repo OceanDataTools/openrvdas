@@ -11,12 +11,11 @@ loggers, either locally or on other machines via client connections.
 
 If you have already installed the files needed to run the core
 OpenRVDAS code, as described in [the parent directory
-INSTALL.md](../INSTALL.md); you only need to install the websockets
-module if it is not part of your existing installation: to run the
-servers:
+INSTALL.md](../INSTALL.md); you will need to install some additional
+Python modules to have full use of OpenRVDAS modules:
 
 ```
-  pip3 install websockets
+  pip3 install websockets parse PyYAML
 ```
 If the LoggerManager code is to serve data via display widgets, you'll
 also need to install the necessary database components by following
