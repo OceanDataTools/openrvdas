@@ -35,6 +35,7 @@ dispatch configurations to client LoggerRunners.
 import asyncio
 import logging
 import queue
+import ssl
 import threading
 import time
 import websockets
@@ -43,7 +44,7 @@ import websockets
 class WebsocketServer:
   ############################
   def __init__(self, host, port, consumer, producer,
-               on_connect=None, on_disconnect=None):
+               on_connect=None, on_disconnect=None, use_ssl=False):
     """host, port - host and port to open as websocket
 
     consumer - async routine that takes a str argument and a
@@ -62,12 +63,18 @@ class WebsocketServer:
     on_disconnect - optional routine to be called when a client
        disconnects. Should take a single integer representing client's
        unique client_id.
+
+    use_ssl - if True, try to serve via SSL. See the SSL section of
+       https://websockets.readthedocs.io/en/stable/intro.html
     """
     self.host = host
     self.port = port
     self.consumer = consumer
     self.producer = producer
-
+    self.ssl_context = None
+    if use_ssl:
+      self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    
     self.on_connect = on_connect
     self.on_disconnect = on_disconnect
 
@@ -113,7 +120,7 @@ class WebsocketServer:
       self.client_map[client_id] = websocket
       self.num_clients += 1
       if self.on_connect:
-        self.on_connect(websocket, client_id, path)
+        await self.on_connect(websocket, client_id, path)
 
     tasks = []
 
@@ -135,7 +142,7 @@ class WebsocketServer:
       logging.info('WebsocketServer client #%d completed', client_id)
       del self.client_map[client_id]
       if self.on_disconnect:
-        self.on_disconnect(client_id)
+        await self.on_disconnect(client_id)
 
   ############################
   def clients(self):
@@ -143,9 +150,14 @@ class WebsocketServer:
     return self.client_map
 
   ############################
+  def start_server(self):
+    """Return a future that we (or someone else) can schedule/ensure."""
+    return websockets.serve(self._handler, self.host, self.port,
+                            ssl=self.ssl_context)
+
+  ############################
   def run(self):
-    start_server = websockets.serve(self._handler, self.host, self.port)
-    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_until_complete(self.start_server())
     asyncio.get_event_loop().run_forever()
 
   ############################
@@ -205,7 +217,7 @@ async def queued_producer(client_id):
       await asyncio.sleep(0.1)
 
 ############################
-def register_websocket_client(websocket, client_id, path):
+async def register_websocket_client(websocket, client_id, path):
   """We've been alerted that a websocket client has connected.
   Register it properly."""
   global send_queue, receive_queue, websocket_map_lock
@@ -216,7 +228,7 @@ def register_websocket_client(websocket, client_id, path):
     logging.warning('Websocket client #%d has connected', client_id)
 
 ############################
-def unregister_websocket_client(client_id):
+async def unregister_websocket_client(client_id):
   """We've been alerted that a websocket client has disconnected.
   Unegister it properly."""
   global send_queue, receive_queue, websocket_map_lock
@@ -260,7 +272,8 @@ if __name__ == '__main__':
                       required=True, type=str,
                       help='Attempt to open specified host:port as websocket '
                       'and begin reading/writing data on it.')
-
+  parser.add_argument('--use_ssl', dest='use_ssl', action='store_true',
+                      default=False, help='Try to serve using SSL.')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
                       help='Increase output verbosity')
