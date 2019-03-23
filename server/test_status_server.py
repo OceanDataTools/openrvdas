@@ -16,10 +16,14 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(
 from server.status_server import StatusServer
 
 TEXT_WEBSOCKET = 'localhost:8768'
-TEXT_REDIS_SERVER = 'localhost:8770'
+TEXT_REDIS_SERVER = 'localhost:8769'
 
-JSON_WEBSOCKET = 'localhost:8769'
+JSON_WEBSOCKET = 'localhost:8770'
 JSON_REDIS_SERVER = 'localhost:8771'
+
+AUTH_WEBSOCKET = 'localhost:8772'
+AUTH_REDIS_SERVER = 'localhost:8773'
+AUTH_TOKEN = 'a34faeracser'
 
 ################################################################################
 class TestStatusServerText(unittest.TestCase):
@@ -227,6 +231,119 @@ class TestStatusServerJSON(unittest.TestCase):
           result = await ws1.recv()
           self.assertEqual(
             result, '{"type": "redis_pub", "channel": "pch3", "message": "pch3_test"}')
+
+    asyncio.get_event_loop().run_until_complete(async_test())  
+
+################################################################################
+class TestStatusServerAuth(unittest.TestCase):
+  ###########
+  # Run the Redis server as a subprocess, return proc number
+  def run_redis_server(self):
+    redis_port = AUTH_REDIS_SERVER.split(':')[1]
+    cmd_line = ['/usr/bin/env', 'redis-server', '--port %s' % redis_port]
+    self.redis_proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+
+    # If we were unable to start server, that probably means one was
+    # already running on this port. Rather than trash it, bail out.
+    time.sleep(0.2)
+    self.assertEqual(self.redis_proc.poll(), None,
+                     'Redis server already running at %s' % AUTH_REDIS_SERVER)
+  
+  ###########
+  # Run the status server in a daemon thread - it creates a new event
+  # loop for its own use.
+  def run_status_server(self):
+    def r_s_s_thread():
+      loop = asyncio.new_event_loop()
+      asyncio.set_event_loop(loop)
+      server = StatusServer(websocket=AUTH_WEBSOCKET, redis=AUTH_REDIS_SERVER,
+                            auth_token=AUTH_TOKEN, use_json=True)
+      server.run()
+    self.status_thread = threading.Thread(name='run_status_server',
+                                          target=r_s_s_thread, daemon=True)
+    self.status_thread.start()
+
+  ############################
+  def setUp(self):
+    warnings.simplefilter("ignore", ResourceWarning)
+
+    self.run_redis_server()
+    self.run_status_server()
+    time.sleep(0.25)  # take a moment to let the servers get started
+    
+  ############################
+  def tearDown(self):
+    if self.redis_proc:
+      logging.info('killing redis process we started')
+      self.redis_proc.terminate()
+    
+  ############################
+  def test_basic(self):
+    async def async_test():
+      async with websockets.connect('ws://' + AUTH_WEBSOCKET) as ws1:
+        async with websockets.connect('ws://' + AUTH_WEBSOCKET) as ws2:
+
+          # Test set and get
+          await ws1.send('{"type":"get", "key":"test_k1", "auth_token": "%s"}' % AUTH_TOKEN)
+          result = await ws1.recv() 
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k1", "value": null}')
+
+          # Set unauthorized
+          await ws1.send('{"type":"set", "key":"test_k1", "value": "should be unauthorized"}')
+          await ws1.send('{"type":"get", "key":"test_k1", "auth_token": "%s"}' % AUTH_TOKEN)
+          result = await ws1.recv() 
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k1", "value": null}')
+
+          # Set authorized
+          await ws1.send('{"type":"set", "key":"test_k1", "value": "value1", "auth_token": "%s"}' % AUTH_TOKEN)
+          await ws1.send('{"type":"get", "key":"test_k1", "auth_token": "%s"}' % AUTH_TOKEN)
+          result = await ws1.recv()
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k1", "value": "value1"}')
+
+          # Now create an auth for both clients: w1 can set and get, and w2 can only get
+          await ws1.send('{"type":"auth", "user":"w1", "user_auth_token":"w1_token", "auth_token": "%s", "commands": ["set", "get"]}' % AUTH_TOKEN)
+          await ws1.send('{"type":"auth", "user":"w2", "user_auth_token":"w2_token", "auth_token": "%s", "commands": ["get"]}' % AUTH_TOKEN)
+
+          # Now try setting without identifying ourselves as w1
+          # Set unauthorized
+          await ws1.send('{"type":"set", "key":"test_k5", "value": "should be unauthorized"}')
+          await ws1.send('{"type":"get", "key":"test_k5", "auth_token": "%s"}' % AUTH_TOKEN)
+          result = await ws1.recv() 
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k5", "value": null}')
+
+          # Now try setting, and using our w1 auth key
+          # Set authorized
+          await ws1.send('{"type":"set", "key":"test_k5", "value": "value5", "user":"w1", "auth_token": "w1_token"}')
+          await ws1.send('{"type":"get", "key":"test_k5", "auth_token": "%s"}' % AUTH_TOKEN)
+          result = await ws1.recv()
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k5", "value": "value5"}')
+
+          # Now client w1 has been identified and authenticated as
+          # user w1, so we should be able to set/get without passing
+          # tokens.
+          await ws1.send('{"type":"set", "key":"test_k6", "value": "value6"}')
+          await ws1.send('{"type":"get", "key":"test_k6", "auth_token": "%s"}' % AUTH_TOKEN)
+          result = await ws1.recv()
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k6", "value": "value6"}')
+
+          await ws1.send('{"type":"get", "key":"test_k6"}')
+          result = await ws1.recv()
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k6", "value": "value6"}')
+
+          # But mset should still be unauthorized.
+          await ws1.send('{"type":"mset", "values": {"test_k7":"should be unauthorized"}}')
+          await ws1.send('{"type":"get", "key":"test_k7", "auth_token": "%s"}' % AUTH_TOKEN)
+          result = await ws1.recv()
+          self.assertEqual(
+            result, '{"type": "redis_get", "key": "test_k7", "value": null}')
 
     asyncio.get_event_loop().run_until_complete(async_test())  
 

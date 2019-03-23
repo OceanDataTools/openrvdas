@@ -19,7 +19,7 @@ similar (identical?) to a subset of commands accepted by redis-cli:
   =========
   mset test_k1 value1 test_k2 value2 test_k3 value3
   mget test_k1 test_k3 test_k5
-   -> {"type": "redis_mget", 
+   -> {"type": "redis_mget",
        "result": {"test_k1": "value1", "test_k3": "value3", "test_k5": null}}
 
   Subscribe/Unsubscribe
@@ -58,7 +58,7 @@ feed it with JSON strings:
                             "test_k3": "value3"} }
 
   {"type": "mget", "keys": ["test_k1", "test_k3", "test_k5"]}
-    ->  {"type": "redis_mget", 
+    ->  {"type": "redis_mget",
          "result": {"test_k1": "value1", "test_k3": "value3", "test_k5": null}}
 
   Subscribe/Unsubscribe
@@ -87,19 +87,46 @@ feed it with JSON strings:
    -> {"type": "redis_pub", "channel": "ch3", "message": "ch3_test"}
 
 
-There are (will be?) rudimentary hooks for JWT authentication so that
-only authorized clients can connect or (eventually) can perform more
-sensitive operations such as (maybe some day) request configuration
-changes.
+Authentication
+==============
+NOTE: authentication only works when --use_json is specified.
+
+Authentication is VERY PRIMITIVE at the moment. Authentication is
+enabled if a master auth_token is passed in on the command line
+(TODO: allow reading master auth_token and user auth_tokens from
+protected file).
+
+Initially, when invoked like this, all requests must include the token
+or will be discarded as "unauthorized":
+
+  {"type":"get", "key":"test_k1", "auth_token": "3fAEF4erfae4$A"}
+
+Specific users may be authorized for specific operations by means of
+an "auth" request:
+
+  {"type":"auth", "auth_token": "3fAEF4erfae4$A",
+   "user":"user1", "user_auth_token":"eEfe44fae4", "commands": ["set", "get"]}
+
+The above request adds permission for user "user1" to perform commands
+"set" and "get". The first time user1 wishes to perform one of those
+commands on a client, they will need to include their user name and
+their own auth_token:
+
+  {"type":"set", "key":"test_k5", "value": "value5",
+   "user":"user1", "auth_token": "eEfe44fae4"}
+
+The server will cache the fact that this client connection is owned by
+user1, and will allow future requests that are authorized for user1 on
+this connection without the need for an auth_token:
+
+  {"type":"get", "key":"test_k6"}
+
+THIS LAST BIT MAY BE A BAD IDEA - I DON'T REALLY KNOW.
+
+====
 
 At the moment it's written to assume a Redis backing server for the
 pubsub service.
-
-TODO: Implement AUTH - invoker hands in AUTH token; a request
-including *that* AUTH token is allowed to add to a user:auth:command
-dict in in-memory store (not Redis store, or authorized users could
-get at it). That dict says that when a user connects with a user:auth
-identification, they get to execute the listed commands.
 
 TODO: Add Redis stream functions, as documented here:
 https://aioredis.readthedocs.io/en/v1.2.0/mixins.html. Currently
@@ -113,6 +140,7 @@ import asyncio
 import copy
 import json
 import logging
+import pprint
 import ssl
 import subprocess
 import sys
@@ -170,8 +198,8 @@ class StatusServer:
             localhost and no server is detected at that address, attempt to
             start one up.
 
-    auth_token - NOT YET IMPLEMENTED. Use this token to authenticate requests
-            to add AUTH tokens for other websocket clients.
+    auth_token - Use this token to authenticate requests to add AUTH
+            tokens for other websocket clients.
 
     use_json - if True, expect websocket clients to send requests in JSON
             format.
@@ -194,8 +222,24 @@ class StatusServer:
     self.client_map = {}
     self.client_lock = asyncio.Lock()
 
-    # As-yet-unused security stuff
+    # Authentication stuff. We use self.auth_token as the One True
+    # Token that, if specified, is authorized to do anything,
+    # including adding authorization for other users to use their own
+    # tokens for specified operations.
     self.auth_token = auth_token
+
+    # We store user authentication stuff in self.auth in dict:
+    #   user: {'auth_token':token, 'commands': set(authorized commands)}
+    #
+    # When a client connects and gives us appropriate 'user' and
+    # 'auth_token' fields in a request, we check whether the command
+    # they're asking for (publish, subscribe, etc.) is in their
+    # commands set. If it is, we not only execute the command, but we
+    # cache that permission so that the client. can perform that
+    # command again in the future without having to send along user
+    # and auth_token.
+    self.auth = {}
+
     self.ssl_context = None
     if use_ssl:
       self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -332,6 +376,67 @@ class StatusServer:
       logging.info('Websocket client %d connection lost', client_id)
 
   ############################
+  async def _check_auth(self, client_id, json_mesg):
+    """Check whether the json_request is an authorized operation."""
+
+    # First, see if they've explicitly handing us an auth token.
+    auth_token = json_mesg.get('auth_token', None)
+    user = json_mesg.get('user', None)
+    command = json_mesg.get('type', None)
+
+    # Is it the One True Token? If so, they can do whatever they want
+    if auth_token == self.auth_token:
+      return True
+
+    #logging.warning('Auth structure:\n%s', pprint.pformat(self.auth))
+
+    if auth_token:
+      #logging.warning('Testing for request auth')
+      # If we've got an auth token and it's not the One True Token,
+      # try to find a user_auth to go with it.
+      if not user:
+        return False
+      user_auth = self.auth.get(user, None)
+      if not user_auth:
+        return False
+      if not auth_token == user_auth.get('auth_token', None):
+        return False
+
+      # So far so good. Now let's see what they want to do, and
+      # whether it's an authorized command.
+      auth_commands = user_auth.get('commands', [])
+      if not command in auth_commands:
+        return False
+
+      #logging.warning('Request is authorized')
+
+      # If they're allowed to do it, give the okay. Should we also
+      # cache that this particular client is now allowed to do these
+      # operations, regardless of whether they've passed us a token?
+      async with self.client_lock:
+        client = self.client_map.get(client_id)
+      async with client.lock:
+        #logging.warning('Got client lock')
+        if not client.auth:
+          #logging.warning('Adding client auth')
+          client.auth = {'user':user,
+                         'auth_token':auth_token,
+                         'commands':set(auth_commands)}
+      #logging.warning('Cached request authorization')
+      return True
+
+    # They've not passed us an auth_token; let's see if we've already
+    # authorized them.
+    #logging.warning('Testing for client auth')
+    client = self.client_map.get(client_id, None)
+    if not client or not client.auth:
+      return False
+    if not command in client.auth.get('commands', []):
+      return False
+    #logging.warning('Client is authorized')
+    return True
+
+  ############################
   async def _process_json_message(self, message, client_id):
     """Parse and process a JSON message we've received from websocket."""
 
@@ -341,16 +446,28 @@ class StatusServer:
       logging.error('Unable to decode JSON string: "%s"', message)
       return
 
+    # Have we been initialized with an auth token? If so, only allow
+    # authorized users to do stuff.
+    if self.auth_token and not await self._check_auth(client_id, json_mesg):
+      logging.warning('Unauthorized request: %s', json_mesg)
+      return
+
     mesg_type = json_mesg.get('type', None)
     if mesg_type is None:
       raise ValueError('Bad JSON message: no "type" field')
-    
-    # Authenticate (hah!), if needed, then pass to Redis. No,
-    # authentication isn't implemented yet.
 
     ##########
+    # Auth - add authentication for a user.
+    if mesg_type == 'auth':
+      # If we're here, we're allowed to do 'auth' commands. Scary,
+      # isn't it?
+      user = json_mesg['user']
+      user_auth_token = json_mesg['user_auth_token']
+      commands = json_mesg['commands']
+      self.auth[user] = {'auth_token':user_auth_token, 'commands':commands}
+
     # Set
-    if mesg_type == 'set':
+    elif mesg_type == 'set':
       try:
         await self._redis_set(client_id, json_mesg['key'], json_mesg['value'])
       except ValueError:
@@ -727,6 +844,12 @@ if __name__ == '__main__':
                       default=0, action='count',
                       help='Increase output verbosity')
   args = parser.parse_args()
+
+  if args.auth_token and not args.use_json:
+    logging.fatal('The --auth_token argument may only be used when '
+                  '--use_json is also specified.')
+    sys.exit(1)
+
 
   # Set logger format and verbosity
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
