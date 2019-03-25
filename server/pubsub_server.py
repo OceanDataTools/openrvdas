@@ -140,6 +140,7 @@ import asyncio
 import copy
 import json
 import logging
+import pathlib
 import pprint
 import ssl
 import subprocess
@@ -185,7 +186,7 @@ def parse_host_spec(host_spec, default_host=None, default_port=None):
   return (host, port)
 
 ################################################################################
-class StatusServer:
+class PubSubServer:
   ############################
   def __init__(self, websocket=None, redis=None, auth_token=None,
                use_json=False, use_ssl=False, event_loop=None):
@@ -243,6 +244,8 @@ class StatusServer:
     self.ssl_context = None
     if use_ssl:
       self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+      #self.ssl_context.load_cert_chain(
+      #  pathlib.Path(__file__).with_name('certificate goes here'))
 
     # Instantiate websocket server
     self.event_loop.run_until_complete(self._start_websocket_server())
@@ -449,7 +452,7 @@ class StatusServer:
     # Have we been initialized with an auth token? If so, only allow
     # authorized users to do stuff.
     if self.auth_token and not await self._check_auth(client_id, json_mesg):
-      logging.warning('Unauthorized request: %s', json_mesg)
+      logging.info('Unauthorized request: %s', json_mesg)
       return
 
     mesg_type = json_mesg.get('type', None)
@@ -859,7 +862,7 @@ if __name__ == '__main__':
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
   # Create the websocket server, setting up queued senders/receivers
-  server = StatusServer(websocket=args.websocket, redis=args.redis,
+  server = PubSubServer(websocket=args.websocket, redis=args.redis,
                         auth_token=args.auth_token,
                         use_json=args.use_json, use_ssl=args.use_ssl)
 

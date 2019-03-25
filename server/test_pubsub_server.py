@@ -13,7 +13,7 @@ import websockets
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
-from server.status_server import StatusServer
+from server.pubsub_server import PubSubServer
 
 TEXT_WEBSOCKET = 'localhost:8768'
 TEXT_REDIS_SERVER = 'localhost:8769'
@@ -26,7 +26,7 @@ AUTH_REDIS_SERVER = 'localhost:8773'
 AUTH_TOKEN = 'a34faeracser'
 
 ################################################################################
-class TestStatusServerText(unittest.TestCase):
+class TestPubSubServerText(unittest.TestCase):
   ###########
   # Run the Redis server as a subprocess, return proc number
   def run_redis_server(self):
@@ -48,7 +48,7 @@ class TestStatusServerText(unittest.TestCase):
     def r_s_s_thread():
       loop = asyncio.new_event_loop()
       asyncio.set_event_loop(loop)
-      server = StatusServer(websocket=TEXT_WEBSOCKET, redis=TEXT_REDIS_SERVER)
+      server = PubSubServer(websocket=TEXT_WEBSOCKET, redis=TEXT_REDIS_SERVER)
       server.run()
     self.status_thread = threading.Thread(name='run_status_server',
                                           target=r_s_s_thread, daemon=True)
@@ -128,7 +128,7 @@ class TestStatusServerText(unittest.TestCase):
     asyncio.get_event_loop().run_until_complete(async_test())  
 
 ################################################################################
-class TestStatusServerJSON(unittest.TestCase):
+class TestPubSubServerJSON(unittest.TestCase):
   ###########
   # Run the Redis server as a subprocess, return proc number
   def run_redis_server(self):
@@ -150,7 +150,7 @@ class TestStatusServerJSON(unittest.TestCase):
     def r_s_s_thread():
       loop = asyncio.new_event_loop()
       asyncio.set_event_loop(loop)
-      server = StatusServer(websocket=JSON_WEBSOCKET, redis=JSON_REDIS_SERVER,
+      server = PubSubServer(websocket=JSON_WEBSOCKET, redis=JSON_REDIS_SERVER,
                             use_json=True)
       server.run()
     self.status_thread = threading.Thread(name='run_status_server',
@@ -235,7 +235,7 @@ class TestStatusServerJSON(unittest.TestCase):
     asyncio.get_event_loop().run_until_complete(async_test())  
 
 ################################################################################
-class TestStatusServerAuth(unittest.TestCase):
+class TestPubSubServerAuth(unittest.TestCase):
   ###########
   # Run the Redis server as a subprocess, return proc number
   def run_redis_server(self):
@@ -257,7 +257,7 @@ class TestStatusServerAuth(unittest.TestCase):
     def r_s_s_thread():
       loop = asyncio.new_event_loop()
       asyncio.set_event_loop(loop)
-      server = StatusServer(websocket=AUTH_WEBSOCKET, redis=AUTH_REDIS_SERVER,
+      server = PubSubServer(websocket=AUTH_WEBSOCKET, redis=AUTH_REDIS_SERVER,
                             auth_token=AUTH_TOKEN, use_json=True)
       server.run()
     self.status_thread = threading.Thread(name='run_status_server',
