@@ -3,88 +3,65 @@
 messages. Clients connect via a websocket and specify what message
 channels they're interested in.
 
-By default will expect websocket clients to feed it with text commands
-similar (identical?) to a subset of commands accepted by redis-cli:
+It expects websocket clients to feed it with JSON-encoded requests
+that roughly correspond to a subset of Redis commands.
 
-  Get/Set
-  =======
-  get test_k1
-   -> {"type": "redis_get", "key": "test_k1", "value": null}
-
-  set test_k1 value1
-  get test_k1'
-   -> {"type": "redis_get", "key": "test_k1", "value": "value1"}
-
-  MGet/MSet
-  =========
-  mset test_k1 value1 test_k2 value2 test_k3 value3
-  mget test_k1 test_k3 test_k5
-   -> {"type": "redis_mget",
-       "result": {"test_k1": "value1", "test_k3": "value3", "test_k5": null}}
-
-  Subscribe/Unsubscribe
-  =====================
-  subscribe ch1 ch2
-  unsubscribe ch1 ch2
-
-  Psubscribe/Punsubscribe
-  =======================
-  psubscribe channel_pattern*
-  punsubscribe channel_pattern*
-
-  Publish
-  =======
-  publish ch1 ch1_test
-   -> {"type": "redis_pub", "channel": "ch1", "message": "ch1_test"}')
-
-
-If started with the --use_json flag, will expect websocket clients to
-feed it with JSON strings:
+Each request will be responded to with a JSON-encoded dict including a
+request status corresponding to HTTP response codes (200 = ok, 400 =
+bad request, 401 = unauthorized):
 
   Get/Set
   =======
   {"type": "get", "key": "test_k1"}
-    -> {"type": "redis_get", "key": "test_k1", "value": null}
+    -> {"type": "response", "request_type": "get", "status": 200,
+        "key": "test_k1", "value": null}
 
   {"type": "set", "key": "test_k1", "value": "value1"}
+    -> {"type": "response", "request_type": "set", "status": 200}
 
   {"type": "get", "key": "test_k1"}
-    ->  {"type": "redis_get", "key": "test_k1", "value": "value1"}
+    -> {"type": "response", "request_type": "get", "status": 200,
+        "key": "test_k1", "value": "value1"}
 
   MGet/MSet
   =======
   {"type": "mset", "values":{"test_k1": "value1",
                             "test_k2": "value2",
                             "test_k3": "value3"} }
+    -> {"type": "response", "request_type": "mset", "status": 200}
 
   {"type": "mget", "keys": ["test_k1", "test_k3", "test_k5"]}
-    ->  {"type": "redis_mget",
-         "result": {"test_k1": "value1", "test_k3": "value3", "test_k5": null}}
+    ->  {"type": "response", "request_type": "mget", "status": 200,
+         "values": {"test_k1": "value1", "test_k3": "value3", "test_k5": null}}
 
   Subscribe/Unsubscribe
   =====================
   {"type": "subscribe", "channels":["ch1", "ch2"]}
     or
   {"type": "subscribe", "channel": "ch1"}
+    -> {"type": "response", "request_type": "subscribe", "status": 200}
 
   {"type": "unsubscribe", "channels":["ch1", "ch2"]}
     or
   {"type": "unsubscribe", "channel": "ch1"}
-
+    -> {"type": "response", "request_type": "unsubscribe", "status": 200}
 
   Psubscribe/Punsubscribe
   =====================
   {"type": "psubscribe", "channel_pattern": "ch*"}
+    -> {"type": "response", "request_type": "psubscribe", "status": 200}
 
   {"type": "punsubscribe", "channel_pattern": "ch*"}
+    -> {"type": "response", "request_type": "punsubscribe", "status": 200}
 
   Publish
   =======
   {"type": "publish", "channel": "ch3", "message": "ch3_test"}
+    -> {"type": "response", "request_type": "publish", "status": 200}
 
   Published messages will be returned in JSON of the format:
 
-   -> {"type": "redis_pub", "channel": "ch3", "message": "ch3_test"}
+   -> {"type": "publish", "channel": "ch3", "message": "ch3_test"}
 
 
 Authentication
@@ -147,6 +124,8 @@ import subprocess
 import sys
 import websockets
 
+from http import HTTPStatus
+
 # Add project path for local imports
 #from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 #from server.websocket_server import WebsocketServer
@@ -189,7 +168,7 @@ def parse_host_spec(host_spec, default_host=None, default_port=None):
 class PubSubServer:
   ############################
   def __init__(self, websocket=None, redis=None, auth_token=None,
-               use_json=False, use_ssl=False, event_loop=None):
+               use_ssl=False, event_loop=None):
     """
     websocket - websocket [host]:[port] on which to serve connections. If
             host or port are omitted, use default from 0.0.0.0:8766.
@@ -202,16 +181,12 @@ class PubSubServer:
     auth_token - Use this token to authenticate requests to add AUTH
             tokens for other websocket clients.
 
-    use_json - if True, expect websocket clients to send requests in JSON
-            format.
-
     use_ssl - if True, try to serve websockets via wss; not fully-implemented
 
     event_loop - if provided, use this event loop instead of the default.
     """
     self.websocket = websocket or DEFAULT_WEBSOCKET
     self.redis = redis or DEFAULT_REDIS_SERVER
-    self.use_json = use_json
     self.event_loop = event_loop or asyncio.get_event_loop()
 
     # If we end up starting our own Redis server, here's where we
@@ -251,7 +226,7 @@ class PubSubServer:
     self.event_loop.run_until_complete(self._start_websocket_server())
 
     # Start Redis server if it doesn't exist
-    self.event_loop.run_until_complete(self._start_redis_server())
+    self.event_loop.run_until_complete(self._start_cache_server())
 
   ############################
   async def _start_websocket_server(self):
@@ -268,7 +243,7 @@ class PubSubServer:
       raise OSError('Failed to open websocket %s:%d  %s' % (host, port, str(e)))
 
   ############################
-  async def _start_redis_server(self):
+  async def _start_cache_server(self):
     """Try to connect to specified Redis server. If it doesn't exist, try
     to start one.
     """
@@ -368,12 +343,9 @@ class PubSubServer:
     """Consume messages from websocket, parse, and pass along to Redis."""
     try:
       websocket = self.client_map[client_id].websocket
-      async for message in websocket:
-        logging.debug('Websocket server received message: ' + message)
-        if self.use_json:
-          await self._process_json_message(message, client_id)
-        else:
-          await self._process_text_message(message, client_id)
+      async for request in websocket:
+        logging.debug('Websocket server received request: ' + request)
+        await self._process_request(request, client_id)
 
     except:
       logging.info('Websocket client %d connection lost', client_id)
@@ -440,53 +412,76 @@ class PubSubServer:
     return True
 
   ############################
-  async def _process_json_message(self, message, client_id):
-    """Parse and process a JSON message we've received from websocket."""
+  async def _process_request(self, request, client_id):
+    """Parse and process a JSON request we've received from websocket."""
 
+    async with self.client_lock:
+      client = self.client_map[client_id]
+
+    # Can we even parse the request?
     try:
-      json_mesg = json.loads(message)
+      json_mesg = json.loads(request)
+      request_type = json_mesg.get('type', None)
     except json.decoder.JSONDecodeError:
-      logging.error('Unable to decode JSON string: "%s"', message)
+      logging.error('Unable to decode JSON string: "%s"', request)
+      response = {'type': 'response', 'status': HTTPStatus.BAD_REQUEST,
+                  'message': 'Unable to parse JSON request: %s' % request}
+      await client.websocket.send(json.dumps(response))
       return
+
+    # Set up a response dict we'll fill in as we try to execute the request
+    response = {'type': 'response'}
+    
+    # Do we even have a request type?
+    if request_type is None:
+      logging.info('Bad JSON request: no request type field: %s', request)
+      response['status'] = HTTPStatus.BAD_REQUEST
+      response['message'] = 'Missing request "type" field: %s' % request
 
     # Have we been initialized with an auth token? If so, only allow
     # authorized users to do stuff.
-    if self.auth_token and not await self._check_auth(client_id, json_mesg):
+    elif self.auth_token and not await self._check_auth(client_id, json_mesg):
       logging.info('Unauthorized request: %s', json_mesg)
-      return
-
-    mesg_type = json_mesg.get('type', None)
-    if mesg_type is None:
-      raise ValueError('Bad JSON message: no "type" field')
+      response['status'] = HTTPStatus.UNAUTHORIZED
+      response['message'] = 'Unauthorized request: %s' % request
 
     ##########
     # Auth - add authentication for a user.
-    if mesg_type == 'auth':
+    elif request_type == 'auth':
       # If we're here, we're allowed to do 'auth' commands. Scary,
       # isn't it?
       user = json_mesg['user']
       user_auth_token = json_mesg['user_auth_token']
       commands = json_mesg['commands']
       self.auth[user] = {'auth_token':user_auth_token, 'commands':commands}
+      response['status'] = HTTPStatus.OK
 
+    ##########
     # Set
-    elif mesg_type == 'set':
+    elif request_type == 'set':
       try:
-        await self._redis_set(client_id, json_mesg['key'], json_mesg['value'])
-      except ValueError:
-        logging.error('Bad set command: "%s"', message)
+        await self._cache_set(client_id, json_mesg['key'], json_mesg['value'])
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad set command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'set request missing key or value: %s' % json_mesg
 
     ##########
     # Get
-    elif mesg_type == 'get':
+    elif request_type == 'get':
       try:
-        await self._redis_get(client_id, json_mesg['key'])
+        response['key'] = json_mesg['key']
+        response['value'] = await self._cache_get(client_id, response['key'])
+        response['status'] = HTTPStatus.OK
       except ValueError:
-        logging.error('Bad get command: "%s"', message)
+        logging.info('Bad mset command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'get request missing key: %s' % request
 
     ##########
     # MSet
-    elif mesg_type == 'mset':
+    elif request_type == 'mset':
       # Assume values are in key:value dict named 'values'; convert to
       # interlaced list.
       try:
@@ -494,167 +489,102 @@ class PubSubServer:
         key_values = []
         for k, v in values.items():
           key_values.extend([k, v])
-        await self._redis_mset(client_id, key_values)
-      except ValueError:
-        logging.error('Bad mset command: "%s"', message)
+        await self._cache_mset(client_id, key_values)
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad mset command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Bad mset request %s' % request
 
     ##########
     # MGet
-    elif mesg_type == 'mget':
+    elif request_type == 'mget':
       # Assume key are in list named 'keys'
       try:
-        await self._redis_mget(client_id, json_mesg['keys'])
-      except ValueError:
-        logging.error('Bad mget command: "%s"', message)
+        values = await self._cache_mget(client_id, json_mesg['keys'])
+        response['values'] = values
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad mget command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Bad mget request %s' % request
 
     ##########
     # Subscribe - accept either "channel":"name" or "channels":["name1", ...]
-    elif mesg_type == 'subscribe':
+    elif request_type == 'subscribe':
       try:
         channels = json_mesg.get('channels', [json_mesg.get('channel')])
-        await self._redis_subscribe(client_id, channels)
-      except ValueError:
-        logging.error('Bad subscribe command: "%s"', message)
+        await self._cache_subscribe(client_id, channels)
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad subscribe command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Bad subscribe request %s' % request
 
     ##########
     # Unsubscribe - accept either "channel":"name" or "channels":["name1", ...]
-    elif mesg_type == 'unsubscribe':
+    elif request_type == 'unsubscribe':
       try:
         channels = json_mesg.get('channels', [json_mesg.get('channel')])
-        await self._redis_unsubscribe(client_id, channels)
-      except ValueError:
-        logging.error('Bad unsubscribe command: "%s"', message)
+        await self._cache_unsubscribe(client_id, channels)
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad unsubscribe command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Bad unsubscribe request %s' % request
 
     ##########
     # PSubscribe
-    elif mesg_type == 'psubscribe':
+    elif request_type == 'psubscribe':
       try:
-        await self._redis_psubscribe(client_id, json_mesg['channel_pattern'])
-      except ValueError:
-        logging.error('Bad psubscribe command: "%s"', message)
+        await self._cache_psubscribe(client_id, json_mesg['channel_pattern'])
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad psubscribe command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Bad psubscribe request %s' % request
 
     ##########
     # Punsubscribe
-    elif mesg_type == 'punsubscribe':
+    elif request_type == 'punsubscribe':
       try:
-        await self._redis_punsubscribe(client_id, json_mesg['channel_pattern'])
-      except ValueError:
-        logging.error('Bad punsubscribe command: "%s"', message)
+        await self._cache_punsubscribe(client_id, json_mesg['channel_pattern'])
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad punsubscribe command: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Bad punsubscribe request %s' % request
 
     ##########
     # Publish
-    elif mesg_type == 'publish':
+    elif request_type == 'publish':
       try:
-        await self._redis_publish(client_id,
-                                  json_mesg['channel'],
-                                  json_mesg['message'])
-      except ValueError:
-        logging.error('Bad publish command: "%s"', message)
+        channel = json_mesg['channel']
+        message = json_mesg['message']
+        await self._cache_publish(client_id, channel, message)
+        response['status'] = HTTPStatus.OK
+      except KeyError:
+        logging.info('Bad publish request: "%s"', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Bad publish request %s' % request
 
     ##########
     # Unknown command
     else:
-      logging.warning('Unknown message received from client %d: %s',
-                      client_id, message)
-
-  ############################
-  async def _process_text_message(self, message, client_id):
-    """Parse and process a text_message we've received from websocket."""
-
-    # Authenticate (hah!), if needed, then pass to Redis. No,
-    # authentication isn't implemented yet.
+      logging.info('Unknown request type received from client %d: %s',
+                      client_id, request)
+      response['status'] = HTTPStatus.BAD_REQUEST
+      response['message'] = 'Unrecognized request type: "%s"' % request_type
 
     ##########
-    # Set
-    if message.find('set ') == 0:
-      try:
-        s, key, value = message.split(sep=' ', maxsplit=2)
-        await self._redis_set(client_id, key, value)
-      except ValueError:
-        logging.error('Bad set command: "%s"', message)
-
-    ##########
-    # Get
-    elif message.find('get ') == 0:
-      try:
-        s, key = message.split(sep=' ')
-        await self._redis_get(client_id, key)
-      except ValueError:
-        logging.error('Bad get command: "%s"', message)
-
-    ##########
-    # MSet
-    elif message.find('mset ') == 0:
-      # Assume list is sequential key value pairs, as in redis-cli
-      try:
-        s, *key_values = message.split(sep=' ')
-        if int(len(key_values)/2) == len(key_values)/2:
-          await self._redis_mset(client_id, key_values)
-        else:
-          logging.error('Bad mset command: must have even number of key value '
-                        'elements: "%s"', message)
-      except ValueError:
-        logging.error('Bad mset command: "%s"', message)
-
-    ##########
-    # MGet
-    elif message.find('mget ') == 0:
-      try:
-        s, *keys = message.split(sep=' ')
-        await self._redis_mget(client_id, keys)
-      except ValueError:
-        logging.error('Bad mget command: "%s"', message)
-
-    ##########
-    # Subscribe
-    elif message.find('subscribe ') == 0:
-      try:
-        sub, *channel_names = message.split(sep=' ')
-        await self._redis_subscribe(client_id, channel_names)
-      except ValueError:
-        logging.error('Bad subscribe command: "%s"', message)
-
-    ##########
-    # Unsubscribe
-    elif message.find('unsubscribe ') == 0:
-      try:
-        unsub, *channel_names = message.split(sep=' ')
-        await self._redis_unsubscribe(client_id, channel_names)
-      except ValueError:
-        logging.error('Bad unsubscribe command: "%s"', message)
-
-    ##########
-    # PSubscribe
-    elif message.find('psubscribe ') == 0:
-      try:
-        psub, channel_pattern = message.split(sep=' ')
-        await self._redis_psubscribe(client_id, channel_pattern)
-      except ValueError:
-        logging.error('Bad psubscribe command: "%s"', message)
-
-    ##########
-    # Punsubscribe
-    elif message.find('punsubscribe ') == 0:
-      try:
-        punsub, channel_pattern = message.split(sep=' ')
-        await self._redis_punsubscribe(client_id, channel_pattern)
-      except ValueError:
-        logging.error('Bad punsubscribe command: "%s"', message)
-
-    ##########
-    # Publish
-    elif message.find('publish ') == 0:
-      try:
-        pub, ch_name, send_message = message.split(sep=' ', maxsplit=2)
-        await self._redis_publish(client_id, ch_name, send_message)
-      except ValueError:
-        logging.error('Bad publish command: "%s"', message)
-
-    ##########
-    # Unknown command
-    else:
-      logging.warning('Unknown message received from client %d: %s',
-                      client_id, message)
+    # Now assemble and send our response - Should this be an "await"
+    # or can we just ensure_future() so that we can get on with other
+    # things?
+    response['request_type'] = request_type
+    logging.info('Sending request response: %s', response)
+    #await client.websocket.send(json.dumps(response))
+    asyncio.ensure_future(client.websocket.send(json.dumps(response)),
+                          loop=self.event_loop)
 
   ############################
   async def _channel_reader(self, client_id, channel, psubscribe=False):
@@ -680,19 +610,38 @@ class PubSubServer:
         matched_channel, message = channel_name, mesg
 
       ws_mesg = {
-        'type': 'redis_pub',
+        'type': 'publish',
         'channel': matched_channel,
         'message': message,
       }
-      logging.debug('  Client %d channel %s sending websocket message %s',
-                   client_id, channel_name, ws_mesg)
       await client.websocket.send(json.dumps(ws_mesg))
       logging.info('  Client %d channel %s sent websocket message %s',
                    client_id, channel_name, ws_mesg)
     logging.info('Client %d channel %s task completed', client_id, channel_name)
+  
+  ############################
+  async def _send_response(self, client_id, status, message = None):
+    """Send a response back for a websocket client's request."""
+    message_dict = {
+      'type': 'response',
+      'status': status,
+    }
+    if message:
+      message_dict['message'] = message
+    json_message = json.dumps(message)
+    logging.debug('  Sending websocket response: %s', json_message)
+    async with self.client_lock:
+      client = self.client_map[client_id]
+    async with client.lock:
+      self.event_loop.ensure_future(client.websocket.send(json_message))
 
   ############################
-  async def _redis_set(self, client_id, key, value):
+  ############################
+  # Start of methods that interact with the cache itself, in this
+  # case, a Redis server
+
+  ###########################
+  async def _cache_set(self, client_id, key, value):
     """Set a key to a value."""
     async with self.client_lock:
       client = self.client_map[client_id]
@@ -701,7 +650,7 @@ class PubSubServer:
     logging.info('Client %d: set %s %s', client_id, key, value)
 
   ############################
-  async def _redis_get(self, client_id, key):
+  async def _cache_get(self, client_id, key):
     """Get value for a key or None if it is not set."""
     async with self.client_lock:
       client = self.client_map[client_id]
@@ -710,15 +659,10 @@ class PubSubServer:
     if value is not None:
       value = value.decode()
     logging.info('Client %d: get %s = %s', client_id, key, value)
-    ws_mesg = {
-      'type': 'redis_get',
-      'key': key,
-      'value': value
-    }
-    await client.websocket.send(json.dumps(ws_mesg))
+    return value
 
   ############################
-  async def _redis_mset(self, client_id, key_value_pairs):
+  async def _cache_mset(self, client_id, key_value_pairs):
     """Set all key-value pairs in the passed dict."""
     async with self.client_lock:
       client = self.client_map[client_id]
@@ -727,7 +671,7 @@ class PubSubServer:
     logging.info('Client %d: mset %s', client_id, key_value_pairs)
 
   ############################
-  async def _redis_mget(self, client_id, keys):
+  async def _cache_mget(self, client_id, keys):
     """Get values for all keys; return None if a key has no value set."""
     async with self.client_lock:
       client = self.client_map[client_id]
@@ -740,15 +684,11 @@ class PubSubServer:
       value = values[i]
       key_value_dict[key] = value.decode() if value is not None else None
 
-    ws_mesg = {
-      'type': 'redis_mget',
-      'result': key_value_dict
-    }
-    logging.info('Client %d: mget %s', client_id, keys)
-    await client.websocket.send(json.dumps(ws_mesg))
+    logging.info('Client %d: mget %s', client_id, key_value_dict)
+    return key_value_dict
 
   ############################
-  async def _redis_subscribe(self, client_id, channel_names):
+  async def _cache_subscribe(self, client_id, channel_names):
     """Create a reader for each channel we've subscribed to and stash the
     tasks so we can await/cancel them as appropriate when done. Do
     this iteratively, instead of as a comprehension, so we can ignore
@@ -768,7 +708,7 @@ class PubSubServer:
     logging.info('Client %d: subscribe %s', client_id, channel_names)
 
   ############################
-  async def _redis_unsubscribe(self, client_id, channel_names):
+  async def _cache_unsubscribe(self, client_id, channel_names):
     async with self.client_lock:
       client = self.client_map[client_id]
     async with client.lock:
@@ -785,7 +725,7 @@ class PubSubServer:
     logging.info('Client %d unsubscribe %s', client_id, channel_names)
 
   ############################
-  async def _redis_psubscribe(self, client_id, channel_pattern):
+  async def _cache_psubscribe(self, client_id, channel_pattern):
     async with self.client_lock:
       client = self.client_map[client_id]
     async with client.lock:
@@ -799,7 +739,7 @@ class PubSubServer:
     logging.info('Client %d psubscribe %s', client_id, channel_pattern)
 
   ############################
-  async def _redis_punsubscribe(self, client_id, channel_pattern):
+  async def _cache_punsubscribe(self, client_id, channel_pattern):
     async with self.client_lock:
       client = self.client_map[client_id]
     async with client.lock:
@@ -807,15 +747,10 @@ class PubSubServer:
     logging.info('Client %d punsubscribe %s', client_id, channel_pattern)
 
   ############################
-  async def _redis_publish(self, client_id, ch_name, message):
+  async def _cache_publish(self, client_id, ch_name, message):
     client = self.client_map[client_id]
     await client.redis.publish(ch_name, message)
     logging.info('Client %d publish %s %s', client_id, ch_name, message)
-
-  ############################
-  def clients(self):
-    """Return a dict mapping client_id->websocket."""
-    return self.client_map
 
 ################################################################################
 if __name__ == '__main__':
@@ -836,9 +771,6 @@ if __name__ == '__main__':
                       'auth token to set auth tokens and corresponding '
                       'permissions for other users.')
 
-  parser.add_argument('--use_json', dest='use_json', default=False,
-                      action='store_true', help='If set, expect websocket '
-                      'connections to send JSON-format requests.')
   parser.add_argument('--use_ssl', dest='use_ssl', default=False,
                       action='store_true', help='If set, expect websocket '
                       'clients to connect via wss://.')
@@ -847,12 +779,6 @@ if __name__ == '__main__':
                       default=0, action='count',
                       help='Increase output verbosity')
   args = parser.parse_args()
-
-  if args.auth_token and not args.use_json:
-    logging.fatal('The --auth_token argument may only be used when '
-                  '--use_json is also specified.')
-    sys.exit(1)
-
 
   # Set logger format and verbosity
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
@@ -863,8 +789,7 @@ if __name__ == '__main__':
 
   # Create the websocket server, setting up queued senders/receivers
   server = PubSubServer(websocket=args.websocket, redis=args.redis,
-                        auth_token=args.auth_token,
-                        use_json=args.use_json, use_ssl=args.use_ssl)
+                        auth_token=args.auth_token, use_ssl=args.use_ssl)
 
   # Start websocket server
   try:
