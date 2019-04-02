@@ -122,6 +122,7 @@ import pprint
 import ssl
 import subprocess
 import sys
+import time
 import websockets
 
 from http import HTTPStatus
@@ -185,6 +186,7 @@ class PubSubServer:
 
     event_loop - if provided, use this event loop instead of the default.
     """
+    logging.basicConfig(format='%(asctime)-15s %(filename)s:%(lineno)d %(message)s')
     self.websocket = websocket or DEFAULT_WEBSOCKET
     self.redis = redis or DEFAULT_REDIS_SERVER
     self.event_loop = event_loop or asyncio.get_event_loop()
@@ -303,8 +305,10 @@ class PubSubServer:
     client.path = path
     client.auth = None
     client.lock = asyncio.Lock()
-    client.tasks = []  # Where we'll stash list of client's async tasks
+    client.tasks = []  # where we'll stash list of client's async tasks
     client.subscriptions = {}
+    client.streams = {}  # stream_name:last_id_read
+    client.stream_reader_task = None # the task that will read above streams
     async with self.client_lock:
       # Get an unused client_id
       client_id = 0
@@ -431,160 +435,254 @@ class PubSubServer:
 
     # Set up a response dict we'll fill in as we try to execute the request
     response = {'type': 'response'}
-    
-    # Do we even have a request type?
-    if request_type is None:
-      logging.info('Bad JSON request: no request type field: %s', request)
+
+    # Wrap the rest of our logic in a general exception block to catch
+    # anything we're not prepared for in processing the message. In
+    # general, this try/except should go away as we figure out what
+    # sort of things can go wrong with our input.
+    try:
+      # Do we even have a request type?
+      if request_type is None:
+        logging.info('Bad JSON request: no request type field: %s', request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Missing request "type" field: %s' % request
+
+      # Have we been initialized with an auth token? If so, only allow
+      # authorized users to do stuff.
+      elif self.auth_token and not await self._check_auth(client_id, json_mesg):
+        logging.info('Unauthorized request: %s', json_mesg)
+        response['status'] = HTTPStatus.UNAUTHORIZED
+        response['message'] = 'Unauthorized request: %s' % request
+
+      ##########
+      # Auth - add authentication for a user.
+      elif request_type == 'auth':
+        # If we're here, we're allowed to do 'auth' commands. Scary,
+        # isn't it?
+        user = json_mesg['user']
+        user_auth_token = json_mesg['user_auth_token']
+        commands = json_mesg['commands']
+        self.auth[user] = {'auth_token':user_auth_token, 'commands':commands}
+        response['status'] = HTTPStatus.OK
+
+      ##########
+      # Set
+      elif request_type == 'set':
+        try:
+          await self._cache_set(client_id, json_mesg['key'], json_mesg['value'])
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad set command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'set request missing key or value: %s' % json_mesg
+
+      ##########
+      # Get
+      elif request_type == 'get':
+        try:
+          response['key'] = json_mesg['key']
+          response['value'] = await self._cache_get(client_id, response['key'])
+          response['status'] = HTTPStatus.OK
+        except ValueError:
+          logging.info('Bad mset command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'get request missing key: %s' % request
+
+      ##########
+      # MSet
+      elif request_type == 'mset':
+        # Assume values are in key:value dict named 'values'; convert to
+        # interlaced list.
+        try:
+          values = json_mesg['values']
+          key_values = []
+          for k, v in values.items():
+            key_values.extend([k, v])
+          await self._cache_mset(client_id, key_values)
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad mset command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad mset request %s' % request
+
+      ##########
+      # MGet
+      elif request_type == 'mget':
+        # Assume key are in list named 'keys'
+        try:
+          values = await self._cache_mget(client_id, json_mesg['keys'])
+          response['values'] = values
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad mget command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad mget request %s' % request
+
+      ##########
+      # Subscribe - accept either "channel":"name" or "channels":["name1", ...]
+      elif request_type == 'subscribe':
+        try:
+          channels = json_mesg.get('channels', [json_mesg.get('channel')])
+          await self._cache_subscribe(client_id, channels)
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad subscribe command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad subscribe request %s' % request
+
+      ##########
+      # Unsubscribe - accept either "channel":"name" or "channels":["name1", ...]
+      elif request_type == 'unsubscribe':
+        try:
+          channels = json_mesg.get('channels', [json_mesg.get('channel')])
+          await self._cache_unsubscribe(client_id, channels)
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad unsubscribe command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad unsubscribe request %s' % request
+
+      ##########
+      # PSubscribe - pattern subscribe to channel(s)
+      elif request_type == 'psubscribe':
+        try:
+          await self._cache_psubscribe(client_id, json_mesg['channel_pattern'])
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad psubscribe command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad psubscribe request %s' % request
+
+      ##########
+      # Punsubscribe - pattern unsubscribe from channel(s)
+      elif request_type == 'punsubscribe':
+        try:
+          await self._cache_punsubscribe(client_id, json_mesg['channel_pattern'])
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad punsubscribe command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad punsubscribe request %s' % request
+
+      ##########
+      # Publish - publish to a channel
+      elif request_type == 'publish':
+        try:
+          channel = json_mesg['channel']
+          message = json_mesg['message']
+          await self._cache_publish(client_id, channel, message)
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad publish request: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad publish request %s' % request
+
+      ##########
+      # Ssubscribe - subscribe to one or more streams. Can accept either
+      # "stream":"name" or "streams":["name1", ...]
+      elif request_type == 'ssubscribe':
+        try:
+          # Get streams and start values (if provided), then normalize
+          # and do some error checking.
+          streams = json_mesg.get('streams', json_mesg.get('stream'))
+          if type(streams) is str: streams = [streams]
+          if not type(streams) is list:
+            raise ValueError('Streams/stream value must either be string or '
+                             'list of strings; found type %s: %s',
+                             type(streams), streams)
+
+          start = json_mesg.get('start', None)
+          if not type(start) in [int, float, str, type(None), list]:
+            raise ValueError('Start value must either be an int, float, '
+                             'string, None, or list of those values.')
+          if type(start) in [int, float, str, type(None)]:
+            start = [start] * len(streams)
+
+          if len(streams) != len(start):
+            raise ValueError('If "start" value is provided, it must either be '
+                             'a single value, or a list of values that match '
+                             'the number of streams: %s' % request)
+
+          # Create stream map from stream_name->start_time in
+          # milliseconds. None means now, and negative means number of
+          # seconds back from now.
+          stream_map = {}
+          now = time.time()
+          for i in range(len(streams)):
+            st = now if start[i] is None else float(start[i])
+            if st < 0:
+              st += now
+            # Convert to milliseconds
+            stream_map[streams[i]] = '%d-0' % int(st * 1000)
+
+          await self._cache_ssubscribe(client_id, stream_map)
+          response['status'] = HTTPStatus.OK
+
+        except (KeyError, ValueError) as e:
+          logging.info('Bad ssubscribe command: "%s"; Error: %s', request, e)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad ssubscribe request %s; Error: %s' \
+                                % (request, e)
+        except Exception as e:
+          logging.error('Caught general exception: %s', str(e))
+
+      ##########
+      # Sunsubscribe - unsubscribe to one or more streams. Can accept
+      # either "stream":"name" or "streams":["name1", ...]
+      elif request_type == 'sunsubscribe':
+        try:
+          streams = json_mesg.get('streams', json_mesg.get('stream'))
+          if type(streams) is str: streams = [streams]
+          await self._cache_sunsubscribe(client_id, streams)
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad sunsubscribe command: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad sunsubscribe request %s' % request
+
+      ##########
+      # Spublish - publish to a stream
+      elif request_type == 'spublish':
+        try:
+          stream = json_mesg['stream']
+          message = json_mesg['message']
+          await self._cache_spublish(client_id, stream, message)
+          response['status'] = HTTPStatus.OK
+        except KeyError:
+          logging.info('Bad spublish request: "%s"', request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Bad spublish request %s' % request
+        except json.decoder.JSONDecodeError:
+          logging.info('Unable to decode spublish JSON message payload: %s',
+                       request)
+          response['status'] = HTTPStatus.BAD_REQUEST
+          response['message'] = 'Unable to decode spublish JSON message ' \
+                                'payload: %s' % request
+
+      ##########
+      # Unknown command
+      else:
+        logging.info('Unknown request type received from client %d: %s',
+                        client_id, request)
+        response['status'] = HTTPStatus.BAD_REQUEST
+        response['message'] = 'Unrecognized request type: "%s"' % request_type
+
+    # If anything strange and wonky goes on, catch it here
+    except Exception as e:
+      logging.warning('When parsing request: %s', request)
+      logging.warning('Unknown parsing error: %s', str(e))
       response['status'] = HTTPStatus.BAD_REQUEST
-      response['message'] = 'Missing request "type" field: %s' % request
-
-    # Have we been initialized with an auth token? If so, only allow
-    # authorized users to do stuff.
-    elif self.auth_token and not await self._check_auth(client_id, json_mesg):
-      logging.info('Unauthorized request: %s', json_mesg)
-      response['status'] = HTTPStatus.UNAUTHORIZED
-      response['message'] = 'Unauthorized request: %s' % request
-
-    ##########
-    # Auth - add authentication for a user.
-    elif request_type == 'auth':
-      # If we're here, we're allowed to do 'auth' commands. Scary,
-      # isn't it?
-      user = json_mesg['user']
-      user_auth_token = json_mesg['user_auth_token']
-      commands = json_mesg['commands']
-      self.auth[user] = {'auth_token':user_auth_token, 'commands':commands}
-      response['status'] = HTTPStatus.OK
-
-    ##########
-    # Set
-    elif request_type == 'set':
-      try:
-        await self._cache_set(client_id, json_mesg['key'], json_mesg['value'])
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad set command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'set request missing key or value: %s' % json_mesg
-
-    ##########
-    # Get
-    elif request_type == 'get':
-      try:
-        response['key'] = json_mesg['key']
-        response['value'] = await self._cache_get(client_id, response['key'])
-        response['status'] = HTTPStatus.OK
-      except ValueError:
-        logging.info('Bad mset command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'get request missing key: %s' % request
-
-    ##########
-    # MSet
-    elif request_type == 'mset':
-      # Assume values are in key:value dict named 'values'; convert to
-      # interlaced list.
-      try:
-        values = json_mesg['values']
-        key_values = []
-        for k, v in values.items():
-          key_values.extend([k, v])
-        await self._cache_mset(client_id, key_values)
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad mset command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'Bad mset request %s' % request
-
-    ##########
-    # MGet
-    elif request_type == 'mget':
-      # Assume key are in list named 'keys'
-      try:
-        values = await self._cache_mget(client_id, json_mesg['keys'])
-        response['values'] = values
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad mget command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'Bad mget request %s' % request
-
-    ##########
-    # Subscribe - accept either "channel":"name" or "channels":["name1", ...]
-    elif request_type == 'subscribe':
-      try:
-        channels = json_mesg.get('channels', [json_mesg.get('channel')])
-        await self._cache_subscribe(client_id, channels)
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad subscribe command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'Bad subscribe request %s' % request
-
-    ##########
-    # Unsubscribe - accept either "channel":"name" or "channels":["name1", ...]
-    elif request_type == 'unsubscribe':
-      try:
-        channels = json_mesg.get('channels', [json_mesg.get('channel')])
-        await self._cache_unsubscribe(client_id, channels)
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad unsubscribe command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'Bad unsubscribe request %s' % request
-
-    ##########
-    # PSubscribe
-    elif request_type == 'psubscribe':
-      try:
-        await self._cache_psubscribe(client_id, json_mesg['channel_pattern'])
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad psubscribe command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'Bad psubscribe request %s' % request
-
-    ##########
-    # Punsubscribe
-    elif request_type == 'punsubscribe':
-      try:
-        await self._cache_punsubscribe(client_id, json_mesg['channel_pattern'])
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad punsubscribe command: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'Bad punsubscribe request %s' % request
-
-    ##########
-    # Publish
-    elif request_type == 'publish':
-      try:
-        channel = json_mesg['channel']
-        message = json_mesg['message']
-        await self._cache_publish(client_id, channel, message)
-        response['status'] = HTTPStatus.OK
-      except KeyError:
-        logging.info('Bad publish request: "%s"', request)
-        response['status'] = HTTPStatus.BAD_REQUEST
-        response['message'] = 'Bad publish request %s' % request
-
-    ##########
-    # Unknown command
-    else:
-      logging.info('Unknown request type received from client %d: %s',
-                      client_id, request)
-      response['status'] = HTTPStatus.BAD_REQUEST
-      response['message'] = 'Unrecognized request type: "%s"' % request_type
+      response['message'] = 'Unknown parsing error: %s' % str(e)
 
     ##########
     # Now assemble and send our response - Should this be an "await"
     # or can we just ensure_future() so that we can get on with other
     # things?
     response['request_type'] = request_type
-    logging.info('Sending request response: %s', response)
-    #await client.websocket.send(json.dumps(response))
-    asyncio.ensure_future(client.websocket.send(json.dumps(response)),
-                          loop=self.event_loop)
+    logging.debug('Sending request response: %s', response)
+    await client.websocket.send(json.dumps(response))
+    #asyncio.ensure_future(client.websocket.send(json.dumps(response)),
+    #                      loop=self.event_loop)
 
   ############################
   async def _channel_reader(self, client_id, channel, psubscribe=False):
@@ -598,7 +696,7 @@ class PubSubServer:
     channel_name = channel.name.decode()
     while await channel.wait_message():
       mesg = await channel.get(encoding='utf-8')
-      logging.info('Client %d, channel %s received message %s',
+      logging.debug('Client %d, channel %s received message %s',
                    client_id, channel_name, mesg)
 
       # If psubscribe, our message is going to be a pair of byte
@@ -615,25 +713,70 @@ class PubSubServer:
         'message': message,
       }
       await client.websocket.send(json.dumps(ws_mesg))
-      logging.info('  Client %d channel %s sent websocket message %s',
+      logging.debug('  Client %d channel %s sent websocket message %s',
                    client_id, channel_name, ws_mesg)
-    logging.info('Client %d channel %s task completed', client_id, channel_name)
-  
+    logging.debug('Client %d channel %s task completed', client_id, channel_name)
+
   ############################
-  async def _send_response(self, client_id, status, message = None):
-    """Send a response back for a websocket client's request."""
-    message_dict = {
-      'type': 'response',
-      'status': status,
-    }
-    if message:
-      message_dict['message'] = message
-    json_message = json.dumps(message)
-    logging.debug('  Sending websocket response: %s', json_message)
-    async with self.client_lock:
-      client = self.client_map[client_id]
-    async with client.lock:
-      self.event_loop.ensure_future(client.websocket.send(json_message))
+  async def _stream_reader(self, client):
+    """Listen on a set of Redis streams for messages."""
+    ######
+    def decode_bytes_dict(bytes_dict):
+      """Convert a dict of bytes into a dict of strings."""
+      return {k.decode():v.decode() for k, v in bytes_dict.items()}
+
+    ######
+    logging.debug('Client %d stream reader initialized, reading streams: %s',
+                  client.id, client.streams)
+    try:
+      # Loop and read. Stuff may happen in background, so timeout
+      # occasionally to check what we're still supposed to be reading,
+      # if anything.
+      while True:
+        # Get the latest_ids for each stream we're reading
+        async with client.lock:
+          streams = []
+          latest_ids = []
+          for stream, latest_id in client.streams.items():
+            streams.append(stream)
+            latest_ids.append(latest_id)
+
+        logging.debug('Client %d xread(%s, latest_ids=%s)',
+                      client.id, streams, latest_ids)
+        records = await client.redis.xread(streams=streams, timeout=500,
+                                           latest_ids=latest_ids)
+        if not records: continue
+        logging.debug('Client %d got stream %s result: %s',
+                      client.id, streams, records)
+
+        message = [(stream.decode(), ts.decode(), decode_bytes_dict(od))
+                   for stream, ts, od in records]
+        # Returned 'message' is list of (stream_name, timestamp, result_dict);
+        # update our latest_ids accordingly.
+        async with client.lock:
+          for stream, ts, result_dict in message:
+            if stream in client.streams:
+              client.streams[stream] = ts
+
+        ws_mesg = {'type': 'spublish', 'message': message}
+        await client.websocket.send(json.dumps(ws_mesg))
+        logging.debug('Client %d stream %s sent websocket message\n%s',
+                     client.id, streams, ws_mesg)
+
+    # If we've been canceled, go quietly into that good night.
+    except asyncio.CancelledError as e:
+      raise e
+
+    # If we've lost the connection, sit tight and let its task expire
+    except aioredis.errors.ConnectionClosedError:
+      logging.info('Client %d lost connection', client.id)
+
+    # Catch any other thing that goes wrong.
+    except Exception as e:
+      logging.warning('Stream reader exception: %s', type(e))
+
+    # Should only get here if we have an exception, I think.
+    logging.info('Client %d stream %s task completed', client.id, stream)
 
   ############################
   ############################
@@ -751,6 +894,68 @@ class PubSubServer:
     client = self.client_map[client_id]
     await client.redis.publish(ch_name, message)
     logging.info('Client %d publish %s %s', client_id, ch_name, message)
+
+  ############################
+  async def _cache_ssubscribe(self, client_id, stream_map):
+    """Create a stream reader, if none yet exists, for all the streams,
+    starting at the timestamp indicated by the value of
+    stream_map[stream_name].
+
+    stream_map  - a map from stream_name:start_time (in epoch milliseconds)
+
+    """
+    client = self.client_map[client_id]
+    logging.debug('Subscribing to streams %s', stream_map)
+    async with self.client_lock:
+      client = self.client_map[client_id]
+
+    # Add the new subscriptions to set of streams we're supposed to
+    # be reading. Kill our old stream reader (if one is running) and
+    # launch a new one to read our new set of streams.
+    async with client.lock:
+      for stream, start in stream_map.items():
+        client.streams[stream] = start
+
+    if client.stream_reader_task:
+      logging.debug('Client %d canceling old stream reader task', client_id)
+      client.stream_reader_task.cancel()
+
+    logging.debug('Client %d stream subscriptions now: %s',
+                 client_id, client.streams)
+    logging.debug('Client %d starting stream reader task', client_id)
+    client.stream_reader_task = asyncio.ensure_future(self._stream_reader(client))
+
+  ############################
+  async def _cache_sunsubscribe(self, client_id, stream_names):
+    async with self.client_lock:
+      client = self.client_map[client_id]
+    async with client.lock:
+      # Remove stream name entry for each stream we're unsubscribing from
+      for st_name in stream_names:
+        if st_name in client.streams:
+          del client.streams[st_name]
+          logging.debug('Client %d sunsubscribed from %s', client_id, st_name)
+        else:
+          logging.info('Client %d asking to unsubscribe from stream %s, '
+                       'but no subscription found.', client_id, st_name)
+      logging.debug('Remaining client %d streams: %s', client_id,client.streams)
+
+      # Kill our old stream reader and, if there are any streams we're
+      # still supposed to be reading, start a new one to do that.
+      if client.stream_reader_task:
+        logging.debug('Client %d canceling old stream reader task', client_id)
+        client.stream_reader_task.cancel()
+      if client.streams:
+        logging.debug('Client %d starting stream reader on remaining '
+                      'streams: %s', client_id, client.streams)
+        client.stream_reader_task = asyncio.ensure_future(self._stream_reader(client))
+
+  ############################
+  async def _cache_spublish(self, client_id, stream_name, message):
+    client = self.client_map[client_id]
+    await client.redis.xadd(stream_name.encode(), message)
+    logging.debug('Client %d spublish stream %s: %s',
+                 client_id, stream_name, message)
 
 ################################################################################
 if __name__ == '__main__':

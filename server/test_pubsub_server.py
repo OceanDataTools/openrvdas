@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import pprint
 import subprocess
 import sys
 import threading
@@ -17,97 +18,112 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(
 
 from server.pubsub_server import PubSubServer
 
-JSON_WEBSOCKET = 'localhost:8770'
-JSON_REDIS_SERVER = 'localhost:8771'
+JSON_WS_PORT = '8770'
+JSON_REDIS_PORT = '8771'
 
-AUTH_WEBSOCKET = 'localhost:8772'
-AUTH_REDIS_SERVER = 'localhost:8773'
+AUTH_WS_PORT = '8772'
+AUTH_REDIS_PORT = '8773'
 AUTH_TOKEN = 'a34faeracser'
 
 ################################################################################
 class TestPubSubServer(unittest.TestCase):
   ###########
-  # Run the Redis server as a subprocess, return proc number
-  def run_redis_server(self):
-    redis_port = JSON_REDIS_SERVER.split(':')[1]
-    cmd_line = ['/usr/bin/env', 'redis-server', '--port %s' % redis_port]
-    self.redis_proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
+  @classmethod
+  def setUpClass(cls):
+
+    ########
+    # Inner function we run in separate thread
+    def run_pubsub_thread():
+      loop = asyncio.new_event_loop()
+      asyncio.set_event_loop(loop)
+      server = PubSubServer(websocket='localhost:' + JSON_WS_PORT,
+                            redis='localhost:' + JSON_REDIS_PORT)
+      server.run()
+
+    cmd_line = ['/usr/bin/env', 'redis-server', '--port %s' % JSON_REDIS_PORT]
+    cls.redis_proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+    time.sleep(0.2)
 
     # If we were unable to start server, that probably means one was
     # already running on this port. Rather than trash it, bail out.
-    time.sleep(0.2)
-
-    self.assertEqual(self.redis_proc.poll(), None,
-                     'Redis server already running at %s' % JSON_REDIS_SERVER)
-
-  ###########
-  # Run the status server in a daemon thread - it creates a new event
-  # loop for its own use.
-  def run_status_server(self):
-    def r_s_s_thread():
-      loop = asyncio.new_event_loop()
-      asyncio.set_event_loop(loop)
-      server = PubSubServer(websocket=JSON_WEBSOCKET, redis=JSON_REDIS_SERVER)
-      server.run()
-    self.status_thread = threading.Thread(name='run_status_server',
-                                          target=r_s_s_thread, daemon=True)
-    self.status_thread.start()
-
-  ############################
-  def setUp(self):
-    warnings.simplefilter("ignore", ResourceWarning)
-
-    self.run_redis_server()
-    self.run_status_server()
+    if cls.redis_proc.poll() is not None:
+      logging.fatal('Redis server already running on port %s', JSON_REDIS_PORT)
+      sys.exit(1)
+    
+    cls.pubsub_thread = threading.Thread(name='run_pubsub_server',
+                                          target=run_pubsub_thread,
+                                          daemon=True)
+    cls.pubsub_thread.start()
     time.sleep(0.25)  # take a moment to let the servers get started
 
-  ############################
-  def tearDown(self):
-    if self.redis_proc:
+  ###########
+  @classmethod
+  def tearDownClass(cls):
+    if cls.redis_proc:
       logging.info('killing redis process we started')
-      self.redis_proc.terminate()
+      cls.redis_proc.terminate()
+
+  ###########
+  async def send_and_expect(self, ws, send, expect):
+    #logging.warning('SEND AND EXPECT')
+    #logging.warning('Sending "%s"', send)
+    await ws.send(json.dumps(send))
+    #logging.warning('Expecting "%s"', expect)
+    json_result = await ws.recv()
+    #logging.warning('Got "%s"', json_result)
+    result = json.loads(json_result)
+    self.assertDictEqual(expect, result,
+                         '\nexpected: %s\ngot: %s' % (expect, result))
+
+  ###########
+  async def check_stream_receives(self, ws, stream, dict_list):
+    response = json.loads(await ws.recv())
+    #logging.warning('response: %s', response)
+    result = response.get('message')
+    self.assertEqual(len(result), len(dict_list))
+    for i in range(len(result)):
+      self.assertEqual(len(result[i]), 3, 'received: %s' % result)
+      stream_name, timestamp, message = result[i]
+      self.assertEqual(stream_name, stream)
+      self.assertDictEqual(message, dict_list[i])
 
   ############################
   def test_basic(self):
-    async def send_and_expect(ws, send, expect):
-      await ws.send(json.dumps(send))
-      result = await ws.recv()
-      self.assertDictEqual(json.loads(result), expect)
-
     async def async_test():
-      async with websockets.connect('ws://' + JSON_WEBSOCKET) as ws1:
-        async with websockets.connect('ws://' + JSON_WEBSOCKET) as ws2:
+      async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws1:
+        async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws2:
+
 
           # Test set and get
-          await send_and_expect(ws1, {'type':'get', 'key':'test_k1'},
+          await self.send_and_expect(ws1, {'type':'get', 'key':'test_k1'},
                                 {'type': 'response', 'key': 'test_k1',
                                  'value': None,
-                                 'status': HTTPStatus.OK,
+                                 'status': 200,
                                  'request_type': 'get'})
 
-          await send_and_expect(ws1, {'type':'set', 'key':'test_k1',
+          await self.send_and_expect(ws1, {'type':'set', 'key':'test_k1',
                                       'value': 'value1'},
                                 {'type': 'response',
-                                 'status': HTTPStatus.OK,
+                                 'status': 200,
                                  'request_type': 'set'})
 
-          await send_and_expect(ws1, {'type':'get', 'key':'test_k1'},
+          await self.send_and_expect(ws1, {'type':'get', 'key':'test_k1'},
                                 {'type': 'response', 'key': 'test_k1',
                                  'value': 'value1',
-                                 'status': HTTPStatus.OK,
+                                 'status': 200,
                                  'request_type': 'get'})
 
           # Test mset and mget
-          await send_and_expect(ws1, {'type':'mset', 'values':
+          await self.send_and_expect(ws1, {'type':'mset', 'values':
                                       {'test_k1':'value1',
                                        'test_k2':'value2',
                                        'test_k3':'value3'}},
                                 {'type': 'response',
-                                 'status': HTTPStatus.OK,
+                                 'status': 200,
                                  'request_type': 'mset'})
 
-          await send_and_expect(ws1, {'type':'mget',
+          await self.send_and_expect(ws1, {'type':'mget',
                                       'keys': ['test_k1',
                                                'test_k3',
                                                'test_k5']},
@@ -115,101 +131,215 @@ class TestPubSubServer(unittest.TestCase):
                                  'values': {'test_k1': 'value1',
                                             'test_k3': 'value3',
                                             'test_k5': None},
-                                 'status': HTTPStatus.OK,
+                                 'status': 200,
                                  'request_type': 'mget'})
 
+    asyncio.get_event_loop().run_until_complete(async_test())
+
+  ############################
+  def test_stream_pub(self):
+    async def async_test():
+      async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws1:
+        async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws2:
+          # Test ssubscribe, spublish and sunsubscribe
+
+          # Pre-load two records into stream s1
+          await self.send_and_expect(ws2, {'type':'spublish', 'stream':'s1',
+                                      'message':{'k1': 'value1'}},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'spublish'})
+          await self.send_and_expect(ws2, {'type':'spublish', 'stream':'s1',
+                                      'message':{'k1': 'value2'}},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'spublish'})
+          
+          await self.send_and_expect(ws1, {'type':'ssubscribe',
+                                           'streams':['s1', 's2'],
+                                           'start':0},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'ssubscribe'})
+
+          await self.check_stream_receives(ws1, 's1', [{'k1': 'value1'},
+                                                       {'k1': 'value2'}])
+
+          # Unsubscribe
+          await self.send_and_expect(ws1, {'type':'sunsubscribe',
+                                           'streams':['s1']},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'sunsubscribe'})
+
+          await self.send_and_expect(ws2, {'type':'spublish', 'stream':'s1',
+                                      'message':{'k1': 'value4'}},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'spublish'})
+          
+          await self.send_and_expect(ws2, {'type':'spublish', 'stream':'s1',
+                                      'message':{'k1': 'value9'}},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'spublish'})
+
+
+          # When we resubscribe, we should only get new records
+          await asyncio.sleep(0.1)
+          await self.send_and_expect(ws1, {'type':'ssubscribe',
+                                           'streams':'s1'},
+                                     {'type': 'response', 'status': 200,
+                                      'request_type': 'ssubscribe'})
+
+          await self.send_and_expect(ws2, {'type':'spublish', 'stream':'s1',
+                                      'message':{'k1': 'value10'}},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'spublish'})
+
+          await self.check_stream_receives(ws1, 's1', [{'k1': 'value10'}])
+
+          # Unsubscribe and subscribe to get all the records
+          await self.send_and_expect(ws1, {'type':'sunsubscribe',
+                                           'streams':'s1'},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'sunsubscribe'})
+          await self.send_and_expect(ws1, {'type':'ssubscribe',
+                                           'streams':'s1', 'start':0},
+                                     {'type': 'response', 'status': 200,
+                                      'request_type': 'ssubscribe'})
+          await self.check_stream_receives(ws1, 's1',
+                                           [{'k1': 'value1'},
+                                            {'k1': 'value2'},
+                                            {'k1': 'value4'},
+                                            {'k1': 'value9'},
+                                            {'k1': 'value10'}])
+          # Unsubscribe, wait a second, put out a record, and
+          # subscribe to get all the records in last half second. We
+          # should just get last one.
+          await self.send_and_expect(ws1, {'type':'sunsubscribe',
+                                           'streams':'s1'},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'sunsubscribe'})
+          await asyncio.sleep(1.0)
+          await self.send_and_expect(ws2, {'type':'spublish', 'stream':'s1',
+                                      'message':{'k1': 'value12'}},
+                                {'type': 'response', 'status': 200,
+                                 'request_type': 'spublish'})
+          await self.send_and_expect(ws1, {'type':'ssubscribe',
+                                           'streams':'s1', 'start':-0.5},
+                                     {'type': 'response', 'status': 200,
+                                      'request_type': 'ssubscribe'})
+          await self.check_stream_receives(ws1, 's1', [{'k1': 'value12'}])
+
+    asyncio.get_event_loop().run_until_complete(async_test())
+
+  ############################
+  def test_pubsub(self):
+    async def async_test():
+      async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws1:
+        async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws2:
+
           # Test subscribe, publish and unsubscribe
-          await send_and_expect(ws1, {'type':'subscribe',
+          await self.send_and_expect(ws1, {'type':'subscribe',
                                       'channels':['ch1', 'ch2']},
                                 {'type': 'response',
-                                 'status': HTTPStatus.OK,
+                                 'status': 200,
                                  'request_type': 'subscribe'})
 
-          await send_and_expect(ws2, {'type':'publish', 'channel':'ch3',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'ch3',
                                       'message':'ch3_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
 
-          await send_and_expect(ws2, {'type':'publish', 'channel':'ch1',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'ch1',
                                       'message':'ch1_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
           self.assertDictEqual(json.loads(await ws1.recv()),
                                {'type': 'publish', 'channel': 'ch1',
                                 'message': 'ch1_test'})
 
 
-          await send_and_expect(ws1, {'type':'unsubscribe', 'channels':['ch1']},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+          await self.send_and_expect(ws1, {'type':'unsubscribe', 'channels':['ch1']},
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'unsubscribe'})
 
-          await send_and_expect(ws2, {'type':'publish', 'channel':'ch2',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'ch2',
                                       'message':'ch2_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
 
-          await send_and_expect(ws2, {'type':'publish', 'channel':'ch1',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'ch1',
                                       'message':'ch1_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
           self.assertDictEqual(json.loads(await ws1.recv()),
                                {'type': 'publish', 'channel': 'ch2',
                                 'message': 'ch2_test'})
+    asyncio.get_event_loop().run_until_complete(async_test())
+
+  ############################
+  def test_psub_punsub(self):
+    async def async_test():
+      async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws1:
+        async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws2:
 
           # Test psubscribe, publish and punsubscribe
-          await send_and_expect(ws1, {'type':'psubscribe',
+          await self.send_and_expect(ws1, {'type':'psubscribe',
                                       'channel_pattern':'pch*'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'psubscribe'})
-          await send_and_expect(ws2, {'type':'publish', 'channel':'pch1',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'pch1',
                                       'message':'pch1_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
           self.assertDictEqual(json.loads(await ws1.recv()),
                                {'type': 'publish', 'channel': 'pch1',
                                 'message': 'pch1_test'})
 
-          await send_and_expect(ws2, {'type':'publish', 'channel':'pch3',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'pch3',
                                       'message':'pch3_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
           self.assertEqual(json.loads(await ws1.recv()),
                            {'type': 'publish', 'channel': 'pch3',
                             'message': 'pch3_test'})
 
-          await send_and_expect(ws1, {'type':'punsubscribe',
+          await self.send_and_expect(ws1, {'type':'punsubscribe',
                                       'channel_pattern':'pch*'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'punsubscribe'})
-          await send_and_expect(ws1, {'type':'psubscribe',
+          await self.send_and_expect(ws1, {'type':'psubscribe',
                                       'channel_pattern':'pch3*'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'psubscribe'})
 
-          await send_and_expect(ws2, {'type':'publish', 'channel':'pch1',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'pch1',
                                       'message':'pch1_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
-          await send_and_expect(ws2, {'type':'publish', 'channel':'pch3',
+          await self.send_and_expect(ws2, {'type':'publish', 'channel':'pch3',
                                       'message':'pch3_test'},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'publish'})
           self.assertDictEqual(json.loads(await ws1.recv()),
                                {'type': 'publish', 'channel': 'pch3',
                                 'message': 'pch3_test'})
+    asyncio.get_event_loop().run_until_complete(async_test())
+
+  ############################
+  def test_errors(self):
+    async def async_test():
+      async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws1:
+        async with websockets.connect('ws://localhost:' + JSON_WS_PORT) as ws2:
 
           # Test some errors
-          await send_and_expect(ws1, {'missing_type':'psubscribe'},
+          await self.send_and_expect(ws1, {'missing_type':'psubscribe'},
                                 {'type': 'response',
                                  'status': HTTPStatus.BAD_REQUEST,
                                  'request_type': None,
                                  'message': 'Missing request "type" field: {"missing_type": "psubscribe"}'})
-          await send_and_expect(ws1, {'type':'unknown_type'},
+          await self.send_and_expect(ws1, {'type':'unknown_type'},
                                 {'type': 'response',
                                  'status': HTTPStatus.BAD_REQUEST,
                                  'request_type': 'unknown_type',
                                  'message': 'Unrecognized request type: "unknown_type"'})
-          await send_and_expect(ws1, {'type':'set', 'key':'key1'},
+          await self.send_and_expect(ws1, {'type':'set', 'key':'key1'},
                                 {'type': 'response',
                                  'status': HTTPStatus.BAD_REQUEST,
                                  'request_type': 'set',
@@ -220,181 +350,180 @@ class TestPubSubServer(unittest.TestCase):
 ################################################################################
 class TestPubSubServerAuth(unittest.TestCase):
   ###########
-  # Run the Redis server as a subprocess, return proc number
-  def run_redis_server(self):
-    redis_port = AUTH_REDIS_SERVER.split(':')[1]
-    cmd_line = ['/usr/bin/env', 'redis-server', '--port %s' % redis_port]
-    self.redis_proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
+  @classmethod
+  def setUpClass(cls):
+    logging.basicConfig(format='%(asctime)-15s %(filename)s:%(lineno)d %(message)s')
+
+    ########
+    # Inner function we run in separate thread
+    def run_pubsub_thread():
+      loop = asyncio.new_event_loop()
+      asyncio.set_event_loop(loop)
+      server = PubSubServer(websocket='localhost:' + AUTH_WS_PORT,
+                            redis='localhost:' + AUTH_REDIS_PORT,
+                            auth_token=AUTH_TOKEN)
+      server.run()
+
+    cmd_line = ['/usr/bin/env', 'redis-server', '--port %s ' % AUTH_REDIS_PORT]
+    cls.redis_proc = subprocess.Popen(cmd_line, stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+    time.sleep(0.2)
 
     # If we were unable to start server, that probably means one was
     # already running on this port. Rather than trash it, bail out.
-    time.sleep(0.2)
-    self.assertEqual(self.redis_proc.poll(), None,
-                     'Redis server already running at %s' % AUTH_REDIS_SERVER)
+    if cls.redis_proc.poll() is not None:
+      logging.fatal('Redis server already running on port %s', AUTH_REDIS_PORT)
+      sys.exit(1)
 
-  ###########
-  # Run the status server in a daemon thread - it creates a new event
-  # loop for its own use.
-  def run_status_server(self):
-    def r_s_s_thread():
-      loop = asyncio.new_event_loop()
-      asyncio.set_event_loop(loop)
-      server = PubSubServer(websocket=AUTH_WEBSOCKET, redis=AUTH_REDIS_SERVER,
-                            auth_token=AUTH_TOKEN)
-      server.run()
-    self.status_thread = threading.Thread(name='run_status_server',
-                                          target=r_s_s_thread, daemon=True)
-    self.status_thread.start()
-
-  ############################
-  def setUp(self):
-    warnings.simplefilter("ignore", ResourceWarning)
-
-    self.run_redis_server()
-    self.run_status_server()
+    
+    cls.pubsub_thread = threading.Thread(name='run_pubsub_server',
+                                          target=run_pubsub_thread,
+                                          daemon=True)
+    cls.pubsub_thread.start()
     time.sleep(0.25)  # take a moment to let the servers get started
 
-  ############################
-  def tearDown(self):
-    if self.redis_proc:
+  ###########
+  @classmethod
+  def tearDownClass(cls):
+    if cls.redis_proc:
       logging.info('killing redis process we started')
-      self.redis_proc.terminate()
+      cls.redis_proc.terminate()
+
+  ############################
+  async def send_and_expect(self, ws, send, expect):
+    await ws.send(json.dumps(send))
+    result = await ws.recv()
+
+    if not json.loads(result) == expect:
+      logging.warning('result: %s', json.loads(result))
+      logging.warning('expected: %s', expect)
+    self.assertDictEqual(json.loads(result), expect)
 
   ############################
   def test_basic(self):
-    async def send_and_expect(ws, send, expect):
-      await ws.send(json.dumps(send))
-      result = await ws.recv()
-
-      if not json.loads(result) == expect:
-        logging.warning('result: %s', json.loads(result))
-        logging.warning('expected: %s', expect)
-      self.assertDictEqual(json.loads(result), expect)
-
     async def async_test():
-      async with websockets.connect('ws://' + AUTH_WEBSOCKET) as ws1:
-        async with websockets.connect('ws://' + AUTH_WEBSOCKET) as ws2:
+      async with websockets.connect('ws://localhost:' + AUTH_WS_PORT) as ws1:
+        async with websockets.connect('ws://localhost:' + AUTH_WS_PORT) as ws2:
 
           # Test set and get
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k1",
                                  "auth_token": AUTH_TOKEN},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'get', "key": "test_k1",
                                  "value": None})
 
           # Set unauthorized
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"set", "key":"test_k1",
                                  "value": "should be unauthorized"},
                                 {'type': 'response', 'status': 401,
                                  'request_type': 'set',
                                  'message': 'Unauthorized request: {"type": "set", "key": "test_k1", "value": '
                                  '"should be unauthorized"}'})
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k1",
                                  "auth_token": AUTH_TOKEN},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'get', "key": "test_k1",
                                  "value": None})
 
           # Set authorized
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"set", "key":"test_k1",
                                  "value": "value1",
                                  "auth_token": AUTH_TOKEN},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'set'})
 
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k1",
                                  "auth_token": AUTH_TOKEN},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'get', 'key': 'test_k1',
                                  'value': 'value1'})
 
           # Now create an auth for both clients: w1 can set and get,
           # and w2 can only get
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"auth", "user":"w1",
                                  "user_auth_token":"w1_token",
                                  "auth_token": AUTH_TOKEN,
                                  "commands": ["set", "get"]},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'auth'})
 
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"auth", "user":"w2",
                                  "user_auth_token":"w2_token",
                                  "auth_token": AUTH_TOKEN,
                                  "commands": ["get"]},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'auth'})
 
           # Now try setting without identifying ourselves as w1
           # Set unauthorized
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"set", "key":"test_k5",
                                  "value": "should be unauthorized"},
                                 {'type': 'response', 'status': 401,
                                  'request_type': 'set',
                                  'message': 'Unauthorized request: {"type": "set", "key": "test_k5", "value": "should be unauthorized"}'})
 
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k5",
                                  "auth_token": AUTH_TOKEN},
                                 {'type': 'response', 'key': 'test_k5',
-                                 'value': None, 'status': HTTPStatus.OK,
+                                 'value': None, 'status': 200,
                                  'request_type': 'get'})
 
           # Now try setting, and using our w1 auth key
           # Set authorized
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"set", "key":"test_k5",
                                  "value": "value5", "user":"w1",
                                  "auth_token": "w1_token"},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'set'})
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k5",
                                  "auth_token": AUTH_TOKEN},
                                 {'type': 'response', 'key': 'test_k5',
-                                 'value': 'value5', 'status': HTTPStatus.OK,
+                                 'value': 'value5', 'status': 200,
                                  'request_type': 'get'})
 
           # Now client w1 has been identified and authenticated as
           # user w1, so we should be able to set/get without passing
           # tokens.
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"set", "key":"test_k6",
                                  "value": "value6"},
-                                {'type': 'response', 'status': HTTPStatus.OK,
+                                {'type': 'response', 'status': 200,
                                  'request_type': 'set'})
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k6",
                                  "auth_token": AUTH_TOKEN},
                                 {'type': 'response', 'key': 'test_k6',
-                                 'value': 'value6', 'status': HTTPStatus.OK,
+                                 'value': 'value6', 'status': 200,
                                  'request_type': 'get'})
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k6"},
                                 {'type': 'response', 'key': 'test_k6',
-                                 'value': 'value6', 'status': HTTPStatus.OK,
+                                 'value': 'value6', 'status': 200,
                                  'request_type': 'get'})
 
           # But mset should still be unauthorized.
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"mset", "values": {"test_k7":"should be unauthorized"}},
                                 {'type': 'response',
                                  'status': HTTPStatus.UNAUTHORIZED,
                                  'message': 'Unauthorized request: {"type": "mset", "values": {"test_k7": "should be unauthorized"}}',
                                  'request_type': 'mset'})
-          await send_and_expect(ws1,
+          await self.send_and_expect(ws1,
                                 {"type":"get", "key":"test_k7",
                                  "auth_token": AUTH_TOKEN},
                                 {'type': 'response', 'key': 'test_k7',
-                                 'value': None, 'status': HTTPStatus.OK,
+                                 'value': None, 'status': 200,
                                  'request_type': 'get'})
 
     asyncio.get_event_loop().run_until_complete(async_test())
