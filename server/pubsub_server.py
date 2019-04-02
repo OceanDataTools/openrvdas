@@ -63,6 +63,62 @@ bad request, 401 = unauthorized):
 
    -> {"type": "publish", "channel": "ch3", "message": "ch3_test"}
 
+  Stream Subscribe/Unsubscribe
+  =====================
+
+  Streams are like channels, except that the server maintains (some
+  amount of) past published data, along with timestamps for those
+  data. When subscribing, one may optionally specify a start time of
+  the streams subscribed to.
+
+  Start times may be:
+     None   - subscribe only to data from now forward
+
+     0      - subscribe to all past data available on the stream
+
+     a positive number N - treat N as a timestamp and subscribe to all data
+            arriving after the specified timestamp
+
+     a negative number N - subscribe to all data from N seconds ago
+            onward (that is, gather N seconds of past data, as well as all
+            future data)
+
+  If no start times are provided, "None" will be used for all
+  subscriptions. If a single start time is provided, it will be
+  applied to all stream subscriptions; if a list is provided, the
+  number of start times must match the number of streams.
+
+
+  {"type": "ssubscribe", "streams":["s1", "s2"]}
+    or
+  {"type": "ssubscribe", "streams":["s1", "s2"], "start":[0, -60]}
+    or
+  {"type": "subscribe", "stream": "s1"}
+    -> {"type": "response", "request_type": "ssubscribe", "status": 200}
+
+  {"type": "sunsubscribe", "streams":["s1", "s2"]}
+    or
+  {"type": "sunsubscribe", "stream": "s1"}
+    -> {"type": "response", "request_type": "sunsubscribe", "status": 200}
+
+  Stream Publish
+  =======
+
+  Stream data is published and delivered in the form of dicts, as
+  illustrated below.
+
+  {"type": "spublish", "stream": "s1",
+   "message": {"key1": "value1", "key2":"value2"}}
+
+    -> {"type": "response", "request_type": "spublish", "status": 200}
+
+  Published messages will be returned in JSON of the format:
+
+   -> {"type": "spublish",
+       "message": [("s1", <timestamp_string>,
+                    {"key1":"value1", "key2":"value2"}),
+                   ("s1", <timestamp_string, {...}),
+                   ...]}
 
 Authentication
 ==============
