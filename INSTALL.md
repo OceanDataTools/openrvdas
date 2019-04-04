@@ -95,7 +95,7 @@ sudo yum install -y git
 ### Operating System
 Goto <https://www.ubuntu.com/download/desktop>
 
-Download Ubuntu for your hardware.  At the time of this writing we are using 16.04.3 (64-bit)
+Download Ubuntu for your hardware.  At the time of this writing we have installation scripts for both Ubuntu 16 and Ubuntu 18 (64-bit).
 
 Perform the default Ubuntu install.  For these instructions the default account that is created is "Survey" and the computer name is "Datalog".
 
@@ -105,8 +105,16 @@ A few minutes after the install completes and the computer restarts, Ubuntu will
 
 _This is the recommended way to install for Ubuntu._
 
-Copy the script ```utils/build_openrvdas_ubuntu16.sh``` into the /tmp
-directory of your new machine. When run as root, it will install and
+Copy the script ```utils/build_openrvdas_ubuntu16.sh``` or
+```utils/build_openrvdas_ubuntu18.sh``` into the /tmp
+directory of your new machine. Then su or login as root and
+
+```
+> cd /tmp
+> source build_openrvdas_ubuntu18.sh
+```
+
+When run as root, it will install and
 set up the core logging, database and GUI services (NGINX web server
 and uWSGI). The script also provides the option of configuring the
 OpenRVDAS servers to start automatically on boot or manually, via
