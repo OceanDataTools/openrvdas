@@ -68,6 +68,7 @@ from logger.transforms.derived_data_transform import ComposedDerivedDataTransfor
 from logger.transforms.max_min_transform import MaxMinTransform
 from logger.transforms.from_json_transform import FromJSONTransform
 from logger.transforms.to_json_transform import ToJSONTransform
+from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.transforms.count_transform import CountTransform
 
 from logger.writers.composed_writer import ComposedWriter

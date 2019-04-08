@@ -412,7 +412,6 @@ class CachedDataServer:
             ...
          }
        }
-
     """
     logging.debug('CachedDataServer.cache_record() received: %s', record)
     if not record:

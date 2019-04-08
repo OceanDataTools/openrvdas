@@ -21,6 +21,20 @@ cruise:
 
 ########################################
 loggers:
+  # Two special loggers to start with - one parses raw NMEA data on
+  # :6224 and broadcasts it on :6225 and the other listens for parsed
+  # JSON records on :6225 and feeds them to a CachedDataServer that
+  # serves them on a websocket at :8766.
+  display:
+    configs:
+    - display->off
+    - display->on
+  parser:
+    configs:
+    - parser->off
+    - parser->on
+
+  # Normal loggers here
   PCOD:
     configs:
     - PCOD->off
@@ -116,23 +130,11 @@ loggers:
     - tsg2->net
     - tsg2->file/net/db
 
-  # Two special loggers - one parses raw NMEA data on :6224 and
-  # broadcasts it on :6225 and the other listens for parsed JSON
-  # records on :6225 and feeds them to a CachedDataServer that serves
-  # them on a websocket at :8766.
-  parser:
-    configs:
-    - parser->off
-    - parser->on
-
-  display:
-    configs:
-    - display->off
-    - display->on
-
 ########################################
 modes:
   'off':
+    display: display->on  # display logger should always be on
+    parser: parser->off
     PCOD: PCOD->off
     adcp: adcp->off
     eng1: eng1->off
@@ -152,9 +154,9 @@ modes:
     true_winds: true_winds->off
     tsg1: tsg1->off
     tsg2: tsg2->off
-    parser: parser->off
-    display: display->off
   port:
+    display: display->on
+    parser: parser->on
     PCOD: PCOD->off
     adcp: adcp->off
     eng1: eng1->net
@@ -174,9 +176,9 @@ modes:
     true_winds: true_winds->net
     tsg1: tsg1->off
     tsg2: tsg2->off
-    parser: parser->on
-    display: display->on
   monitor:
+    display: display->on
+    parser: parser->on
     PCOD: PCOD->net
     adcp: adcp->net
     eng1: eng1->net
@@ -196,10 +198,10 @@ modes:
     true_winds: true_winds->net
     tsg1: tsg1->net
     tsg2: tsg2->net
-    parser: parser->on
-    display: display->on
  
   monitor and log:
+    display: display->on
+    parser: parser->on
     PCOD: PCOD->file/net/db
     adcp: adcp->file/net/db
     eng1: eng1->file/net/db
@@ -219,14 +221,56 @@ modes:
     true_winds: true_winds->net
     tsg1: tsg1->file/net/db
     tsg2: tsg2->file/net/db
-    parser: parser->on
-    display: display->on
 
 ########################################
 default_mode: 'off'
 
 ########################################
 configs:
+  #############
+  # Display logger is the one that will feed status/error/display data
+  #  to anyone who connects via websocket, so we want it running pretty
+  #  much all the time.
+  display->on:
+    name: display->on
+    stderr_writer:
+      class: TextFileWriter
+      kwargs:
+        filename: /var/log/openrvdas/display.log
+    readers:
+      class: NetworkReader
+      kwargs:
+        network: :6225   # Port 6225 is where parsed JSON records are
+    transforms:
+      class: FromJSONTransform
+    writers:
+      class: CachedDataWriter
+      kwargs:
+        websocket: :8766
+        back_seconds: 640
+
+  display->off: {}
+
+  parser->on:
+    name: parser->on
+    stderr_writer:
+      class: TextFileWriter
+      kwargs:
+        filename: /var/log/openrvdas/parser.log
+    readers:
+      class: NetworkReader
+      kwargs:
+        network: :6224   # Port 6224 is where unparsed NMEA records are
+    transforms:
+      class: ParseTransform
+    writers:
+      class: NetworkWriter
+      kwargs:
+        network: :6225   # Port 6225 is where parsed JSON records are
+  parser->off: {}
+
+  #############
+  # All the normal loggers start here
   PCOD->file/net/db:
     name: PCOD->net/file/db
     stderr_writer:
@@ -1415,40 +1459,3 @@ configs:
             network: :6224
   tsg2->off: {}
  
-  parser->on:
-    name: parser->on
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/parser.log
-    readers:
-      class: NetworkReader
-      kwargs:
-        network: :6224   # Port 6224 is where unparsed NMEA records are
-    transforms:
-      class: ParseTransform
-    writers:
-      class: NetworkWriter
-      kwargs:
-        network: :6225   # Port 6225 is where parsed JSON records are
-  parser->off: {}
-
-  display->on:
-    name: display->on
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/display.log
-    readers:
-      class: NetworkReader
-      kwargs:
-        network: :6225   # Port 6225 is where parsed JSON records are
-    transforms:
-      class: FromJSONTransform
-    writers:
-      class: CachedDataWriter
-      kwargs:
-        websocket: :8766
-        back_seconds: 640
-
-  display->off: {}
