@@ -1,12 +1,6 @@
-# Sample YAML file for NBP1406 - created from NBP1406_cruise.json via:
-#
-#  import yaml
-#  import logger.utils.read_config
 
-#  filename = 'test/nmea/NBP1406/NBP1406_cruise.json'
-#  config = logger.utils.read_config.read_config(filename)
-#  with open('NBP1406_cruise.yaml','w') as outfile:
-#    print(yaml.dump(config, outfile, default_flow_style=False))
+# Sample cruise definition file for NBP1406, created by hacked-up script
+# at test/nmea/NBP1406/create_cruise_definition.py.
 
 # Note that the one hack necessary is that YAML interprets 'off' (when not
 # quoted) as the literal 'False'. So YAML needs to quote 'off'. We should
@@ -21,20 +15,15 @@ cruise:
 
 ########################################
 loggers:
-  # Two special loggers to start with - one parses raw NMEA data on
-  # :6224 and broadcasts it on :6225 and the other listens for parsed
-  # JSON records on :6225 and feeds them to a CachedDataServer that
-  # serves them on a websocket at :8766.
+  # One special logger to start with: 'display' listens for parsed JSON
+  # records on the CACHE_UDP port and makes the values available via a
+  # CachedDataServer on the websocket port.
   display:
     configs:
     - display->off
     - display->on
-  parser:
-    configs:
-    - parser->off
-    - parser->on
 
-  # Normal loggers here
+  # Normal loggers below
   PCOD:
     configs:
     - PCOD->off
@@ -115,10 +104,6 @@ loggers:
     - svp1->off
     - svp1->net
     - svp1->file/net/db
-  true_winds:
-    configs:
-    - true_winds->off
-    - true_winds->net
   tsg1:
     configs:
     - tsg1->off
@@ -134,7 +119,6 @@ loggers:
 modes:
   'off':
     display: display->on  # display logger should always be on
-    parser: parser->off
     PCOD: PCOD->off
     adcp: adcp->off
     eng1: eng1->off
@@ -151,34 +135,11 @@ modes:
     s330: s330->off
     seap: seap->off
     svp1: svp1->off
-    true_winds: true_winds->off
     tsg1: tsg1->off
     tsg2: tsg2->off
-  port:
-    display: display->on
-    parser: parser->on
-    PCOD: PCOD->off
-    adcp: adcp->off
-    eng1: eng1->net
-    gp02: gp02->off
-    grv1: grv1->off
-    gyr1: gyr1->net
-    hdas: hdas->off
-    knud: knud->off
-    mbdp: mbdp->off
-    mwx1: mwx1->net
-    pco2: pco2->off
-    pguv: pguv->off
-    rtmp: rtmp->net
-    s330: s330->net
-    seap: seap->off
-    svp1: svp1->off
-    true_winds: true_winds->net
-    tsg1: tsg1->off
-    tsg2: tsg2->off
+
   monitor:
-    display: display->on
-    parser: parser->on
+    display: display->on  # display logger should always be on
     PCOD: PCOD->net
     adcp: adcp->net
     eng1: eng1->net
@@ -195,13 +156,11 @@ modes:
     s330: s330->net
     seap: seap->net
     svp1: svp1->net
-    true_winds: true_winds->net
     tsg1: tsg1->net
     tsg2: tsg2->net
- 
-  monitor and log:
-    display: display->on
-    parser: parser->on
+
+  log:
+    display: display->on  # display logger should always be on
     PCOD: PCOD->file/net/db
     adcp: adcp->file/net/db
     eng1: eng1->file/net/db
@@ -218,7 +177,6 @@ modes:
     s330: s330->file/net/db
     seap: seap->file/net/db
     svp1: svp1->file/net/db
-    true_winds: true_winds->net
     tsg1: tsg1->file/net/db
     tsg2: tsg2->file/net/db
 
@@ -229,1202 +187,1772 @@ default_mode: 'off'
 configs:
   #############
   # Display logger is the one that will feed status/error/display data
-  #  to anyone who connects via websocket, so we want it running pretty
-  #  much all the time.
+  # to anyone who connects via websocket, so we want it running pretty
+  # much all the time.
+  display->off: {}
+
   display->on:
     name: display->on
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/display.log
     readers:
       class: NetworkReader
       kwargs:
-        network: :6225   # Port 6225 is where parsed JSON records are
+        network: :6225   # Where key:value pairs to cache are being sent
     transforms:
       class: FromJSONTransform
     writers:
       class: CachedDataWriter
       kwargs:
-        websocket: :8766
+        websocket: :8766  
         back_seconds: 640
-
-  display->off: {}
-
-  parser->on:
-    name: parser->on
-    stderr_writer:
+    stderr_writers:
       class: TextFileWriter
       kwargs:
-        filename: /var/log/openrvdas/parser.log
-    readers:
-      class: NetworkReader
-      kwargs:
-        network: :6224   # Port 6224 is where unparsed NMEA records are
-    transforms:
-      class: ParseTransform
-    writers:
-      class: NetworkWriter
-      kwargs:
-        network: :6225   # Port 6225 is where parsed JSON records are
-  parser->off: {}
+        filename: /var/log/openrvdas/display.log
 
-  #############
-  # All the normal loggers start here
-  PCOD->file/net/db:
-    name: PCOD->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/PCOD.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_PCOD
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/PCOD/raw/NBP1406_PCOD
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-          class: PrefixTransform
-          kwargs:
-            prefix: PCOD
-        writers:
-          class: NetworkWriter
-          kwargs:
-            network: :6224
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: PCOD
-        - class: ParseTransform
-        writers:
-          class: DatabaseWriter
+  ########
+  PCOD->off:
+    name: PCOD->off
+
   PCOD->net:
     name: PCOD->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/PCOD.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_PCOD
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: PCOD
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'PCOD:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  PCOD->file/net/db:
+    name: PCOD->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_PCOD
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/PCOD/raw/NBP1406_PCOD
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: PCOD
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  PCOD->off: {}
-  adcp->file/net/db:
-    name: adcp->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/adcp.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_adcp
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/adcp/raw/NBP1406_adcp
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: adcp
+            prefix: PCOD
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: adcp
+            prefix: PCOD
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'PCOD:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  adcp->off:
+    name: adcp->off
+
   adcp->net:
     name: adcp->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/adcp.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_adcp
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: adcp
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'adcp:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  adcp->file/net/db:
+    name: adcp->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_adcp
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/adcp/raw/NBP1406_adcp
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: adcp
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  adcp->off: {}
-  eng1->file/net/db:
-    name: eng1->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/eng1.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_eng1
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/eng1/raw/NBP1406_eng1
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: eng1
+            prefix: adcp
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: eng1
+            prefix: adcp
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'adcp:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  eng1->off:
+    name: eng1->off
+
   eng1->net:
     name: eng1->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/eng1.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_eng1
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: eng1
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'eng1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  eng1->file/net/db:
+    name: eng1->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_eng1
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/eng1/raw/NBP1406_eng1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: eng1
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  eng1->off: {}
-  gp02->file/net/db:
-    name: gp02->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/gp02.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_gp02
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/gp02/raw/NBP1406_gp02
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: gp02
+            prefix: eng1
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: gp02
+            prefix: eng1
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'eng1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  gp02->off:
+    name: gp02->off
+
   gp02->net:
     name: gp02->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/gp02.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_gp02
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: gp02
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'gp02:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  gp02->file/net/db:
+    name: gp02->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_gp02
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/gp02/raw/NBP1406_gp02
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: gp02
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  gp02->off: {}
-  grv1->file/net/db:
-    name: grv1->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/grv1.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_grv1
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/grv1/raw/NBP1406_grv1
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: grv1
+            prefix: gp02
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: grv1
+            prefix: gp02
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'gp02:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  grv1->off:
+    name: grv1->off
+
   grv1->net:
     name: grv1->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/grv1.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_grv1
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: grv1
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'grv1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  grv1->file/net/db:
+    name: grv1->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_grv1
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/grv1/raw/NBP1406_grv1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: grv1
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  grv1->off: {}
-  gyr1->file/net/db:
-    name: gyr1->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/gyr1.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_gyr1
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/gyr1/raw/NBP1406_gyr1
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: gyr1
+            prefix: grv1
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: gyr1
+            prefix: grv1
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'grv1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  gyr1->off:
+    name: gyr1->off
+
   gyr1->net:
     name: gyr1->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/gyr1.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_gyr1
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: gyr1
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'gyr1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  gyr1->file/net/db:
+    name: gyr1->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_gyr1
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/gyr1/raw/NBP1406_gyr1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: gyr1
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  gyr1->off: {}
-  hdas->file/net/db:
-    name: hdas->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/hdas.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_hdas
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/hdas/raw/NBP1406_hdas
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: hdas
+            prefix: gyr1
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: hdas
+            prefix: gyr1
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'gyr1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  hdas->off:
+    name: hdas->off
+
   hdas->net:
     name: hdas->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/hdas.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_hdas
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: hdas
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'hdas:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  hdas->file/net/db:
+    name: hdas->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_hdas
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/hdas/raw/NBP1406_hdas
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: hdas
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  hdas->off: {}
-  knud->file/net/db:
-    name: knud->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/knud.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_knud
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/knud/raw/NBP1406_knud
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: knud
+            prefix: hdas
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: knud
+            prefix: hdas
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'hdas:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  knud->off:
+    name: knud->off
+
   knud->net:
     name: knud->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/knud.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_knud
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: knud
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'knud:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  knud->file/net/db:
+    name: knud->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_knud
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/knud/raw/NBP1406_knud
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: knud
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  knud->off: {}
-  mbdp->file/net/db:
-    name: mbdp->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/mbdp.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_mbdp
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/mbdp/raw/NBP1406_mbdp
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: mbdp
+            prefix: knud
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: mbdp
+            prefix: knud
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'knud:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  mbdp->off:
+    name: mbdp->off
+
   mbdp->net:
     name: mbdp->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/mbdp.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_mbdp
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: mbdp
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'mbdp:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  mbdp->file/net/db:
+    name: mbdp->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_mbdp
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/mbdp/raw/NBP1406_mbdp
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: mbdp
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  mbdp->off: {}
-  mwx1->file/net/db:
-    name: mwx1->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/mwx1.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_mwx1
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/mwx1/raw/NBP1406_mwx1
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: mwx1
+            prefix: mbdp
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: mwx1
+            prefix: mbdp
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'mbdp:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  mwx1->off:
+    name: mwx1->off
+
   mwx1->net:
     name: mwx1->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/mwx1.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_mwx1
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: mwx1
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'mwx1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  mwx1->file/net/db:
+    name: mwx1->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_mwx1
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/mwx1/raw/NBP1406_mwx1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: mwx1
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  mwx1->off: {}
-  pco2->file/net/db:
-    name: pco2->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/pco2.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_pco2
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/pco2/raw/NBP1406_pco2
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: pco2
+            prefix: mwx1
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: pco2
+            prefix: mwx1
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'mwx1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  pco2->off:
+    name: pco2->off
+
   pco2->net:
     name: pco2->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/pco2.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_pco2
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: pco2
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'pco2:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  pco2->file/net/db:
+    name: pco2->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_pco2
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/pco2/raw/NBP1406_pco2
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: pco2
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  pco2->off: {}
-  pguv->file/net/db:
-    name: pguv->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/pguv.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_pguv
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/pguv/raw/NBP1406_pguv
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: pguv
+            prefix: pco2
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: pguv
+            prefix: pco2
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'pco2:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  pguv->off:
+    name: pguv->off
+
   pguv->net:
     name: pguv->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/pguv.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_pguv
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: pguv
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'pguv:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  pguv->file/net/db:
+    name: pguv->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_pguv
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/pguv/raw/NBP1406_pguv
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: pguv
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  pguv->off: {}
-  rtmp->file/net/db:
-    name: rtmp->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/rtmp.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_rtmp
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/rtmp/raw/NBP1406_rtmp
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: rtmp
+            prefix: pguv
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: rtmp
+            prefix: pguv
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'pguv:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  rtmp->off:
+    name: rtmp->off
+
   rtmp->net:
     name: rtmp->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/rtmp.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_rtmp
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: rtmp
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'rtmp:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  rtmp->file/net/db:
+    name: rtmp->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_rtmp
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/rtmp/raw/NBP1406_rtmp
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: rtmp
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  rtmp->off: {}
-  s330->file/net/db:
-    name: s330->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/s330.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_s330
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/s330/raw/NBP1406_s330
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: s330
+            prefix: rtmp
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: s330
+            prefix: rtmp
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'rtmp:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  s330->off:
+    name: s330->off
+
   s330->net:
     name: s330->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/s330.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_s330
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: s330
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 's330:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  s330->file/net/db:
+    name: s330->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_s330
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/s330/raw/NBP1406_s330
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: s330
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  s330->off: {}
-  seap->file/net/db:
-    name: seap->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/seap.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_seap
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/seap/raw/NBP1406_seap
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: seap
+            prefix: s330
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: seap
+            prefix: s330
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 's330:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  seap->off:
+    name: seap->off
+
   seap->net:
     name: seap->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/seap.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_seap
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: seap
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'seap:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  seap->file/net/db:
+    name: seap->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_seap
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/seap/raw/NBP1406_seap
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: seap
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  seap->off: {}
-  svp1->file/net/db:
-    name: svp1->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/svp1.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_svp1
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/svp1/raw/NBP1406_svp1
-    - class: ComposedWriter
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
+        - class: PrefixTransform
           kwargs:
-            prefix: svp1
+            prefix: seap
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: svp1
+            prefix: seap
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'seap:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  svp1->off:
+    name: svp1->off
+
   svp1->net:
     name: svp1->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/svp1.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_svp1
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: svp1
     writers:
-      class: ComposedWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+        -  class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'svp1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  svp1->file/net/db:
+    name: svp1->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_svp1
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/svp1/raw/NBP1406_svp1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
           kwargs:
             prefix: svp1
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter      # Send raw NMEA to UDP
           kwargs:
             network: :6224
-  svp1->off: {}
-  true_winds->db:
-    name: true_winds->db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/true_winds.log
-    readers:
-      class: NetworkReader
-      kwargs:
-        network: :6224
-    transforms:
-    - class: ParseTransform
-    - class: ComposedDerivedDataTransform
-      kwargs:
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-        - class: TrueWindsTransform
+        - class: PrefixTransform
           kwargs:
-            apparent_dir_name: PortApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            true_dir_name: PortTrueWindDir
-            true_speed_name: PortTrueWindSpeed
-            update_on_fields:
-            - MwxPortRelWindDir
-            wind_dir_field: MwxPortRelWindDir
-            wind_speed_field: MwxPortRelWindSpeed
-        - class: TrueWindsTransform
-          kwargs:
-            apparent_dir_name: StbdApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            true_dir_name: StbdTrueWindDir
-            true_speed_name: StbdTrueWindSpeed
-            update_on_fields:
-            - MwxStbdRelWindDir
-            wind_dir_field: MwxStbdRelWindDir
-            wind_speed_field: MwxStbdRelWindSpeed
-    writers:
-      class: DatabaseWriter
-  true_winds->net:
-    name: true_winds->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/true_winds.log
-    readers:
-      class: NetworkReader
-      kwargs:
-        network: :6224
-    transforms:
-    - class: ParseTransform
-    - class: ComposedDerivedDataTransform
-      kwargs:
-        transforms:
-        - class: TrueWindsTransform
-          kwargs:
-            apparent_dir_name: PortApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            true_dir_name: PortTrueWindDir
-            true_speed_name: PortTrueWindSpeed
-            update_on_fields:
-            - MwxPortRelWindDir
-            wind_dir_field: MwxPortRelWindDir
-            wind_speed_field: MwxPortRelWindSpeed
-        - class: TrueWindsTransform
-          kwargs:
-            apparent_dir_name: StbdApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            true_dir_name: StbdTrueWindDir
-            true_speed_name: StbdTrueWindSpeed
-            update_on_fields:
-            - MwxStbdRelWindDir
-            wind_dir_field: MwxStbdRelWindDir
-            wind_speed_field: MwxStbdRelWindSpeed
-    writers:
-      class: NetworkWriter
-      kwargs:
-        network: :6225  # Network for parsed JSON records
-  true_winds->off: {}
-  tsg1->file/net/db:
-    name: tsg1->net/file/db
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/tsg1.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_tsg1
-    transforms:
-      class: TimestampTransform
-    writers:
-    - class: LogfileWriter
-      kwargs:
-        filebase: /var/tmp/log/NBP1406/tsg1/raw/NBP1406_tsg1
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-          class: PrefixTransform
-          kwargs:
-            prefix: tsg1
+            prefix: svp1
+        - class: ParseTransform
+        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+        - class: NetworkWriter
           kwargs:
-            network: :6224
-    - class: ComposedWriter
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
           kwargs:
-            prefix: tsg1
+            prefix: svp1
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'svp1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  tsg1->off:
+    name: tsg1->off
+
   tsg1->net:
     name: tsg1->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/tsg1.log
-    readers:
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_tsg1
-    transforms:
-      class: TimestampTransform
-    writers:
-      class: ComposedWriter
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
       kwargs:
+        prefix: tsg1
+    writers:
+    - class: NetworkWriter      # Send raw NMEA to UDP
+      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
-          kwargs:
-            prefix: tsg1
+        - class: ParseTransform
+        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
-            network: :6224
-  tsg1->off: {}
-  tsg2->file/net/db:
-    name: tsg2->net/file/db
-    stderr_writer:
-      class: TextFileWriter
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
-        filename: /var/log/openrvdas/tsg2.log
-    readers:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'tsg1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  tsg1->file/net/db:
+    name: tsg1->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_tsg1
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/tsg1/raw/NBP1406_tsg1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg1
+        writers:
+        - class: NetworkWriter      # Send raw NMEA to UDP
+          kwargs:
+            network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg1
+        - class: ParseTransform
+        - class: ToJSONTransform
+        writers:
+        - class: NetworkWriter
+          kwargs:
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg1
+        - class: ParseTransform
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'tsg1:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ########
+  tsg2->off:
+    name: tsg2->off
+
+  tsg2->net:
+    name: tsg2->net
+    readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
         baudrate: 9600
         port: /tmp/tty_tsg2
-    transforms:
-      class: TimestampTransform
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: tsg2
     writers:
-    - class: LogfileWriter
+    - class: NetworkWriter      # Send raw NMEA to UDP
       kwargs:
-        filebase: /var/tmp/log/NBP1406/tsg2/raw/NBP1406_tsg2
-    - class: ComposedWriter
-      kwargs:
+        network: :6224
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
         transforms:
-          class: PrefixTransform
-          kwargs:
-            prefix: tsg2
+        - class: ParseTransform
+        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'tsg2:stderr'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  tsg2->file/net/db:
+    name: tsg2->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_tsg2
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/tsg2/raw/NBP1406_tsg2
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        writers:
+        - class: NetworkWriter      # Send raw NMEA to UDP
+          kwargs:
             network: :6224
-    - class: ComposedWriter
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        - class: ParseTransform
+        - class: ToJSONTransform
+        writers:
+        - class: NetworkWriter
+          kwargs:
+            network: :6225
+    - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
         - class: PrefixTransform
@@ -1432,30 +1960,17 @@ configs:
             prefix: tsg2
         - class: ParseTransform
         writers:
-          class: DatabaseWriter
-  tsg2->net:
-    name: tsg2->net
-    stderr_writer:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/tsg2.log
-    readers:
-      class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_tsg2
-    transforms:
-      class: TimestampTransform
-    writers:
-      class: ComposedWriter
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
-          class: PrefixTransform
+        - class: ToDASRecordTransform
           kwargs:
-            prefix: tsg2
+            field_name: 'tsg2:stderr'
+        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
-            network: :6224
-  tsg2->off: {}
- 
+            network: :6225
+

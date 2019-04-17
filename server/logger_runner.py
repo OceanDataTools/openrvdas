@@ -447,11 +447,11 @@ class LoggerRunner:
             try:
               process.terminate()
             except Exception as e:
-              logging.warning('process.terminate threw error: %s', str(e))
+              logging.debug('process.terminate threw error: %s', str(e))
             try:
               os.kill(process.pid, signal.SIGKILL)
             except Exception as e:
-              logging.warning('os.kill threw error: %s', str(e))
+              logging.debug('os.kill threw error: %s', str(e))
         except:
           pass
 
@@ -757,8 +757,8 @@ if __name__ == '__main__':
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
-    stderr_writer = TextFileWriter(args.stderr_file)
-    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
+    stderr_writers = [TextFileWriter(args.stderr_file)]
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
 
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]

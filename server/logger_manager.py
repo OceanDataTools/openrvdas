@@ -133,6 +133,7 @@ import getpass  # to get username
 import json
 import logging
 import os
+import pprint
 import queue
 import signal
 import socket  # to get hostname
@@ -147,6 +148,7 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(
 from logger.utils.read_config import read_config
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 from logger.writers.text_file_writer import TextFileWriter
+from logger.writers.network_writer import NetworkWriter
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 #from server.data_server import DataServer
@@ -182,8 +184,9 @@ class WriteToAPILoggingHandler(logging.Handler):
 ################################################################################
 class LoggerManager:
   ############################
-  def __init__(self, api=None, websocket=None, host_id=None,
-               interval=0.5, max_tries=3, logger_log_level=logging.WARNING):
+  def __init__(self, api=None, websocket=None, broadcast_status=None,
+               host_id=None, interval=0.5, max_tries=3,
+               logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
 
@@ -194,17 +197,22 @@ class LoggerManager:
           for LoggerRunners to connect to for dispatches of logger
           configs they should run.
 
+    broadcast_status - 'Network port on which to broadcast logger status
+          updates. If cruise configuration includes a display server, this
+          should match the port monitored by that server, so that clients
+          can receive status updates.
+
     host_id - optional id by which we identify ourselves. Tasks that
-         include a "host_id" specification will only be dispatched to
-         the matching host. For now, all tasks without a host_id
-         specification will be run on the local machine.
+          include a "host_id" specification will only be dispatched to
+          the matching host. For now, all tasks without a host_id
+          specification will be run on the local machine.
 
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a failed server before giving up
 
     logger_log_level - At what logging level our component loggers
-                should operate.
+          should operate.
     """
     # Set signal to catch SIGTERM and convert it into a
     # KeyboardInterrupt so we can shut things down gracefully.
@@ -222,6 +230,12 @@ class LoggerManager:
     self.interval = interval
     self.max_tries = max_tries
     self.logger_log_level = logger_log_level
+
+    # Have we been given a network port on which to broadcast status updates?
+    if broadcast_status:
+      self.status_writer = NetworkWriter(broadcast_status)
+    else:
+      self.status_writer = None
 
     self.quit_flag = False
 
@@ -253,21 +267,6 @@ class LoggerManager:
     # configurations and read status updates from them.
     self.logger_runner_clients = set()
 
-    # Clients (such as web consoles) attached via /logger_status
-    # path. We'll send them logger status updates.
-    self.logger_status_clients = set()
-
-    # Clients attached via /server_status path. We'll send them
-    # messages about the status of this server and changes in configs.
-    # NOT YET IMPLEMENTED!!!
-    self.server_status_clients = set()
-
-    # Clients attached via the /data path. We'll receive requests for
-    # which fields (and how much back data) they want, then send them
-    # new data as they arrive.
-    # NOT YET IMPLEMENTED!!!
-    self.data_clients = set()
-
   ############################
   def start(self):
     """Start the threads that make up the LoggerManager operation: a local
@@ -285,6 +284,12 @@ class LoggerManager:
     self.update_configs_thread = threading.Thread(
       target=self.update_configs_loop, daemon=True)
     self.update_configs_thread.start()
+
+    # If broadcasting our status, start doing that in a separate thread.
+    if self.status_writer:
+      self.broadcast_status_thread = threading.Thread(
+        target=self._broadcast_status_loop, daemon=True)
+      self.broadcast_status_thread.start()
 
     # If we've got a websocket specification, launch websocket
     # server in its own separate thread.
@@ -363,7 +368,6 @@ class LoggerManager:
       self.send_queue[client_id] = queue.Queue()
       self.receive_queue[client_id] = queue.Queue()
 
-    ###########
     # Remote LoggerRunner has connected. Its "producer" is simple: we
     # just send it whatever is in its send_queue. Its consumer is a
     # little more complicated, as we want to process what we've
@@ -384,45 +388,6 @@ class LoggerManager:
       with self.client_map_lock:
         self.logger_runner_clients.discard(client_id)
 
-    ###########
-    # Logger status client has connected. Serve it logger status updates.
-    elif path.find('/logger_status/') == 0:
-      sender = self._logger_status_sender(client_id)
-
-      with self.client_map_lock:
-        self.logger_status_clients.add(client_id)
-
-      await self._handle_client_connection(client_id=client_id, sender=sender)
-
-      with self.client_map_lock:
-        self.logger_status_clients.discard(client_id)
-
-    ###########
-    # Status message client has connected. Serve it status updates
-    elif path.find('/messages/') == 0:
-      # Client wants server log messages
-      path_parts = path.split('/')
-      log_level = int(path_parts[2]) if len(path_parts) > 2 else logging.INFO
-      source = unquote(path_parts[3]) if len(path_parts) > 3 else None
-
-      logging.info('New client requests server messages: level "%s", '
-                   'source "%s"',
-                   log_level, source)
-
-      sender = self._log_message_sender(client_id, log_level, source)
-      await self._handle_client_connection(client_id=client_id, sender=sender)
-
-    ###########################
-    ## Display client has connected. - DEPRECATED. Use CachedDataServer instead.
-    #elif path == '/data':
-    #  # Client wants logger data - this is what we serve widgets. This
-    #  # is a messy and fraught bit of code, so we've isolated it into
-    #  # its own class.
-    #  websocket = self.client_map[client_id]
-    #  data_server = DataServer(websocket)
-    #  await data_server.serve_data()
-
-    ##########################
     else:
       # Client wants something unknown. Complain and return
       logging.warning('Unknown status request: "%s"', path)
@@ -456,7 +421,7 @@ class LoggerManager:
       tasks.append(asyncio.ensure_future(sender))
     if receiver is not None:
       # Task that receives data from websocket and does something with it
-      asyncio.ensure_future(receiver)
+      tasks.append(asyncio.ensure_future(receiver))
 
     # Wait until one (or both) tasks finish
     done, pending = await asyncio.wait(
@@ -494,39 +459,40 @@ class LoggerManager:
         await asyncio.sleep(0.1)
 
   ############################
-  async def _logger_status_sender(self, client_id):
-    """Iteratively grab status messages for a configuration and send to
-    websocket. In theory we could be much more efficient and directly
+  def _broadcast_status_loop(self):
+    """Iteratively grab status messages from the api and send them out as
+    JSON to whatever writer we're using to broadcast our logger
+    statuses. In theory we could be much more efficient and directly
     grab status updates in _process_logger_runner_messages() when we
     get them from the LoggerRunners.
-    """
-    websocket = self.client_map.get(client_id, None)
-    if not websocket:
-      raise ValueError('No websocket for client_id %s!' % client_id)
-
+    """    
     # We stash previous_configs so that we know not to send them if
     # they haven't changed since last check. We keep the raw
     # previous_status separately, because we have to do some
     # processing to get it into a form that's useful for our clients,
     # and we want do avoid doing that processing if we can.
-    previous_configs = {}
+    previous_cruise_def = {}
     previous_logger_status = {}
 
     while not self.quit_flag:
-      something_changed = False
-      configs = {}
+      # Sleep for a bit before going around (also, before we try the
+      # first time, to let the LoggerManager start up).
+      time.sleep(self.interval)
+      
+      cruise_def_changed = status_changed = False
       try:
-        configs['modes'] = self.api.get_modes()
-        configs['mode'] = self.api.get_active_mode()
-        configs['loggers'] = {logger_id:
-                    self.api.get_logger_config_name(logger_id)
-                    for logger_id in self.api.get_loggers()}
+        cruise_def = {
+          'loggers': self.api.get_loggers(),
+          'modes':   self.api.get_modes(),
+          'mode':    self.api.get_active_mode()
+          }
       except (AttributeError, ValueError):
-        logging.info('No config found')
+        logging.info('No cruise definition found')
+        cruise_def = {}
 
-      if not configs == previous_configs:
-        something_changed = True
-        previous_configs = configs
+      if not cruise_def == previous_cruise_def:
+        cruise_def_changed = True
+        previous_cruise_def = cruise_def
 
       # We expect status to be a dict of timestamp:{logger status
       # dict} entries. We may have multiple entries if we have
@@ -542,53 +508,56 @@ class LoggerManager:
       # Has anything changed with logger statuses?
       if not logger_status == previous_logger_status:
         previous_logger_status = logger_status
-        something_changed = True
+        status_changed = True
 
-      # If no changes, just send the timestamp; otherwise, assemble a
-      # complete message from configs and status.
-      message = {'timestamp': timestamp}
-      if something_changed:
-        message.update(configs)
-        message['status'] = logger_status
+      #########
+      # If nothing has changed, just send a heartbeat timestamp
+      if not cruise_def_changed and not status_changed:
+        status_message = {'data_id':'logger_status',
+                          'timestamp': timestamp,
+                          'fields': {}}
+        self.status_writer.write(json.dumps(status_message))
+        continue
 
-      logging.debug('Sending logger status to client %d: %s', client_id,message)
-      try:
-        await websocket.send(json.dumps(message))
-      except websockets.ConnectionClosed:
-        logging.info('Client %d connection closed', client_id)
-        return
-      await asyncio.sleep(self.interval)
+      #########
+      # If we're here, something changed, either in cruise definition
+      # or status; send out updates for all in small packets.
 
-  ############################
-  async def _log_message_sender(self, client_id, log_level=logging.INFO,
-                                source=None):
-    """Iteratively grab log_messages of log_level and below and send to
-    websocket. If source is not specified, retrieve from all
-    sources. If log_level is not specified, retrieve all log levels.
-    """
-    logging.info('Created message sender client %s: source %s, log_level %d',
-                 client_id, source, log_level)
-    websocket = self.client_map.get(client_id, None)
-    if not websocket:
-      raise ValueError('No websocket for client_id %s!' % client_id)
+      # Send list of loggers
+      loggers = cruise_def['loggers']
+      status_message = {'data_id':'logger_status',
+                        'timestamp': timestamp,
+                        'fields': {'status:logger_list':
+                                   [logger for logger in loggers]}}
+      self.status_writer.write(json.dumps(status_message))
 
-    # Arbitrarily get the last 10 minutes' requests
-    last_timestamp = time.time() - (10 * 60)
-    while not self.quit_flag:
-      logging.debug('last message timestamp: %s', last_timestamp)
-      messages = self.api.get_message_log(source=source, user=None,
-                                          log_level=log_level,
-                                          since_timestamp=last_timestamp)
-      if messages:
-        logging.debug('got messages: %s', messages)
-        # Remember timestamp of last message
-        last_timestamp = max(last_timestamp, float(messages[-1][0]))
-        try:
-          await websocket.send(json.dumps(messages))
-        except websockets.ConnectionClosed:
-          logging.info('Client %d connection closed', client_id)
-          return
-      await asyncio.sleep(self.interval)
+      # Send list of modes and current mode
+      status_message = {'data_id':'logger_status',
+                        'timestamp': timestamp,
+                        'fields': {'status:mode_list': cruise_def['modes'],
+                                   'status:mode': cruise_def['mode']}}
+      self.status_writer.write(json.dumps(status_message))
+
+      # Send one logger status per message, so we don't blow past the
+      # packet size limit if we're broadcasting UDP
+      for logger in loggers:
+        status = logger_status.get(logger, None)
+        if not status:
+          logging.warning('Skipping logger %s', logger)
+          continue        
+        status_message = {
+          'data_id':'logger_status',
+          'timestamp': timestamp,
+          'fields': {
+            'status:logger:' + logger: {
+              'configs': loggers[logger].get('configs', []),
+              'config': status.get('config', None),
+              'failed': status.get('failed', None),
+              'running': status.get('running', None)
+            }
+          }
+        }
+        self.status_writer.write(json.dumps(status_message))
 
   ##########################
   async def _queued_receiver(self, client_id):
@@ -727,8 +696,14 @@ if __name__ == '__main__':
   parser.add_argument('--database', dest='database', action='store',
                       choices=['memory', 'django', 'hapi'],
                       default='memory', help='What backing store database '
-                      'to use. Currently-implemented options are "memory" '
-                      'and "django".')
+                      'to use.')
+
+  parser.add_argument('--broadcast_status', dest='broadcast_status',
+                      action='store', default=None,
+                      help='Network port on which to broadcast logger status '
+                      'updates. If cruise configuration includes a display '
+                      'server, this should match the port monitored by that '
+                      'server, so that clients can receive status updates.')
 
   # Optional address for websocket server from which we'll accept
   # connections from LoggerRunners willing to accept dispatched
@@ -769,8 +744,8 @@ if __name__ == '__main__':
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
-    stderr_writer = TextFileWriter(args.stderr_file)
-    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
+    stderr_writers = [TextFileWriter(args.stderr_file)]
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
     
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
@@ -799,6 +774,7 @@ if __name__ == '__main__':
   ############################
   # Create our LoggerManager
   logger_manager = LoggerManager(api=api, websocket=args.websocket,
+                                 broadcast_status=args.broadcast_status,
                                  host_id=args.host_id,
                                  interval=args.interval,
                                  max_tries=args.max_tries,
