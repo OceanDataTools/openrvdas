@@ -25,13 +25,12 @@ class TestCachedDataServer(unittest.TestCase):
 
   ############################
   def test_basic(self):
-
     cds = CachedDataServer(WEBSOCKET)
-
     cds.cache_record({'fields':{'field_1':'value_11',
                                 'field_2':'value_21',
                                 'field_3':'value_31'}})
 
+    # We call this in ensure_future, below
     async def run_test():
       async with websockets.connect('ws://' + WEBSOCKET) as ws:
         now = time.time()
@@ -44,7 +43,6 @@ class TestCachedDataServer(unittest.TestCase):
         response = json.loads(result)
         self.assertEqual(response.get('data', None),
                          ['field_1', 'field_2', 'field_3'])
-
         #####
         to_send = {'type':'publish',
                    'data':{'timestamp':time.time(),
@@ -79,23 +77,33 @@ class TestCachedDataServer(unittest.TestCase):
         self.assertEqual(response['data']['field_3'][0][1], 'value_31')
 
         #####
+        to_send = {'type':'publish',
+                   'data':{'timestamp':time.time(),
+                           'fields':{'field_1':'value_13',
+                                     'field_2':'value_23'}}}
+        await ws.send(json.dumps(to_send))
+        await asyncio.sleep(0.1)
+        result = await ws.recv()
+        logging.info('got publish result: %s', result)
+
+        #####
         to_send = {'type':'ready'}
         await ws.send(json.dumps(to_send))
         await asyncio.sleep(0.1)
         result = await ws.recv()
         logging.info('got ready 2 result: %s', result)
 
-        response = json.loads(result)
-        self.assertEqual(len(response['data']), 1)
-        self.assertEqual(len(response['data']['field_3']), 1)
-        self.assertEqual(response['data']['field_3'][0][1], 'value_31')
-        
+        response = json.loads(result)        
+        self.assertEqual(len(response['data']), 2)
+        self.assertEqual(len(response['data']['field_1']), 1)
+        self.assertEqual(response['data']['field_1'][0][1], 'value_13')
+        self.assertEqual(len(response['data']['field_2']), 1)
+        self.assertEqual(response['data']['field_2'][0][1], 'value_23')
+
         #####
         to_send = {'type':'publish',
                    'data':{'timestamp':time.time(),
-                           'fields':{'field_1':'value_13',
-                                     'field_2':'value_23',
-                                     'field_3':'value_33'}}}
+                           'fields':{'field_3':'value_33'}}}
         await ws.send(json.dumps(to_send))
         await asyncio.sleep(0.1)
         result = await ws.recv()
@@ -109,16 +117,11 @@ class TestCachedDataServer(unittest.TestCase):
         logging.info('got ready 3 result: %s', result)
 
         response = json.loads(result)        
-        self.assertEqual(len(response['data']), 3)
-        self.assertEqual(len(response['data']['field_1']), 1)
-        self.assertEqual(response['data']['field_1'][0][1], 'value_13')
-        self.assertEqual(len(response['data']['field_2']), 1)
-        self.assertEqual(response['data']['field_2'][0][1], 'value_23')
+        self.assertEqual(len(response['data']), 1)
         self.assertEqual(len(response['data']['field_3']), 1)
         self.assertEqual(response['data']['field_3'][0][1], 'value_33')
 
     task = asyncio.ensure_future(run_test())
-    #asyncio.gather(task)
     time.sleep(1)
     
 ############################

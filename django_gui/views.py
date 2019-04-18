@@ -121,7 +121,7 @@ def index(request):
   # Assemble information to draw page
   template_vars = {
     'cruise_id': cruise_id or '',
-    'websocket_server': WEBSOCKET_STATUS_SERVER,
+    'websocket_server': WEBSOCKET_DATA_SERVER,
     'errors': errors,
     'loggers': {},
   }
@@ -205,9 +205,10 @@ def widget(request, field_list=''):
   global logger_server
 
   template_vars = {
-    'field_list': field_list,
+    'field_list_string': field_list,
+    'field_list': field_list.split(',') if field_list else [],
     'is_superuser': True,
-    'websocket_data_server': WEBSOCKET_DATA_SERVER,
+    'websocket_server': WEBSOCKET_DATA_SERVER,
   }
 
   # Render what we've ended up with

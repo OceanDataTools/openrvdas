@@ -244,7 +244,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'PCOD:stderr'
+            field_name: 'stderr:logger:PCOD'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -301,7 +301,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'PCOD:stderr'
+            field_name: 'stderr:logger:PCOD'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -342,7 +342,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'adcp:stderr'
+            field_name: 'stderr:logger:adcp'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -399,7 +399,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'adcp:stderr'
+            field_name: 'stderr:logger:adcp'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -440,7 +440,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'eng1:stderr'
+            field_name: 'stderr:logger:eng1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -497,7 +497,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'eng1:stderr'
+            field_name: 'stderr:logger:eng1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -538,7 +538,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'gp02:stderr'
+            field_name: 'stderr:logger:gp02'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -595,7 +595,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'gp02:stderr'
+            field_name: 'stderr:logger:gp02'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -636,7 +636,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'grv1:stderr'
+            field_name: 'stderr:logger:grv1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -693,7 +693,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'grv1:stderr'
+            field_name: 'stderr:logger:grv1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -734,7 +734,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'gyr1:stderr'
+            field_name: 'stderr:logger:gyr1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -791,7 +791,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'gyr1:stderr'
+            field_name: 'stderr:logger:gyr1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -832,7 +832,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'hdas:stderr'
+            field_name: 'stderr:logger:hdas'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -889,7 +889,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'hdas:stderr'
+            field_name: 'stderr:logger:hdas'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -930,7 +930,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'knud:stderr'
+            field_name: 'stderr:logger:knud'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -987,7 +987,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'knud:stderr'
+            field_name: 'stderr:logger:knud'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1028,7 +1028,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'mbdp:stderr'
+            field_name: 'stderr:logger:mbdp'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1085,7 +1085,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'mbdp:stderr'
+            field_name: 'stderr:logger:mbdp'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1126,7 +1126,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'mwx1:stderr'
+            field_name: 'stderr:logger:mwx1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1183,7 +1183,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'mwx1:stderr'
+            field_name: 'stderr:logger:mwx1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1224,7 +1224,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'pco2:stderr'
+            field_name: 'stderr:logger:pco2'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1281,7 +1281,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'pco2:stderr'
+            field_name: 'stderr:logger:pco2'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1322,7 +1322,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'pguv:stderr'
+            field_name: 'stderr:logger:pguv'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1379,7 +1379,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'pguv:stderr'
+            field_name: 'stderr:logger:pguv'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1420,7 +1420,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'rtmp:stderr'
+            field_name: 'stderr:logger:rtmp'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1477,7 +1477,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'rtmp:stderr'
+            field_name: 'stderr:logger:rtmp'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1518,7 +1518,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 's330:stderr'
+            field_name: 'stderr:logger:s330'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1575,7 +1575,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 's330:stderr'
+            field_name: 'stderr:logger:s330'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1616,7 +1616,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'seap:stderr'
+            field_name: 'stderr:logger:seap'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1673,7 +1673,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'seap:stderr'
+            field_name: 'stderr:logger:seap'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1714,7 +1714,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'svp1:stderr'
+            field_name: 'stderr:logger:svp1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1771,7 +1771,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'svp1:stderr'
+            field_name: 'stderr:logger:svp1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1812,7 +1812,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'tsg1:stderr'
+            field_name: 'stderr:logger:tsg1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1869,7 +1869,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'tsg1:stderr'
+            field_name: 'stderr:logger:tsg1'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1910,7 +1910,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'tsg2:stderr'
+            field_name: 'stderr:logger:tsg2'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -1967,7 +1967,7 @@ configs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'tsg2:stderr'
+            field_name: 'stderr:logger:tsg2'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter

@@ -482,6 +482,7 @@ class LoggerManager:
       cruise_def_changed = status_changed = False
       try:
         cruise_def = {
+          'cruise':  self.api.get_configuration(),
           'loggers': self.api.get_loggers(),
           'modes':   self.api.get_modes(),
           'mode':    self.api.get_active_mode()
@@ -522,6 +523,19 @@ class LoggerManager:
       #########
       # If we're here, something changed, either in cruise definition
       # or status; send out updates for all in small packets.
+
+      # Send cruise metadata
+      cruise = cruise_def['cruise']
+      status_message = {'data_id':'cruise_metadata',
+                        'timestamp': timestamp,
+                        'fields': {
+                          'status:cruise_id': cruise.id,
+                          'status:cruise_start': cruise.start.timestamp(),
+                          'status:cruise_end': cruise.end.timestamp(),
+                          'status:cruise_loaded': cruise.loaded_time.timestamp(),
+                          'status:cruise_filename': cruise.config_filename,
+                        }}
+      self.status_writer.write(json.dumps(status_message))
 
       # Send list of loggers
       loggers = cruise_def['loggers']

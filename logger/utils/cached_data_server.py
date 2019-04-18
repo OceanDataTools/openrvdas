@@ -40,10 +40,14 @@ recent 480 seconds for each field.
               'field_2':{'seconds':0},
               'field_3':{'seconds':-1}}}
 
-       - subscribe to updates for field_1, field_2 and field_3. Provide
-         50 seconds worth of back data for field_1. Provide only data
-         from this time onward for field_2. Always provide just the single
-         most recent value for field_3.
+       - subscribe to updates for field_1, field_2 and field_3. Allowable
+         values for 'seconds':
+
+            0  - provide only new values that arrive after subscription
+           -1  - provide the most recent value, and then all future new ones
+           num - provide num seconds of back data, then all future new ones
+         
+         If 'seconds' is missing, use '0' as the default.
 
    {'type':'ready'}
 
@@ -294,7 +298,7 @@ class WebSocketConnection:
     # there are, or whether we've sent it before.
     field_timestamps = {}
     interval = self.interval # Use the default interval, uh, by default
-    
+
     while not self.quit_flag:
       now = time.time()
     
@@ -306,6 +310,7 @@ class WebSocketConnection:
         await self.send_json_response(
           {'status':400, 'error':'received unparseable JSON'},
           is_error=True)
+        logging.warning('unparseable JSON: %s', raw_request)
         continue
       except websockets.exceptions.ConnectionClosed:
         logging.info('Client closed connection')
@@ -410,13 +415,17 @@ class WebSocketConnection:
             logging.debug('No cached data for %s', field_name)
             continue
 
-          # If no data for reqeusted field, skip.
+          # If no data for requested field, skip.
           if not field_cache or not field_cache[-1]:
             continue
 
-          # If they don't want back data, just send the most recent result.
+          # If special case -1, they want just single most recent
+          # value, then future results. Grab last value, then set its
+          # timestamp as the last one we've seen.
           elif latest_timestamp == -1:
-            results[field_name] = [ field_cache[-1] ]
+            last_value = field_cache[-1]
+            results[field_name] = [ last_value ]
+            field_timestamps[field_name] = last_value[0] # ts of last value
 
           # Otherwise - if no data newer than the latest
           # timestamp we've already sent, skip,
@@ -432,12 +441,11 @@ class WebSocketConnection:
             if field_cache:
               field_timestamps[field_name] = field_cache[-1][0]
 
-        # If we do have results, package them up and send them
-        if results:
-          await self.send_json_response({'type':'data', 'status':200,
-                                         'data':results})
-        else:
-          logging.debug('No results to send')
+        logging.debug('Websocket results: %s...', str(results)[0:100])
+        
+        # Package up what results we have (if any) and send them off
+        await self.send_json_response({'type':'data', 'status':200,
+                                       'data':results})
 
         # New results or not, take a nap before trying to fetch more results
         elapsed = time.time() - now
@@ -532,13 +540,14 @@ class CachedDataServer:
 
   ############################
   def cleanup(self, oldest):
-    """Remove any data from cache with a timestamp older than 'oldest' seconds.
+    """Remove any data from cache with a timestamp older than 'oldest'
+    seconds, but keep at least one (most recent) value.
     """
     logging.debug('Cleaning up cache')
     with self.cache_lock:
       for field in self.cache:
         value_list = self.cache[field]
-        while value_list and value_list[0][0] < oldest:
+        while value_list and len(value_list) > 1 and value_list[0][0] < oldest:
           value_list.pop(0)
 
   ############################
@@ -608,14 +617,19 @@ class CachedDataServer:
       index = 0
       while index < len(self._connections):
         if self._connections[index].closed():
-          logging.info('Disposing of closed connection.')
+          logging.debug('Disposing of closed connection.')
           self._connections.pop(index)
         else:
           index += 1
       # Now add the new connection
       self._connections.append(connection)
 
-    await connection.serve_requests()
+    # If client disconnects, tell connection to quit
+    try:
+      await connection.serve_requests()
+    except websockets.ConnectionClosed:
+      logging.warning('client disconnected')
+      connection.quit()
 
 ################################################################################
 ################################################################################
