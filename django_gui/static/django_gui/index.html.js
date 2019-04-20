@@ -87,7 +87,7 @@ function process_message(message_str) {
 // the HTML...
 function process_data_message(data_dict) {
   var data_str = JSON.stringify(data_dict);
-  var new_subscriptions = [];
+  var new_fields = {};
 
   for (var field_name in data_dict) {
     var value_list = data_dict[field_name];
@@ -108,8 +108,8 @@ function process_data_message(data_dict) {
         for (var ll_i = 0; ll_i < logger_list.length; ll_i++) {
           var logger = logger_list[ll_i];
           loggers[logger] = true;
-          new_subscriptions.push('status:logger:' + logger);
-          new_subscriptions.push('stderr:logger:' + logger);
+          new_fields['status:logger:' + logger] = {'seconds':-1};
+          new_fields['stderr:logger:' + logger] = {'seconds':88000};
         }
         update_logger_list();
         break;
@@ -159,21 +159,17 @@ function process_data_message(data_dict) {
         }
     }
   }
-  // Do we have new subscriptions? Create the subscription request.
+  // Do we have new field subscriptions? Create the subscription request.
   // But make sure we keep listening for future logger_list, mode_list
   // mode updates.
-  if (new_subscriptions.length) {
-    var sub_fields = {};
-    for (var ns_i = 0; ns_i < new_subscriptions.length; ns_i++) {
-      sub_fields[new_subscriptions[ns_i]] = {'seconds':-1};
-    }
-    sub_fields['status:cruise_id'] = {'seconds':0};
-    sub_fields['status:logger_list'] = {'seconds':0};
-    sub_fields['status:mode_list'] = {'seconds':0};
-    sub_fields['status:mode'] = {'seconds':0};
+  if (Object.keys(new_fields).length) {
+    new_fields['status:cruise_id'] = {'seconds':0};
+    new_fields['status:logger_list'] = {'seconds':0};
+    new_fields['status:mode_list'] = {'seconds':0};
+    new_fields['status:mode'] = {'seconds':0};
 
-    var sub_message = {'type':'subscribe', 'fields':sub_fields};
-    send(sub_message);
+    var subscribe_message = {'type':'subscribe', 'fields':new_fields};
+    send(subscribe_message);
   }
 }
 

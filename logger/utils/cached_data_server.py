@@ -73,7 +73,7 @@ RedisReader or the like):
       --network :6221,:6224 \
       --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
       --transform_parse \
-      --write_cached_data_server :8766
+      --write_cached_data_writer :8766
 
 This command  line creates  a CachedDataWriter that  reads timestamped
 NMEA sentences, parses them into  field:value pairs, then stores them,
@@ -97,7 +97,7 @@ readers:
 - class: NetworkReader
   kwargs: {network: ':6224'}
 transforms:
-- {class: ParseTransform}
+- class: ParseTransform
 writers:
 - class: CachedDataWriter
   kwargs:
@@ -196,6 +196,10 @@ def cache_record(record, cache, cache_lock):
                     'level.')
       logging.error('The record in question: %s', str(record))
       return
+  else:
+    logging.warning('Received non-DASRecord, non-dict input (type: %s): %s',
+                      type(record), record)
+    return
 
   # Add values from record to cache
   with cache_lock:
@@ -638,7 +642,7 @@ if __name__ == '__main__':
 
   from logger.readers.composed_reader import ComposedReader
   from logger.readers.network_reader import NetworkReader
-  from logger.transforms.parse_transform import ParseTransform
+  from logger.transforms.from_json_transform import FromJSONTransform
   from logger.utils import record_parser
 
   parser = argparse.ArgumentParser()
@@ -650,13 +654,6 @@ if __name__ == '__main__':
   parser.add_argument('--websocket', dest='websocket', required=True,
                       action='store',
                       help='Host:port on which to serve data')
-
-  parser.add_argument('--parse_definition_path',
-                      dest='parse_definition_path',
-                      default=record_parser.DEFAULT_DEFINITION_PATH,
-                      help='Comma-separated globs of device and device type '
-                      'definition file names, e.g. '
-                      'local/devices/*.yaml,test/skq/devices.yaml')
 
   parser.add_argument('--back_seconds', dest='back_seconds', action='store',
                       type=float, default=480,
@@ -683,7 +680,7 @@ if __name__ == '__main__':
 
   readers = [NetworkReader(network=network)
              for network in args.network.split(',')]
-  transform = ParseTransform(definition_path=args.parse_definition_path)
+  transform = FromJSONTransform()
 
   reader = ComposedReader(readers=readers, transforms=[transform])
   writer = CachedDataServer(args.websocket, args.interval)
