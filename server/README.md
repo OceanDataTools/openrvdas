@@ -39,137 +39,92 @@ from the command line as:
 *Note*: The sample_configs.yaml file above specifies configs that read
 from simulated serial ports and write to UDP port 6224. To get the
 configs to actually run, you'll need to run
+
 ```
     logger/utils/serial_sim.py --config test/serial_sim.py
 ```
+
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
 
 To verify that the scripts are actually working as intended, you can
 create a network listener on port 6224 in yet another window:
+
 ```
     logger/listener/listen.py --network :6224 --write_file -
 ```
 
-### LoggerRunner - As Client
-
-A LoggerRunner may also be started as a client for a remote
-LoggerManager. To do so, specify a host and port of a running
-LoggerManager (described below) using the ```--websocket``` argument
-and assign it a host id by which to identify itself using the
-```--host_id``` argument:
-
-```
-    server/logger_manager.py --websocket localhost:8765 --host_id master.host
-```
-
-When the LoggerManager identifies a logger to be run that includes
-a host_id restriction, e.g.
-```
-    "knud": {
-       "host_id": "knud.host",
-       "configs": ...
-        ...
-    }
-```
-
-it will attempt to dispatch that config to the LoggerRunner that has
-identified itself with that host id. (Note: loggers with no host
-restriction will be run by the LoggerManager itself, and if a logger
-has a host restriction and no host by that name has connected, the
-LoggerManager will issue a warning and not run the configuration.)
-
-### LoggerManager - Standalone
+### LoggerManager
 
 To run the LoggerManager from the command line with (using the default
 of an InMemoryServerAPI):
+
 ```
     server/logger_manager.py
 ```
+
 If an initial configuration is specified on the command line, as
 below:
+
 ```
     server/logger_manager.py --config test/configs/sample_cruise.yaml
 ```
+
 the cruise configuration will be loaded and set to its default
-mode. If a --mode argument is included, it will be used in place of
+mode. If a ``--mode`` argument is included, it will be used in place of
 the default mode.
 
-### LoggerManager - As Server
-
-If the LoggerManager is created with a websocket specification
-(host:port), it will accept connections from LoggerRunners. It
-expects the LoggerRunners to identify themselves with a host_id, and
-will dispatch any configs listing that host_id to the appropriate
-LoggerRunner. Configs that have no host_id specified will continue to
-be dispatched to the local LoggerRunner; configs specifying a host_id
-that doesn't match any connected LoggerRunner will not be run:
-```
-    server/logger_manager.py --websocket localhost:8765
-```
-A LoggerRunner that would connect to the above LoggerManager could be
-launched via:
-```
-    server/logger_runner.py --websocket localhost:8765 \
-        --host_id knud.host
-```
-The ```-v``` flag may be specified on any of the above command lines to
+The ``-v`` flag may be specified on any of the above command lines to
 increase diagnostic verbosity to "INFO". Repeating the flag sets
 verbosity to "DEBUG".
 
-For the LoggerManager and LoggerRunner, the ```-V``` (capitalized) flag
+For the LoggerManager and LoggerRunner, the ``-V`` (capitalized) flag
 increases verbosity of the loggers being run.
 
 ### Running the Scripts Together
-To try out the scripts, open four(!) terminal windows.
+To try out the scripts, open three terminal windows.
 
 1. In the first terminal, start the LoggerManager with a websocket server:
-```
-   server/logger_manager.py --websocket localhost:8765 -v
-```
-2. In a second terminal, start a LoggerRunner that will try to connect
-   to the websocket on the LoggerManager you've started.
-```
-    server/logger_runner.py --websocket localhost:8765 \
-         --host_id knud.host -v
-```
-   Note that this LoggerRunner is identifies its host as "knud.host";
-   if you look at test/configs/sample_cruise.yaml, you'll notice that
-   the logger definition for the "knud" logger has a host restriction of
-   "knud.host", meaning that our LoggerManager should try to dispatch
-   knud logger configs to this LoggerRunner.
 
-3. The sample cruise that we're going to load and run is configured to
+```
+   server/logger_manager.py -v
+```
+
+2. The sample cruise that we're going to load and run is configured to
    read from simulated serial ports. To create those simulated ports
    and start feeding data to them, use a third terminal window to run:
+
 ```
     logger/utils/simulate_serial.py --config test/serial_sim.yaml -v
 ```
-4. Finally, we'd like to be able to easily glimpse the data that the
+
+3. Finally, we'd like to be able to easily glimpse the data that the
    loggers are producing. The sample cruise configuration tells the
-   loggers to write to UDP port 6224 when running, so use the fourth
+   loggers to write to UDP port 6225 when running, so use the fourth
    terminal to run a Listener that will monitor that port. The '-'
    filename tells the Listener to write to stdout (see listen.py
    --help for all Listener options):
+
 ```
-    logger/listener/listen.py --network :6224 --write_file -
+    logger/listener/listen.py --network :6225 --write_file -
 ```
-5. Whew! Now try a few commands in the terminal running the
+
+4. Whew! Now try a few commands in the terminal running the
    LoggerManager (you can type 'help' for a full list):
 
 #### Load a cruise configuration
 ```
-   command? load_configuration test/configs/sample_cruise.yaml
+   command? load_configuration test/nmea/NBP1406/NBP1406_cruise.yaml
 ```
 #### Change cruise modes
 ```
    command? get_modes
-     Modes: off, port, underway
+     Modes: off, monitor, log
 
-   command? set_active_mode port
+   command? set_active_mode monitor
      (You should notice data appearing in the Listener window.)
 
-   command? set_active_mode underway
+   command? set_active_mode log
      (You should notice more data appearing in the Listener window, and
       the LoggerRunner in the second window should leap into action.)
 
@@ -190,33 +145,28 @@ To try out the scripts, open four(!) terminal windows.
 
    command? quit
 ```
-When setting the mode to port, you should notice data appearing in
+When setting the mode to monitor, you should notice data appearing in
 the listener window, and should see diagnostic output in the
 LoggerManager window.
-
-When setting the mode to underway, you should see more data appearing
-in the listener window (due to more loggers running), and should see
-the LoggerRunner leap into action as the LoggerManager dispatches the
-configs for "knud.host" to it.
 
 ## Server API
 
 The LoggerManager stores and retrieves configuration and status data
-using a backing store. There are currently two backing stores
-implemented: an in-memory based and Django-based.
+using a backing store. There are currently three backing stores
+implemented: an in-memory based (``--database memory``), Django-based
+(``--database django``) and a HAPI-based one (``--database hapi``).
 
 By default, a LoggerManager will use the in-memory backing store. This
 means that state will be lost whenever the LoggerManager is
-restarted. If you have Django installed, you may also specify a
-persistent Django backing store via the ```--database`` argument:
-```
-server/logger_manager.py --websocket localhost:8765 --database django
-```
+restarted. If you have Django installed or a HAPI-based server
+running, you may run using those options to maintain persistence.
 
-Both backing stores are implemented via and API; for details on the
-API and its implementations, please see ```server/server_api.py```,
-```server/in_memory_server_api.py```, and
-```django_gui/django_server_api.py```.
+The backing stores are implemented via an API; for details on the
+API and its implementations, please see
+[server/server\_api.py](../server/server\_api.py),
+[server/in\_memory\_server\_api.py](../server/in\_memory\_server\_api.py),
+and
+[django\_gui/django\_server\_api.py](../django\_gui/django\_server\_api.py).
 
 ## Contributing
 

@@ -26,7 +26,7 @@ says to
    below for formats understood.)
 
 2. Store the received data in an in-memory cache, retaining the most
-recent 480 seconds for each field.
+   recent 480 seconds for each field.
 
 3. Wait for clients to connect to the websocket at port 8766 and serve
    them the requested data. Web clients may issue JSON-encoded
@@ -149,10 +149,10 @@ def cache_record(record, cache, cache_lock):
      emitted by default by ParseTransform:
 
      {
-       'data_id': ...,
-       'timestamp': ...,
+       'data_id': ...,    # optional
+       'timestamp': ...,  # optional - use time.time() if missing
        'fields': {
-         field_name: value,    # use default timestamp of 'now'
+         field_name: value,
          field_name: value,
          ...
        }
@@ -165,8 +165,7 @@ def cache_record(record, cache, cache_lock):
   timestamp, if any, is ignored.
 
      {
-       'data_id': ...,
-       'timestamp': ...,
+       'data_id': ...,  # optional
        'fields': {
           field_name: [(timestamp, value), (timestamp, value),...],
           field_name: [(timestamp, value), (timestamp, value),...],
