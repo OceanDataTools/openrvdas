@@ -409,8 +409,8 @@ mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-OPENRVDAS_LOGFILE=openrvdas.log
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v --stderr_file  \$OPENRVDAS_LOGFILE"
+OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
+sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py  --database django --broadcast_status :6225 --no-console -v --stderr_file  \$OPENRVDAS_LOGFILE"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF
@@ -441,7 +441,7 @@ while true; do
             echo To manually run server, go to install directory and run logger_manager.py
             echo 
             echo '  cd $INSTALL_ROOT/openrvdas'
-            echo '  python3 server/logger_manager.py --websocket :8765 --database django -v'
+            echo '  python3 server/logger_manager.py --database django -v'
             echo
             break;;
         * ) echo "Please answer yes or no.";;
@@ -482,7 +482,7 @@ echo
 echo To run server, go to install directory and run logger_manager.py
 echo 
 echo '  cd $INSTALL_ROOT/openrvdas'
-echo '  python3 server/logger_manager.py --websocket :8765 --database django -v'
+echo '  python3 server/logger_manager.py --database django -v'
 echo 
 echo "#########################################################################"
 echo Finished installation and configuration. You must reboot before some
