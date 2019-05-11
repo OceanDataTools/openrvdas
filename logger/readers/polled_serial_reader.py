@@ -26,7 +26,7 @@ class PolledSerialReader(SerialReader):
                      parity=parity, stopbits=stopbits, timeout=timeout,
                      xonxoff=xonxoff, rtscts=rtscts, write_timeout=write_timeout,
                      dsrdtr=dsrdtr, inter_byte_timeout=inter_byte_timeout,
-                     exclusive=exclusive)
+                     exclusive=exclusive, max_bytes=None, lf=None)
 
     self.start_cmd = start_cmd
     self.pre_read_cmd = pre_read_cmd
