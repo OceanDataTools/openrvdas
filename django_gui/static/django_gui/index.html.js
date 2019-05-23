@@ -86,14 +86,14 @@ function process_message(message_str) {
 // We've got data fields - process and put them where they belong in
 // the HTML...
 function process_data_message(data_dict) {
-  var data_str = JSON.stringify(data_dict);
+  //var data_str = JSON.stringify(data_dict);
   var new_fields = {};
 
   for (var field_name in data_dict) {
     var value_list = data_dict[field_name];
     switch (field_name) {
       ////////////////////////////////////////////////////
-      // If we've got a new list of loggers; rebuild assoc array
+      // If we've got a new cruise_id
       case 'status:cruise_id':
         var cruise_id = value_list[value_list.length-1][1];
         document.getElementById('cruise_id').innerHTML = cruise_id;
