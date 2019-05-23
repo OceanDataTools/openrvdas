@@ -14,10 +14,11 @@ class TimestampTransform(Transform):
     """If timestamp_format is not specified, use default format"""
     super().__init__(input_format=formats.Text, output_format=formats.Text)
     self.time_format = time_format
+    self.sep = sep
 
   ############################
   def transform(self, record):
     """Prepend a timestamp"""
     if record is None:
       return None
-    return timestamp.time_str(time_format=self.time_format) + sep + record
+    return timestamp.time_str(time_format=self.time_format) + self.sep + record

@@ -371,7 +371,7 @@ mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-OPENRVDAS_LOGFILE=openrvdas.log
+OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
 sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE"
 EOF
 
