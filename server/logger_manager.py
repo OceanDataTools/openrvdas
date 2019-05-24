@@ -101,14 +101,18 @@ import asyncio
 import getpass  # to get username
 import json
 import logging
+import multiprocessing
 import os
 import pprint
 import queue
 import signal
 import socket  # to get hostname
+import subprocess
 import sys
 import threading
 import time
+import websockets
+
 from urllib.parse import unquote
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
@@ -116,9 +120,14 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(
 from logger.utils.read_config import read_config
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 from logger.writers.text_file_writer import TextFileWriter
-from logger.writers.network_writer import NetworkWriter
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
+
+# Imports for running CachedDataServer
+from logger.readers.composed_reader import ComposedReader
+from logger.readers.network_reader import NetworkReader
+from logger.transforms.from_json_transform import FromJSONTransform
+from logger.utils.cached_data_server import CachedDataServer
 
 # Number of times we'll try a failing logger before giving up
 DEFAULT_MAX_TRIES = 3
@@ -153,19 +162,16 @@ class WriteToAPILoggingHandler(logging.Handler):
 ################################################################################
 class LoggerManager:
   ############################
-  def __init__(self, api=None, broadcast_status=None,
-               interval=0.5, max_tries=3,
-               logger_log_level=logging.WARNING):
+  def __init__(self, api=None, data_server_websocket=None,
+               interval=0.5, max_tries=3, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
 
     api - ServerAPI (or subclass) instance by which LoggerManager will get
           its data store updates
 
-    broadcast_status - 'Network port on which to broadcast logger status
-          updates. If cruise configuration includes a display server, this
-          should match the port monitored by that server, so that clients
-          can receive status updates.
+    data_server_websocket - websocket address to which we're going to send
+          our status updates.
 
     interval - number of seconds to sleep between checking/updating loggers
 
@@ -190,11 +196,8 @@ class LoggerManager:
     self.max_tries = max_tries
     self.logger_log_level = logger_log_level
 
-    # Have we been given a network port on which to broadcast status updates?
-    if broadcast_status:
-      self.status_writer = NetworkWriter(broadcast_status)
-    else:
-      self.status_writer = None
+    # Data server to which we're going to send status updates
+    self.data_server_websocket = data_server_websocket
 
     self.quit_flag = False
 
@@ -226,11 +229,12 @@ class LoggerManager:
       target=self.update_configs_loop, daemon=True)
     self.update_configs_thread.start()
 
-    # If broadcasting our status, start doing that in a separate thread.
-    if self.status_writer:
-      self.broadcast_status_thread = threading.Thread(
-        target=self._broadcast_status_loop, daemon=True)
-      self.broadcast_status_thread.start()
+    # If we've got the address of a data server websocket, start a
+    # thread to send our status updates to it.
+    if self.data_server_websocket:
+      self.send_status_thread = threading.Thread(
+        target=self._send_status_loop, daemon=True)
+      self.send_status_thread.start()
 
   ############################
   def quit(self):
@@ -277,123 +281,113 @@ class LoggerManager:
       except (AttributeError, ValueError):
         return
 
-      # If configs have changed, send updated ones to the logger_runner
+      # If configs have changed, send updated ones to the
+      # logger_runner and to the data_server.
       if not new_configs == self.old_configs:
         self.logger_runner.set_configs(new_configs)
+        #self._send_status()
 
+        
   ############################
-  def _broadcast_status_loop(self):
+  def _send_status_loop(self):
     """Iteratively grab status messages from the api and send them out as
     JSON to whatever writer we're using to broadcast our logger
     statuses. In theory we could be much more efficient and directly
     grab status updates in _process_logger_runner_messages() when we
     get them from the LoggerRunners.
-    """    
-    # We stash previous_configs so that we know not to send them if
-    # they haven't changed since last check. We keep the raw
-    # previous_status separately, because we have to do some
-    # processing to get it into a form that's useful for our clients,
-    # and we want do avoid doing that processing if we can.
-    previous_cruise_def = {}
-    previous_logger_status = {}
 
-    while not self.quit_flag:
-      # Sleep for a bit before going around (also, before we try the
-      # first time, to let the LoggerManager start up).
-      time.sleep(self.interval)
+    Websockets are async, so we need to use an inner function and a
+    new event loop to handle the whole async/await thing.
+    """
+    
+    ############################    
+    async def _async_send_status_loop(self):
+      """Inner async function that actually implements the fetching and
+      sending of status messages."""
       
-      cruise_def_changed = status_changed = False
-      try:
-        cruise_def = {
-          'cruise':  self.api.get_configuration(),
-          'loggers': self.api.get_loggers(),
-          'modes':   self.api.get_modes(),
-          'mode':    self.api.get_active_mode()
-          }
-      except (AttributeError, ValueError):
-        logging.info('No cruise definition found')
-        cruise_def = {}
+      # We stash previous_configs so that we know not to send them if
+      # they haven't changed since last check. We keep the raw
+      # previous_status separately, because we have to do some
+      # processing to get it into a form that's useful for our clients,
+      # and we want do avoid doing that processing if we can.
+      previous_cruise_def = {}
+      previous_logger_status = {}
 
-      if not cruise_def == previous_cruise_def:
-        cruise_def_changed = True
-        previous_cruise_def = cruise_def
+      # If we only have a server port but not a name, use 'localhost'
+      ws_name = self.data_server_websocket
+      if ws_name.find(':') == 0:
+        ws_name = 'localhost' + ws_name
 
-      # We expect status to be a dict of timestamp:{logger status
-      # dict} entries. If we don't have any yet, work with a dummy
-      # entry.
-      status = self.api.get_status() or {0: {}}
-      timestamp = 0
-      logger_status = {}
-      for next_timestamp, next_logger_status in status.items():
-        timestamp = max(timestamp, next_timestamp)
-        logger_status.update(next_logger_status)
+      while not self.quit_flag:
+        try:
+          logging.warning('Connecting to websocket: "%s"', ws_name)
+          async with websockets.connect('ws://' + ws_name) as ws:
+            while not self.quit_flag:
+              # Sleep for a bit before going around (also, before we try the
+              # first time, to let the LoggerManager start up).
+              await asyncio.sleep(self.interval)
 
-      # Has anything changed with logger statuses?
-      if not logger_status == previous_logger_status:
-        previous_logger_status = logger_status
-        status_changed = True
+              # Assemble information to draw page
+              try:
+                cruise_def = {
+                  'cruise_id': api.get_configuration().id,
+                  'loggers': api.get_loggers(),
+                  'modes': api.get_modes(),
+                  'active_mode': api.get_active_mode()
+                }
+              except (AttributeError, ValueError):
+                logging.info('No cruise definition found')
+                cruise_def = {}
 
-      #########
-      # If nothing has changed, just send a heartbeat timestamp
-      if not cruise_def_changed and not status_changed:
-        status_message = {'data_id':'logger_status',
-                          'timestamp': timestamp,
-                          'fields': {}}
-        self.status_writer.write(json.dumps(status_message))
-        continue
+              # Has our cruise definition changed? If so, send update
+              if not cruise_def == previous_cruise_def:
+                # Send cruise metadata
+                cruise_message = {
+                  'type':'publish',
+                  'data':{'timestamp': time.time(),
+                          'fields': {'status:cruise_definition': cruise_def}
+                  }
+                }
+                logging.warning('sending cruise update: %s', cruise_message)
+                await ws.send(json.dumps(cruise_message))
+                previous_cruise_def = cruise_def
 
-      #########
-      # If we're here, something changed, either in cruise definition
-      # or status; send out updates for all in small packets.
+              # We expect status to be a dict of timestamp:{logger status
+              # dict} entries. If we don't have any yet, work with a dummy
+              # entry.
+              logger_status = self.api.get_status() or {0: {}}
 
-      # Send cruise metadata
-      cruise = cruise_def['cruise']
-      status_message = {'data_id':'cruise_metadata',
-                        'timestamp': timestamp,
-                        'fields': {
-                          'status:cruise_id': cruise.id,
-                          'status:cruise_start': cruise.start.timestamp(),
-                          'status:cruise_end': cruise.end.timestamp(),
-                          'status:cruise_loaded': cruise.loaded_time.timestamp(),
-                          'status:cruise_filename': cruise.config_filename,
-                        }}
-      self.status_writer.write(json.dumps(status_message))
+              # Has anything changed with logger statuses? If not, just send
+              # a heartbeat.
+              logger_status_changed = False
+              for timestamp in sorted(logger_status.keys()):
+                timestamped_status = logger_status[timestamp]
+                if not timestamped_status == previous_logger_status:
+                  previous_logger_status = timestamped_status
+                  logger_status_changed = True
 
-      # Send list of loggers
-      loggers = cruise_def['loggers']
-      status_message = {'data_id':'logger_status',
-                        'timestamp': timestamp,
-                        'fields': {'status:logger_list':
-                                   [logger for logger in loggers]}}
-      self.status_writer.write(json.dumps(status_message))
+              if not logger_status_changed:
+                logger_status = {}
+                
+              status_message = {
+                'type':'publish',
+                'data':{'timestamp': time.time(),
+                        'fields': {'status:logger_status': logger_status}
+                }
+              }
+              logging.debug('sending status update: %s', status_message)
+              await ws.send(json.dumps(status_message))
 
-      # Send list of modes and current mode
-      status_message = {'data_id':'logger_status',
-                        'timestamp': timestamp,
-                        'fields': {'status:mode_list': cruise_def['modes'],
-                                   'status:mode': cruise_def['mode']}}
-      self.status_writer.write(json.dumps(status_message))
+        except BrokenPipeError:
+          pass
+        except OSError as e:
+          logging.warning('Unable to connect to data server: %s', str(e))
+          await asyncio.sleep(1)
 
-      # Send one logger status per message, so we don't blow past the
-      # packet size limit if we're broadcasting UDP
-      for logger in loggers:
-        status = logger_status.get(logger, None)
-        if not status:
-          logging.warning('Skipping logger %s', logger)
-          continue        
-        status_message = {
-          'data_id':'logger_status',
-          'timestamp': timestamp,
-          'fields': {
-            'status:logger:' + logger: {
-              'configs': loggers[logger].get('configs', []),
-              'config': status.get('config', None),
-              'failed': status.get('failed', None),
-              'running': status.get('running', None)
-            }
-          }
-        }
-        self.status_writer.write(json.dumps(status_message))
+    # Now call the async process in its own event loop
+    status_event_loop = asyncio.new_event_loop()
+    status_event_loop.run_until_complete(_async_send_status_loop(self))
+    status_event_loop.close()
 
   ##########################
   def _process_logger_runner_message(self, message):
@@ -417,6 +411,42 @@ class LoggerManager:
       logging.error('Errors from LoggerRunner: %s', errors)
 
 ################################################################################
+def run_data_server(data_server_websocket, data_server_udp,
+                    data_server_back_seconds, data_server_cleanup_interval,
+                    data_server_interval):
+  """Run a CachedDataServer (to be called as a separate process),
+  accepting websocket connections and listening for UDP broadcasts
+  on the specified port to receive data to be cached and served.
+  """
+  readers = [NetworkReader(network=network)
+             for network in data_server_udp.split(',')]
+  transform = FromJSONTransform()
+
+  reader = ComposedReader(readers=readers, transforms=[transform])
+  writer = CachedDataServer(data_server_websocket, data_server_interval)
+
+  # Every N seconds, we're going to detour to clean old data out of cache
+  next_cleanup_time = time.time() + data_server_cleanup_interval
+
+  # Loop, reading data and writing it to the cache
+  try:
+    while True:
+      record = reader.read()
+      logging.debug('Got record: %s', record)
+
+      # If, for some reason, we get empty record try again
+      writer.cache_record(record)
+
+      # Is it time for next cleanup?
+      now = time.time()
+      if now > next_cleanup_time:
+        writer.cleanup(now - data_server_back_seconds)
+        next_cleanup_time = now + data_server_cleanup_interval
+  except KeyboardInterrupt:
+    logging.warning('Received KeyboardInterrupt - shutting down')
+    writer.quit()
+
+################################################################################
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -436,12 +466,32 @@ if __name__ == '__main__':
                       default='memory', help='What backing store database '
                       'to use.')
 
-  parser.add_argument('--broadcast_status', dest='broadcast_status',
-                      action='store', default=None,
-                      help='Network port on which to broadcast logger status '
-                      'updates. If cruise configuration includes a display '
-                      'server, this should match the port monitored by that '
-                      'server, so that clients can receive status updates.')
+  parser.add_argument('--data_server_websocket', dest='data_server_websocket',
+                      action='store', default=':8766',
+                      help='Address at which to connect to cached data server '
+                      'to send status updates.')
+  
+  parser.add_argument('--start_data_server', dest='start_data_server',
+                      action='store_true', default=False,
+                      help='Whether to start our own cached data server.')
+  parser.add_argument('--data_server_udp', dest='data_server_udp',
+                      action='store', default=':6225',
+                      help='If we are starting our own cached data server, on '
+                      'what comma-separated network port(s) it should listen '
+                      'for UDP broadcasts, e.g. :6221,:6224.')
+  parser.add_argument('--data_server_back_seconds',
+                      dest='data_server_back_seconds', action='store',
+                      type=float, default=480,
+                      help='Maximum number of seconds of old data to keep '
+                      'for serving to new clients.')
+  parser.add_argument('--data_server_cleanup_interval',
+                      dest='data_server_cleanup_interval',
+                      action='store', type=float, default=60,
+                      help='How often to clean old data out of the cache.')
+  parser.add_argument('--data_server_interval', dest='data_server_interval',
+                      action='store', type=float, default=1,
+                      help='How many seconds to sleep between successive '
+                      'sends of data to clients.')
 
   parser.add_argument('--interval', dest='interval', action='store',
                       type=float, default=1,
@@ -499,11 +549,12 @@ if __name__ == '__main__':
 
   ############################
   # Create our LoggerManager
-  logger_manager = LoggerManager(api=api,
-                                 broadcast_status=args.broadcast_status,
-                                 interval=args.interval,
-                                 max_tries=args.max_tries,
-                                 logger_log_level=logger_log_level)
+  logger_manager = LoggerManager(
+    api=api,
+    data_server_websocket=args.data_server_websocket,
+    interval=args.interval,
+    max_tries=args.max_tries,
+    logger_log_level=logger_log_level)
 
   # Register a callback: when api.set_active_mode() or api.set_config()
   # have completed, they call api.signal_update(). We're registering
@@ -511,6 +562,29 @@ if __name__ == '__main__':
   # signals that an update has occurred.
   api.on_update(callback=logger_manager.update_configs)
   api.on_quit(callback=logger_manager.quit)
+
+  ############################
+  # If we're supposed to be running our own CachedDataServer, start it
+  # here in its own process.
+  if args.start_data_server:
+    #data_server_proc = multiprocessing.Process(
+    #  target=run_data_server,
+    #  args=(args.data_server_websocket, args.data_server_udp,
+    #        args.data_server_back_seconds, args.data_server_cleanup_interval,
+    #        args.data_server_interval),
+    #  daemon=True)
+    #data_server_proc.start()
+
+    cmd_line = [
+      'logger/utils/cached_data_server.py',
+      '--websocket', args.data_server_websocket,
+      '--network', args.data_server_udp,
+      '--back_seconds', str(args.data_server_back_seconds),
+      '--cleanup_interval', str(args.data_server_cleanup_interval),
+      '--interval', str(args.data_server_interval)
+    ]
+    logging.warning('Starting CachedDataServer: %s', ' '.join(cmd_line))
+    proc = subprocess.Popen(cmd_line, stderr=subprocess.PIPE)
 
   ############################
   # Start all the various LoggerManager threads running

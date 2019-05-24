@@ -557,7 +557,7 @@ class CachedDataServer:
   def _run_websocket_server(self):
     """Start serving on the specified websocket.
     """
-    logging.info('Starting WebSocketServer')
+    logging.info('Starting WebSocketServer %s:%s', self.host, self.port)
     try:
       self.websocket_server = websockets.serve(
         ws_handler=self._serve_websocket_data,
@@ -645,14 +645,13 @@ if __name__ == '__main__':
   from logger.utils import record_parser
 
   parser = argparse.ArgumentParser()
-  parser.add_argument('--network', dest='network', required=True,
-                      action='store',
-                      help='Comma-separated list of network ports to listen '
-                      'for data on, e.g. :6221,:6224')
-
   parser.add_argument('--websocket', dest='websocket', required=True,
                       action='store',
                       help='Host:port on which to serve data')
+
+  parser.add_argument('--network', dest='network', default=None, action='store',
+                      help='Comma-separated list of network ports to listen '
+                      'for data on, e.g. :6221,:6224')
 
   parser.add_argument('--back_seconds', dest='back_seconds', action='store',
                       type=float, default=480,
@@ -676,13 +675,16 @@ if __name__ == '__main__':
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-
-  readers = [NetworkReader(network=network)
-             for network in args.network.split(',')]
-  transform = FromJSONTransform()
-
-  reader = ComposedReader(readers=readers, transforms=[transform])
-  writer = CachedDataServer(args.websocket, args.interval)
+  # Only create reader(s) if they've given us a network to read from;
+  # otherwise, count on data coming from websocket publish
+  # connections.
+  if args.network:
+    readers = [NetworkReader(network=network)
+               for network in args.network.split(',')]
+    transform = FromJSONTransform()
+    reader = ComposedReader(readers=readers, transforms=[transform])
+    
+  server = CachedDataServer(args.websocket, args.interval)
 
   # Every N seconds, we're going to detour to clean old data out of cache
   next_cleanup_time = time.time() + args.cleanup_interval
@@ -690,17 +692,20 @@ if __name__ == '__main__':
   # Loop, reading data and writing it to the cache
   try:
     while True:
-      record = reader.read()
-      logging.debug('Got record: %s', record)
+      if args.network:
+        record = reader.read()
+        logging.debug('Got record: %s', record)
 
-      # If, for some reason, we get empty record try again
-      writer.cache_record(record)
+        # If, for some reason, we get empty record try again
+        server.cache_record(record)
+      else:
+        time.sleep(args.interval)
 
       # Is it time for next cleanup?
       now = time.time()
       if now > next_cleanup_time:
-        writer.cleanup(now - args.back_seconds)
+        server.cleanup(now - args.back_seconds)
         next_cleanup_time = now + args.cleanup_interval
   except KeyboardInterrupt:
     logging.warning('Received KeyboardInterrupt - shutting down')
-    writer.quit()
+    server.quit()

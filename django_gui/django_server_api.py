@@ -156,7 +156,8 @@ class DjangoServerAPI(ServerAPI):
     if not loggers:
       raise ValueError('No loggers found in cruise')
     return {
-      logger.name:{'configs':self.get_logger_config_names(logger.name)}
+      logger.name:{'configs': self.get_logger_config_names(logger.name),
+                   'active': self.get_logger_config_name(logger.name)}
       for logger in loggers
     }
 

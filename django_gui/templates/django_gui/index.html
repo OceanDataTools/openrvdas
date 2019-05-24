@@ -58,10 +58,10 @@
                   disabled
                 {% endif %}
                 >
-          {{ logger_config }}
+          {{ logger_config.active }}
         </button>
       </td>
-      <td style="min-width:0px;padding:0px;" id="{{ logger_name }}_error"></td>
+      <td><div style="height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto" id="{{ logger_name }}_stderr"></div></td>
     </tr>
     {% endfor %}
 
@@ -80,7 +80,7 @@
       
       {% for mode_option in modes %}
       <option id="mode_{{ mode_option }}"
-         {% if mode_option == current_mode %}
+         {% if mode_option == active_mode %}
          selected
          {% endif %}>
           {{ mode_option }}

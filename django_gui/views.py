@@ -73,7 +73,7 @@ def index(request):
   ############################
   # If we've gotten a POST request
   cruise_id = ''
-  errors = []
+  errors = {}
   if request.method == 'POST':
     logging.debug('POST: %s', request.POST)
 
@@ -91,8 +91,8 @@ def index(request):
       logging.info('switching to mode "%s"', new_mode_name)
       api.set_active_mode(new_mode_name)
 
-    # Did we get a cruise definition file? Load it and switch to the
-    # configuration it defines.
+    # Did we get a cruise definition file? Load it. If there aren't
+    # any errors, switch to the configuration it defines.
     elif 'load_config' in request.POST and 'config_file' in request.FILES:
       config_file = request.FILES['config_file']
       config_contents = config_file.read()
@@ -102,15 +102,13 @@ def index(request):
         configuration = parse(config_contents.decode('utf-8'))
         api.load_configuration(configuration)
       except JSONDecodeError as e:
-        errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
+          errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
       except ValueError as e:
         errors.append(str(e))
-
-      # If there weren't any errors, switch to the configuration we've
-      # just loaded.
       if errors:
         logging.warning('Errors! %s', errors)
 
+    # If they canceled the upload
     elif 'cancel' in request.POST:
       logging.warning('User canceled upload')
 
@@ -120,30 +118,17 @@ def index(request):
 
   # Assemble information to draw page
   template_vars = {
-    'cruise_id': cruise_id or '',
     'websocket_server': WEBSOCKET_DATA_SERVER,
-    'errors': errors,
-    'loggers': {},
+    'errors': {'django': errors},
   }
-
-  # If we have a cruise id, assemble loggers and other cruise-specific
-  # info from API.
-  #template_vars['is_superuser'] = True
   try:
+    template_vars['cruise_id'] = api.get_configuration().id
+    template_vars['loggers'] = api.get_loggers()
     template_vars['modes'] = api.get_modes()
-    template_vars['current_mode'] = api.get_active_mode()
-
-    # Get config corresponding to current mode for each logger
-
-    # REPLACE WITH?
-    #template_vars['loggers'] = api.get_logger_configs()
-    for logger_id in api.get_loggers():
-      logger_config = api.get_logger_config_name(logger_id)
-      template_vars['loggers'][logger_id] = logger_config
-      logging.warning('config for %s is %s', logger_id, logger_config)
+    template_vars['active_mode'] = api.get_active_mode()
   except ValueError:
     logging.info('No configuration loaded')
-
+  
   return render(request, 'django_gui/index.html', template_vars)
 
 ################################################################################
