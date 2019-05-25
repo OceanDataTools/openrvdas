@@ -522,9 +522,13 @@ class CachedDataServer:
     self._connections = []
     self._connection_lock = threading.Lock()
 
-    # If we've received an event loop, use it
-    self.event_loop = event_loop or asyncio.get_event_loop()
-    if event_loop:
+    # If we've received an event loop, use it, otherwise create a new one
+    # of our own.
+    if not event_loop:
+      self.event_loop = asyncio.new_event_loop()
+      asyncio.set_event_loop(self.event_loop)
+    else:
+      self.event_loop = None
       asyncio.set_event_loop(event_loop)
 
     self.quit_flag = False
@@ -535,6 +539,12 @@ class CachedDataServer:
     self.server_thread = threading.Thread(target=self._run_websocket_server,
                                           daemon=True)
     self.server_thread.start()
+
+  ############################
+  def __del__(self):
+    if self.event_loop:
+      self.event_loop.stop()
+      self.event_loop.close()
 
   ############################
   def cache_record(self, record):
@@ -632,6 +642,9 @@ class CachedDataServer:
       await connection.serve_requests()
     except websockets.ConnectionClosed:
       logging.warning('client disconnected')
+      connection.quit()
+    except KeyboardInterrupt:
+      logging.warning('Keyboard Interrupt')
       connection.quit()
 
 ################################################################################

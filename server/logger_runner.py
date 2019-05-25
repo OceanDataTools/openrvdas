@@ -107,7 +107,7 @@ from logger.listener.listen import ListenerFromLoggerConfig
 # bit more of a hack, but seems robust against the mysterious behavior
 # of CachedDataServer.
 
-USE_MULTIPROCESSING = False
+USE_MULTIPROCESSING = True
 
 ############################
 def kill_handler(self, signum):

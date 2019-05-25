@@ -360,12 +360,19 @@ cat > /root/scripts/start_openrvdas.sh <<EOF
 #!/bin/bash
 # Start openrvdas servers as service
 OPENRVDAS_LOG_DIR=/var/log/openrvdas
+OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
+
 mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --broadcast_status :6225 --no-console -v --stderr_file  \$OPENRVDAS_LOGFILE"
+DATA_SERVER_WEBSOCKET=:8766
+DATA_SERVER_UDP=:6225
+
+# Comment out line below to have logger manager *not* start a data server
+START_DATA_SERVER='--start_data_server'
+
+sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET --data_server_udp \$DATA_SERVER_UDP \$START_DATA_SERVER"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF

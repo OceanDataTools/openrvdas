@@ -348,7 +348,7 @@ class LoggerManager:
                           'fields': {'status:cruise_definition': cruise_def}
                   }
                 }
-                logging.warning('sending cruise update: %s', cruise_message)
+                logging.info('sending cruise update: %s', cruise_message)
                 await ws.send(json.dumps(cruise_message))
                 previous_cruise_def = cruise_def
 
@@ -381,7 +381,9 @@ class LoggerManager:
         except BrokenPipeError:
           pass
         except OSError as e:
-          logging.warning('Unable to connect to data server: %s', str(e))
+          logging.warning('Unable to connect to data server. '
+                          'Sleeping to try again...')
+          logging.info('Connection error: %s', str(e))
           await asyncio.sleep(1)
 
     # Now call the async process in its own event loop
@@ -418,11 +420,11 @@ def run_data_server(data_server_websocket, data_server_udp,
   accepting websocket connections and listening for UDP broadcasts
   on the specified port to receive data to be cached and served.
   """
-  readers = [NetworkReader(network=network)
-             for network in data_server_udp.split(',')]
+  network_readers = [NetworkReader(network=network)
+                     for network in data_server_udp.split(',')]
   transform = FromJSONTransform()
 
-  reader = ComposedReader(readers=readers, transforms=[transform])
+  reader = ComposedReader(readers=network_readers, transforms=[transform])
   writer = CachedDataServer(data_server_websocket, data_server_interval)
 
   # Every N seconds, we're going to detour to clean old data out of cache
@@ -567,24 +569,24 @@ if __name__ == '__main__':
   # If we're supposed to be running our own CachedDataServer, start it
   # here in its own process.
   if args.start_data_server:
-    #data_server_proc = multiprocessing.Process(
-    #  target=run_data_server,
-    #  args=(args.data_server_websocket, args.data_server_udp,
-    #        args.data_server_back_seconds, args.data_server_cleanup_interval,
-    #        args.data_server_interval),
-    #  daemon=True)
-    #data_server_proc.start()
+    data_server_proc = multiprocessing.Process(
+      target=run_data_server,
+      args=(args.data_server_websocket, args.data_server_udp,
+            args.data_server_back_seconds, args.data_server_cleanup_interval,
+            args.data_server_interval),
+      daemon=True)
+    data_server_proc.start()
 
-    cmd_line = [
-      'logger/utils/cached_data_server.py',
-      '--websocket', args.data_server_websocket,
-      '--network', args.data_server_udp,
-      '--back_seconds', str(args.data_server_back_seconds),
-      '--cleanup_interval', str(args.data_server_cleanup_interval),
-      '--interval', str(args.data_server_interval)
-    ]
-    logging.warning('Starting CachedDataServer: %s', ' '.join(cmd_line))
-    proc = subprocess.Popen(cmd_line, stderr=subprocess.PIPE)
+    #cmd_line = [
+    #  'logger/utils/cached_data_server.py',
+    #  '--websocket', args.data_server_websocket,
+    #  '--network', args.data_server_udp,
+    #  '--back_seconds', str(args.data_server_back_seconds),
+    #  '--cleanup_interval', str(args.data_server_cleanup_interval),
+    #  '--interval', str(args.data_server_interval)
+    #]
+    #logging.warning('Starting CachedDataServer: %s', ' '.join(cmd_line))
+    #proc = subprocess.Popen(cmd_line, stderr=subprocess.PIPE)
 
   ############################
   # Start all the various LoggerManager threads running
