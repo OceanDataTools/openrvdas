@@ -146,16 +146,24 @@ class TestInMemoryServerAPI(unittest.TestCase):
                        'mwx1': {'config': 'mwx1->net'},
                        's330': {'config': 'off'}
                       })
-
     self.assertDictEqual(api.get_loggers(),
-                         {'knud': {'configs': [
-                           'off', 'knud->net', 'knud->net/file']},
-                          'gyr1': {'configs': [
-                            'off', 'gyr1->net', 'gyr1->net/file']},
-                          'mwx1': {'configs': [
-                            'off', 'mwx1->net', 'mwx1->net/file']},
-                          's330': {'configs': [
-                            'off', 's330->net', 's330->net/file']}})
+
+                         {'knud': {
+                           'configs': ['off', 'knud->net', 'knud->net/file'],
+                           'active': 'knud->net/file'
+                         },
+                          'gyr1': {
+                            'configs': ['off', 'gyr1->net', 'gyr1->net/file'],
+                            'active': 'gyr1->net/file'
+                          },
+                          'mwx1': {
+                            'configs': ['off', 'mwx1->net', 'mwx1->net/file'],
+                            'active': 'mwx1->net/file'
+                          },
+                          's330': {
+                            'configs': ['off', 's330->net', 's330->net/file'],
+                            'active': 's330->net/file'
+                          }})
     api.delete_configuration()
     with self.assertRaises(ValueError):
       api.get_logger_configs()

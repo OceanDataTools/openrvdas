@@ -98,16 +98,27 @@ class TestInMemoryServerAPI(unittest.TestCase):
                        'mwx1': {'config mwx1->net'},
                        's330': {}
                       })
-
     self.assertDictEqual(api.get_loggers(),
-                         {'knud': {'configs': [
-                           'knud->off', 'knud->net', 'knud->net/file']},
-                          'gyr1': {'configs': [
-                            'gyr1->off', 'gyr1->net', 'gyr1->net/file']},
-                          'mwx1': {'configs': [
-                            'mwx1->off', 'mwx1->net', 'mwx1->net/file']},
-                          's330': {'configs': [
-                            's330->off', 's330->net', 's330->net/file']}})
+                         {'knud': {
+                           'configs': [
+                             'knud->off', 'knud->net', 'knud->net/file'],
+                           'active': 'knud->net/file'
+                         },
+                          'gyr1': {
+                            'configs': [
+                              'gyr1->off', 'gyr1->net', 'gyr1->net/file'],
+                            'active': 'gyr1->net/file'
+                          },
+                          'mwx1': {
+                            'configs': [
+                              'mwx1->off', 'mwx1->net', 'mwx1->net/file'],
+                            'active': 'mwx1->net/file'
+                          },
+                          's330': {
+                            'configs': [
+                              's330->off', 's330->net', 's330->net/file'],
+                            'active': 's330->net/file'}
+                         })
     api.delete_configuration()
     # self.assertEqual(api.get_cruises(), ['NBP1701'])
     with self.assertRaises(ValueError):

@@ -180,14 +180,22 @@ class TestDjangoServerAPI(TestCase):
                        's330': {'name': 'off'}
                       })
     self.assertDictEqual(api.get_loggers(),
-                         {'knud': {'configs': [
-                           'off', 'knud->net', 'knud->net/file']},
-                          'gyr1': {'configs': [
-                            'off', 'gyr1->net', 'gyr1->net/file']},
-                          'mwx1': {'configs': [
-                            'off', 'mwx1->net', 'mwx1->net/file']},
-                          's330': {'configs': [
-                            'off', 's330->net', 's330->net/file']}})
+                         {'knud': {
+                           'configs': ['off', 'knud->net', 'knud->net/file'],
+                           'active': 'off'
+                         },
+                          'gyr1': {
+                            'configs': ['off', 'gyr1->net', 'gyr1->net/file'],
+                            'active': 'off'
+                          },
+                          'mwx1': {
+                            'configs': ['off', 'mwx1->net', 'mwx1->net/file'],
+                            'active': 'off'
+                          },
+                          's330': {
+                            'configs': ['off', 's330->net', 's330->net/file'],
+                            'active': 'off'}
+                         })
     api.delete_configuration()
     with self.assertRaises(ValueError):
       api.get_configuration()
