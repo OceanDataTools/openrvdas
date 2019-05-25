@@ -546,8 +546,8 @@ if __name__ == '__main__':
 
   # Now that API is defined, tack on one more logging handler: one
   # that passes messages to API.
-  # TODO: decide if we even need this.
-  logging.getLogger().addHandler(WriteToAPILoggingHandler(api))
+  # TODO: decide if we even need this. Disabled for now
+  #logging.getLogger().addHandler(WriteToAPILoggingHandler(api))
 
   ############################
   # Create our LoggerManager
