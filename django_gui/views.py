@@ -25,7 +25,7 @@ from server.logger_manager import LoggerManager
 from logger.utils.read_config import parse
 
 from django_gui.settings import HOSTNAME
-from django_gui.settings import WEBSOCKET_STATUS_SERVER, WEBSOCKET_DATA_SERVER
+from django_gui.settings import WEBSOCKET_DATA_SERVER
 
 # Convenience dicts we pass to the server_message page to
 # translate logging levels to names and colors.
@@ -144,7 +144,7 @@ def server_messages(request, path):
   log_level = path_pieces[0] if len(path_pieces) > 0 else logging.INFO
   source = path_pieces[1] if len(path_pieces) > 1 else None
 
-  template_vars = {'websocket_server': WEBSOCKET_STATUS_SERVER,
+  template_vars = {'websocket_server': WEBSOCKET_DATA_SERVER,
                    'log_level': int(log_level),
                    'log_levels': LOG_LEVELS,
                    'log_level_colors': LOG_LEVEL_COLORS,
