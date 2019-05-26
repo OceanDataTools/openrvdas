@@ -380,6 +380,10 @@ class LoggerManager:
 
         except BrokenPipeError:
           pass
+        except websockets.exceptions.ConnectionClosed:
+          logging.warning('Lost websocket connection to data server; '
+                          'trying to reconnect.')
+          await asyncio.sleep(0.2)
         except OSError as e:
           logging.warning('Unable to connect to data server. '
                           'Sleeping to try again...')
