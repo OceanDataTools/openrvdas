@@ -39,11 +39,11 @@ from the command line as:
 *Note*: The sample_configs.yaml file above specifies configs that read
 from simulated serial ports and write to UDP port 6224. To get the
 configs to actually run, you'll need to run
-
 ```
-    logger/utils/serial_sim.py --config test/serial_sim.py
+  python3 logger/utils/simulate_serial.py \
+    --config test/nmea/NBP1406/serial_sim_NBP1406.yaml \
+    --loop 
 ```
-
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
 
@@ -67,9 +67,8 @@ If an initial configuration is specified on the command line, as
 below:
 
 ```
-    server/logger_manager.py --config test/configs/sample_cruise.yaml
+    server/logger_manager.py --config test/nmea/NBP1406/NBP1406_cruise.yaml
 ```
-
 the cruise configuration will be loaded and set to its default
 mode. If a ``--mode`` argument is included, it will be used in place of
 the default mode.
@@ -84,24 +83,28 @@ increases verbosity of the loggers being run.
 ### Running the Scripts Together
 To try out the scripts, open three terminal windows.
 
-1. In the first terminal, start the LoggerManager with a websocket server:
-
+1. In the first terminal, start the LoggerManager with a data server
+(officially a CachedDataServer):
 ```
-   server/logger_manager.py -v
-```
+  server/logger_manager.py \
+    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --start_data_server
+``````
 
 2. The sample cruise that we're going to load and run is configured to
    read from simulated serial ports. To create those simulated ports
    and start feeding data to them, use a third terminal window to run:
 
 ```
-    logger/utils/simulate_serial.py --config test/serial_sim.yaml -v
+  logger/utils/simulate_serial.py \
+    --config test/nmea/NBP1406/serial_sim_NBP1406.yaml \
+    --loop 
 ```
 
 3. Finally, we'd like to be able to easily glimpse the data that the
    loggers are producing. The sample cruise configuration tells the
-   loggers to write to UDP port 6225 when running, so use the fourth
-   terminal to run a Listener that will monitor that port. The '-'
+   loggers to write data to UDP port 6225 when running, so use the
+   third terminal to run a Listener that will monitor that port. The '-'
    filename tells the Listener to write to stdout (see listen.py
    --help for all Listener options):
 
