@@ -1,5 +1,5 @@
 # OpenRVDAS Controlling Loggers
-© 2018-2019 David Pablo Cohn - DRAFT 2019-04-20
+© 2018-2019 David Pablo Cohn - DRAFT 2019-05-26
 
 ## Overview
 
@@ -246,22 +246,30 @@ in the [Display Widgets document](display_widgets.md).
 
 ![Logger Manager with CachedDataServer](images/console_based_logger_manager.png)
 
-A CachedDataServer may be run as a standalone process. Or, as in the case of the NBP1406 cruise definition, it may be folded into a special "always on" logger that reads the desired network port with a NetworkReader and writes to a CachedDataWriter (a thin wrapper around the CachedDataServer, described in the [Display Widgets document](display_widgets.md).
-
-The logger_manager.py script can be configured to make its own status
-data available to the CachedDataServer by invoking it with a
-``--broadcast_status`` flag:
-
+A CachedDataServer may be run as a standalone process. Or it may be invoked by the
+LoggerManager when handed a ``--start_data_server`` flag:
 ```
-server/logger_manager.py --database django --broadcast_status :6225
+  server/logger_manager.py \
+    --database django \
+    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --start_data_server
+```
+By default it will use websocket port 8766 and network UDP port 6225, but these
+may be overridden with additional command line flags:
+```
+  server/logger_manager.py \
+    --database django \
+    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --data_server_websocket :8765 \
+    --data_server_udp :6226 \
+    --start_data_server
 ```
 
-Fields that will be made available include ``status:logger_list``,
-``status:mode_list``, ``status:mode``,
-``status:logger:<logger_name>``, the last of which is a dict of a
-logger's available configuration names, the current configuration, its
-run state, and what errors it has reported.
-
+The LoggerManager will start a CachedDataServer and publish logger and status
+updates to it via the specified websocket. The fields it will make available
+are ``status:cruise_definition`` for the list of logger names, configurations
+and active configuration, and ``status:logger_status`` for actual running state
+of each logger.
 
 ### Web-based control of the logger_manager.py
 
