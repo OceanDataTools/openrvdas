@@ -10,14 +10,15 @@ from logger.transforms.transform import Transform
 ################################################################################
 """Prepend a timestamp to a text record."""
 class TimestampTransform(Transform):
-  def __init__(self, time_format=timestamp.TIME_FORMAT):
+  def __init__(self, time_format=timestamp.TIME_FORMAT, sep=' '):
     """If timestamp_format is not specified, use default format"""
     super().__init__(input_format=formats.Text, output_format=formats.Text)
     self.time_format = time_format
+    self.sep = sep
 
   ############################
   def transform(self, record):
     """Prepend a timestamp"""
     if record is None:
       return None
-    return timestamp.time_str(time_format=self.time_format) + ' ' + record
+    return timestamp.time_str(time_format=self.time_format) + self.sep + record
