@@ -7,6 +7,8 @@
 * [Data Servers](#data-servers)
    * [Via a CachedDataServer](#via-a-cacheddataserver)
    * [Via a CachedDataWriter](#via-a-cacheddatawriter)
+   * [Via the LoggerManager](#via-the-loggermanager)
+
 * [Feeding the CachedDataServer](#feeding-the-cached-data-server)
 * [Connecting Widgets to Data Servers](#connecting-widgets-to-data-servers)
 * [Widget content](#widget-content)
