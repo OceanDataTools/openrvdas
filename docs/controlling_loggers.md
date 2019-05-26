@@ -135,7 +135,7 @@ knud:
   - knud->net,
   - knud->file/net/db
 ```
-Perusing a complete cruise configuration file such as [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml) may be useful for newcomers to the system.
+Perusing a complete cruise configuration file such as [test/nmea/NBP1406/NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml) may be useful for newcomers to the system.
 
 ### What the logger manager does
 
