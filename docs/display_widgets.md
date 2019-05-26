@@ -135,7 +135,7 @@ RedisReader or the like):
       --write_cached_data_writer :8766
 ```
 
-Finally, it may be incorporated (again, within its CachedDataWriter
+Of course, it may be incorporated (again, within its CachedDataWriter
 wrapper) into a logger via a configuration file:
 
 ```
@@ -165,6 +165,27 @@ writers:
 ```
 
 Again, this will perform the same functionality as the original call.
+
+### Via the LoggerManager
+
+Finally, the LoggerManager may be called upon to start a CachedDataWriter
+via the ``--start_data_server`` flag:
+```
+  server/logger_manager.py \
+    --database django \
+    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --start_data_server
+```
+By default it will use websocket port 8766 and network UDP port 6225, but these
+may be overridden with additional command line flags:
+```
+  server/logger_manager.py \
+    --database django \
+    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --data_server_websocket :8765 \
+    --data_server_udp :6226 \
+    --start_data_server
+```
 
 ## Feeding the CachedDataServer
 
