@@ -26,6 +26,11 @@ DEFAULT_OPENRVDAS_BRANCH=master
 
 DEFAULT_RVDAS_USER=rvdas
 
+if [ "$(whoami)" != "root" ]; then
+  echo "ERROR: installation script must be run as root."
+  return -1 2> /dev/null || exit -1  # terminate correctly if sourced/bashed
+fi
+
 echo "############################################################################"
 echo OpenRVDAS configuration script
 while true; do
