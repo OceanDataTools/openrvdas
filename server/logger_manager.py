@@ -107,7 +107,6 @@ import pprint
 import queue
 import signal
 import socket  # to get hostname
-import subprocess
 import sys
 import threading
 import time
@@ -320,7 +319,7 @@ class LoggerManager:
 
       while not self.quit_flag:
         try:
-          logging.warning('Connecting to websocket: "%s"', ws_name)
+          logging.info('Connecting to websocket: "%s"', ws_name)
           async with websockets.connect('ws://' + ws_name) as ws:
             while not self.quit_flag:
               # Sleep for a bit before going around (also, before we try the
@@ -385,10 +384,10 @@ class LoggerManager:
                           'trying to reconnect.')
           await asyncio.sleep(0.2)
         except OSError as e:
-          logging.warning('Unable to connect to data server. '
+          logging.info('Unable to connect to data server. '
                           'Sleeping to try again...')
           logging.info('Connection error: %s', str(e))
-          await asyncio.sleep(1)
+          await asyncio.sleep(5)
 
     # Now call the async process in its own event loop
     status_event_loop = asyncio.new_event_loop()
@@ -580,17 +579,6 @@ if __name__ == '__main__':
             args.data_server_interval),
       daemon=True)
     data_server_proc.start()
-
-    #cmd_line = [
-    #  'logger/utils/cached_data_server.py',
-    #  '--websocket', args.data_server_websocket,
-    #  '--network', args.data_server_udp,
-    #  '--back_seconds', str(args.data_server_back_seconds),
-    #  '--cleanup_interval', str(args.data_server_cleanup_interval),
-    #  '--interval', str(args.data_server_interval)
-    #]
-    #logging.warning('Starting CachedDataServer: %s', ' '.join(cmd_line))
-    #proc = subprocess.Popen(cmd_line, stderr=subprocess.PIPE)
 
   ############################
   # Start all the various LoggerManager threads running

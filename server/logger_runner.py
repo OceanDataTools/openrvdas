@@ -83,7 +83,6 @@ import multiprocessing
 import os
 import pprint
 import signal
-import subprocess
 import sys
 import time
 import threading
@@ -94,20 +93,6 @@ from logger.utils.read_config import read_config
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 from logger.writers.text_file_writer import TextFileWriter
 from logger.listener.listen import ListenerFromLoggerConfig
-
-# We have a few different ways we can start up a process. Using the
-# multiprocessing module seems like the Right Way to do it, but while
-# it works fine when logger_runner.py is run from the command line,
-# any CachedDataWriters instantiated within it fail mysteriously: the
-# Connection objects spawned by the asyncio websocket server only ever
-# get the initial copy of the (empty) cache, regardless of what's in
-# the shared cache.
-
-# As an alternative, we can use the subprocess.Popen() method. It's a
-# bit more of a hack, but seems robust against the mysterious behavior
-# of CachedDataServer.
-
-USE_MULTIPROCESSING = True
 
 ############################
 def kill_handler(self, signum):
@@ -199,16 +184,9 @@ class LoggerRunner:
 
   ############################
   def process_is_alive(self, process):
-    """Is the passed process alive? We pull this out because we're still
-    oscillating between using the multiprocessing module or the subprocess
-    one, and how we check aliveness differs between the two.
+    """Is the passed process alive?
     """
-    if USE_MULTIPROCESSING:
-      # Using multiprocessing module
-      return process and process.is_alive()
-    else:
-      # Using subprocess - poll() returns None if process hasn't completed
-      return process and process.poll() is None
+    return process and process.is_alive()
       
   ############################
   def set_configs(self, new_configs):
@@ -352,48 +330,13 @@ class LoggerRunner:
                  logger, config.get('name', 'no-name'))
     logging.debug('Starting config:\n%s', pprint.pformat(config))
 
-    #########
-    # We have a few different ways we can start up a process. Using
-    # the multiprocessing module seems like the Right Way to do it,
-    # but while it works fine when logger_runner.py is run from the
-    # command line, any CachedDataWriters instantiated within it
-    # fail mysteriously ('Unable to bind to address') when a
-    # LoggerRunner is invoked from the logger_manager.py script.
+    # The multiprocessing way of starting a process
     try:
-
-      #########
-      # The multiprocessing way of starting a process
-      #proc = multiprocessing.Process(
-      #  target=self._start_listener_in_new_process, args=(config,),
-      #  daemon=True)
-      #proc.start()
-
-      if USE_MULTIPROCESSING:
-        # Another way of starting a listener, more directly, using the
-        # multiprocessing module. This is the approach we were originally
-        # using.
-        proc = multiprocessing.Process(
-          target=_create_listener,
-          args=(config, self.logger_log_level),
-          daemon=True)
-        proc.start()
-      else:
-        # An old-fangled but apparently more robust way of launching new
-        # listeners, using subprocess.
-        cmd_line = [
-          'logger/listener/listen.py',
-          '--config_string',
-          json.dumps(config),
-        ]
-        # Add logging fields to config
-        if self.logger_log_level < logging.WARNING:
-          cmd_line.append('-v')
-        if self.logger_log_level < logging.INFO:
-          cmd_line.append('-v')
-          
-        proc = subprocess.Popen(cmd_line, stderr=subprocess.PIPE)
-        threading.Thread(target=self._process_logger_output,
-                         args=(logger, proc.stderr), daemon=True).start()
+      proc = multiprocessing.Process(
+        target=_create_listener,
+        args=(config, self.logger_log_level),
+        daemon=True)
+      proc.start()
 
     # If something went wrong. If it was a KeyboardInterrupt, signal
     # everybody to quit. Otherwise stash error and return None
@@ -418,28 +361,13 @@ class LoggerRunner:
     with self.config_lock:
       process = self.processes.get(logger, None)
       if process:
-        logging.debug('Shutting down %s (pid %d)', logger, process.pid)
-        # For reasons I can't fathom, when LoggerRunner isn't in the
-        # main thread, process.terminate() is propagating to the main
-        # thread in our own process and killing everything. Using the
-        # heavier-handed os.kill() seems to not have this problem.
         try:
-          if USE_MULTIPROCESSING:
-            os.kill(process.pid, signal.SIGKILL)
-            process.terminate()
-            process.join()
-          else:
-            try:
-              process.terminate()
-            except Exception as e:
-              logging.debug('process.terminate threw error: %s', str(e))
-            try:
-              os.kill(process.pid, signal.SIGKILL)
-            except Exception as e:
-              logging.debug('os.kill threw error: %s', str(e))
+          logging.debug('Shutting down %s (pid %d)', logger, process.pid)
+          os.kill(process.pid, signal.SIGKILL)
+          process.terminate()
+          process.join()
         except:
           pass
-
       else:
         logging.debug('Attempted to kill process for %s, but no '
                      'associated process found.', logger)
