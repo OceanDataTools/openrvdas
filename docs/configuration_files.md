@@ -92,7 +92,7 @@ two writers are both defined by enclosing the pair in a list.
 ## Cruise Definitions
 
 A full cruise definition file (such as
-[sample_cruise.yaml](../test/configs/sample_cruise.yaml)) may define
+[NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml)) may define
 many logger configurations. They will be contained in a "configs" dict
 that maps from configuration names to the configuration definitions
 themselves.
