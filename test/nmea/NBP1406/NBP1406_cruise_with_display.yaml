@@ -15,6 +15,15 @@ cruise:
 
 ########################################
 loggers:
+  # One special logger to start with: 'display' listens for parsed JSON
+  # records on the CACHE_UDP port and makes the values available via a
+  # CachedDataServer on the websocket port.
+  display:
+    configs:
+    - display->off
+    - display->on
+
+  # Normal loggers below
   PCOD:
     configs:
     - PCOD->off
@@ -109,6 +118,7 @@ loggers:
 ########################################
 modes:
   'off':
+    display: display->on  # display logger should always be on
     PCOD: PCOD->off
     adcp: adcp->off
     eng1: eng1->off
@@ -129,6 +139,7 @@ modes:
     tsg2: tsg2->off
 
   monitor:
+    display: display->on  # display logger should always be on
     PCOD: PCOD->net
     adcp: adcp->net
     eng1: eng1->net
@@ -149,6 +160,7 @@ modes:
     tsg2: tsg2->net
 
   log:
+    display: display->on  # display logger should always be on
     PCOD: PCOD->file/net/db
     adcp: adcp->file/net/db
     eng1: eng1->file/net/db
@@ -173,6 +185,30 @@ default_mode: 'off'
 
 ########################################
 configs:
+  #############
+  # Display logger is the one that will feed status/error/display data
+  # to anyone who connects via websocket, so we want it running pretty
+  # much all the time.
+  display->off: {}
+
+  display->on:
+    name: display->on
+    readers:
+      class: NetworkReader
+      kwargs:
+        network: :6225   # Where key:value pairs to cache are being sent
+    transforms:
+      class: FromJSONTransform
+    writers:
+      class: CachedDataWriter
+      kwargs:
+        websocket: :8766  
+        back_seconds: 640
+    stderr_writers:
+      class: TextFileWriter
+      kwargs:
+        filename: /var/log/openrvdas/display.log
+
   ########
   PCOD->off:
     name: PCOD->off

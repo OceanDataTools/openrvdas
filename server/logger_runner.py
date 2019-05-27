@@ -83,15 +83,9 @@ import multiprocessing
 import os
 import pprint
 import signal
-import subprocess
 import sys
 import time
 import threading
-try:
-  import websockets
-except ImportError:
-  logging.info('Unable to import "websockets" - websocket functionality '
-               'will not be available.')
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
@@ -99,20 +93,6 @@ from logger.utils.read_config import read_config
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 from logger.writers.text_file_writer import TextFileWriter
 from logger.listener.listen import ListenerFromLoggerConfig
-
-# We have a few different ways we can start up a process. Using the
-# multiprocessing module seems like the Right Way to do it, but while
-# it works fine when logger_runner.py is run from the command line,
-# any CachedDataWriters instantiated within it fail mysteriously: the
-# Connection objects spawned by the asyncio websocket server only ever
-# get the initial copy of the (empty) cache, regardless of what's in
-# the shared cache.
-
-# As an alternative, we can use the subprocess.Popen() method. It's a
-# bit more of a hack, but seems robust against the mysterious behavior
-# of CachedDataServer.
-
-USE_MULTIPROCESSING = False
 
 ############################
 def kill_handler(self, signum):
@@ -132,8 +112,7 @@ def runnable(config):
 class LoggerRunner:
   ############################
   def __init__(self, interval=0.5, max_tries=3, initial_configs=None,
-               websocket=None, host_id=None, event_loop=None,
-               logger_log_level=logging.WARNING):
+               event_loop=None, logger_log_level=logging.WARNING):
     """Create a LoggerRunner.
     interval - number of seconds to sleep between checking/updating loggers
 
@@ -141,12 +120,6 @@ class LoggerRunner:
                 never stop retrying.
 
     initial_configs - optional dict of configs to start up on creation.
-
-    websocket - Optional websocket address (host:port) to connect to
-                for updates.
-
-    host_id - Optional string by which this instance will identify itself
-                to websocket server.
 
     event_loop - Optional event loop, if we're instantiated in a thread
                 that doesn't have its own.
@@ -202,9 +175,6 @@ class LoggerRunner:
     if initial_configs:
       self.set_configs(initial_configs)
 
-    self.websocket = websocket
-    self.host_id = host_id
-
   ############################
   def logger_is_alive(self, logger):
     """Is the logger for the passed name alive?
@@ -214,16 +184,9 @@ class LoggerRunner:
 
   ############################
   def process_is_alive(self, process):
-    """Is the passed process alive? We pull this out because we're still
-    oscillating between using the multiprocessing module or the subprocess
-    one, and how we check aliveness differs between the two.
+    """Is the passed process alive?
     """
-    if USE_MULTIPROCESSING:
-      # Using multiprocessing module
-      return process and process.is_alive()
-    else:
-      # Using subprocess - poll() returns None if process hasn't completed
-      return process and process.poll() is None
+    return process and process.is_alive()
       
   ############################
   def set_configs(self, new_configs):
@@ -367,48 +330,13 @@ class LoggerRunner:
                  logger, config.get('name', 'no-name'))
     logging.debug('Starting config:\n%s', pprint.pformat(config))
 
-    #########
-    # We have a few different ways we can start up a process. Using
-    # the multiprocessing module seems like the Right Way to do it,
-    # but while it works fine when logger_runner.py is run from the
-    # command line, any CachedDataWriters instantiated within it
-    # fail mysteriously ('Unable to bind to address') when a
-    # LoggerRunner is invoked from the logger_manager.py script.
+    # The multiprocessing way of starting a process
     try:
-
-      #########
-      # The multiprocessing way of starting a process
-      #proc = multiprocessing.Process(
-      #  target=self._start_listener_in_new_process, args=(config,),
-      #  daemon=True)
-      #proc.start()
-
-      if USE_MULTIPROCESSING:
-        # Another way of starting a listener, more directly, using the
-        # multiprocessing module. This is the approach we were originally
-        # using.
-        proc = multiprocessing.Process(
-          target=_create_listener,
-          args=(config, self.logger_log_level),
-          daemon=True)
-        proc.start()
-      else:
-        # An old-fangled but apparently more robust way of launching new
-        # listeners, using subprocess.
-        cmd_line = [
-          'logger/listener/listen.py',
-          '--config_string',
-          json.dumps(config),
-        ]
-        # Add logging fields to config
-        if self.logger_log_level < logging.WARNING:
-          cmd_line.append('-v')
-        if self.logger_log_level < logging.INFO:
-          cmd_line.append('-v')
-          
-        proc = subprocess.Popen(cmd_line, stderr=subprocess.PIPE)
-        threading.Thread(target=self._process_logger_output,
-                         args=(logger, proc.stderr), daemon=True).start()
+      proc = multiprocessing.Process(
+        target=_create_listener,
+        args=(config, self.logger_log_level),
+        daemon=True)
+      proc.start()
 
     # If something went wrong. If it was a KeyboardInterrupt, signal
     # everybody to quit. Otherwise stash error and return None
@@ -433,28 +361,13 @@ class LoggerRunner:
     with self.config_lock:
       process = self.processes.get(logger, None)
       if process:
-        logging.debug('Shutting down %s (pid %d)', logger, process.pid)
-        # For reasons I can't fathom, when LoggerRunner isn't in the
-        # main thread, process.terminate() is propagating to the main
-        # thread in our own process and killing everything. Using the
-        # heavier-handed os.kill() seems to not have this problem.
         try:
-          if USE_MULTIPROCESSING:
-            os.kill(process.pid, signal.SIGKILL)
-            process.terminate()
-            process.join()
-          else:
-            try:
-              process.terminate()
-            except Exception as e:
-              logging.warning('process.terminate threw error: %s', str(e))
-            try:
-              os.kill(process.pid, signal.SIGKILL)
-            except Exception as e:
-              logging.warning('os.kill threw error: %s', str(e))
+          logging.debug('Shutting down %s (pid %d)', logger, process.pid)
+          os.kill(process.pid, signal.SIGKILL)
+          process.terminate()
+          process.join()
         except:
           pass
-
       else:
         logging.debug('Attempted to kill process for %s, but no '
                      'associated process found.', logger)
@@ -475,31 +388,6 @@ class LoggerRunner:
     if logger in self.processes: del self.processes[logger]
     if logger in self.errors: del self.errors[logger]
     self.failed_loggers.discard(logger)
-
-  ############################
-  async def _get_websocket_commands(self, websocket):
-    """Listen to websocket for commands and process them."""
-    async for command in websocket:
-      try:
-        self.parse_command(command)
-      except ValueError:
-        await websocket.send(json.dumps(
-          {'error': 'unrecognized command: ' + command}))
-
-  ############################
-  def parse_command(self, command):
-    """Parse and execute the passed command."""
-    if command == 'quit':
-      self.quit_flag = True
-
-    elif command.find('set_configs ') == 0:
-      (configs_cmd, configs_str) = command.split(maxsplit=1)
-      logging.debug('Setting configs to %s', configs_str)
-      self.set_configs(json.loads(configs_str))
-
-    else:
-      logging.error('Unrecognized command: %s', command)
-      raise ValueError('Unrecognized command: %s' % command)
 
   ############################
   def check_logger(self, logger, manage=False, clear_errors=False):
@@ -613,89 +501,16 @@ class LoggerRunner:
       return status
 
   ############################
-  async def _check_loggers_loop(self, websocket=None,
-                          manage=False, clear_errors=False):
-    """Iteratively check logger status.
-
-    websocket - a passed websocket; if not None, send status to websocket.
-
-    manage - if True, try to restart/stop loggers to put them in the state
-             their configs say they should be in.
-
-    clear_errors - if True, clear out any errors reported by checking.
-    """
-    # If websocket, first thing we should do is identify ourselves
-    if websocket:
-      await websocket.send(json.dumps({'host_id': self.host_id}))
-
-    while not self.quit_flag:
-      status = self.check_loggers(manage, clear_errors)
-      if websocket:
-        await websocket.send(json.dumps({'status': status}))
-        logging.info('Sent status')
-
-      logging.warning('Sleeping %f', self.interval)
-      await asyncio.sleep(self.interval)
-
-  ############################
-  async def _logger_task_handler(self):
-    """Check up on the loggers. If no websocket, that just means calling
-    check_loggers() and letting it iterate until done. If we do have a
-    websocket, set up two tasks in parallel: one that calls
-    check_loggers() and a parallel one that looks for updates from the
-    websocket."""
-    # If no websocket, just fire up check_loggers() and wait for it to finish.
-    if not self.websocket:
-      await self._check_loggers_loop(websocket=None,
-                                     manage=True, clear_errors=True)
-      return
-
-    # If we have a websocket specification
-    try:
-      server_addr = 'ws://%s/logger_runner/%s' % (self.websocket,self.host_id)
-      async with websockets.connect(server_addr) as websocket:
-        get_commands_task = asyncio.ensure_future(
-          self._get_websocket_commands(websocket))
-        check_loggers_task = asyncio.ensure_future(
-          self._check_loggers_loop(websocket, manage=True, clear_errors=False))
-        done, pending = await asyncio.wait([get_commands_task,
-                                            check_loggers_task],
-                                           return_when=asyncio.FIRST_COMPLETED)
-      # When here, either check_loggers_tast or get_commands_task has
-      # ended. Terminate the other task.
-      for task in pending:
-        task.cancel()
-    except OSError as e:
-      logging.error('Failed to connect to websocket on %s: %s',
-                    self.websocket, str(e))
-
-  ############################
   def run(self):
-    """Loop. If attached to a websocket, read commands from it to update
-    configs and send back status reports. Otherwise just check up on loggers
-    and discard status report."""
+    """ Check up on loggers and discard status report."""
     try:
-      if self.websocket:
-        # If event loop is already running, just add LoggerRunner as a task
-        if self.event_loop.is_running():
-          asyncio.ensure_future(self._logger_task_handler(),
-                                loop=self.event_loop)
-        # Otherwise, fire up the event loop now
-        else:
-          self.event_loop.run_until_complete(self._logger_task_handler())
-
-      # If not running websocket, don't mess with event loop
-      else:
-        while not self.quit_flag:
-          status = self.check_loggers(manage=True, clear_errors=False)
-          time.sleep(self.interval)
+      while not self.quit_flag:
+        status = self.check_loggers(manage=True, clear_errors=False)
+        time.sleep(self.interval)
 
     except KeyboardInterrupt:
       logging.warning('Received KeyboardInterrupt. Exiting')
       self.quit()
-    except OSError as e:
-      logging.fatal('Failed to open websocket "%s"', self.websocket)
-      raise e
 
   ############################
   def quit(self):
@@ -716,21 +531,11 @@ class LoggerRunner:
         proc.kill()
 
 ################################################################################
-import argparse
-
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store', default=None,
                       help='Initial set of configs to run.')
-
-  parser.add_argument('--websocket', dest='websocket', action='store',
-                      default=None, help='Optional websocket address '
-                      '(host:port) to connect to for updates.')
-  parser.add_argument('--host_id', dest='host_id', action='store',
-                      default=None, help='Name by which to identify ourselves '
-                      'to websocket server. Required if --websocket is '
-                      'specified.')
 
   parser.add_argument('--max_tries', dest='max_tries', action='store',
                       type=int, default=3, help='How many times to try a '
@@ -757,26 +562,15 @@ if __name__ == '__main__':
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
-    stderr_writer = TextFileWriter(args.stderr_file)
-    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
+    stderr_writers = [TextFileWriter(args.stderr_file)]
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
 
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
-
-  if not args.websocket and not args.config:
-    logging.error('No initial configs and no websocket to take commands from, '
-                  'so nothing to do - exiting.')
-    sys.exit(1)
-
-  if args.websocket and not args.host_id:
-    logging.error('Websocket client needs --host_id or it will not ever get '
-                  'tasks assigned to it - exiting.')
-    sys.exit(1)
 
   initial_configs = read_config(args.config) if args.config else None
 
   runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
                         initial_configs=initial_configs,
-                        websocket=args.websocket, host_id=args.host_id,
                         logger_log_level=logger_log_level)
   runner.run()

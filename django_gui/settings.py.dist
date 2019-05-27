@@ -49,18 +49,11 @@ HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
-# Websocket we'll connect to for logger status updates.
-WEBSOCKET_STATUS_HOST = HOSTNAME
-WEBSOCKET_STATUS_PORT = 8765
-WEBSOCKET_STATUS_SERVER = '%s:%d' % (WEBSOCKET_STATUS_HOST,
-                                     WEBSOCKET_STATUS_PORT)
-
 # Websocket we'll connect to for logger data updates.
 WEBSOCKET_DATA_HOST = HOSTNAME
-WEBSOCKET_DATA_PORT = 8765
+WEBSOCKET_DATA_PORT = 8766
 WEBSOCKET_DATA_SERVER = '%s:%d' % (WEBSOCKET_DATA_HOST,
                                    WEBSOCKET_DATA_PORT)
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -128,7 +121,6 @@ DATABASES = {
     'timeout': 20,
   },
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators

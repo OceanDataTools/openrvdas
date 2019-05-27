@@ -1,6 +1,6 @@
 # OpenRVDAS Django Web Interface
 © David Pablo Cohn - david.cohn@gmail.com  
-DRAFT 2018-08-10
+DRAFT 2019-05-26
 
 ## Table of Contents
 
@@ -47,12 +47,21 @@ In a separate window, run logger_manager.py
 
 ```
 python3 server/logger_manager.py \
-    --database django --websocket :8765
+    --database django \
+    --data_server_websocket :8765 \
+    --data_server_udp :6225 \
+    --start_data_server
 ```
-The sample configuration relies on simulated serial ports serving data stored in the test/ directory. To set up the simulated ports, run
+This tells the LoggerManager to run a CachedDataServer that listens for 
+UDP broadcasts of data from loggers on port 6225 and accepts websocket
+connections on port 8765.
+
+The sample configuration relies on simulated serial ports serving data
+stored in the test/ directory. To set up the simulated ports, run
 
 ```
-python3 logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
+python3 logger/utils/simulate_serial.py \
+  --config test/nmea/NBP1406/serial_sim_NBP1406.yaml --loop
 ```
 
 At this point you should be able to open a browser window to 
@@ -67,7 +76,7 @@ Log in using the username (rvdas) and password that you specified; you should no
 
 ![No Configuration Loaded](images/no_configuration_loaded.png)
 
-Select the "Load configuration file" button and browse to find [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml). Select "Load", and you should be looking at a loaded and ready-to-run cruise management page.
+Select the "Load configuration file" button and browse to find [test/nmea/NBP1406/NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml). Select "Load", and you should be looking at a loaded and ready-to-run cruise management page.
 
 ![Sample Cruise Off](images/sample_cruise_off.png)
 

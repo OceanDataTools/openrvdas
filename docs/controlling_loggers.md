@@ -1,5 +1,5 @@
 # OpenRVDAS Controlling Loggers
-© 2018 David Pablo Cohn - DRAFT 2019-01-03
+© 2018-2019 David Pablo Cohn - DRAFT 2019-05-26
 
 ## Overview
 
@@ -9,12 +9,14 @@ This document describes two scripts that allow running, controlling and monitori
 
 ## Table of Contents
 
-* [logger\_runner.py](#logger--runnerpy)
-* [logger\_manager.py](#logger--managerpy)
-  + [Cruises, modes and configurations](#cruises--modes-and-configurations)
-  + [What the logger manager does](#what-the-logger-manager-does)
-  + [Running logger\_manager.py from the command line](#running-logger--managerpy-from-the-command-line)
-  + [Managing loggers via a web interface](#managing-loggers-via-a-web-interface)
+* [The logger_runner.py script](#logger_runnerpy)
+* [The logger_manager.py script](#logger_managerpy)
+   * [Cruises, modes and configurations](#cruises-modes-and-configurations)
+   * [What the logger manager does](#what-the-logger-manager-does)
+   * [Running logger_manager.py from the command line](#running-logger_managerpy-from-the-command-line)
+   * [Driving widget-based data display with the logger_manager.py](#driving-widget-based-data-display-with-the-logger_managerpy)
+   * [Web-based control of the logger_manager.py](#web-based-control-of-the-logger_managerpy)
+   * [Managing loggers via a web interface](#managing-loggers-via-a-web-interface)
 
 ## logger\_runner.py
 
@@ -122,9 +124,9 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
       knud: knud->file/net/db 
       rtmp: rtmp->file/net/db
 ```
--   **Cruise configuration** - (or just "configuration" when we're being sloppy). This is the file/JSON/YAML structure that contains everything the logger manager needs to know about running a cruise. In addition to containing cruise metadata (cruise id, provisional start and ending dates), a cruise configuration file (such as in [test/configs/sample\_cruise.yaml](../test/configs/sample\_cruise.yaml)), contains a dict of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes into which those logger configurations are grouped.
+-   **Cruise configuration** - (or just "configuration" when we're being sloppy). This is the file/JSON/YAML structure that contains everything the logger manager needs to know about running a cruise. In addition to containing cruise metadata (cruise id, provisional start and ending dates), a cruise configuration file (such as in [test/nmea/NBP1406/NBP1406\_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml)), contains a dict of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes into which those logger configurations are grouped.
   
-It is worth noting that strictly speaking, a "logger" does not exist as a separate entity in OpenRVDAS. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the [sample cruise definition file](../test/configs/sample\_cruise.yaml), as the logger definition ("knud") is just a list of the configurations that are responsible for handling the data that comes in from a particular serial port.
+It is worth noting that strictly speaking, a "logger" does not exist as a separate entity in OpenRVDAS. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the [sample cruise definition file](../test/nmea/NBP1406/NBP1406_cruise.yaml), as the logger definition ("knud") is just a list of the configurations that are responsible for handling the data that comes in from a particular serial port.
 
 ```
 knud:
@@ -133,7 +135,7 @@ knud:
   - knud->net,
   - knud->file/net/db
 ```
-Perusing a complete cruise configuration file such as [test/configs/sample_cruise.yaml](../test/configs/sample_cruise.yaml) may be useful for newcomers to the system.
+Perusing a complete cruise configuration file such as [test/nmea/NBP1406/NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml) may be useful for newcomers to the system.
 
 ### What the logger manager does
 
@@ -141,36 +143,40 @@ In short, a bunch of stuff.
 
 ![Logger Manager Diagram](images/logger_manager_diagram.png)
 
-* It consults a database (either a transient in-memory one, or a Django-based one, depending on the value of the ```--database``` flag) to determine what loggers, logger configurations and cruise modes exist, and which cruise mode or combination of logger configurations the user wishes to have running. If a cruise configuration and/or mode are specified on startup via the ```--config``` and ```--mode``` flags, it stores those in the database as the new logger configuration definitions and desired cruise mode.
+* It spawns a command line console interface to a database/backing
+  store where it will store/retrieve information on which logger
+  configurations should be running and which are. By default, this
+  database will be an in-memory, transient store, unless overridden
+  with the ``--database`` flag to select ``django`` or
+  ``hapi``). When run as a service, the console may be disabled by
+  using the ``--no-console`` flag:
 
-* It spawns a command line console interface (unless the ```--no-console``` flag is specified) that allows the user to load cruise configurations, change modes, set individual desired logger configurations and retrieve logger status reports.
+  ```
+  server/logger_manager.py --database django --no-console
+  ```
 
-* It starts/stops logger processes using the desired logger configurations specified by the database and records the new logger states in the database. Once started, it monitors the health of theses processes, recording failures in the database and restarting processes as necessary.
+* If a cruise definition and optional mode are specified on the
+  command line via the ``--config`` and ``--mode`` flags, it loads
+  the definition into the database and sets the current mode as
+  directed:
 
-Additionally, if the ```--websocket :[port]``` flag has been specified, a running logger\_manager.py provides several services to clients that connect via the websocket:
+  ```
+  server/logger_manager.py \
+        --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+        --mode monitor
+  ```
 
-* **Logger status updates** via connections to a websocket at ```hostname:port/logger_status```. This service may be used by web clients, such as the logger monitoring/control page provided by the Django GUI. (See the documentation for the [Django Web Interface](django_interface.md) for more information on this.)
-
-    ![Django GUI Logger Status](images/django_gui_logger_status.png)
-
-* **Logger messages, warnings and errors** to clients that connect to ```hostname:port/messages/[log level]/[source]```, where log level and source are optional arguments.
-
-    ![Django GUI Logger Messages](images/django_gui_messages.png)
-
-* **Control of remote logger runner processes.** A cruise configuration file may specify that certain loggers may only run on certain machines (via a ```host_id``` field in the definition). This may be desirable if, for example, the required serial ports are only available on a particular machine. A remote host like this may connect to a logger manager via the invocation
-      
-    ```
-    server/logger_runner.py --websocket <logger manager host>:<port> \
-        --host_id knud.host
-    ```
-      
-    to indicate that it is available to run logger configurations that are restricted to host ```knud.host```. The logger manager will dispatch any such logger configurations to this logger runner process.
-
-    Note that this also provides a mechanism for manual load sharing if, for example, some logger processes are particularly compute intensive. Please see the header documentation in [server/logger\_runner.py](../server/logger_runner.py) for more details on how to use this functionality.
+* It consults the database to determine what loggers, logger
+  configurations and cruise modes exist, and which cruise mode or
+  combination of logger configurations the user wishes to have running
+  and starts/stops logger processes as appropriate. It records the new
+  logger states in the database. Once started, it monitors the health
+  of theses processes, recording failures in the database and
+  restarting processes as necessary.
 
 ### Running logger\_manager.py from the command line
 
-The logger\_manager.py script can be run with no arguments and will default to using an in-memory data store:
+As indicated above, the logger\_manager.py script can be run with no arguments and will default to using an in-memory data store:
 
 ```
 server/logger_manager.py
@@ -227,27 +233,59 @@ As with sample script for logger\_runner.py, the sample cruise configuration fil
 
 running in another terminal for the logger manager to load and run it without complaining.
 
-### Other invocation options
 
-If Django is installed and configured, you may also direct the logger manager to use the Django database when you invoke it. This has several advantages, the chief one being that desired logger states and modes will be preserved between runs of the logger manager (so that, for example, if the machine on which it is running is rebooted, the logger manager will restart the loggers that were running at the time.)
+### Driving widget-based data display with the logger\_manager.py
 
+In addition to being stored, logger data may be displayed in real time
+via [display widgets](display_widgets.md). The most straightforward
+way to do this is by configuring loggers to echo their output to a UDP
+port (such as :6225) where it can be read, cached and served by a
+[CachedDataServer](../logger/utils/cached_data_server.py). Widgets
+connect to the server via a websocket and request data, as described
+in the [Display Widgets document](display_widgets.md).
+
+![Logger Manager with CachedDataServer](images/console_based_logger_manager.png)
+
+A CachedDataServer may be run as a standalone process. Or it may be invoked by the
+LoggerManager when handed a ``--start_data_server`` flag:
 ```
-    server/logger_manager.py --database django
+  server/logger_manager.py \
+    --database django \
+    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --start_data_server
+```
+By default it will use websocket port 8766 and network UDP port 6225, but these
+may be overridden with additional command line flags:
+```
+  server/logger_manager.py \
+    --database django \
+    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --data_server_websocket :8765 \
+    --data_server_udp :6226 \
+    --start_data_server
 ```
 
-As described above, the logger manager may also be invoked with a websocket specification, which will allow communicating with it via the Django interface, and will enable the additional websocket-based services described above:
+The LoggerManager will start a CachedDataServer and publish logger and status
+updates to it via the specified websocket. The fields it will make available
+are ``status:cruise_definition`` for the list of logger names, configurations
+and active configuration, and ``status:logger_status`` for actual running state
+of each logger.
 
-```
-    server/logger_manager.py --database django \
-        --websocket :8765
-```
+### Web-based control of the logger_manager.py
 
-Finally, the logger manager may be invoked with a cruise configuration and/or cruise mode, and will attempt to load and run the loggers specified in it:
+In addition to being controlled from a command line console, the
+logger\manager.py may be controlled by a web console.
 
-```
-    server/logger_manager.py --config test/nmea/NBP1406/NBP1406_cruise.yaml \
-        --mode monitor
-```
+![Logger Manager with
+ CachedDataServer](images/web_based_logger_manager.png)
+
+If the system is installed using the default build scripts in the
+[utils directory](../utils), it will be configured to serve a
+Django-based web console served by Nginx. The logger manager will be
+configured to use the Django-based database (backed by MySQL) to
+maintain logger state.
+
+But while the system will use Django and the webserver to load the web console HTML and Javascript, the loaded Javascript will look for a CachedDataServer from which to draw information about what loggers are and should be running.
 
 Please see the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_manager.py.
 

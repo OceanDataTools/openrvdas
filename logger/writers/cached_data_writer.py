@@ -63,19 +63,41 @@ class CachedDataWriter(Writer):
 
   ############################
   def write(self, record):
-    """Write out record. Expects passed records to either be DASRecords
-    or simple dicts. If type(record) is dict, expect it to be in one
-    of the following formats:
+    """Write out record. Expects passed records to be in one of two
+    formats:
 
-       {field_name: value,    # use default timestamp of 'now'
-        field_name: value,
-        ...
+    1) DASRecord
+
+    2) a dict encoding optionally a source data_id and timestamp and a
+       mandatory 'fields' key of field_name: value pairs. This is the format
+       emitted by default by ParseTransform:
+
+       {
+         'data_id': ...,
+         'timestamp': ...,
+         'fields': {
+           field_name: value,    # use default timestamp of 'now'
+           field_name: value,
+           ...
+         }
        }
-    or
-       {field_name: [(timestamp, value), (timestamp, value),...],
-        field_name: [(timestamp, value), (timestamp, value),...],
-        ...
+
+    A twist on format (2) is that the values may either be a singleton
+    (int, float, string, etc) or a list. If the value is a singleton,
+    it is taken at face value. If it is a list, it is assumed to be a
+    list of (value, timestamp) tuples, in which case the top-level
+    timestamp, if any, is ignored.
+
+       {
+         'data_id': ...,
+         'timestamp': ...,
+         'fields': {
+            field_name: [(timestamp, value), (timestamp, value),...],
+            field_name: [(timestamp, value), (timestamp, value),...],
+            ...
+         }
        }
+
     """
     if record:
       self.server.cache_record(record)

@@ -4,6 +4,7 @@ import logging
 import logging.handlers
 import sys
 import time
+import traceback
 
 from os import makedirs
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -24,7 +25,7 @@ class Listener:
 
   """
   ############################
-  def __init__(self, readers, transforms=[], writers=[], stderr_writer=None,
+  def __init__(self, readers, transforms=[], writers=[], stderr_writers=[],
                host_id='', interval=0, name=None, check_format=False,
                log_level=None):
     """listener = Listener(readers, transforms=[], writers=[],
@@ -36,7 +37,8 @@ class Listener:
 
     writers        A single Writer or a list of zero or more Writers
 
-    stderr_writer  An optional writer to which stderr should be written.
+    stderr_writers A single Writer or a list of zero or more Writers to which
+                   the logger's stderr should be written.
 
     host_id        Optional host_id on which Listener is to be run. Ignored
                    here, but it may show up as part of a config, so we need
@@ -67,8 +69,8 @@ class Listener:
     """
     # Set up logging first of all
     setUpStdErrLogging(log_level=log_level)
-    if stderr_writer is not None:
-      logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
+    if stderr_writers:
+      logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
 
     logging.info('Instantiating %s logger', name or 'unnamed')
     
@@ -116,5 +118,6 @@ class Listener:
     except KeyboardInterrupt:
       logging.info('Listener %s received KeyboardInterrupt - exiting.',
                    self.name or '')
-    except Exception as e:
-      logging.error('Listener %s received exception: %s', str(e))
+    except Exception:
+      logging.error('Listener %s received exception: %s',
+                    self.name, traceback.format_exc())

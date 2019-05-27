@@ -405,12 +405,19 @@ cat > /root/scripts/start_openrvdas.sh <<EOF
 #!/bin/bash
 # Start openrvdas servers as service
 OPENRVDAS_LOG_DIR=/var/log/openrvdas
+OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
+
 mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
-sudo -u $RVDAS_USER sh -c "cd $INSTALL_ROOT/openrvdas;/usr/local/bin/python3 server/logger_manager.py --websocket :8765 --database django --no-console -v --stderr_file  \$OPENRVDAS_LOGFILE"
+DATA_SERVER_WEBSOCKET=:8766
+DATA_SERVER_UDP=:6225
+
+# Comment out line below to have logger manager *not* start a data server
+START_DATA_SERVER='--start_data_server'
+
+sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/local/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET --data_server_udp \$DATA_SERVER_UDP \$START_DATA_SERVER"
 EOF
 
 cat > /root/scripts/stop_openrvdas.sh <<EOF
@@ -441,7 +448,7 @@ while true; do
             echo To manually run server, go to install directory and run logger_manager.py
             echo 
             echo '  cd $INSTALL_ROOT/openrvdas'
-            echo '  python3 server/logger_manager.py --websocket :8765 --database django -v'
+            echo '  python3 server/logger_manager.py --database django -v'
             echo
             break;;
         * ) echo "Please answer yes or no.";;
@@ -479,10 +486,10 @@ echo "#########################################################################"
 echo "#########################################################################"
 echo Installation complete.
 echo 
-echo To run server, go to install directory and run logger_manager.py
+echo To manually run server, go to install directory and run logger_manager.py
 echo 
 echo '  cd $INSTALL_ROOT/openrvdas'
-echo '  python3 server/logger_manager.py --websocket :8765 --database django -v'
+echo '  python3 server/logger_manager.py --database django -v'
 echo 
 echo "#########################################################################"
 echo Finished installation and configuration. You must reboot before some

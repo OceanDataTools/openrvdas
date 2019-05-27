@@ -62,9 +62,9 @@ class StdErrLoggingHandler(logging.Handler):
 
     logging.getLogger().addHandler(StdErrLoggingHandler(my_writer))
   """
-  def __init__(self, writer, logging_format=DEFAULT_LOGGING_FORMAT):
+  def __init__(self, writers, logging_format=DEFAULT_LOGGING_FORMAT):
     super().__init__()
-    self.writer = writer
+    self.writers = writers
 
     self.formatter = logging.Formatter(fmt=logging_format,
                                        datefmt=DEFAULT_DATE_FORMAT)
@@ -78,5 +78,9 @@ class StdErrLoggingHandler(logging.Handler):
     logging.root.setLevel(logging.CRITICAL)
 
     message = self.formatter.format(record)
-    self.writer.write(message)
+      
+    if type(self.writers) is list:
+      [writer.write(message) for writer in self.writers]
+    else:
+      self.writers.write(message)
     logging.root.setLevel(log_level)

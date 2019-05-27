@@ -81,14 +81,20 @@ class InMemoryServerAPI(ServerAPI):
 
   ############################
   def get_loggers(self):
-    """Get a dict of {logger_id:logger_spec,...} defined for the
-    specified cruise id in the data store. If cruise_id=None, get
-    all loggers."""
+    """Get a dict of
+        {logger_id:{'configs':[<name_1>,<name_2>,...], 'active':<name>},...}
+    for all loggers.
+    """
     config = self.get_configuration()
 
     if not 'loggers' in config:
       raise ValueError('No loggers found')
-    return config['loggers']
+    logger_configs = config['loggers']
+
+    # Fetch and insert the currently active config for each logger
+    for logger in logger_configs:
+      logger_configs[logger]['active'] = self.get_logger_config_name(logger)
+    return logger_configs
 
   ############################
   def get_logger_config(self, config_name):

@@ -68,6 +68,7 @@ from logger.transforms.derived_data_transform import ComposedDerivedDataTransfor
 from logger.transforms.max_min_transform import MaxMinTransform
 from logger.transforms.from_json_transform import FromJSONTransform
 from logger.transforms.to_json_transform import ToJSONTransform
+from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.transforms.count_transform import CountTransform
 
 from logger.writers.composed_writer import ComposedWriter
@@ -119,7 +120,7 @@ class ListenerFromLoggerConfig(Listener):
       # takes a single reader.
       if key in ['readers', 'transforms', 'writers',
                  'reader',            # special case for TimeoutReader
-                 'stderr_writer',     # writer to use for stderr messages
+                 'stderr_writers',    # writers to use for stderr messages
                 ]:
         kwargs[key] = self._class_kwargs_from_config(value)
 
@@ -472,7 +473,7 @@ if __name__ == '__main__':
     readers = []
     transforms = []
     writers = []
-    stderr_writer = None
+    stderr_writers = []
     
     ############################
     # Parse args out. We do this in a rather non-standard way to use the
@@ -675,14 +676,15 @@ if __name__ == '__main__':
       ##########################
       # Stderr Writer
       if new_args.stderr_file:
-        stderr_writer = TextFileWriter(filename=new_args.stderr_file)
+        stderr_writers = [TextFileWriter(filename=new_args.stderr_file)]
         #stderr_writer = LogfileWriter(filebase=new_args.stderr_file)
 
     ##########################
     # Now that we've got our readers, transforms and writers defined,
     # create the Listener.
     listener = Listener(readers=readers, transforms=transforms, writers=writers,
-                        stderr_writer=stderr_writer, interval=all_args.interval,
+                        stderr_writers=stderr_writers,
+                        interval=all_args.interval,
                         check_format=all_args.check_format,
                         log_level=log_level)
 
