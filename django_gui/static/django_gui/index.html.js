@@ -38,17 +38,10 @@ function initial_send_message() {
 
 ////////////////////////////
 function process_message(message_str) {
+  reset_server_timeout(); // We've gotten a server update
+  
   // Just for debugging purposes
   var message = JSON.parse(message_str);
-
-  // Update time string and reset timeout timer
-  document.getElementById('time_td').innerHTML = Date();
-  document.getElementById('time_warning_row').style.display = 'none';
-  document.getElementById('time_row').style.backgroundColor = 'white';
-  //document.getElementById('time_str').innerHTML = message.time_str;
-  //time_str.style.backgroundColor = 'white';
-  clearInterval(timeout_timer);
-  timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
 
   // Figure out what kind of message we got
   var message_type = message.type;
@@ -150,7 +143,6 @@ function process_data_message(data_dict) {
         mode_selector.appendChild(opt);
       }
 
-      
       ////////////////////////////////
       // Now update loggers
       var loggers = cruise_definition.loggers;
@@ -230,6 +222,9 @@ function process_data_message(data_dict) {
     // dict where the timestamp is the key, and the value is a dict of
     // {logger_name: logger_status}
     case 'status:logger_status':
+      console.log('Got status update');
+      reset_status_timeout(); // We've gotten a status update
+                                            
       // We will have been handed a list of [timestamp, status_update]
       // pairs. Fetch the last status update in the list.
       var status_array = value[value.length-1][1];
@@ -334,15 +329,82 @@ function add_to_stderr(logger_name, new_messages) {
   global_logger_stderr[logger_name] = stderr_messages;
 }
 
-///////////////////////////////
-// Run timer to check how long it's been since our last update. If no
-// update in 5 seconds, change background color to red
-var TIMEOUT_INTERVAL = 5000;
-function flag_timeout() {
-  document.getElementById('time_row').style.backgroundColor = 'orangered';
-  document.getElementById('time_warning_td').innerHTML = Date();
+function date_str() {
+  return Date().substring(0,24);
 }
-var timeout_timer = setInterval(flag_timeout, TIMEOUT_INTERVAL);
+
+////////////////////////////////////////////////////////////////////////////////
+var NOW_TIMEOUT_INTERVAL = 1000;     // Update console clock every second
+var SERVER_TIMEOUT_INTERVAL = 5000;  // 5 seconds before warn about server
+var STATUS_TIMEOUT_INTERVAL = 10000; // 5 seconds before warn about status
+
+///////////////////////////////
+// Timer to update the 'Now' clock on web console.
+function flag_now_timeout() {
+  document.getElementById('time_td').innerHTML = date_str();
+  clearInterval(now_timeout_timer);
+  now_timeout_timer = setInterval(flag_now_timeout, NOW_TIMEOUT_INTERVAL);
+}
+var now_timeout_timer = setInterval(flag_now_timeout, NOW_TIMEOUT_INTERVAL);
+
+// Question on timer warnings: should we reserve space for the
+// warnings (e.g. use the commented-out "visibility=hidden" style), or
+// have them open up space when errors occur? For now, for
+// compactness, going with the latter route.
+
+///////////////////////////////
+// Timer to check how long it's been since our last status update. If
+// no update in 10 seconds, change background color to red
+function flag_status_timeout() {
+  document.getElementById('status_time_row').style.display = 'block';
+  //document.getElementById('status_time_row').style.visibility = 'visible';
+  document.getElementById('status_time_row').style.backgroundColor ='orangered';
+  //for (var logger in global_loggers) {
+  //  var config_button = document.getElementById(logger + '_config_button');
+  //  if (config_button) {
+  //    console.log('Turning ' + logger + ' yellow');
+  //    config_button.style.backgroundColor = 'yellow';
+  //  } else {
+  //    console.log('Couldnt find logger ' + logger);
+  //  }
+  //}
+
+}
+function reset_status_timeout() {
+  // Update time string and reset timeout timer
+  document.getElementById('status_time_row').style.display = 'none';
+  //document.getElementById('status_time_row').style.visibility = 'hidden';
+  document.getElementById('status_time_row').style.backgroundColor = 'white';
+  document.getElementById('status_time_td').innerHTML = 'Check logger manager - last status update ' + date_str();
+  clearInterval(status_timeout_timer);
+  status_timeout_timer = setInterval(flag_status_timeout,
+                                     STATUS_TIMEOUT_INTERVAL);
+}
+var status_timeout_timer = setInterval(flag_status_timeout,
+                                       STATUS_TIMEOUT_INTERVAL);
+///////////////////////////////
+// Timer to check how long it's been since our last update of any kind
+// from the data server. If no update in 5 seconds, change background
+// color to red
+function flag_server_timeout() {
+  document.getElementById('server_time_row').style.display = 'block';
+  //document.getElementById('server_time_row').style.visibility = 'visible';
+  document.getElementById('server_time_row').style.backgroundColor ='orangered';
+}
+function reset_server_timeout() {
+  // Update time string and reset timeout timer
+  document.getElementById('server_time_row').style.display = 'none';
+  //document.getElementById('server_time_row').style.visibility = 'hidden';
+  document.getElementById('server_time_row').style.backgroundColor = 'white';
+  document.getElementById('server_time_td').innerHTML = 'Check data server manager - last update ' + date_str();
+  clearInterval(server_timeout_timer);
+  server_timeout_timer = setInterval(flag_server_timeout,
+                                     SERVER_TIMEOUT_INTERVAL);
+}
+var server_timeout_timer = setInterval(flag_server_timeout,
+                                       SERVER_TIMEOUT_INTERVAL);
+
+////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////
 // Turn select pull-down's text background yellow when it's been changed

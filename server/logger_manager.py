@@ -220,11 +220,13 @@ class LoggerManager:
     """
     # Start the local LoggerRunner in its own thread.
     local_logger_thread = threading.Thread(
+      name='logger_runner',
       target=self.local_logger_runner, daemon=True)
     local_logger_thread.start()
 
     # Update configs in a separate thread.
     self.update_configs_thread = threading.Thread(
+      name='update_configs_loop',
       target=self.update_configs_loop, daemon=True)
     self.update_configs_thread.start()
 
@@ -232,6 +234,7 @@ class LoggerManager:
     # thread to send our status updates to it.
     if self.data_server_websocket:
       self.send_status_thread = threading.Thread(
+        name='send_status_loop',
         target=self._send_status_loop, daemon=True)
       self.send_status_thread.start()
 
@@ -317,6 +320,11 @@ class LoggerManager:
       if ws_name.find(':') == 0:
         ws_name = 'localhost' + ws_name
 
+      # Even if things haven't changed, we want to send a full status
+      # update every N seconds.
+      SEND_EVERY_N_SECONDS = 5
+      last_status_sent = 0
+      
       while not self.quit_flag:
         try:
           logging.info('Connecting to websocket: "%s"', ws_name)
@@ -365,6 +373,11 @@ class LoggerManager:
                   previous_logger_status = timestamped_status
                   logger_status_changed = True
 
+              # If it's been at least N seconds, force a send of status
+              if time.time() > last_status_sent + SEND_EVERY_N_SECONDS:
+                logger_status_changed = True
+                last_status_sent = time.time()
+                
               if not logger_status_changed:
                 logger_status = {}
                 
