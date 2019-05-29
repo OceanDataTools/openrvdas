@@ -46,7 +46,7 @@ says to
             0  - provide only new values that arrive after subscription
            -1  - provide the most recent value, and then all future new ones
            num - provide num seconds of back data, then all future new ones
-         
+
          If 'seconds' is missing, use '0' as the default.
 
    {'type':'ready'}
@@ -61,7 +61,7 @@ says to
        - submit new data to the cache (an alternative way to get data
          in that doesn't, e.g. have the same record size limits as a
          UDP packet).
-   
+
 A CachedDataServer may also be created by invoking the listen.py
 script and creating a CachedDataWriter (which is just a wrapper around
 CachedDataServer). It may be invoked with the same options, and has
@@ -304,7 +304,7 @@ class WebSocketConnection:
 
     while not self.quit_flag:
       now = time.time()
-    
+
       try:
         logging.debug('Waiting for client')
         raw_request = await self.websocket.recv()
@@ -333,7 +333,7 @@ class WebSocketConnection:
           is_error=True)
 
       # Let's see what type of request it is
-      
+
       # Send client a list of the variable names we're able to serve.
       elif request['type'] == 'fields':
         logging.debug('fields request')
@@ -445,7 +445,7 @@ class WebSocketConnection:
               field_timestamps[field_name] = field_cache[-1][0]
 
         logging.debug('Websocket results: %s...', str(results)[0:100])
-        
+
         # Package up what results we have (if any) and send them off
         await self.send_json_response({'type':'data', 'status':200,
                                        'data':results})
@@ -454,7 +454,7 @@ class WebSocketConnection:
         elapsed = time.time() - now
         time_to_sleep = max(0, interval - elapsed)
         logging.debug('Sleeping %g seconds', time_to_sleep)
-        await asyncio.sleep(time_to_sleep)  
+        await asyncio.sleep(time_to_sleep)
 
       # If unrecognized request type - whine, then iterate
       else:
@@ -696,7 +696,7 @@ if __name__ == '__main__':
                for network in args.network.split(',')]
     transform = FromJSONTransform()
     reader = ComposedReader(readers=readers, transforms=[transform])
-    
+
   server = CachedDataServer(args.websocket, args.interval)
 
   # Every N seconds, we're going to detour to clean old data out of cache
