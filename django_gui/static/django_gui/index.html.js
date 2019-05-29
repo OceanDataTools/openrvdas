@@ -335,7 +335,7 @@ function date_str() {
 ////////////////////////////////////////////////////////////////////////////////
 var NOW_TIMEOUT_INTERVAL = 1000;     // Update console clock every second
 var SERVER_TIMEOUT_INTERVAL = 5000;  // 5 seconds before warn about server
-var STATUS_TIMEOUT_INTERVAL = 10000; // 5 seconds before warn about status
+var STATUS_TIMEOUT_INTERVAL = 6000;  // 6 seconds before warn about status
 
 ///////////////////////////////
 // Timer to update the 'Now' clock on web console.
@@ -359,7 +359,7 @@ var now_timeout_timer = setInterval(flag_now_timeout, NOW_TIMEOUT_INTERVAL);
 function flag_status_timeout() {
   document.getElementById('status_time_row').style.display = 'block';
   //document.getElementById('status_time_row').style.visibility = 'visible';
-  document.getElementById('status_time_row').style.backgroundColor ='orangered';
+  document.getElementById('status_time_row').style.backgroundColor ='yellow';
   for (var logger in global_loggers) {
     var config_button = document.getElementById(logger + '_config_button');
     if (config_button) {
@@ -389,7 +389,7 @@ var status_timeout_timer = setInterval(flag_status_timeout,
 function flag_server_timeout() {
   document.getElementById('server_time_row').style.display = 'block';
   //document.getElementById('server_time_row').style.visibility = 'visible';
-  document.getElementById('server_time_row').style.backgroundColor ='orangered';
+  document.getElementById('server_time_row').style.backgroundColor ='yellow';
 }
 function reset_server_timeout() {
   // Update time string and reset timeout timer
