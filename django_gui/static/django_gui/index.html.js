@@ -328,14 +328,18 @@ function add_to_stderr(logger_name, new_messages) {
   global_logger_stderr[logger_name] = stderr_messages;
 }
 
-function date_str() {
-  return Date().substring(0,24);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 var NOW_TIMEOUT_INTERVAL = 1000;     // Update console clock every second
 var SERVER_TIMEOUT_INTERVAL = 5000;  // 5 seconds before warn about server
 var STATUS_TIMEOUT_INTERVAL = 6000;  // 6 seconds before warn about status
+
+// Question on timer warnings: should we reserve space for the
+// warnings (e.g. use the commented-out "visibility=hidden" style), or
+// have them open up space when errors occur? For now, for
+// compactness, going with the latter route.
+function date_str() {
+  return Date().substring(0,24);
+}
 
 ///////////////////////////////
 // Timer to update the 'Now' clock on web console.
@@ -344,12 +348,6 @@ function flag_now_timeout() {
   clearInterval(now_timeout_timer);
   now_timeout_timer = setInterval(flag_now_timeout, NOW_TIMEOUT_INTERVAL);
 }
-var now_timeout_timer = setInterval(flag_now_timeout, NOW_TIMEOUT_INTERVAL);
-
-// Question on timer warnings: should we reserve space for the
-// warnings (e.g. use the commented-out "visibility=hidden" style), or
-// have them open up space when errors occur? For now, for
-// compactness, going with the latter route.
 
 ///////////////////////////////
 // Timer to check how long it's been since our last status update. If
@@ -368,10 +366,8 @@ function flag_status_timeout() {
       console.log('Couldnt find logger ' + logger);
     }
   }
-
 }
 function reset_status_timeout() {
-  // Update time string and reset timeout timer
   document.getElementById('status_time_row').style.display = 'none';
   //document.getElementById('status_time_row').style.visibility = 'hidden';
   document.getElementById('status_time_row').style.backgroundColor = 'white';
@@ -380,8 +376,7 @@ function reset_status_timeout() {
   status_timeout_timer = setInterval(flag_status_timeout,
                                      STATUS_TIMEOUT_INTERVAL);
 }
-var status_timeout_timer = setInterval(flag_status_timeout,
-                                       STATUS_TIMEOUT_INTERVAL);
+
 ///////////////////////////////
 // Timer to check how long it's been since our last update of any kind
 // from the data server. If no update in 5 seconds, change background
@@ -392,7 +387,6 @@ function flag_server_timeout() {
   document.getElementById('server_time_row').style.backgroundColor ='yellow';
 }
 function reset_server_timeout() {
-  // Update time string and reset timeout timer
   document.getElementById('server_time_row').style.display = 'none';
   //document.getElementById('server_time_row').style.visibility = 'hidden';
   document.getElementById('server_time_row').style.backgroundColor = 'white';
@@ -401,10 +395,14 @@ function reset_server_timeout() {
   server_timeout_timer = setInterval(flag_server_timeout,
                                      SERVER_TIMEOUT_INTERVAL);
 }
+
+///////////////////////////////
+// Start the timers
+var now_timeout_timer = setInterval(flag_now_timeout, NOW_TIMEOUT_INTERVAL);
+var status_timeout_timer = setInterval(flag_status_timeout,
+                                       STATUS_TIMEOUT_INTERVAL);
 var server_timeout_timer = setInterval(flag_server_timeout,
                                        SERVER_TIMEOUT_INTERVAL);
-
-////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////
 // Turn select pull-down's text background yellow when it's been changed
