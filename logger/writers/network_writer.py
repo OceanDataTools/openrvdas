@@ -8,6 +8,7 @@ import sys
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.formats import Text
+from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
 ################################################################################
@@ -65,7 +66,6 @@ class NetworkWriter(Writer):
   ############################
   def write(self, record):
     """Write the record to the network."""
-
     if not record:
       return
 
@@ -74,6 +74,8 @@ class NetworkWriter(Writer):
     if not type(record) is str:
       if type(record) in [int, float, bool, list, dict]:
         record = json.dumps(record)
+      elif type(record) is DASRecord:
+        record = record.as_json()
       else:
         record = str(record)
 
