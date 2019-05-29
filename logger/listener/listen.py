@@ -81,7 +81,7 @@ from logger.writers.record_screen_writer import RecordScreenWriter
 from logger.writers.cached_data_writer import CachedDataWriter
 
 from logger.utils import read_config, timestamp, nmea_parser, record_parser
-from logger.utils.stderr_logging import setUpStdErrLogging
+from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 from logger.listener.listener import Listener
 
 
@@ -113,15 +113,24 @@ class ListenerFromLoggerConfig(Listener):
     """Parse a kwargs from a JSON string, making exceptions for keywords
     'readers', 'transforms', and 'writers' as internal class references."""
     kwargs = {}
-    for key, value in config_dict.items():
 
+    # First we pull out the 'stderr_writers' spec as a special case so
+    # that we can catch and properly route stderr output from
+    # parsing/creation of the other keyword args.
+    stderr_writers_spec = config_dict.get('stderr_writers', None)
+    if stderr_writers_spec:
+      stderr_writers = self._class_kwargs_from_config(stderr_writers_spec)
+      logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
+
+      # We've already initialized the logger for stderr_writers, so
+      # *don't* pass that arg on, or things will get logged twice.
+      del config_dict['stderr_writers']
+
+    for key, value in config_dict.items():
       # Declaration of readers, transforms and writers. Note that the
       # singular "reader" is a special case for TimeoutReader that
       # takes a single reader.
-      if key in ['readers', 'transforms', 'writers',
-                 'reader',            # special case for TimeoutReader
-                 'stderr_writers',    # writers to use for stderr messages
-                ]:
+      if key in ['readers', 'reader', 'transforms', 'writers']:
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords
