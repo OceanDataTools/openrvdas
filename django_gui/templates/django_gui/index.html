@@ -45,7 +45,7 @@
   </tr>
   {% endcomment %}
 </table>
-    
+
 {# ######################################################################## #}
 {# Draw the loggers and their current configurations.                       #}
 <hr>
@@ -71,7 +71,7 @@
     {% endfor %}
 
     </tbody>
-  </table>      
+  </table>
 
 {# ######################################################################## #}
 {# If user is authenticated, allow to switch modes. Else just show mode     #}
@@ -82,14 +82,14 @@
     <select name='select_mode' id='select_mode'
             onchange='highlight_select_mode()'
             {% if not user.is_authenticated %} disabled {% endif %} >
-      
+
       {% for mode_option in modes %}
       <option id="mode_{{ mode_option }}"
          {% if mode_option == active_mode %}
          selected
          {% endif %}>
           {{ mode_option }}
-      </option> 
+      </option>
       {% endfor %}
 
     </select>

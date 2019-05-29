@@ -39,7 +39,7 @@ function initial_send_message() {
 ////////////////////////////
 function process_message(message_str) {
   reset_server_timeout(); // We've gotten a server update
-  
+
   // Just for debugging purposes
   var message = JSON.parse(message_str);
 
@@ -146,7 +146,7 @@ function process_data_message(data_dict) {
       ////////////////////////////////
       // Now update loggers
       var loggers = cruise_definition.loggers;
-      
+
       // Has the actual list of loggers changed? If not, only update
       // what has changed.
       if (array_keys_match(global_loggers, loggers)) {
@@ -218,48 +218,47 @@ function process_data_message(data_dict) {
       break;
 
     ////////////////////////////////////////////////////
-    // If we've got a logger status definition update; the values will be a
-    // dict where the timestamp is the key, and the value is a dict of
-    // {logger_name: logger_status}
+    // If we've got a logger status update; the values will be a list
+    // of dicts where for each dict, the timestamp of the status is
+    // the key, and the value is a dict of {logger_name:
+    // logger_status}.
+
     case 'status:logger_status':
-      console.log('Got status update');
+      //console.log('Got status update');
       reset_status_timeout(); // We've gotten a status update
-                                            
-      // We will have been handed a list of [timestamp, status_update]
-      // pairs. Fetch the last status update in the list.
-      var status_array = value[value.length-1][1];
 
-      // The status update itself, when it isn't empty, will be an assoc
-      // array of form {timestamp:status,...}. We want to use the most
-      // recent timestamp.
-      var max_timestamp = Math.max(0,Math.max(...Object.keys(status_array)));
-      if (max_timestamp == 0) { break; } // empty status
-      if (max_timestamp <= global_last_logger_status_timestamp) {
-        //console.log('Got old logger_status');
-        break;
-      }
-      global_last_logger_status_timestamp = max_timestamp;
 
-      var status = status_array[max_timestamp];
+      // The value array will be a list of [timestamp, status_update]
+      // pairs. We want to grab the most recently-timestamped status update.
+      var timestamp_status_array = value[value.length-1][1];
 
-      // Update status - status is ternary:
-      //   true:  we're running and is supposed to be
-      //   false: not running and is supposed to be
-      //   null:  not running and not supposed to be
-      for (var logger_name in status) {
-        //console.log('Updating status for ' + logger_name);
-        var logger_status = status[logger_name];
-        var button = document.getElementById(logger_name + '_config_button');
-        button.innerHTML = logger_status.config;
-        if (logger_status.running == true) {
-          button.style.backgroundColor = "lightgreen";
-        } else if (logger_status.running == false) {
-          button.style.backgroundColor = "orangered";
-        } else {
-          button.style.backgroundColor = "lightgray";
-        }
-        if (logger_status.failed) {
-          button.style.backgroundColor = "red";
+      // The status update will be an associative array of {timestamp:
+      // {logger:status, logger:status,...}}.  Go through each
+      // timestamp and update the loggers it references.
+      for (var status_timestamp in timestamp_status_array) {
+        var status_array = timestamp_status_array[status_timestamp];
+        for (var logger_name in status_array) {
+          var logger_status = status_array[logger_name];
+          var button = document.getElementById(logger_name + '_config_button');
+          if (button == undefined) {
+            console.log('Button not found for logger ' + logger_name);
+            continue;
+          }
+          button.innerHTML = logger_status.config;
+          // Update status - status is ternary:
+          //   true:  we're running and is supposed to be
+          //   false: not running and is supposed to be
+          //   null:  not running and not supposed to be
+          if (logger_status.running == true) {
+            button.style.backgroundColor = "lightgreen";
+          } else if (logger_status.running == false) {
+            button.style.backgroundColor = "orange";
+          } else {
+            button.style.backgroundColor = "lightgray";
+          }
+          if (logger_status.failed) {
+            button.style.backgroundColor = "red";
+          }
         }
       }
       break;
@@ -354,20 +353,21 @@ var now_timeout_timer = setInterval(flag_now_timeout, NOW_TIMEOUT_INTERVAL);
 
 ///////////////////////////////
 // Timer to check how long it's been since our last status update. If
-// no update in 10 seconds, change background color to red
+// no update in 10 seconds, change status background color to red, and
+// flag all loggers in yellow to show that we're not confident of
+// their state.
 function flag_status_timeout() {
   document.getElementById('status_time_row').style.display = 'block';
   //document.getElementById('status_time_row').style.visibility = 'visible';
   document.getElementById('status_time_row').style.backgroundColor ='orangered';
-  //for (var logger in global_loggers) {
-  //  var config_button = document.getElementById(logger + '_config_button');
-  //  if (config_button) {
-  //    console.log('Turning ' + logger + ' yellow');
-  //    config_button.style.backgroundColor = 'yellow';
-  //  } else {
-  //    console.log('Couldnt find logger ' + logger);
-  //  }
-  //}
+  for (var logger in global_loggers) {
+    var config_button = document.getElementById(logger + '_config_button');
+    if (config_button) {
+      config_button.style.backgroundColor = 'yellow';
+    } else {
+      console.log('Couldnt find logger ' + logger);
+    }
+  }
 
 }
 function reset_status_timeout() {

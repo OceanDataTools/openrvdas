@@ -21,6 +21,8 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 
+from django.db import connection
+
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise, CruiseState
 from .models import LogMessage, ServerState
@@ -41,7 +43,7 @@ class DjangoServerAPI(ServerAPI):
     # Test whether Django is in fact initialized. If we get a DoesNotExist
     # error, that means that our tables are working.
     try:
-      dummy_logger = Logger.objects.get(name='dummy')
+      dummy_logger = Logger.objects.get(name='ThisIsADummyLogger')
     except Logger.DoesNotExist:
       pass # we're good here
     except:
@@ -54,19 +56,31 @@ class DjangoServerAPI(ServerAPI):
   def _get_cruise_object(self):
     """Helper function for getting cruise object from id. Raise exception
     if it does not exist."""
-    try:
-      return Cruise.objects.get()
-    except Cruise.DoesNotExist:
-      raise ValueError('No current cruise found"')
+    while True:
+      try:
+        return Cruise.objects.get()
+      except Cruise.DoesNotExist:
+        raise ValueError('No current cruise found"')
+      except django.db.utils.OperationalError as e:
+        logging.warning('_get_cruise_object() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   #############################
   def _get_logger_object(self, logger_id):
     """Helper function for getting logger object from cruise and
     name. Raise exception if it does not exist."""
-    try:
-      return Logger.objects.get(name=logger_id)
-    except Logger.DoesNotExist:
-      raise ValueError('No logger %s' % logger_id)
+    while True:
+      try:
+        return Logger.objects.get(name=logger_id)
+      except Logger.DoesNotExist:
+        raise ValueError('No logger %s' % logger_id)
+      except django.db.utils.OperationalError as e:
+        logging.warning('_get_logger_object() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   #############################
   def _get_logger_config_object(self, logger_id, mode=None):
@@ -74,37 +88,49 @@ class DjangoServerAPI(ServerAPI):
     logger_id. If mode is specified, get logger's config in that mode
     (or None if no config). If mode is None, get logger's
     current_config."""
-    try:
-      if mode is None:
-        logger = self._get_logger_object(logger_id)
-        return logger.config
-      else:
-        return LoggerConfig.objects.get(logger__name=logger_id,
-                                        modes__name=mode)
-    except LoggerConfig.DoesNotExist:
-      # If we didn't find a config, maybe there isn't one, which we
-      # should warn about. But maybe the mode or cruise_id themselves
-      # are undefined, which should be an error.
-      if not Cruise.objects.count():
-        raise ValueError('No cruise defined')
-      if not Logger.objects.filter(name=logger_id).count():
-        raise ValueError('No logger "%s" defined' % logger_id)
-      if not Mode.objects.filter(name=mode).count():
-        raise ValueError('No such mode "%s" defined' % mode)
+    while True:
+      try:
+        if mode is None:
+          logger = self._get_logger_object(logger_id)
+          return logger.config
+        else:
+          return LoggerConfig.objects.get(logger__name=logger_id,
+                                          modes__name=mode)
+      except LoggerConfig.DoesNotExist:
+        # If we didn't find a config, maybe there isn't one, which we
+        # should warn about. But maybe the mode or cruise_id themselves
+        # are undefined, which should be an error.
+        if not Cruise.objects.count():
+          raise ValueError('No cruise defined')
+        if not Logger.objects.filter(name=logger_id).count():
+          raise ValueError('No logger "%s" defined' % logger_id)
+        if not Mode.objects.filter(name=mode).count():
+          raise ValueError('No such mode "%s" defined' % mode)
 
-      # If cruise, logger and mode are defined, we're just lacking a
-      # config for this particular combination.
-      logging.warning('No such logger/mode (%s/%s)', logger_id, mode)
-      return None
+        # If cruise, logger and mode are defined, we're just lacking a
+        # config for this particular combination.
+        logging.warning('No such logger/mode (%s/%s)', logger_id, mode)
+        return None
+      except django.db.utils.OperationalError as e:
+        logging.warning('_get_logger_config_object() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   #############################
   def _get_logger_config_object_by_name(self, config_name):
     """Helper function for getting LoggerConfig object from
     config name. Raise exception if it does not exist."""
-    try:
-      return LoggerConfig.objects.get(name=config_name)
-    except LoggerConfig.DoesNotExist:
-      raise ValueError('No config %s in cruise' % config_name)
+    while True:
+      try:
+        return LoggerConfig.objects.get(name=config_name)
+      except LoggerConfig.DoesNotExist:
+        raise ValueError('No config %s in cruise' % config_name)
+      except django.db.utils.OperationalError as e:
+        logging.warning('_get_logger_config_object_by_name() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   #############################
   # API methods below are used in querying/modifying the API for the
@@ -138,10 +164,17 @@ class DjangoServerAPI(ServerAPI):
   def get_default_mode(self):
     """Get the name of the default mode for current cruise
     from the data store."""
-    cruise = self._get_cruise_objects.get()
-    if cruise.default_mode:
-      return cruise.default_mode.name
-    return None
+    while True:
+      try:
+        cruise = self._get_cruise_objects.get()
+        if cruise.default_mode:
+          return cruise.default_mode.name
+        return None
+      except django.db.utils.OperationalError as e:
+        logging.warning('_get_default_mode() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   def get_logger(self, logger):
@@ -152,14 +185,21 @@ class DjangoServerAPI(ServerAPI):
   def get_loggers(self):
     """Get a dict of {logger_id:logger_spec,...} defined for the
     current cruise."""
-    loggers = Logger.objects.all()
-    if not loggers:
-      raise ValueError('No loggers found in cruise')
-    return {
-      logger.name:{'configs': self.get_logger_config_names(logger.name),
-                   'active': self.get_logger_config_name(logger.name)}
-      for logger in loggers
-    }
+    while True:
+      try:
+        loggers = Logger.objects.all()
+        if not loggers:
+          raise ValueError('No loggers found in cruise')
+        return {
+          logger.name:{'configs': self.get_logger_config_names(logger.name),
+                       'active': self.get_logger_config_name(logger.name)}
+          for logger in loggers
+        }
+      except django.db.utils.OperationalError as e:
+        logging.warning('_get_loggers() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   def get_logger_config(self, config_name):
@@ -196,11 +236,17 @@ class DjangoServerAPI(ServerAPI):
     > api.get_logger_config_names('NBP1700', 'knud')
           ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
     """
-    try:
-      return [config.name for config in
-              LoggerConfig.objects.filter(logger__name=logger_id)]
-    except LoggerConfig.DoesNotExist:
-      raise ValueError('No configs found for logger %d' % logger_id)
+    while True:
+      try:
+        return [config.name for config in
+                LoggerConfig.objects.filter(logger__name=logger_id)]
+      except LoggerConfig.DoesNotExist:
+        raise ValueError('No configs found for logger %d' % logger_id)
+      except django.db.utils.OperationalError as e:
+        logging.warning('get_logger_config_names() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   # Methods for manipulating the desired state via API to indicate
@@ -208,51 +254,67 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def set_active_mode(self, mode):
     """Set the current mode of the current cruise in the data store."""
-    cruise = self._get_cruise_object()
-    try:
-      mode_obj = Mode.objects.get(name=mode)
-    except Mode.DoesNotExist:
-      raise ValueError('Cruise has no mode %s' % mode)
-    cruise.current_mode = mode_obj
-    cruise.save()
+    while True:
+      try:
+        cruise = self._get_cruise_object()
+        try:
+          mode_obj = Mode.objects.get(name=mode)
+        except Mode.DoesNotExist:
+          raise ValueError('Cruise has no mode %s' % mode)
+        cruise.current_mode = mode_obj
+        cruise.save()
 
-    # Store the fact that our mode has been changed.
-    CruiseState(cruise=cruise, current_mode=mode_obj).save()
+        # Store the fact that our mode has been changed.
+        CruiseState(cruise=cruise, current_mode=mode_obj).save()
 
-    for logger in Logger.objects.filter(cruise=cruise):
-      logger_id = logger.name
-      new_config = self._get_logger_config_object(logger_id=logger_id,
-                                                  mode=mode)
-      # Save new config and note that its state has been updated
-      logger.config = new_config
-      logger.save()
-      LoggerConfigState(logger=logger, config=new_config, pid=0,
-                        running=False).save()
+        for logger in Logger.objects.filter(cruise=cruise):
+          logger_id = logger.name
+          new_config = self._get_logger_config_object(logger_id=logger_id,
+                                                      mode=mode)
+          # Save new config and note that its state has been updated
+          logger.config = new_config
+          logger.save()
+          LoggerConfigState(logger=logger, config=new_config, pid=0,
+                            running=False).save()
 
-    # Notify any update_callbacks that wanted to be called when the state of
-    # the world changes.
-    logging.info('Signaling update')
-    self.signal_update()
+        # Notify any update_callbacks that wanted to be called when the state of
+        # the world changes.
+        logging.info('Signaling update')
+        self.signal_update()
+        return
+      except django.db.utils.OperationalError as e:
+        logging.warning('set_active_mode() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   def set_active_logger_config(self, logger, config_name):
     """Set specified logger to new config."""
-    logger = self._get_logger_object(logger)
-    new_config = self._get_logger_config_object_by_name(config_name)
-    if not new_config.logger == logger:
-      raise ValueError('Config %s is not compatible with logger %s)'
-                       % (config_name, logger))
-    logger.config = new_config
-    logger.save()
+    while True:
+      try:
+        logger = self._get_logger_object(logger)
+        new_config = self._get_logger_config_object_by_name(config_name)
+        if not new_config.logger == logger:
+          raise ValueError('Config %s is not compatible with logger %s)'
+                           % (config_name, logger))
+        logger.config = new_config
+        logger.save()
 
-    # Save that we've updated the logger's config
-    LoggerConfigState(logger=logger, config=new_config, pid=0,
-                      running=False).save()
+        # Save that we've updated the logger's config
+        LoggerConfigState(logger=logger, config=new_config, pid=0,
+                          running=False).save()
 
-    # Notify any update_callbacks that wanted to be called when the state of
-    # the world changes.
-    logging.info('Signaling update')
-    self.signal_update()
+        # Notify any update_callbacks that wanted to be called when the state of
+        # the world changes.
+        logging.info('Signaling update')
+        self.signal_update()
+        return
+      except django.db.utils.OperationalError as e:
+        logging.warning('set_active_logger_config() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   #############################
   # API method to register a callback. When the data store changes,
@@ -278,59 +340,72 @@ class DjangoServerAPI(ServerAPI):
   def update_status(self, status):
     """Save/register the loggers' retrieved status report with the API."""
     logging.debug('Got status: %s', status)
-    now = datetime_obj()
-    try:
-      for logger_id, logger_report in status.items():
-        logger_config = logger_report.get('config', None)
-        logger_errors = logger_report.get('errors', None)
-        logger_pid = logger_report.get('pid', None)
-        logger_failed = logger_report.get('failed', None)
-        logger_running = logger_report.get('running', None)
-
-        # Get the most recent corresponding LoggerConfigState from
-        # datastore. If there isn't a most recent, create a dummy that
-        # will get filled in.
+    while True:
+      try:
+        now = datetime_obj()
         try:
-          # Get the latest LoggerConfigState for this logger
-          stored_state = LoggerConfigState.objects.filter(
-            logger__name=logger_id).latest('timestamp')
-        except LoggerConfigState.DoesNotExist:
-          # If no existing LoggerConfigState for logger, create one
-          try:
-            logger = Logger.objects.get(name=logger_id)
-            config = LoggerConfig.objects.get(name=logger_config, logger=logger)
-            stored_state = LoggerConfigState(logger=logger, config=config,
-                                             running=False, failed=False,
-                                             pid=0, errors='')
+          for logger_id, logger_report in status.items():
+            logger_config = logger_report.get('config', None)
+            logger_errors = logger_report.get('errors', None)
+            logger_pid = logger_report.get('pid', None)
+            logger_failed = logger_report.get('failed', None)
+            logger_running = logger_report.get('running', None)
+
+            # Get the most recent corresponding LoggerConfigState from
+            # datastore. If there isn't a most recent, create one and
+            # move on to the next logger.
+            try:
+              # Get the latest LoggerConfigState for this logger
+              stored_state = LoggerConfigState.objects.filter(
+                logger__name=logger_id).latest('timestamp')
+            except LoggerConfigState.DoesNotExist:
+              # If no existing LoggerConfigState for logger, create one
+              try:
+                logger = Logger.objects.get(name=logger_id)
+                config = LoggerConfig.objects.get(name=logger_config,
+                                                  logger=logger)
+                stored_state = LoggerConfigState(logger=logger, config=config,
+                                                 running=logger_running,
+                                                 failed=logger_failed,
+                                                 pid=logger_pid,
+                                                 errors=logger_errors)
+                stored_state.save()
+                continue
+              except Logger.DoesNotExist:
+                continue
+
+            # Compare stored LoggerConfigState with the new status. If there
+            # have been changes, reset pk, which will create a new object
+            # when we save.
+            if (logger_errors or
+                not stored_state.running == logger_running or
+                not stored_state.failed == logger_failed or
+                not stored_state.pid == logger_pid):
+              # Otherwise, add changes and save as a new object
+              stored_state.pk = None
+              stored_state.running = logger_running
+              stored_state.failed = logger_failed
+              stored_state.pid = logger_pid
+              stored_state.errors = '\n'.join(logger_errors)
+
+            # Saving will update the last_checked field, regardless of
+            # whether we made other changes.
             stored_state.save()
-          except Logger.DoesNotExist:
-            logging.warning('Logger "%s" not found in update_status', logger_id)
-            continue
 
-        # Compare stored LoggerConfigState with the new status. If there
-        # have been changes, reset pk, which will create a new object
-        # when we save.
-        if (logger_errors or
-            not stored_state.running == logger_running or
-            not stored_state.failed == logger_failed or
-            not stored_state.pid == logger_pid):
-          # Otherwise, add changes and save as a new object
-          stored_state.pk = None
-          stored_state.running = logger_running
-          stored_state.failed = logger_failed
-          stored_state.pid = logger_pid
-          stored_state.errors = '\n'.join(logger_errors)
+          # Made it through loop of all loggers
+          return
 
-        # Update last_checked field and save, regardless of whether we
-        # made other changes.
-        stored_state.last_checked = now
-        stored_state.save()
-    except django.core.exceptions.ObjectDoesNotExist:
-      logging.warning('Got Django DoesNotExist Error on attempted status '
-                      'update; database may be changing - skipping update.')
-    except django.db.utils.IntegrityError:
-      logging.warning('Got Django Integrity Error on attempted status '
-                      'update; database may be changing - skipping update.')
+        except django.core.exceptions.ObjectDoesNotExist:
+          logging.warning('Got Django DoesNotExist Error on attempted status '
+                          'update; database may be changing - skipping update.')
+        except django.db.utils.IntegrityError:
+          logging.warning('Got Django Integrity Error on attempted status '
+                          'update; database may be changing - skipping update.')
+      except django.db.utils.OperationalError as e:
+        logging.warning('update_status() '
+                        'Got DjangoOperationalError - trying again.')
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   # Methods for getting logger status data from API
@@ -341,51 +416,61 @@ class DjangoServerAPI(ServerAPI):
     logger. If since_timestamp is specified, retrieve all status reports
     since that time."""
     status = {}
+    while True:
+      try:
+        if since_timestamp is None:
+          # We just want the latest config state message from each logger
+          for logger in Logger.objects.all():
+            try:
+              lcs = LoggerConfigState.objects.filter(
+                logger=logger).latest('last_checked')
 
-    def _add_lcs_to_status(lcs):
-      """Helper function - add retrieved record to the status report."""
-      # May be loggers that haven't been run yet
-      if not lcs.last_checked:
-        return
-      lcs_timestamp = lcs.last_checked.timestamp()
+              if not lcs.last_checked:
+                continue
 
-      # Add entry to our status report, indexed by timestamp
-      if not lcs_timestamp in status:
-        status[lcs_timestamp] = {}
-      id = lcs.logger.name
-      status[lcs_timestamp][id] = {
-        'config':lcs.config.name if lcs.config else None,
-        'running':lcs.running,
-        'failed':lcs.failed,
-        'pid':lcs.pid,
-        'errors':lcs.errors.split('\n')
-      }
-
-    if since_timestamp is None:
-      # We just want the latest config state message from each logger
-      for logger in Logger.objects.all():
-        try:
-          lcs = LoggerConfigState.objects.filter(
-            logger=logger).latest('last_checked')
-          _add_lcs_to_status(lcs)
-        except LoggerConfigState.DoesNotExist:
-          continue
-    else:
-      # We want all status updates since specified timestamp
-      since_datetime = datetime_obj_from_timestamp(since_timestamp)
-      for lcs in LoggerConfigState.objects.filter(
-          last_checked__gt=since_datetime):
-        _add_lcs_to_status(lcs)
-    return status
+              lcs_timestamp = lcs.last_checked.timestamp()
+              # Add entry to our status report, indexed by timestamp
+              if not lcs_timestamp in status:
+                status[lcs_timestamp] = {}
+              id = lcs.logger.name
+              status[lcs_timestamp][id] = {
+                'config':lcs.config.name if lcs.config else None,
+                'running':lcs.running,
+                'failed':lcs.failed,
+                'pid':lcs.pid,
+                'errors':lcs.errors.split('\n')
+              }
+            except LoggerConfigState.DoesNotExist:
+              logging.warning('no LoggerConfigState for %s', logger)
+              continue
+        else:
+          # We want all status updates since specified timestamp
+          since_datetime = datetime_obj_from_timestamp(since_timestamp)
+          for lcs in LoggerConfigState.objects.filter(
+              last_checked__gt=since_datetime):
+            _add_lcs_to_status(lcs)
+        return status
+      except django.db.utils.OperationalError as e:
+        logging.warning('set_active_logger_config() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   # Methods for storing/retrieving messages from servers/loggers/etc.
   ############################
   def message_log(self, source, user, log_level, message):
     """Timestamp and store the passed message."""
-
-    LogMessage(source=source, user=user,
-               log_level=log_level, message=message).save()
+    while True:
+      try:
+        LogMessage(source=source, user=user,
+                   log_level=log_level, message=message).save()
+        return
+      except django.db.utils.OperationalError as e:
+        logging.warning('message_log() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   def get_message_log(self, source=None, user=None, log_level=logging.INFO,
@@ -395,21 +480,28 @@ class DjangoServerAPI(ServerAPI):
     log_level is omitted, retrieve at all levels. If since_timestamp is
     omitted, only retrieve most recent message.
     """
-    logs = LogMessage.objects.filter(log_level__gte=log_level)
-    if source:
-      logs = logs.filter(source=source)
-    if user:
-      logs = logs.filter(user=user)
+    while True:
+      try:
+        logs = LogMessage.objects.filter(log_level__gte=log_level)
+        if source:
+          logs = logs.filter(source=source)
+        if user:
+          logs = logs.filter(user=user)
 
-    if since_timestamp is None:
-      message = logs.latest('timestamp')
-      return [(message.timestamp.timestamp(), message.source,
-               message.user, message.log_level, message.message)]
-    else:
-      since_datetime = datetime_obj_from_timestamp(since_timestamp)
-      logs = logs.filter(timestamp__gt=since_datetime).order_by('timestamp')
-      return [(message.timestamp.timestamp(), message.source, message.user,
-               message.log_level, message.message) for message in logs]
+        if since_timestamp is None:
+          message = logs.latest('timestamp')
+          return [(message.timestamp.timestamp(), message.source,
+                   message.user, message.log_level, message.message)]
+        else:
+          since_datetime = datetime_obj_from_timestamp(since_timestamp)
+          logs = logs.filter(timestamp__gt=since_datetime).order_by('timestamp')
+          return [(message.timestamp.timestamp(), message.source, message.user,
+                   message.log_level, message.message) for message in logs]
+      except django.db.utils.OperationalError as e:
+        logging.warning('get_message_log() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   #############################
   # Methods to modify the data store
@@ -499,7 +591,7 @@ class DjangoServerAPI(ServerAPI):
           logger_config_name = mode_dict.get(logger_name, None)
           if logger_config_name and logger_config_name == config_name:
             try:
-              logging.info('modes: %s', Mode.objects.filter(name=mode_name, cruise=cruise))
+              logging.debug('modes: %s', Mode.objects.filter(name=mode_name, cruise=cruise))
 
               mode = Mode.objects.get(name=mode_name, cruise=cruise)
             except Mode.DoesNotExist:

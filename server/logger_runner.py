@@ -187,7 +187,7 @@ class LoggerRunner:
     """Is the passed process alive?
     """
     return process and process.is_alive()
-      
+
   ############################
   def set_configs(self, new_configs):
     """Start/stop loggers as necessary to move from current configs
@@ -234,7 +234,7 @@ class LoggerRunner:
       if new_config == current_config:
         logging.debug('Logger %s config didn\'t change. Skipping', logger)
         return
-      
+
       config_name = new_config.get('name', 'Unknown') if new_config else None
       logging.info('Setting logger %s to config %s', logger, config_name)
 

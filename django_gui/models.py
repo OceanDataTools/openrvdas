@@ -100,7 +100,7 @@ class LoggerConfigState(models.Model):
   config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
                              blank=True, null=True)
   timestamp = models.DateTimeField(auto_now_add=True)
-  last_checked = models.DateTimeField(blank=True, null=True)
+  last_checked = models.DateTimeField(auto_now=True)
 
   running = models.NullBooleanField(default=False, blank=True, null=True)
   failed = models.BooleanField(default=False, blank=True)

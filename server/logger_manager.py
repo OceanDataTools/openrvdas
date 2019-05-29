@@ -149,7 +149,7 @@ class WriteToAPILoggingHandler(logging.Handler):
   def __init__(self, api):
     super().__init__()
 
-    API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'    
+    API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'
     self.api = api
     self.formatter = logging.Formatter(API_LOGGING_FORMAT)
 
@@ -259,7 +259,6 @@ class LoggerManager:
       status = self.logger_runner.check_loggers(manage=True, clear_errors=False)
       message = {'status': status}
       self._process_logger_runner_message(message)
-
       time.sleep(self.interval)
 
   ############################
@@ -289,7 +288,7 @@ class LoggerManager:
         self.logger_runner.set_configs(new_configs)
         #self._send_status()
 
-        
+
   ############################
   def _send_status_loop(self):
     """Iteratively grab status messages from the api and send them out as
@@ -301,12 +300,12 @@ class LoggerManager:
     Websockets are async, so we need to use an inner function and a
     new event loop to handle the whole async/await thing.
     """
-    
-    ############################    
+
+    ############################
     async def _async_send_status_loop(self):
       """Inner async function that actually implements the fetching and
       sending of status messages."""
-      
+
       # We stash previous_configs so that we know not to send them if
       # they haven't changed since last check. We keep the raw
       # previous_status separately, because we have to do some
@@ -324,7 +323,7 @@ class LoggerManager:
       # update every N seconds.
       SEND_EVERY_N_SECONDS = 5
       last_status_sent = 0
-      
+
       while not self.quit_flag:
         try:
           logging.info('Connecting to websocket: "%s"', ws_name)
@@ -377,10 +376,10 @@ class LoggerManager:
               if time.time() > last_status_sent + SEND_EVERY_N_SECONDS:
                 logger_status_changed = True
                 last_status_sent = time.time()
-                
+
               if not logger_status_changed:
                 logger_status = {}
-                
+
               status_message = {
                 'type':'publish',
                 'data':{'timestamp': time.time(),
@@ -488,7 +487,7 @@ if __name__ == '__main__':
                       action='store', default=':8766',
                       help='Address at which to connect to cached data server '
                       'to send status updates.')
-  
+
   parser.add_argument('--start_data_server', dest='start_data_server',
                       action='store_true', default=False,
                       help='Whether to start our own cached data server.')
@@ -540,7 +539,7 @@ if __name__ == '__main__':
   if args.stderr_file:
     stderr_writers = [TextFileWriter(args.stderr_file)]
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
-    
+
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
