@@ -197,7 +197,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -209,7 +208,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:PCOD'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -245,7 +243,6 @@ configs:
           kwargs:
             prefix: PCOD
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -266,7 +263,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:PCOD'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -295,7 +291,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -307,7 +302,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:adcp'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -343,7 +337,6 @@ configs:
           kwargs:
             prefix: adcp
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -364,7 +357,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:adcp'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -393,7 +385,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -405,7 +396,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:eng1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -441,7 +431,6 @@ configs:
           kwargs:
             prefix: eng1
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -462,7 +451,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:eng1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -491,7 +479,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -503,7 +490,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:gp02'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -539,7 +525,6 @@ configs:
           kwargs:
             prefix: gp02
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -560,7 +545,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:gp02'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -589,7 +573,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -601,7 +584,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:grv1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -637,7 +619,6 @@ configs:
           kwargs:
             prefix: grv1
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -658,7 +639,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:grv1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -687,7 +667,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -699,7 +678,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:gyr1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -735,7 +713,6 @@ configs:
           kwargs:
             prefix: gyr1
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -756,7 +733,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:gyr1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -785,7 +761,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -797,7 +772,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:hdas'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -833,7 +807,6 @@ configs:
           kwargs:
             prefix: hdas
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -854,7 +827,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:hdas'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -883,7 +855,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -895,7 +866,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:knud'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -931,7 +901,6 @@ configs:
           kwargs:
             prefix: knud
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -952,7 +921,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:knud'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -981,7 +949,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -993,7 +960,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:mbdp'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1029,7 +995,6 @@ configs:
           kwargs:
             prefix: mbdp
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1050,7 +1015,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:mbdp'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1079,7 +1043,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1091,7 +1054,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:mwx1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1127,7 +1089,6 @@ configs:
           kwargs:
             prefix: mwx1
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1148,7 +1109,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:mwx1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1177,7 +1137,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1189,7 +1148,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:pco2'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1225,7 +1183,6 @@ configs:
           kwargs:
             prefix: pco2
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1246,7 +1203,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:pco2'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1275,7 +1231,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1287,7 +1242,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:pguv'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1323,7 +1277,6 @@ configs:
           kwargs:
             prefix: pguv
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1344,7 +1297,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:pguv'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1373,7 +1325,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1385,7 +1336,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:rtmp'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1421,7 +1371,6 @@ configs:
           kwargs:
             prefix: rtmp
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1442,7 +1391,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:rtmp'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1471,7 +1419,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1483,7 +1430,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:s330'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1519,7 +1465,6 @@ configs:
           kwargs:
             prefix: s330
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1540,7 +1485,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:s330'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1569,7 +1513,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1581,7 +1524,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:seap'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1617,7 +1559,6 @@ configs:
           kwargs:
             prefix: seap
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1638,7 +1579,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:seap'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1667,7 +1607,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1679,7 +1618,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:svp1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1715,7 +1653,6 @@ configs:
           kwargs:
             prefix: svp1
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1736,7 +1673,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:svp1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1765,7 +1701,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1777,7 +1712,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:tsg1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1813,7 +1747,6 @@ configs:
           kwargs:
             prefix: tsg1
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1834,7 +1767,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:tsg1'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1863,7 +1795,6 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1875,7 +1806,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:tsg2'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
@@ -1911,7 +1841,6 @@ configs:
           kwargs:
             prefix: tsg2
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
         - class: NetworkWriter
           kwargs:
@@ -1932,7 +1861,6 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:tsg2'
-        - class: ToJSONTransform
         writers:
           class: NetworkWriter
           kwargs:
