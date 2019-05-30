@@ -22,9 +22,10 @@
 {# Show server status up top.                                               #}
 <table>
   <tr id='time_row'>
-    <td colspan=4  style='background-color:white'>
+    <td style='background-color:white'>
       Now: <span id='time_td'></span>
-
+    </td>
+    <td>
       <button id="server_messages" type="submit"
               onclick="window.open('../server_messages/30', '_blank', 'location=yes,height=200,scrollbars=yes,status=yes');">
         server messages
@@ -32,12 +33,12 @@
     </td>
   </tr>
   <tr id='server_time_row'>
-    <td colspan=4>
+    <td colspan=2>
       <span id='server_time_td'>no connection - is status server running?</span>
     </td>
   </tr>
   <tr id='status_time_row'>
-    <td colspan=4>
+    <td colspan=2>
       <span id='status_time_td'>no connection - is logger manager running?</span>
     </td>
   </tr>

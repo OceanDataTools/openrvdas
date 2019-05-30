@@ -19,14 +19,14 @@
 ////////////////////////////////////////////////////////////////////
 // Widget-specific functions
 
-//function resize_table() {
-//  var window_height = window.innerHeight;
-//  console.log('RESIZED to ' + window_height);
-//  var server_message_div = document.getElementById('server_message_div');
-//  console.log('Table height now ' + server_message_div.style.height);
-//  server_message_div.style.height = (window_height - 100) + 'px';
-//}
-//window.addEventListener('resize', resize_table);
+function resize_table() {
+  var window_height = window.innerHeight;
+  console.log('RESIZED to ' + window_height);
+  var server_message_table = document.getElementById('server_message_table');
+  console.log('Table height now ' + server_message_table.style.height);
+  server_message_table.style.height = (window_height - 175) + 'px';
+}
+window.addEventListener('resize', resize_table);
 
 ///////////////////////////
 function initial_send_message() {

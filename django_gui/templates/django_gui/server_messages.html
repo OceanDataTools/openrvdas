@@ -38,15 +38,23 @@
   {# <meta http-equiv='refresh' content='3'> #}
 
   <style>
-    .scrollTable tbody{
-    display:block;
-    float:left;
-    overflow:auto;
-    height:400px;
-    width:100%;
+    .fixed_header{
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
     }
-    .scrollTable thead {}
-    .scrollTable th, td {}
+    .fixed_header tbody{
+      display:block;
+      overflow:auto;
+      height:450px;
+      width:100%;
+    }
+    .fixed_header thead tr{
+      display:block;
+    }
+    .fixed_header td{
+      word-wrap:break-word
+    }
   </style>
 </head>
 
@@ -55,16 +63,16 @@
 {# ######################################################################## #}
 <table>
   <tr id='log_level_row'>
-  </tr>
 </table>
-<div class=scrollTable id='server_message_div'>
-<table>
+<table class='fixed_header' id='server_message_table'>
   <thead>
+    <tr>
+      <th>time</th><th>level</th><th>message</th>
+    </tr>
   </thead>
   <tbody id='server_messages'>
   </tbody>
 </table>
-</div>
 
 <script type='text/javascript'>
   var log_level_row = document.getElementById('log_level_row');
@@ -82,7 +90,7 @@
     log_level_row.appendChild(td);
   }
 
-//resize_table(); // Defined in server_messages.html.js
+resize_table(); // Defined in server_messages.html.js
 
 </script>
 {% endblock content %}
