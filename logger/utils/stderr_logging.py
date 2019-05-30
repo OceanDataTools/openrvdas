@@ -80,7 +80,7 @@ class StdErrLoggingHandler(logging.Handler):
     message = self.formatter.format(record)
       
     if type(self.writers) is list:
-      [writer.write(message) for writer in self.writers]
+      [writer.write(message) for writer in self.writers if writer]
     else:
       self.writers.write(message)
     logging.root.setLevel(log_level)

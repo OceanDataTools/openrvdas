@@ -39,6 +39,7 @@ own output:
 """
 import argparse
 import logging
+import pprint
 import re
 import sys
 import time
@@ -112,11 +113,13 @@ class ListenerFromLoggerConfig(Listener):
   def _kwargs_from_config(self, config_dict):
     """Parse a kwargs from a JSON string, making exceptions for keywords
     'readers', 'transforms', and 'writers' as internal class references."""
-    kwargs = {}
-
+    if not config_dict:
+      return {}
+    
     # First we pull out the 'stderr_writers' spec as a special case so
     # that we can catch and properly route stderr output from
     # parsing/creation of the other keyword args.
+    kwargs = {}
     stderr_writers_spec = config_dict.get('stderr_writers', None)
     if stderr_writers_spec:
       stderr_writers = self._class_kwargs_from_config(stderr_writers_spec)
@@ -171,8 +174,11 @@ class ListenerFromLoggerConfig(Listener):
 
     # Instantiate!
     logging.debug('Instantiating {}({})'.format(class_name, kwargs))
-    component = class_const(**kwargs)
-    return component
+    try:
+      component = class_const(**kwargs)
+    except (TypeError, ValueError) as e:
+      raise ValueError('Class {}: {}\nClass definition: {}'.format(
+        class_name, e, pprint.pformat(class_json)))
 
 ################################################################################
 class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
