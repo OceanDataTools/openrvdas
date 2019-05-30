@@ -179,6 +179,7 @@ class ListenerFromLoggerConfig(Listener):
     except (TypeError, ValueError) as e:
       raise ValueError('Class {}: {}\nClass definition: {}'.format(
         class_name, e, pprint.pformat(class_json)))
+    return component
 
 ################################################################################
 class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):

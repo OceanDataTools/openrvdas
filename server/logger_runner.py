@@ -333,6 +333,7 @@ class LoggerRunner:
     # The multiprocessing way of starting a process
     try:
       proc = multiprocessing.Process(
+        name=logger,
         target=_create_listener,
         args=(config, self.logger_log_level),
         daemon=True)
