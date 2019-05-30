@@ -117,8 +117,13 @@ from urllib.parse import unquote
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
-from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
+from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
+from logger.utils.stderr_logging import setUpStdErrLogging
+from logger.utils.stderr_logging import StdErrLoggingHandler
+from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.writers.text_file_writer import TextFileWriter
+from logger.writers.composed_writer import ComposedWriter
+from logger.writers.network_writer import NetworkWriter
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 
@@ -539,6 +544,17 @@ if __name__ == '__main__':
   if args.stderr_file:
     stderr_writers = [TextFileWriter(args.stderr_file)]
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
+
+  # If we have (or are going to have) a cached data server, set up
+  # logging of stderr to it. Use a special format that prepends the
+  # log level to the message, to aid in filtering.
+  if args.data_server_udp:
+    stderr_network_writer = ComposedWriter(
+      transforms=ToDASRecordTransform(field_name='stderr:logger_manager'),
+      writers=NetworkWriter(network=args.data_server_udp))
+    stderr_format = '%(levelno)d\t%(levelname)s\t' + DEFAULT_LOGGING_FORMAT
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_network_writer,
+                                                        stderr_format))
 
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]

@@ -27,26 +27,6 @@ from logger.utils.read_config import parse
 from django_gui.settings import HOSTNAME
 from django_gui.settings import WEBSOCKET_DATA_SERVER
 
-# Convenience dicts we pass to the server_message page to
-# translate logging levels to names and colors.
-LOG_LEVELS = {
-  0:  'ALL',
-  10: 'DEBUG',
-  20: 'INFO',
-  30: 'WARNING',
-  40: 'ERROR',
-  50: 'CRITICAL'
-}
-
-LOG_LEVEL_COLORS = {
-  0:  '',
-  10: '',
-  20: '',
-  30: '#FFFF99',
-  40: '#FF9999',
-  50: '#FF6666'
-}
-
 ############################
 # We're going to interact with the Django DB via its API class
 from .django_server_api import DjangoServerAPI
@@ -132,23 +112,14 @@ def index(request):
   return render(request, 'django_gui/index.html', template_vars)
 
 ################################################################################
-# Page to display messages from the specified server
-#def server_messages(request, log_level=logging.INFO,
-#                    cruise_id=None, source=None):
-def server_messages(request, path):
+# Page to display messages from the openrvdas server
+def server_messages(request, log_level=logging.INFO):
   global api
   if api is None:
     api = DjangoServerAPI()
 
-  path_pieces = path.split('/')
-  log_level = path_pieces[0] if len(path_pieces) > 0 else logging.INFO
-  source = path_pieces[1] if len(path_pieces) > 1 else None
-
   template_vars = {'websocket_server': WEBSOCKET_DATA_SERVER,
-                   'log_level': int(log_level),
-                   'log_levels': LOG_LEVELS,
-                   'log_level_colors': LOG_LEVEL_COLORS,
-                   'source': source}
+                   'log_level': int(log_level)}
   return render(request, 'django_gui/server_messages.html', template_vars)
 
 ################################################################################

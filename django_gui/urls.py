@@ -29,9 +29,8 @@ urlpatterns = [
   path('logout/', auth_views.logout,
       {'next_page': '../'}, name='logout'),
 
-  # "path" is /<int:log_level>/<str:cruise_id>/<str:source>/ where any
-  # or all fields may be empty
-  path('server_messages/<path:path>', views.server_messages,
+  path('server_messages', views.server_messages, name='server_messages'),
+  path('server_messages/<int:log_level>', views.server_messages,
        name='server_messages'),
 
   path('edit_config/<str:logger_id>',

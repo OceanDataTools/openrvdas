@@ -2,26 +2,51 @@
 
 {% block content %}
 
+<script type='text/javascript'>
+  // Need to define for following JS scripts. For now, count on the
+  // relevant variables being set by Django.
+  var WEBSOCKET_SERVER = '{{ websocket_server }}';
+  var FIELD_LIST = ['stderr:logger_manager'];
+
+  // These two variables will be needed by server_messages.html.js
+  var LOG_LEVEL = {{ log_level }};
+  
+  // Convenience dicts to translate logging levels to names and colors.
+  LOG_LEVELS = {
+    0:  'ALL',
+    10: 'DEBUG',
+    20: 'INFO',
+    30: 'WARNING',
+    40: 'ERROR',
+    50: 'CRITICAL'
+  }
+
+  LOG_LEVEL_COLORS = {
+    0:  '',
+    10: '',
+    20: '',
+    30: '#FFFF99',
+    40: '#FF9999',
+    50: '#FF6666'
+  }
+</script>
+<script src='/static/django_gui/server_messages.html.js'></script>
+<script src='/static/django_gui/websocket.js'></script>
+
 <head>
   <title>Server messages</title>
-  {# <meta http-equiv="refresh" content="3"> #}
+  {# <meta http-equiv='refresh' content='3'> #}
 
   <style>
     .scrollTable tbody{
     display:block;
+    float:left;
     overflow:auto;
-    height:200px;
+    height:400px;
     width:100%;
     }
-    .scrollTable thead tr{
-    display: table-header-group;
-    }
-    
-    .scrollTable thead {
-    }
-    
-    .scrollTable th, td {
-    }
+    .scrollTable thead {}
+    .scrollTable th, td {}
   </style>
 </head>
 
@@ -29,184 +54,35 @@
 
 {# ######################################################################## #}
 <table>
-  <tr>
-    {% for level, level_name in log_levels.items %}
-    <td>
-      <button onclick="window.location='/server_messages/{{ level }}/{{ source }}'"
-              {% if log_level == level %}
-              style="background-color:gray"
-              {% endif %}
-              >
-        {{ level_name }}
-      </button>
-    </td>
-    {% endfor %}
+  <tr id='log_level_row'>
   </tr>
 </table>
-<div class=scrollTable>
-<table rows=18 cols=80>
+<div class=scrollTable id='server_message_div'>
+<table>
   <thead>
-    <th>time</th><th>source</th><th>user</th><th>level</th><th>message</th></tr>
   </thead>
-  <tbody id="server_messages">
+  <tbody id='server_messages'>
   </tbody>
 </table>
 </div>
 
-{# ######################################################################## #}
-{# Start of Javascript                                                      #}
-<script type="text/javascript">
-
-  //////////////////////////////////////////////////////////////
-  // Connect to the websocket
-  // We're after messages statuses, so append '/messages' path followed
-  // by name of server we want messages from.
-  var ws_addr = "ws://{{ websocket_server }}/messages/{{ log_level }}/{{ source }}";
-  console.log("connecting to: " + ws_addr);
-  var websocket_server = ws_addr;
-
-  //////////////////////////////////////////////////////////////
-  // Generic websocket code - need to pull this out into a separate
-  // file so we're not duplicating it in each of these files.
-  if (! "WebSocket" in window) {
-    alert("Warning: websockets not supported by your Browser!");
-  }
-
-  // Set timer to retry websocket connection if it closes. Interval is
-  // turned off in ws.onopen() if/when we succeed.
-  var retry_interval = 3000;
-  var retry_websocket_connection;
-  var ws;
-  
-  // Try connecting right off the bat
-  connect_websocket();
-
-  function connect_websocket() {
-    console.log("Trying to connect to websocket at " + websocket_server);
-    ws = new WebSocket(websocket_server);
-    
-    ws.onopen = function() {
-      // We've succeeded in opening - don't try anymore
-      console.log("Connected - clearing retry interval");
-      clearTimeout(retry_websocket_connection);
-    };
-
-    ws.onclose = function() { 
-      // websocket is closed.
-      console.log("Connection is closed...");
-
-      // Set page to show that we're not connected
-      on_disconnect();
-
-      // Set up an alarm to sleep, then try re-opening websocket
-      console.log("Setting timer to reconnect");
-      retry_websocket_connection = setTimeout(connect_websocket,retry_interval);
-    };
-
-    ws.onmessage = function (received_message) { 
-      //console.log("Got status update message: " + received_message.data);
-      process_message(JSON.parse(received_message.data));
-    };
-  };
-  
-  window.onbeforeunload = function(event) {
-    console.log("Closing websocket");
-    ws.close();
-  };
-
-  function send(message) {
-    //console.log("Sending message '" + message + "'");
-    ws.send(message);
-    //console.log("Sent!");
-  };
-
-  //////////////////////////////////////////////////////
-  // Start of server_messages.html-specific Javascript
-
-  function on_disconnect() {
-    console.log("Setting buttons to 'disconnected' state");
-    var server_messages = document.getElementById("server_messages");
-    //server_messages.style.backgroundColor = "yellow";
-  }
-
-  function timestamp_to_date(timestamp) {
-    var date = new Date(timestamp*1000);
-    var hours = date.getHours();
-    var minutes = "0" + date.getMinutes();
-    var seconds = "0" + date.getSeconds();
-    var date_str = "";
-    //date_str += hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-    date_str += date.getUTCFullYear() + "-"
-       + ("0" + date.getUTCMonth()).substr(-2) + "-"
-       + ("0" + date.getUTCDate()).substr(-2) + " "
-       + ("0" + date.getUTCHours()).substr(-2) + ":"
-       + ("0" + date.getUTCMinutes()).substr(-2) + ":"
-       + ("0" + date.getUTCSeconds()).substr(-2) + "."
-       + ("00" + date.getMilliseconds()).substr(-3);
-    return date_str;
-  }
-
-  function process_message(message) {
-    // Fill in the values we've received
-    var server_messages = document.getElementById("server_messages");
-    //server_messages.style.backgroundColor = "white";
-
-    // Is display at bottom of table? If so, we'll scroll down after
-    // adding new entries.
-    var page_bottom = server_messages.scrollHeight;
-    var page_position = server_messages.scrollTop+server_messages.clientHeight;
-    var at_bottom = (page_bottom == page_position);
-  
-    var message_length = message.length;
-    for (var i = 0; i < message_length; i++) {
-      var timestamp = timestamp_to_date(message[i][0]);
-      var source    = message[i][1];
-      var user      = message[i][2];
-      var mesg_log_level = message[i][3];
-      var mesg      = message[i][4];
-      var tr = document.createElement("tr");
-      var td = document.createElement("td");
-
-      td.appendChild(document.createTextNode(timestamp));
-      tr.appendChild(td);
-
-      var td = document.createElement("td");
-      td.appendChild(document.createTextNode(source));
-      tr.appendChild(td);
-
-      var td = document.createElement("td");
-      td.appendChild(document.createTextNode(user));
-      tr.appendChild(td);
-
-      var td = document.createElement("td");
-      var log_level_name = "-";
-      {% for level, level_name in log_levels.items %}
-        if (mesg_log_level == {{ level }}) {
-          log_level_name = "{{ level_name }}";
-        }
-      {% endfor %}
-      td.appendChild(document.createTextNode(log_level_name));
-      tr.appendChild(td);
-
-      var td = document.createElement("td");
-      td.appendChild(document.createTextNode(mesg));
-      tr.appendChild(td);
-
-      // Set message color if it's a warning or error
-      {% for level, level_color in log_level_colors.items %}
-        if (mesg_log_level == {{ level }}) {
-          tr.style.backgroundColor = "{{ level_color }}";
-        }
-      {% endfor %}
-      server_messages.appendChild(tr);
+<script type='text/javascript'>
+  var log_level_row = document.getElementById('log_level_row');
+  for (var level in LOG_LEVELS) {
+    var td = document.createElement('td');
+    var button = document.createElement('button');
+    button.setAttribute('onclick', 
+                        'window.location=\'/server_messages/' + level + '\'');
+    button.setAttribute('type', 'submit');
+    if (level == LOG_LEVEL) {
+      button.setAttribute('style', 'background-color:gray');
     }
-
-    // If window was at bottom before we added new stuff, scroll down
-    // to keep it at the bottom.
-    if (at_bottom) {
-      server_messages.scrollTop = server_messages.scrollHeight + server_messages.clientHeight;
-    }
+    button.innerHTML = LOG_LEVELS[level];
+    td.appendChild(button);
+    log_level_row.appendChild(td);
   }
+
+//resize_table(); // Defined in server_messages.html.js
+
 </script>
-
 {% endblock content %}
