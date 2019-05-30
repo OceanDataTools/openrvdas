@@ -5,6 +5,7 @@
 
 - [Overview - needs and design philosophy](#overview---needs-and-design-philosophy)
   * [Design Philosophy](#design-philosophy)
+- [Quick Start](#quick-start)
 - [Architecture](#architecture)
   * [Running Loggers](#running-loggers)
   * [Controlling Multiple Loggers](#controlling-multiple-loggers)
@@ -30,6 +31,66 @@ Please see [http://openrvdas.org](http://openrvdas.org) and [http://github.com/d
 Every ship will have different requirements, so no single system can hope to accommodate everyone's needs. In addition, those requirements will change from mission to mission and year to year, so no fixed system will be optimal for any length of time.
 
 Because of this, instead of a system, we have focused on designing and building an architecture that allows easy assembly of small, modular components into whatever system is needed in a given situation.
+
+## Quick Start
+
+The surest (and still simplest) way to get started with OpenRVDAS is to bring up a clean dedicated Ubuntu (16 or 18) or Centos 7 machine in a virtual environment such as [VirtualBox](https://www.virtualbox.org/).
+
+Install ``git``, then retrieve a copy of the code repository with
+```
+cd /tmp
+git clone https://github.com/davidpablocohn/openrvdas
+```
+Then, __as root__, run the installation script appropriate to your distribution:
+```
+source openrvdas/utils/build_openrvdas_ubuntu18.sh
+```
+For demo purposes, just set the passwords (for user, for database) to ``rvdas`` - yeah, I know, I know. But this is for a demo installation. Say "yes" to starting openrvdas service on boot and "no" to Redis. Script will ask if you want to reboot at end of installation; say "yes."
+
+Once you have logged back on, open two terminal windows.
+
+1. The sample cruise configuration file in [test/nmea/NBP1406/NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml) assumes the existence of a set of virtual serial ports; we'll run a script __as user rvdas__ to create those ports and start feeding them sample cruise data:
+```
+  su rvdas
+  cd /opt/openrvdas
+  logger/utils/simulate_serial.py --config test/nmea/NBP1406/serial_sim_NBP1406.yaml --loop
+```
+
+2. In the other window, run a logger to verify that the serial ports are functioning as expected:
+ ```
+  cd /opt/openrvdas
+  logger/listener/listen.py --serial port=/tmp/tty_s330 --write_file -
+ ```
+ 
+ (The "-" says that the listener's TextFileWriter should write what it receives to stdout.)
+
+3. Open a web browser and direct it to http://openrvdas:8000 (assuming you named your openrvdas machine 'openrvdas'). You may need to edit your local host machine's ``/etc/host`` to include the name and IP address of your openrvdas machine for this to work.
+
+ If all has gone well, you will see a cruise management startup page like the one below:
+
+ ![Initial Web Console](images/nbp_initial.png)
+
+ Select the Log in link and log in as user __rvdas__. You should now see a "Load configuration file" button. Select it, and navigate to load the sample cruise definition file at ``test/nmea/NBP1406/NBP1406_cruise.yaml``.
+
+ At this point you should see a table of loggers, all in configuration "off". Scroll to the bottom of the page, where there is a "Mode" selector. Select "monitor" and press "Change mode."
+
+ ![NBP Sample Cruise, Mode off](images/nbp_mode_off.png)
+
+ After a few seconds of startup, the loggers should turn green and switch to "net" configuration, indicating that they are writing UDP to the network (in this case, to port 6224). You can verify this with another listener:
+
+ ```
+  logger/listener/listen.py --network :6224 --write_file -
+ ```
+
+ You can change the active configuration of individual loggers by clicking on the button bearing the name of the current configuration.
+
+4. Open a second browser window and direct it to http://openrvdas:8000/static/widgets/nbp_demo.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
+
+ ![NBP Widget Demo](images/nbp_display.png)
+ 
+ What is going on here is that, in addition to writing raw data to port 6224, the loggers are also configured to send parsed data to 6225, where it is picked up by a CachedDataServer. The web console and display widgets connect to the CachedDataServer via websockets and request data to display.
+
+The sections below describe the architecture and control scripts in greater detail.
 
 ## Architecture
 
