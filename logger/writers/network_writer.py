@@ -30,8 +30,8 @@ class NetworkWriter(Writer):
     super().__init__(input_format=Text)
 
     if network.find(':') == -1:
-      raise ValueError('NetworkWriter network argument must be in '
-                       '\'host:port\' or \':port\' format. Found "%s"', network)
+      raise ValueError('NetworkWriter network argument must be in \'host:port\''
+                       ' or \':port\' format. Found "%s"' % network)
     self.network = network
     self.num_retry = num_retry
 
