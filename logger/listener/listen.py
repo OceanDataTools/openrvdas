@@ -115,7 +115,7 @@ class ListenerFromLoggerConfig(Listener):
     'readers', 'transforms', and 'writers' as internal class references."""
     if not config_dict:
       return {}
-    
+
     # First we pull out the 'stderr_writers' spec as a special case so
     # that we can catch and properly route stderr output from
     # parsing/creation of the other keyword args.
@@ -489,7 +489,7 @@ if __name__ == '__main__':
     transforms = []
     writers = []
     stderr_writers = []
-    
+
     ############################
     # Parse args out. We do this in a rather non-standard way to use the
     # order of args on the command line to determine the order of our
