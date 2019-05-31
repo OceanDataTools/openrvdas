@@ -14,7 +14,7 @@ from logger.writers.writer import Writer
 ################################################################################
 class NetworkWriter(Writer):
   """Write to network."""
-  def __init__(self, network, num_retry=2):
+  def __init__(self, network, num_retry=2, eol=''):
     """
     Write text records to a network socket.
 
@@ -25,6 +25,9 @@ class NetworkWriter(Writer):
                  broadcast via UDP on specified port.
 
     num_retry    Number of times to retry if write fails.
+
+    eol          If specified, an end of line string to append to record
+                 before sending
     """
 
     super().__init__(input_format=Text)
@@ -34,7 +37,7 @@ class NetworkWriter(Writer):
                        ' or \':port\' format. Found "%s"' % network)
     self.network = network
     self.num_retry = num_retry
-
+    self.eol = eol
     (host, port) = network.split(':')
     port = int(port)
 
@@ -78,6 +81,8 @@ class NetworkWriter(Writer):
         record = record.as_json()
       else:
         record = str(record)
+    if self.eol:
+      record += self.eol
 
     num_tries = 0
     bytes_sent = 0

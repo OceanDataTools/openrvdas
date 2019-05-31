@@ -32,8 +32,8 @@ class TestNetworkWriter(unittest.TestCase):
 
   ############################
   # Actually run the NetworkWriter in internal method
-  def write_network(self, addr, data, interval=0, delay=0):
-    writer = NetworkWriter(addr)
+  def write_network(self, addr, eol=None, data=None, interval=0, delay=0):
+    writer = NetworkWriter(addr, eol=eol)
 
     time.sleep(delay)
     for line in data:
@@ -44,6 +44,7 @@ class TestNetworkWriter(unittest.TestCase):
   def test_udp(self):
     # Main method starts here
     addr = ':8001'
+    eol = None
     (host, port) = addr.split(':')
     port = int(port)
     sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -58,7 +59,7 @@ class TestNetworkWriter(unittest.TestCase):
 
     # Start the writer
     threading.Thread(target=self.write_network,
-                     args=(addr, SAMPLE_DATA, 0.1)).start()
+                     args=(addr, eol, SAMPLE_DATA, 0.1)).start()
 
     # Set timeout we can catch if things are taking too long
     signal.signal(signal.SIGALRM, self._handler)
@@ -70,7 +71,46 @@ class TestNetworkWriter(unittest.TestCase):
         logging.info('looking for "%s", got "%s"', line.strip(), record)
         if record:
           record = record.decode('utf-8')
-        #self.assertEqual(line, record)
+        self.assertEqual(line, record)
+    except ReaderTimeout:
+      self.assertTrue(False, 'NetworkReader timed out in test - is port '
+                      '%s open?' % addr)
+    signal.alarm(0)
+
+############################
+def test_udp_with_eol(self):
+# Main method starts here
+addr = ':8002'
+eol = '\r\n'
+
+(host, port) = addr.split(':')
+port = int(port)
+sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+try: # Raspbian doesn't recognize SO_REUSEPORT
+pass
+#sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+except AttributeError:
+logging.warning('Unable to set socket REUSEPORT; system may not support it.')
+
+sock.bind((host, port))
+
+# Start the writer
+threading.Thread(target=self.write_network,
+args=(addr, eol, SAMPLE_DATA, 0.1)).start()
+
+# Set timeout we can catch if things are taking too long
+signal.signal(signal.SIGALRM, self._handler)
+signal.alarm(3)
+try:
+# Check that we get the lines we expect from it
+for line in SAMPLE_DATA:
+record = sock.recv(4096)
+logging.info('looking for "%s", got "%s"', line.strip(), record)
+if record:
+record = record.decode('utf-8')
+line += eol
+self.assertEqual(line, record)
     except ReaderTimeout:
       self.assertTrue(False, 'NetworkReader timed out in test - is port '
                       '%s open?' % addr)
