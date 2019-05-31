@@ -399,6 +399,13 @@ if __name__ == '__main__':
   parser.add_argument('--write_network', dest='write_network', default=None,
                       help='Network address(es) to write to')
 
+  parser.add_argument('--write_udp', dest='write_udp', default=None,
+                      help='UDP interface(s) and port(s) to write to')
+
+  parser.add_argument('--network_eol', dest='network_eol', default=None,
+                      help='Optional EOL string to add to write_network '
+                      'and write_udp transmissions.')
+
   parser.add_argument('--write_redis', dest='write_redis', default=None,
                       help='Redis pubsub channel[@host[:port]] to write to. '
                       'Defaults to localhost:6379.')
@@ -671,8 +678,13 @@ if __name__ == '__main__':
       if new_args.write_logfile:
         writers.append(LogfileWriter(filebase=new_args.write_logfile))
       if new_args.write_network:
+        eol = all_args.network_eol
         for addr in new_args.write_network.split(','):
-          writers.append(NetworkWriter(network=addr))
+          writers.append(NetworkWriter(network=addr, eol=eol))
+      if new_args.write_udp:
+        eol = all_args.network_eol
+        for addr in new_args.write_udp.split(','):
+          writers.append(UDPWriter(network=addr, eol=eol))
       if new_args.write_redis:
         for channel in new_args.write_redis.split(','):
           writers.append(RedisWriter(channel=channel))
