@@ -16,6 +16,10 @@ from logger.readers.network_reader import NetworkReader
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
+EOL_SAMPLE_DATA = ['f1 line 1\nf1 line 1a\nf1 line 1b\n',
+                   'f1 line 2',
+                   '\nf1 line 3',
+                   '\n']
 
 ##############################
 class ReaderTimeout(StopIteration):
@@ -61,32 +65,48 @@ class TestNetworkReader(unittest.TestCase):
   ############################
   def test_udp(self):
     addr = ':8000'
-    reader = NetworkReader(addr)
 
-    (host, port) = addr.split(':')
-    port = int(port)
-
-    host = '<broadcast>' # special code for broadcast
-    sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-    try: # Raspbian doesn't recognize SO_REUSEPORT
-      sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-    except AttributeError:
-      logging.warning('Unable to set socket REUSEPORT; system may not support it.')
-    sock.connect((host, port))
+    threading.Thread(target=write_network,
+                     args=(addr, SAMPLE_DATA, 0.1, 0.2)).start()
 
     # Set timeout we can catch if things are taking too long
     signal.signal(signal.SIGALRM, self._handler)
     signal.alarm(5)
     try:
+      reader = NetworkReader(addr)
       for line in SAMPLE_DATA:
-        sock.send(line.encode('utf-8'))
-
-        time.sleep(0.2)
+        time.sleep(0.1)
         logging.debug('NetworkReader reading...')
         result = reader.read()
         logging.info('network wrote "%s", read "%s"', line, result)
-        #self.assertEqual(line, result)
+        self.assertEqual(line, result)
+    except ReaderTimeout:
+      self.assertTrue(False, 'NetworkReader timed out in test - is port '
+                      '%s open?' % addr)
+    signal.alarm(0)
+
+  ############################
+  def test_udp_eol(self):
+    addr = ':8001'
+
+    threading.Thread(target=write_network,
+                     args=(addr, EOL_SAMPLE_DATA, 0.1, 0.2)).start()
+
+    # Set timeout we can catch if things are taking too long
+    signal.signal(signal.SIGALRM, self._handler)
+    signal.alarm(5)
+    try:
+      reader = NetworkReader(addr, eol='\n')
+      result = reader.read()
+      self.assertEqual('f1 line 1\n', result)
+      result = reader.read()
+      self.assertEqual('f1 line 1a\n', result)
+      result = reader.read()
+      self.assertEqual('f1 line 1b\n', result)
+      result = reader.read()
+      self.assertEqual('f1 line 2\n', result)
+      result = reader.read()
+      self.assertEqual('f1 line 3\n', result)
     except ReaderTimeout:
       self.assertTrue(False, 'NetworkReader timed out in test - is port '
                       '%s open?' % addr)
