@@ -140,8 +140,11 @@ class RecordParser:
       if format is None:
         raise ValueError('Device type %s has no format definition' %device_type)
       if type(format) is str:
-        compiled_format = [parse.compile(format=format,
-                                         extra_types=parser_dict)]
+        try:
+          compiled_format = [parse.compile(format=format,
+                                           extra_types=parser_dict)]
+        except ValueError as e:
+          raise ValueError('Bad parser format: "%s": %s' % (format, e))
       else:
         compiled_format = [parse.compile(format=f, extra_types=parser_dict)
                            for f in format]
