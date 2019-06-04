@@ -242,10 +242,10 @@ The Django-based dynamic widget is coded to look in
 at that address.
 
 The static widgets rely on the file
-[widgets/static/js/widgets/settings.js](static/js/widgets/settings.js)
+[widgets/static/js/widgets/settings.js](../static/js/widgets/settings.js)
 for their definition of ```WEBSOCKET_DATA_SERVER```. The settings.py
 file must be copied over from
-[widgets/static/js/widgets/settings.js.dist](static/js/widgets/settings.js.dist)
+[widgets/static/js/widgets/settings.js.dist](../static/js/widgets/settings.js.dist)
 and modified to match your installation.
 
 In either case, the Django server and web server should be restarted
@@ -276,12 +276,12 @@ installation's specific needs.
 They are:
 
 * For use with the ```test/nmea/NBP1406/NBP1406_cruise.yaml``` configuration:
-  * [nbp\_demo.html](static/widgets/nbp_demo.html)
-  * [true\_winds\_demo.html](static/widgets/true_winds_demo.html)
-  * [winch\_demo.html](static/widgets/winch_demo.html)
-  * [map\_demo.html](static/widgets/map_demo.html)
+  * [nbp\_demo.html](../static/widgets/nbp_demo.html)
+  * [true\_winds\_demo.html](../static/widgets/true_winds_demo.html)
+  * [winch\_demo.html](../static/widgets/winch_demo.html)
+  * [map\_demo.html](../static/widgets/map_demo.html)
 * For use with the ```test/nmea/SKQ201822S/SKQ201822S_cruise.yaml``` configuration:
-  * [skq\_bridge.html](static/widgets/skq_bridge.html)
+  * [skq\_bridge.html](../static/widgets/skq_bridge.html)
 
 A simple widget might be constructed as follows
 
