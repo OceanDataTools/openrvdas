@@ -86,7 +86,6 @@ from logger.utils import read_config, timestamp, nmea_parser, record_parser
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 from logger.listener.listener import Listener
 
-
 ################################################################################
 class ListenerFromLoggerConfig(Listener):
   """Helper class for instantiating a Listener object from a Python dict."""
@@ -94,6 +93,10 @@ class ListenerFromLoggerConfig(Listener):
   def __init__(self, config, stderr_file=None, stderr_path=None,log_level=None):
     """Create a Listener from a Python config dict."""
 
+    if not type(config) is dict:
+      raise ValueError('ListenerFromLoggerConfig expects config of type '
+                       '"dict" but received one of type "%s": %s'
+                       % (type(config), str(config)))
     # Set up stderr logging. We do this inside Listener(), too, but
     # doing it here allows us to pick up diagnostic messages created
     # before we actually create the Listener object. If we've been
@@ -107,7 +110,14 @@ class ListenerFromLoggerConfig(Listener):
                        log_level=log_level)
 
     # Extract keyword args from config and instantiate.
-    kwargs = self._kwargs_from_config(config)
+    logging.debug('ListenerFromLoggerConfig instantiating logger '
+                  'config:\n%s', pprint.pformat(config))
+    try:
+      kwargs = self._kwargs_from_config(config)
+    except ValueError as e:
+      config_name = config.get('name', 'unknown logger')
+      raise ValueError('Config for %s: %s' % (config_name, e))
+
     super().__init__(**kwargs)
 
   ############################
@@ -135,6 +145,8 @@ class ListenerFromLoggerConfig(Listener):
       # singular "reader" is a special case for TimeoutReader that
       # takes a single reader.
       if key in ['readers', 'reader', 'transforms', 'writers']:
+        if not value:
+          raise ValueError('declaration of "%s" in class has no kwargs?!?' % key)
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords
@@ -169,7 +181,11 @@ class ListenerFromLoggerConfig(Listener):
 
     # Get the keyword args for the component
     kwarg_dict = class_json.get('kwargs', {})
-    kwargs = self._kwargs_from_config(kwarg_dict)
+    try:
+     kwargs = self._kwargs_from_config(kwarg_dict)
+    except ValueError as e:
+      raise ValueError('Class "%s": %s' % (class_name, e))
+
     if not kwargs:
       logging.debug('No kwargs found for component {}'.format(class_name))
 
