@@ -51,6 +51,7 @@ from logger.readers.logfile_reader import LogfileReader
 from logger.readers.network_reader import NetworkReader
 from logger.readers.redis_reader import RedisReader
 from logger.readers.serial_reader import SerialReader
+from logger.readers.polled_serial_reader import PolledSerialReader
 from logger.readers.text_file_reader import TextFileReader
 from logger.readers.database_reader import DatabaseReader
 from logger.readers.timeout_reader import TimeoutReader
