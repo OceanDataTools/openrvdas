@@ -128,6 +128,10 @@ class ListenerFromLoggerConfig(Listener):
     if not config_dict:
       return {}
 
+    if not type(config_dict) is dict:
+      raise ValueError('Received config dict of type "%s" (instead of dict)'
+                       % type(config_dict))
+
     # First we pull out the 'stderr_writers' spec as a special case so
     # that we can catch and properly route stderr output from
     # parsing/creation of the other keyword args.
@@ -206,6 +210,7 @@ class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
   def __init__(self, config_str, log_level=None):
     """Create a Listener from a JSON config string."""
     config = read_config.parse(config_str)
+    logging.info('Received config string:\n%s', pprint.pformat(config))
     super().__init__(config=config, log_level=log_level)
 
 ################################################################################
@@ -215,6 +220,7 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
   def __init__(self, config_file, log_level=None):
     """Create a Listener from a Python config file."""
     config = read_config.read_config(config_file)
+    logging.info('Loaded config file:\n%s', pprint.pformat(config))
     super().__init__(config=config, log_level=log_level)
 
 ################################################################################

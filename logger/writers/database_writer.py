@@ -26,9 +26,14 @@ except ModuleNotFoundError:
 ################################################################################
 class DatabaseWriter(Writer):
   def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
-               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD):
-    """Write to the passed record to a database table. Expects passed
-    records to be in one of two formats:
+               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
+               save_source=True):
+    """Write to the passed record to a database table. With connectors
+    written so far (MySQL and Mongo), writes values in the records as
+    timestamped field-value pairs. If save_source=True, also save the
+    source record we are passed.
+
+    Expects passed source records to be in one of two formats:
 
     1) DASRecord
 
@@ -74,7 +79,8 @@ class DatabaseWriter(Writer):
                          'DatabaseWriter unavailable.')
 
     self.db = Connector(database=database, host=host,
-                        user=user, password=password)
+                        user=user, password=password,
+                        save_source=save_source)
 
   ############################
   def _table_exists(self, table_name):
