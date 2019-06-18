@@ -10,7 +10,7 @@ port. The instrument-to-port mappings are listed in
 ``test/SKQ201822S/CREATE_SKQ_CRUISE/skq_ports.txt``.
 
 This dataflow can be simulated using the script
-[logger/utils/simulate_network.py](../logger/utils/simulate_network.py). Given a configuration file that encodes the above mapping, it
+[logger/utils/simulate_network.py](../../logger/utils/simulate_network.py). Given a configuration file that encodes the above mapping, it
 reads from stored logfiles and feeds lines to the appropriate ports at
 intervals that mirror the timestamps of the original data. To simulate
 a short run of Sikuliaq data, you can it as follows:
@@ -37,7 +37,7 @@ The configuration file was created using another quick-and-dirty script:
 ```
    test/SKQ201822S/CREATE_SKQ_CRUISE/create_skq_config.py \
      < test/SKQ201822S/CREATE_SKQ_CRUISE/skq_ports.txt \
-     > test/nmea/SKQ201822S/SKQ201822S_cruise.yaml
+     > test/SKQ201822S/SKQ201822S_cruise.yaml
 ```
 
 The script generates a configuration with four modes:
@@ -58,7 +58,7 @@ you can specify the desired mode on the command line:
 
 ```
     server/logger_manager.py \
-      --config test/nmea/SKQ201822S/SKQ201822S_cruise.yaml \
+      --config test/SKQ201822S/SKQ201822S_cruise.yaml \
       --mode file/db
 ```
 
@@ -76,8 +76,8 @@ selecting between modes, one may manually start/stop/reconfigure
 individual loggers as desired.
 
 *Note:* The configuration file specifies Sikuliaq-specific sensor
-definitions in test/sikuliaq/sensors.yaml and sensor model definitions
-in test/sikuliaq/sensor_models.yaml. Please see [Locations of Message,
+definitions in [test/SKQ201822S/CREATE\_SKQ\_CRUISE/sensors.yaml](SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml) and sensor model definitions
+in [test/SKQ201822S/CREATE\_SKQ\_CRUISE/sensor_models.yaml](SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml). Please see [Locations of Message,
 Sensor and Sensor Model Definitions in the NMEA Parsing
 document](../../docs/nmea_parser.md#locations-of-message-sensor-and-sensor-model-definitions)
 for more information on specifying deployment-specific sensor
