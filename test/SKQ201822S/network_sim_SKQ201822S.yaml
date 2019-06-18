@@ -1,0 +1,157 @@
+# This configuration file allows simulation of the dataflow setup on Sikulia
+# using a small slice of data from one day of a cruise.
+#
+# To run, use the following invocation:
+#     logger/utils/simulate_network.py \
+#       --config test/SKQ201822S/network_sim_SKQ201822S.yaml \
+#       --loop
+{
+    "met_ptu307": {
+        "network": ":53100",
+        "filebase": "test/SKQ201822S/met_ptu307/raw/SKQ201822S_met_ptu307-2018-12-06"
+    },
+    "rain_rmy50202": {
+        "network": ":53101",
+        "filebase": "test/SKQ201822S/rain_rmy50202/raw/SKQ201822S_rain_rmy50202-2018-12-06"
+    },
+    "rad_qsr2150a": {
+        "network": ":53104",
+        "filebase": "test/SKQ201822S/rad_qsr2150a/raw/SKQ201822S_rad_qsr2150a-2018-12-06"
+    },
+    "rad_psp-pir": {
+        "network": ":53105",
+        "filebase": "test/SKQ201822S/rad_psp-pir/raw/SKQ201822S_rad_psp-pir-2018-12-06"
+    },
+    "thermo_pyrometer-ct15": {
+        "network": ":53106",
+        "filebase": "test/SKQ201822S/thermo_pyrometer-ct15/raw/SKQ201822S_thermo_pyrometer-ct15-2018-12-06"
+    },
+    "fluoro_turner-c6": {
+        "network": ":53107",
+        "filebase": "test/SKQ201822S/fluoro_turner-c6/raw/SKQ201822S_fluoro_turner-c6-2018-12-06"
+    },
+    "grav_bgm3_222": {
+        "network": ":53108",
+        "filebase": "test/SKQ201822S/grav_bgm3_222/raw/SKQ201822S_grav_bgm3_222-2018-12-06"
+    },
+    "pco2_ldeo_merge": {
+        "network": ":54109",
+        "filebase": "test/SKQ201822S/pco2_ldeo_merge/raw/SKQ201822S_pco2_ldeo_merge-2018-12-06"
+    },
+    "tsg_sbe45_fwd": {
+        "network": ":53110",
+        "filebase": "test/SKQ201822S/tsg_sbe45_fwd/raw/SKQ201822S_tsg_sbe45_fwd-2018-12-06"
+    },
+    "thermo_sbe38_fwd": {
+        "network": ":53111",
+        "filebase": "test/SKQ201822S/thermo_sbe38_fwd/raw/SKQ201822S_thermo_sbe38_fwd-2018-12-06"
+    },
+    "thermo_sbe38_incubator": {
+        "network": ":53112",
+        "filebase": "test/SKQ201822S/thermo_sbe38_incubator/raw/SKQ201822S_thermo_sbe38_incubator-2018-12-06"
+    },
+    "tsg_sbe45_fwd_2": {
+        "network": ":53114",
+        "filebase": "test/SKQ201822S/tsg_sbe45_fwd_2/raw/SKQ201822S_tsg_sbe45_fwd_2-2018-12-06"
+    },
+    "flow_krohne_pco2": {
+        "network": ":53116",
+        "filebase": "test/SKQ201822S/flow_krohne_pco2/raw/SKQ201822S_flow_krohne_pco2-2018-12-06"
+    },
+    "ssv_aml": {
+        "network": ":53117",
+        "filebase": "test/SKQ201822S/ssv_aml/raw/SKQ201822S_ssv_aml-2018-12-06"
+    },
+    "ins_seapath_position": {
+        "network": ":53119",
+        "filebase": "test/SKQ201822S/ins_seapath_position/raw/SKQ201822S_ins_seapath_position-2018-12-06"
+    },
+    "gnss_cnav": {
+        "network": ":53121",
+        "filebase": "test/SKQ201822S/gnss_cnav/raw/SKQ201822S_gnss_cnav-2018-12-06"
+    },
+    "gyro_1": {
+        "network": ":53122",
+        "filebase": "test/SKQ201822S/gyro_1/raw/SKQ201822S_gyro_1-2018-12-06"
+    },
+    "gyro_2": {
+        "network": ":53123",
+        "filebase": "test/SKQ201822S/gyro_2/raw/SKQ201822S_gyro_2-2018-12-06"
+    },
+    "wind_gill_fwdmast": {
+        "network": ":53124",
+        "filebase": "test/SKQ201822S/wind_gill_fwdmast/raw/SKQ201822S_wind_gill_fwdmast-2018-12-06"
+    },
+    "wind_gill_fwdmast_true": {
+        "network": ":54124",
+        "filebase": "test/SKQ201822S/wind_gill_fwdmast_true/raw/SKQ201822S_wind_gill_fwdmast_true-2018-12-06"
+    },
+    "speedlog": {
+        "network": ":53125",
+        "filebase": "test/SKQ201822S/speedlog/raw/SKQ201822S_speedlog-2018-12-06"
+    },
+    "sb_echosounder_1": {
+        "network": ":53126",
+        "filebase": "test/SKQ201822S/sb_echosounder_1/raw/SKQ201822S_sb_echosounder_1-2018-12-06"
+    },
+    "sb_echosounder_2": {
+        "network": ":53127",
+        "filebase": "test/SKQ201822S/sb_echosounder_2/raw/SKQ201822S_sb_echosounder_2-2018-12-06"
+    },
+    "winch_rapp": {
+        "network": ":53128",
+        "filebase": "test/SKQ201822S/winch_rapp/raw/SKQ201822S_winch_rapp-2018-12-06"
+    },
+    "flow_krohne_fwd": {
+        "network": ":53129",
+        "filebase": "test/SKQ201822S/flow_krohne_fwd/raw/SKQ201822S_flow_krohne_fwd-2018-12-06"
+    },
+    "wind_mast_port": {
+        "network": ":53130",
+        "filebase": "test/SKQ201822S/wind_mast_port/raw/SKQ201822S_wind_mast_port-2018-12-06"
+    },
+    "wind_mast_port_true": {
+        "network": ":54130",
+        "filebase": "test/SKQ201822S/wind_mast_port_true/raw/SKQ201822S_wind_mast_port_true-2018-12-06"
+    },
+    "wind_mast_stbd": {
+        "network": ":53131",
+        "filebase": "test/SKQ201822S/wind_mast_stbd/raw/SKQ201822S_wind_mast_stbd-2018-12-06"
+    },
+    "wind_mast_stbd_true": {
+        "network": ":54131",
+        "filebase": "test/SKQ201822S/wind_mast_stbd_true/raw/SKQ201822S_wind_mast_stbd_true-2018-12-06"
+    },
+    "oxygen_sbe43_fwd": {
+        "network": ":53132",
+        "filebase": "test/SKQ201822S/oxygen_sbe43_fwd/raw/SKQ201822S_oxygen_sbe43_fwd-2018-12-06"
+    },
+    "oxygen_sbe43_fwd_calc": {
+        "network": ":54132",
+        "filebase": "test/SKQ201822S/oxygen_sbe43_fwd_calc/raw/SKQ201822S_oxygen_sbe43_fwd_calc-2018-12-06"
+    },
+    "mbari_isus_fwd": {
+        "network": ":53133",
+        "filebase": "test/SKQ201822S/mbari_isus_fwd/raw/SKQ201822S_mbari_isus_fwd-2018-12-06"
+    },
+    "ais_r4-navigator_bridge": {
+        "network": ":53134",
+        "filebase": "test/SKQ201822S/ais_r4-navigator_bridge/raw/SKQ201822S_ais_r4-navigator_bridge-2018-12-06"
+    },
+    "adcp_speedlog": {
+        "network": ":53135",
+        "filebase": "test/SKQ201822S/adcp_speedlog/raw/SKQ201822S_adcp_speedlog-2018-12-06"
+    },
+    "cruiseid": {
+        "network": ":54000",
+        "filebase": "test/SKQ201822S/cruiseid/raw/SKQ201822S_cruiseid-2018-12-06"
+    },
+    "tsg_emssv": {
+        "network": ":54001",
+        "filebase": "test/SKQ201822S/tsg_emssv/raw/SKQ201822S_tsg_emssv-2018-12-06"
+    },
+    "mb_em302_centerbeam": {
+        "network": ":55005",
+        "filebase": "test/SKQ201822S/mb_em302_centerbeam/raw/SKQ201822S_mb_em302_centerbeam-2018-12-06"
+    }
+}

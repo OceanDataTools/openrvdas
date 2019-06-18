@@ -3,28 +3,35 @@
 Sikuliaq sensors. Sets up one logger for each instrument, each one
 listening for UDP packets on the specified port.
 
-
 To run, first use this script to generate the config file:
 
-   test/sikuliaq/create_skq_config.py \
-     < test/sikuliaq/skq_ports.txt \
-     > test/sikuliaq/skq_cruise.yaml
+   test/SKQ201822S/CREATE_SKQ_CRUISE/create_skq_config.py \
+     < test/SKQ201822S/CREATE_SKQ_CRUISE/skq_ports.txt \
+     > test/SKQ201822S/SKQ201822S_cruise.yaml
 
 Then either hand the config file to the command line logger_manager script:
 
    server/logger_manager.py \
-       --config test/sikuliaq/skq_cruise.yaml \
-       --mode file/db -v
+       --config test/SKQ201822S/SKQ201822S_cruise.yaml \
+       --mode file \
+       --start_data_server
 
-   (The above command starts loggers running in the config's "file/db"
-   mode, which reads from UDP ports and writes the resulting data to
-   logfiles and the database, using the default database, host and
-   user name, as specified in database/settings.py. Other modes are
-   "off", "file", and "db", which each do pretty much what you'd
-   expect.)
+The above command starts loggers running in the config's "file" mode,
+which reads from UDP ports and writes the resulting data to
+logfiles. Other modes are "off", "file/db", and "db", which each do
+pretty much what you'd expect.
 
-or load the script via the Django GUI, as described in the gui/
-subdirectory.
+The --start_data_server flag tells the logger_manager.py script to start up a CachedDataServer that will listen
+
+
+NOTE: For the above logger_manager.py command to run successfully, you
+will need to either have live data being served on the appropriate
+ports or you will need to run the logger/utils/simulate_network.py
+script to have it feed stored data to those ports:
+
+  logger/utils/simulate_network.py  \
+    --config test/SKQ201822S/network_sim_SKQ201822S.yaml \
+    --loop
 
 """
 import json
@@ -48,14 +55,14 @@ PORT = '6224'
 cruise = 'SKQ201822S'
 
 file_db_config = """{
-          "name": "INST->file/db",
+          "name": "%INST%->file/db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":PORT" }
+            "kwargs": { "network": ":%PORT%" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
-            "kwargs": { "pattern": "^INST" }
+            "kwargs": { "pattern": "^%INST%" }
           },
           "writers": [
             {
@@ -65,13 +72,17 @@ file_db_config = """{
                   "class": "ParseNMEATransform",
                   "kwargs": {
                     "sensor_path":
-                      "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                      "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
                     "sensor_model_path":
-                      "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                      "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
                     "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                   }
                 },
-                "writers": { "class": "DatabaseWriter" }
+                "writers": [
+                  { "class": "DatabaseWriter" },
+                  { "class": "NetworkWriter",
+                    "kwargs": {"network": ":6225" }}
+                ]
               }
             },
             {
@@ -84,7 +95,7 @@ file_db_config = """{
                 "writers": {
                   "class": "LogfileWriter",
                   "kwargs": {
-                    "filebase": "/var/tmp/log/CRUISE/INST/raw/CRUISE_INST",
+                    "filebase": "/var/tmp/log/%CRUISE%/%INST%/raw/%CRUISE%_%INST%",
                     "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                   }
                 }
@@ -94,42 +105,63 @@ file_db_config = """{
         }"""
 
 file_config = """{
-          "name": "INST->file",
+          "name": "%INST%->file",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":PORT" }
+            "kwargs": { "network": ":%PORT%" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
-            "kwargs": { "pattern": "^INST" }
+            "kwargs": { "pattern": "^%INST%" }
           },
-          "writers": {
-            "class": "ComposedWriter",
-            "kwargs": {
-              "transforms": {
-                "class": "SliceTransform",
-                "kwargs": {"fields": "1:"}
-              },
-              "writers": {
-                "class": "LogfileWriter",
-                "kwargs": {
-                  "filebase": "/var/tmp/log/CRUISE/INST/raw/CRUISE_INST",
-                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+          "writers": [
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "SliceTransform",
+                  "kwargs": {"fields": "1:"}
+                },
+                "writers": {
+                  "class": "LogfileWriter",
+                  "kwargs": {
+                    "filebase": "/var/tmp/log/%CRUISE%/%INST%/raw/%CRUISE%_%INST%",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                  }
+                }
+              }
+            },
+            {
+              "class": "ComposedWriter",
+              "kwargs": {
+                "transforms": {
+                  "class": "ParseNMEATransform",
+                  "kwargs": {
+                    "sensor_path":
+                      "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
+                    "sensor_model_path":
+                      "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
+                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
+                    }
+                },
+                "writers": {
+                  "class": "NetworkWriter",
+                  "kwargs": {"network": ":6225" }
                 }
               }
             }
-          }
+          ]
         }"""
 
 db_config = """{
-          "name": "INST->db",
+          "name": "%INST%->db",
           "readers": {
             "class": "NetworkReader",
-            "kwargs": { "network": ":PORT" }
+            "kwargs": { "network": ":%PORT%" }
           },
           "transforms": {
             "class": "RegexFilterTransform",
-            "kwargs": { "pattern": "^INST" }
+            "kwargs": { "pattern": "^%INST%" }
           },
           "writers": {
             "class": "ComposedWriter",
@@ -138,13 +170,17 @@ db_config = """{
                 "class": "ParseNMEATransform",
                 "kwargs": {
                   "sensor_path":
-                    "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+                    "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
                   "sensor_model_path":
-                    "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
+                    "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
                   "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
                   }
               },
-              "writers": { "class": "DatabaseWriter" }
+              "writers": [
+                { "class": "DatabaseWriter" },
+                { "class": "NetworkWriter",
+                  "kwargs": {"network": ":6225" }}
+              ]
             }
           }
         }"""
@@ -155,8 +191,8 @@ display_on_config =  {
           "transforms": {
             "class": "ParseNMEATransform",
             "kwargs": {
-              "sensor_model_path": "local/sensor_model/*.yaml,test/sikuliaq/sensor_models.yaml",
-              "sensor_path": "local/sensor/*.yaml,test/sikuliaq/sensors.yaml",
+              "sensor_model_path": "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
+              "sensor_path": "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
             }
           },
           "writers": {
@@ -189,21 +225,21 @@ for line in lines:
   configs['%s->off' % inst] = {}
 
   config = file_db_config
-  config = config.replace('INST', inst)
-  config = config.replace('PORT', port)
-  config = config.replace('CRUISE', cruise)
+  config = config.replace('%INST%', inst)
+  config = config.replace('%PORT%', port)
+  config = config.replace('%CRUISE%', cruise)
   configs['%s->file/db' % inst] = yaml.load(config)
 
   config = file_config
-  config = config.replace('INST', inst)
-  config = config.replace('PORT', port)
-  config = config.replace('CRUISE', cruise)
+  config = config.replace('%INST%', inst)
+  config = config.replace('%PORT%', port)
+  config = config.replace('%CRUISE%', cruise)
   configs['%s->file' % inst] = yaml.load(config)
 
   config = db_config
-  config = config.replace('INST', inst)
-  config = config.replace('PORT', port)
-  config = config.replace('CRUISE', cruise)
+  config = config.replace('%INST%', inst)
+  config = config.replace('%PORT%', port)
+  config = config.replace('%CRUISE%', cruise)
   configs['%s->db' % inst] = yaml.load(config)
 
   loggers[inst] = {}
@@ -218,23 +254,6 @@ for line in lines:
 
 #pprint.pprint(loggers, width=40, compact=False)
 #pprint.pprint(modes, width=40, compact=False)
-
-# Add the display logger
-loggers['display'] = {'configs': ['display->off', 'display->on']}
-
-modes['off']['display'] = 'display->off'
-modes['file']['display'] = 'display->on'
-modes['db']['display'] = 'display->on'
-modes['file/db']['display'] = 'display->on'
-
-# Add the display configs
-configs['display->off'] = {}
-for line in lines:
-  (inst, port) = line.split('\t', maxsplit=2)
-  display_on_config['readers'].append(
-    {"class": "NetworkReader", "kwargs": {"network": ":"+port} })
-configs['display->on'] = display_on_config
-
 
 skq_cruise = OrderedDict()
 skq_cruise['cruise'] = {
