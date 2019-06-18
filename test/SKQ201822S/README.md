@@ -76,8 +76,8 @@ selecting between modes, one may manually start/stop/reconfigure
 individual loggers as desired.
 
 *Note:* The configuration file specifies Sikuliaq-specific sensor
-definitions in [test/SKQ201822S/CREATE\_SKQ\_CRUISE/sensors.yaml](SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml) and sensor model definitions
-in [test/SKQ201822S/CREATE\_SKQ\_CRUISE/sensor_models.yaml](SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml). Please see [Locations of Message,
+definitions in [CREATE\_SKQ\_CRUISE/sensors.yaml](CREATE_SKQ_CRUISE/sensors.yaml) and sensor model definitions
+in [CREATE\_SKQ\_CRUISE/sensor_models.yaml](CREATE_SKQ_CRUISE/sensor_models.yaml). Please see [Locations of Message,
 Sensor and Sensor Model Definitions in the NMEA Parsing
 document](../../docs/nmea_parser.md#locations-of-message-sensor-and-sensor-model-definitions)
 for more information on specifying deployment-specific sensor
