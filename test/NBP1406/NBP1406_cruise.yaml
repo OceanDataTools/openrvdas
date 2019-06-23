@@ -1,6 +1,6 @@
 
 # Sample cruise definition file for NBP1406, created by hacked-up script
-# at test/nmea/NBP1406/create_cruise_definition.py.
+# at test/NBP1406/create_cruise_definition.py.
 
 # Note that the one hack necessary is that YAML interprets 'off' (when not
 # quoted) as the literal 'False'. So YAML needs to quote 'off'. We should

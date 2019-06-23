@@ -124,9 +124,9 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
       knud: knud->file/net/db 
       rtmp: rtmp->file/net/db
 ```
--   **Cruise configuration** - (or just "configuration" when we're being sloppy). This is the file/JSON/YAML structure that contains everything the logger manager needs to know about running a cruise. In addition to containing cruise metadata (cruise id, provisional start and ending dates), a cruise configuration file (such as in [test/nmea/NBP1406/NBP1406\_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml)), contains a dict of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes into which those logger configurations are grouped.
+-   **Cruise configuration** - (or just "configuration" when we're being sloppy). This is the file/JSON/YAML structure that contains everything the logger manager needs to know about running a cruise. In addition to containing cruise metadata (cruise id, provisional start and ending dates), a cruise configuration file (such as in [test/NBP1406/NBP1406\_cruise.yaml](../test/NBP1406/NBP1406_cruise.yaml)), contains a dict of all the logger configurations that are to be run on a particular vessel deployment, along with definitions for all the modes into which those logger configurations are grouped.
   
-It is worth noting that strictly speaking, a "logger" does not exist as a separate entity in OpenRVDAS. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the [sample cruise definition file](../test/nmea/NBP1406/NBP1406_cruise.yaml), as the logger definition ("knud") is just a list of the configurations that are responsible for handling the data that comes in from a particular serial port.
+It is worth noting that strictly speaking, a "logger" does not exist as a separate entity in OpenRVDAS. It is just a convenient way of thinking about a set of configurations that are responsible for a given data stream, e.g. Knudsen data, or a GPS feed. This is evident when looking at the [sample cruise definition file](../test/NBP1406/NBP1406_cruise.yaml), as the logger definition ("knud") is just a list of the configurations that are responsible for handling the data that comes in from a particular serial port.
 
 ```
 knud:
@@ -135,7 +135,7 @@ knud:
   - knud->net,
   - knud->file/net/db
 ```
-Perusing a complete cruise configuration file such as [test/nmea/NBP1406/NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml) may be useful for newcomers to the system.
+Perusing a complete cruise configuration file such as [test/NBP1406/NBP1406_cruise.yaml](../test/NBP1406/NBP1406_cruise.yaml) may be useful for newcomers to the system.
 
 ### What the logger manager does
 
@@ -162,7 +162,7 @@ In short, a bunch of stuff.
 
   ```
   server/logger_manager.py \
-        --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+        --config test/NBP1406/NBP1406_cruise.yaml \
         --mode monitor
   ```
 
@@ -186,7 +186,7 @@ You can type "help" for a full list of commands, but a sample of the available f
 **Load a cruise configuration**
 
 ```
-command? load_configuration test/nmea/NBP1406/NBP1406_cruise.yaml
+command? load_configuration test/NBP1406/NBP1406_cruise.yaml
 command? 
 ```
 
@@ -223,11 +223,11 @@ Configs for gyr1: gyr1->off, gyr1->net, gyr1->file/net/db
 command? set_active_logger_config gyr1 gyr1->file/net/db
 command? quit
 ```
-As with sample script for logger\_runner.py, the sample cruise configuration file [test/nmea/NBP1406/NBP1406\_cruise.yaml](../test/nmea/NBP1406/NBP1406\_cruise.yaml) attempts to read from virtual serial ports, so you'll need to create those simulated serial ports by having the command
+As with sample script for logger\_runner.py, the sample cruise configuration file [test/NBP1406/NBP1406\_cruise.yaml](../test/NBP1406/NBP1406\_cruise.yaml) attempts to read from virtual serial ports, so you'll need to create those simulated serial ports by having the command
 
 ```
   logger/utils/simulate_serial.py \
-      --config test/nmea/NBP1406/serial_sim_NBP1406.yaml \
+      --config test/NBP1406/serial_sim_NBP1406.yaml \
       --loop
 ```
 
@@ -251,7 +251,7 @@ LoggerManager when handed a ``--start_data_server`` flag:
 ```
   server/logger_manager.py \
     --database django \
-    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --config test/NBP1406/NBP1406_cruise.yaml \
     --start_data_server
 ```
 By default it will use websocket port 8766 and network UDP port 6225, but these
@@ -259,7 +259,7 @@ may be overridden with additional command line flags:
 ```
   server/logger_manager.py \
     --database django \
-    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --config test/NBP1406/NBP1406_cruise.yaml \
     --data_server_websocket :8765 \
     --data_server_udp :6226 \
     --start_data_server

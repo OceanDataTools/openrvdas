@@ -8,7 +8,7 @@ for details.
 Examples:
 
   logger/listener/listen.py \
-    --logfile test/nmea/NBP1700/s330/raw/NBP1700_s330 \
+    --logfile test/NBP1700/s330/raw/NBP1700_s330 \
     --interval 0.25 \
     --transform_slice 1: \
     --transform_timestamp \

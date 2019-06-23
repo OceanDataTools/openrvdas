@@ -49,11 +49,11 @@ For demo purposes, just set the passwords (for user, for database) to ``rvdas`` 
 
 Once you have logged back on, open two terminal windows.
 
-1. The sample cruise configuration file in [test/nmea/NBP1406/NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml) assumes the existence of a set of virtual serial ports; we'll run a script __as user rvdas__ to create those ports and start feeding them sample cruise data:
+1. The sample cruise configuration file in [test/NBP1406/NBP1406_cruise.yaml](../test/NBP1406/NBP1406_cruise.yaml) assumes the existence of a set of virtual serial ports; we'll run a script __as user rvdas__ to create those ports and start feeding them sample cruise data:
 ```
   su rvdas
   cd /opt/openrvdas
-  logger/utils/simulate_serial.py --config test/nmea/NBP1406/serial_sim_NBP1406.yaml --loop
+  logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
 ```
 
 2. In the other window, run a logger to verify that the serial ports are functioning as expected:
@@ -70,7 +70,7 @@ Once you have logged back on, open two terminal windows.
 
  ![Initial Web Console](images/nbp_initial.png)
 
- Select the Log in link and log in as user __rvdas__. You should now see a "Load configuration file" button. Select it, and navigate to load the sample cruise definition file at ``test/nmea/NBP1406/NBP1406_cruise.yaml``.
+ Select the Log in link and log in as user __rvdas__. You should now see a "Load configuration file" button. Select it, and navigate to load the sample cruise definition file at ``test/NBP1406/NBP1406_cruise.yaml``.
 
  At this point you should see a table of loggers, all in configuration "off". Scroll to the bottom of the page, where there is a "Mode" selector. Select "monitor" and press "Change mode."
 

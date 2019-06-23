@@ -13,7 +13,7 @@ listen.py script to connect a LogfileReader to a NetworkWriter, e.g.
 
 ```
 logger/listener/listen.py \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
     --transform_timestamp \
     --transform_prefix gyr1 \
     --write_network :6224
@@ -26,7 +26,7 @@ command line script that invokes it:
 ```
 logger/utils/simulate_serial.py \
     --port /dev/ttyr15 \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
     --loop
 ```
 tries to create virtual serial port /dev/ttyr15 and feeds it with data

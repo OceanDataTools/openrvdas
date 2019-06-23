@@ -41,7 +41,7 @@ from simulated serial ports and write to UDP port 6224. To get the
 configs to actually run, you'll need to run
 ```
   python3 logger/utils/simulate_serial.py \
-    --config test/nmea/NBP1406/serial_sim_NBP1406.yaml \
+    --config test/NBP1406/serial_sim_NBP1406.yaml \
     --loop 
 ```
 in a separate terminal window to create the virtual serial ports the
@@ -67,7 +67,7 @@ If an initial configuration is specified on the command line, as
 below:
 
 ```
-    server/logger_manager.py --config test/nmea/NBP1406/NBP1406_cruise.yaml
+    server/logger_manager.py --config test/NBP1406/NBP1406_cruise.yaml
 ```
 the cruise configuration will be loaded and set to its default
 mode. If a ``--mode`` argument is included, it will be used in place of
@@ -87,7 +87,7 @@ To try out the scripts, open three terminal windows.
 (officially a CachedDataServer):
 ```
   server/logger_manager.py \
-    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --config test/NBP1406/NBP1406_cruise.yaml \
     --start_data_server
 ``````
 
@@ -97,7 +97,7 @@ To try out the scripts, open three terminal windows.
 
 ```
   logger/utils/simulate_serial.py \
-    --config test/nmea/NBP1406/serial_sim_NBP1406.yaml \
+    --config test/NBP1406/serial_sim_NBP1406.yaml \
     --loop 
 ```
 
@@ -117,7 +117,7 @@ To try out the scripts, open three terminal windows.
 
 #### Load a cruise configuration
 ```
-   command? load_configuration test/nmea/NBP1406/NBP1406_cruise.yaml
+   command? load_configuration test/NBP1406/NBP1406_cruise.yaml
 ```
 #### Change cruise modes
 ```
