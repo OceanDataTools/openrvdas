@@ -57,7 +57,7 @@ specifying the Django backing store and a cruise configuration definition to sta
 ```
   server/logger_manager.py \
     --database django \
-    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --config test/NBP1406/NBP1406_cruise.yaml \
     --start_data_server
 ```
 If the ``--start_data_server`` flag is specified, the LoggerManager will
@@ -97,7 +97,7 @@ serving data stored in the test/ directory. To set up the simulated
 ports, run
 ```
   python3 logger/utils/simulate_serial.py \
-    --config test/nmea/NBP1406/serial_sim_NBP1406.yaml \
+    --config test/NBP1406/serial_sim_NBP1406.yaml \
     --loop 
 ```
 
@@ -106,7 +106,7 @@ no configuration is loaded, along with a prompt to log in. Log in
 using the rvdas account you created.
 
 Select "Load configuration file" to select and load the file
-```test/nmea/NBP1406/NBP1406_cruise.yaml```.
+```test/NBP1406/NBP1406_cruise.yaml```.
 
 The GUI window should now update to show a set of loggers,
 configurations and mode selector in mode ``off``. Select the mode
@@ -155,7 +155,7 @@ on CentOS or manually running
 ```
   server/logger_manager.py \
     --database django \
-    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --config test/NBP1406/NBP1406_cruise.yaml \
     --start_data_server \
     -v
 ```

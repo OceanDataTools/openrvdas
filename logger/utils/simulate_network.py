@@ -4,7 +4,7 @@
 Run with, e.g.
 
     logger/utils/simulate_network.py \
-         --config test/nmea/SKQ201822S/network_sim_SKQ201822S.yaml \
+         --config test/SKQ201822S/network_sim_SKQ201822S.yaml \
          --loop
 
 and you should be able to listen on the various ports that Sikuliaq

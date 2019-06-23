@@ -175,7 +175,7 @@ via the ``--start_data_server`` flag:
 ```
   server/logger_manager.py \
     --database django \
-    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --config test/NBP1406/NBP1406_cruise.yaml \
     --start_data_server
 ```
 By default it will use websocket port 8766 and network UDP port 6225, but these
@@ -183,7 +183,7 @@ may be overridden with additional command line flags:
 ```
   server/logger_manager.py \
     --database django \
-    --config test/nmea/NBP1406/NBP1406_cruise.yaml \
+    --config test/NBP1406/NBP1406_cruise.yaml \
     --data_server_websocket :8765 \
     --data_server_udp :6226 \
     --start_data_server
@@ -275,12 +275,12 @@ installation's specific needs.
 
 They are:
 
-* For use with the ```test/nmea/NBP1406/NBP1406_cruise.yaml``` configuration:
+* For use with the ```test/NBP1406/NBP1406_cruise.yaml``` configuration:
   * [nbp\_demo.html](../widgets/static/widgets/nbp_demo.html)
   * [true\_winds\_demo.html](../widgets/static/widgets/true_winds_demo.html)
   * [winch\_demo.html](../widgets/static/widgets/winch_demo.html)
   * [map\_demo.html](../widgets/static/widgets/map_demo.html)
-* For use with the ```test/nmea/SKQ201822S/SKQ201822S_cruise.yaml``` configuration:
+* For use with the ```test/SKQ201822S/SKQ201822S_cruise.yaml``` configuration:
   * [skq\_bridge.html](../widgets/static/widgets/skq_bridge.html)
 
 A simple widget might be constructed as follows

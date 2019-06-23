@@ -61,7 +61,7 @@ stored in the test/ directory. To set up the simulated ports, run
 
 ```
 python3 logger/utils/simulate_serial.py \
-  --config test/nmea/NBP1406/serial_sim_NBP1406.yaml --loop
+  --config test/NBP1406/serial_sim_NBP1406.yaml --loop
 ```
 
 At this point you should be able to open a browser window to 
@@ -76,7 +76,7 @@ Log in using the username (rvdas) and password that you specified; you should no
 
 ![No Configuration Loaded](images/no_configuration_loaded.png)
 
-Select the "Load configuration file" button and browse to find [test/nmea/NBP1406/NBP1406_cruise.yaml](../test/nmea/NBP1406/NBP1406_cruise.yaml). Select "Load", and you should be looking at a loaded and ready-to-run cruise management page.
+Select the "Load configuration file" button and browse to find [test/NBP1406/NBP1406_cruise.yaml](../test/NBP1406/NBP1406_cruise.yaml). Select "Load", and you should be looking at a loaded and ready-to-run cruise management page.
 
 ![Sample Cruise Off](images/sample_cruise_off.png)
 

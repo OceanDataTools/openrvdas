@@ -104,7 +104,7 @@ argument to appear on the command line *before* any DatabaseReader or
 DatabaseWriter specification:
 ```
 logger/listener/listen.py \
-  --logfile test/nmea/NBP1700/s330/raw/NBP1700_s330-2017-11-04 \
+  --logfile test/NBP1700/s330/raw/NBP1700_s330-2017-11-04 \
   --transform_prefix s330 \
   --transform_parse_nmea \
   --database_password rvdas \

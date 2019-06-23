@@ -27,7 +27,7 @@ readers:
       kwargs:
         prefix: 'composed:'
 
-transforms: [] # No transforms - empty list, or omit entirely
+#transforms:  # No transforms, so omit entirely
 
 # Only a single writer, not enclosed in a list, to demonstrate/test
 # that lists are only needed if we've got multiple components.

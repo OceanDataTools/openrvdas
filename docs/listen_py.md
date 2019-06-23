@@ -90,7 +90,7 @@ If your machine doesn't have any serial ports sending actual data, you can creat
 ```
 logger/utils/simulate_serial.py \
     --port /tmp/tty_gyr1 \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
     --loop
 ```
 in a separate terminal, in which case your listener command line would be
@@ -174,7 +174,7 @@ Logfile records are special in that they are prefixed with timestamps. If, for t
 ```
 logger/listener/listen.py \
     --logfile_use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
     --write_file -
 ```
 To read logfiles in parallel, we can either specify a comma-separated list of logfiles:
@@ -182,7 +182,7 @@ To read logfiles in parallel, we can either specify a comma-separated list of lo
 ```
 logger/listener/listen.py \
     --logfile_use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1,test/nmea/NBP1700/knud/raw/NBP1700_knud \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1,test/NBP1700/knud/raw/NBP1700_knud \
     --write_file -
 ```
 or specify them with two separate `--logfile` flags:
@@ -190,8 +190,8 @@ or specify them with two separate `--logfile` flags:
 ```
 logger/listener/listen.py \
     --logfile_use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
-    --logfile test/nmea/NBP1700/knud/raw/NBP1700_knud \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
+    --logfile test/NBP1700/knud/raw/NBP1700_knud \
     --write_file -
 ```
 It's worth taking a moment to discuss how listen.py and its FileReaders and LogfileReaders select and read through the files that are specified as their inputs.
@@ -203,7 +203,7 @@ So the invocation
 ```
 logger/listener/listen.py \
     --tail --refresh_file_spec \
-    --file test/nmea/NBP1700/\*/raw/NBP1700_\* \
+    --file test/NBP1700/\*/raw/NBP1700_\* \
     --write_file -
 ```
 will create a single FileReader that will sequentially read through and deliver the records of all logfiles in the test directory, then wait to see if any more matching files ever show up. In contrast, each **comma-separated** value is used to instantiate a separate reader, as above.
@@ -222,7 +222,7 @@ When creating a LogfileReader, we give it a filebase (e.g. `NBP1700/gyr1/raw/NBP
 ```
 logger/listener/listen.py \
     --use_timestamps \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
     --write_file -
 ```
 Will match all files that have `NBP1700/gyr1/raw/NBP1700_gyr1` as their prefix and deliver the records they contain in sequence. As we've already observed, an additional power of LogfileReaders is that they can also parse the timestamps of their records and deliver them at a rate corresponding to their original creation times.
@@ -231,7 +231,7 @@ So, given these pieces, let's try reading data from a logfile, stripping off the
 
 ```
 logger/listener/listen.py \
-    --logfile test/nmea/NBP1700/gyr1/raw/NBP1700_gyr1 \
+    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
     --transform_slice 1: \
     --transform_timestamp \
     --write_logfile /tmp/NBP1700_fast_gyr \
