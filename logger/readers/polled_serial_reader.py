@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import serial
 import sys
 
 sys.path.append('.')
@@ -15,7 +16,7 @@ class PolledSerialReader(SerialReader):
   def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-               exclusive=None, max_bytes=None, lf=None, start_cmd=None,
+               exclusive=None, max_bytes=None, eol=None, start_cmd=None,
                pre_read_cmd=None, stop_cmd=None):
     """
     Extends the standard serial reader by allowing the user to define
@@ -44,7 +45,7 @@ class PolledSerialReader(SerialReader):
       if self.pre_read_cmd:
         self.serial.write(self.pre_read_cmd.encode('utf-8'))
 
-      record = self.read()
+      record = super().read()
       return record
     except serial.serialutil.SerialException as e:
       logging.error(str(e))
