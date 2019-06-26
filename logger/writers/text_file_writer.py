@@ -30,7 +30,8 @@ class TextFileWriter(Writer):
     if filename:
       # If directory doesn't exist, try to create it
       file_dir = os.path.dirname(filename)
-      os.makedirs(file_dir, exist_ok=True)
+      if file_dir:
+        os.makedirs(file_dir, exist_ok=True)
 
       if truncate:
         self.file = open(filename, 'w')

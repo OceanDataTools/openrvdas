@@ -104,9 +104,9 @@ argument to appear on the command line *before* any DatabaseReader or
 DatabaseWriter specification:
 ```
 logger/listener/listen.py \
-  --logfile test/NBP1700/s330/raw/NBP1700_s330-2017-11-04 \
+  --logfile test/NBP1406/s330/raw/NBP1406_s330-2014-08-01 \
   --transform_prefix s330 \
-  --transform_parse_nmea \
+  --transform_parse \
   --database_password rvdas \
   --write_database rvdas@localhost:data
 ```
@@ -119,7 +119,7 @@ message type '$PSXN-23':
 ```
 logger/listener/listen.py \
   --database_password rvdas \
-  --database rvdas@localhost:data:s330:\$PSXN-23 \
+  --database rvdas@localhost:data:S330SpeedKt,S330Latitude,S330Longitude \
   --write_file -
 ```
 

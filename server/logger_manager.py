@@ -62,7 +62,7 @@ To try out the scripts, open four(!) terminal windows.
    # Change cruise modes
 
    command? get_modes
-     Modes for NBP1700: off, port, underway
+     Modes for NBP1406: off, port, underway
 
    command? set_active_mode port
      (You should notice data appearing in the Listener window.)

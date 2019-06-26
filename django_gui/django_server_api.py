@@ -233,7 +233,7 @@ class DjangoServerAPI(ServerAPI):
   #############################
   def get_logger_config_names(self, logger_id):
     """Retrieve list of config names that are valid for the specified logger .
-    > api.get_logger_config_names('NBP1700', 'knud')
+    > api.get_logger_config_names('NBP1406', 'knud')
           ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
     """
     while True:

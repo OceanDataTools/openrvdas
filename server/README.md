@@ -142,7 +142,7 @@ To try out the scripts, open three terminal windows.
    command? get_logger_configs s330
      Configs for s330: s330->off, s330->net, s330->file/net/db
    
-   command? set_active_logger_config NBP1700 s330 s330->net
+   command? set_active_logger_config s330 s330->net
 
    command? set_active_mode off
 

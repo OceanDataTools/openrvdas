@@ -1,6 +1,6 @@
 # The Listener Script - listen.py
-© 2018 David Pablo Cohn
- DRAFT 2018-08-10
+© 2018-2019 David Pablo Cohn
+ DRAFT 2019-06-25
 
 ## Table of Contents
 
@@ -90,7 +90,7 @@ If your machine doesn't have any serial ports sending actual data, you can creat
 ```
 logger/utils/simulate_serial.py \
     --port /tmp/tty_gyr1 \
-    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1-2017-11-04 \
+    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
     --loop
 ```
 in a separate terminal, in which case your listener command line would be
@@ -130,9 +130,10 @@ logger/listener/listen.py \
 producing
 
 ```
-gyr1 2017-11-08:16:25:12.835904 $HEHDT,235.34,T*1c
-gyr1 2017-11-08:16:25:13.093473 $HEHDT,235.36,T*1e
-gyr1 2017-11-08:16:25:13.349195 $HEHDT,235.38,T*10
+gyr1 2019-06-25T20:52:28.152794Z $HEHDT,218.40,T*10
+gyr1 2019-06-25T20:52:28.153415Z $HEHDT,218.36,T*11
+gyr1 2019-06-25T20:52:28.317247Z $HEHDT,218.33,T*14
+gyr1 2019-06-25T20:52:28.518668Z $HEHDT,218.29,T*1f
 ...
 ```
 (An error "Network is unreachable" may occur if you're offline.)
@@ -155,7 +156,7 @@ logger/listener/listen.py \
 If our network records look like
 
 ```
-gyr1 2017-11-08:16:25:13.349195 $HEHDT,235.38,T*10
+gyr1 2019-06-25T20:52:28.721599Z $HEHDT,218.24,T*12
 ```
 
 we can strip off the instrument name before storing it:
@@ -174,7 +175,7 @@ Logfile records are special in that they are prefixed with timestamps. If, for t
 ```
 logger/listener/listen.py \
     --logfile_use_timestamps \
-    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
+    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
     --write_file -
 ```
 To read logfiles in parallel, we can either specify a comma-separated list of logfiles:
@@ -182,7 +183,7 @@ To read logfiles in parallel, we can either specify a comma-separated list of lo
 ```
 logger/listener/listen.py \
     --logfile_use_timestamps \
-    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1,test/NBP1700/knud/raw/NBP1700_knud \
+    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01,test/NBP1406/knud/raw/NBP1406_knud-2014-08-01 \
     --write_file -
 ```
 or specify them with two separate `--logfile` flags:
@@ -190,8 +191,8 @@ or specify them with two separate `--logfile` flags:
 ```
 logger/listener/listen.py \
     --logfile_use_timestamps \
-    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
-    --logfile test/NBP1700/knud/raw/NBP1700_knud \
+    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
+    --logfile test/NBP1406/knud/raw/NBP1406_knud-2014-08-01 \
     --write_file -
 ```
 It's worth taking a moment to discuss how listen.py and its FileReaders and LogfileReaders select and read through the files that are specified as their inputs.
@@ -203,7 +204,7 @@ So the invocation
 ```
 logger/listener/listen.py \
     --tail --refresh_file_spec \
-    --file test/NBP1700/\*/raw/NBP1700_\* \
+    --file test/NBP1406/\*/raw/NBP1406_\* \
     --write_file -
 ```
 will create a single FileReader that will sequentially read through and deliver the records of all logfiles in the test directory, then wait to see if any more matching files ever show up. In contrast, each **comma-separated** value is used to instantiate a separate reader, as above.
@@ -221,23 +222,23 @@ When creating a LogfileReader, we give it a filebase (e.g. `NBP1700/gyr1/raw/NBP
 
 ```
 logger/listener/listen.py \
-    --use_timestamps \
-    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
+    --logfile_use_timestamps \
+    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1 \
     --write_file -
 ```
-Will match all files that have `NBP1700/gyr1/raw/NBP1700_gyr1` as their prefix and deliver the records they contain in sequence. As we've already observed, an additional power of LogfileReaders is that they can also parse the timestamps of their records and deliver them at a rate corresponding to their original creation times.
+Will match all files that have `NBP1406/gyr1/raw/NBP1406_gyr1` as their prefix and deliver the records they contain in sequence. As we've already observed, an additional power of LogfileReaders is that they can also parse the timestamps of their records and deliver them at a rate corresponding to their original creation times.
 
 So, given these pieces, let's try reading data from a logfile, stripping off the timestamps and creating new timestamps that are more spread out, simulating a faster delivery of data.
 
 ```
 logger/listener/listen.py \
-    --logfile test/NBP1700/gyr1/raw/NBP1700_gyr1 \
+    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1 \
     --transform_slice 1: \
     --transform_timestamp \
-    --write_logfile /tmp/NBP1700_fast_gyr \
+    --write_logfile /tmp/NBP1406_fast_gyr \
     --interval 0.1
 ```
-Note that we've left off the `--use_timestamps` flag, so the LogfileReader will read its records as fast as it can. We slice off the first field in the record (the old timestamp), add a new one, and write it to a new logfile. We also specify `--interval 0.1` to tell the listener to sleep so that (as close as it can manage) new records come out every 0.1 seconds.
+Note that we've left off the `--logfile_use_timestamps` flag, so the LogfileReader will read its records as fast as it can. We slice off the first field in the record (the old timestamp), add a new one, and write it to a new logfile. We also specify `--interval 0.1` to tell the listener to sleep so that (as close as it can manage) new records come out every 0.1 seconds.
 
 If you append `-v -v` to the above call to place the listener in debug mode, you'll get to see all the inner workings as the LogfileReader instantiates an inner TextFileReader, fetches records from it, slices off the first field, adds a new timestamp and writes it to a date-stamped logfile.
 
@@ -271,63 +272,40 @@ A configuration file is a YAML or JSON specification[^4] of components along wit
 ```
 logger/listener/listen.py --config_file gyr_logger.yaml
 ```
-where gyr_logger.yaml consists of the JSON definition
+where gyr_logger.yaml consists of the YAML definition
 
 ```
-{ 
-   "readers": { 
-     "class": "SerialReader", 
-     "kwargs": { 
-       "port": "/dev/ttyr15", 
-       "baudrate": 9600 
-     }
-   }, 
-   "transforms": [ 
-     { 
-       "class": "TimestampTransform" 
-       // NOTE: no keyword args 
-     }, 
-     { 
-       "class": "PrefixTransform", 
-       "kwargs": { 
-         "prefix": "gyr1" 
-       }
-     }  
-   ], 
-   "writers": [ 
-     { 
-       "class": "LogfileWriter", 
-       "kwargs": { 
-         "filebase": "/log/current/gyr1" 
-       } 
-     }, 
-     { 
-       "class": "NetworkWriter", 
-       "kwargs": { 
-         "network": ":6224" 
-       } 
-     } 
-   ] 
-}
+  readers:  
+    class: SerialReader 
+    kwargs:  
+      port: /dev/ttyr15 
+      baudrate: 9600 
+  transforms:
+  - class: TimestampTransform  # NOTE: no keyword args 
+  = class: PrefixTransform 
+    kwargs:  
+        prefix: gyr1 
+   writers:
+   - class: LogfileWriter 
+     kwargs:  
+       filebase: /log/current/gyr1 
+   - class: NetworkWriter 
+     kwargs:  
+       network: :6224 
 ```
 The basic format of a logger configuration file is a YAML or JSON definition:
 
 ```
-{ 
-  "readers": [... ], 
-  "transforms": [...], 
-  "writers": [...] 
-}
+  readers: [... ]
+  transforms: [...]
+  writers: [...] 
 ```
 where the reader/transform/writer definition is a list of dictionaries, each defining one component via two elements: a "class" key defining the type of component, and a "kwargs" key defining its keyword arguments:
 
 ```
-{ 
-  "class": "LogfileWriter", 
-  "kwargs": { 
-    "filebase": "/log/current/gyr1" 
-  } 
-}
+  class: LogfileWriter, 
+  kwargs:
+    filebase: /log/current/gyr1 
 ```
 If there is only one component defined for readers/transforms/writers, it doesn't need to be enclosed in a list, as with the "readers" example above.
 
