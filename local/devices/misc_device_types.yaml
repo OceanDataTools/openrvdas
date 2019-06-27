@@ -243,7 +243,7 @@ Winch:
   category: "device_type"
   description: "Unknown winch model"
 
-  format: "{LANID:nc},{WinchTime:ti},{Name:nc},{Tension:g},{Speed:g},{Payout:g},{Checksum:g}"
+  format: "{LANID:nc},{WinchTime:ti},{Name:nc},{Tension:of},{Speed:of},{Payout:of},{Checksum:g}"
 
   fields:
     LANID:

@@ -88,7 +88,10 @@ class NetworkWriter(Writer):
     bytes_sent = 0
     rec_len = len(record)
     while num_tries < self.num_retry and bytes_sent < rec_len:
-      bytes_sent = self.socket.send(record.encode('utf-8'))
+      try:
+        bytes_sent = self.socket.send(record.encode('utf-8'))
+      except OSError as e:
+        logging.warning('Error while writing "%s": %s', record, str(e))
       num_tries += 1
 
     logging.debug('NetworkWriter.write() wrote %d/%d bytes after %d tries',

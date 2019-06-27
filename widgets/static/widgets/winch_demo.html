@@ -101,6 +101,7 @@
   </tr>
 
 </table>
+<em>Note: to activate the data required by these widgets, load and run the cruise definition at test/NBP1406/NBP1406_winch.yaml</em>
 
 
     <script type="text/javascript">
@@ -167,7 +168,7 @@
       var cwnc_tension_gauge_options = {
         chart: { type: 'solidgauge' },
         series: [{
-          id: 'CWNCTension',
+          id: 'WaterfallTension',
           name: 'Payout',
           data: [0],
           dataLabels: {
@@ -218,13 +219,13 @@
       //////////////////
       // Two dials
       var cwnc_speed_dial_fields = {
-        CWNCSpeed: { name: 'Waterfall Winch Speed' }
+        WaterfallSpeed: { name: 'Waterfall Winch Speed' }
       };
       widget_list.push(new DialWidget('cwnc-speed-dial-container',
                                       cwnc_speed_dial_fields,
                                       cwnc_speed_gauge_options));
       var cwnc_tension_dial_fields = {
-        CWNCTension: { name: 'Tension' }
+        WaterfallTension: { name: 'Tension' }
       };
       widget_list.push(new DialWidget('cwnc-tension-dial-container',
                                       cwnc_tension_dial_fields,
@@ -246,14 +247,14 @@
 
       //////////////////
       // Two rows: Payout and any alerts
-      var cwnc_payout_fields = {CWNCPayout: {name: "Payout" }};
+      var cwnc_payout_fields = {WaterfallPayout: {name: "Payout" }};
       widget_list.push(new TextWidget('cwnc-payout-container',
                                       cwnc_payout_fields));
       var cwnc_warnings_fields = {
-        AlertMessage: {
+        'stderr:cwnc': {
           seconds: 30,
           transform: function(val) {
-            if (val && val.search('CWNC') >= 0) {
+            if (val && val.search('Waterfall') >= 0) {
               // Before we return value, an ugly little hack to keep our 
               // text area at bottom before we add text.
               keep_element_scrolled_to_bottom('cwnc-warnings-container');
@@ -275,7 +276,7 @@
       var twnc_speed_gauge_options = {
         chart: { type: 'solidgauge' },
         series: [{
-          id: 'TWNCSpeed',
+          id: 'TrawlSpeed',
           name: 'Trawl Winch Speed',
           data: [0],
           dataLabels: {
@@ -288,7 +289,7 @@
         yAxis: {
           min: 0,
           max: 60,
-          title: { text: 'TWNC Speed' },
+          title: { text: 'Trawl Speed' },
           stops: [
               [0.1, '#55BF3B'], // green
               [0.5, '#DDDF0D'], // yellow
@@ -328,7 +329,7 @@
       var twnc_tension_gauge_options = {
         chart: { type: 'solidgauge' },
         series: [{
-          id: 'TWNCTension',
+          id: 'TrawlTension',
           name: 'Payout',
           data: [0],
           dataLabels: {
@@ -379,13 +380,13 @@
       //////////////////
       // Two dials
       var twnc_speed_dial_fields = {
-        TWNCSpeed: { name: 'Trawl Winch Speed' }
+        TrawlSpeed: { name: 'Trawl Winch Speed' }
       };
       widget_list.push(new DialWidget('twnc-speed-dial-container',
                                       twnc_speed_dial_fields,
                                       twnc_speed_gauge_options));
       var twnc_tension_dial_fields = {
-        TWNCTension: { name: 'Tension' }
+        TrawlTension: { name: 'Tension' }
       };
       widget_list.push(new DialWidget('twnc-tension-dial-container',
                                       twnc_tension_dial_fields,
@@ -407,14 +408,14 @@
 
       //////////////////
       // Two rows: Payout and any alerts
-      var twnc_payout_fields = {TWNCPayout: {name: "Payout" }};
+      var twnc_payout_fields = {TrawlPayout: {name: "Payout" }};
       widget_list.push(new TextWidget('twnc-payout-container',
                                       twnc_payout_fields));
       var twnc_warnings_fields = {
-        AlertMessage: {
+        'stderr:twnc': {
           seconds: 30,
           transform: function(val) {
-            if (val && val.search('TWNC') >= 0) {
+            if (val && val.search('Trawl') >= 0) {
               // Before we return value, an ugly little hack to keep our 
               // text area at bottom before we add text.
               keep_element_scrolled_to_bottom('twnc-warnings-container');

@@ -67,6 +67,7 @@
         </td>
       </tr>
     </table>
+    <em>Note: to activate the data required by these widgets, load and run the cruise definition at test/NBP1406/NBP1406_true_winds.yaml</em>
 
     <script type="text/javascript">
       //////////////////////////////////////
@@ -94,10 +95,12 @@
         PortTrueWindDir: {
           name: 'Port True Wind',
           color: 'red',
+          transform: function(val) { return Math.round(val*100)/100; }
         },
         StbdTrueWindDir: {
           name: 'Stbd True Wind',
           color: 'green',
+          transform: function(val) { return Math.round(val*100)/100; }
         }
       };
       widget_list.push(new DialWidget('true-wind-container', true_wind_fields));
@@ -139,7 +142,7 @@
       widget_list.push(new TextWidget('heading_container',
                                       {S330HeadingTrue: {name: 'Heading'}}));
       widget_list.push(new TextWidget('sog_container',
-                                      {S330Speed: {name: 'Speed'}}));
+                                      {S330SpeedKt: {name: 'Speed'}}));
 
       var widget_server = new WidgetServer(widget_list,
                                            WEBSOCKET_DATA_SERVER);

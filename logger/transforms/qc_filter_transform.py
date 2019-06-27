@@ -55,25 +55,31 @@ class QCFilterTransform(Transform):
     if not record:
       return None
 
-    errors = []
-
-    if not type(record) is DASRecord:
-      errors.append('Improper format record: %s' % str(record))
-
+    if type(record) is DASRecord:
+      fields = record.fields
+    elif type(record) is dict:
+      if 'fields' in record:
+        fields = record['fields']
+      else:
+        fields = record
     else:
-      for bound in self.bounds:
-        if not bound in record.fields:
-          continue
-        value = record.fields.get(bound)
-        (lower, upper) = self.bounds[bound]
-        if type(value) is not int and type(value) is not float:
-          errors.append('%s: non-numeric value: "%s"' % (bound, value))
-          continue
+      return ('Record passed to QCFilterTransform was neither a dict nor a '
+              'DASRecord. Type was %s: %s' % (type(record), str(record)[:80]))
+    
+    errors = []
+    for bound in self.bounds:
+      if not bound in fields:
+        continue
+      value = fields.get(bound)
+      (lower, upper) = self.bounds[bound]
+      if type(value) is not int and type(value) is not float:
+        errors.append('%s: non-numeric value: "%s"' % (bound, value))
+        continue
 
-        if lower is not None and value < lower:
-          errors.append('%s: %g < lower bound %g' % (bound, value, lower))
-        if upper is not None and value > upper:
-          errors.append('%s: %g > upper bound %g' % (bound, value, upper))
+      if lower is not None and value < lower:
+        errors.append('%s: %g < lower bound %g' % (bound, value, lower))
+      if upper is not None and value > upper:
+        errors.append('%s: %g > upper bound %g' % (bound, value, upper))
 
     # If no errors, return None. Otherwise either return the specified
     # message (if we've been given one), or the joined string of

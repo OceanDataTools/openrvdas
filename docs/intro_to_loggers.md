@@ -49,7 +49,11 @@ The document [OpenRVDAS Components](components.md) describes many of the current
 
 ## Using the Listener Class
 
-A ```Listener``` class further simplifies creation and running of loggers at the code level. It takes a list of Readers, Transforms and Writers and runs them in a "hourglass" pipeline, running all Readers in parallel, feeding their output to the Transforms, run in series, and feeding that output to the Writers, run in parallel, as below:
+A ```Listener``` class further simplifies creation and running of loggers at the code level. It takes a list of Readers, Transforms and Writers and runs them in an "hourglass" pipeline:
+
+![Hourglass dataflow for listener class](images/generic_listener.png)
+
+It runs all Readers in parallel, feeding their output to the Transforms, run in series, and feeding that output to the Writers, run in parallel, as below:
 
 ```
     listener = Listener(readers=[NetworkReader(':6221'),
@@ -98,41 +102,23 @@ logger/listener/listen.py --config_file gyr_logger.yaml
 The file gyr_logger.yaml might consist of the YAML/JSON definition
 
 ```
-{ 
-   "readers": { 
-     "class": "SerialReader", 
-     "kwargs": { 
-       "port": "/dev/ttyr15", 
-       "baudrate": 9600 
-     }
-   }, 
-   "transforms": [ 
-     { 
-       "class": "TimestampTransform" 
-       // NOTE: no keyword args 
-     }, 
-     { 
-       "class": "PrefixTransform", 
-       "kwargs": { 
-         "prefix": "gyr1" 
-       }
-     }  
-   ], 
-   "writers": [ 
-     { 
-       "class": "LogfileWriter", 
-       "kwargs": { 
-         "filebase": "/log/current/gyr1" 
-       } 
-     }, 
-     { 
-       "class": "NetworkWriter", 
-       "kwargs": { 
-         "network": ":6224" 
-       } 
-     } 
-   ] 
-}
+  readers:  
+    class: SerialReader 
+    kwargs:  
+      port: /dev/ttyr15 
+      baudrate: 9600 
+  transforms:
+  - class: TimestampTransform  # NOTE: no keyword args 
+  - class: PrefixTransform 
+    kwargs:  
+      prefix: gyr1 
+  writers:
+  - class: LogfileWriter 
+    kwargs:  
+      filebase: /log/current/gyr1 
+  - class: NetworkWriter 
+    kwargs: 
+      network: :6224 
 ```
 
 Again, use of listen.py script with and without configuration files is described in [The Listener Script](listen_py.md), and  configuration files are described in detail in [OpenRVDAS Configuration Files](configuration_files.md).

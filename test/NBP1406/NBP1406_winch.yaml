@@ -1,344 +1,240 @@
-{
-    "cruise": {
-        "id": "NBP1406 Winches",
-        "start": "2014-06-01",
-        "end": "2014-07-01"
-    },
-    "loggers": {
-        "cwnc": {
-            "configs": [
-                "cwnc->off",
-                "cwnc->net",
-                "cwnc->file/net/db"
-            ]
-        },
-        "twnc": {
-            "configs": [
-                "twnc->off",
-                "twnc->net",
-                "twnc->file/net/db"
-            ]
-        },
-        "cwnc_qc": {
-            "configs": [
-                "cwnc_qc->off",
-                "cwnc_qc->net",
-                "cwnc_qc->file/net/db"
-            ]
-        }
-    },
-    "modes": {
-        "off": {
-            "cwnc": "cwnc->off",
-            "twnc": "twnc->off",
-            "cwnc_qc": "cwnc_qc->off"
-        },
-        "monitor": {
-            "cwnc": "cwnc->net",
-            "twnc": "twnc->net",
-            "cwnc_qc": "cwnc_qc->net"
-        },
-        "monitor and log": {
-            "cwnc": "cwnc->file/net/db",
-            "twnc": "twnc->file/net/db",
-            "cwnc_qc": "cwnc_qc->file/net/db"
-        }
-    },
-    "default_mode": "off",
-    "configs": {
-        "cwnc->off": {},
-        "twnc->off": {},
-        "cwnc->net": {
-            "name": "cwnc->net",
-            "readers": {
-                "class": "SerialReader",
-                "kwargs": {
-                    "port": "/tmp/tty_cwnc",
-                    "baudrate": 9600
-                }
-            },
-            "transforms": {
-                "class": "TimestampTransform"
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "PrefixTransform",
-                        "kwargs": {
-                            "prefix": "cwnc"
-                        }
-                    },
-                    "writers": {
-                        "class": "NetworkWriter",
-                        "kwargs": {
-                            "network": ":6224"
-                        }
-                    }
-                }
-            }
-        },
-        "twnc->net": {
-            "name": "twnc->net",
-            "readers": {
-                "class": "SerialReader",
-                "kwargs": {
-                    "port": "/tmp/tty_twnc",
-                    "baudrate": 9600
-                }
-            },
-            "transforms": {
-                "class": "TimestampTransform"
-            },
-            "writers": {
-                "class": "ComposedWriter",
-                "kwargs": {
-                    "transforms": {
-                        "class": "PrefixTransform",
-                        "kwargs": {
-                            "prefix": "twnc"
-                        }
-                    },
-                    "writers": {
-                        "class": "NetworkWriter",
-                        "kwargs": {
-                            "network": ":6224"
-                        }
-                    }
-                }
-            }
-        },
-        "cwnc->file/net/db": {
-            "name": "cwnc->net/file/db",
-            "readers": {
-                "class": "SerialReader",
-                "kwargs": {
-                    "port": "/tmp/tty_cwnc",
-                    "baudrate": 9600
-                }
-            },
-            "transforms": {
-                "class": "TimestampTransform"
-            },
-            "writers": [
-                {
-                    "class": "LogfileWriter",
-                    "kwargs": {
-                        "filebase": "/var/tmp/log/NBP1406/cwnc/raw/NBP1406_cwnc"
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "PrefixTransform",
-                            "kwargs": {
-                                "prefix": "cwnc"
-                            }
-                        },
-                        "writers": {
-                            "class": "NetworkWriter",
-                            "kwargs": {
-                                "network": ":6224"
-                            }
-                        }
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": [
-                            {
-                                "class": "PrefixTransform",
-                                "kwargs": {
-                                    "prefix": "cwnc"
-                                }
-                            },
-                            {
-                                "class": "ParseNMEATransform"
-                            }
-                        ],
-                        "writers": {
-                            "class": "DatabaseWriter"
-                        }
-                    }
-                }
-            ]
-        },
-        "twnc->file/net/db": {
-            "name": "twnc->net/file/db",
-            "readers": {
-                "class": "SerialReader",
-                "kwargs": {
-                    "port": "/tmp/tty_twnc",
-                    "baudrate": 9600
-                }
-            },
-            "transforms": {
-                "class": "TimestampTransform"
-            },
-            "writers": [
-                {
-                    "class": "LogfileWriter",
-                    "kwargs": {
-                        "filebase": "/var/tmp/log/NBP1406/twnc/raw/NBP1406_twnc"
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "PrefixTransform",
-                            "kwargs": {
-                                "prefix": "twnc"
-                            }
-                        },
-                        "writers": {
-                            "class": "NetworkWriter",
-                            "kwargs": {
-                                "network": ":6224"
-                            }
-                        }
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": [
-                            {
-                                "class": "PrefixTransform",
-                                "kwargs": {
-                                    "prefix": "twnc"
-                                }
-                            },
-                            {
-                                "class": "ParseNMEATransform"
-                            }
-                        ],
-                        "writers": {
-                            "class": "DatabaseWriter"
-                        }
-                    }
-                }
-            ]
-        },
-        "cwnc_qc->off": {},
-        "cwnc_qc->net": {
-            "name": "cwnc_qc->net",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":6224"
-                }
-            },
-            "transforms": [
-                {
-                    "class": "RegexFilterTransform",
-                    "kwargs": {
-                        "pattern": "^cwnc "
-                    }
-                },
-                {
-                    "class": "ParseNMEATransform"
-                },
-                {
-                    "class": "QCFilterTransform",
-                    "kwargs": {
-                        "bounds": "CWNCTension:-15:10000,CWNCPayout:-6000:100000"
-                    }
-                },
-                {
-                    "class": "TimestampTransform"
-                },
-                {
-                    "class": "PrefixTransform",
-                    "kwargs": {
-                        "prefix": "alrt"
-                    }
-                }
-            ],
-            "writers": {
-                "class": "NetworkWriter",
-                "kwargs": {
-                    "network": ":6224"
-                }
-            }
-        },
-        "cwnc_qc->file/net/db": {
-            "name": "cwnc_qc->file/net/db",
-            "readers": {
-                "class": "NetworkReader",
-                "kwargs": {
-                    "network": ":6224"
-                }
-            },
-            "transforms": [
-                {
-                    "class": "RegexFilterTransform",
-                    "kwargs": {
-                        "pattern": "^cwnc "
-                    }
-                },
-                {
-                    "class": "ParseNMEATransform"
-                },
-                {
-                    "class": "QCFilterTransform",
-                    "kwargs": {
-                        "bounds": "CWNCTension:-15:10000,CWNCPayout:-6000:100000"
-                    }
-                },
-                {
-                    "class": "TimestampTransform"
-                }
-            ],
-            "writers": [
-                {
-                    "class": "LogfileWriter",
-                    "kwargs": {
-                        "filebase": "/var/tmp/log/NBP1406/alrt/raw/NBP1406_alrt"
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": {
-                            "class": "PrefixTransform",
-                            "kwargs": {
-                                "prefix": "alrt"
-                            }
-                        },
-                        "writers": {
-                            "class": "NetworkWriter",
-                            "kwargs": {
-                                "network": ":6224"
-                            }
-                        }
-                    }
-                },
-                {
-                    "class": "ComposedWriter",
-                    "kwargs": {
-                        "transforms": [
-                            {
-                                "class": "TimestampTransform"
-                            },
-                            {
-                                "class": "PrefixTransform",
-                                "kwargs": {
-                                    "prefix": "alrt"
-                                }
-                            },
-                            {
-                                "class": "ParseNMEATransform"
-                            }
-                        ],
-                        "writers": {
-                            "class": "DatabaseWriter"
-                        }
-                    }
-                }
-            ]
-        }
-    }
-}
+# A sample quality control logger for winch data. The waterfall winch
+# logger (cwnc) outputs raw data to port 6224 and parsed fields to 6225.
+# A QC logger listens to port 6225 and passes fields it receives through a
+# QCFilterTransform that checks whether the fields CWNCTension or CWNCPayout
+# are present, and if so, whether they are within the specified bounds
+# (CWNCTension:-15:10000,CWNCPayout:-6000:100000). If so, it silently
+# returns nothing. But if not, it passes on an alert message that is
+# retransmitted on 6225.
+
+# If a cached data server is listening on port 6225* while these are
+# running, you should be able to observe the results on the widget at
+#
+#   http://localhost:8000/static/widgets/winch_demo.html
+#
+# (substitute your host name for 'localhost' here).
+#
+# * A cached data server will be run, listening on the appropriate
+# ports, if the logger manager is started with a --start_data_server
+# flag on the command line. E.g.
+#
+#  server/logger_manager.py \
+#      --database django \
+#      --config test/NBP1406/NBP1406_winch \
+#      --mode monitor \
+#      --start_data_server
+
+cruise:
+  end: '2014-07-01'
+  id: NBP1406 Winches
+  start: '2014-06-01'
+
+loggers:
+  twnc:
+    configs:
+    - twnc->off
+    - twnc->net
+    - twnc->file/net
+  cwnc:
+    configs:
+    - cwnc->off
+    - cwnc->net
+    - cwnc->file/net
+  cwnc_qc:
+    configs:
+    - cwnc_qc->off
+    - cwnc_qc->net
+    - cwnc_qc->file/net
+
+modes:
+  'off':
+    twnc: twnc->off
+    cwnc: cwnc->off
+    cwnc_qc: cwnc_qc->off
+  monitor:
+    twnc: twnc->net
+    cwnc: cwnc->net
+    cwnc_qc: cwnc_qc->net
+  monitor and log:
+    twnc: twnc->file/net
+    cwnc: cwnc->file/net
+    cwnc_qc: cwnc_qc->file/net
+
+default_mode: 'off'
+
+configs:
+  twnc->off: {}
+  cwnc->off: {}
+  cwnc_qc->off: {}
+
+  twnc->net:
+    name: twnc->net
+    readers:
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_twnc
+    transforms:
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: twnc
+    writers:
+    - class: NetworkWriter
+      kwargs:
+        network: :6224
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: ParseTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  twnc->file/net:
+    name: twnc->net/file
+    readers:
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_twnc
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/twnc/raw/NBP1406_twnc
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: PrefixTransform
+          kwargs:
+            prefix: twnc
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6224
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: twnc
+        - class: ParseTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  cwnc->net:
+    name: cwnc->net
+    readers:
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_cwnc
+    transforms:
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: cwnc
+    writers:
+    - class: NetworkWriter
+      kwargs:
+        network: :6224
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: ParseTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  cwnc->file/net:
+    name: cwnc->net/file
+    readers:
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /tmp/tty_cwnc
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/tmp/log/NBP1406/cwnc/raw/NBP1406_cwnc
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: PrefixTransform
+          kwargs:
+            prefix: cwnc
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6224
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: cwnc
+        - class: ParseTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  cwnc_qc->net:
+    name: cwnc_qc->net
+    readers:
+      class: NetworkReader
+      kwargs:
+        network: :6225
+    transforms:
+    - class: FromJSONTransform
+    - class: QCFilterTransform
+      kwargs:
+        bounds: CWNCTension:-15:10000,CWNCPayout:-6000:100000
+    - class: ToDASRecordTransform
+      kwargs:
+        data_id: alrt
+        field_name: stderr:cwnc
+    writers:
+      class: NetworkWriter
+      kwargs:
+        network: :6225
+
+  cwnc_qc->file/net:
+    name: cwnc_qc->file/net
+    readers:
+      class: NetworkReader
+      kwargs:
+        network: :6225
+    transforms:
+    - class: FromJSONTransform
+    - class: QCFilterTransform
+      kwargs:
+        bounds: CWNCTension:-15:10000,CWNCPayout:-6000:100000
+    writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: TimestampTransform
+        writers:
+        - class: LogfileWriter
+          kwargs:
+            filebase: /var/tmp/log/NBP1406/alrt/raw/NBP1406_alrt
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            data_id: alrt
+            field_name: stderr:cwnc
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225

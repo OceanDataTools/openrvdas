@@ -50,7 +50,7 @@ class TestQCFilterTransform(unittest.TestCase):
 
     record = 'knud 2017-11-04T05:12:21.981359Z'
     self.assertEqual(q.transform(record),
-                     'Improper format record: knud 2017-11-04T05:12:21.981359Z')
+                     'Record passed to QCFilterTransform was neither a dict nor a DASRecord. Type was <class \'str\'>: knud 2017-11-04T05:12:21.981359Z')
 
     record = p.transform('knud 2017-11-04T05:12:21.981359Z 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183')
     self.assertEqual(q.transform(record),
@@ -62,8 +62,10 @@ class TestQCFilterTransform(unittest.TestCase):
     p = ParseNMEATransform()
     q = QCFilterTransform(bounds='KnudLFDepth:0:6000,KnudHFDepth:0:5000',
                           message='The sky is falling!')
+    record = {'KnudLFDepth':5999}
+    self.assertEqual(q.transform(record), None)
 
-    record = 'knud 2017-11-04T05:12:21.981359Z'
+    record = {'KnudLFDepth':6001}
     self.assertEqual(q.transform(record), 'The sky is falling!')
 
 ################################################################################

@@ -1,9 +1,9 @@
 # OpenRVDAS Controlling Loggers
-© 2018-2019 David Pablo Cohn - DRAFT 2019-05-26
+© 2018-2019 David Pablo Cohn - DRAFT 2019-06-26
 
 ## Overview
 
-The [OpenRVDAS Introduction and Overview](intro_and_overview.md) document provides an introduction to the OpenRVDAS framework, and [Introduction to Loggers](intro_to_loggers.md) provides an introduction to the process of running individual loggers.
+The [OpenRVDAS Introduction and Overview](intro_and_overview.md) document provides an introduction to the OpenRVDAS framework, and [Introduction to Loggers](intro_to_loggers.md) provides an introduction to the process of running *individual* loggers.
 
 This document describes two scripts that allow running, controlling and monitoring entire sets of loggers: [logger\_runner.py](../server/logger_runner.py) and [logger\_manager.py](../server/logger_manager.py).
 

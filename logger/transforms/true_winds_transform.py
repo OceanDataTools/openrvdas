@@ -144,7 +144,13 @@ class TrueWindsTransform(DerivedDataTransform):
 
     if None in (course_val, speed_val, heading_val,
                 wind_dir_val, wind_speed_val):
-      logging.debug('Not all required values for true winds are present')
+      logging.debug('Not all required values for true winds are present: '
+                    '%s: %s, %s: %s, %s: %s, %s: %s, %s: %s',
+                    self.course_field, course_val,
+                    self.speed_field, speed_val,
+                    self.heading_field, heading_val,
+                    self.wind_dir_field, wind_dir_val,
+                    self.wind_speed_field, wind_speed_val)
       return None
 
     # If we have timestamps, check our most recent timestamps against

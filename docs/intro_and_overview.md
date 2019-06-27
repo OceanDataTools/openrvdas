@@ -1,5 +1,5 @@
 # OpenRVDAS Introduction and Overview
-© 2018 David Pablo Cohn - DRAFT 2018-12-15
+© 2018-2019 David Pablo Cohn - DRAFT 2019-06-26
 
 ## Table of Contents
 
@@ -100,7 +100,7 @@ The core logger architecture is made up of three basic classes of components: Re
 
 ### Running Loggers
 
-We can combine these components at a number of levels, from hand-coding Python routines that call them manually in turn to sophisticated scripts that assemble and run complex combinations of components from either command line options or YAML/JSON configuration files. Please see [Introduction to Loggers](intro_to_loggers.md) for an in-depth exploration of how loggers may be assembled and run.
+We can combine these components at a number of levels, from hand-coding Python routines that call them manually in turn to sophisticated scripts that assemble and run complex combinations of components from either command line options or YAML/JSON configuration files. For running a single logger from the command line, the [listen.py script](listen_py.md) provides a nice compromise of power and convenience:
 
 ```
   openrvdas> logger/listener/listen.py \
@@ -115,6 +115,8 @@ We can combine these components at a number of levels, from hand-coding Python r
   knud 2018-12-16T04:16:39.397700Z 3.5kHz,4410.41,0,,,,1500,-22.004796,-17.941868
   ...           
 ```
+
+Please see [Introduction to Loggers](intro_to_loggers.md) for an in-depth exploration of other ways in which loggers may be assembled and run.
 
 ### Controlling Multiple Loggers
 
