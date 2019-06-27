@@ -31,7 +31,7 @@ class PolledSerialReader(SerialReader):
                      parity=parity, stopbits=stopbits, timeout=timeout,
                      xonxoff=xonxoff, rtscts=rtscts, write_timeout=write_timeout,
                      dsrdtr=dsrdtr, inter_byte_timeout=inter_byte_timeout,
-                     exclusive=exclusive, max_bytes=None, lf=None)
+                     exclusive=exclusive, max_bytes=max_bytes, eol=eol)
 
     if self.start_cmd:
       try:

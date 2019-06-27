@@ -26,7 +26,7 @@ class SerialReader(Reader):
   def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-               exclusive=None, max_bytes=None, lf=None):
+               exclusive=None, max_bytes=None, eol=None):
     """
     If max_bytes is specified on initialization, read up to that many
     bytes when read() is called. If not specified, read() will read up to
@@ -55,13 +55,13 @@ class SerialReader(Reader):
       sys.exit(1)
 
     self.max_bytes = max_bytes
-    self.lf = lf
+    self.eol = eol
 
   ############################
   def read(self):
     try:
-      if self.lf:
-        record = self.serial.read_until(self.lf, self.max_bytes)
+      if self.eol:
+        record = self.serial.read_until(self.eol, self.max_bytes)
       elif self.max_bytes:
         record = self.serial.read(self.max_bytes)
       else:
