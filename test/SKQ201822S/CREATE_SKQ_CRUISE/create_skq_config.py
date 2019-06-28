@@ -44,229 +44,189 @@ from collections import OrderedDict
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-# Following line is for testing only (see README.md). Set
-# ALL_USE_SAME_PORT to False to generate a configuration where each
-# logger reads from its proper port.
-
-ALL_USE_SAME_PORT = False
-PORT = '6224'
+CACHE_UDP = ':6225'
 
 # Set to desired cruise ID
 cruise = 'SKQ201822S'
 
-file_db_config = """{
-          "name": "%INST%->file/db",
-          "readers": {
-            "class": "NetworkReader",
-            "kwargs": { "network": ":%PORT%" }
-          },
-          "transforms": {
-            "class": "RegexFilterTransform",
-            "kwargs": { "pattern": "^%INST%" }
-          },
-          "writers": [
-            {
-              "class": "ComposedWriter",
-              "kwargs": {
-                "transforms": {
-                  "class": "ParseNMEATransform",
-                  "kwargs": {
-                    "sensor_path":
-                      "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
-                    "sensor_model_path":
-                      "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
-                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                  }
-                },
-                "writers": [
-                  { "class": "DatabaseWriter" },
-                  { "class": "NetworkWriter",
-                    "kwargs": {"network": ":6225" }}
-                ]
-              }
-            },
-            {
-              "class": "ComposedWriter",
-              "kwargs": {
-                "transforms": {
-                  "class": "SliceTransform",
-                  "kwargs": {"fields": "1:"}
-                },
-                "writers": {
-                  "class": "LogfileWriter",
-                  "kwargs": {
-                    "filebase": "/var/tmp/log/%CRUISE%/%INST%/raw/%CRUISE%_%INST%",
-                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                  }
-                }
-              }
-            }
-          ]
-        }"""
+file_db_config = """    readers:
+      class: NetworkReader
+      kwargs:
+        network: :%PORT%
+    writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: ParseNMEATransform
+          kwargs:
+            sensor_path: local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml
+            sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
+            time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
+        writers:
+        - class: DatabaseWriter
+        - class: NetworkWriter
+          kwargs:
+            network: :6225
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: SliceTransform
+          kwargs:
+            fields: "1:"
+        writers:
+          class: LogfileWriter
+          kwargs:
+            filebase: /var/tmp/log/%CRUISE%/%LOGGER%/raw/%CRUISE%_%LOGGER%
+            time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:%LOGGER%'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: %CACHE_UDP%
+"""
 
-file_config = """{
-          "name": "%INST%->file",
-          "readers": {
-            "class": "NetworkReader",
-            "kwargs": { "network": ":%PORT%" }
-          },
-          "transforms": {
-            "class": "RegexFilterTransform",
-            "kwargs": { "pattern": "^%INST%" }
-          },
-          "writers": [
-            {
-              "class": "ComposedWriter",
-              "kwargs": {
-                "transforms": {
-                  "class": "SliceTransform",
-                  "kwargs": {"fields": "1:"}
-                },
-                "writers": {
-                  "class": "LogfileWriter",
-                  "kwargs": {
-                    "filebase": "/var/tmp/log/%CRUISE%/%INST%/raw/%CRUISE%_%INST%",
-                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                  }
-                }
-              }
-            },
-            {
-              "class": "ComposedWriter",
-              "kwargs": {
-                "transforms": {
-                  "class": "ParseNMEATransform",
-                  "kwargs": {
-                    "sensor_path":
-                      "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
-                    "sensor_model_path":
-                      "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
-                    "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                    }
-                },
-                "writers": {
-                  "class": "NetworkWriter",
-                  "kwargs": {"network": ":6225" }
-                }
-              }
-            }
-          ]
-        }"""
+file_config = """    readers:
+      class: NetworkReader
+      kwargs:
+        network: :%PORT%
+    writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: SliceTransform
+          kwargs:
+            fields: "1:"
+        writers:
+          class: LogfileWriter
+          kwargs:
+            filebase: /var/tmp/log/%CRUISE%/%LOGGER%/raw/%CRUISE%_%LOGGER%
+            time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: ParseNMEATransform
+          kwargs:
+            sensor_path: local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml
+            sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
+            time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:%LOGGER%'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: %CACHE_UDP%
+"""
 
-db_config = """{
-          "name": "%INST%->db",
-          "readers": {
-            "class": "NetworkReader",
-            "kwargs": { "network": ":%PORT%" }
-          },
-          "transforms": {
-            "class": "RegexFilterTransform",
-            "kwargs": { "pattern": "^%INST%" }
-          },
-          "writers": {
-            "class": "ComposedWriter",
-            "kwargs": {
-              "transforms": {
-                "class": "ParseNMEATransform",
-                "kwargs": {
-                  "sensor_path":
-                    "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
-                  "sensor_model_path":
-                    "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
-                  "time_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-                  }
-              },
-              "writers": [
-                { "class": "DatabaseWriter" },
-                { "class": "NetworkWriter",
-                  "kwargs": {"network": ":6225" }}
-              ]
-            }
-          }
-        }"""
+db_config = """    readers:
+      class: NetworkReader
+      kwargs:
+        network: :%PORT%
+    writers:
+      class: ComposedWriter
+      kwargs:
+        transforms:
+          class: ParseNMEATransform
+          kwargs:
+            sensor_path: local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml
+            sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
+            time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
 
-display_on_config =  {
-          "name": "display->on",
-          "readers": [],
-          "transforms": {
-            "class": "ParseNMEATransform",
-            "kwargs": {
-              "sensor_model_path": "local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml",
-              "sensor_path": "local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml",
-            }
-          },
-          "writers": {
-            "class": "CachedDataWriter",
-            "kwargs": {
-              "back_seconds": 640,
-              "websocket": ":8766"
-            }
-          }
-        }
+        writers:
+        - class: DatabaseWriter
+        - class: NetworkWriter
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:%LOGGER%'
+        - class: ToJSONTransform
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: %CACHE_UDP%
+"""
 
 lines = [line.strip() for line in sys.stdin.readlines()]
 
-loggers = {}
-modes = {}
-configs = {}
+print('##########')
+cruise_def = """cruise: 
+  id: %s
+  start: "2018-04-01"
+  end: "2018-05-01"
+""" % cruise
+print(cruise_def)
 
-modes['off'] = {}
-modes['file'] = {}
-modes['db'] = {}
-modes['file/db'] = {}
+loggers = [line.split('\t', maxsplit=2)[0] for line in lines]
+ports = {line.split('\t', maxsplit=2)[0]: line.split('\t', maxsplit=2)[1]
+         for line in lines}
+modes = ['off', 'file', 'db', 'file/db']
 
-for line in lines:
-  logging.warning(line)
-  (inst, port) = line.split('\t', maxsplit=2)
+print('##########')
+print('loggers:')
+for logger in loggers:
+  logger_def = """  %s:
+    configs:
+    - %s->off
+    - %s->file
+    - %s->db
+    - %s->file/db""" % (logger, logger, logger, logger, logger)
+  print(logger_def)
 
-  if ALL_USE_SAME_PORT:
-    port = PORT
+print('##########')
+print('modes:')
+for mode in modes:
+  if mode == 'off':
+    print('  "%s":' % mode)
+  else:
+    print('  %s:' % mode)
+  for logger in loggers:
+    print('    %s: %s->%s' % (logger, logger, mode))
 
-  configs['%s->off' % inst] = {}
+print('##########')
+print('default_mode: "off"')
 
-  config = file_db_config
-  config = config.replace('%INST%', inst)
-  config = config.replace('%PORT%', port)
-  config = config.replace('%CRUISE%', cruise)
-  configs['%s->file/db' % inst] = yaml.load(config)
+print('##########')
+print('configs:')
+for mode in modes:
+  print('  # %s' % mode)
+  for logger in loggers:
+    name_str = """  %s->%s:
+    name: %s->%s""" % (logger, mode, logger, mode)
+    print(name_str)
 
-  config = file_config
-  config = config.replace('%INST%', inst)
-  config = config.replace('%PORT%', port)
-  config = config.replace('%CRUISE%', cruise)
-  configs['%s->file' % inst] = yaml.load(config)
+    if mode == 'off':
+      continue
+    elif mode == 'file':
+      config_str = file_config
+    elif mode == 'db':
+      config_str = db_config
+    elif mode == 'file/db':
+      config_str = file_db_config
+      
+    config_str = config_str.replace('%LOGGER%', logger)
+    config_str = config_str.replace('%PORT%', ports[logger])
+    config_str = config_str.replace('%CRUISE%', cruise)
+    config_str = config_str.replace('%CACHE_UDP%', CACHE_UDP)
+    print(config_str)
 
-  config = db_config
-  config = config.replace('%INST%', inst)
-  config = config.replace('%PORT%', port)
-  config = config.replace('%CRUISE%', cruise)
-  configs['%s->db' % inst] = yaml.load(config)
-
-  loggers[inst] = {}
-  loggers[inst]['configs'] = [
-    '%s->off' % inst, '%s->file/db' % inst, '%s->file' % inst, '%s->db' % inst
-  ]
-
-  modes['off'][inst] = '%s->off' % inst
-  modes['file'][inst] = '%s->file' % inst
-  modes['db'][inst] = '%s->db' % inst
-  modes['file/db'][inst] = '%s->file/db' % inst
-
-#pprint.pprint(loggers, width=40, compact=False)
-#pprint.pprint(modes, width=40, compact=False)
-
-skq_cruise = OrderedDict()
-skq_cruise['cruise'] = {
-  'id': '%s' % cruise,
-  'start': '2018-04-01',
-  'end': '2018-05-01'
-}
-skq_cruise['loggers'] = loggers
-skq_cruise['modes'] = modes
-skq_cruise['default_mode'] = 'off'
-skq_cruise['configs'] = configs
-
-#pprint.pprint(loggers, width=40, compact=False)
-#pprint.pprint(modes, width=40, compact=False)
-#pprint.pprint(skq_cruise, width=40, compact=False)
-print(json.dumps(skq_cruise, indent=4))

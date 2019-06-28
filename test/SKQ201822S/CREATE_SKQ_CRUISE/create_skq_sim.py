@@ -47,16 +47,12 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 cruise = 'SKQ201822S'
 date = '2018-12-06'
 
-configs = OrderedDict()
-
 for line in sys.stdin.readlines():
   line = line.strip()
-  logging.warning(line)
   (inst, port) = line.split('\t', maxsplit=2)
 
-  configs[inst] = {
-    'network': ':' + port,
-    'filebase': 'test/%s/%s/raw/%s_%s-%s' % (cruise, inst, cruise, inst, date)
-  }
+  config_str = """%s:
+  network: :%s
+  filebase: test/%s/%s/raw/%s_%s-%s""" % (inst, port, cruise, inst, cruise, inst, date)
+  print(config_str)
 
-print(json.dumps(configs, indent=4))

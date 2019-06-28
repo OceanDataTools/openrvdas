@@ -251,7 +251,7 @@
       widget_list.push(new TextWidget('cwnc-payout-container',
                                       cwnc_payout_fields));
       var cwnc_warnings_fields = {
-        'stderr:cwnc': {
+        'stderr:logger:cwnc': {
           seconds: 30,
           transform: function(val) {
             if (val && val.search('Waterfall') >= 0) {
@@ -412,7 +412,7 @@
       widget_list.push(new TextWidget('twnc-payout-container',
                                       twnc_payout_fields));
       var twnc_warnings_fields = {
-        'stderr:twnc': {
+        'stderr:logger:twnc': {
           seconds: 30,
           transform: function(val) {
             if (val && val.search('Trawl') >= 0) {

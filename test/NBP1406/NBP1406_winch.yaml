@@ -201,7 +201,7 @@ configs:
     - class: ToDASRecordTransform
       kwargs:
         data_id: alrt
-        field_name: stderr:cwnc
+        field_name: stderr:logger:cwnc
     writers:
       class: NetworkWriter
       kwargs:
@@ -233,7 +233,7 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             data_id: alrt
-            field_name: stderr:cwnc
+            field_name: stderr:logger:cwnc
         writers:
           class: NetworkWriter
           kwargs:

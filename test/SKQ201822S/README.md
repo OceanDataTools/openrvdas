@@ -58,6 +58,7 @@ you can specify the desired mode on the command line:
 
 ```
     server/logger_manager.py \
+      --database django \
       --config test/SKQ201822S/SKQ201822S_cruise.yaml \
       --mode file/db
 ```
@@ -114,6 +115,7 @@ If you are running a logger_manager manually, you may direct it to start a Cache
 
 ```
     server/logger_manager.py \
+      --database django \
       --config test/SKQ201822S/SKQ201822S_cruise.yaml \
       --mode file/db \
       --start_data_server

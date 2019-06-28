@@ -114,7 +114,7 @@ NET_WRITER_TEMPLATE="""
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: '%LOGGER%:stderr'
+            field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
@@ -173,7 +173,7 @@ FULL_WRITER_TEMPLATE="""
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: '%LOGGER%:stderr'
+            field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
           class: NetworkWriter
