@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+
+import asyncio
+import json
+import logging
+import queue
+import sys
+import threading
+import time
+
+try:
+  import websockets
+  WEBSOCKETS_ENABLED = True
+except ModuleNotFoundError:
+  WEBSOCKETS_ENABLED = False
+
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+
+from logger.readers.reader import Reader
+
+DEFAULT_SERVER_WEBSOCKET = 'localhost:8766'
+
+################################################################################
+class CachedDataReader(Reader):
+  """Subscribe to and read field values from a CachedDataServer via
+  websocket connection.
+  """
+  def __init__(self, subscription, server=DEFAULT_SERVER_WEBSOCKET):
+    """Subscribe to and read field values from a CachedDataServer via
+    websocket connection.
+
+    subscription - a dictionary corresponding to the full
+        fields/seconds, etc that the reader wishes, following the
+        conventions described in logger/utils/cached_data_server.py
+
+    server - the host and port at which to try to connect to a
+        CachedDataServer
+    """
+
+    if not WEBSOCKETS_ENABLED:
+      raise ModuleNotFoundError('CachedDataReader(): websockets module is not '
+                                'installed. Please try "pip3 install '
+                                'websockets" prior to use.')
+    self.subscription = subscription
+    subscription['type'] = 'subscribe'
+    self.server = server
+
+    # We won't initialize our websocket until the first read()
+    # call. At that point we'll launch an async process in a separate
+    # thread that will wait for data from the websocket and put it in
+    # a queue that read() will pop from.
+    self.websocket_thread = None
+    self.queue = queue.Queue()
+    self.quit_flag = False
+
+  ############################
+  def _parse_response(self, response):
+    """Parse a CachedDataServer response and enqueue the resulting data."""
+    if not response.get('type', None) == 'data':
+      logging.warning('Non-"data" response received from data '
+                      'server: %s', response)
+      return
+    if not response.get('status', None) == 200:
+      logging.warning('Non-"200" status received from data '
+                      'server: %s', response)
+      return
+    data = response.get('data', None)
+    if not data:
+      logging.debug('No data found in data server response?: %s', response)
+      return
+    if not type(data) is dict:
+      logging.warning('Data from data server not a dict?!?: %s', response)
+      return
+
+    # Collate the fields/values by timestamp
+    timestamp_dict = {}
+    for field, values in data.items():
+      for timestamp, value in values: # should be list of [ts, value] pairs
+        if not timestamp in timestamp_dict:
+          timestamp_dict[timestamp] = {}
+        timestamp_dict[timestamp][field] = value
+
+    # Enqueue entries by timestamp
+    for timestamp in sorted(timestamp_dict.keys()):
+      entry = {'timestamp': timestamp, 'fields': timestamp_dict[timestamp]}
+      logging.debug('Enqueuing from CDS: %s', entry)
+      self.queue.put(entry)
+
+  ############################
+  def _start_websocket(self):
+    """We'll run this in a separate thread as soon as we get our first
+    call to read()."""
+
+    ############################
+    async def _websocket_loop(self):
+      """Asynchronous inner function that will read from websocket and put
+      the result in our queue.
+      """
+      # Iterate if we lose the websocket for some reason other than a 'quit'
+      while not self.quit_flag:
+        try:
+          logging.info('Connecting to websocket: "%s"', self.server)
+          async with websockets.connect('ws://' + self.server) as ws:
+            # Send our subscription request
+            await ws.send(json.dumps(self.subscription))
+            result = await ws.recv()
+            response = json.loads(result)
+
+            while not self.quit_flag:
+              await ws.send(json.dumps({'type':'ready'}))
+              result = await ws.recv()
+              response = json.loads(result)
+              logging.debug('Got CachedDataServer response: %s', response)
+              self._parse_response(response)
+
+        except BrokenPipeError:
+          pass
+        except websockets.exceptions.ConnectionClosed:
+          logging.warning('Lost websocket connection to data server; '
+                          'trying to reconnect.')
+          await asyncio.sleep(0.2)
+        except OSError as e:
+          logging.info('Unable to connect to data server. '
+                       'Sleeping to try again...')
+          logging.info('Connection error: %s', str(e))
+          await asyncio.sleep(5)
+
+    # In the outer function, get a new event loop and fire up the
+    # inner, async routine.
+    self.websocket_initialized = True
+
+    # Could we also use asyncio.ensure_future(_websocket_loop(self)) ?
+
+    websocket_event_loop = asyncio.new_event_loop()
+    websocket_event_loop.run_until_complete(_websocket_loop(self))
+    websocket_event_loop.close()
+
+  ############################
+  def quit(self, seconds=0):
+    """Sleep N seconds, then signal quit."""
+    time.sleep(seconds)
+    self.quit_flag = True
+
+  ############################
+  def read(self):
+    """Read/wait for data from the websocket."""
+
+    # If we've not yet fired up the websocket thread, do that now.
+    if not self.websocket_thread:
+      self.websocket_thread = threading.Thread(
+        name='websocket_thread',
+        target=self._start_websocket,
+        daemon=True)
+      self.websocket_thread.start()
+
+    # Use a timeout in our queue get() so we can periodically check if
+    # we've gotten a 'quit'
+    while not self.quit_flag:
+      try:
+        result = self.queue.get(timeout=2)
+        logging.debug('Got result from queue: %s', result)
+        return result
+      except queue.Empty:
+        logging.debug('get() timed out - trying again')
+        pass
+
+    # If we've fallen out because of a quit...
+    return None

@@ -46,6 +46,7 @@ import time
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
+from logger.readers.cached_data_reader import CachedDataReader
 from logger.readers.composed_reader import ComposedReader
 from logger.readers.logfile_reader import LogfileReader
 from logger.readers.network_reader import NetworkReader
@@ -155,7 +156,7 @@ class ListenerFromLoggerConfig(Listener):
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords
-      elif type(value) in [float, bool, int, str, list]:
+      elif type(value) in [float, bool, int, str, list, dict]:
         kwargs[key] = value
 
       # Else what do we have?
@@ -274,6 +275,11 @@ if __name__ == '__main__':
                       help='Make LogfileReaders deliver records at intervals '
                       'corresponding to the intervals indicated by the stored '
                       'record timestamps.')
+
+  parser.add_argument('--cached_data', dest='cached_data_server', default=None,
+                      help='Read from cached data server with argument '
+                      'field_1,field2,...[@host:port]. Defaults to '
+                      'localhost:8766.')
 
   parser.add_argument('--redis', dest='redis', default=None,
                       help='Redis pubsub channel[@host[:port]] to read from. '
@@ -616,6 +622,18 @@ if __name__ == '__main__':
             filebase=filebase, use_timestamps=all_args.logfile_use_timestamps,
             time_format=all_args.time_format,
             refresh_file_spec=all_args.refresh_file_spec))
+
+      if new_args.cached_data_server:
+        fields = new_args.cached_data_server
+        server = None
+        if fields.find('@') > 0:
+          fields, server = fields.split('@')
+        subscription = {'fields': {f:{'seconds':0} for f in fields.split(',')}}
+        if server:
+          readers.append(CachedDataReader(subscription=subscription,
+                                          server=server))
+        else:
+          readers.append(CachedDataReader(subscription=subscription))
 
       # For each comma-separated spec, parse out values for
       # user@host:database:data_id[:message_type]. We count on
