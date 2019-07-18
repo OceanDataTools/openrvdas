@@ -123,7 +123,8 @@ echo Creating database user "$RVDAS_USER"
 read -p "Database password to use for $RVDAS_USER? ($RVDAS_USER) " RVDAS_PASSWORD
 RVDAS_PASSWORD=${RVDAS_PASSWORD:-$RVDAS_USER}
 
-echo Please enter SQL database root password again
+echo Now setting up database tables.
+echo Please enter SQL database *root* password to continue
 mysql -u root -p <<EOF 
 drop user if exists 'test'@'localhost'; 
 create user 'test'@'localhost' identified by 'test';
@@ -221,7 +222,12 @@ git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
 echo Initializing OpenRVDAS database...
 cd openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
+sed -i .bak -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
+sed -i .bak -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_PASSWORD}'/g" django_gui/settings.py
+
 cp database/settings.py.dist database/settings.py
+sed -i .bak -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
+sed -i .bak -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_PASSWORD}'/g" database/settings.py
 
 cp widgets/static/js/widgets/settings.js.dist \
    widgets/static/js/widgets/settings.js
