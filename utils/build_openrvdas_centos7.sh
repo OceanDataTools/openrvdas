@@ -337,6 +337,7 @@ firewall-cmd --zone=public --permanent --add-port=8766/tcp # data
 
 # Our favorite UDP port for network data
 firewall-cmd --zone=public --permanent --add-port=6224/udp
+firewall-cmd --zone=public --permanent --add-port=6225/udp
 
 # For unittest access
 firewall-cmd --zone=public --permanent --add-port=8000/udp
