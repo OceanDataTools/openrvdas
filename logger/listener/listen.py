@@ -50,6 +50,7 @@ from logger.readers.cached_data_reader import CachedDataReader
 from logger.readers.composed_reader import ComposedReader
 from logger.readers.logfile_reader import LogfileReader
 from logger.readers.network_reader import NetworkReader
+from logger.readers.udp_reader import UDPReader
 from logger.readers.redis_reader import RedisReader
 from logger.readers.serial_reader import SerialReader
 from logger.readers.polled_serial_reader import PolledSerialReader
@@ -253,6 +254,11 @@ if __name__ == '__main__':
   parser.add_argument('--network', dest='network', default=None,
                       help='Comma-separated network addresses to read from')
 
+  parser.add_argument('--udp', dest='udp', default=None,
+                      help='Comma-separated udp addresses to read from, '
+                      'where an address is of format [source:]port and '
+                      'source, when provided, is a multicast group.')
+
   parser.add_argument('--database', dest='database', default=None,
                       help='Format: user@host:database:field1,field2,... '
                       'Read specified fields from database. If no fields are '
@@ -429,7 +435,8 @@ if __name__ == '__main__':
                       help='Network address(es) to write to')
 
   parser.add_argument('--write_udp', dest='write_udp', default=None,
-                      help='UDP interface(s) and port(s) to write to')
+                      help='UDP interface(s) and port(s) to write to. Format '
+                      '[[interface:]destination:]port')
 
   parser.add_argument('--network_eol', dest='network_eol', default=None,
                       help='Optional EOL string to add to write_network '
@@ -612,6 +619,19 @@ if __name__ == '__main__':
         for addr in new_args.network.split(','):
           readers.append(NetworkReader(network=addr))
 
+      if new_args.udp:
+        eol = all_args.network_eol
+        for addr_str in new_args.udp.split(','):
+          addr = addr_str.split(':')
+          source = ''
+          port = int(addr[-1])  # port is last arg
+          if len(addr) > 1:
+            source = addr[-2] # source (multi/broadcast) is prev arg
+          if len(addr) > 2:
+            parser.error('Format error for --udp argument. Format '
+                         'should be [source:]port')
+          readers.append(UDPReader(port=port, source=source, eol=eol))
+
       if new_args.redis:
         for channel in new_args.redis.split(','):
           readers.append(RedisReader(channel=channel))
@@ -716,21 +736,39 @@ if __name__ == '__main__':
           if filename == '-':
             filename = None
           writers.append(TextFileWriter(filename=filename))
+
       if new_args.write_logfile:
         writers.append(LogfileWriter(filebase=new_args.write_logfile))
+
       if new_args.write_network:
         eol = all_args.network_eol
         for addr in new_args.write_network.split(','):
           writers.append(NetworkWriter(network=addr, eol=eol))
+
       if new_args.write_udp:
         eol = all_args.network_eol
-        for addr in new_args.write_udp.split(','):
-          writers.append(UDPWriter(network=addr, eol=eol))
+        for addr_str in new_args.write_udp.split(','):
+          addr = addr_str.split(':')
+          dest = ''
+          interface = ''
+          port = int(addr[-1])  # port is last arg
+          if len(addr) > 1:
+            dest = addr[-2] # destination (multi/broadcast) is prev arg
+          if len(addr) > 2:
+            interface = addr[-3] # interface is first arg
+          if len(addr) > 3:
+            parser.error('Format error for --write_udp argument. Format '
+                         'should be [[interface:]destination:]port')
+          writers.append(UDPWriter(port=port, destination=dest,
+                                   interface=interface, eol=eol))
+
       if new_args.write_redis:
         for channel in new_args.write_redis.split(','):
           writers.append(RedisWriter(channel=channel))
+
       if new_args.write_record_screen:
         writers.append(RecordScreenWriter())
+
       if new_args.write_database:
         password = all_args.database_password
         # Parse out values for user@host:database. We count on
@@ -739,6 +777,7 @@ if __name__ == '__main__':
         (host, database) = host_db.split(':')
         writers.append(DatabaseWriter(database=database, host=host,
                                       user=user, password=password))
+
       if new_args.write_cached_data_server:
         websocket = new_args.write_cached_data_server
         writers.append(CachedDataWriter(websocket=websocket))
