@@ -79,7 +79,7 @@ Once you have logged back on, open two terminal windows.
  After a few seconds of startup, the loggers should turn green and switch to "net" configuration, indicating that they are writing UDP to the network (in this case, to port 6224). You can verify this with another listener:
 
  ```
-  logger/listener/listen.py --network :6224 --write_file -
+  logger/listener/listen.py --udp 6224 --write_file -
  ```
 
  You can change the active configuration of individual loggers by clicking on the button bearing the name of the current configuration.
@@ -108,7 +108,7 @@ We can combine these components at a number of levels, from hand-coding Python r
                  --transform_timestamp \
                  --transform_prefix knud \
                  --write_logfile /var/log/current_cruise/knud \
-                 --write_network :6224 \
+                 --write_udp 6224 \
                  --write_file -
   knud 2018-12-16T04:16:20.147283Z 3.5kHz,4410.18,0,,,,1500,-22.004162,-17.941308
   knud 2018-12-16T04:16:29.767645Z 3.5kHz,4409.00,0,,,,1500,-22.004472,-17.941574

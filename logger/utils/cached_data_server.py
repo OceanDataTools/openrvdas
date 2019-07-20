@@ -14,14 +14,14 @@ configuration file.
 The following direct invocation of this script
 
     logger/utils/cached_data_server.py \
-      --network :6225 \
-      --websocket :8766 \
+      --udp 6225 \
+      --port 8766 \
       --back_seconds 480 \
       --v
 
 says to
 
-1. Listen on the UDP port specified by --network for JSON-encoded,
+1. Listen on the UDP port specified by --udp for JSON-encoded,
    timestamped, field:value pairs. (See the definition for cache_record(),
    below for formats understood.)
 
@@ -70,10 +70,10 @@ variety of sources (by using a LogfileReader, DatabaseReader,
 RedisReader or the like):
 
     logger/listener/listen.py \
-      --network :6221,:6224 \
+      --udp 6221,6224 \
       --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
       --transform_parse \
-      --write_cached_data_writer :8766
+      --write_cached_data_writer 8766
 
 This command  line creates  a CachedDataWriter that  reads timestamped
 NMEA sentences, parses them into  field:value pairs, then stores them,
@@ -92,10 +92,12 @@ wrapper) into a logger via a configuration file:
 where data_server_config.yaml contains:
 
 readers:
-- class: NetworkReader
-  kwargs: {network: ':6221'}
-- class: NetworkReader
-  kwargs: {network: ':6224'}
+- class: UDPReader
+  kwargs:
+    port: 6221
+- class: UDPReader
+  kwargs:
+    port: 6224
 transforms:
 - class: ParseTransform
 writers:
@@ -103,7 +105,7 @@ writers:
   kwargs:
     back_seconds: 480
     cleanup: 60
-     websocket: ':8766'
+    port: 8766
 
 *****************
 NOTE: We get have some inexplicable behavior here. When called
@@ -467,8 +469,8 @@ class WebSocketConnection:
 class CachedDataServer:
   """Class that caches field:value pairs passed to it in either a
   DASRecord or a simple dict. It also establishes a websocket server
-  at the specified host:port name and serves the cached values to
-  clients that connect via a websocket.
+  on the specified port and serves the cached values to clients that
+  connect via a websocket.
 
   The server listens for two types of requests:
 
@@ -501,17 +503,12 @@ class CachedDataServer:
   (timestamp, value) tuples that have come in since the previous
   request. It will continue this behavior indefinitely, waiting for a
   "ready" request and sending updates.
+
   """
 
   ############################
-  def __init__(self, websocket, interval=1, event_loop=None):
-    try:
-      self.host, port = websocket.split(':')
-      self.port = int(port)
-    except ValueError as e:
-      logging.error('websocket argument format must be host:port')
-      raise e
-
+  def __init__(self, port, interval=1, event_loop=None):
+    self.port = port
     self.interval = interval
     self.cache = {}
     self.cache_lock = threading.Lock()
@@ -567,12 +564,11 @@ class CachedDataServer:
   def _run_websocket_server(self):
     """Start serving on the specified websocket.
     """
-    logging.info('Starting WebSocketServer %s:%s', self.host, self.port)
+    logging.info('Starting WebSocketServer on port %d', self.port)
     try:
       self.websocket_server = websockets.serve(
         ws_handler=self._serve_websocket_data,
-        host=self.host, port=self.port,
-        loop=self.event_loop)
+        host='', port=self.port, loop=self.event_loop)
 
       # If event loop is already running, just add server to task list
       if self.event_loop.is_running():
@@ -583,8 +579,7 @@ class CachedDataServer:
         self.event_loop.run_until_complete(self.websocket_server)
         self.event_loop.run_forever()
     except OSError as e:
-      logging.fatal('Failed to open websocket %s:%s: %s',
-                    self.host, self.port, str(e))
+      logging.fatal('Failed to open websocket on port %s: %s',self.port, str(e))
       raise e
 
   ############################
@@ -653,18 +648,19 @@ if __name__ == '__main__':
   import argparse
 
   from logger.readers.composed_reader import ComposedReader
-  from logger.readers.network_reader import NetworkReader
+  from logger.readers.udp_reader import UDPReader
   from logger.transforms.from_json_transform import FromJSONTransform
   from logger.utils import record_parser
 
   parser = argparse.ArgumentParser()
-  parser.add_argument('--websocket', dest='websocket', required=True,
-                      action='store',
-                      help='Host:port on which to serve data')
+  parser.add_argument('--port', dest='port', required=True,
+                      action='store', type=int,
+                      help='Websocket port on which to serve data')
 
-  parser.add_argument('--network', dest='network', default=None, action='store',
+  parser.add_argument('--udp', dest='udp', default=None, action='store',
                       help='Comma-separated list of network ports to listen '
-                      'for data on, e.g. :6221,:6224')
+                      'for data on, e.g. 6221,6224. Prefix by group id '
+                      'to specify multicast.')
 
   parser.add_argument('--back_seconds', dest='back_seconds', action='store',
                       type=float, default=480,
@@ -691,13 +687,19 @@ if __name__ == '__main__':
   # Only create reader(s) if they've given us a network to read from;
   # otherwise, count on data coming from websocket publish
   # connections.
-  if args.network:
-    readers = [NetworkReader(network=network)
-               for network in args.network.split(',')]
+  if args.udp:
+    readers = []
+    # Readers may either be just a port (to listen for broadcast) or
+    # a multicast_group:port to listen for multicast.
+    for udp_spec in args.udp.split(','):
+      group_port = udp_spec.split(':')
+      port = int(group_port[-1])
+      multicast_group = group_port[-2] if len(group_port) == 2 else ''
+      readers.append(UDPReader(port=port, source=multicast_group))
     transform = FromJSONTransform()
     reader = ComposedReader(readers=readers, transforms=[transform])
 
-  server = CachedDataServer(args.websocket, args.interval)
+  server = CachedDataServer(args.port, args.interval)
 
   # Every N seconds, we're going to detour to clean old data out of cache
   next_cleanup_time = time.time() + args.cleanup_interval
@@ -705,7 +707,7 @@ if __name__ == '__main__':
   # Loop, reading data and writing it to the cache
   try:
     while True:
-      if args.network:
+      if args.udp:
         record = reader.read()
         logging.debug('Got record: %s', record)
 

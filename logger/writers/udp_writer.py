@@ -52,7 +52,7 @@ class UDPWriter(NetworkWriter):
 
     # Bind to interface, whether it is one passed in, or the 0.0.0.0
     # default that means send on all interfaces.
-    self.socket.bind((interface, port))
+    #self.socket.bind((interface, port))
 
     # If no destination, it's a broadcast; set flag allowing broadcast and
     # set dest to special string

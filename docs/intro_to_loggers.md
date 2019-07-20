@@ -32,7 +32,7 @@ def logger(port, instrument):
   reader = SerialReader(port=port, baudrate=9600)
   ts_transform = TimestampTransform()
   prefix_transform = PrefixTransform(instrument)
-  network_writer = NetworkWriter(':6224')
+  network_writer = UDPWriter(6224)
   logfile_writer = LogfileWriter('/log/current/%s' % instrument)
   
   while True:
@@ -43,7 +43,7 @@ def logger(port, instrument):
     network_writer.write(prefixed_record)
 ```
 
-![NetworkWriter data flow](images/network_writer.png)
+![UDPWriter data flow](images/network_writer.png)
 
 The document [OpenRVDAS Components](components.md) describes many of the currently-implemented Readers, Transforms and Writers, and you can examine the directories [logger/readers/](../logger/readers), [logger/transforms/](../logger/transforms) and [logger/writers/](../logger/writers) for the full set of standard, implemented components.
 
@@ -56,8 +56,8 @@ A ```Listener``` class further simplifies creation and running of loggers at the
 It runs all Readers in parallel, feeding their output to the Transforms, run in series, and feeding that output to the Writers, run in parallel, as below:
 
 ```
-    listener = Listener(readers=[NetworkReader(':6221'),
-                                 NetworkReader(':6223')],
+    listener = Listener(readers=[UDPReader(6221),
+                                 UDPReader(6223)],
                         transforms=[TimestampTransform(),
                                     PrefixTransform('network')],
                         writers=[TextFileWriter('/logs/network_recs'),
@@ -78,7 +78,7 @@ listen.py \
   --transform_timestamp \
   --transform_prefix gyr1 \
   --write_logfile /log/current/gyr1 \
-  --write_network :6224
+  --write_udp 6224
 ```
 implements the following data flow:
 
@@ -116,9 +116,9 @@ The file gyr_logger.yaml might consist of the YAML/JSON definition
   - class: LogfileWriter 
     kwargs:  
       filebase: /log/current/gyr1 
-  - class: NetworkWriter 
+  - class: UDPWriter 
     kwargs: 
-      network: :6224 
+      port: 6224 
 ```
 
 Again, use of listen.py script with and without configuration files is described in [The Listener Script](listen_py.md), and  configuration files are described in detail in [OpenRVDAS Configuration Files](configuration_files.md).

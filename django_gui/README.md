@@ -68,8 +68,8 @@ arguments:
 ```
   server/logger_manager.py \
     --database django \
-    --data_server_websocket :8765 \
-    --data_server_udp :6226 \
+    --data_server_websocket 8765 \
+    --data_server_udp 6226 \
     --start_data_server
 ```
 See ``server/logger_manager.py --help`` for all command line options.
@@ -123,7 +123,7 @@ yellow.
 The sample configurations use UDP broadcasts to port 6224 for raw network
 writes. You can run a listener on the port using
 ```
-  python3 logger/listener/listen.py --network :6224 --write_file -
+  python3 logger/listener/listen.py --udp 6224 --write_file -
 ```
 to listen to the appropriate port.
 

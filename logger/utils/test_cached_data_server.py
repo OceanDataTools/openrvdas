@@ -14,7 +14,7 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.readers.text_file_reader import TextFileReader
 from logger.utils.cached_data_server import CachedDataServer
 
-WEBSOCKET = 'localhost:8766'
+WEBSOCKET_PORT = 8766
 
 class TestCachedDataServer(unittest.TestCase):
 
@@ -25,14 +25,14 @@ class TestCachedDataServer(unittest.TestCase):
 
   ############################
   def test_basic(self):
-    cds = CachedDataServer(WEBSOCKET)
+    cds = CachedDataServer(port=WEBSOCKET_PORT)
     cds.cache_record({'fields':{'field_1':'value_11',
                                 'field_2':'value_21',
                                 'field_3':'value_31'}})
 
     # We call this in ensure_future, below
     async def run_test():
-      async with websockets.connect('ws://' + WEBSOCKET) as ws:
+      async with websockets.connect('ws://localhost:%d' % WEBSOCKET_PORT) as ws:
         now = time.time()
 
         #####

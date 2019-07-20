@@ -1,11 +1,9 @@
-
-# Sample cruise definition file for NBP1406, created by hacked-up script
-# at test/NBP1406/create_cruise_definition.py.
+##########
+# Sample YAML cruise definition file for NBP1406, created by hacked-up
+# script at test/NBP1406/create_cruise_definition.py.
 
 # Note that the one hack necessary is that YAML interprets 'off' (when not
-# quoted) as the literal 'False'. So YAML needs to quote 'off'. We should
-# probably also be quoting the :6224, but YAML seems to do the right thing
-# by ignoring a second colon on a line.
+# quoted) as the literal 'False'. So YAML needs to quote 'off'.
 
 ########################################
 cruise:
@@ -192,7 +190,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -200,8 +198,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -211,7 +209,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   PCOD->file/net/db:
     name: PCOD->net
@@ -235,7 +233,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -246,7 +244,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -256,7 +254,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -266,7 +264,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   adcp->off:
     name: adcp->off
@@ -286,7 +284,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -294,8 +292,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -305,7 +303,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   adcp->file/net/db:
     name: adcp->net
@@ -329,7 +327,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -340,7 +338,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -350,7 +348,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -360,7 +358,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   eng1->off:
     name: eng1->off
@@ -380,7 +378,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -388,8 +386,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -399,7 +397,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   eng1->file/net/db:
     name: eng1->net
@@ -423,7 +421,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -434,7 +432,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -444,7 +442,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -454,7 +452,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   gp02->off:
     name: gp02->off
@@ -474,7 +472,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -482,8 +480,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -493,7 +491,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gp02->file/net/db:
     name: gp02->net
@@ -517,7 +515,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -528,7 +526,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -538,7 +536,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -548,7 +546,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   grv1->off:
     name: grv1->off
@@ -568,7 +566,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -576,8 +574,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -587,7 +585,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   grv1->file/net/db:
     name: grv1->net
@@ -611,7 +609,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -622,7 +620,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -632,7 +630,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -642,7 +640,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   gyr1->off:
     name: gyr1->off
@@ -662,7 +660,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -670,8 +668,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -681,7 +679,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gyr1->file/net/db:
     name: gyr1->net
@@ -705,7 +703,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -716,7 +714,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -726,7 +724,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -736,7 +734,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   hdas->off:
     name: hdas->off
@@ -756,7 +754,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -764,8 +762,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -775,7 +773,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   hdas->file/net/db:
     name: hdas->net
@@ -799,7 +797,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -810,7 +808,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -820,7 +818,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -830,7 +828,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   knud->off:
     name: knud->off
@@ -850,7 +848,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -858,8 +856,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -869,7 +867,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   knud->file/net/db:
     name: knud->net
@@ -893,7 +891,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -904,7 +902,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -914,7 +912,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -924,7 +922,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   mbdp->off:
     name: mbdp->off
@@ -944,7 +942,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -952,8 +950,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -963,7 +961,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mbdp->file/net/db:
     name: mbdp->net
@@ -987,7 +985,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -998,7 +996,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1008,7 +1006,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1018,7 +1016,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   mwx1->off:
     name: mwx1->off
@@ -1038,7 +1036,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1046,8 +1044,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1057,7 +1055,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mwx1->file/net/db:
     name: mwx1->net
@@ -1081,7 +1079,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1092,7 +1090,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1102,7 +1100,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1112,7 +1110,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   pco2->off:
     name: pco2->off
@@ -1132,7 +1130,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1140,8 +1138,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1151,7 +1149,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   pco2->file/net/db:
     name: pco2->net
@@ -1175,7 +1173,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1186,7 +1184,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1196,7 +1194,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1206,7 +1204,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   pguv->off:
     name: pguv->off
@@ -1226,7 +1224,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1234,8 +1232,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1245,7 +1243,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   pguv->file/net/db:
     name: pguv->net
@@ -1269,7 +1267,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1280,7 +1278,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1290,7 +1288,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1300,7 +1298,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   rtmp->off:
     name: rtmp->off
@@ -1320,7 +1318,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1328,8 +1326,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1339,7 +1337,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rtmp->file/net/db:
     name: rtmp->net
@@ -1363,7 +1361,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1374,7 +1372,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1384,7 +1382,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1394,7 +1392,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   s330->off:
     name: s330->off
@@ -1414,7 +1412,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1422,8 +1420,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1433,7 +1431,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   s330->file/net/db:
     name: s330->net
@@ -1457,7 +1455,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1468,7 +1466,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1478,7 +1476,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1488,7 +1486,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   seap->off:
     name: seap->off
@@ -1508,7 +1506,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1516,8 +1514,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1527,7 +1525,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   seap->file/net/db:
     name: seap->net
@@ -1551,7 +1549,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1562,7 +1560,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1572,7 +1570,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1582,7 +1580,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   svp1->off:
     name: svp1->off
@@ -1602,7 +1600,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1610,8 +1608,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1621,7 +1619,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   svp1->file/net/db:
     name: svp1->net
@@ -1645,7 +1643,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1656,7 +1654,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1666,7 +1664,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1676,7 +1674,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   tsg1->off:
     name: tsg1->off
@@ -1696,7 +1694,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1704,8 +1702,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1715,7 +1713,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg1->file/net/db:
     name: tsg1->net
@@ -1739,7 +1737,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1750,7 +1748,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1760,7 +1758,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1770,7 +1768,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
   ########
   tsg2->off:
     name: tsg2->off
@@ -1790,7 +1788,7 @@ configs:
     writers:
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1798,8 +1796,8 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1809,7 +1807,7 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg2->file/net/db:
     name: tsg2->net
@@ -1833,7 +1831,7 @@ configs:
         writers:
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1844,7 +1842,7 @@ configs:
         writers:
         - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1854,7 +1852,7 @@ configs:
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
@@ -1864,5 +1862,5 @@ configs:
         writers:
           class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 

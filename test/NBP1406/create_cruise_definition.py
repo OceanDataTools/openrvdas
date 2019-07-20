@@ -3,9 +3,9 @@
 from collections import OrderedDict
 
 VARS = {
-  '%RAW_UDP%': ':6224',
-  '%CACHE_UDP%': ':6225',
-  '%WEBSOCKET%': ':8766',
+  '%RAW_UDP%': '6224',
+  '%CACHE_UDP%': '6225',
+  '%WEBSOCKET%': '8766',
   '%BACK_SECONDS%': '640'
 }
 
@@ -34,47 +34,18 @@ LOGGERS = [
 
 MODES = ['off', 'port', 'monitor', 'monitor and log']
 
-HEADER_TEMPLATE = """
+HEADER_TEMPLATE = """##########
 # Sample YAML cruise definition file for NBP1406, created by hacked-up
 # script at test/NBP1406/create_cruise_definition.py.
 
 # Note that the one hack necessary is that YAML interprets 'off' (when not
-# quoted) as the literal 'False'. So YAML needs to quote 'off'. We should
-# probably also be quoting the :6224, but YAML seems to do the right thing
-# by ignoring a second colon on a line.
+# quoted) as the literal 'False'. So YAML needs to quote 'off'.
 
 ########################################
 cruise:
   end: '2014-07-01'
   id: NBP1406
   start: '2014-06-01'
-"""
-
-DISPLAY_TEMPLATE = """
-  #############
-  # Display logger is the one that will feed status/error/display data
-  # to anyone who connects via websocket, so we want it running pretty
-  # much all the time.
-  display->off: {}
-
-  display->on:
-    name: display->on
-    readers:
-      class: NetworkReader
-      kwargs:
-        network: %CACHE_UDP%   # Where key:value pairs to cache are being sent
-    transforms:
-      class: FromJSONTransform
-    writers:
-      class: CachedDataWriter
-      kwargs:
-        websocket: %WEBSOCKET%  
-        back_seconds: %BACK_SECONDS%
-    stderr_writers:
-      class: TextFileWriter
-      kwargs:
-        filename: /var/log/openrvdas/display.log
-
 """
 
 OFF_TEMPLATE="""
@@ -96,30 +67,28 @@ NET_WRITER_TEMPLATE="""
       kwargs:
         prefix: %LOGGER%
     writers:
-    - class: NetworkWriter      # Send raw NMEA to UDP
+    - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
-        network: %RAW_UDP%
+        port: %RAW_UDP%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
-        -  class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: %CACHE_UDP%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+            port: %CACHE_UDP%
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:%LOGGER%'
-        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: %CACHE_UDP%
+            port: %CACHE_UDP%
 """
 
 FULL_WRITER_TEMPLATE="""
@@ -143,9 +112,9 @@ FULL_WRITER_TEMPLATE="""
           kwargs:
             prefix: %LOGGER%
         writers:
-        - class: NetworkWriter      # Send raw NMEA to UDP
+        - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
-            network: %RAW_UDP%
+            port: %RAW_UDP%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -153,11 +122,10 @@ FULL_WRITER_TEMPLATE="""
           kwargs:
             prefix: %LOGGER%
         - class: ParseTransform
-        - class: ToJSONTransform
         writers:
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: %CACHE_UDP%
+            port: %CACHE_UDP%
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -167,18 +135,17 @@ FULL_WRITER_TEMPLATE="""
         - class: ParseTransform
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
         transforms:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:%LOGGER%'
-        - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: %CACHE_UDP%
+            port: %CACHE_UDP%
 """
 
 def fill_vars(template, vars):
@@ -197,15 +164,6 @@ output = HEADER_TEMPLATE
 output += """
 ########################################
 loggers:
-  # One special logger to start with: 'display' listens for parsed JSON
-  # records on the CACHE_UDP port and makes the values available via a
-  # CachedDataServer on the websocket port.
-  display:
-    configs:
-    - display->off
-    - display->on
-
-  # Normal loggers below
 """
 
 LOGGER_DEF = """  %LOGGER%:
@@ -223,21 +181,18 @@ output += """
 ########################################
 modes:
   'off':
-    display: display->on  # display logger should always be on
 """
 for logger in LOGGERS:
   output += '    %LOGGER%: %LOGGER%->off\n'.replace('%LOGGER%', logger)
 #### monitor
 output += """
   monitor:
-    display: display->on  # display logger should always be on
 """
 for logger in LOGGERS:
   output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
 #### log
 output += """
   log:
-    display: display->on  # display logger should always be on
 """
 for logger in LOGGERS:
   if logger:
@@ -252,8 +207,8 @@ default_mode: 'off'
 # Now output configs
 output += """
 ########################################
-configs:"""
-output += fill_vars(DISPLAY_TEMPLATE, VARS)
+configs:
+"""
 for logger in LOGGERS:
   output += """  ########"""
   output += fill_vars(OFF_TEMPLATE, VARS).replace('%LOGGER%', logger)

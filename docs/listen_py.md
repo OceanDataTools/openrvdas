@@ -1,6 +1,6 @@
 # The Listener Script - listen.py
 © 2018-2019 David Pablo Cohn
- DRAFT 2019-06-25
+ DRAFT 2019-07-20
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ logger/listener/listen.py \
   --transform_timestamp \
   --transform_prefix gyr1 \
   --write_logfile /log/current/gyr1 \
-  --write_network :6224
+  --write_udp 6224
 ```
 implements the following data flow:
 
@@ -63,14 +63,14 @@ will prefix first, then add a timestamp:
 Transforms can be applied in any order, and may be repeated as desired, but it is important to remember that because of the sequential processing of the command line, any flags on which a transform (or reader or writer) depends must appear before the transform on the command line. That is:
 
 ```
-logger/listener/listen.py --network :6224 \
+logger/listener/listen.py --udp 6224 \
     --slice_separator ' ' \
     --transform_slice 0:3
 ```
 will slice its records using a space as the field separator, while
 
 ```
-logger/listener/listen.py --network :6224 \
+logger/listener/listen.py --udp 6224 \
     --transform_slice 0:3 \
     --slice_separator ' '  # ignored by the preceding transform
 ```
@@ -124,7 +124,7 @@ logger/listener/listen.py \
     --serial port=/tmp/tty_gyr1 \
     --transform_timestamp \
     --transform_prefix gyr1 \
-    --write_network :6224 \
+    --write_udp 6224 \
     --write_file -
 ```
 producing
@@ -142,14 +142,14 @@ You can also read directly from one or more network ports:
 
 ```
 logger/listener/listen.py \
-    --network :6224,:6225 \
+    --udp 6224,6225 \
     --write_file -
 ```
 and filter the results to only receive records of interest:
 
 ```
 logger/listener/listen.py \
-    --network :6224,:6225 \
+    --udp 6224,6225 \
     --transform_regex_filter "^gyr1 " \
     --write_file -
 ```
@@ -163,7 +163,7 @@ we can strip off the instrument name before storing it:
 
 ```
 logger/listener/listen.py \
-    --network :6224,:6225 \
+    --udp 6224,6225 \
     --transform_regex_filter "^gyr1 " \
     --transform_slice 1: \
     --write_file -
@@ -244,7 +244,7 @@ If you append `-v -v` to the above call to place the listener in debug mode, you
 
 ## Listener chaining
 
-While the previous section illustrates the flexibility of the listen.py script, there are still limitations. When running from the command line, **all** transforms are applied to **all** records from **all** readers, before being sent out to **all** writers. In our original custom logger, records sent to the NetworkWriter were prefixed with the instrument name ('gyr1'), while records that were written to the gyr1 logfile (where the prefix would be redundant) were not.
+While the previous section illustrates the flexibility of the listen.py script, there are still limitations. When running from the command line, **all** transforms are applied to **all** records from **all** readers, before being sent out to **all** writers. In our original custom logger, records sent to the UDPWriter were prefixed with the instrument name ('gyr1'), while records that were written to the gyr1 logfile (where the prefix would be redundant) were not.
 
 One way around this problem is **listener chaining**.
 
@@ -259,7 +259,7 @@ logger/listener/listen.py \
 logger/listener/listen.py \
     --logfile /log/current/gyr1 \
     --transform_prefix gyr1 \
-    --write_network :6224
+    --write_udp 6224
 ```
 The first of these scripts timestamps records as they come in and saves them in a log file. The second one reads that logfile, adds the desired prefix, and broadcasts it to the network via UDP. Surprisingly complex workflows can be achieved with chaining.
 
@@ -289,9 +289,9 @@ where gyr_logger.yaml consists of the YAML definition
    - class: LogfileWriter 
      kwargs:  
        filebase: /log/current/gyr1 
-   - class: NetworkWriter 
+   - class: UDPWriter 
      kwargs:  
-       network: :6224 
+       port: 6224 
 ```
 The basic format of a logger configuration file is a YAML or JSON definition:
 

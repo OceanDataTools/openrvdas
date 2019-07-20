@@ -465,9 +465,9 @@ configs:
   met_ptu307->file:
     name: met_ptu307->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53100
+        port: 53100
     writers:
     - class: ComposedWriter
       kwargs:
@@ -489,9 +489,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -501,16 +501,16 @@ configs:
             field_name: 'stderr:logger:met_ptu307'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rain_rmy50202->file:
     name: rain_rmy50202->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53101
+        port: 53101
     writers:
     - class: ComposedWriter
       kwargs:
@@ -532,9 +532,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -544,16 +544,16 @@ configs:
             field_name: 'stderr:logger:rain_rmy50202'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rad_qsr2150a->file:
     name: rad_qsr2150a->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53104
+        port: 53104
     writers:
     - class: ComposedWriter
       kwargs:
@@ -575,9 +575,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -587,16 +587,16 @@ configs:
             field_name: 'stderr:logger:rad_qsr2150a'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rad_psp-pir->file:
     name: rad_psp-pir->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53105
+        port: 53105
     writers:
     - class: ComposedWriter
       kwargs:
@@ -618,9 +618,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -630,16 +630,16 @@ configs:
             field_name: 'stderr:logger:rad_psp-pir'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_pyrometer-ct15->file:
     name: thermo_pyrometer-ct15->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53106
+        port: 53106
     writers:
     - class: ComposedWriter
       kwargs:
@@ -661,9 +661,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -673,16 +673,16 @@ configs:
             field_name: 'stderr:logger:thermo_pyrometer-ct15'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   fluoro_turner-c6->file:
     name: fluoro_turner-c6->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53107
+        port: 53107
     writers:
     - class: ComposedWriter
       kwargs:
@@ -704,9 +704,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -716,16 +716,16 @@ configs:
             field_name: 'stderr:logger:fluoro_turner-c6'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   grav_bgm3_222->file:
     name: grav_bgm3_222->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53108
+        port: 53108
     writers:
     - class: ComposedWriter
       kwargs:
@@ -747,9 +747,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -759,16 +759,16 @@ configs:
             field_name: 'stderr:logger:grav_bgm3_222'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   pco2_ldeo_merge->file:
     name: pco2_ldeo_merge->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54109
+        port: 54109
     writers:
     - class: ComposedWriter
       kwargs:
@@ -790,9 +790,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -802,16 +802,16 @@ configs:
             field_name: 'stderr:logger:pco2_ldeo_merge'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_sbe45_fwd->file:
     name: tsg_sbe45_fwd->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53110
+        port: 53110
     writers:
     - class: ComposedWriter
       kwargs:
@@ -833,9 +833,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -845,16 +845,16 @@ configs:
             field_name: 'stderr:logger:tsg_sbe45_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_sbe38_fwd->file:
     name: thermo_sbe38_fwd->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53111
+        port: 53111
     writers:
     - class: ComposedWriter
       kwargs:
@@ -876,9 +876,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -888,16 +888,16 @@ configs:
             field_name: 'stderr:logger:thermo_sbe38_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_sbe38_incubator->file:
     name: thermo_sbe38_incubator->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53112
+        port: 53112
     writers:
     - class: ComposedWriter
       kwargs:
@@ -919,9 +919,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -931,16 +931,16 @@ configs:
             field_name: 'stderr:logger:thermo_sbe38_incubator'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_sbe45_fwd_2->file:
     name: tsg_sbe45_fwd_2->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53114
+        port: 53114
     writers:
     - class: ComposedWriter
       kwargs:
@@ -962,9 +962,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -974,16 +974,16 @@ configs:
             field_name: 'stderr:logger:tsg_sbe45_fwd_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   flow_krohne_pco2->file:
     name: flow_krohne_pco2->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53116
+        port: 53116
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1005,9 +1005,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1017,16 +1017,16 @@ configs:
             field_name: 'stderr:logger:flow_krohne_pco2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ssv_aml->file:
     name: ssv_aml->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53117
+        port: 53117
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1048,9 +1048,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1060,16 +1060,16 @@ configs:
             field_name: 'stderr:logger:ssv_aml'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ins_seapath_position->file:
     name: ins_seapath_position->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53119
+        port: 53119
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1091,9 +1091,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1103,16 +1103,16 @@ configs:
             field_name: 'stderr:logger:ins_seapath_position'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gnss_cnav->file:
     name: gnss_cnav->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53121
+        port: 53121
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1134,9 +1134,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1146,16 +1146,16 @@ configs:
             field_name: 'stderr:logger:gnss_cnav'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gyro_1->file:
     name: gyro_1->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53122
+        port: 53122
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1177,9 +1177,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1189,16 +1189,16 @@ configs:
             field_name: 'stderr:logger:gyro_1'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gyro_2->file:
     name: gyro_2->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53123
+        port: 53123
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1220,9 +1220,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1232,16 +1232,16 @@ configs:
             field_name: 'stderr:logger:gyro_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_gill_fwdmast->file:
     name: wind_gill_fwdmast->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53124
+        port: 53124
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1263,9 +1263,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1275,16 +1275,16 @@ configs:
             field_name: 'stderr:logger:wind_gill_fwdmast'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_gill_fwdmast_true->file:
     name: wind_gill_fwdmast_true->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54124
+        port: 54124
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1306,9 +1306,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1318,16 +1318,16 @@ configs:
             field_name: 'stderr:logger:wind_gill_fwdmast_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   speedlog->file:
     name: speedlog->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53125
+        port: 53125
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1349,9 +1349,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1361,16 +1361,16 @@ configs:
             field_name: 'stderr:logger:speedlog'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   sb_echosounder_1->file:
     name: sb_echosounder_1->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53126
+        port: 53126
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1392,9 +1392,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1404,16 +1404,16 @@ configs:
             field_name: 'stderr:logger:sb_echosounder_1'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   sb_echosounder_2->file:
     name: sb_echosounder_2->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53127
+        port: 53127
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1435,9 +1435,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1447,16 +1447,16 @@ configs:
             field_name: 'stderr:logger:sb_echosounder_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   winch_rapp->file:
     name: winch_rapp->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53128
+        port: 53128
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1478,9 +1478,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1490,16 +1490,16 @@ configs:
             field_name: 'stderr:logger:winch_rapp'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   flow_krohne_fwd->file:
     name: flow_krohne_fwd->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53129
+        port: 53129
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1521,9 +1521,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1533,16 +1533,16 @@ configs:
             field_name: 'stderr:logger:flow_krohne_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_port->file:
     name: wind_mast_port->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53130
+        port: 53130
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1564,9 +1564,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1576,16 +1576,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_port'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_port_true->file:
     name: wind_mast_port_true->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54130
+        port: 54130
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1607,9 +1607,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1619,16 +1619,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_port_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_stbd->file:
     name: wind_mast_stbd->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53131
+        port: 53131
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1650,9 +1650,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1662,16 +1662,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_stbd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_stbd_true->file:
     name: wind_mast_stbd_true->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54131
+        port: 54131
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1693,9 +1693,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1705,16 +1705,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_stbd_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   oxygen_sbe43_fwd->file:
     name: oxygen_sbe43_fwd->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53132
+        port: 53132
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1736,9 +1736,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1748,16 +1748,16 @@ configs:
             field_name: 'stderr:logger:oxygen_sbe43_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   oxygen_sbe43_fwd_calc->file:
     name: oxygen_sbe43_fwd_calc->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54132
+        port: 54132
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1779,9 +1779,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1791,16 +1791,16 @@ configs:
             field_name: 'stderr:logger:oxygen_sbe43_fwd_calc'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mbari_isus_fwd->file:
     name: mbari_isus_fwd->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53133
+        port: 53133
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1822,9 +1822,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1834,16 +1834,16 @@ configs:
             field_name: 'stderr:logger:mbari_isus_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ais_r4-navigator_bridge->file:
     name: ais_r4-navigator_bridge->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53134
+        port: 53134
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1865,9 +1865,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1877,16 +1877,16 @@ configs:
             field_name: 'stderr:logger:ais_r4-navigator_bridge'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   adcp_speedlog->file:
     name: adcp_speedlog->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53135
+        port: 53135
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1908,9 +1908,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1920,16 +1920,16 @@ configs:
             field_name: 'stderr:logger:adcp_speedlog'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   cruiseid->file:
     name: cruiseid->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54000
+        port: 54000
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1951,9 +1951,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -1963,16 +1963,16 @@ configs:
             field_name: 'stderr:logger:cruiseid'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_emssv->file:
     name: tsg_emssv->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54001
+        port: 54001
     writers:
     - class: ComposedWriter
       kwargs:
@@ -1994,9 +1994,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2006,16 +2006,16 @@ configs:
             field_name: 'stderr:logger:tsg_emssv'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mb_em302_centerbeam->file:
     name: mb_em302_centerbeam->file
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :55005
+        port: 55005
     writers:
     - class: ComposedWriter
       kwargs:
@@ -2037,9 +2037,9 @@ configs:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2049,17 +2049,17 @@ configs:
             field_name: 'stderr:logger:mb_em302_centerbeam'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   # db
   met_ptu307->db:
     name: met_ptu307->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53100
+        port: 53100
     writers:
       class: ComposedWriter
       kwargs:
@@ -2072,9 +2072,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2084,16 +2084,16 @@ configs:
             field_name: 'stderr:logger:met_ptu307'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rain_rmy50202->db:
     name: rain_rmy50202->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53101
+        port: 53101
     writers:
       class: ComposedWriter
       kwargs:
@@ -2106,9 +2106,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2118,16 +2118,16 @@ configs:
             field_name: 'stderr:logger:rain_rmy50202'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rad_qsr2150a->db:
     name: rad_qsr2150a->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53104
+        port: 53104
     writers:
       class: ComposedWriter
       kwargs:
@@ -2140,9 +2140,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2152,16 +2152,16 @@ configs:
             field_name: 'stderr:logger:rad_qsr2150a'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rad_psp-pir->db:
     name: rad_psp-pir->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53105
+        port: 53105
     writers:
       class: ComposedWriter
       kwargs:
@@ -2174,9 +2174,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2186,16 +2186,16 @@ configs:
             field_name: 'stderr:logger:rad_psp-pir'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_pyrometer-ct15->db:
     name: thermo_pyrometer-ct15->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53106
+        port: 53106
     writers:
       class: ComposedWriter
       kwargs:
@@ -2208,9 +2208,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2220,16 +2220,16 @@ configs:
             field_name: 'stderr:logger:thermo_pyrometer-ct15'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   fluoro_turner-c6->db:
     name: fluoro_turner-c6->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53107
+        port: 53107
     writers:
       class: ComposedWriter
       kwargs:
@@ -2242,9 +2242,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2254,16 +2254,16 @@ configs:
             field_name: 'stderr:logger:fluoro_turner-c6'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   grav_bgm3_222->db:
     name: grav_bgm3_222->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53108
+        port: 53108
     writers:
       class: ComposedWriter
       kwargs:
@@ -2276,9 +2276,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2288,16 +2288,16 @@ configs:
             field_name: 'stderr:logger:grav_bgm3_222'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   pco2_ldeo_merge->db:
     name: pco2_ldeo_merge->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54109
+        port: 54109
     writers:
       class: ComposedWriter
       kwargs:
@@ -2310,9 +2310,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2322,16 +2322,16 @@ configs:
             field_name: 'stderr:logger:pco2_ldeo_merge'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_sbe45_fwd->db:
     name: tsg_sbe45_fwd->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53110
+        port: 53110
     writers:
       class: ComposedWriter
       kwargs:
@@ -2344,9 +2344,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2356,16 +2356,16 @@ configs:
             field_name: 'stderr:logger:tsg_sbe45_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_sbe38_fwd->db:
     name: thermo_sbe38_fwd->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53111
+        port: 53111
     writers:
       class: ComposedWriter
       kwargs:
@@ -2378,9 +2378,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2390,16 +2390,16 @@ configs:
             field_name: 'stderr:logger:thermo_sbe38_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_sbe38_incubator->db:
     name: thermo_sbe38_incubator->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53112
+        port: 53112
     writers:
       class: ComposedWriter
       kwargs:
@@ -2412,9 +2412,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2424,16 +2424,16 @@ configs:
             field_name: 'stderr:logger:thermo_sbe38_incubator'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_sbe45_fwd_2->db:
     name: tsg_sbe45_fwd_2->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53114
+        port: 53114
     writers:
       class: ComposedWriter
       kwargs:
@@ -2446,9 +2446,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2458,16 +2458,16 @@ configs:
             field_name: 'stderr:logger:tsg_sbe45_fwd_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   flow_krohne_pco2->db:
     name: flow_krohne_pco2->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53116
+        port: 53116
     writers:
       class: ComposedWriter
       kwargs:
@@ -2480,9 +2480,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2492,16 +2492,16 @@ configs:
             field_name: 'stderr:logger:flow_krohne_pco2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ssv_aml->db:
     name: ssv_aml->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53117
+        port: 53117
     writers:
       class: ComposedWriter
       kwargs:
@@ -2514,9 +2514,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2526,16 +2526,16 @@ configs:
             field_name: 'stderr:logger:ssv_aml'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ins_seapath_position->db:
     name: ins_seapath_position->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53119
+        port: 53119
     writers:
       class: ComposedWriter
       kwargs:
@@ -2548,9 +2548,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2560,16 +2560,16 @@ configs:
             field_name: 'stderr:logger:ins_seapath_position'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gnss_cnav->db:
     name: gnss_cnav->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53121
+        port: 53121
     writers:
       class: ComposedWriter
       kwargs:
@@ -2582,9 +2582,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2594,16 +2594,16 @@ configs:
             field_name: 'stderr:logger:gnss_cnav'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gyro_1->db:
     name: gyro_1->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53122
+        port: 53122
     writers:
       class: ComposedWriter
       kwargs:
@@ -2616,9 +2616,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2628,16 +2628,16 @@ configs:
             field_name: 'stderr:logger:gyro_1'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gyro_2->db:
     name: gyro_2->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53123
+        port: 53123
     writers:
       class: ComposedWriter
       kwargs:
@@ -2650,9 +2650,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2662,16 +2662,16 @@ configs:
             field_name: 'stderr:logger:gyro_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_gill_fwdmast->db:
     name: wind_gill_fwdmast->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53124
+        port: 53124
     writers:
       class: ComposedWriter
       kwargs:
@@ -2684,9 +2684,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2696,16 +2696,16 @@ configs:
             field_name: 'stderr:logger:wind_gill_fwdmast'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_gill_fwdmast_true->db:
     name: wind_gill_fwdmast_true->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54124
+        port: 54124
     writers:
       class: ComposedWriter
       kwargs:
@@ -2718,9 +2718,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2730,16 +2730,16 @@ configs:
             field_name: 'stderr:logger:wind_gill_fwdmast_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   speedlog->db:
     name: speedlog->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53125
+        port: 53125
     writers:
       class: ComposedWriter
       kwargs:
@@ -2752,9 +2752,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2764,16 +2764,16 @@ configs:
             field_name: 'stderr:logger:speedlog'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   sb_echosounder_1->db:
     name: sb_echosounder_1->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53126
+        port: 53126
     writers:
       class: ComposedWriter
       kwargs:
@@ -2786,9 +2786,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2798,16 +2798,16 @@ configs:
             field_name: 'stderr:logger:sb_echosounder_1'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   sb_echosounder_2->db:
     name: sb_echosounder_2->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53127
+        port: 53127
     writers:
       class: ComposedWriter
       kwargs:
@@ -2820,9 +2820,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2832,16 +2832,16 @@ configs:
             field_name: 'stderr:logger:sb_echosounder_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   winch_rapp->db:
     name: winch_rapp->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53128
+        port: 53128
     writers:
       class: ComposedWriter
       kwargs:
@@ -2854,9 +2854,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2866,16 +2866,16 @@ configs:
             field_name: 'stderr:logger:winch_rapp'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   flow_krohne_fwd->db:
     name: flow_krohne_fwd->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53129
+        port: 53129
     writers:
       class: ComposedWriter
       kwargs:
@@ -2888,9 +2888,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2900,16 +2900,16 @@ configs:
             field_name: 'stderr:logger:flow_krohne_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_port->db:
     name: wind_mast_port->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53130
+        port: 53130
     writers:
       class: ComposedWriter
       kwargs:
@@ -2922,9 +2922,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2934,16 +2934,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_port'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_port_true->db:
     name: wind_mast_port_true->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54130
+        port: 54130
     writers:
       class: ComposedWriter
       kwargs:
@@ -2956,9 +2956,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -2968,16 +2968,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_port_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_stbd->db:
     name: wind_mast_stbd->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53131
+        port: 53131
     writers:
       class: ComposedWriter
       kwargs:
@@ -2990,9 +2990,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3002,16 +3002,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_stbd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_stbd_true->db:
     name: wind_mast_stbd_true->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54131
+        port: 54131
     writers:
       class: ComposedWriter
       kwargs:
@@ -3024,9 +3024,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3036,16 +3036,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_stbd_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   oxygen_sbe43_fwd->db:
     name: oxygen_sbe43_fwd->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53132
+        port: 53132
     writers:
       class: ComposedWriter
       kwargs:
@@ -3058,9 +3058,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3070,16 +3070,16 @@ configs:
             field_name: 'stderr:logger:oxygen_sbe43_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   oxygen_sbe43_fwd_calc->db:
     name: oxygen_sbe43_fwd_calc->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54132
+        port: 54132
     writers:
       class: ComposedWriter
       kwargs:
@@ -3092,9 +3092,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3104,16 +3104,16 @@ configs:
             field_name: 'stderr:logger:oxygen_sbe43_fwd_calc'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mbari_isus_fwd->db:
     name: mbari_isus_fwd->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53133
+        port: 53133
     writers:
       class: ComposedWriter
       kwargs:
@@ -3126,9 +3126,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3138,16 +3138,16 @@ configs:
             field_name: 'stderr:logger:mbari_isus_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ais_r4-navigator_bridge->db:
     name: ais_r4-navigator_bridge->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53134
+        port: 53134
     writers:
       class: ComposedWriter
       kwargs:
@@ -3160,9 +3160,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3172,16 +3172,16 @@ configs:
             field_name: 'stderr:logger:ais_r4-navigator_bridge'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   adcp_speedlog->db:
     name: adcp_speedlog->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53135
+        port: 53135
     writers:
       class: ComposedWriter
       kwargs:
@@ -3194,9 +3194,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3206,16 +3206,16 @@ configs:
             field_name: 'stderr:logger:adcp_speedlog'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   cruiseid->db:
     name: cruiseid->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54000
+        port: 54000
     writers:
       class: ComposedWriter
       kwargs:
@@ -3228,9 +3228,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3240,16 +3240,16 @@ configs:
             field_name: 'stderr:logger:cruiseid'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_emssv->db:
     name: tsg_emssv->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54001
+        port: 54001
     writers:
       class: ComposedWriter
       kwargs:
@@ -3262,9 +3262,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3274,16 +3274,16 @@ configs:
             field_name: 'stderr:logger:tsg_emssv'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mb_em302_centerbeam->db:
     name: mb_em302_centerbeam->db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :55005
+        port: 55005
     writers:
       class: ComposedWriter
       kwargs:
@@ -3296,9 +3296,9 @@ configs:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -3308,17 +3308,17 @@ configs:
             field_name: 'stderr:logger:mb_em302_centerbeam'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   # file/db
   met_ptu307->file/db:
     name: met_ptu307->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53100
+        port: 53100
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3330,9 +3330,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3353,16 +3353,16 @@ configs:
             field_name: 'stderr:logger:met_ptu307'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rain_rmy50202->file/db:
     name: rain_rmy50202->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53101
+        port: 53101
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3374,9 +3374,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3397,16 +3397,16 @@ configs:
             field_name: 'stderr:logger:rain_rmy50202'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rad_qsr2150a->file/db:
     name: rad_qsr2150a->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53104
+        port: 53104
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3418,9 +3418,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3441,16 +3441,16 @@ configs:
             field_name: 'stderr:logger:rad_qsr2150a'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   rad_psp-pir->file/db:
     name: rad_psp-pir->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53105
+        port: 53105
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3462,9 +3462,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3485,16 +3485,16 @@ configs:
             field_name: 'stderr:logger:rad_psp-pir'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_pyrometer-ct15->file/db:
     name: thermo_pyrometer-ct15->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53106
+        port: 53106
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3506,9 +3506,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3529,16 +3529,16 @@ configs:
             field_name: 'stderr:logger:thermo_pyrometer-ct15'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   fluoro_turner-c6->file/db:
     name: fluoro_turner-c6->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53107
+        port: 53107
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3550,9 +3550,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3573,16 +3573,16 @@ configs:
             field_name: 'stderr:logger:fluoro_turner-c6'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   grav_bgm3_222->file/db:
     name: grav_bgm3_222->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53108
+        port: 53108
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3594,9 +3594,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3617,16 +3617,16 @@ configs:
             field_name: 'stderr:logger:grav_bgm3_222'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   pco2_ldeo_merge->file/db:
     name: pco2_ldeo_merge->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54109
+        port: 54109
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3638,9 +3638,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3661,16 +3661,16 @@ configs:
             field_name: 'stderr:logger:pco2_ldeo_merge'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_sbe45_fwd->file/db:
     name: tsg_sbe45_fwd->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53110
+        port: 53110
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3682,9 +3682,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3705,16 +3705,16 @@ configs:
             field_name: 'stderr:logger:tsg_sbe45_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_sbe38_fwd->file/db:
     name: thermo_sbe38_fwd->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53111
+        port: 53111
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3726,9 +3726,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3749,16 +3749,16 @@ configs:
             field_name: 'stderr:logger:thermo_sbe38_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   thermo_sbe38_incubator->file/db:
     name: thermo_sbe38_incubator->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53112
+        port: 53112
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3770,9 +3770,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3793,16 +3793,16 @@ configs:
             field_name: 'stderr:logger:thermo_sbe38_incubator'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_sbe45_fwd_2->file/db:
     name: tsg_sbe45_fwd_2->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53114
+        port: 53114
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3814,9 +3814,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3837,16 +3837,16 @@ configs:
             field_name: 'stderr:logger:tsg_sbe45_fwd_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   flow_krohne_pco2->file/db:
     name: flow_krohne_pco2->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53116
+        port: 53116
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3858,9 +3858,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3881,16 +3881,16 @@ configs:
             field_name: 'stderr:logger:flow_krohne_pco2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ssv_aml->file/db:
     name: ssv_aml->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53117
+        port: 53117
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3902,9 +3902,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3925,16 +3925,16 @@ configs:
             field_name: 'stderr:logger:ssv_aml'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ins_seapath_position->file/db:
     name: ins_seapath_position->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53119
+        port: 53119
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3946,9 +3946,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -3969,16 +3969,16 @@ configs:
             field_name: 'stderr:logger:ins_seapath_position'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gnss_cnav->file/db:
     name: gnss_cnav->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53121
+        port: 53121
     writers:
     - class: ComposedWriter
       kwargs:
@@ -3990,9 +3990,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4013,16 +4013,16 @@ configs:
             field_name: 'stderr:logger:gnss_cnav'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gyro_1->file/db:
     name: gyro_1->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53122
+        port: 53122
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4034,9 +4034,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4057,16 +4057,16 @@ configs:
             field_name: 'stderr:logger:gyro_1'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   gyro_2->file/db:
     name: gyro_2->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53123
+        port: 53123
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4078,9 +4078,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4101,16 +4101,16 @@ configs:
             field_name: 'stderr:logger:gyro_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_gill_fwdmast->file/db:
     name: wind_gill_fwdmast->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53124
+        port: 53124
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4122,9 +4122,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4145,16 +4145,16 @@ configs:
             field_name: 'stderr:logger:wind_gill_fwdmast'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_gill_fwdmast_true->file/db:
     name: wind_gill_fwdmast_true->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54124
+        port: 54124
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4166,9 +4166,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4189,16 +4189,16 @@ configs:
             field_name: 'stderr:logger:wind_gill_fwdmast_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   speedlog->file/db:
     name: speedlog->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53125
+        port: 53125
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4210,9 +4210,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4233,16 +4233,16 @@ configs:
             field_name: 'stderr:logger:speedlog'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   sb_echosounder_1->file/db:
     name: sb_echosounder_1->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53126
+        port: 53126
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4254,9 +4254,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4277,16 +4277,16 @@ configs:
             field_name: 'stderr:logger:sb_echosounder_1'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   sb_echosounder_2->file/db:
     name: sb_echosounder_2->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53127
+        port: 53127
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4298,9 +4298,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4321,16 +4321,16 @@ configs:
             field_name: 'stderr:logger:sb_echosounder_2'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   winch_rapp->file/db:
     name: winch_rapp->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53128
+        port: 53128
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4342,9 +4342,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4365,16 +4365,16 @@ configs:
             field_name: 'stderr:logger:winch_rapp'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   flow_krohne_fwd->file/db:
     name: flow_krohne_fwd->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53129
+        port: 53129
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4386,9 +4386,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4409,16 +4409,16 @@ configs:
             field_name: 'stderr:logger:flow_krohne_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_port->file/db:
     name: wind_mast_port->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53130
+        port: 53130
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4430,9 +4430,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4453,16 +4453,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_port'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_port_true->file/db:
     name: wind_mast_port_true->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54130
+        port: 54130
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4474,9 +4474,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4497,16 +4497,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_port_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_stbd->file/db:
     name: wind_mast_stbd->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53131
+        port: 53131
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4518,9 +4518,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4541,16 +4541,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_stbd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   wind_mast_stbd_true->file/db:
     name: wind_mast_stbd_true->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54131
+        port: 54131
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4562,9 +4562,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4585,16 +4585,16 @@ configs:
             field_name: 'stderr:logger:wind_mast_stbd_true'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   oxygen_sbe43_fwd->file/db:
     name: oxygen_sbe43_fwd->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53132
+        port: 53132
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4606,9 +4606,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4629,16 +4629,16 @@ configs:
             field_name: 'stderr:logger:oxygen_sbe43_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   oxygen_sbe43_fwd_calc->file/db:
     name: oxygen_sbe43_fwd_calc->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54132
+        port: 54132
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4650,9 +4650,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4673,16 +4673,16 @@ configs:
             field_name: 'stderr:logger:oxygen_sbe43_fwd_calc'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mbari_isus_fwd->file/db:
     name: mbari_isus_fwd->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53133
+        port: 53133
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4694,9 +4694,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4717,16 +4717,16 @@ configs:
             field_name: 'stderr:logger:mbari_isus_fwd'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   ais_r4-navigator_bridge->file/db:
     name: ais_r4-navigator_bridge->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53134
+        port: 53134
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4738,9 +4738,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4761,16 +4761,16 @@ configs:
             field_name: 'stderr:logger:ais_r4-navigator_bridge'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   adcp_speedlog->file/db:
     name: adcp_speedlog->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :53135
+        port: 53135
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4782,9 +4782,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4805,16 +4805,16 @@ configs:
             field_name: 'stderr:logger:adcp_speedlog'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   cruiseid->file/db:
     name: cruiseid->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54000
+        port: 54000
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4826,9 +4826,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4849,16 +4849,16 @@ configs:
             field_name: 'stderr:logger:cruiseid'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   tsg_emssv->file/db:
     name: tsg_emssv->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :54001
+        port: 54001
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4870,9 +4870,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4893,16 +4893,16 @@ configs:
             field_name: 'stderr:logger:tsg_emssv'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   mb_em302_centerbeam->file/db:
     name: mb_em302_centerbeam->file/db
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :55005
+        port: 55005
     writers:
     - class: ComposedWriter
       kwargs:
@@ -4914,9 +4914,9 @@ configs:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -4937,7 +4937,7 @@ configs:
             field_name: 'stderr:logger:mb_em302_centerbeam'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
