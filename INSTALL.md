@@ -158,10 +158,10 @@ logger/listener/listen.py --serial port=/tmp/tty_s330 \
 ```
 Try reading from the simulated serial port and writing to the database:
 ```
-logger/listener/listen.py --serial po=/tmp/tty_s330 \
+logger/listener/listen.py --serial port=/tmp/tty_s330 \
   --transform_timestamp \
   --transform_prefix s330 \
-  ---transform_parse --write_file - \
+  --transform_parse --write_file - \
   --database_password <your database password> \
   --write_database rvdas@localhost:data
 ```
