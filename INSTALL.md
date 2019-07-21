@@ -3,7 +3,7 @@ At the time of this writing OpenRVDAS was built and tested against MacOS X, Cent
 
 *Note that OpenRVDAS is still very much under development and subject to unannounced changes.*
 
-### Scripted Installation
+## Scripted Installation
 
 _This is the recommended way to install for CentOS 7, Ubuntu 16 and Ubuntu 18._
 
@@ -20,7 +20,7 @@ and shut down via
 
 ```service openrvdas stop```
 
-### Manual Installation
+## Manual Installation
 
 As a (somewhat painful) alternative, you can manually install OpenRVDAS.
 
@@ -186,6 +186,6 @@ logger/listener/listen.py --network :6224 \
   --write_file -
 ```
 
-## GUI Functionality
+### GUI Functionality
 To use the Django-based GUI, you will need to follow the instructions in [django_gui/README.md](django_gui/README.md).
 
