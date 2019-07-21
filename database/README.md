@@ -17,50 +17,19 @@ DatabaseReader and DatabaseWriter are decoupled from the actual
 underlying database that will be used, and access via a connector
 class defined (by import) in [database/settings.py](settings.py).
 The methods that such a connector class should implement are described
-below in "Connector Class Methods"
+below in "Connector Class Methods."
 
-## Installation
+## Installation - MySQL, MariaDB and MongoDB
 
-The first step is to copy the distribution file
-[database/settings.py.dist](settings.py.dist)
-over to [database/settings.py](settings.py). From there, the steps needed to use the
-DatabaseReader and DatabaseWriter depend on which database you intend
-to use them with. Below, we describe how to set the system up to use
-MySQLConnector.
+If you have used one of the installation scripts included in [the top-level utils directory](../utils/)
+or followed the instructions in the top-level [INSTALL.md](../INSTALL.md) document, then database
+installation is complete for the MySQL/Maria database connector.
 
-### MySQLConnector
-
-If you have already installed the files needed to run the core
-OpenRVDAS code, as described in [the parent directory
-INSTALL.md](../INSTALL.md), there are only a couple more steps needed
-to get the database working:
-
-1. Install the MySQL server and its client tools
-```
-  apt-get install mysql-server libmysqlclient-dev # ubuntu
-
-  yum install mariadb-server mariadb-devel mariadb-libs # CentOS
-  service mariadb start  # to start db server
-  sudo systemctl enable httpd.service # to make it start on boot
-```
-2. Install the python mysql-connector modules
-```
-  pip3 install mysqlclient mysql-connector==2.1.6
-```
-3. Run the configuration script that will create 'test' and 'data'
-databases and will create an sql user that has access to those databases.
-It will also create a 'test' user that has access only to 'test'.
-```
-  database/setup_mysql_connector.sh <mysql_user> <mysql_user_pwd>  # ubuntu
-
-  database/setup_mariadb_connector.sh <mysql_user> <mysql_user_pwd>  # CentOS
-```
-(Note: The script will ask for the root MySQL password.)
-
-At this point you should be able to test the installation by running the
-database/test_mysql_connector.py script (to test the mysql_connector)
-and logger/writers/test_database_writer.py script (to ensure that it has
-been properly connected to the DatabaseWriter).
+If you wish to use MongoDB instead,
+you should execute the [setup_mongo_connector.sh](setup_mongo_connector.sh) script in this
+directory. If you do the latter and are planning to also use Django, you will need to modify
+[django_gui/settings.py](../django_gui/settings.py) to add the appropriate database, user name
+and password to its DATABASES declaration.
 
 ### Other Connectors
 
