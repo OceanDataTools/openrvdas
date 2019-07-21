@@ -58,9 +58,9 @@ writers:  # List of writers - these will be called in parallel
 - class: LogfileWriter
   kwargs:
     filebase: /log/current/gyr1
-- class: NetworkWriter
+- class: UDPWriter
   kwargs:
-    network: ':6224'
+    port: 6224
 ```
 
 The configuration definition is a YAML-formatted dictionary with the

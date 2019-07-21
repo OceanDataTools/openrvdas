@@ -21,14 +21,13 @@ except ModuleNotFoundError:
 
 ################################################################################
 class CachedDataWriter(Writer):
-  def __init__(self, websocket, back_seconds=480, cleanup=60, interval=1):
+  def __init__(self, port, back_seconds=480, cleanup=60, interval=1):
     """A thin wrapper around CachedDataServer. Instantiate a
     CachedDataServer and feed the passed records into it. The
-    CachedDataServer will start a websocket server at 'websocket' and
+    CachedDataServer will start a websocket server on port 'port' and
     serve cached record data to clients who connect to it.
 
-    websocket      host:port string on which to serve websocket connections
-                   Host may be omitted by just specifying :port
+    port           port on which to serve websocket connections
 
     back_seconds   Number of seconds of back data to hold in cache
 
@@ -41,12 +40,12 @@ class CachedDataWriter(Writer):
     if not CACHED_DATA_SERVER_OKAY:
       raise RuntimeError('Unable to load logger/utils/cached_data_server.py. '
                          'Is websockets module properly installed?')
-    self.websocket = websocket
+    self.port = port
     self.back_seconds = back_seconds
     self.cleanup = cleanup
 
     # Instantiate (and start) CachedDataServer
-    self.server = CachedDataServer(websocket=websocket, interval=interval)
+    self.server = CachedDataServer(port=port, interval=interval)
 
     # Start thread that will call server.cleanup() every 'cleanup' seconds
     threading.Thread(target=self.cleanup_loop, daemon=True).start()

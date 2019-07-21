@@ -50,8 +50,8 @@ line. The following invocation
 
 ```
     logger/utils/cached_data_server.py \
-      --network :6225 \
-      --websocket :8766 \
+      --udp 6225 \
+      --port 8766 \
       --back_seconds 480 \
       --cleanup 60 \
       --v
@@ -114,7 +114,7 @@ class. You may invoke it as part of a listen.py call:
 
 ```
     logger/listener/listen.py \
-      --network :6225 \
+      --udp 6225 \
       --write_cached_data_server :8766
 ```
 
@@ -131,10 +131,10 @@ RedisReader or the like):
 
 ```
     logger/listener/listen.py \
-      --network :6221,:6224 \
+      --udp 6221,6224 \
       --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
       --transform_parse \
-      --write_cached_data_writer :8766
+      --write_cached_data_server :8766
 ```
 
 Of course, it may be incorporated (again, within its CachedDataWriter
@@ -148,12 +148,12 @@ where data\_server\_config.yaml contains:
 
 ```
 readers:
-- class: NetworkReader
+- class: UDPReader
   kwargs:
-    network: :6221 
-- class: NetworkReader
+    port: 6221 
+- class: UDPReader
   kwargs:
-    network: :6224 
+    port: 6224 
 
 transforms:
   class: ParseNMEATransform 
@@ -184,8 +184,8 @@ may be overridden with additional command line flags:
   server/logger_manager.py \
     --database django \
     --config test/NBP1406/NBP1406_cruise.yaml \
-    --data_server_websocket :8765 \
-    --data_server_udp :6226 \
+    --data_server_websocket 8765 \
+    --data_server_udp 6226 \
     --start_data_server
 ```
 

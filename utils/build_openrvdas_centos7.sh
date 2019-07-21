@@ -95,16 +95,6 @@ yum install -y socat git nginx sqlite-devel readline-devel \
 ln -s /usr/bin/python36 /usr/bin/python3
 
 # Install database stuff and set up as service.
-# Problem is that the Mariadb version that ships with CentOS 7
-# is missing a bunch of commands that exist in MySQL. So add the
-# project repo, that has a more recent version.
-cat > /etc/yum.repos.d/MariaDB.repo <<EOF
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.1/centos7-amd64
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-EOF
 
 echo "############################################################################"
 echo Installing Mariadb \(MySQL replacement in CentOS 7\)...
@@ -126,21 +116,18 @@ RVDAS_PASSWORD=${RVDAS_PASSWORD:-$RVDAS_USER}
 echo Now setting up database tables.
 echo Please enter SQL database *root* password to continue
 mysql -u root -p <<EOF 
-drop user if exists 'test'@'localhost'; 
-create user 'test'@'localhost' identified by 'test';
+create user test@localhost identified by 'test';
+create user $RVDAS_USER@localhost identified by '$RVDAS_PASSWORD';
 
-drop user if exists 'rvdas'@'localhost';
-create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_PASSWORD';
+create database data character set utf8;
+GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost;
 
-create database if not exists data character set utf8;
-GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
+create database openrvdas character set utf8;
+GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost;
 
-create database if not exists openrvdas character set utf8;
-GRANT ALL PRIVILEGES ON openrvdas.* TO '$RVDAS_USER'@'localhost';
-
-create database if not exists test character set utf8;
-GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
+create database test character set utf8;
+GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost;
+GRANT ALL PRIVILEGES ON test.* TO test@localhost identified by 'test';
 
 flush privileges;
 \q
@@ -326,6 +313,10 @@ chgrp -R rvdas ${INSTALL_ROOT}/openrvdas
 echo "############################################################################"
 echo Setting SELINUX permissions \(permissive\) and firewall ports
 sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+
+yum install -y firewalld
+systemctl start firewalld
+systemctl enable firewalld
 
 firewall-cmd --zone=public --permanent --add-port=80/tcp
 firewall-cmd --zone=public --permanent --add-port=8000/tcp

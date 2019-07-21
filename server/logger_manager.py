@@ -123,15 +123,15 @@ from logger.utils.stderr_logging import StdErrLoggingHandler
 from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.composed_writer import ComposedWriter
-from logger.writers.network_writer import NetworkWriter
+from logger.writers.udp_writer import UDPWriter
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 
 # Imports for running CachedDataServer
 from logger.readers.composed_reader import ComposedReader
-from logger.readers.network_reader import NetworkReader
+from logger.readers.udp_reader import UDPReader
 from logger.transforms.from_json_transform import FromJSONTransform
-from logger.utils.cached_data_server import CachedDataServer
+from logger.writers.cached_data_writer import CachedDataWriter
 
 # Number of times we'll try a failing logger before giving up
 DEFAULT_MAX_TRIES = 3
@@ -321,7 +321,9 @@ class LoggerManager:
 
       # If we only have a server port but not a name, use 'localhost'
       ws_name = self.data_server_websocket
-      if ws_name.find(':') == 0:
+      if not ':' in ws_name and int(ws_name) > 0:  # if gave us just port
+        ws_name = 'localhost:' + ws_name
+      if ws_name.find(':') == 0:  # if gave us :port
         ws_name = 'localhost' + ws_name
 
       # Even if things haven't changed, we want to send a full status
@@ -337,7 +339,6 @@ class LoggerManager:
               # Sleep for a bit before going around (also, before we try the
               # first time, to let the LoggerManager start up).
               await asyncio.sleep(self.interval)
-
               # Assemble information to draw page
               try:
                 cruise_def = {
@@ -440,12 +441,21 @@ def run_data_server(data_server_websocket, data_server_udp,
   accepting websocket connections and listening for UDP broadcasts
   on the specified port to receive data to be cached and served.
   """
-  network_readers = [NetworkReader(network=network)
-                     for network in data_server_udp.split(',')]
+  # First get the port that we're going to run the data server on. Because
+  # we're running it locally, it should only have a port, not a hostname.
+  # We should try to handle it if they prefix with a ':', though.
+  websocket_port = int(data_server_websocket.split(':')[-1])
+  
+  # only have
+  network_readers = []
+  for network in data_server_udp.split(','):
+    group_port = network.split(':')
+    port = int(group_port[-1])
+    multicast_group = group_port[-2] if len(group_port) == 2 else ''
+    network_readers.append(UDPReader(port=port, source=multicast_group))
   transform = FromJSONTransform()
-
   reader = ComposedReader(readers=network_readers, transforms=[transform])
-  writer = CachedDataServer(data_server_websocket, data_server_interval)
+  writer = CachedDataWriter(port=websocket_port, interval=data_server_interval)
 
   # Every N seconds, we're going to detour to clean old data out of cache
   next_cleanup_time = time.time() + data_server_cleanup_interval
@@ -454,19 +464,18 @@ def run_data_server(data_server_websocket, data_server_udp,
   try:
     while True:
       record = reader.read()
-      logging.debug('Got record: %s', record)
 
       # If, for some reason, we get empty record try again
-      writer.cache_record(record)
+      writer.server.cache_record(record)
 
       # Is it time for next cleanup?
       now = time.time()
       if now > next_cleanup_time:
-        writer.cleanup(now - data_server_back_seconds)
+        writer.server.cleanup(now - data_server_back_seconds)
         next_cleanup_time = now + data_server_cleanup_interval
   except KeyboardInterrupt:
     logging.warning('Received KeyboardInterrupt - shutting down')
-    writer.quit()
+    writer.server.quit()
 
 ################################################################################
 ################################################################################
@@ -489,7 +498,7 @@ if __name__ == '__main__':
                       'to use.')
 
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
-                      action='store', default=':8766',
+                      action='store', default='8766',
                       help='Address at which to connect to cached data server '
                       'to send status updates.')
 
@@ -497,10 +506,12 @@ if __name__ == '__main__':
                       action='store_true', default=False,
                       help='Whether to start our own cached data server.')
   parser.add_argument('--data_server_udp', dest='data_server_udp',
-                      action='store', default=':6225',
+                      action='store', default='6225',
                       help='If we are starting our own cached data server, on '
                       'what comma-separated network port(s) it should listen '
-                      'for UDP broadcasts, e.g. :6221,:6224.')
+                      'for UDP broadcasts, e.g. 6225,6227. For multicast, '
+                      'prefix with colon-separated group, e.g. '
+                      '224.1.1.1:6225')
   parser.add_argument('--data_server_back_seconds',
                       dest='data_server_back_seconds', action='store',
                       type=float, default=480,
@@ -549,9 +560,12 @@ if __name__ == '__main__':
   # logging of stderr to it. Use a special format that prepends the
   # log level to the message, to aid in filtering.
   if args.data_server_udp:
+    group_port = args.data_server_udp.split(':')
+    port = int(group_port[-1])
+    multicast_group = group_port[-2] if len(group_port) == 2 else ''
     stderr_network_writer = ComposedWriter(
       transforms=ToDASRecordTransform(field_name='stderr:logger_manager'),
-      writers=NetworkWriter(network=args.data_server_udp))
+      writers=UDPWriter(port=port, destination=multicast_group))
     stderr_format = '%(levelno)d\t%(levelname)s\t' + DEFAULT_LOGGING_FORMAT
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_network_writer,
                                                         stderr_format))

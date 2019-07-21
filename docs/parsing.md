@@ -1,6 +1,6 @@
 # Record Parsing
 © David Pablo Cohn - (david.cohn@gmail)  
-DRAFT 2019-03-16
+DRAFT 2019-07-20
 
 Perhaps the second most crucial task that a data acquisition system
 must accomplish (after reliably storing incoming data records) is to
@@ -119,7 +119,7 @@ It can be invoked from the command line ```listen.py``` script as well:
 
   ```
   logger/listener/listen.py \
-      --network :6224 \
+      --port 6224 \
       --transform_parse \
       --write_file -
   ```
@@ -131,7 +131,7 @@ command line **before** ```--transform_parse``` argument):
 
   ```
   logger/listener/listen.py \
-      --network :6224 \
+      --udp 6224 \
       --parse_definition_path "local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml" \
       --parse_to_json \
       --transform_parse \

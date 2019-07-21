@@ -1,5 +1,5 @@
 # OpenRVDAS Components
-Draft 2018-08-10  
+Draft 2019-07-20
 © 2018 David Pablo Cohn
 
 This document enumerates and describes current OpenRVDAS Reader, Writer
@@ -42,14 +42,14 @@ The core of OpenRVDAS are three types of simple components designed to be
   prefixed_record = prefix_transform.transform(timestamped_record)
   ```
 
-* **Writers** (e.g. LogfileWriter, NetworkWriter, DatabaseWriter) implement - you guessed it - a `write()` method that takes a record and stores/or distributes it in some way.
+* **Writers** (e.g. LogfileWriter, UDPWriter, DatabaseWriter) implement - you guessed it - a `write()` method that takes a record and stores/or distributes it in some way.
 
   ```
-  network_writer = NetworkWriter(':6224')
+  udp_writer = UDPWriter(port=6224)
   logfile_writer = LogfileWriter('/log/current/gyr1')
 
   logfile_writer.write(timestamped_record)
-  network_writer.write(prefixed_record)
+  udp_writer.write(prefixed_record)
   ```
 
 As described in [OpenRVDAS Introduction to Loggers](intro_to_loggers.md), we can combine these components to create simple and powerful loggers:
@@ -59,7 +59,7 @@ def logger(port, instrument):
   reader = SerialReader(port=port, baudrate=9600)
   ts_transform = TimestampTransform()
   prefix_transform = PrefixTransform(instrument)
-  network_writer = NetworkWriter(':6224')
+  udp_writer = UDPWriter(6224)
   logfile_writer = LogfileWriter('/log/current/%s' % instrument)
 
   while True:
@@ -68,7 +68,7 @@ def logger(port, instrument):
     prefixed_record = prefix_transform.transform(timestamped_record)
 
     logfile_writer.write(timestamped_record)
-    network_writer.write(prefixed_record)
+    udp_writer.write(prefixed_record)
 ```
 
 ## Using the Listener Class
@@ -94,7 +94,7 @@ readers = SerialReader(port=port, baudrate=9600)
 transforms = TimestampTransform()
 writers = [LogfileWriter(filebase='/log/current/%s' % instrument),
            ComposedWriter(transforms=[PrefixTransform(instrument)],
-                          writers=[NetworkWriter(':6224')])]
+                          writers=[UDPWriter(6224)])]
 listener = Listener(readers=readers, transforms=transforms, writers=writers)
 listener.run()
 ```
@@ -152,9 +152,9 @@ Let us say we have the following specification in file `gyr1_config.yaml`:
           }
         },
         "writers": {
-          "class": "NetworkWriter",
+          "class": "UDPWriter",
           "kwargs": {
-            "network": ":6224"
+            "port": 6224
           }
         }
       }

@@ -80,17 +80,17 @@ configs:
       kwargs:
         prefix: twnc
     writers:
-    - class: NetworkWriter
+    - class: UDPWriter
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter
       kwargs:
         transforms:
           class: ParseTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   twnc->file/net:
     name: twnc->net/file
@@ -112,9 +112,9 @@ configs:
           kwargs:
             prefix: twnc
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -123,9 +123,9 @@ configs:
             prefix: twnc
         - class: ParseTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   cwnc->net:
     name: cwnc->net
@@ -140,17 +140,17 @@ configs:
       kwargs:
         prefix: cwnc
     writers:
-    - class: NetworkWriter
+    - class: UDPWriter
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter
       kwargs:
         transforms:
           class: ParseTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   cwnc->file/net:
     name: cwnc->net/file
@@ -172,9 +172,9 @@ configs:
           kwargs:
             prefix: cwnc
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6224
+            port: 6224
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -183,16 +183,16 @@ configs:
             prefix: cwnc
         - class: ParseTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   cwnc_qc->net:
     name: cwnc_qc->net
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :6225
+        port: 6225
     transforms:
     - class: FromJSONTransform
     - class: QCFilterTransform
@@ -203,16 +203,16 @@ configs:
         data_id: alrt
         field_name: stderr:logger:cwnc
     writers:
-      class: NetworkWriter
+      class: UDPWriter
       kwargs:
-        network: :6225
+        port: 6225
 
   cwnc_qc->file/net:
     name: cwnc_qc->file/net
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :6225
+        port: 6225
     transforms:
     - class: FromJSONTransform
     - class: QCFilterTransform
@@ -235,6 +235,6 @@ configs:
             data_id: alrt
             field_name: stderr:logger:cwnc
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225

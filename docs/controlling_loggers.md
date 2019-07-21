@@ -40,9 +40,9 @@ eng1->net:
     kwargs:
       prefix: eng1
   writers:
-    class: NetworkWriter
+    class: UDPWriter
     kwargs:
-      network: ':6224'
+      port: 6224
 gyr1->net:
   ...
 knud->net:
@@ -65,7 +65,7 @@ logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
 in a separate terminal. To observe the data being logged by the above sample configs, you can start a Listener in yet another terminal:
 
 ```
-logger/listener/listen.py --network :6224 --write_file -
+logger/listener/listen.py --udp 6224 --write_file -
 ```
 Please see the [server/README.md](../server/README.md) file and [logger_runner.py](../server/logger_runner.py) headers for the most up-to-date information on running logger\_runner.py.
 
@@ -94,9 +94,9 @@ Before we dive into the use of logger\_manager.py, it's worth pausing for a mome
       kwargs: 
         prefix: knud
     writers: 
-      class: NetworkWriter
+      class: UDPWriter
       kwargs: 
-        network: ":6224"
+        port: 6224
 ```
 -   **Cruise mode (or just "mode")** - Logger configurations can be grouped into logical collections that will be active at any given time. Certain logger configurations will be running when a vessel is in port; another set may be running while the vessel is at sea, but within territorial waters; yet another when it is fully underway. The mode definition below indicates that when "port" mode is active, the configurations "gyr1-\>net", "mwx1-\>net", "s330-\>net" and "eng1-\>net" should be running:
 
@@ -212,7 +212,7 @@ command?
 **Note**: the NBP1406 sample cruise directs UDP output to port 6224, so you can monitor the logger manager's network output by running the following listener command in a separate window to read from port 6224 and write to standard output:
 
 ```
-    logger/listener/listen.py --network :6224 --write_file -
+    logger/listener/listen.py --udp 6224 --write_file -
 ```
 
 **Manually change logger configurations**
@@ -239,7 +239,7 @@ running in another terminal for the logger manager to load and run it without co
 In addition to being stored, logger data may be displayed in real time
 via [display widgets](display_widgets.md). The most straightforward
 way to do this is by configuring loggers to echo their output to a UDP
-port (such as :6225) where it can be read, cached and served by a
+port (such as 6225) where it can be read, cached and served by a
 [CachedDataServer](../logger/utils/cached_data_server.py). Widgets
 connect to the server via a websocket and request data, as described
 in the [Display Widgets document](display_widgets.md).
@@ -260,8 +260,8 @@ may be overridden with additional command line flags:
   server/logger_manager.py \
     --database django \
     --config test/NBP1406/NBP1406_cruise.yaml \
-    --data_server_websocket :8765 \
-    --data_server_udp :6226 \
+    --data_server_websocket 8766 \
+    --data_server_udp 6226 \
     --start_data_server
 ```
 

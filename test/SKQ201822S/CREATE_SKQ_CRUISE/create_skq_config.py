@@ -44,15 +44,15 @@ from collections import OrderedDict
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-CACHE_UDP = ':6225'
+CACHE_UDP = '6225'
 
 # Set to desired cruise ID
 cruise = 'SKQ201822S'
 
 file_db_config = """    readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :%PORT%
+        port: %PORT%
     writers:
     - class: ComposedWriter
       kwargs:
@@ -64,9 +64,9 @@ file_db_config = """    readers:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -87,15 +87,15 @@ file_db_config = """    readers:
             field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: %CACHE_UDP%
+            port: %CACHE_UDP%
 """
 
 file_config = """    readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :%PORT%
+        port: %PORT%
     writers:
     - class: ComposedWriter
       kwargs:
@@ -117,9 +117,9 @@ file_config = """    readers:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -129,15 +129,15 @@ file_config = """    readers:
             field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: %CACHE_UDP%
+            port: %CACHE_UDP%
 """
 
 db_config = """    readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :%PORT%
+        port: %PORT%
     writers:
       class: ComposedWriter
       kwargs:
@@ -150,9 +150,9 @@ db_config = """    readers:
 
         writers:
         - class: DatabaseWriter
-        - class: NetworkWriter
+        - class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -162,9 +162,9 @@ db_config = """    readers:
             field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: %CACHE_UDP%
+            port: %CACHE_UDP%
 """
 
 lines = [line.strip() for line in sys.stdin.readlines()]

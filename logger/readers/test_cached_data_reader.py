@@ -17,7 +17,7 @@ from logger.readers.cached_data_reader import CachedDataReader
 from logger.utils.cached_data_server import CachedDataServer
 from logger.listener.listen import ListenerFromLoggerConfigFile
 
-WEBSOCKET = 'localhost:8769'
+WEBSOCKET_PORT = 8769
 
 class TestCachedDataReader(unittest.TestCase):
 
@@ -31,7 +31,7 @@ class TestCachedDataReader(unittest.TestCase):
     """Basic test"""
     # Create the CachedDataServer we're going to try to connect to
     # and seed it with some initial values.
-    cds = CachedDataServer(WEBSOCKET)
+    cds = CachedDataServer(port=WEBSOCKET_PORT)
     cds.cache_record({'fields':{'field_1':'value_11',
                                 'field_2':'value_21',
                                 'field_3':'value_31'}})
@@ -46,7 +46,8 @@ class TestCachedDataReader(unittest.TestCase):
     subscription = {'fields':{'field_1':{'seconds':10},
                               'field_2':{'seconds':10},
                               'field_3':{'seconds':10}}}
-    cdr = CachedDataReader(subscription=subscription, server=WEBSOCKET)
+    cdr = CachedDataReader(subscription=subscription,
+                           server='localhost:%d' % WEBSOCKET_PORT)
 
     response = cdr.read()
     self.assertDictEqual(response.get('fields', None),

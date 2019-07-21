@@ -1,6 +1,6 @@
 # NMEA Parsing - DEPRECATED
 © David Pablo Cohn - (david.cohn@gmail)  
-DRAFT 2019-03-16
+DRAFT 2019-07-20
 
 **Please see the [Parsing](parsing.md) document that supercedes this one and the module described here.**
 
@@ -225,7 +225,7 @@ the appropriate command line options:
 
 ```
   logger/listener/listen.py \
-      --network :6224 \
+      --udp 6224 \
       --parse_nmea_message_path local/message/\*.yaml,test/sikuliaq/messages.yaml \
       --transform_parse_nmea \
       --write_file -

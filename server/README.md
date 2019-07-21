@@ -51,7 +51,7 @@ To verify that the scripts are actually working as intended, you can
 create a network listener on port 6224 in yet another window:
 
 ```
-    logger/listener/listen.py --network :6224 --write_file -
+    logger/listener/listen.py --udp 6224 --write_file -
 ```
 
 ### LoggerManager
@@ -109,7 +109,7 @@ To try out the scripts, open three terminal windows.
    --help for all Listener options):
 
 ```
-    logger/listener/listen.py --network :6225 --write_file -
+    logger/listener/listen.py --udp 6225 --write_file -
 ```
 
 4. Whew! Now try a few commands in the terminal running the

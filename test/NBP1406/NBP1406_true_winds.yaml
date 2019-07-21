@@ -73,17 +73,17 @@ configs:
       kwargs:
         prefix: s330
     writers:
-    - class: NetworkWriter   # write raw data to :6224
+    - class: UDPWriter   # write raw data to :6224
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter  # write parsed data to :6225
       kwargs:
         transforms:
           class: ParseTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
           
   mwx1->net:
     name: mwx1->net
@@ -98,24 +98,24 @@ configs:
       kwargs:
         prefix: mwx1
     writers:
-    - class: NetworkWriter   # write raw data to :6224
+    - class: UDPWriter   # write raw data to :6224
       kwargs:
-        network: :6224
+        port: 6224
     - class: ComposedWriter  # write parsed data to :6225
       kwargs:
         transforms:
           class: ParseTransform
         writers:
-          class: NetworkWriter
+          class: UDPWriter
           kwargs:
-            network: :6225
+            port: 6225
 
   derived->net:
     name: derived->net
     readers:
-      class: NetworkReader
+      class: UDPReader
       kwargs:
-        network: :6225
+        port: 6225
     transforms:
     - class: FromJSONTransform
     - class: ComposedDerivedDataTransform
@@ -148,8 +148,8 @@ configs:
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
     writers:
-      class: NetworkWriter
+      class: UDPWriter
       kwargs:
-        network: :6225
+        port: 6225
 
 

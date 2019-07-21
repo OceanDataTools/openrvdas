@@ -48,8 +48,8 @@ In a separate window, run logger_manager.py
 ```
 python3 server/logger_manager.py \
     --database django \
-    --data_server_websocket :8765 \
-    --data_server_udp :6225 \
+    --data_server_websocket 8765 \
+    --data_server_udp 6225 \
     --start_data_server
 ```
 This tells the LoggerManager to run a CachedDataServer that listens for 
@@ -107,7 +107,7 @@ Loggers that are writing to the local network may be monitored using the listene
 
 ```
 python3 logger/listener/listen.py \
-    --network :6224 --write_file -
+    --udp 6224 --write_file -
 ```
 Similarly, loggers that are writing to the database may be monitored using the listen.py script invoked with a database readers:
 

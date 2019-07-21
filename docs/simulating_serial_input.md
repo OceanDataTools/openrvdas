@@ -9,14 +9,14 @@ It can be very useful, during development or testing, to run using saved
 log files as synthetic input, and some sample synthetic data are
 included in the test/ subdirectory for that purpose. For systems that
 expect their data to arrive via UDP, simulation can be set up using the
-listen.py script to connect a LogfileReader to a NetworkWriter, e.g.
+listen.py script to connect a LogfileReader to a UDPWriter, e.g.
 
 ```
 logger/listener/listen.py \
     --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
     --transform_timestamp \
     --transform_prefix gyr1 \
-    --write_network :6224
+    --write_udp 6224
 ```
 Simulating a system that uses serial ports for its input is more
 involved. We provide a rudimentary serial port simulation in

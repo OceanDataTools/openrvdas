@@ -9,8 +9,8 @@ A true wind logger can use a configuration like the one below to listen to the n
 ```
 {
     "readers": {
-        "class": "NetworkReader",
-        "kwargs": { "network": ":6224" }
+        "class": "UDPReader",
+        "kwargs": { "port": 6224 }
     },
 
     "transforms": [
@@ -30,12 +30,12 @@ A true wind logger can use a configuration like the one below to listen to the n
     ],
 
     "writers": {
-        "class": "NetworkWriter",
-        "kwargs": { "network": ":6224" }
+        "class": "UDPWriter",
+        "kwargs": { "port": 6224 }
     }
 }
 ```
-The configuration feeds these records into a TrueWindsTransform, which looks for relevant fields and aggregates their values to compute true wind speed and direction. It then feeds the result to a NetworkWriter that rebroadcasts it back onto the network as a "synthetic" record. From the point of view of a device listening to the network, this new record is indistinguishable from records that originated from a primary logger.
+The configuration feeds these records into a TrueWindsTransform, which looks for relevant fields and aggregates their values to compute true wind speed and direction. It then feeds the result to a UDPWriter that rebroadcasts it back onto the network as a "synthetic" record. From the point of view of a device listening to the network, this new record is indistinguishable from records that originated from a primary logger.
 
 Please see [logger/transforms/true\_winds\_transform.py](logger/transforms/true_winds_transform.py) and the sample configuration file [test/configs/port\_true\_winds.yaml](test/configs/port_true_winds.yaml) for an example of this implementation that can be run standalone from the command line
 
