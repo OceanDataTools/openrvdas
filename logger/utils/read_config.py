@@ -23,7 +23,7 @@ def parse(source):
   except NameError:
     raise ImportError('No YAML module available. Please ensure that '
                       'PyYAML or equivalent is installed (e.g. via '
-                      '"pip3 instal PyYAML"')
+                      '"pip3 install PyYAML"')
 
 ################################################################################
 def read_config(filename):
