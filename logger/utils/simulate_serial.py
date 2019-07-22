@@ -12,12 +12,14 @@ from logger.transforms.slice_transform import SliceTransform
 from logger.writers.text_file_writer import TextFileWriter
 
 from logger.utils.read_config import read_config
+from logger.utils.timestamp import TIME_FORMAT
 
 ################################################################################
 class SimSerial:
   """Create a virtual serial port and feed stored logfile data to it."""
   ############################
-  def __init__(self, port, source_file, use_timestamps=True,
+  def __init__(self, port, source_file, time_format=TIME_FORMAT,
+               use_timestamps=True,
                baudrate=9600, bytesize=8, parity='N', stopbits=1,
                timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
                dsrdtr=False, inter_byte_timeout=None, exclusive=None):
@@ -25,6 +27,7 @@ class SimSerial:
     timestamps, and the standard parameters that a serial port takes."""
     self.source_file = source_file
     self.use_timestamps = use_timestamps
+    self.time_format = time_format
 
     # We'll create two virtual ports: 'port' and 'port_in'; we will write
     # to port_in and read the values back out from port
@@ -95,7 +98,9 @@ class SimSerial:
     time.sleep(0.2)
 
     self.reader = LogfileReader(filebase=self.source_file,
-                                use_timestamps=self.use_timestamps)
+                                use_timestamps=self.use_timestamps,
+                                time_format=self.time_format)
+
     self.strip = SliceTransform('1:') # strip off the first field)
     self.writer = TextFileWriter(self.write_port, truncate=True)
 
@@ -133,10 +138,14 @@ if __name__ == '__main__':
   parser.add_argument('--logfile', dest='logfile',
                       help='Log file to read from.')
 
+  parser.add_argument('--time_format', dest='time_format', default=TIME_FORMAT,
+                      help='Format string for parsing timestamp')
+
   parser.add_argument('--loop', dest='loop', action='store_true',
                       help='If True, loop when reaching end of sample data')
 
-  parser.add_argument('--port', dest='port', help='Virtual serial port to open')
+  parser.add_argument('--port', dest='port',
+                      help='Virtual serial port to open')
   parser.add_argument('--baud', dest='baud', type=int,
                       help='Baud rate for port.')
 
@@ -160,7 +169,8 @@ if __name__ == '__main__':
     thread_list = []
     for inst in configs:
       config = configs[inst]
-      sim = SimSerial(port=config['port'], source_file=config['logfile'])
+      sim = SimSerial(port=config['port'], source_file=config['logfile'],
+                      time_format=config.get('time_format', args.time_format))
       sim_thread = threading.Thread(target=sim.run, kwargs={'loop': args.loop})
       sim_thread.start()
       thread_list.append(sim_thread)
