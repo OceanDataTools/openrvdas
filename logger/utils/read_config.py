@@ -15,7 +15,11 @@ def parse(source):
   YAML) and try to parse it into a Python dict.
   """
   try:
-    return yaml.load(source, Loader=yaml.FullLoader)
+    try:
+      return yaml.load(source, Loader=yaml.FullLoader)
+    except AttributeError:
+      # If they've got an older yaml, it may not have FullLoader)
+      return yaml.load(source)
   except NameError:
     raise ImportError('No YAML module available. Please ensure that '
                       'PyYAML or equivalent is installed (e.g. via '
