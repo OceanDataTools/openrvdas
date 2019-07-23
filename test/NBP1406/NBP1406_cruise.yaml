@@ -195,6 +195,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -241,6 +243,8 @@ configs:
           kwargs:
             prefix: PCOD
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -252,6 +256,8 @@ configs:
           kwargs:
             prefix: PCOD
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -289,6 +295,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -335,6 +343,8 @@ configs:
           kwargs:
             prefix: adcp
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -346,6 +356,8 @@ configs:
           kwargs:
             prefix: adcp
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -383,6 +395,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -429,6 +443,8 @@ configs:
           kwargs:
             prefix: eng1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -440,6 +456,8 @@ configs:
           kwargs:
             prefix: eng1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -477,6 +495,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -523,6 +543,8 @@ configs:
           kwargs:
             prefix: gp02
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -534,6 +556,8 @@ configs:
           kwargs:
             prefix: gp02
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -571,6 +595,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -617,6 +643,8 @@ configs:
           kwargs:
             prefix: grv1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -628,6 +656,8 @@ configs:
           kwargs:
             prefix: grv1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -665,6 +695,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -711,6 +743,8 @@ configs:
           kwargs:
             prefix: gyr1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -722,6 +756,8 @@ configs:
           kwargs:
             prefix: gyr1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -759,6 +795,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -805,6 +843,8 @@ configs:
           kwargs:
             prefix: hdas
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -816,6 +856,8 @@ configs:
           kwargs:
             prefix: hdas
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -853,6 +895,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -899,6 +943,8 @@ configs:
           kwargs:
             prefix: knud
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -910,6 +956,8 @@ configs:
           kwargs:
             prefix: knud
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -947,6 +995,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -993,6 +1043,8 @@ configs:
           kwargs:
             prefix: mbdp
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1004,6 +1056,8 @@ configs:
           kwargs:
             prefix: mbdp
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1041,6 +1095,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1087,6 +1143,8 @@ configs:
           kwargs:
             prefix: mwx1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1098,6 +1156,8 @@ configs:
           kwargs:
             prefix: mwx1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1135,6 +1195,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1181,6 +1243,8 @@ configs:
           kwargs:
             prefix: pco2
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1192,6 +1256,8 @@ configs:
           kwargs:
             prefix: pco2
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1229,6 +1295,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1275,6 +1343,8 @@ configs:
           kwargs:
             prefix: pguv
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1286,6 +1356,8 @@ configs:
           kwargs:
             prefix: pguv
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1323,6 +1395,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1369,6 +1443,8 @@ configs:
           kwargs:
             prefix: rtmp
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1380,6 +1456,8 @@ configs:
           kwargs:
             prefix: rtmp
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1417,6 +1495,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1463,6 +1543,8 @@ configs:
           kwargs:
             prefix: s330
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1474,6 +1556,8 @@ configs:
           kwargs:
             prefix: s330
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1511,6 +1595,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1557,6 +1643,8 @@ configs:
           kwargs:
             prefix: seap
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1568,6 +1656,8 @@ configs:
           kwargs:
             prefix: seap
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1605,6 +1695,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1651,6 +1743,8 @@ configs:
           kwargs:
             prefix: svp1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1662,6 +1756,8 @@ configs:
           kwargs:
             prefix: svp1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1699,6 +1795,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1745,6 +1843,8 @@ configs:
           kwargs:
             prefix: tsg1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1756,6 +1856,8 @@ configs:
           kwargs:
             prefix: tsg1
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -1793,6 +1895,8 @@ configs:
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -1839,6 +1943,8 @@ configs:
           kwargs:
             prefix: tsg2
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -1850,6 +1956,8 @@ configs:
           kwargs:
             prefix: tsg2
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache

@@ -74,6 +74,8 @@ NET_WRITER_TEMPLATE="""
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -122,6 +124,8 @@ FULL_WRITER_TEMPLATE="""
           kwargs:
             prefix: %LOGGER%
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -133,6 +137,8 @@ FULL_WRITER_TEMPLATE="""
           kwargs:
             prefix: %LOGGER%
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache

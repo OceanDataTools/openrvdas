@@ -80,6 +80,8 @@ configs:
       kwargs:
         transforms:
           class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -105,6 +107,8 @@ configs:
       kwargs:
         transforms:
           class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
