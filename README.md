@@ -61,7 +61,11 @@ Most OpenRVDAS documentation is gathered in the [docs/](docs/) subdirectory of t
 
 ## Installation
 
-OpenRVDAS is written primarily in Python 3.[^1] There are currently installation scripts for CentOS 7 and Ubuntu 16, but it may be manually installed on other systems. Please refer to [INSTALL.md](./INSTALL.md) for details.
+OpenRVDAS is written primarily in Python 3.[^1] There are currently installation scripts for CentOS 7, Ubuntu 16 and Ubuntu 18, but it may be manually installed on other systems. Please refer to [INSTALL.md](./INSTALL.md) for details.
+
+## Ship/Organization-Dependent Code
+
+Please see the [local/README.md](local/README.md) file for conventions on where and how to organize your institution's configuration and definition files.
 
 ## Contributing
 

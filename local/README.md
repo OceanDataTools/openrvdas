@@ -1,10 +1,12 @@
 # How to Use the 'local/' Directory
 
-In short, this is where you should put anything/everything specific to your ship, project and/or
-organization. Nowhere else.
+In short, this is where you should put anything/everything specific to
+your ship, project and/or organization. Nowhere else.
 
-Below, we propose a directory structure that should prevent file collisions if you ever hope
-to share or make use of definitions or configurations from other organizations:
+Below, we propose a directory structure that should prevent file
+collisions if you ever hope to share or make use of definitions or
+configurations from other organizations:
+
 ```
   local/
     devices/             - Definitions for widely-used device types (SeaPath, Garmin, etc.)
@@ -38,14 +40,18 @@ For example,
     sikuliaq/
       ...
 ```
-In general, we recommend that any organization or ship using OpenRVDAS create their own branch or fork 
-of the code to allow them to selectively merge OpenRVDAS code updates as they see fit. Following the
-above structure will simplify the process
+In general, we recommend that any organization or ship using OpenRVDAS
+create their own branch or fork of the code to allow them to
+selectively merge OpenRVDAS code updates as they see fit. Following
+the above structure will simplify the process
 
 ## Local Device/Device Type Definitions
-By default, the parser transform (class ``ParseTransform``) will look for device and device type definitions
-in ``local/devices/*.yaml``. If you wish to also use devices/device types defined in any other directories,
-you can specify the path in the config file in which you specify the parser:
+
+By default, the parser transform (class ``ParseTransform``) will look
+for device and device type definitions in ``local/devices/*.yaml``. If
+you wish to also use devices/device types defined in any other
+directories, you can specify the path in the config file in which you
+specify the parser:
 ```
    readers:
      class: UDPReader
@@ -60,8 +66,9 @@ you can specify the path in the config file in which you specify the parser:
      kwargs:
        port: 6225
 ```
-If invoked from the command line with the ``listen.py`` script, use the ``--parse_definition_path`` argument
-(lexically __before__ the parser transform) on the command line:
+If invoked from the command line with the ``listen.py`` script, use
+the ``--parse_definition_path`` argument (lexically __before__ the
+parser transform) on the command line:
 ```
   logger/listener/listen.py \
       --udp 6224 \
