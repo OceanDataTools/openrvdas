@@ -36,6 +36,7 @@ might have either, both or neither of speed in knots and/or km/hour.
 The recognized format types we add are:
   od = optional integer
   of = optional generalized float
+  og = optional generalized number
   ow = optional sequence of letters, numbers, underscores
   nc = any ASCII text that is not a comma
 
@@ -61,6 +62,14 @@ def optional_f(text):
     return None
 optional_f.pattern = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'
 
+def optional_g(text):
+  """Method for parsing an 'optional' generalized number."""
+  if text:
+    return float(text)
+  else:
+    return None
+optional_g.pattern = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
+
 def optional_w(text):
   """Method for parsing an 'optional' letters/numbers/underscore
   string."""
@@ -79,7 +88,8 @@ def not_comma(text):
     return None
 not_comma.pattern = r'[^,]*'
 
-parser_dict = dict(od=optional_d, of=optional_f, ow=optional_w, nc=not_comma)
+parser_dict = dict(od=optional_d, of=optional_f, og=optional_g,
+                   ow=optional_w, nc=not_comma)
 
 ################################################################################
 class RecordParser:

@@ -130,7 +130,7 @@ Seapath330:
     - "$INHDT,{HeadingTrue:f},T*{CheckSum:x}"
     - "$INVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
     - "$INZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
-    - "$INRMC,{GPSTime:f},{GPSStatus:w},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:f},{MagneticVarEorW:w},{Mode:w}*{Checksum:x}"
+    - "$INRMC,{GPSTime:f},{GPSStatus:w},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}"
     - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
     - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
     - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"

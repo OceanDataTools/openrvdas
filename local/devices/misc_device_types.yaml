@@ -8,7 +8,9 @@ ADCP_OS75:
   category: "device_type"
   description: "RD Industries OS-75 Acoustic Doppler Current Profiler"
   
-  format: "$PUHAW,UVH,{VelocityE:f},{VelocityN:f},{HeadingT:f}"
+  format:
+  - "$PUHAW,UVH,{VelocityE:f},{VelocityN:f},{HeadingT:f}"
+  - "$VDVBW,{LongWaterSpeed:f},{TransWaterSpeed:f},{WaterSpeedStatus:ow},{LongGroundSpeed:of},{TransGroundSpeed:of},{GroundSpeedStatus:ow}*{Checksum:x}"
 
   fields:
     VelocityE:
@@ -20,6 +22,22 @@ ADCP_OS75:
     HeadingT:
       units: "degrees"
       description: "True Heading"
+    LongWaterSpeed:
+      units: "knots"
+      description: "Longitudinal water speed (negative means astern)"
+    TransWaterSpeed:
+      units: "knots"
+      description: "Longitudinal water speed (negative means port)"
+    WaterSpeedStatus:
+      description: "A = Data Valid"
+    LongGroundSpeed:
+      units: "knots"
+      description: "Longitudinal ground speed (negative means astern)"
+    TransGroundSpeed:
+      units: "knots"
+      description: "Transverse ground speed (negative means port)"
+    GroundSpeedStatus:
+      description: "A = Data Valid"
 
 ######################################
 Gravimeter_BGM3:
