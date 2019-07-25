@@ -93,6 +93,11 @@ loggers:
     - utsg->off
     - utsg->net
     - utsg->file/net/db
+  true_wind:
+    configs:
+    - true_wind->off
+    - true_wind->net
+    - true_wind->file/net/db
 
 ########################################
 modes:
@@ -113,6 +118,7 @@ modes:
     lsvp: lsvp->off
     tsg2: tsg2->off
     utsg: utsg->off
+    true_wind: true_wind->off
 
   monitor:
     ladc: ladc->net
@@ -131,6 +137,7 @@ modes:
     lsvp: lsvp->net
     tsg2: tsg2->net
     utsg: utsg->net
+    true_wind: true_wind->net
 
   log:
     ladc: ladc->file/net/db
@@ -149,6 +156,7 @@ modes:
     lsvp: lsvp->file/net/db
     tsg2: tsg2->file/net/db
     utsg: utsg->file/net/db
+    true_wind: true_wind->file/net/db
 
 ########################################
 default_mode: 'off'
@@ -198,7 +206,7 @@ configs:
             port: 6225
 
   ladc->file/net/db:
-    name: ladc->net
+    name: ladc->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -298,7 +306,7 @@ configs:
             port: 6225
 
   lais->file/net/db:
-    name: lais->net
+    name: lais->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -398,7 +406,7 @@ configs:
             port: 6225
 
   ldfl->file/net/db:
-    name: ldfl->net
+    name: ldfl->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -498,7 +506,7 @@ configs:
             port: 6225
 
   lgar->file/net/db:
-    name: lgar->net
+    name: lgar->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -598,7 +606,7 @@ configs:
             port: 6225
 
   lguv->file/net/db:
-    name: lguv->net
+    name: lguv->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -698,7 +706,7 @@ configs:
             port: 6225
 
   lgyr->file/net/db:
-    name: lgyr->net
+    name: lgyr->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -798,7 +806,7 @@ configs:
             port: 6225
 
   lknu->file/net/db:
-    name: lknu->net
+    name: lknu->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -898,7 +906,7 @@ configs:
             port: 6225
 
   lmwx->file/net/db:
-    name: lmwx->net
+    name: lmwx->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -998,7 +1006,7 @@ configs:
             port: 6225
 
   loxy->file/net/db:
-    name: loxy->net
+    name: loxy->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1098,7 +1106,7 @@ configs:
             port: 6225
 
   lpco->file/net/db:
-    name: lpco->net
+    name: lpco->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1198,7 +1206,7 @@ configs:
             port: 6225
 
   lrtm->file/net/db:
-    name: lrtm->net
+    name: lrtm->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1298,7 +1306,7 @@ configs:
             port: 6225
 
   lsea->file/net/db:
-    name: lsea->net
+    name: lsea->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1398,7 +1406,7 @@ configs:
             port: 6225
 
   lsep->file/net/db:
-    name: lsep->net
+    name: lsep->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1498,7 +1506,7 @@ configs:
             port: 6225
 
   lsvp->file/net/db:
-    name: lsvp->net
+    name: lsvp->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1598,7 +1606,7 @@ configs:
             port: 6225
 
   tsg2->file/net/db:
-    name: tsg2->net
+    name: tsg2->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1698,7 +1706,7 @@ configs:
             port: 6225
 
   utsg->file/net/db:
-    name: utsg->net
+    name: utsg->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -1751,6 +1759,115 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:utsg'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+  ########
+  true_wind->off:
+    name: true_wind->off
+
+  true_wind->net:
+    name: true_wind->net
+    readers:
+      class: UDPReader
+      kwargs:
+        port: 6225
+    transforms:
+    - class: FromJSONTransform
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: UDPWriter          # Write back out to UDP
+      kwargs:
+        port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+
+  true_wind->file/net/db:
+    name: true_wind->file/net/db
+    readers:
+      class: UDPReader
+      kwargs:
+        port: 6225
+    transforms:
+    - class: FromJSONTransform
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: UDPWriter          # Write back out to UDP
+      kwargs:
+        port: 6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
         writers:
           class: UDPWriter
           kwargs:

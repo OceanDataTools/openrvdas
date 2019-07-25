@@ -26,6 +26,7 @@ LOGGERS = [
   'lsvp',
   'tsg2',
   'utsg',
+  'true_wind'
   ]
 
 MODES = ['off', 'port', 'monitor', 'monitor and log']
@@ -42,6 +43,114 @@ cruise:
   id: LMG1903
   start: '2014-03-26'
   end: '2019-04-09'
+"""
+
+TRUE_WIND_TEMPLATE = """
+  true_wind->net:
+    name: true_wind->net
+    readers:
+      class: UDPReader
+      kwargs:
+        port: %CACHE_UDP%
+    transforms:
+    - class: FromJSONTransform
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: UDPWriter          # Write back out to UDP
+      kwargs:
+        port: %CACHE_UDP%
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: %CACHE_UDP%
+
+  true_wind->file/net/db:
+    name: true_wind->file/net/db
+    readers:
+      class: UDPReader
+      kwargs:
+        port: %CACHE_UDP%
+    transforms:
+    - class: FromJSONTransform
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: UDPWriter          # Write back out to UDP
+      kwargs:
+        port: %CACHE_UDP%
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: %CACHE_UDP%
 """
 
 OFF_TEMPLATE="""
@@ -91,7 +200,7 @@ NET_WRITER_TEMPLATE="""
 
 FULL_WRITER_TEMPLATE="""
   %LOGGER%->file/net/db:
-    name: %LOGGER%->net
+    name: %LOGGER%->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -214,6 +323,11 @@ configs:
 for logger in LOGGERS:
   output += """  ########"""
   output += fill_vars(OFF_TEMPLATE, VARS).replace('%LOGGER%', logger)
+  # Special case for true winds, which is a derived logger
+  if logger == 'true_wind':
+    output += fill_vars(TRUE_WIND_TEMPLATE, VARS)
+    continue
+
   output += fill_vars(NET_WRITER_TEMPLATE, VARS).replace('%LOGGER%', logger)
   output += fill_vars(FULL_WRITER_TEMPLATE, VARS).replace('%LOGGER%', logger)
 
