@@ -15,6 +15,10 @@
              "time_format": "%y+%j:%H:%M:%S.%f",
              "logfile": "test/LMG1903/lgar/raw/LMG1903_lgar" 
             },
+    "lguv": {"port": "/tmp/tty_lguv",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lguv/raw/LMG1903_lguv" 
+            },
     "lgyr": {"port": "/tmp/tty_lgyr",
              "time_format": "%y+%j:%H:%M:%S.%f",
              "logfile": "test/LMG1903/lgyr/raw/LMG1903_lgyr" 
