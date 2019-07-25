@@ -73,36 +73,6 @@ Gyrocompass:
       description: "Rate of turn"
 
 ######################################
-Knudsen3260:
-  category: "device_type"
-  description: "Knudsen Chirp 3260"
-
-  format: "{LFInUse:nc},{LFDepth:of},{LFValid:od},{HFInUse:nc},{HFDepth:of},{HFValid:od},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
-
-  fields:
-    LFDepth:
-      units: "meters"
-      description:  Depth in meters from transducer"
-    LFValid:
-      units: "0"
-      description: "Valid if present (value may always be zero?)"
-    HFDepth:
-      units: "meters"
-      description:  Depth in meters from transducer"
-    HFValid:
-      units: "0"
-      description: "Valid if present (value may always be zero?)"
-    SoundSpeed:
-      units: "meters/second"
-      description: "Sound speed velocity"
-    Latitude:
-      units: "degrees north"
-      description: "Latitude in degrees north"
-    Longitude:
-      units: "degrees west"
-      description: "Longitude in degrees west"
-
-######################################
 MultibeamEM122:
   category: "device_type"
   description: "Simrad EM122 Multibeam"
