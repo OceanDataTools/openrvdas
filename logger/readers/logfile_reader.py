@@ -98,29 +98,40 @@ class LogfileReader(TimestampedReader):
       if not record:
         could be EOF or simply an empty next line
     """
-    record = self.reader.read()
-    if not record:
-      return None
 
     # NOTE: It feels like we should check here that the reader's
     # current file really does match our logfile name format...
+    while True:
+      record = self.reader.read()
+      if not record:  # None means we're out of records
+        return None
 
-    if self.use_timestamps:
-      # Get timestamp off record
-      time_str = record.split(' ', 1)[0]
-      ts = timestamp.timestamp(time_str, time_format=self.time_format)
+      # If we've got a record and we're not using timestamps, we're
+      # done - just return it.
+      if not self.use_timestamps:
+        self.prev_record = record
+        # We need this in case the next call is seek_time() or
+        # read_time_range(). This is less expensive than parsing every
+        # timestamp and keeping self.last_timestamp, but an
+        # alternative might be to implement read_previous(), which
+        # would be expensive but which could be called only when
+        # actually needed.
+        return record
 
-    # If we're not trying to return records in intervals that match
-    # their original intervals, we're done - just return it.
-    if not self.use_timestamps:
-      self.prev_record = record
-      # We need this in case the next call is seek_time() or read_time_range().
-      # This is less expensive than parsing every timestamp and keeping
-      # self.last_timestamp, but an alternative might be to implement
-      # read_previous(), which would be expensive but which could be called
-      # only when actually needed.
-      return record
+      # If we are using timestamps, make sure we can parse the
+      # timestamp off the front. If we can't, complain and try getting
+      # the next record.
+      try:
+        time_str = record.split(' ', 1)[0]
+        ts = timestamp.timestamp(time_str, time_format=self.time_format)
+        break
+      except ValueError:
+        # If, for some reason, the record is malformed, complain and
+        # loop to try fetching the next record
+        logging.warning('Unable to parse time string from record: %s', record)
 
+    # If here, we've got a record and a timestamp and are intending to
+    # use it. Figure out how long we should sleep before returning it.
     desired_interval = ts - self.last_timestamp
     now = timestamp.timestamp()
     actual_interval = now - self.last_read
