@@ -101,14 +101,14 @@
       <tr>
         <td colspan=2>
           Relative Wind
-          <div id="rel-wind-container"
+          <div id="rel_wind_dir"
                style="height: 200px; width: 200px"></div>
         Port: <span id="port_rel_speed" style="color:red"></span> m/s,
         Stbd: <span id="stbd_rel_speed" style="color:green"></span> m/s</td>
         </td>
         <td colspan=2>
           True Wind
-          <div id="true-wind-container"
+          <div id="true_wind_dir"
                style="height: 200px; width: 200px"></div>
         Port: <span id="port_true_speed" style="color:red"></span> m/s,
         Stbd: <span id="stbd_true_speed" style="color:green"></span> m/s</td>
@@ -130,14 +130,29 @@
   <script type="text/javascript">
   var widget_list = [];
 
+  function round_1(val) {
+    return val.toFixed(1);
+  }
+  function round_2(val) {
+    return val.toFixed(2);
+  }
+  function round_4(val) {
+    return val.toFixed(4);
+  }
+
+  function num_to_lat_lon(val) {
+    return ((val/100).toFixed(4)).padStart(9);
+  }
+
+  /////////////////////////
+  // Start of widgets
+  
   // Lat/Lon text widgets
   widget_list.push(new TextWidget('gps_lat',
                                   {S330Latitude:
                                     {
                                       name: "Latitude",
-                                      transform: function(val) {
-                                        return Math.round(val*100)/10000;
-                                      }
+                                      transform: num_to_lat_lon
                                     }
                                   }));
   widget_list.push(new TextWidget('gps_n_or_s', {S330NorS: {name: "N/S"}}));
@@ -146,9 +161,7 @@
                                   {S330Longitude:
                                     {
                                       name: "Longitude",
-                                      transform: function(val) {
-                                        return Math.round(val*100)/10000;
-                                      }
+                                      transform: num_to_lat_lon
                                     }
                                   }));
   widget_list.push(new TextWidget('gps_e_or_w', {S330EorW: {name: "E/W"}}));
@@ -202,78 +215,82 @@
                                   }));
   widget_list.push(new TextWidget('gmt_year', {S330GPSYear: {name: "GMT Year"}}));
 
-      //////////////////
-      // Relative winds
-      var rel_wind_fields = {
-        MwxPortRelWindDir: {
-          name: 'Port Relative Wind',
-          color: 'red',
-        },
-        MwxStbdRelWindDir: {
-          name: 'Stbd Relative Wind',
-          color: 'green',
-        }
-      };
-      widget_list.push(new DialWidget('rel-wind-container', rel_wind_fields,
-                                      {title:{text:''}, credits:false, maxPadding: 0.05}));
+  //////////////////
+  // Relative winds
+  var rel_wind_fields = {
+    MwxPortRelWindDir: {
+      name: 'Port Relative Wind',
+      color: 'red',
+    },
+    MwxStbdRelWindDir: {
+      name: 'Stbd Relative Wind',
+      color: 'green',
+    }
+  };
+  widget_list.push(new DialWidget('rel_wind_dir', rel_wind_fields,
+                                  {title:{text:''}, credits:false, maxPadding: 0.05}));
 
-      //////////////////
-      // True winds
-      var true_wind_fields = {
-        PortTrueWindDir: {
-          name: 'Port True Wind',
-          color: 'red',
-          transform: function(val) { return Math.round(val*100)/100; }
-        },
-        StbdTrueWindDir: {
-          name: 'Stbd True Wind',
-          color: 'green',
-          transform: function(val) { return Math.round(val*100)/100; }
-        }
-      };
-      widget_list.push(new DialWidget('true-wind-container', true_wind_fields,
-                               {title:{text:''}, credits:false}));
-      var port_rel_speed_fields = {
-        MwxPortRelWindSpeed: {
-          name: "Port Rel Wind Speed",
-        }
-      };
-      widget_list.push(new TextWidget('port_rel_speed', port_rel_speed_fields));
+  //////////////////
+  // True winds
+  var true_wind_fields = {
+    PortTrueWindDir: {
+      name: 'Port True Wind',
+      color: 'red',
+      transform: function(val) { return Math.round(val); }
+    },
+    StbdTrueWindDir: {
+      name: 'Stbd True Wind',
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
+    }
+  };
+  widget_list.push(new DialWidget('true_wind_dir', true_wind_fields,
+                           {title:{text:''}, credits:false}));
+  var port_rel_speed_fields = {
+    MwxPortRelWindSpeed: {
+      name: "Port Rel Wind Speed",
+      transform: round_2
+    }
+  };
+  widget_list.push(new TextWidget('port_rel_speed', port_rel_speed_fields));
 
-      var stbd_rel_speed_fields = {
-        MwxStbdRelWindSpeed: {
-          name: "Stbd Rel Wind Speed",
-        }
-      };
-      widget_list.push(new TextWidget('stbd_rel_speed', stbd_rel_speed_fields));
+  var stbd_rel_speed_fields = {
+    MwxStbdRelWindSpeed: {
+      name: "Stbd Rel Wind Speed",
+      transform: round_2
+    }
+  };
+  widget_list.push(new TextWidget('stbd_rel_speed', stbd_rel_speed_fields));
 
-      var port_true_speed_fields = {
-        PortTrueWindSpeed: {
-          name: "Port True Wind Speed",
-          transform: function(val) { return Math.round(val*100)/100; }
-        }
-      };
-      widget_list.push(new TextWidget('port_true_speed',
-                                      port_true_speed_fields));
+  var port_true_speed_fields = {
+    PortTrueWindSpeed: {
+      name: "Port True Wind Speed",
+      transform: round_2
+    }
+  };
+  widget_list.push(new TextWidget('port_true_speed',
+                                  port_true_speed_fields));
 
-      var stbd_true_speed_fields = {
-        StbdTrueWindSpeed: {
-          name: "Stbd True Wind Speed",
-          transform: function(val) { return Math.round(val*100)/100; }
-        }
-      };
-      widget_list.push(new TextWidget('stbd_true_speed',
-                                      stbd_true_speed_fields));
+  var stbd_true_speed_fields = {
+    StbdTrueWindSpeed: {
+      name: "Stbd True Wind Speed",
+      transform: round_2
+    }
+  };
+  widget_list.push(new TextWidget('stbd_true_speed',
+                                  stbd_true_speed_fields));
 
-      widget_list.push(new TextWidget('course_true',
-                                      {S330CourseTrue: {name: 'Course'}}));
-      widget_list.push(new TextWidget('heading_true',
-                                      {S330HeadingTrue: {name: 'Heading'}}));
-      widget_list.push(new TextWidget('sog_kt',
-                                      {S330SpeedKt: {name: 'Speed'}}));
+  widget_list.push(new TextWidget('course_true',
+      {S330CourseTrue: {name: 'Course', transform: round_1}}));
+  widget_list.push(new TextWidget('heading_true',
+      {S330HeadingTrue: {name: 'Heading', transform: round_1}}));
+  widget_list.push(new TextWidget('sog_kt',
+      {S330SpeedKt: {name: 'Speed', transform: round_1}}));
 
-  widget_list.push(new TextWidget('pitch', { S330Pitch: {name: 'Pitch'}}));
-  widget_list.push(new TextWidget('roll', { S330Roll: {name: 'Roll'}}));
+  widget_list.push(new TextWidget('pitch',
+      {S330Pitch: {name: 'Pitch', transform: round_1}}));
+  widget_list.push(new TextWidget('roll',
+      {S330Roll: {name: 'Roll', transform: round_1}}));
 
   var widget_server = new WidgetServer(widget_list,
                                        WEBSOCKET_DATA_SERVER);
