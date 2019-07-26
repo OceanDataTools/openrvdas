@@ -158,9 +158,9 @@ function DialWidget(container, fields, widget_options={}) {
       outerRadius: '109%'
     },
     yAxis: {
-      min: 0,
+      min: 0.0001,
       max: 360,
-
+      tickInterval: 45,
       minorTickInterval: 'auto',
       minorTickWidth: 1,
       minorTickLength: 10,
@@ -173,7 +173,7 @@ function DialWidget(container, fields, widget_options={}) {
       tickLength: 10,
       tickColor: '#666',
       labels: {
-          step: 2,
+          step: 1,
           rotation: 'auto'
       }
     },
