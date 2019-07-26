@@ -117,7 +117,7 @@ function build_data_request(widget_list) {
   for (var widget_i = 0; widget_i < widget_list.length; widget_i++) {
     var widget = widget_list[widget_i];
     for (field_name in widget.fields) {
-      var field_seconds = widget.fields[field_name].seconds || 0;
+      var field_seconds = widget.fields[field_name].seconds || -1;
       if (field_array[field_name] === undefined) {
         field_array[field_name] = {};
       }
