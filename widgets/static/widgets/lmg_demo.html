@@ -30,11 +30,21 @@
         text-align: left;
         width: 30%;
       }
-      .name_td {
+      .name_td_25 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
         font-weight: bold;
         width: 25%;
+      }
+      .name_td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 50%;
+      }
+      .val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
       }
       .val_td_50 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -56,8 +66,6 @@
     <script src="/static/js/highcharts/code/highstock.js"></script>
     <script src="/static/js/highcharts/code/highcharts-more.js"></script>
     <script src="/static/js/highcharts/code/modules/data.js"></script>
-    <script src="/static/js/highcharts/code/modules/exporting.js"></script>
-    <script src="/static/js/highcharts/code/modules/export-data.js"></script>
 
     <script src="/static/js/widgets/highcharts_widget.js"></script>
     <script src="/static/js/widgets/text_widget.js"></script>
@@ -69,66 +77,52 @@
 
     <table class="ship_table">
       <tr>
-        <td class="name_td" colspan=2>
-          Lawrence M. Gould Console
+        <td class="name_td_50" colspan=2>
+          Lawrence M. Gould Console<br>
+          GMT Day: <span id="gmt_julian_date">---</span>,
+          Date: <span id="gmt_day">--</span>-<span id="gmt_month">---</span>-<span id="gmt_year">----</span>
         </td>
-        <td class="val_td_25">
+        <td class="val_td_50" colspan=2>
           Lat: <span id="gps_lat">--.----</span>°
-          <span id="gps_n_or_s"></span>
-        </td>
-        <td class="val_td_25">
+          <span id="gps_n_or_s"></span><br>
           Lon: <span id="gps_lon">--.----</span>°
           <span id="gps_e_or_w"></span>
         </td>
       </tr>
 
       <tr>
-        <td class="val_td_25" colspan=2>
+        <td class="val_td_50" colspan=2>
           GMT Time: <span id="gmt_time">--:--:--.--</span>
         </td>
-        <td class="val_td_25" colspan=2>
-          GMT Day: <span id="gmt_julian_date">---</span>,
-          Date: <span id="gmt_day">--</span>-<span id="gmt_month">---</span>-<span id="gmt_year">----</span>
+        <td class="val_td_50" colspan=2>
         </td>
       </tr>
 
       <tr>
         <td colspan=2>
+          Relative Wind
           <div id="rel-wind-container"
-               style="height: 300px; width: 310px"></div>
+               style="height: 200px; width: 200px"></div>
+        Port: <span id="port_rel_speed" style="color:red"></span> m/s,
+        Stbd: <span id="stbd_rel_speed" style="color:green"></span> m/s</td>
         </td>
         <td colspan=2>
+          True Wind
           <div id="true-wind-container"
-               style="height: 300px; width: 310px"></div>
+               style="height: 200px; width: 200px"></div>
+        Port: <span id="port_true_speed" style="color:red"></span> m/s,
+        Stbd: <span id="stbd_true_speed" style="color:green"></span> m/s</td>
         </td>
       </tr>
       <tr>
-        <td>Relative Speed
-        Port: <span id="port_rel_speed" style="color:red"></span> m/s,</td>
-        <td>Stbd: <span id="stbd_rel_speed" style="color:green"></span> m/s</td>
-        <td>True Speed
-        Port: <span id="port_true_speed" style="color:red"></span> m/s,</td>
-        <td>Stbd: <span id="stbd_true_speed" style="color:green"></span> m/s</td>
+        <td>Course: <span id="course_true">-</span>°</td>
+        <td>SOG: <span id="sog_kt">-</span> kts</td>
+        <td class="val_td">Pitch: <span id="pitch"></span>°</td>
       </tr>
       <tr>
-        <td colspan>
-          Course <span id="course_true">-</span>°
-        </td>
-        <td colspan>
-          Heading <span id="heading_true"></span>°
-        </td>
-        <td colspan>
-          Speed over ground <span id="sog_kt">-</span> kts
-        </td>
-      </tr>
-      <tr>
-        <td class="name_td">Pitch</td>
-        <td class="val_td"><span id="pitch"></span>°</td>
-        <td class="name_td">Roll</td>
-        <td class="val_td"><span id="roll"></span>°</td>
-      </tr>
-    </table>
-        </td>
+        <td>Heading: <span id="heading_true"></span>°</td>
+        <td></td>
+        <td class="val_td">Roll: <span id="roll"></span>°</td>
       </tr>
     </table>
 
@@ -220,8 +214,8 @@
           color: 'green',
         }
       };
-      widget_list.push(new DialWidget('rel-wind-container', rel_wind_fields));
-
+      widget_list.push(new DialWidget('rel-wind-container', rel_wind_fields,
+                                      {title:{text:''}, credits:false, maxPadding: 0.05}));
 
       //////////////////
       // True winds
@@ -237,8 +231,8 @@
           transform: function(val) { return Math.round(val*100)/100; }
         }
       };
-      widget_list.push(new DialWidget('true-wind-container', true_wind_fields));
-
+      widget_list.push(new DialWidget('true-wind-container', true_wind_fields,
+                               {title:{text:''}, credits:false}));
       var port_rel_speed_fields = {
         MwxPortRelWindSpeed: {
           name: "Port Rel Wind Speed",
