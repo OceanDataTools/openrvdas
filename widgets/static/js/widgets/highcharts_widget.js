@@ -134,7 +134,12 @@ function DialWidget(container, fields, widget_options={}) {
 
   var this_widget_options = {
     chart: {
-      type: 'gauge'
+      type: 'gauge',
+      maxPadding:0.05,
+      marginTop:1,
+      marginBottom:1,
+      marginLeft:1,
+      marginRight:1,
     },
     title: {
       // Just all the field names, comma separated
