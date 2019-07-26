@@ -221,10 +221,12 @@
     MwxPortRelWindDir: {
       name: 'Port Relative Wind',
       color: 'red',
+      transform: function(val) { return Math.round(val); }
     },
     MwxStbdRelWindDir: {
       name: 'Stbd Relative Wind',
       color: 'green',
+      transform: function(val) { return Math.round(val); }
     }
   };
   widget_list.push(new DialWidget('rel_wind_dir', rel_wind_fields,
