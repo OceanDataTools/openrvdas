@@ -163,6 +163,25 @@ class WriteToAPILoggingHandler(logging.Handler):
                          log_level=record.levelno,
                          message=self.formatter.format(record))
 
+############################
+def parse_udp_spec(spec):
+  """Format should be [[interface:]destination:]port"""
+  destination = interface = ''
+  addr = spec.split(':')
+  try:
+    port = int(addr[-1])    # port is last arg
+  except ValueError:
+    raise ValueError('UDP spec "%s" has non-integer port: "%s"; should be '
+                     'format "[[interface:]destination:]port"', spec, port)
+  if len(addr) > 1:
+    destination = addr[-2]  # destination (multi/broadcast) is prev arg
+  if len(addr) > 2:
+    interface = addr[-3]    # interface is first arg
+  if len(addr) > 3:
+    raise ValueError('Improper UDP specification: "%s"; should be format '
+                     '"[[interface:]destination:]port"', spec)
+  return (interface, destination, port)
+
 ################################################################################
 class LoggerManager:
   ############################
@@ -448,11 +467,10 @@ def run_data_server(data_server_websocket, data_server_udp,
   
   # only have
   network_readers = []
-  for network in data_server_udp.split(','):
-    group_port = network.split(':')
-    port = int(group_port[-1])
-    multicast_group = group_port[-2] if len(group_port) == 2 else ''
-    network_readers.append(UDPReader(port=port, source=multicast_group))
+  for network_spec in data_server_udp.split(','):
+    # Format should be [[interface:]destination:]port
+    (interface, destination, port) = parse_udp_spec(network_spec)
+    network_readers.append(UDPReader(port=port, source=destination))
   transform = FromJSONTransform()
   reader = ComposedReader(readers=network_readers, transforms=[transform])
   writer = CachedDataWriter(port=websocket_port, interval=data_server_interval)
@@ -560,12 +578,11 @@ if __name__ == '__main__':
   # logging of stderr to it. Use a special format that prepends the
   # log level to the message, to aid in filtering.
   if args.data_server_udp:
-    group_port = args.data_server_udp.split(':')
-    port = int(group_port[-1])
-    multicast_group = group_port[-2] if len(group_port) == 2 else ''
+    # Format should be [[interface:]destination:]port
+    (interface, destination, port) = parse_udp_spec(args.data_server_udp)
     stderr_network_writer = ComposedWriter(
       transforms=ToDASRecordTransform(field_name='stderr:logger_manager'),
-      writers=UDPWriter(port=port, destination=multicast_group))
+      writers=UDPWriter(port=port, destination=destination,interface=interface))
     stderr_format = '%(levelno)d\t%(levelname)s\t' + DEFAULT_LOGGING_FORMAT
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_network_writer,
                                                         stderr_format))
