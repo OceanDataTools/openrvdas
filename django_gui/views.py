@@ -73,7 +73,7 @@ def index(request):
         api.set_active_mode(new_mode_name)
       except ValueError as e:
         logging.warning('Error trying to set mode to "%s": %s',
-                        new_mode_name, str(e));
+                        new_mode_name, str(e))
 
     # Did we get a cruise definition file? Load it. If there aren't
     # any errors, switch to the configuration it defines.
