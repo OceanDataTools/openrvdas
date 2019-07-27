@@ -69,7 +69,11 @@ def index(request):
     elif 'select_mode' in request.POST:
       new_mode_name = request.POST['select_mode']
       logging.info('switching to mode "%s"', new_mode_name)
-      api.set_active_mode(new_mode_name)
+      try:
+        api.set_active_mode(new_mode_name)
+      except ValueError as e:
+        logging.warning('Error trying to set mode to "%s": %s',
+                        new_mode_name, str(e));
 
     # Did we get a cruise definition file? Load it. If there aren't
     # any errors, switch to the configuration it defines.
