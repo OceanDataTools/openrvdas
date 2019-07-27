@@ -3,6 +3,7 @@
 from collections import OrderedDict
 
 VARS = {
+  '%INTERFACE%': '204.238.237.54',
   '%RAW_UDP%': '6224',
   '%CACHE_UDP%': '6225',
   '%WEBSOCKET%': '8766',
@@ -87,6 +88,7 @@ TRUE_WIND_TEMPLATE = """
     - class: UDPWriter          # Write back out to UDP
       kwargs:
         port: %CACHE_UDP%
+        interface: %INTERFACE%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -98,6 +100,7 @@ TRUE_WIND_TEMPLATE = """
           class: UDPWriter
           kwargs:
             port: %CACHE_UDP%
+            interface: %INTERFACE%
 
   true_wind->file/net/db:
     name: true_wind->file/net/db
@@ -140,6 +143,7 @@ TRUE_WIND_TEMPLATE = """
     - class: UDPWriter          # Write back out to UDP
       kwargs:
         port: %CACHE_UDP%
+        interface: %INTERFACE%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -151,6 +155,7 @@ TRUE_WIND_TEMPLATE = """
           class: UDPWriter
           kwargs:
             port: %CACHE_UDP%
+            interface: %INTERFACE%
 """
 
 OFF_TEMPLATE="""
@@ -175,6 +180,7 @@ NET_WRITER_TEMPLATE="""
     - class: UDPWriter      # Send raw NMEA to UDP
       kwargs:
         port: %RAW_UDP%
+        interface: %INTERFACE%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -185,6 +191,7 @@ NET_WRITER_TEMPLATE="""
           class: UDPWriter
           kwargs:
             port: %CACHE_UDP%
+            interface: %INTERFACE%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -196,6 +203,7 @@ NET_WRITER_TEMPLATE="""
           class: UDPWriter
           kwargs:
             port: %CACHE_UDP%
+            interface: %INTERFACE%
 """
 
 FULL_WRITER_TEMPLATE="""
@@ -222,6 +230,7 @@ FULL_WRITER_TEMPLATE="""
         - class: UDPWriter      # Send raw NMEA to UDP
           kwargs:
             port: %RAW_UDP%
+            interface: %INTERFACE%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -235,6 +244,7 @@ FULL_WRITER_TEMPLATE="""
         - class: UDPWriter
           kwargs:
             port: %CACHE_UDP%
+            interface: %INTERFACE%
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -257,6 +267,7 @@ FULL_WRITER_TEMPLATE="""
           class: UDPWriter
           kwargs:
             port: %CACHE_UDP%
+            interface: %INTERFACE%
 """
 
 def fill_vars(template, vars):
