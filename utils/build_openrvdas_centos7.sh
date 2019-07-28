@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # This script is designed to be run as root. It should take a clean CentOS 7
 # installation and install and configure all the components to run the full
@@ -18,8 +18,10 @@
 # the specific issue and simply re-running will produce the desired result.
 # Bug reports, and even better, bug fixes, will be greatly appreciated.
 
-DEFAULT_HOSTNAME=openrvdas
+DEFAULT_HOSTNAME=$HOSTNAME
 DEFAULT_INSTALL_ROOT=/opt
+#DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
+DEFAULT_HTTP_PROXY=$http_proxy
 
 DEFAULT_OPENRVDAS_REPO=http://github.com/davidpablocohn/openrvdas
 DEFAULT_OPENRVDAS_BRANCH=master
@@ -55,6 +57,14 @@ OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
 
 read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
 OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
+
+read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
+HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
+
+[ -z $HTTP_PROXY ] || echo Setting up proxy $HTTP_PROXY
+[ -z $HTTP_PROXY ] || export http_proxy=$HTTP_PROXY
+[ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
+
 echo "Will install from repository '$OPENRVDAS_REPO', branch '$OPENRVDAS_BRANCH'"
 
 read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
@@ -64,6 +74,10 @@ RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
 if [ 0 -eq 1 ]; then
   Commented out stuff goes here
 fi
+
+# Set creation mask so that everything we install is, by default,
+# world readable/executable.
+umask 022
 
 # Create user
 echo Checking if user $RVDAS_USER exists yet
@@ -92,7 +106,7 @@ yum -y update
 yum install -y socat git nginx sqlite-devel readline-devel \
     wget gcc zlib-devel openssl-devel \
     python36 python36-devel python36-pip 
-ln -s /usr/bin/python36 /usr/bin/python3
+[ -e /usr/bin/python3 ] || ln -s /usr/bin/python36 /usr/bin/python3
 
 # Install database stuff and set up as service.
 
@@ -103,41 +117,48 @@ service mariadb restart              # to manually start db server
 systemctl enable mariadb.service     # to make it start on boot
 
 echo "############################################################################"
-echo Configuring database:
-/usr/bin/mysql_secure_installation
-
-echo "############################################################################"
 echo Setting up database tables and permissions
 echo
 echo Creating database user "$RVDAS_USER"
-read -p "Database password to use for $RVDAS_USER? ($RVDAS_USER) " RVDAS_PASSWORD
-RVDAS_PASSWORD=${RVDAS_PASSWORD:-$RVDAS_USER}
+read -p "Database password to use for $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
+RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
-echo Now setting up database tables.
-echo Please enter SQL database *root* password to continue
-mysql -u root -p <<EOF 
-create user test@localhost identified by 'test';
-create user $RVDAS_USER@localhost identified by '$RVDAS_PASSWORD';
+while true; do
+  read -p "Current database password for root? (if one exists) " CURRENT_ROOT_DATABASE_PASSWORD
+  PASS=TRUE
+  (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
+  case $PASS in
+    TRUE ) break;;
+    * ) echo "Password failed";;
+  esac
+done
+read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
+NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
 
-create database data character set utf8;
-GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost;
+echo current: $CURRENT_ROOT_DATABASE_PASSWORD, new: $NEW_ROOT_DATABASE_PASSWORD
+mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD <<EOF
+UPDATE mysql.user SET Password=PASSWORD('$NEW_ROOT_DATABASE_PASSWORD') WHERE User='root';
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+DELETE FROM mysql.user WHERE User='';
+DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
+FLUSH PRIVILEGES;
 
-create database openrvdas character set utf8;
-GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost;
+GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 
-create database test character set utf8;
-GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost;
-GRANT ALL PRIVILEGES ON test.* TO test@localhost identified by 'test';
-
-flush privileges;
-\q
+GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
 EOF
 echo Done setting up database
 
 # Django and uWSGI
 echo "############################################################################"
+
 echo Installing Django, uWSGI and other Python-dependent packages
-pip3.6 install Django==2.0 pyserial uwsgi websockets PyYAML \
+export PATH=/usr/bin:/usr/local/bin:$PATH
+/usr/bin/env pip3 install --upgrade pip
+/usr/local/bin/pip3 install Django==2.0 pyserial uwsgi websockets PyYAML \
        parse mysqlclient mysql-connector
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
@@ -160,7 +181,7 @@ WantedBy = multi-user.target
 EOF
 
 # Create uWSGI start/stop scripts
-mkdir /root/scripts
+[ -e /root/scripts ] || mkdir /root/scripts
 cat > /root/scripts/start_uwsgi_daemon.sh <<EOF
 #!/bin/bash
 # Start uWSGI as a daemon; installed as service
@@ -181,8 +202,8 @@ chmod 755 /root/scripts/start_uwsgi_daemon.sh /root/scripts/stop_uwsgi_daemon.sh
 # Set up nginx
 echo "############################################################################"
 echo Setting up NGINX
-mkdir /etc/nginx/sites-available
-mkdir /etc/nginx/sites-enabled
+[ -e /etc/nginx/sites-available ] || mkdir /etc/nginx/sites-available
+[ -e /etc/nginx/sites-enabled ] || mkdir /etc/nginx/sites-enabled
 
 # We need to add a couple of lines to not quite the end of nginx.conf,
 # so do a bit of hackery: chop off the closing "}" with head, append
@@ -204,21 +225,28 @@ fi
 echo "############################################################################"
 echo Fetching and setting up OpenRVDAS code...
 cd $INSTALL_ROOT
-git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+
+if [ -e openrvdas ]; then
+  cd openrvdas
+  git checkout $OPENRVDAS_BRANCH
+  git pull
+else
+  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+  cd openrvdas
+fi
 
 echo Initializing OpenRVDAS database...
-cd openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
-sed -i .bak -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
-sed -i .bak -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_PASSWORD}'/g" django_gui/settings.py
+sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
+sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
 
 cp database/settings.py.dist database/settings.py
-sed -i .bak -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
-sed -i .bak -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_PASSWORD}'/g" database/settings.py
+sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
+sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
 
 cp widgets/static/js/widgets/settings.js.dist \
    widgets/static/js/widgets/settings.js
-sed -i .bak -e "s/localhost/${HOSTNAME}/g" widgets/static/js/widgets/settings.js
+sed -i -e "s/localhost/${HOSTNAME}/g" widgets/static/js/widgets/settings.js
 
 python3 manage.py makemigrations django_gui
 python3 manage.py migrate
@@ -226,7 +254,7 @@ echo yes | python3 manage.py collectstatic
 
 # Bass-ackwards way of creating superuser $RVDAS_USER, as the createsuperuser
 # command won't work from a script
-echo "from django.contrib.auth.models import User; User.objects.filter(email='${RVDAS_USER}@example.com').delete(); User.objects.create_superuser('${RVDAS_USER}', '${RVDAS_USER}@example.com', '${RVDAS_PASSWORD}')" | python3 manage.py shell
+echo "from django.contrib.auth.models import User; User.objects.filter(email='${RVDAS_USER}@example.com').delete(); User.objects.create_superuser('${RVDAS_USER}', '${RVDAS_USER}@example.com', '${RVDAS_DATABASE_PASSWORD}')" | python3 manage.py shell
 
 # Connect uWSGI with our project installation
 echo "############################################################################"
@@ -312,29 +340,29 @@ chgrp -R rvdas ${INSTALL_ROOT}/openrvdas
 # Set permissions
 echo "############################################################################"
 echo Setting SELINUX permissions \(permissive\) and firewall ports
-sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+(sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
 
 yum install -y firewalld
 systemctl start firewalld
 systemctl enable firewalld
 
-firewall-cmd --zone=public --permanent --add-port=80/tcp
-firewall-cmd --zone=public --permanent --add-port=8000/tcp
-firewall-cmd --zone=public --permanent --add-port=8001/tcp
+firewall-cmd --zone=public --permanent --add-port=80/tcp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8000/tcp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8001/tcp > /dev/null
 
 # Websocket ports
-firewall-cmd --zone=public --permanent --add-port=8765/tcp # status
-firewall-cmd --zone=public --permanent --add-port=8766/tcp # data
+firewall-cmd --zone=public --permanent --add-port=8765/tcp > /dev/null # status
+firewall-cmd --zone=public --permanent --add-port=8766/tcp > /dev/null # data
 
 # Our favorite UDP port for network data
-firewall-cmd --zone=public --permanent --add-port=6224/udp
-firewall-cmd --zone=public --permanent --add-port=6225/udp
+firewall-cmd --zone=public --permanent --add-port=6224/udp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=6225/udp > /dev/null
 
 # For unittest access
-firewall-cmd --zone=public --permanent --add-port=8000/udp
-firewall-cmd --zone=public --permanent --add-port=8001/udp
-firewall-cmd --zone=public --permanent --add-port=8002/udp
-firewall-cmd --reload
+firewall-cmd --zone=public --permanent --add-port=8000/udp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8001/udp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8002/udp > /dev/null
+firewall-cmd --reload > /dev/null
 
 # Make uWSGI run on boot
 systemctl enable uwsgi.service
@@ -413,35 +441,32 @@ while true; do
     esac
 done
 
-echo "############################################################################"
-while true; do
-    read -p "Do you wish to install Redis? " yn
-    case $yn in
-        [Yy]* )
-            yum install -y redis;
-            pip3.6 install redis;
-
-            while true; do
-                read -p "Do you wish to start a Redis server on boot? " ynb
-                case $ynb in
-                    [Yy]* )
-                        systemctl start redis
-                        systemctl enable redis.service;
-                        break;;
-                    [Nn]* )
-                        break;;
-                    * ) echo "Please answer yes or no.";;
-                esac
-            done
-            break;;
-        [Nn]* )
-            break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
-
-
+#echo "############################################################################"
+#while true; do
+#    read -p "Do you wish to install Redis? " yn
+#    case $yn in
+#        [Yy]* )
+#            yum install -y redis;
+#            pip3.6 install redis;
+#
+#            while true; do
+#                read -p "Do you wish to start a Redis server on boot? " ynb
+#                case $ynb in
+#                    [Yy]* )
+#                        systemctl start redis
+#                        systemctl enable redis.service;
+#                        break;;
+#                    [Nn]* )
+#                        break;;
+#                    * ) echo "Please answer yes or no.";;
+#                esac
+#            done
+#            break;;
+#        [Nn]* )
+#            break;;
+#        * ) echo "Please answer yes or no.";;
+#    esac
+#done
 
 echo "#########################################################################"
 echo "#########################################################################"
