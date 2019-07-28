@@ -142,7 +142,21 @@ DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
 FLUSH PRIVILEGES;
+EOF
 
+# Try creating databases. Command will fail if they exist, so we need
+# to do one at a time and trap any possible errors.
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "data" appears to already exist
+create database data character set utf8;
+EOF
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "openrvdas" appears to already exist
+create database openrvdas character set utf8;
+EOF
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "test" appears to already exist
+create database test character set utf8;
+EOF
+
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 
