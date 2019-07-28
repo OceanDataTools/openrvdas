@@ -123,10 +123,14 @@ echo Creating database user "$RVDAS_USER"
 read -p "Database password to use for $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
 RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
+# Get (and verify) current root password for mysql
 while true; do
   read -p "Current database password for root? (if one exists) " CURRENT_ROOT_DATABASE_PASSWORD
+  # Check whether they're right about the current password; need
+  # a special case if the password is empty.
   PASS=TRUE
-  (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
+  [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root  < /dev/null) || PASS=FALSE
+  [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
   case $PASS in
     TRUE ) break;;
     * ) echo "Password failed";;
@@ -135,9 +139,21 @@ done
 read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
 NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
 
-echo current: $CURRENT_ROOT_DATABASE_PASSWORD, new: $NEW_ROOT_DATABASE_PASSWORD
-mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD <<EOF
+# Set the new root password
+cat > /tmp/set_pwd <<EOF
 UPDATE mysql.user SET Password=PASSWORD('$NEW_ROOT_DATABASE_PASSWORD') WHERE User='root';
+FLUSH PRIVILEGES;
+EOF
+
+# If there's a current root password
+[ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /tmp/set_pwd
+
+# If there's no current root password
+[ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root < /tmp/set_pwd
+rm /tmp/set_pwd
+
+# Now do the rest of the 'mysql_safe_installation' stuff
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
