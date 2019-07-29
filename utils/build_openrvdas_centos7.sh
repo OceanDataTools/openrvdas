@@ -234,17 +234,17 @@ Description = Run uWSGI as a daemon
 After = network.target
 
 [Service]
-ExecStart = /root/scripts/start_uwsgi_daemon.sh
+ExecStart = /etc/uwsgi/scripts/start_uwsgi_daemon.sh
 RemainAfterExit=true
-ExecStop = /root/scripts/stop_uwsgi_daemon.sh
+ExecStop = /etc/uwsgi/scripts/top_uwsgi_daemon.sh
 
 [Install]
 WantedBy = multi-user.target
 EOF
 
 # Create uWSGI start/stop scripts
-[ -e /root/scripts ] || mkdir /root/scripts
-cat > /root/scripts/start_uwsgi_daemon.sh <<EOF
+[ -e /etc/uwsgi/scripts ] || mkdir /etc/uwsgi/scripts
+cat > /etc/uwsgi/scripts/start_uwsgi_daemon.sh <<EOF
 #!/bin/bash
 # Start uWSGI as a daemon; installed as service
 /usr/local/bin/uwsgi \
@@ -254,12 +254,12 @@ cat > /root/scripts/start_uwsgi_daemon.sh <<EOF
   --daemonize /var/log/uwsgi-emperor.log
 EOF
 
-cat > /root/scripts/stop_uwsgi_daemon.sh <<EOF
+cat > /etc/uwsgi/scripts/stop_uwsgi_daemon.sh <<EOF
 #!/bin/bash
 /usr/local/bin/uwsgi --stop /etc/uwsgi/process.pid
 EOF
 
-chmod 755 /root/scripts/start_uwsgi_daemon.sh /root/scripts/stop_uwsgi_daemon.sh 
+chmod 755 /etc/uwsgi/scripts/start_uwsgi_daemon.sh /etc/uwsgi/scripts/stop_uwsgi_daemon.sh 
 
 # Set up nginx
 echo "############################################################################"
@@ -390,7 +390,7 @@ vacuum          = true
 EOF
 
 # Make vassal directory and copy symlink in
-mkdir -p /etc/uwsgi/vassals
+[ -e /etc/uwsgi/vassals ] || mkdir -p /etc/uwsgi/vassals
 ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
       /etc/uwsgi/vassals/
 
@@ -415,14 +415,15 @@ Description = Run openrvdas/server/logger_manager.py as service
 After = network.target
 
 [Service]
-ExecStart = /root/scripts/start_openrvdas.sh
-ExecStop = /root/scripts/stop_openrvdas.sh
+ExecStart = ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh
+ExecStop = ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh
 
 [Install]
 WantedBy = multi-user.target
 EOF
 
-cat > /root/scripts/start_openrvdas.sh <<EOF
+[ -e ${INSTALL_ROOT}/openrvdas/scripts ] || mkdir -p ${INSTALL_ROOT}/openrvdas/scripts
+cat > ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh <<EOF
 #!/bin/bash
 # Start openrvdas servers as service
 OPENRVDAS_LOG_DIR=/var/log/openrvdas
@@ -438,16 +439,16 @@ DATA_SERVER_UDP=:6225
 # Comment out line below to have logger manager *not* start a data server
 START_DATA_SERVER='--start_data_server'
 
-sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET --data_server_udp \$DATA_SERVER_UDP \$START_DATA_SERVER"
+sudo -u rvdas -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET --data_server_udp \$DATA_SERVER_UDP \$START_DATA_SERVER"
 EOF
 
-cat > /root/scripts/stop_openrvdas.sh <<EOF
+cat > ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh <<EOF
 #!/bin/bash
 USER=rvdas
 sudo -u $USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
 EOF
 
-chmod 755 /root/scripts/start_openrvdas.sh /root/scripts/stop_openrvdas.sh
+chmod 755 ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh
 
 echo "############################################################################"
 echo The OpenRVDAS server can be configured to start on boot. Otherwise you will
