@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import logging
 from collections import OrderedDict
 
 VARS = {
@@ -30,11 +31,46 @@ LOGGERS = [
   'true_wind'
   ]
 
+#######################
+# From tethys:/usr/local/packages/rvdas/config/port.tab
+# instrument    serial port     baud  datab stopb parity igncr icrnl eol onlcr ocrnl icanon vmin vtime vintr vquit opost
+# ----------    -----------     ----- ----- ----- ------ ----- ----- --- ----- ----- ------ ---- ----- ----- ----- -----
+#SAMPLE         /dev/ttyy00     9600  8     1     0      1     0     0   1     0     1      1    0     0     0     0
+MOXA = {
+    # Moxa Box 10.1.1.50
+    'lgar': 'Garmin_GPS  /dev/ttyr00  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    #'': 'Trimble_GPS  /dev/ttyr01  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lgyr': 'GYRO  /dev/ttyr02  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'tsg2': 'uTSG2  /dev/ttyr03  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    #'': '#empty      /dev/ttyr04  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lknu': 'Sonar_Depth  /dev/ttyr05  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'utsg': 'uTSG  /dev/ttyr06  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lrtm': 'Remote_Temp  /dev/ttyr07  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lsea': 'SeaWall  /dev/ttyr08  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lpco': 'PCO2  /dev/ttyr09  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'loxy': 'OXYG  /dev/ttyr0a  9600  8  1  0  0  1  0  1  0  1  1  0  0  0  0',
+    'ldfl': 'Digital_Flr  /dev/ttyr0b  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lsep': 'SeaPath  /dev/ttyr0c  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'ladc': 'ADCP  /dev/ttyr0d  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lsvp': 'SV_PROBE  /dev/ttyr0e  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lguv': 'PUV_GUV  /dev/ttyr0f  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+
+    # Moxa Box 10.1.1.51
+    #'': '#Winch  /dev/ttyr10  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    #'': 'CTD  /dev/ttyr11  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    #'': 'NetDepth  /dev/ttyr12  9600  7  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    #'': 'Oxygen  /dev/ttyr13  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lais': 'AIS  /dev/ttyr14  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    'lmwx': 'MastWx  /dev/ttyr15  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    #'': 'Winch  /dev/ttyr16  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0'
+}
+
+
 MODES = ['off', 'port', 'monitor', 'monitor and log']
 
 HEADER_TEMPLATE = """##########
-# Sample YAML cruise definition file for NBP1406, created by hacked-up
-# script at test/NBP1406/create_cruise_definition.py.
+# Sample YAML cruise definition file for LMG1903, created by hacked-up
+# script at local/LMG1903/create_MOXA_cruise_definition.py.
 
 # Note that the one hack necessary is that YAML interprets 'off' (when not
 # quoted) as the literal 'False'. So YAML needs to quote 'off'.
@@ -169,8 +205,8 @@ NET_WRITER_TEMPLATE="""
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
-        baudrate: 9600
-        port: /tmp/tty_%LOGGER%
+        baudrate: %BAUD%
+        port: %TTY%
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -212,8 +248,8 @@ FULL_WRITER_TEMPLATE="""
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
-        baudrate: 9600
-        port: /tmp/tty_%LOGGER%
+        baudrate: %BAUD%
+        port: %TTY%
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -339,8 +375,24 @@ for logger in LOGGERS:
     output += fill_vars(TRUE_WIND_TEMPLATE, VARS)
     continue
 
-  output += fill_vars(NET_WRITER_TEMPLATE, VARS).replace('%LOGGER%', logger)
-  output += fill_vars(FULL_WRITER_TEMPLATE, VARS).replace('%LOGGER%', logger)
+  # Look up port.tab values for this logger
+  if not logger in MOXA:
+    logging.warning('No port.tab entry found for %s; skipping...', logger)
+    continue
+
+  (inst, tty, baud, datab, stopb, parity, igncr, icrnl, eol, onlcr,
+   ocrnl, icanon, vmin, vtime, vintr, vquit, opost) = MOXA[logger].split()
+  net_writer = fill_vars(NET_WRITER_TEMPLATE, VARS)
+  net_writer = net_writer.replace('%LOGGER%', logger)
+  net_writer = net_writer.replace('%TTY%', tty)
+  net_writer = net_writer.replace('%BAUD%', baud)
+  output += net_writer
+
+  full_writer = fill_vars(FULL_WRITER_TEMPLATE, VARS)
+  full_writer = full_writer.replace('%LOGGER%', logger)
+  full_writer = full_writer.replace('%TTY%', tty)
+  full_writer = full_writer.replace('%BAUD%', baud)
+  output += full_writer
 
 print(output)
 
