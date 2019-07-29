@@ -37,7 +37,11 @@ SeawaterWall:
   description: "Seawater Wall"
 
   #  WetLab_1,21.8,XMISS,3.578,V,1346.320,143.548,0.001,-307.818,-43.473,0.000,-0.001,T,21.4,NAN,NAN,-273.1,P,0,0,F,65.4778,0,8.414996,0,0,0,0,0,I,1,1,1,1
-  format: "WetLab_1,{InternalTemp:f},XMISS,{Transmissometer:f},V,{HPVoltage1:g},{HPVoltage2:g},{HPVoltage3:g},{SPVoltage1:g},{SPVoltage2:g},{SPVoltage3:g},{SPVoltage4:g},T,{Temp1:g},{Temp2:g},{Temp3:g},{Temp4:g},P,{PulseCounter1:d},{PulseCounter2:d},F,{Flow1:g},{Flow2:g},{Flow3:g},{Flow4:g},{Flow5:g},{Flow6:g},{Flow7:g},{Flow8:g},I,{DigitalInput1:d},{DigitalInput2:d},{DigitalInput3:d},{DigitalInput4:d}"
+  # Serial port data arrives with a \r at the front, so add extra format that
+  # can strip it out.
+  format:
+  - "WetLab_1,{InternalTemp:f},XMISS,{Transmissometer:f},V,{HPVoltage1:g},{HPVoltage2:g},{HPVoltage3:g},{SPVoltage1:g},{SPVoltage2:g},{SPVoltage3:g},{SPVoltage4:g},T,{Temp1:g},{Temp2:g},{Temp3:g},{Temp4:g},P,{PulseCounter1:d},{PulseCounter2:d},F,{Flow1:g},{Flow2:g},{Flow3:g},{Flow4:g},{Flow5:g},{Flow6:g},{Flow7:g},{Flow8:g},I,{DigitalInput1:d},{DigitalInput2:d},{DigitalInput3:d},{DigitalInput4:d}"
+  - "{:s}WetLab_1,{InternalTemp:f},XMISS,{Transmissometer:f},V,{HPVoltage1:g},{HPVoltage2:g},{HPVoltage3:g},{SPVoltage1:g},{SPVoltage2:g},{SPVoltage3:g},{SPVoltage4:g},T,{Temp1:g},{Temp2:g},{Temp3:g},{Temp4:g},P,{PulseCounter1:d},{PulseCounter2:d},F,{Flow1:g},{Flow2:g},{Flow3:g},{Flow4:g},{Flow5:g},{Flow6:g},{Flow7:g},{Flow8:g},I,{DigitalInput1:d},{DigitalInput2:d},{DigitalInput3:d},{DigitalInput4:d}"
 
   fields:
     InternalTemp:

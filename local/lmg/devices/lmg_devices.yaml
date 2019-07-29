@@ -288,69 +288,71 @@ lgar:
     CourseMag: "GarCourseMag"
     SpeedKt: "GarSpeedKt"
     SpeedKm: "GarSpeedKm"
-    GPSTime: "GarGPSTime"
-    GPSDay: "GarGPSDay"
-    GPSMonth: "GarGPSMonth"
-    GPSYear: "GarGPSYear"
-    GPSDate: "GarGPSDate"
-    LocalHours: "GarGPSLocalHours"
+    Time: "GarTime"
+    Day: "GarDay"
+    Month: "GarMonth"
+    Year: "GarYear"
+    Date: "GarDate"
+    LocalHours: "GarLocalHours"
     Latitude: "GarLatitude"
     NorS: "GarNorS"
     Longitude: "GarLongitude"
     EorW: "GarEorW"
 
     # $GPGSV Fields
-    GPSTotalNumMesg: GarTotalNumMesg
-    GPSMesgNum: GarMesgNum
-    GPSNumSats: GarNumSats
-    GPSSatPRN: GarSatPRN
-    GPSElevation: GarElevation
-    GPSAzimuth: GarAzimuth
-    GPSSignalToNoise: GarSignalToNoise
-    GPS2ndSatPRN: Gar2ndSatPRN
-    GPS2ndElevation: Gar2ndElevation
-    GPS2ndAzimuth: Gar2ndAzimuth
-    GPS2ndSignalToNoise: Gar2ndSignalToNoise
-    GPS3rdSatPRN: Gar3rdSatPRN
-    GPS3rdElevation: Gar3rdElevation
-    GPS3rdAzimuth: Gar3rdAzimuth
-    GPS3rdSignalToNoise: Gar3rdSignalToNoise
-    GPS4thSatPRN: Gar4thSatPRN
-    GPS4thElevation: Gar4thElevation
-    GPS4thAzimuth: Gar4thAzimuth
-    GPS4thSignalToNoise: Gar4thSignalToNoise
+    TotalNumMesg: GarTotalNumMesg
+    MesgNum: GarMesgNum
+    NumSats: GarNumSats
+    Sat1PRN: GarSat1PRN
+    Sat1Elevation: GarSat1Elevation
+    Sat1Azimuth: GarSat1Azimuth
+    Sat1SignalToNoise: GarSat1SignalToNoise
+    Sat2PRN: GarSat2PRN
+    Sat2Elevation: GarSat2Elevation
+    Sat2Azimuth: GarSat2Azimuth
+    Sat2SignalToNoise: GarSat2SignalToNoise
+    Sat3PRN: GarSat3PRN
+    Sat3Elevation: GarSat3Elevation
+    Sat3Azimuth: GarSat3Azimuth
+    Sat3SignalToNoise: GarSat3SignalToNoise
+    Sat4PRN: GarSat4PRN
+    Sat4Elevation: GarSat4Elevation
+    Sat4Azimuth: GarSat4Azimuth
+    Sat4SignalToNoise: GarSat4SignalToNoise
 
     # $GPGSA Fields
-    GPSManualAutoMode: GarManualAutoMode
-    GPSDimensionMode: GarDimensionMode
-    GPSSat1ID: GarSat1ID
-    GPSSat2ID: GarSat2ID
-    GPSSat3ID: GarSat3ID
-    GPSSat4ID: GarSat4ID
-    GPSSat5ID: GarSat5ID
-    GPSSat6ID: GarSat6ID
-    GPSSat7ID: GarSat7ID
-    GPSSat8ID: GarSat8ID
-    GPSSat9ID: GarSat9ID
-    GPSSat10ID: GarSat10ID
-    GPSSat11ID: GarSat11ID
-    GPSSat12ID: GarSat12ID
-    GPSPDOP: GarPDOP
-    GPSHDOP: GarHDOP
-    GPSVDOP: GarVDOP
+    ManualAutoMode: GarManualAutoMode
+    DimensionMode: GarDimensionMode
+    Sat1ID: GarSat1ID
+    Sat2ID: GarSat2ID
+    Sat3ID: GarSat3ID
+    Sat4ID: GarSat4ID
+    Sat5ID: GarSat5ID
+    Sat6ID: GarSat6ID
+    Sat7ID: GarSat7ID
+    Sat8ID: GarSat8ID
+    Sat9ID: GarSat9ID
+    Sat10ID: GarSat10ID
+    Sat11ID: GarSat11ID
+    Sat12ID: GarSat12ID
+    PDOP: GarPDOP
+    HDOP: GarHDOP
+    VDOP: GarVDOP
 
     # $PGRMT Fields
-    GPSProduct: GarProduct
-    GPSRomChecksumTest: GarRomChecksumTest
-    GPSReceiverTest: GarReceiverTest
-    GPSStoredDataLost: GarStoredDataLost
-    GPSRealtimeClockLost: GarRealtimeClockLost
-    GPSOscillatorDrift: GarOscillatorDrift
-    GPSDataCollection: GarDataCollection
-    GPSBoardTemp: GarBoardTemp
-    GPSBoardConfigData: GarBoardConfigData
+    Product: GarProduct
+    RomChecksumTest: GarRomChecksumTest
+    ReceiverTest: GarReceiverTest
+    StoredDataLost: GarStoredDataLost
+    RealtimeClockLost: GarRealtimeClockLost
+    OscillatorDrift: GarOscillatorDrift
+    DataCollection: GarDataCollection
+    BoardTemp: GarBoardTemp
+    BoardConfigData: GarBoardConfigData
 
-
+    # $GPGSA Fields
+    WeekNum: GarWeekNum
+    SecondsInWeek: GarSecondsInWeek
 
 ######################################
 lgyr:
