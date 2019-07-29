@@ -243,7 +243,7 @@ WantedBy = multi-user.target
 EOF
 
 # Create uWSGI start/stop scripts
-[ -e /etc/uwsgi/scripts ] || mkdir /etc/uwsgi/scripts
+[ -e /etc/uwsgi/scripts ] || mkdir -p /etc/uwsgi/scripts
 cat > /etc/uwsgi/scripts/start_uwsgi_daemon.sh <<EOF
 #!/bin/bash
 # Start uWSGI as a daemon; installed as service
