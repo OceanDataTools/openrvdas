@@ -150,7 +150,7 @@ EOF
 
 # If there's no current root password
 [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root < /tmp/set_pwd
-rm /tmp/set_pwd
+rm -f /tmp/set_pwd
 
 # Now do the rest of the 'mysql_safe_installation' stuff
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
