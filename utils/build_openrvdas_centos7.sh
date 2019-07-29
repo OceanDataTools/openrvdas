@@ -105,11 +105,45 @@ yum -y update
 
 yum install -y socat git nginx sqlite-devel readline-devel \
     wget gcc zlib-devel openssl-devel \
-    python36 python36-devel python36-pip 
+    python36 python36-devel python36-pip firewalld
 [ -e /usr/bin/python3 ] || ln -s /usr/bin/python36 /usr/bin/python3
 
-# Install database stuff and set up as service.
+# Set permissions
+echo "############################################################################"
+echo Setting SELINUX permissions \(permissive\) and firewall ports
 
+# The old way of enabling things...
+# (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
+
+# The new way of more selectively enabling things
+setsebool -P nis_enabled 1
+setsebool -P use_nfs_home_dirs 1
+setsebool -P httpd_can_network_connect 1
+semanage permissive -a httpd_t
+
+# Set up the firewall and open some holes in it
+systemctl start firewalld
+systemctl enable firewalld
+
+firewall-cmd --zone=public --permanent --add-port=80/tcp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8000/tcp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8001/tcp > /dev/null
+
+# Websocket ports
+firewall-cmd --zone=public --permanent --add-port=8765/tcp > /dev/null # status
+firewall-cmd --zone=public --permanent --add-port=8766/tcp > /dev/null # data
+
+# Our favorite UDP port for network data
+firewall-cmd --zone=public --permanent --add-port=6224/udp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=6225/udp > /dev/null
+
+# For unittest access
+firewall-cmd --zone=public --permanent --add-port=8000/udp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8001/udp > /dev/null
+firewall-cmd --zone=public --permanent --add-port=8002/udp > /dev/null
+firewall-cmd --reload > /dev/null
+
+# Install database stuff and set up as service.
 echo "############################################################################"
 echo Installing Mariadb \(MySQL replacement in CentOS 7\)...
 yum install -y mariadb-server mariadb-devel mariadb-libs # CentOS
@@ -125,7 +159,7 @@ RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
 # Get (and verify) current root password for mysql
 while true; do
-  read -p "Current database password for root? (if one exists) " CURRENT_ROOT_DATABASE_PASSWORD
+  read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD
   # Check whether they're right about the current password; need
   # a special case if the password is empty.
   PASS=TRUE
@@ -162,14 +196,11 @@ EOF
 
 # Try creating databases. Command will fail if they exist, so we need
 # to do one at a time and trap any possible errors.
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "data" appears to already exist
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "data" appears to already exist - no problem
 create database data character set utf8;
 EOF
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "openrvdas" appears to already exist
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "openrvdas" appears to already exist - no problem
 create database openrvdas character set utf8;
-EOF
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF || echo table "test" appears to already exist
-create database test character set utf8;
 EOF
 
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
@@ -366,33 +397,6 @@ ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
 chmod 755 ${INSTALL_ROOT}/openrvdas
 chown -R rvdas ${INSTALL_ROOT}/openrvdas
 chgrp -R rvdas ${INSTALL_ROOT}/openrvdas
-
-# Set permissions
-echo "############################################################################"
-echo Setting SELINUX permissions \(permissive\) and firewall ports
-(sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
-
-yum install -y firewalld
-systemctl start firewalld
-systemctl enable firewalld
-
-firewall-cmd --zone=public --permanent --add-port=80/tcp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8000/tcp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8001/tcp > /dev/null
-
-# Websocket ports
-firewall-cmd --zone=public --permanent --add-port=8765/tcp > /dev/null # status
-firewall-cmd --zone=public --permanent --add-port=8766/tcp > /dev/null # data
-
-# Our favorite UDP port for network data
-firewall-cmd --zone=public --permanent --add-port=6224/udp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=6225/udp > /dev/null
-
-# For unittest access
-firewall-cmd --zone=public --permanent --add-port=8000/udp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8001/udp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8002/udp > /dev/null
-firewall-cmd --reload > /dev/null
 
 # Make uWSGI run on boot
 systemctl enable uwsgi.service
