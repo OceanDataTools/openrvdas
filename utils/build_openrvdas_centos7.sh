@@ -125,22 +125,22 @@ semanage permissive -a httpd_t
 systemctl start firewalld
 systemctl enable firewalld
 
-firewall-cmd --zone=public --permanent --add-port=80/tcp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8000/tcp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8001/tcp > /dev/null
+firewall-cmd --permanent --add-port=80/tcp > /dev/null
+firewall-cmd --permanent --add-port=8000/tcp > /dev/null
+firewall-cmd --permanent --add-port=8001/tcp > /dev/null
 
 # Websocket ports
-firewall-cmd --zone=public --permanent --add-port=8765/tcp > /dev/null # status
-firewall-cmd --zone=public --permanent --add-port=8766/tcp > /dev/null # data
+firewall-cmd --permanent --add-port=8765/tcp > /dev/null # status
+firewall-cmd --permanent --add-port=8766/tcp > /dev/null # data
 
 # Our favorite UDP port for network data
-firewall-cmd --zone=public --permanent --add-port=6224/udp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=6225/udp > /dev/null
+firewall-cmd --permanent --add-port=6224/udp > /dev/null
+firewall-cmd --permanent --add-port=6225/udp > /dev/null
 
 # For unittest access
-firewall-cmd --zone=public --permanent --add-port=8000/udp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8001/udp > /dev/null
-firewall-cmd --zone=public --permanent --add-port=8002/udp > /dev/null
+firewall-cmd --permanent --add-port=8000/udp > /dev/null
+firewall-cmd --permanent --add-port=8001/udp > /dev/null
+firewall-cmd --permanent --add-port=8002/udp > /dev/null
 firewall-cmd --reload > /dev/null
 
 # Install database stuff and set up as service.
