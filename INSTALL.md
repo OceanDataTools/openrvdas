@@ -36,7 +36,7 @@ First set up our default OpenRVDAS user:
 ### Install required packages
 The standard OpenRVDAS installation requires extra packages. 
 
-On CentOS7, run:
+#### On CentOS7, run:
 ```
 sudo yum -y install deltarpm epel-release
 sudo yum -y update
@@ -44,8 +44,28 @@ sudo yum install -y socat git nginx sqlite-devel readline-devel \
     wget gcc zlib-devel openssl-devel \
     python36 python36-devel python36-pip
 ```
+If you have firewalld installed and running, you'll need to open some ports for UDP and TCP:
+```
+firewall-cmd --permanent --add-port=80/tcp > /dev/null
+firewall-cmd --permanent --add-port=8000/tcp > /dev/null
+firewall-cmd --permanent --add-port=8001/tcp > /dev/null
 
-On Ubuntu 18, run:
+# Websocket ports
+firewall-cmd --permanent --add-port=8765/tcp > /dev/null # status
+firewall-cmd --permanent --add-port=8766/tcp > /dev/null # data
+
+# Our favorite UDP port for network data
+firewall-cmd --permanent --add-port=6224/udp > /dev/null
+firewall-cmd --permanent --add-port=6225/udp > /dev/null
+
+# For unittest access
+firewall-cmd --permanent --add-port=8000/udp > /dev/null
+firewall-cmd --permanent --add-port=8001/udp > /dev/null
+firewall-cmd --permanent --add-port=8002/udp > /dev/null
+firewall-cmd --reload > /dev/null
+```
+
+#### On Ubuntu 18, run:
 ```    
 sudo apt-get update
 sudo apt install -y socat git nginx python3-dev python3-pip libreadline-dev \
@@ -70,6 +90,15 @@ sudo /usr/bin/mysql_secure_installation
 sudo apt install -y mysql-server
 sudo mysql_secure_installation
 update-rc.d mysql defaults
+```
+
+### Set some security options
+SELinux can cause some mysterious failures. The default script tweaks are:
+```
+setsebool -P nis_enabled 1
+setsebool -P use_nfs_home_dirs 1
+setsebool -P httpd_can_network_connect 1
+semanage permissive -a httpd_t
 ```
 
 ### Configure the database
