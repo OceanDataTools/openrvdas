@@ -17,86 +17,103 @@ loggers:
     configs:
     - ladc->off
     - ladc->net
+    - ladc->file/net
     - ladc->file/net/db
   lais:
     configs:
     - lais->off
     - lais->net
+    - lais->file/net
     - lais->file/net/db
   ldfl:
     configs:
     - ldfl->off
     - ldfl->net
+    - ldfl->file/net
     - ldfl->file/net/db
   lgar:
     configs:
     - lgar->off
     - lgar->net
+    - lgar->file/net
     - lgar->file/net/db
   lguv:
     configs:
     - lguv->off
     - lguv->net
+    - lguv->file/net
     - lguv->file/net/db
   lgyr:
     configs:
     - lgyr->off
     - lgyr->net
+    - lgyr->file/net
     - lgyr->file/net/db
   lknu:
     configs:
     - lknu->off
     - lknu->net
+    - lknu->file/net
     - lknu->file/net/db
   lmwx:
     configs:
     - lmwx->off
     - lmwx->net
+    - lmwx->file/net
     - lmwx->file/net/db
   loxy:
     configs:
     - loxy->off
     - loxy->net
+    - loxy->file/net
     - loxy->file/net/db
   lpco:
     configs:
     - lpco->off
     - lpco->net
+    - lpco->file/net
     - lpco->file/net/db
   lrtm:
     configs:
     - lrtm->off
     - lrtm->net
+    - lrtm->file/net
     - lrtm->file/net/db
   lsea:
     configs:
     - lsea->off
     - lsea->net
+    - lsea->file/net
     - lsea->file/net/db
   lsep:
     configs:
     - lsep->off
     - lsep->net
+    - lsep->file/net
     - lsep->file/net/db
   lsvp:
     configs:
     - lsvp->off
     - lsvp->net
+    - lsvp->file/net
     - lsvp->file/net/db
   tsg2:
     configs:
     - tsg2->off
     - tsg2->net
+    - tsg2->file/net
     - tsg2->file/net/db
   utsg:
     configs:
     - utsg->off
     - utsg->net
+    - utsg->file/net
     - utsg->file/net/db
   true_wind:
     configs:
     - true_wind->off
     - true_wind->net
+    - true_wind->file/net
     - true_wind->file/net/db
 
 ########################################
@@ -140,6 +157,25 @@ modes:
     true_wind: true_wind->net
 
   log:
+    ladc: ladc->file/net
+    lais: lais->file/net
+    ldfl: ldfl->file/net
+    lgar: lgar->file/net
+    lguv: lguv->file/net
+    lgyr: lgyr->file/net
+    lknu: lknu->file/net
+    lmwx: lmwx->file/net
+    loxy: loxy->file/net
+    lpco: lpco->file/net
+    lrtm: lrtm->file/net
+    lsea: lsea->file/net
+    lsep: lsep->file/net
+    lsvp: lsvp->file/net
+    tsg2: tsg2->file/net
+    utsg: utsg->file/net
+    true_wind: true_wind->file/net
+
+  'log+db':
     ladc: ladc->file/net/db
     lais: lais->file/net/db
     ldfl: ldfl->file/net/db
@@ -208,6 +244,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  ladc->file/net:
+    name: ladc->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/ladc/raw/LMG1903_ladc
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ladc'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   ladc->file/net/db:
     name: ladc->file/net/db
     readers:                    # Read from simulated serial port
@@ -220,7 +307,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/ladc/raw/NBP1406_ladc
+        filebase: /var/tmp/log/LMG1903/ladc/raw/LMG1903_ladc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -314,6 +401,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lais->file/net:
+    name: lais->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr14
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lais/raw/LMG1903_lais
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lais'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lais->file/net/db:
     name: lais->file/net/db
     readers:                    # Read from simulated serial port
@@ -326,7 +464,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lais/raw/NBP1406_lais
+        filebase: /var/tmp/log/LMG1903/lais/raw/LMG1903_lais
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -420,6 +558,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  ldfl->file/net:
+    name: ldfl->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/ldfl/raw/LMG1903_ldfl
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ldfl'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   ldfl->file/net/db:
     name: ldfl->file/net/db
     readers:                    # Read from simulated serial port
@@ -432,7 +621,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/ldfl/raw/NBP1406_ldfl
+        filebase: /var/tmp/log/LMG1903/ldfl/raw/LMG1903_ldfl
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -526,6 +715,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lgar->file/net:
+    name: lgar->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr00
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lgar/raw/LMG1903_lgar
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgar'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lgar->file/net/db:
     name: lgar->file/net/db
     readers:                    # Read from simulated serial port
@@ -538,7 +778,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lgar/raw/NBP1406_lgar
+        filebase: /var/tmp/log/LMG1903/lgar/raw/LMG1903_lgar
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -632,6 +872,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lguv->file/net:
+    name: lguv->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0f
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lguv/raw/LMG1903_lguv
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lguv'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lguv->file/net/db:
     name: lguv->file/net/db
     readers:                    # Read from simulated serial port
@@ -644,7 +935,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lguv/raw/NBP1406_lguv
+        filebase: /var/tmp/log/LMG1903/lguv/raw/LMG1903_lguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -738,6 +1029,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lgyr->file/net:
+    name: lgyr->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr02
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lgyr/raw/LMG1903_lgyr
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgyr'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lgyr->file/net/db:
     name: lgyr->file/net/db
     readers:                    # Read from simulated serial port
@@ -750,7 +1092,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lgyr/raw/NBP1406_lgyr
+        filebase: /var/tmp/log/LMG1903/lgyr/raw/LMG1903_lgyr
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -844,6 +1186,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lknu->file/net:
+    name: lknu->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr05
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lknu/raw/LMG1903_lknu
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lknu'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lknu->file/net/db:
     name: lknu->file/net/db
     readers:                    # Read from simulated serial port
@@ -856,7 +1249,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lknu/raw/NBP1406_lknu
+        filebase: /var/tmp/log/LMG1903/lknu/raw/LMG1903_lknu
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -950,6 +1343,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lmwx->file/net:
+    name: lmwx->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr15
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lmwx/raw/LMG1903_lmwx
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lmwx'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lmwx->file/net/db:
     name: lmwx->file/net/db
     readers:                    # Read from simulated serial port
@@ -962,7 +1406,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lmwx/raw/NBP1406_lmwx
+        filebase: /var/tmp/log/LMG1903/lmwx/raw/LMG1903_lmwx
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1056,6 +1500,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  loxy->file/net:
+    name: loxy->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0a
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/loxy/raw/LMG1903_loxy
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:loxy'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   loxy->file/net/db:
     name: loxy->file/net/db
     readers:                    # Read from simulated serial port
@@ -1068,7 +1563,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/loxy/raw/NBP1406_loxy
+        filebase: /var/tmp/log/LMG1903/loxy/raw/LMG1903_loxy
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1162,6 +1657,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lpco->file/net:
+    name: lpco->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr09
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lpco/raw/LMG1903_lpco
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lpco'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lpco->file/net/db:
     name: lpco->file/net/db
     readers:                    # Read from simulated serial port
@@ -1174,7 +1720,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lpco/raw/NBP1406_lpco
+        filebase: /var/tmp/log/LMG1903/lpco/raw/LMG1903_lpco
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1268,6 +1814,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lrtm->file/net:
+    name: lrtm->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr07
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lrtm/raw/LMG1903_lrtm
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lrtm'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lrtm->file/net/db:
     name: lrtm->file/net/db
     readers:                    # Read from simulated serial port
@@ -1280,7 +1877,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lrtm/raw/NBP1406_lrtm
+        filebase: /var/tmp/log/LMG1903/lrtm/raw/LMG1903_lrtm
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1374,6 +1971,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lsea->file/net:
+    name: lsea->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr08
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lsea/raw/LMG1903_lsea
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsea'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lsea->file/net/db:
     name: lsea->file/net/db
     readers:                    # Read from simulated serial port
@@ -1386,7 +2034,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lsea/raw/NBP1406_lsea
+        filebase: /var/tmp/log/LMG1903/lsea/raw/LMG1903_lsea
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1480,6 +2128,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lsep->file/net:
+    name: lsep->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0c
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lsep/raw/LMG1903_lsep
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsep'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lsep->file/net/db:
     name: lsep->file/net/db
     readers:                    # Read from simulated serial port
@@ -1492,7 +2191,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lsep/raw/NBP1406_lsep
+        filebase: /var/tmp/log/LMG1903/lsep/raw/LMG1903_lsep
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1586,6 +2285,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  lsvp->file/net:
+    name: lsvp->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0e
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/lsvp/raw/LMG1903_lsvp
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsvp'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   lsvp->file/net/db:
     name: lsvp->file/net/db
     readers:                    # Read from simulated serial port
@@ -1598,7 +2348,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/lsvp/raw/NBP1406_lsvp
+        filebase: /var/tmp/log/LMG1903/lsvp/raw/LMG1903_lsvp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1692,6 +2442,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  tsg2->file/net:
+    name: tsg2->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr03
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/tsg2/raw/LMG1903_tsg2
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:tsg2'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   tsg2->file/net/db:
     name: tsg2->file/net/db
     readers:                    # Read from simulated serial port
@@ -1704,7 +2505,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/tsg2/raw/NBP1406_tsg2
+        filebase: /var/tmp/log/LMG1903/tsg2/raw/LMG1903_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1798,6 +2599,57 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  utsg->file/net:
+    name: utsg->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/utsg/raw/LMG1903_utsg
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.102
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:utsg'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   utsg->file/net/db:
     name: utsg->file/net/db
     readers:                    # Read from simulated serial port
@@ -1810,7 +2662,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/utsg/raw/NBP1406_utsg
+        filebase: /var/tmp/log/LMG1903/utsg/raw/LMG1903_utsg
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1918,6 +2770,61 @@ configs:
             port: 6225
             interface: 157.132.133.102
 
+  true_wind->file/net:
+    name: true_wind->file/net
+    readers:
+      class: UDPReader
+      kwargs:
+        port: 6225
+    transforms:
+    - class: FromJSONTransform
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: UDPWriter          # Write back out to UDP
+      kwargs:
+        port: 6225
+        interface: 157.132.133.102
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: 6225
+            interface: 157.132.133.102
+
   true_wind->file/net/db:
     name: true_wind->file/net/db
     readers:
@@ -1971,5 +2878,5 @@ configs:
           class: UDPWriter
           kwargs:
             port: 6225
-            interface: 204.238.237.54
+            interface: 157.132.133.102
 

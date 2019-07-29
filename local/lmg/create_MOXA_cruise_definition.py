@@ -66,8 +66,6 @@ MOXA = {
 }
 
 
-MODES = ['off', 'port', 'monitor', 'monitor and log']
-
 HEADER_TEMPLATE = """##########
 # Sample YAML cruise definition file for LMG1903, created by hacked-up
 # script at local/LMG1903/create_MOXA_cruise_definition.py.
@@ -85,6 +83,61 @@ cruise:
 TRUE_WIND_TEMPLATE = """
   true_wind->net:
     name: true_wind->net
+    readers:
+      class: UDPReader
+      kwargs:
+        port: %CACHE_UDP%
+    transforms:
+    - class: FromJSONTransform
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: UDPWriter          # Write back out to UDP
+      kwargs:
+        port: %CACHE_UDP%
+        interface: %INTERFACE%
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: %CACHE_UDP%
+            interface: %INTERFACE%
+
+  true_wind->file/net:
+    name: true_wind->file/net
     readers:
       class: UDPReader
       kwargs:
@@ -242,6 +295,59 @@ NET_WRITER_TEMPLATE="""
             interface: %INTERFACE%
 """
 
+FILE_NET_WRITER_TEMPLATE="""
+  %LOGGER%->file/net:
+    name: %LOGGER%->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: %BAUD%
+        port: %TTY%
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/LMG1903/%LOGGER%/raw/LMG1903_%LOGGER%
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: %RAW_UDP%
+            interface: %INTERFACE%
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: %CACHE_UDP%
+            interface: %INTERFACE%
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:%LOGGER%'
+        writers:
+          class: UDPWriter
+          kwargs:
+            port: %CACHE_UDP%
+            interface: %INTERFACE%
+"""
+
 FULL_WRITER_TEMPLATE="""
   %LOGGER%->file/net/db:
     name: %LOGGER%->file/net/db
@@ -255,7 +361,7 @@ FULL_WRITER_TEMPLATE="""
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/NBP1406/%LOGGER%/raw/NBP1406_%LOGGER%
+        filebase: /var/tmp/log/LMG1903/%LOGGER%/raw/LMG1903_%LOGGER%
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -328,6 +434,7 @@ LOGGER_DEF = """  %LOGGER%:
     configs:
     - %LOGGER%->off
     - %LOGGER%->net
+    - %LOGGER%->file/net
     - %LOGGER%->file/net/db
 """
 for logger in LOGGERS:
@@ -351,6 +458,13 @@ for logger in LOGGERS:
 #### log
 output += """
   log:
+"""
+for logger in LOGGERS:
+  if logger:
+    output += '    %LOGGER%: %LOGGER%->file/net\n'.replace('%LOGGER%', logger)
+#### log+db
+output += """
+  'log+db':
 """
 for logger in LOGGERS:
   if logger:
@@ -387,6 +501,12 @@ for logger in LOGGERS:
   net_writer = net_writer.replace('%TTY%', tty)
   net_writer = net_writer.replace('%BAUD%', baud)
   output += net_writer
+
+  file_net_writer = fill_vars(FILE_NET_WRITER_TEMPLATE, VARS)
+  file_net_writer = file_net_writer.replace('%LOGGER%', logger)
+  file_net_writer = file_net_writer.replace('%TTY%', tty)
+  file_net_writer = file_net_writer.replace('%BAUD%', baud)
+  output += file_net_writer
 
   full_writer = fill_vars(FULL_WRITER_TEMPLATE, VARS)
   full_writer = full_writer.replace('%LOGGER%', logger)
