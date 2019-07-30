@@ -213,6 +213,7 @@ TSG_SBE45:
   format:
   - "{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g},{:s}{SoundVelocity:g}"
   - "{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g}"
+  - "{:s}{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g}"
 
   fields:
     Temp:
