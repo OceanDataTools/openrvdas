@@ -392,8 +392,8 @@ bwnc:
   description: "Baltic winch"
 
   # Map from device_type field names to names specific for this
-  # specific fields.
-  device:
+  # specific device.
+  fields:
     LANID: "BalticLANID"
     WinchTime: "BalticWinchTime"
     Name: "BalticName"

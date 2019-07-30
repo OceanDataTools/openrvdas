@@ -415,3 +415,19 @@ hdas:
 
 
 
+######################################
+lwn1:
+  category: "device"
+  device_type: "Winch"
+  serial_number: "unknown"
+  description: "LMG winch"
+
+  # Map from device_type field names to names specific for this
+  # specific device.
+  fields:
+    LANID: "WinchLANID"
+    WinchTime: "WinchTime"
+    Name: "WinchName"
+    Tension: "WinchTension"
+    Speed: "WinchSpeed"
+    Payout: "WinchPayout"

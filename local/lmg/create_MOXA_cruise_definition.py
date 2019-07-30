@@ -4,7 +4,7 @@ import logging
 from collections import OrderedDict
 
 VARS = {
-  '%INTERFACE%': '157.132.133.102',
+  '%INTERFACE%': '157.132.133.103',
   '%RAW_UDP%': '6224',
   '%CACHE_UDP%': '6225',
   '%WEBSOCKET%': '8766',
@@ -28,6 +28,7 @@ LOGGERS = [
   'lsvp',
   'tsg2',
   'utsg',
+  'lwn1',
   'true_wind'
   ]
 
@@ -56,18 +57,18 @@ MOXA = {
     'lguv': 'PUV_GUV  /dev/ttyr0f  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
 
     # Moxa Box 10.1.1.51
-    #'': '#Winch  /dev/ttyr10  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
+    #'lwin1': '#Winch  /dev/ttyr10  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
     #'': 'CTD  /dev/ttyr11  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
     #'': 'NetDepth  /dev/ttyr12  9600  7  1  0  1  1  0  1  0  1  1  0  0  0  0',
     #'': 'Oxygen  /dev/ttyr13  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
     'lais': 'AIS  /dev/ttyr14  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
     'lmwx': 'MastWx  /dev/ttyr15  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0',
-    #'': 'Winch  /dev/ttyr16  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0'
+    'lwn1': 'Winch  /dev/ttyr16  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0'
 }
 
 
 HEADER_TEMPLATE = """##########
-# Sample YAML cruise definition file for LMG1903, created by hacked-up
+# Sample YAML cruise definition file for LMG openrvdas, created by hacked-up
 # script at local/LMG1903/create_MOXA_cruise_definition.py.
 
 # Note that the one hack necessary is that YAML interprets 'off' (when not
@@ -75,9 +76,9 @@ HEADER_TEMPLATE = """##########
 
 ########################################
 cruise:
-  id: LMG1903
-  start: '2014-03-26'
-  end: '2019-04-09'
+  id: LMGxxxx
+  start: '2019-07-30'
+  end: '2019-12-31'
 """
 
 TRUE_WIND_TEMPLATE = """
