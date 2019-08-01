@@ -128,10 +128,9 @@ from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 
 # Imports for running CachedDataServer
-from logger.readers.composed_reader import ComposedReader
+from logger.utils.cached_data_server import CachedDataServer
 from logger.readers.udp_reader import UDPReader
 from logger.transforms.from_json_transform import FromJSONTransform
-from logger.writers.cached_data_writer import CachedDataWriter
 
 # Number of times we'll try a failing logger before giving up
 DEFAULT_MAX_TRIES = 3
@@ -445,17 +444,16 @@ def run_data_server(data_server_websocket, data_server_udp,
   # we're running it locally, it should only have a port, not a hostname.
   # We should try to handle it if they prefix with a ':', though.
   websocket_port = int(data_server_websocket.split(':')[-1])
-  
-  # only have
-  network_readers = []
-  for network in data_server_udp.split(','):
-    group_port = network.split(':')
+  server = CachedDataServer(port=websocket_port, interval=data_server_interval)
+
+  # If we have a data_server_udp specified, start up a reader that
+  # will listen on that UDP port and cache what it receives.
+  if data_server_udp:
+    group_port = data_server_udp.split(':')
     port = int(group_port[-1])
     multicast_group = group_port[-2] if len(group_port) == 2 else ''
-    network_readers.append(UDPReader(port=port, source=multicast_group))
-  transform = FromJSONTransform()
-  reader = ComposedReader(readers=network_readers, transforms=[transform])
-  writer = CachedDataWriter(port=websocket_port, interval=data_server_interval)
+    reader = UDPReader(port=port, source=multicast_group)
+    transform = FromJSONTransform()
 
   # Every N seconds, we're going to detour to clean old data out of cache
   next_cleanup_time = time.time() + data_server_cleanup_interval
@@ -463,19 +461,29 @@ def run_data_server(data_server_websocket, data_server_udp,
   # Loop, reading data and writing it to the cache
   try:
     while True:
-      record = reader.read()
+      # If we have a reader, try reading from it
+      if reader:
+        try:
+          record = reader.read()
+          if record:
+            server.cache_record(transform.transform(record))
+        except ValueError as e:
+          logging.warning(
+            'Data Server UDP port received non-JSON message: %s', str(e))
+          continue
 
-      # If, for some reason, we get empty record try again
-      writer.server.cache_record(record)
+      # If no reader, sleep until it's time to do another cleanup
+      else:
+        time.sleep(data_server_cleanup_interval)
 
       # Is it time for next cleanup?
       now = time.time()
       if now > next_cleanup_time:
-        writer.server.cleanup(now - data_server_back_seconds)
+        server.cleanup(oldest=now - data_server_back_seconds)
         next_cleanup_time = now + data_server_cleanup_interval
   except KeyboardInterrupt:
     logging.warning('Received KeyboardInterrupt - shutting down')
-    writer.server.quit()
+    server.quit()
 
 ################################################################################
 ################################################################################

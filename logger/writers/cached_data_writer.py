@@ -1,64 +1,113 @@
 #!/usr/bin/env python3
 
+import asyncio
+import json
 import logging
 import sys
 import threading
 import time
+import websockets
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
+from logger.utils.cached_data_server import CachedDataServer
 from logger.writers.writer import Writer
-
-# Don't freak out if we can't find websockets - unless they actually
-# try to instantiate a CachedDataWriter.
-try:
-  from logger.utils.cached_data_server import CachedDataServer
-  CACHED_DATA_SERVER_OKAY = True
-except ModuleNotFoundError:
-  CACHED_DATA_SERVER_OKAY = False
 
 ################################################################################
 class CachedDataWriter(Writer):
-  def __init__(self, port, back_seconds=480, cleanup=60, interval=1):
-    """A thin wrapper around CachedDataServer. Instantiate a
-    CachedDataServer and feed the passed records into it. The
-    CachedDataServer will start a websocket server on port 'port' and
-    serve cached record data to clients who connect to it.
+  def __init__(self, data_server, start_server=False, back_seconds=480,
+               cleanup_interval=6, update_interval=1):
+    """Feed passed records to a CachedDataServer via a websocket. Expects
+    records in DASRecord or dict formats. If the --start_server flag
+    is True, try to start the server ourselves, using the rest of the provided
+    parameters as defaults.
 
-    port           port on which to serve websocket connections
+    data_server    [host:]port on which to look for data server
 
     back_seconds   Number of seconds of back data to hold in cache
 
-    cleanup        Remove old data every cleanup seconds
+    cleanup_interval   Remove old data every N seconds
 
-    interval       Serve updates to websocket clients every interval seconds
+    update_interval    Serve updates to websocket clients every N seconds
+
+    start_server       If true, start the server ourselves
     """
-    super().__init__(input_format=Python_Record)
-
-    if not CACHED_DATA_SERVER_OKAY:
-      raise RuntimeError('Unable to load logger/utils/cached_data_server.py. '
-                         'Is websockets module properly installed?')
-    self.port = port
+    self.data_server = data_server
+    self.websocket = None
+    self.server = None
     self.back_seconds = back_seconds
-    self.cleanup = cleanup
+    self.cleanup_interval = cleanup_interval
 
-    # Instantiate (and start) CachedDataServer
-    self.server = CachedDataServer(port=port, interval=interval)
+    # Event loop we'll use to asynchronously manage writes to websocket
+    self.event_loop = asyncio.new_event_loop()
+    self.send_queue = asyncio.Queue(loop=self.event_loop)
 
-    # Start thread that will call server.cleanup() every 'cleanup' seconds
-    threading.Thread(target=self.cleanup_loop, daemon=True).start()
+    if start_server:
+      host_port = data_server.split(':')
+      if len(host_port) > 1 and host_port[0] != 'localhost':
+        raise ValueError('CachedDataWriter host specification for data server '
+                         'must be either "localhost" or empty if starting '
+                         'our own cached data server: "%s"' % host_port)
+      self.port = int(host_port[-1])
+      
+      # Instantiate (and start) CachedDataServer
+      self.server = CachedDataServer(port=port, interval=update_interval)
+
+    # Start the thread that will asynchronously pull stuff from the
+    # queue and send to the websocket. Also will, if we've got our oue
+    # data server, run cleanup from time to time.
+    self.cached_data_writer_thread = threading.Thread(
+      name='cached_data_writer_thread',
+      target=self._cached_data_writer_loop, daemon=True)
+    self.cached_data_writer_thread.start()
 
   ############################
-  def cleanup_loop(self):
-    """Inner class to run in a thread, looping and cleaning up old records
-    every 'cleanup' seconds.
+  def _cached_data_writer_loop(self):
+    """Use an inner async function to pull stuff from the queue and send
+    to the websocket. Also, if we've got our oue data server, run
+    cleanup from time to time.
     """
-    while True:
-      time.sleep(self.cleanup)
-      now = time.time()
-      self.server.cleanup(now - self.back_seconds)
+
+    ############################
+    async def _async_send_records_loop(self):
+      """Inner async function that actually does websocket writes 
+      and cleanups.
+      """
+      next_cleanup = 0
+      while True:
+        logging.info('CachedDataWriter trying to connect to '
+                     + self.data_server)
+        try:
+          async with websockets.connect('ws://' + self.data_server) as ws:
+            while True:
+              try:
+                record = self.send_queue.get_nowait()
+                logging.debug('sending record: %s', record)
+                record = {'type':'publish', 'data':record}
+                await ws.send(json.dumps(record))
+                response = await ws.recv()
+                logging.debug('received response: %s', response)
+              except asyncio.QueueEmpty:
+                await asyncio.sleep(.2)
+
+              # If we've started our own server, see if it's time to
+              # clean up
+              if self.server and time.time() > next_cleanup:
+                now = time.time()
+                self.server.cleanup(now - self.back_seconds)
+                next_cleanup = now + self.cleanup_interval
+
+        # If the websocket connection failed
+        except OSError as e:
+          logging.warning('CachedDataWriter websocket connection to %s '
+                          'failed; sleeping before trying again: %s',
+                          self.data_server, str(e))
+          await asyncio.sleep(5)
+          
+    # Now call the async process in its own event loop
+    self.event_loop.run_until_complete(_async_send_records_loop(self))
+    self.event_loop.close()
 
   ############################
   def write(self, record):
@@ -98,5 +147,16 @@ class CachedDataWriter(Writer):
        }
 
     """
-    if record:
-      self.server.cache_record(record)
+    if not record:
+      return
+
+    # Convert to a dict - inefficient, I know...
+    if type(record) is DASRecord:
+      record = json.loads(record.as_json())
+    if type(record) is dict:
+      self.send_queue.put_nowait(record)
+    else:
+      logging.warning('CachedDataWriter got non-dict/DASRecord object of '
+                      'type %s: %s', type(record), str(record))
+
+
