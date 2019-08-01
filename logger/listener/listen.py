@@ -779,8 +779,8 @@ if __name__ == '__main__':
                                       user=user, password=password))
 
       if new_args.write_cached_data_server:
-        websocket = new_args.write_cached_data_server
-        writers.append(CachedDataWriter(websocket=websocket))
+        data_server = new_args.write_cached_data_server
+        writers.append(CachedDataWriter(data_server=data_server))
 
       ##########################
       # Stderr Writer
