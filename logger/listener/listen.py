@@ -789,6 +789,14 @@ if __name__ == '__main__':
         #stderr_writer = LogfileWriter(filebase=new_args.stderr_file)
 
     ##########################
+    # If we don't have any readers, read from stdin, if we don't have
+    # any writers, write to stdout.
+    if not readers:
+      readers.append(TextFileReader())
+    if not writers:
+      writers.append(TextFileWriter())
+    
+    ##########################
     # Now that we've got our readers, transforms and writers defined,
     # create the Listener.
     listener = Listener(readers=readers, transforms=transforms, writers=writers,

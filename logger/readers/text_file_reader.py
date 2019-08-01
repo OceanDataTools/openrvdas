@@ -58,9 +58,19 @@ class TextFileReader(StorageReader):
     # how long to sleep
     self.last_read = 0
 
+    # The file we're currently using
+    self.current_file = None
+
+    self.pos = 0
+    self.start_pos = {}
+    self.end_pos = {}
+
     # Special case if file_spec is None
     if file_spec is None:
       self.current_file = sys.stdin
+      self.used_file_list = []
+      self.unused_file_list = []
+      self.tail = True
       return
 
     # Which files will we use, which haven't we used yet?
@@ -70,12 +80,6 @@ class TextFileReader(StorageReader):
                       file_spec)
     self.used_file_list = []
 
-    # The file we're currently using
-    self.current_file = None
-
-    self.pos = 0
-    self.start_pos = {}
-    self.end_pos = {}
 
   ############################
   def _get_next_file(self):
@@ -148,6 +152,10 @@ class TextFileReader(StorageReader):
         if self._get_next_file():
           # Found a new file to read - loop again right away
           continue
+
+      # EOF when we're reading from stdin means we're done
+      if not self.file_spec:
+        return None
 
       # No record, no new files, no tail or refresh directive -
       # there's nothing left for us to try. Go home empty-handed.
