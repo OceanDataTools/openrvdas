@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import ipaddress
 import logging
 import socket
 import struct
@@ -11,19 +12,6 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.utils.formats import Text
 from logger.utils.das_record import DASRecord
 from logger.writers.network_writer import NetworkWriter
-
-############################
-def check_is_ip_addr(ip_str):
-  """Raise ValueError if the passed string is not a well-formed ip address."""
-  tuples = ip_str.split('.')
-  okay = len(tuples) == 4
-  if okay:
-    try:
-      okay = False not in [int(t) < 256 for t in tuples]
-    except ValueError:
-      okay = False
-  if not okay:
-    raise ValueError('"%s" is not a valid IPv4 tuple' % ip_str)
 
 ################################################################################
 class UDPWriter(NetworkWriter):
@@ -64,8 +52,8 @@ class UDPWriter(NetworkWriter):
     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
     if interface and destination:
-      check_is_ip_addr(interface)
-      check_is_ip_addr(destination)
+      ipaddress.ip_address(interface) # throw a ValueError if bad addr
+      ipaddress.ip_address(destination)
       # At the moment, we don't know how to do both interface and
       # multicast/unicast. If they've specified both, then complain
       # and ignore the interface part.
@@ -79,13 +67,13 @@ class UDPWriter(NetworkWriter):
     # our destination. The broadcast address is just the normal
     # address with the last tuple replaced by ".255".
     elif interface:
-      check_is_ip_addr(interface)
+      ipaddress.ip_address(interface)
       # Change interface's lowest tuple to 'broadcast' value (255)
       destination = interface[:interface.rfind('.')] + '.255'
 
     # If we've been given a destination, make sure it's a valid IP
     elif destination:
-      check_is_ip_addr(destination)
+      ipaddress.ip_address(destination)
 
     # If no destination, it's a broadcast; set flag allowing broadcast and
     # set dest to special string
