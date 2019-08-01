@@ -102,7 +102,8 @@ class CachedDataReader(Reader):
           logging.info('Connecting to websocket: "%s"', self.server)
           async with websockets.connect('ws://' + self.server) as ws:
             # Send our subscription request
-            await ws.send(json.dumps(self.subscription))
+            message = {'type':'subscribe', 'fields': self.subscription}
+            await ws.send(json.dumps(message))
             result = await ws.recv()
             response = json.loads(result)
 
