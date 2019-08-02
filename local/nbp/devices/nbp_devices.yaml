@@ -382,6 +382,7 @@ PCOD:
     EorW: "PcodEorW"
     MagneticVar: "PcodMagVar"
     MagneticVarEorW: "PcodMagVarEorW"
+    DataValid: "PcodDataValid"
     Mode: "PcodMode"
 
 ######################################
