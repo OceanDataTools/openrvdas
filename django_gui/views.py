@@ -53,7 +53,7 @@ def index(request):
   ############################
   # If we've gotten a POST request
   cruise_id = ''
-  errors = {}
+  errors = []
   if request.method == 'POST':
     logging.debug('POST: %s', request.POST)
 
@@ -110,6 +110,7 @@ def index(request):
     template_vars['loggers'] = api.get_loggers()
     template_vars['modes'] = api.get_modes()
     template_vars['active_mode'] = api.get_active_mode()
+    template_vars['errors'] = errors
   except ValueError:
     logging.info('No configuration loaded')
   
