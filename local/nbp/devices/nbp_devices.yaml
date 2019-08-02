@@ -382,7 +382,7 @@ PCOD:
     EorW: "PcodEorW"
     MagneticVar: "PcodMagVar"
     MagneticVarEorW: "PcodMagVarEorW"
-
+    Mode: "PcodMode"
 
 ######################################
 bwnc:
