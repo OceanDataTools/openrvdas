@@ -651,7 +651,7 @@ if __name__ == '__main__':
         subscription = {'fields': {f:{'seconds':0} for f in fields.split(',')}}
         if server:
           readers.append(CachedDataReader(subscription=subscription,
-                                          server=server))
+                                          data_server=server))
         else:
           readers.append(CachedDataReader(subscription=subscription))
 
