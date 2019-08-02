@@ -25,16 +25,34 @@ class CachedDataReader(Reader):
   """Subscribe to and read field values from a CachedDataServer via
   websocket connection.
   """
-  def __init__(self, subscription, server=DEFAULT_SERVER_WEBSOCKET):
+  def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET):
     """Subscribe to and read field values from a CachedDataServer via
     websocket connection.
 
     subscription - a dictionary corresponding to the full
         fields/seconds, etc that the reader wishes, following the
         conventions described in logger/utils/cached_data_server.py
+        e.g:
 
-    server - the host and port at which to try to connect to a
+        subscription = {'fields':{'S330CourseTrue':{seconds:0},
+                                  'S330HeadingTrue':{seconds:0}}}
+
+    data_server - the host and port at which to try to connect to a
         CachedDataServer
+
+    When invoked in a config file, this would be:
+
+      readers:
+        class: CachedDataServer
+        kwargs:
+          data_server: localhost:8766
+          subscription:
+            fields:
+              S330CourseTrue:
+                seconds: 0
+              S330HeadingTrue:
+                seconds: 0
+
     """
 
     if not WEBSOCKETS_ENABLED:
@@ -43,7 +61,7 @@ class CachedDataReader(Reader):
                                 'websockets" prior to use.')
     self.subscription = subscription
     subscription['type'] = 'subscribe'
-    self.server = server
+    self.data_server = data_server
 
     # We won't initialize our websocket until the first read()
     # call. At that point we'll launch an async process in a separate
@@ -99,11 +117,10 @@ class CachedDataReader(Reader):
       # Iterate if we lose the websocket for some reason other than a 'quit'
       while not self.quit_flag:
         try:
-          logging.info('Connecting to websocket: "%s"', self.server)
-          async with websockets.connect('ws://' + self.server) as ws:
+          logging.info('Connecting to websocket: "%s"', self.data_server)
+          async with websockets.connect('ws://' + self.data_server) as ws:
             # Send our subscription request
-            message = {'type':'subscribe', 'fields': self.subscription}
-            await ws.send(json.dumps(message))
+            await ws.send(json.dumps(self.subscription))
             result = await ws.recv()
             response = json.loads(result)
 
