@@ -424,7 +424,7 @@ NET_WRITER_TEMPLATE="""
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -475,7 +475,7 @@ FILE_NET_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -526,7 +526,7 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -539,7 +539,7 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/nbp/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache

@@ -1,12 +1,19 @@
 #! /usr/bin/env python3
 
+"""Create a cruise definition with loggers that read data from LMG
+MOXA ports and write to the cached data server via websockets.
+"""
 import logging
 from collections import OrderedDict
+
+ADD_TIMEOUTS = True
 
 VARS = {
   '%INTERFACE%': '157.132.133.103',
   '%RAW_UDP%': '6224',
   '%CACHE_UDP%': '6225',
+  '%FILE_ROOT%': '/data/current_cruise',
+
   '%WEBSOCKET%': '8766',
   '%BACK_SECONDS%': '640'
 }
@@ -29,8 +36,28 @@ LOGGERS = [
   'tsg2',
   'utsg',
   'lwn1',
-  'true_wind'
-  ]
+  'true_wind',
+]
+
+TIMEOUTS = {
+  'ladc': 10,
+  'lais': 10,
+  'ldfl': 10,
+  'lgar': 10,
+  'lguv': 10,
+  'lgyr': 10,
+  'lknu': 10,
+  'lmwx': 10,
+  'loxy': 10,
+  'lpco': 200,
+  'lrtm': 10,
+  'lsea': 10,
+  'lsep': 10,
+  'lsvp': 10,
+  'tsg2': 10,
+  'utsg': 10,
+  'lwn1': 10,
+}
 
 #######################
 # From tethys:/usr/local/packages/rvdas/config/port.tab
@@ -69,7 +96,7 @@ MOXA = {
 
 HEADER_TEMPLATE = """##########
 # Sample YAML cruise definition file for LMG openrvdas, created by hacked-up
-# script at local/LMG1903/create_MOXA_cruise_definition.py.
+# script at local/lmg/create_MOXA_cruise_definition.py.
 
 # Note that the one hack necessary is that YAML interprets 'off' (when not
 # quoted) as the literal 'False'. So YAML needs to quote 'off'.
@@ -85,9 +112,24 @@ TRUE_WIND_TEMPLATE = """
   true_wind->net:
     name: true_wind->net
     readers:
-      class: UDPReader
+      class: CachedDataPReader
       kwargs:
-        port: %CACHE_UDP%
+        server: localhost:%WEBSOCKET%
+        subscription:
+          S330CourseTrue:
+            seconds: 0
+          S330HeadingTrue:
+            seconds: 0
+          S330SpeedKt:
+            seconds: 0
+          MwxPortRelWindDir:
+            seconds: 0
+          MwxPortRelWindSpeed:
+            seconds: 0
+          MwxStbdRelWindDir:
+            seconds: 0
+          MwxStbdRelWindSpeed:
+            seconds: 0
     transforms:
     - class: FromJSONTransform
     - class: ComposedDerivedDataTransform
@@ -120,10 +162,9 @@ TRUE_WIND_TEMPLATE = """
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
     writers:
-    - class: UDPWriter          # Write back out to UDP
+    - class: CachedDataWriter          # Write back out to UDP
       kwargs:
-        port: %CACHE_UDP%
-        interface: %INTERFACE%
+        data_server: localhost:%WEBSOCKET%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -132,17 +173,32 @@ TRUE_WIND_TEMPLATE = """
           kwargs:
             field_name: 'stderr:logger:true_wind'
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
 
   true_wind->file/net:
     name: true_wind->file/net
     readers:
-      class: UDPReader
+      class: CachedDataReader
       kwargs:
-        port: %CACHE_UDP%
+        data_server: localhost:%WEBSOCKET%
+        subscription:
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: FromJSONTransform
     - class: ComposedDerivedDataTransform
@@ -175,10 +231,9 @@ TRUE_WIND_TEMPLATE = """
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
     writers:
-    - class: UDPWriter          # Write back out to UDP
+    - class: CachedDataWriter          # Write back out to UDP
       kwargs:
-        port: %CACHE_UDP%
-        interface: %INTERFACE%
+        data_server: localhost:%WEBSOCKET%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -187,17 +242,32 @@ TRUE_WIND_TEMPLATE = """
           kwargs:
             field_name: 'stderr:logger:true_wind'
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
 
   true_wind->file/net/db:
     name: true_wind->file/net/db
     readers:
-      class: UDPReader
+      class: CachedDataReader
       kwargs:
-        port: %CACHE_UDP%
+        data_server: localhost:%WEBSOCKET%
+        subscription:
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: FromJSONTransform
     - class: ComposedDerivedDataTransform
@@ -230,10 +300,9 @@ TRUE_WIND_TEMPLATE = """
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
     writers:
-    - class: UDPWriter          # Write back out to UDP
+    - class: CachedDataWriter          # Write back out to UDP
       kwargs:
-        port: %CACHE_UDP%
-        interface: %INTERFACE%
+        data_server: localhost:%WEBSOCKET%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -242,10 +311,9 @@ TRUE_WIND_TEMPLATE = """
           kwargs:
             field_name: 'stderr:logger:true_wind'
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
 """
 
 OFF_TEMPLATE="""
@@ -276,12 +344,11 @@ NET_WRITER_TEMPLATE="""
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -290,10 +357,9 @@ NET_WRITER_TEMPLATE="""
           kwargs:
             field_name: 'stderr:logger:%LOGGER%'
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
 """
 
 FILE_NET_WRITER_TEMPLATE="""
@@ -309,7 +375,7 @@ FILE_NET_WRITER_TEMPLATE="""
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/LMG1903/%LOGGER%/raw/LMG1903_%LOGGER%
+        filebase: %FILE_ROOT%/%LOGGER%/raw/%LOGGER%
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -329,12 +395,11 @@ FILE_NET_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
-        - class: UDPWriter
+        - class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -343,10 +408,9 @@ FILE_NET_WRITER_TEMPLATE="""
           kwargs:
             field_name: 'stderr:logger:%LOGGER%'
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
 """
 
 FULL_WRITER_TEMPLATE="""
@@ -362,7 +426,7 @@ FULL_WRITER_TEMPLATE="""
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/LMG1903/%LOGGER%/raw/LMG1903_%LOGGER%
+        filebase: %FILE_ROOT%/%LOGGER%/raw/%LOGGER%
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -382,12 +446,11 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
-        - class: UDPWriter
+        - class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -396,7 +459,7 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
@@ -407,21 +470,123 @@ FULL_WRITER_TEMPLATE="""
           kwargs:
             field_name: 'stderr:logger:%LOGGER%'
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
-            interface: %INTERFACE%
+            data_server: localhost:%WEBSOCKET%
 """
 
+
+NET_TIMEOUT_TEMPLATE="""
+  %LOGGER%_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: %RAW_UDP%
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^%LOGGER%"
+        timeout: %TIMEOUT%
+        message: "Timeout: logger %LOGGER% produced no output on %RAW_UDP% for %TIMEOUT% seconds"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: %LOGGER%_timeout
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:%LOGGER%'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%WEBSOCKET%
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: TextFileWriter
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:%LOGGER%'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%WEBSOCKET%
+"""
+FILE_TIMEOUT_TEMPLATE="""
+  %LOGGER%_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: %FILE_ROOT%/%LOGGER%/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: %TIMEOUT%
+        message: "Timeout: logger %LOGGER% produced no output in  %FILE_ROOT%/%LOGGER%/raw/ for %TIMEOUT% seconds"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:%LOGGER%'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%WEBSOCKET%
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: TextFileWriter
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:%LOGGER%'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%WEBSOCKET%
+"""
+
+################################################################################
+################################################################################
 def fill_vars(template, vars):
   output = template
   for src, dest in vars.items():
     output = output.replace(src, dest)
   return output
 
-################################################################################
-################################################################################
 
+################################################################################
 output = HEADER_TEMPLATE
 
 ################################################################################
@@ -441,6 +606,18 @@ LOGGER_DEF = """  %LOGGER%:
 for logger in LOGGERS:
   output += fill_vars(LOGGER_DEF, VARS).replace('%LOGGER%', logger)
 
+TIMEOUT_LOGGER_DEF = """  %LOGGER%_timeout:
+    configs:
+    - %LOGGER%_timeout->off
+    - %LOGGER%_timeout->net
+    - %LOGGER%_timeout->file
+"""
+if ADD_TIMEOUTS:
+  for logger in LOGGERS:
+    if not logger in TIMEOUTS: # if no timeout, don't create timeout logger
+      continue
+    output += fill_vars(TIMEOUT_LOGGER_DEF, VARS).replace('%LOGGER%', logger)
+
 ################################################################################
 # Fill in mode definitions
 output += """
@@ -450,12 +627,24 @@ modes:
 """
 for logger in LOGGERS:
   output += '    %LOGGER%: %LOGGER%->off\n'.replace('%LOGGER%', logger)
+if ADD_TIMEOUTS:
+  for logger in LOGGERS:
+    if not logger in TIMEOUTS: # if no timeout, don't create timeout logger
+      continue
+    output += '    %LOGGER%_timeout: %LOGGER%_timeout->off\n'.replace('%LOGGER%', logger)
+
 #### monitor
 output += """
   monitor:
 """
 for logger in LOGGERS:
   output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
+if ADD_TIMEOUTS:
+  for logger in LOGGERS:
+    if not logger in TIMEOUTS: # if no timeout, don't create timeout logger
+      continue
+    output += '    %LOGGER%_timeout: %LOGGER%_timeout->net\n'.replace('%LOGGER%', logger)
+
 #### log
 output += """
   log:
@@ -463,6 +652,12 @@ output += """
 for logger in LOGGERS:
   if logger:
     output += '    %LOGGER%: %LOGGER%->file/net\n'.replace('%LOGGER%', logger)
+if ADD_TIMEOUTS:
+  for logger in LOGGERS:
+    if not logger in TIMEOUTS: # if no timeout, don't create timeout logger
+      continue
+    output += '    %LOGGER%_timeout: %LOGGER%_timeout->file\n'.replace('%LOGGER%', logger)
+
 #### log+db
 output += """
   'log+db':
@@ -470,6 +665,11 @@ output += """
 for logger in LOGGERS:
   if logger:
     output += '    %LOGGER%: %LOGGER%->file/net/db\n'.replace('%LOGGER%', logger)
+if ADD_TIMEOUTS:
+  for logger in LOGGERS:
+    if not logger in TIMEOUTS: # if no timeout, don't create timeout logger
+      continue
+    output += '    %LOGGER%_timeout: %LOGGER%_timeout->file\n'.replace('%LOGGER%', logger)
 
 output += """
 ########################################
@@ -484,8 +684,8 @@ configs:
 """
 for logger in LOGGERS:
   output += """  ########"""
-  output += fill_vars(OFF_TEMPLATE, VARS).replace('%LOGGER%', logger)
   # Special case for true winds, which is a derived logger
+  output += fill_vars(OFF_TEMPLATE, VARS).replace('%LOGGER%', logger)
   if logger == 'true_wind':
     output += fill_vars(TRUE_WIND_TEMPLATE, VARS)
     continue
@@ -495,6 +695,9 @@ for logger in LOGGERS:
     logging.warning('No port.tab entry found for %s; skipping...', logger)
     continue
 
+  if ADD_TIMEOUTS:
+    output += fill_vars(OFF_TEMPLATE, VARS).replace('%LOGGER%', logger + '_timeout')
+
   (inst, tty, baud, datab, stopb, parity, igncr, icrnl, eol, onlcr,
    ocrnl, icanon, vmin, vtime, vintr, vquit, opost) = MOXA[logger].split()
   net_writer = fill_vars(NET_WRITER_TEMPLATE, VARS)
@@ -503,11 +706,23 @@ for logger in LOGGERS:
   net_writer = net_writer.replace('%BAUD%', baud)
   output += net_writer
 
+  if ADD_TIMEOUTS:
+    net_timeout_writer = fill_vars(NET_TIMEOUT_TEMPLATE, VARS)
+    net_timeout_writer = net_timeout_writer.replace('%LOGGER%', logger)
+    net_timeout_writer = net_timeout_writer.replace('%TIMEOUT%', str(TIMEOUTS[logger]))
+    output += net_timeout_writer
+
   file_net_writer = fill_vars(FILE_NET_WRITER_TEMPLATE, VARS)
   file_net_writer = file_net_writer.replace('%LOGGER%', logger)
   file_net_writer = file_net_writer.replace('%TTY%', tty)
   file_net_writer = file_net_writer.replace('%BAUD%', baud)
   output += file_net_writer
+
+  if ADD_TIMEOUTS:
+    file_timeout_writer = fill_vars(FILE_TIMEOUT_TEMPLATE, VARS)
+    file_timeout_writer = file_timeout_writer.replace('%LOGGER%', logger)
+    file_timeout_writer = file_timeout_writer.replace('%TIMEOUT%', str(TIMEOUTS[logger]))
+    output += file_timeout_writer
 
   full_writer = fill_vars(FULL_WRITER_TEMPLATE, VARS)
   full_writer = full_writer.replace('%LOGGER%', logger)

@@ -202,7 +202,7 @@ lpco:
 ######################################
 lmwx:
   category: "device"
-  device_type: "MastWxLMG"
+  device_type: "MastWx"
   description: "Aggregator of mast weather data"
 
   fields:

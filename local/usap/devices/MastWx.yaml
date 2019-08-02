@@ -1,10 +1,10 @@
 ################################################################################
 # NBP-Specific Mast Weather Device Type Definitions
 #
-# See README.md in this directory
+# See local/README.md
 
 ######################################
-MastWxNBP:
+MastWx:
   category: "device_type"
   description: "Aggregator of mast weather data"
 
@@ -14,6 +14,7 @@ MastWxNBP:
   # just having both be "non-comma" fields.
   #
   # MET,12.1,22,4.89,78.2,3.398632,-0.126934,-0.4755421,279.9002,279.3687,1006.409,5.00,76.1
+  # MET,12.1,22,19.15,63.5,7.138004,-0.0766031,-0.404655
   # PUS,^BA,336,009.41,M,+344.63,+021.71,60,^C01
   # SUS,^BA,327,009.72,M,+344.09,+020.79,60,^C04
   format:

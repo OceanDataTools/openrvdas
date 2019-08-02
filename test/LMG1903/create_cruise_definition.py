@@ -186,7 +186,7 @@ NET_WRITER_TEMPLATE="""
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -239,7 +239,7 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
         - class: UDPWriter
           kwargs:
@@ -253,7 +253,7 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
         - class: DatabaseWriter
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
