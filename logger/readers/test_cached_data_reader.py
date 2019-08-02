@@ -47,7 +47,7 @@ class TestCachedDataReader(unittest.TestCase):
                               'field_2':{'seconds':10},
                               'field_3':{'seconds':10}}}
     cdr = CachedDataReader(subscription=subscription,
-                           server='localhost:%d' % WEBSOCKET_PORT)
+                           data_server='localhost:%d' % WEBSOCKET_PORT)
 
     response = cdr.read()
     self.assertDictEqual(response.get('fields', None),
