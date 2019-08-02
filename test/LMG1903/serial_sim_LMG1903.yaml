@@ -1,0 +1,66 @@
+{
+    "ladc": {"port": "/tmp/tty_ladc",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/ladc/raw/LMG1903_ladc" 
+            },
+    "lais": {"port": "/tmp/tty_lais",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lais/raw/LMG1903_lais" 
+            },
+    "ldfl": {"port": "/tmp/tty_ldfl",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/ldfl/raw/LMG1903_ldfl" 
+            },
+    "lgar": {"port": "/tmp/tty_lgar",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lgar/raw/LMG1903_lgar" 
+            },
+    "lguv": {"port": "/tmp/tty_lguv",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lguv/raw/LMG1903_lguv" 
+            },
+    "lgyr": {"port": "/tmp/tty_lgyr",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lgyr/raw/LMG1903_lgyr" 
+            },
+    "lknu": {"port": "/tmp/tty_lknu",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lknu/raw/LMG1903_lknu" 
+            },
+    "lmwx": {"port": "/tmp/tty_lmwx",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lmwx/raw/LMG1903_lmwx" 
+            },
+    "loxy": {"port": "/tmp/tty_loxy",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/loxy/raw/LMG1903_loxy" 
+            },
+    "lpco": {"port": "/tmp/tty_lpco",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lpco/raw/LMG1903_lpco" 
+            },
+    "lrtm": {"port": "/tmp/tty_lrtm",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lrtm/raw/LMG1903_lrtm" 
+            },
+    "lsea": {"port": "/tmp/tty_lsea",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lsea/raw/LMG1903_lsea" 
+            },
+    "lsep": {"port": "/tmp/tty_lsep",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lsep/raw/LMG1903_lsep" 
+            },
+    "lsvp": {"port": "/tmp/tty_lsvp",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/lsvp/raw/LMG1903_lsvp" 
+            },
+    "tsg2": {"port": "/tmp/tty_tsg2",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/tsg2/raw/LMG1903_tsg2" 
+            },
+    "utsg": {"port": "/tmp/tty_utsg",
+             "time_format": "%y+%j:%H:%M:%S.%f",
+             "logfile": "test/LMG1903/utsg/raw/LMG1903_utsg" 
+            }
+}
