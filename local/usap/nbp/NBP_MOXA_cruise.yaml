@@ -3912,22 +3912,23 @@ configs:
     readers:
       class: CachedDataReader
       kwargs:
-        server: localhost:8766
+        data_server: localhost:8766
         subscription:
-          S330CourseTrue:
-            seconds: 0
-          S330HeadingTrue:
-            seconds: 0
-          S330SpeedKt:
-            seconds: 0
-          MwxPortRelWindDir:
-            seconds: 0
-          MwxPortRelWindSpeed:
-            seconds: 0
-          MwxStbdRelWindDir:
-            seconds: 0
-          MwxStbdRelWindSpeed:
-            seconds: 0
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: ComposedDerivedDataTransform
       kwargs:
@@ -3979,22 +3980,23 @@ configs:
     readers:
       class: CachedDataReader
       kwargs:
-        server: localhost:8766
+        data_server: localhost:8766
         subscription:
-          S330CourseTrue:
-            seconds: 0
-          S330HeadingTrue:
-            seconds: 0
-          S330SpeedKt:
-            seconds: 0
-          MwxPortRelWindDir:
-            seconds: 0
-          MwxPortRelWindSpeed:
-            seconds: 0
-          MwxStbdRelWindDir:
-            seconds: 0
-          MwxStbdRelWindSpeed:
-            seconds: 0
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: ComposedDerivedDataTransform
       kwargs:
@@ -4046,22 +4048,23 @@ configs:
     readers:
       class: CachedDataReader
       kwargs:
-        server: localhost:8766
+        data_server: localhost:8766
         subscription:
-          S330CourseTrue:
-            seconds: 0
-          S330HeadingTrue:
-            seconds: 0
-          S330SpeedKt:
-            seconds: 0
-          MwxPortRelWindDir:
-            seconds: 0
-          MwxPortRelWindSpeed:
-            seconds: 0
-          MwxStbdRelWindDir:
-            seconds: 0
-          MwxStbdRelWindSpeed:
-            seconds: 0
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: ComposedDerivedDataTransform
       kwargs:

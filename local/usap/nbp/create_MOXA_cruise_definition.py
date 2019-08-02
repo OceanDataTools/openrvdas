@@ -199,22 +199,23 @@ TRUE_WIND_TEMPLATE = """
     readers:
       class: CachedDataReader
       kwargs:
-        server: localhost:%WEBSOCKET%
+        data_server: localhost:%WEBSOCKET%
         subscription:
-          S330CourseTrue:
-            seconds: 0
-          S330HeadingTrue:
-            seconds: 0
-          S330SpeedKt:
-            seconds: 0
-          MwxPortRelWindDir:
-            seconds: 0
-          MwxPortRelWindSpeed:
-            seconds: 0
-          MwxStbdRelWindDir:
-            seconds: 0
-          MwxStbdRelWindSpeed:
-            seconds: 0
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: ComposedDerivedDataTransform
       kwargs:
@@ -266,22 +267,23 @@ TRUE_WIND_TEMPLATE = """
     readers:
       class: CachedDataReader
       kwargs:
-        server: localhost:%WEBSOCKET%
+        data_server: localhost:%WEBSOCKET%
         subscription:
-          S330CourseTrue:
-            seconds: 0
-          S330HeadingTrue:
-            seconds: 0
-          S330SpeedKt:
-            seconds: 0
-          MwxPortRelWindDir:
-            seconds: 0
-          MwxPortRelWindSpeed:
-            seconds: 0
-          MwxStbdRelWindDir:
-            seconds: 0
-          MwxStbdRelWindSpeed:
-            seconds: 0
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: ComposedDerivedDataTransform
       kwargs:
@@ -333,22 +335,23 @@ TRUE_WIND_TEMPLATE = """
     readers:
       class: CachedDataReader
       kwargs:
-        server: localhost:%WEBSOCKET%
+        data_server: localhost:%WEBSOCKET%
         subscription:
-          S330CourseTrue:
-            seconds: 0
-          S330HeadingTrue:
-            seconds: 0
-          S330SpeedKt:
-            seconds: 0
-          MwxPortRelWindDir:
-            seconds: 0
-          MwxPortRelWindSpeed:
-            seconds: 0
-          MwxStbdRelWindDir:
-            seconds: 0
-          MwxStbdRelWindSpeed:
-            seconds: 0
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
     - class: ComposedDerivedDataTransform
       kwargs:

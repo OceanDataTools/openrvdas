@@ -336,6 +336,53 @@ s330:
     MagneticVarEorW: "S330MagVarEorW"
 
 ######################################
+sp1b:
+  category: "device"
+  device_type: "Seapath330"
+  serial_number: "unknown"
+  description: "Really a Seapath 1B, but we don't have a def for that yet."
+
+  # Map from device_type field names to names specific for this
+  # specific device.
+  fields:
+    GPSTime: "SP1BGPSTime"
+    FixQuality: "SP1BFixQuality"
+    NumSats: "SP1BNumSats"
+    HDOP: "SP1BHDOP"
+    AntennaHeight: "SP1BAntennaHeight"
+    GeoidHeight: "SP1BGeoidHeight"
+    LastDGPSUpdate: "SP1BLastDGPSUpdate"
+    DGPSStationID: "SP1BDGPSStationID"
+    CourseTrue: "SP1BCourseTrue"
+    CourseMag: "SP1BCourseMag"
+    SpeedKt: "SP1BSpeedKt"
+    SpeedKm: "SP1BSpeedKm"
+    Mode: "SP1BMode"
+    GPSTime: "SP1BGPSTime"
+    GPSDay: "SP1BGPSDay"
+    GPSMonth: "SP1BGPSMonth"
+    GPSYear: "SP1BGPSYear"
+    GPSDate: "SP1BGPSDate"
+    LocalHours: "SP1BLocalHours"
+    LocalZone: "SP1BLocalZone"
+    HorizQual: "SP1BHorizQual"
+    HeightQual: "SP1BHeightQual"
+    HeadingQual: "SP1BHeadingQual"
+    RollPitchQual: "SP1BRollPitchQual"
+    GyroCal: "SP1BGyroCal"
+    GyroOffset: "SP1BGyroOffset"
+    Roll: "SP1BRoll"
+    Pitch: "SP1BPitch"
+    HeadingTrue: "SP1BHeadingTrue"
+    Heave: "SP1BHeave"
+    Latitude: "SP1BLatitude"
+    NorS: "SP1BNorS"
+    Longitude: "SP1BLongitude"
+    EorW: "SP1BEorW"
+    MagneticVar: "SP1BMagVar"
+    MagneticVarEorW: "SP1BMagVarEorW"
+
+######################################
 PCOD:
   category: "device"
   device_type: "TrimbleGPS"
@@ -382,6 +429,7 @@ PCOD:
     EorW: "PcodEorW"
     MagneticVar: "PcodMagVar"
     MagneticVarEorW: "PcodMagVarEorW"
+    DataValid: "PcodDataValid"
     Mode: "PcodMode"
 
 ######################################
