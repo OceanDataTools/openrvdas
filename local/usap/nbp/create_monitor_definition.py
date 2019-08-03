@@ -16,32 +16,40 @@ import logging
 from collections import OrderedDict
 
 VARS = {
-  '%INTERFACE%': '157.132.133.103',
+  '%INTERFACE%': '157.132.128.112',
   '%RAW_UDP%': '6224',
   '%CACHE_UDP%': '6225',
   '%FILE_ROOT%': '/data/current_cruise',
   '%WEBSOCKET%': '8766',
-  '%BACK_SECONDS%': '640'
 }
 
 LOGGER_TIMEOUTS = {
-  'ladc': 10,
-  'lais': 10,
-  'ldfl': 10,
-  'lgar': 10,
-  'lguv': 10,
-  'lgyr': 10,
-  'lknu': 10,
-  'lmwx': 10,
-  'loxy': 10,
-  'lpco': 200,
-  'lrtm': 10,
-  'lsea': 10,
-  'lsep': 10,
-  'lsvp': 10,
+  'adcp': 10,
+  'ctdd': 10,
+  'eng1': 10,
+  'gp02': 10,
+  'grv1': 10,
+  'gyr1': 10,
+  'hdas': 10,
+  'knud': 10,
+  'mbdp': 10,
+  'mwx1': 10,
+  'ndfl': 10,
+  'pco2': 200,
+  'PCOD': 10,
+  'pguv': 10,
+  'rtmp': 10,
+  's330': 10,
+  'seap': 10,
+  'sp1b': 10,
+  'svp1': 10,
+  'tsg1': 10,
   'tsg2': 10,
-  'utsg': 10,
-  'lwn1': 10,
+
+  'bwnc': 10,
+  'cwnc': 10,
+  'twnc': 10,
+  'true_wind': 10,
 }
 
 HEADER_TEMPLATE = """########################################

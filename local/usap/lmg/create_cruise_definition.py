@@ -9,8 +9,8 @@ from collections import OrderedDict
 ADD_TIMEOUTS = True
 
 VARS = {
-  '%INTERFACE%': '157.132.133.103',   # lmg openrvdas
-  #'%INTERFACE%': '157.132.133.194',   # lmg-dast-s1-t
+  #'%INTERFACE%': '157.132.133.103',   # lmg openrvdas
+  '%INTERFACE%': '157.132.133.194',   # lmg-dast-s1-t
   '%RAW_UDP%': '6224',
   '%CACHE_UDP%': '6225',
   '%FILE_ROOT%': '/data/logger',
@@ -508,7 +508,7 @@ NET_TIMEOUT_TEMPLATE="""
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'stderr:%LOGGER%'
+            field_name: 'stderr:logger:%LOGGER%'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -556,7 +556,7 @@ FILE_TIMEOUT_TEMPLATE="""
         transforms:
         - class: ToDASRecordTransform
           kwargs:
-            field_name: 'stderr:%LOGGER%'
+            field_name: 'stderr:logger:%LOGGER%'
         writers:
         - class: CachedDataWriter
           kwargs:
