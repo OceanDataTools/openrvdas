@@ -471,7 +471,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/ladc/raw/ladc
+        filebase: /data/logger/ladc/raw/ladc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -515,12 +515,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/ladc/raw/
+            filebase: /data/logger/ladc/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger ladc produced no output in  /data/current_cruise/ladc/raw/ for 10 seconds"
-        resume_message: "Timeout: logger ladc writing to /data/current_cruise again"
+        message: "Timeout: logger ladc produced no output in  /data/logger/ladc/raw/ for 10 seconds"
+        resume_message: "Timeout: logger ladc writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -567,7 +567,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/ladc/raw/ladc
+        filebase: /data/logger/ladc/raw/ladc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -723,7 +723,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lais/raw/lais
+        filebase: /data/logger/lais/raw/lais
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -767,12 +767,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lais/raw/
+            filebase: /data/logger/lais/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lais produced no output in  /data/current_cruise/lais/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lais writing to /data/current_cruise again"
+        message: "Timeout: logger lais produced no output in  /data/logger/lais/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lais writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -819,7 +819,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lais/raw/lais
+        filebase: /data/logger/lais/raw/lais
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -975,7 +975,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/ldfl/raw/ldfl
+        filebase: /data/logger/ldfl/raw/ldfl
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1019,12 +1019,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/ldfl/raw/
+            filebase: /data/logger/ldfl/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger ldfl produced no output in  /data/current_cruise/ldfl/raw/ for 10 seconds"
-        resume_message: "Timeout: logger ldfl writing to /data/current_cruise again"
+        message: "Timeout: logger ldfl produced no output in  /data/logger/ldfl/raw/ for 10 seconds"
+        resume_message: "Timeout: logger ldfl writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -1071,7 +1071,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/ldfl/raw/ldfl
+        filebase: /data/logger/ldfl/raw/ldfl
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1227,7 +1227,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lgar/raw/lgar
+        filebase: /data/logger/lgar/raw/lgar
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1271,12 +1271,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lgar/raw/
+            filebase: /data/logger/lgar/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lgar produced no output in  /data/current_cruise/lgar/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lgar writing to /data/current_cruise again"
+        message: "Timeout: logger lgar produced no output in  /data/logger/lgar/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lgar writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -1323,7 +1323,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lgar/raw/lgar
+        filebase: /data/logger/lgar/raw/lgar
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1479,7 +1479,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lguv/raw/lguv
+        filebase: /data/logger/lguv/raw/lguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1523,12 +1523,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lguv/raw/
+            filebase: /data/logger/lguv/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lguv produced no output in  /data/current_cruise/lguv/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lguv writing to /data/current_cruise again"
+        message: "Timeout: logger lguv produced no output in  /data/logger/lguv/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lguv writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -1575,7 +1575,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lguv/raw/lguv
+        filebase: /data/logger/lguv/raw/lguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1731,7 +1731,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lgyr/raw/lgyr
+        filebase: /data/logger/lgyr/raw/lgyr
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1775,12 +1775,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lgyr/raw/
+            filebase: /data/logger/lgyr/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lgyr produced no output in  /data/current_cruise/lgyr/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lgyr writing to /data/current_cruise again"
+        message: "Timeout: logger lgyr produced no output in  /data/logger/lgyr/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lgyr writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -1827,7 +1827,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lgyr/raw/lgyr
+        filebase: /data/logger/lgyr/raw/lgyr
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1983,7 +1983,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lknu/raw/lknu
+        filebase: /data/logger/lknu/raw/lknu
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2027,12 +2027,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lknu/raw/
+            filebase: /data/logger/lknu/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lknu produced no output in  /data/current_cruise/lknu/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lknu writing to /data/current_cruise again"
+        message: "Timeout: logger lknu produced no output in  /data/logger/lknu/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lknu writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -2079,7 +2079,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lknu/raw/lknu
+        filebase: /data/logger/lknu/raw/lknu
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2235,7 +2235,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lmwx/raw/lmwx
+        filebase: /data/logger/lmwx/raw/lmwx
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2279,12 +2279,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lmwx/raw/
+            filebase: /data/logger/lmwx/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lmwx produced no output in  /data/current_cruise/lmwx/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lmwx writing to /data/current_cruise again"
+        message: "Timeout: logger lmwx produced no output in  /data/logger/lmwx/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lmwx writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -2331,7 +2331,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lmwx/raw/lmwx
+        filebase: /data/logger/lmwx/raw/lmwx
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2487,7 +2487,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/loxy/raw/loxy
+        filebase: /data/logger/loxy/raw/loxy
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2531,12 +2531,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/loxy/raw/
+            filebase: /data/logger/loxy/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger loxy produced no output in  /data/current_cruise/loxy/raw/ for 10 seconds"
-        resume_message: "Timeout: logger loxy writing to /data/current_cruise again"
+        message: "Timeout: logger loxy produced no output in  /data/logger/loxy/raw/ for 10 seconds"
+        resume_message: "Timeout: logger loxy writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -2583,7 +2583,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/loxy/raw/loxy
+        filebase: /data/logger/loxy/raw/loxy
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2739,7 +2739,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lpco/raw/lpco
+        filebase: /data/logger/lpco/raw/lpco
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2783,12 +2783,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lpco/raw/
+            filebase: /data/logger/lpco/raw/
             tail: True
             refresh_file_spec: True
         timeout: 200
-        message: "Timeout: logger lpco produced no output in  /data/current_cruise/lpco/raw/ for 200 seconds"
-        resume_message: "Timeout: logger lpco writing to /data/current_cruise again"
+        message: "Timeout: logger lpco produced no output in  /data/logger/lpco/raw/ for 200 seconds"
+        resume_message: "Timeout: logger lpco writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -2835,7 +2835,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lpco/raw/lpco
+        filebase: /data/logger/lpco/raw/lpco
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2991,7 +2991,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lrtm/raw/lrtm
+        filebase: /data/logger/lrtm/raw/lrtm
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3035,12 +3035,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lrtm/raw/
+            filebase: /data/logger/lrtm/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lrtm produced no output in  /data/current_cruise/lrtm/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lrtm writing to /data/current_cruise again"
+        message: "Timeout: logger lrtm produced no output in  /data/logger/lrtm/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lrtm writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -3087,7 +3087,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lrtm/raw/lrtm
+        filebase: /data/logger/lrtm/raw/lrtm
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3243,7 +3243,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lsea/raw/lsea
+        filebase: /data/logger/lsea/raw/lsea
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3287,12 +3287,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lsea/raw/
+            filebase: /data/logger/lsea/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lsea produced no output in  /data/current_cruise/lsea/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lsea writing to /data/current_cruise again"
+        message: "Timeout: logger lsea produced no output in  /data/logger/lsea/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lsea writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -3339,7 +3339,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lsea/raw/lsea
+        filebase: /data/logger/lsea/raw/lsea
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3495,7 +3495,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lsep/raw/lsep
+        filebase: /data/logger/lsep/raw/lsep
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3539,12 +3539,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lsep/raw/
+            filebase: /data/logger/lsep/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lsep produced no output in  /data/current_cruise/lsep/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lsep writing to /data/current_cruise again"
+        message: "Timeout: logger lsep produced no output in  /data/logger/lsep/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lsep writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -3591,7 +3591,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lsep/raw/lsep
+        filebase: /data/logger/lsep/raw/lsep
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3747,7 +3747,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lsvp/raw/lsvp
+        filebase: /data/logger/lsvp/raw/lsvp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3791,12 +3791,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lsvp/raw/
+            filebase: /data/logger/lsvp/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lsvp produced no output in  /data/current_cruise/lsvp/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lsvp writing to /data/current_cruise again"
+        message: "Timeout: logger lsvp produced no output in  /data/logger/lsvp/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lsvp writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -3843,7 +3843,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lsvp/raw/lsvp
+        filebase: /data/logger/lsvp/raw/lsvp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3999,7 +3999,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/tsg2/raw/tsg2
+        filebase: /data/logger/tsg2/raw/tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -4043,12 +4043,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/tsg2/raw/
+            filebase: /data/logger/tsg2/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger tsg2 produced no output in  /data/current_cruise/tsg2/raw/ for 10 seconds"
-        resume_message: "Timeout: logger tsg2 writing to /data/current_cruise again"
+        message: "Timeout: logger tsg2 produced no output in  /data/logger/tsg2/raw/ for 10 seconds"
+        resume_message: "Timeout: logger tsg2 writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -4095,7 +4095,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/tsg2/raw/tsg2
+        filebase: /data/logger/tsg2/raw/tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -4251,7 +4251,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/utsg/raw/utsg
+        filebase: /data/logger/utsg/raw/utsg
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -4295,12 +4295,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/utsg/raw/
+            filebase: /data/logger/utsg/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger utsg produced no output in  /data/current_cruise/utsg/raw/ for 10 seconds"
-        resume_message: "Timeout: logger utsg writing to /data/current_cruise again"
+        message: "Timeout: logger utsg produced no output in  /data/logger/utsg/raw/ for 10 seconds"
+        resume_message: "Timeout: logger utsg writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -4347,7 +4347,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/utsg/raw/utsg
+        filebase: /data/logger/utsg/raw/utsg
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -4503,7 +4503,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lwn1/raw/lwn1
+        filebase: /data/logger/lwn1/raw/lwn1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -4547,12 +4547,12 @@ configs:
         reader:
           class: LogfileReader
           kwargs:
-            filebase: /data/current_cruise/lwn1/raw/
+            filebase: /data/logger/lwn1/raw/
             tail: True
             refresh_file_spec: True
         timeout: 10
-        message: "Timeout: logger lwn1 produced no output in  /data/current_cruise/lwn1/raw/ for 10 seconds"
-        resume_message: "Timeout: logger lwn1 writing to /data/current_cruise again"
+        message: "Timeout: logger lwn1 produced no output in  /data/logger/lwn1/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lwn1 writing to /data/logger again"
 
 
     transforms:                 # Add timestamp and logger label
@@ -4599,7 +4599,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/current_cruise/lwn1/raw/lwn1
+        filebase: /data/logger/lwn1/raw/lwn1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:

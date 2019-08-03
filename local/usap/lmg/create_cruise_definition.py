@@ -9,11 +9,11 @@ from collections import OrderedDict
 ADD_TIMEOUTS = True
 
 VARS = {
-  #'%INTERFACE%': '157.132.133.103',   # lmg openrvdas
-  '%INTERFACE%': '157.132.133.194',   # lmg-dast-s1-t
+  '%INTERFACE%': '157.132.133.103',   # lmg openrvdas
+  #'%INTERFACE%': '157.132.133.194',   # lmg-dast-s1-t
   '%RAW_UDP%': '6224',
   '%CACHE_UDP%': '6225',
-  '%FILE_ROOT%': '/data/current_cruise',
+  '%FILE_ROOT%': '/data/logger',
 
   '%WEBSOCKET%': '8766',
   '%BACK_SECONDS%': '640'
