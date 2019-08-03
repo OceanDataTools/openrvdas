@@ -28,7 +28,7 @@ class TimeoutReader(Reader):
   passed timeout message or a default one, warning that no records have
   been received within the specified timeout."""
   ############################
-  def __init__(self, reader, timeout, message=None,
+  def __init__(self, reader, timeout, message=None, resume_message=None,
                empty_is_okay=False, none_is_okay=False):
     """
     reader         A client reader instance
@@ -37,6 +37,9 @@ class TimeoutReader(Reader):
 
     message        Message to be returned if client reader fails to return
                    a record within the timeout interval
+
+    resume_message Message to be returned when client returns a record after
+                   having timed out
 
     empty_is_okay If True, receiving an empty record is sufficient to reset
                   the timer.
@@ -56,8 +59,13 @@ class TimeoutReader(Reader):
     self.timeout = timeout
     self.message = message or ('Timeout: no %s record received in %d seconds'
                                % (reader, timeout))
+    self.resume_message = resume_message or ('Timeout: %s record received'
+                                             % reader)
     self.empty_is_okay=empty_is_okay
     self.none_is_okay=none_is_okay
+
+    # Keep track of whether we're currently timed out or not
+    self.timed_out = False
 
   ############################
   def _handler(self, signum, frame):
@@ -76,7 +84,7 @@ class TimeoutReader(Reader):
     last_read = time.time()
 
     while True:
-      signal.alarm(self.timeout)
+      signal.alarm(self.timeout)  # set timer
 
       try:
         # Loop inside the 'try' until we get a record
@@ -88,22 +96,26 @@ class TimeoutReader(Reader):
           if record is None and self.none_is_okay:
             break
 
-        # If here, we've gotten a record - fall through and reset timer
+        # If here, we've gotten a record - disable timer
+        signal.alarm(0)
+
         now = time.time()
         logging.info('TimeoutReader got record after %2.2f seconds: %s',
                      now - last_read, record)
         last_read = now
 
-      # If we haven't gotten a (valid) record within timeout seconds,
-      # our handler will fire off a ReaderTimeoutError. Break out of
-      # our loop and return our complaint.
-      except ReaderTimeout:
-        interval = time.time() - last_read
-        logging.info('TimeoutReader no records after %2.2f seconds', interval)
-        break
+        # If we were timed out, we aren't anymore - return the resume_message
+        if self.timed_out:
+          self.timed_out = False
+          return self.resume_message
 
-    # If here, we've failed to get a record within the specified
-    # timeout. Disable the timeout alarm and return our
-    # complaint/warning.
-    signal.alarm(0)
-    return self.message
+      # If we're here, we've timed out and our alarm has
+      # fired. Disable the timer, and see if we're already in a
+      # timeout state. If so, loop; if not, return the timeout
+      # message.
+      except ReaderTimeout:
+        signal.alarm(0)
+        logging.info('TimeoutReader no records after %f seconds', self.timeout)
+        if not self.timed_out:
+          self.timed_out = True
+          return self.message

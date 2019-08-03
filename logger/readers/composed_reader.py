@@ -129,79 +129,74 @@ class ComposedReader(Reader):
     """
     Get the next record from queue or readers.
     """
-    try:
-      # If we only have one reader, there's no point making things
-      # complicated. Just read, transform, return.
-      if len(self.readers) == 1:
-        return self._apply_transforms(self.readers[0].read())
+    # If we only have one reader, there's no point making things
+    # complicated. Just read, transform, return.
+    if len(self.readers) == 1:
+      return self._apply_transforms(self.readers[0].read())
 
-      # Do we have anything in the queue? Note: safe to check outside of
-      # lock, because we're the only method that actually *removes*
-      # anything. So if tests True here, we're assured that there's
-      # something there, and we lock before retrieving it. Advantage of
-      # doing it this way is that we don't tie up queue lock while
-      # processing transforms.
-      if self.queue:
-        logging.debug('read() - read requested; queue len is %d',
+    # Do we have anything in the queue? Note: safe to check outside of
+    # lock, because we're the only method that actually *removes*
+    # anything. So if tests True here, we're assured that there's
+    # something there, and we lock before retrieving it. Advantage of
+    # doing it this way is that we don't tie up queue lock while
+    # processing transforms.
+    if self.queue:
+      logging.debug('read() - read requested; queue len is %d',
+                    len(self.queue))
+      with self.queue_lock:
+        record = self.queue.pop(0)
+        return self._apply_transforms(record)
+
+    # If here, nothing's in the queue. Note that, if we wanted to be
+    # careful to never unnecessarily ask for more records, we should
+    # put a lock around this, but the failure mode is somewhat benign:
+    # we ask for more records when some are already on the way.
+    logging.debug('read() - read requested and nothing in the queue.')
+
+    # Some threads may have timed out while waiting to be called to
+    # action; restart them.
+    for i in range(len(self.readers)):
+      if not self.reader_threads[i] \
+         or not self.reader_threads[i].is_alive() \
+         and not self.reader_returned_eof[i]:
+        logging.info('read() - starting thread for Reader #%d', i)
+        self.reader_returned_eof[i] = False
+        thread = threading.Thread(target=self._run_reader, args=(i,))
+        self.reader_threads[i] = thread
+        thread.start()
+
+    # Now notify all threads that we do in fact need a record.
+    self.queue_needs_record.set()
+
+    # Keep checking/sleeping until we've either got a record in the
+    # queue or all readers have given us an EOF.
+    while False in self.reader_returned_eof:
+      logging.debug('read() - waiting for queue lock')
+      with self.queue_lock:
+        logging.debug('read() - acquired queue lock, queue length is %d',
                       len(self.queue))
-        with self.queue_lock:
+        if self.queue:
           record = self.queue.pop(0)
+          if not self.queue:
+            self.queue_has_record.clear() # only set/clear inside queue_lock
+
+          logging.debug('read() - got record')
           return self._apply_transforms(record)
+        else:
+          self.queue_has_record.clear()
 
-      # If here, nothing's in the queue. Note that, if we wanted to be
-      # careful to never unnecessarily ask for more records, we should
-      # put a lock around this, but the failure mode is somewhat benign:
-      # we ask for more records when some are already on the way.
-      logging.debug('read() - read requested and nothing in the queue.')
+      # If here, nothing in queue yet. Wait
+      logging.debug('read() - clear of queue lock, waiting for record')
+      self.queue_has_record.wait(READER_TIMEOUT_WAIT)
 
-      # Some threads may have timed out while waiting to be called to
-      # action; restart them.
-      for i in range(len(self.readers)):
-        if not self.reader_threads[i] \
-           or not self.reader_threads[i].is_alive() \
-           and not self.reader_returned_eof[i]:
-          logging.info('read() - starting thread for Reader #%d', i)
-          self.reader_returned_eof[i] = False
-          thread = threading.Thread(target=self._run_reader, args=(i,))
-          self.reader_threads[i] = thread
-          thread.start()
+      if not self.queue_has_record.is_set():
+        logging.debug('read() - timed out waiting for record. Looping')
+      logging.debug('read() - readers returned EOF: %s',
+                    self.reader_returned_eof)
 
-      # Now notify all threads that we do in fact need a record.
-      self.queue_needs_record.set()
-
-      # Keep checking/sleeping until we've either got a record in the
-      # queue or all readers have given us an EOF.
-      while False in self.reader_returned_eof:
-        logging.debug('read() - waiting for queue lock')
-        with self.queue_lock:
-          logging.debug('read() - acquired queue lock, queue length is %d',
-                        len(self.queue))
-          if self.queue:
-            record = self.queue.pop(0)
-            if not self.queue:
-              self.queue_has_record.clear() # only set/clear inside queue_lock
-
-            logging.debug('read() - got record')
-            return self._apply_transforms(record)
-          else:
-            self.queue_has_record.clear()
-
-        # If here, nothing in queue yet. Wait
-        logging.debug('read() - clear of queue lock, waiting for record')
-        self.queue_has_record.wait(READER_TIMEOUT_WAIT)
-
-        if not self.queue_has_record.is_set():
-          logging.debug('read() - timed out waiting for record. Looping')
-        logging.debug('read() - readers returned EOF: %s',
-                      self.reader_returned_eof)
-
-      # All readers have given us an EOF
-      logging.debug('read() - all threads returned None; returning None')
-      return None
-
-    except Exception as e:
-      logging.error(str(e))
-      raise e
+    # All readers have given us an EOF
+    logging.debug('read() - all threads returned None; returning None')
+    return None
 
   ############################
   def _run_reader(self, index):

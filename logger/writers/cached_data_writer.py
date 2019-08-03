@@ -33,7 +33,14 @@ class CachedDataWriter(Writer):
 
     start_server       If true, start the server ourselves
     """
-    self.data_server = data_server
+    host_port = data_server.split(':')
+    if len(host_port) == 1: 
+      self.data_server = 'localhost:' + data_server  # they gave us ':8765'
+    elif not len(host_port[0]):
+      self.data_server = 'localhost' + data_server   # they gave us ':8766'
+    else:
+      self.data_server = data_server                 # they gave us 'host:8766'
+
     self.websocket = None
     self.server = None
     self.back_seconds = back_seconds
@@ -44,8 +51,8 @@ class CachedDataWriter(Writer):
     self.send_queue = asyncio.Queue(loop=self.event_loop)
 
     if start_server:
-      host_port = data_server.split(':')
-      if len(host_port) > 1 and host_port[0] != 'localhost':
+      host_port = self.data_server.split(':')
+      if host_port[0] != 'localhost':
         raise ValueError('CachedDataWriter host specification for data server '
                          'must be either "localhost" or empty if starting '
                          'our own cached data server: "%s"' % host_port)

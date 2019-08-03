@@ -460,13 +460,17 @@ mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-DATA_SERVER_WEBSOCKET=:8766
-DATA_SERVER_UDP=:6225
-
 # Comment out line below to have logger manager *not* start a data server
 START_DATA_SERVER='--start_data_server'
 
-sudo -u rvdas -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET --data_server_udp \$DATA_SERVER_UDP \$START_DATA_SERVER"
+DATA_SERVER_WEBSOCKET=:8766
+DATA_SERVER_UDP=:6225
+DATA_SERVER_LISTEN_ON_UDP=
+
+# Comment out line below to have data server we start *not* listen on UDP
+# DATA_SERVER_LISTEN_ON_UDP='--data_server_udp $DATA_SERVER_UDP'
+
+sudo -u rvdas -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET \$DATA_SERVER_LISTEN_ON_UDP \$START_DATA_SERVER"
 EOF
 
 cat > ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh <<EOF

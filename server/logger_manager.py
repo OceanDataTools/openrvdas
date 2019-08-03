@@ -123,7 +123,7 @@ from logger.utils.stderr_logging import StdErrLoggingHandler
 from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.composed_writer import ComposedWriter
-from logger.writers.udp_writer import UDPWriter
+from logger.writers.cached_data_writer import CachedDataWriter
 from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 
@@ -481,7 +481,7 @@ def run_data_server(data_server_websocket, data_server_udp,
   try:
     while True:
       # If we have a reader, try reading from it
-      if reader:
+      if data_server_udp:
         try:
           record = reader.read()
           if record:
@@ -586,12 +586,12 @@ if __name__ == '__main__':
   # If we have (or are going to have) a cached data server, set up
   # logging of stderr to it. Use a special format that prepends the
   # log level to the message, to aid in filtering.
-  if args.data_server_udp:
+  if args.data_server_websocket:
     # Format should be [[interface:]destination:]port
     (interface, destination, port) = parse_udp_spec(args.data_server_udp)
     stderr_network_writer = ComposedWriter(
       transforms=ToDASRecordTransform(field_name='stderr:logger_manager'),
-      writers=UDPWriter(port=port, destination=destination,interface=interface))
+      writers=CachedDataWriter(data_server=args.data_server_websocket))
     stderr_format = '%(levelno)d\t%(levelname)s\t' + DEFAULT_LOGGING_FORMAT
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_network_writer,
                                                         stderr_format))
