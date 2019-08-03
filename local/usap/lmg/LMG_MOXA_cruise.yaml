@@ -1,0 +1,4856 @@
+##########
+# Sample YAML cruise definition file for LMG openrvdas, created by hacked-up
+# script at local/lmg/create_MOXA_cruise_definition.py.
+
+# Note that the one hack necessary is that YAML interprets 'off' (when not
+# quoted) as the literal 'False'. So YAML needs to quote 'off'.
+
+########################################
+cruise:
+  id: LMGxxxx
+  start: '2019-07-30'
+  end: '2019-12-31'
+
+########################################
+loggers:
+  ladc:
+    configs:
+    - ladc->off
+    - ladc->net
+    - ladc->file/net
+    - ladc->file/net/db
+  lais:
+    configs:
+    - lais->off
+    - lais->net
+    - lais->file/net
+    - lais->file/net/db
+  ldfl:
+    configs:
+    - ldfl->off
+    - ldfl->net
+    - ldfl->file/net
+    - ldfl->file/net/db
+  lgar:
+    configs:
+    - lgar->off
+    - lgar->net
+    - lgar->file/net
+    - lgar->file/net/db
+  lguv:
+    configs:
+    - lguv->off
+    - lguv->net
+    - lguv->file/net
+    - lguv->file/net/db
+  lgyr:
+    configs:
+    - lgyr->off
+    - lgyr->net
+    - lgyr->file/net
+    - lgyr->file/net/db
+  lknu:
+    configs:
+    - lknu->off
+    - lknu->net
+    - lknu->file/net
+    - lknu->file/net/db
+  lmwx:
+    configs:
+    - lmwx->off
+    - lmwx->net
+    - lmwx->file/net
+    - lmwx->file/net/db
+  loxy:
+    configs:
+    - loxy->off
+    - loxy->net
+    - loxy->file/net
+    - loxy->file/net/db
+  lpco:
+    configs:
+    - lpco->off
+    - lpco->net
+    - lpco->file/net
+    - lpco->file/net/db
+  lrtm:
+    configs:
+    - lrtm->off
+    - lrtm->net
+    - lrtm->file/net
+    - lrtm->file/net/db
+  lsea:
+    configs:
+    - lsea->off
+    - lsea->net
+    - lsea->file/net
+    - lsea->file/net/db
+  lsep:
+    configs:
+    - lsep->off
+    - lsep->net
+    - lsep->file/net
+    - lsep->file/net/db
+  lsvp:
+    configs:
+    - lsvp->off
+    - lsvp->net
+    - lsvp->file/net
+    - lsvp->file/net/db
+  tsg2:
+    configs:
+    - tsg2->off
+    - tsg2->net
+    - tsg2->file/net
+    - tsg2->file/net/db
+  utsg:
+    configs:
+    - utsg->off
+    - utsg->net
+    - utsg->file/net
+    - utsg->file/net/db
+  lwn1:
+    configs:
+    - lwn1->off
+    - lwn1->net
+    - lwn1->file/net
+    - lwn1->file/net/db
+  true_wind:
+    configs:
+    - true_wind->off
+    - true_wind->net
+    - true_wind->file/net
+    - true_wind->file/net/db
+  ladc_timeout:
+    configs:
+    - ladc_timeout->off
+    - ladc_timeout->net
+    - ladc_timeout->file
+  lais_timeout:
+    configs:
+    - lais_timeout->off
+    - lais_timeout->net
+    - lais_timeout->file
+  ldfl_timeout:
+    configs:
+    - ldfl_timeout->off
+    - ldfl_timeout->net
+    - ldfl_timeout->file
+  lgar_timeout:
+    configs:
+    - lgar_timeout->off
+    - lgar_timeout->net
+    - lgar_timeout->file
+  lguv_timeout:
+    configs:
+    - lguv_timeout->off
+    - lguv_timeout->net
+    - lguv_timeout->file
+  lgyr_timeout:
+    configs:
+    - lgyr_timeout->off
+    - lgyr_timeout->net
+    - lgyr_timeout->file
+  lknu_timeout:
+    configs:
+    - lknu_timeout->off
+    - lknu_timeout->net
+    - lknu_timeout->file
+  lmwx_timeout:
+    configs:
+    - lmwx_timeout->off
+    - lmwx_timeout->net
+    - lmwx_timeout->file
+  loxy_timeout:
+    configs:
+    - loxy_timeout->off
+    - loxy_timeout->net
+    - loxy_timeout->file
+  lpco_timeout:
+    configs:
+    - lpco_timeout->off
+    - lpco_timeout->net
+    - lpco_timeout->file
+  lrtm_timeout:
+    configs:
+    - lrtm_timeout->off
+    - lrtm_timeout->net
+    - lrtm_timeout->file
+  lsea_timeout:
+    configs:
+    - lsea_timeout->off
+    - lsea_timeout->net
+    - lsea_timeout->file
+  lsep_timeout:
+    configs:
+    - lsep_timeout->off
+    - lsep_timeout->net
+    - lsep_timeout->file
+  lsvp_timeout:
+    configs:
+    - lsvp_timeout->off
+    - lsvp_timeout->net
+    - lsvp_timeout->file
+  tsg2_timeout:
+    configs:
+    - tsg2_timeout->off
+    - tsg2_timeout->net
+    - tsg2_timeout->file
+  utsg_timeout:
+    configs:
+    - utsg_timeout->off
+    - utsg_timeout->net
+    - utsg_timeout->file
+  lwn1_timeout:
+    configs:
+    - lwn1_timeout->off
+    - lwn1_timeout->net
+    - lwn1_timeout->file
+
+########################################
+modes:
+  'off':
+    ladc: ladc->off
+    lais: lais->off
+    ldfl: ldfl->off
+    lgar: lgar->off
+    lguv: lguv->off
+    lgyr: lgyr->off
+    lknu: lknu->off
+    lmwx: lmwx->off
+    loxy: loxy->off
+    lpco: lpco->off
+    lrtm: lrtm->off
+    lsea: lsea->off
+    lsep: lsep->off
+    lsvp: lsvp->off
+    tsg2: tsg2->off
+    utsg: utsg->off
+    lwn1: lwn1->off
+    true_wind: true_wind->off
+    ladc_timeout: ladc_timeout->off
+    lais_timeout: lais_timeout->off
+    ldfl_timeout: ldfl_timeout->off
+    lgar_timeout: lgar_timeout->off
+    lguv_timeout: lguv_timeout->off
+    lgyr_timeout: lgyr_timeout->off
+    lknu_timeout: lknu_timeout->off
+    lmwx_timeout: lmwx_timeout->off
+    loxy_timeout: loxy_timeout->off
+    lpco_timeout: lpco_timeout->off
+    lrtm_timeout: lrtm_timeout->off
+    lsea_timeout: lsea_timeout->off
+    lsep_timeout: lsep_timeout->off
+    lsvp_timeout: lsvp_timeout->off
+    tsg2_timeout: tsg2_timeout->off
+    utsg_timeout: utsg_timeout->off
+    lwn1_timeout: lwn1_timeout->off
+
+  monitor:
+    ladc: ladc->net
+    lais: lais->net
+    ldfl: ldfl->net
+    lgar: lgar->net
+    lguv: lguv->net
+    lgyr: lgyr->net
+    lknu: lknu->net
+    lmwx: lmwx->net
+    loxy: loxy->net
+    lpco: lpco->net
+    lrtm: lrtm->net
+    lsea: lsea->net
+    lsep: lsep->net
+    lsvp: lsvp->net
+    tsg2: tsg2->net
+    utsg: utsg->net
+    lwn1: lwn1->net
+    true_wind: true_wind->net
+    ladc_timeout: ladc_timeout->net
+    lais_timeout: lais_timeout->net
+    ldfl_timeout: ldfl_timeout->net
+    lgar_timeout: lgar_timeout->net
+    lguv_timeout: lguv_timeout->net
+    lgyr_timeout: lgyr_timeout->net
+    lknu_timeout: lknu_timeout->net
+    lmwx_timeout: lmwx_timeout->net
+    loxy_timeout: loxy_timeout->net
+    lpco_timeout: lpco_timeout->net
+    lrtm_timeout: lrtm_timeout->net
+    lsea_timeout: lsea_timeout->net
+    lsep_timeout: lsep_timeout->net
+    lsvp_timeout: lsvp_timeout->net
+    tsg2_timeout: tsg2_timeout->net
+    utsg_timeout: utsg_timeout->net
+    lwn1_timeout: lwn1_timeout->net
+
+  log:
+    ladc: ladc->file/net
+    lais: lais->file/net
+    ldfl: ldfl->file/net
+    lgar: lgar->file/net
+    lguv: lguv->file/net
+    lgyr: lgyr->file/net
+    lknu: lknu->file/net
+    lmwx: lmwx->file/net
+    loxy: loxy->file/net
+    lpco: lpco->file/net
+    lrtm: lrtm->file/net
+    lsea: lsea->file/net
+    lsep: lsep->file/net
+    lsvp: lsvp->file/net
+    tsg2: tsg2->file/net
+    utsg: utsg->file/net
+    lwn1: lwn1->file/net
+    true_wind: true_wind->file/net
+    ladc_timeout: ladc_timeout->file
+    lais_timeout: lais_timeout->file
+    ldfl_timeout: ldfl_timeout->file
+    lgar_timeout: lgar_timeout->file
+    lguv_timeout: lguv_timeout->file
+    lgyr_timeout: lgyr_timeout->file
+    lknu_timeout: lknu_timeout->file
+    lmwx_timeout: lmwx_timeout->file
+    loxy_timeout: loxy_timeout->file
+    lpco_timeout: lpco_timeout->file
+    lrtm_timeout: lrtm_timeout->file
+    lsea_timeout: lsea_timeout->file
+    lsep_timeout: lsep_timeout->file
+    lsvp_timeout: lsvp_timeout->file
+    tsg2_timeout: tsg2_timeout->file
+    utsg_timeout: utsg_timeout->file
+    lwn1_timeout: lwn1_timeout->file
+
+  'log+db':
+    ladc: ladc->file/net/db
+    lais: lais->file/net/db
+    ldfl: ldfl->file/net/db
+    lgar: lgar->file/net/db
+    lguv: lguv->file/net/db
+    lgyr: lgyr->file/net/db
+    lknu: lknu->file/net/db
+    lmwx: lmwx->file/net/db
+    loxy: loxy->file/net/db
+    lpco: lpco->file/net/db
+    lrtm: lrtm->file/net/db
+    lsea: lsea->file/net/db
+    lsep: lsep->file/net/db
+    lsvp: lsvp->file/net/db
+    tsg2: tsg2->file/net/db
+    utsg: utsg->file/net/db
+    lwn1: lwn1->file/net/db
+    true_wind: true_wind->file/net/db
+    ladc_timeout: ladc_timeout->file
+    lais_timeout: lais_timeout->file
+    ldfl_timeout: ldfl_timeout->file
+    lgar_timeout: lgar_timeout->file
+    lguv_timeout: lguv_timeout->file
+    lgyr_timeout: lgyr_timeout->file
+    lknu_timeout: lknu_timeout->file
+    lmwx_timeout: lmwx_timeout->file
+    loxy_timeout: loxy_timeout->file
+    lpco_timeout: lpco_timeout->file
+    lrtm_timeout: lrtm_timeout->file
+    lsea_timeout: lsea_timeout->file
+    lsep_timeout: lsep_timeout->file
+    lsvp_timeout: lsvp_timeout->file
+    tsg2_timeout: tsg2_timeout->file
+    utsg_timeout: utsg_timeout->file
+    lwn1_timeout: lwn1_timeout->file
+
+########################################
+default_mode: 'off'
+
+########################################
+configs:
+  ########
+  ladc->off:
+    name: ladc->off
+
+  ladc_timeout->off:
+    name: ladc_timeout->off
+
+  ladc->net:
+    name: ladc->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: ladc
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ladc'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ladc_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^ladc"
+        timeout: 10
+        message: "Timeout: logger ladc produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger ladc broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:ladc'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:ladc'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ladc->file/net:
+    name: ladc->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/ladc/raw/ladc
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ladc'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ladc_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/ladc/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger ladc produced no output in  /data/current_cruise/ladc/raw/ for 10 seconds"
+        resume_message: "Timeout: logger ladc writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:ladc'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:ladc'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ladc->file/net/db:
+    name: ladc->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/ladc/raw/ladc
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ladc'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lais->off:
+    name: lais->off
+
+  lais_timeout->off:
+    name: lais_timeout->off
+
+  lais->net:
+    name: lais->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr14
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lais
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lais'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lais_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lais"
+        timeout: 10
+        message: "Timeout: logger lais produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lais broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lais'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lais'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lais->file/net:
+    name: lais->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr14
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lais/raw/lais
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lais'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lais_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lais/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lais produced no output in  /data/current_cruise/lais/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lais writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lais'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lais'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lais->file/net/db:
+    name: lais->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr14
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lais/raw/lais
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lais'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  ldfl->off:
+    name: ldfl->off
+
+  ldfl_timeout->off:
+    name: ldfl_timeout->off
+
+  ldfl->net:
+    name: ldfl->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: ldfl
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ldfl'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ldfl_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^ldfl"
+        timeout: 10
+        message: "Timeout: logger ldfl produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger ldfl broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:ldfl'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:ldfl'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ldfl->file/net:
+    name: ldfl->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/ldfl/raw/ldfl
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ldfl'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ldfl_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/ldfl/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger ldfl produced no output in  /data/current_cruise/ldfl/raw/ for 10 seconds"
+        resume_message: "Timeout: logger ldfl writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:ldfl'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:ldfl'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ldfl->file/net/db:
+    name: ldfl->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/ldfl/raw/ldfl
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ldfl'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lgar->off:
+    name: lgar->off
+
+  lgar_timeout->off:
+    name: lgar_timeout->off
+
+  lgar->net:
+    name: lgar->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr00
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lgar
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgar'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgar_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lgar"
+        timeout: 10
+        message: "Timeout: logger lgar produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lgar broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lgar'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lgar'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgar->file/net:
+    name: lgar->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr00
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lgar/raw/lgar
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgar'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgar_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lgar/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lgar produced no output in  /data/current_cruise/lgar/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lgar writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lgar'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lgar'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgar->file/net/db:
+    name: lgar->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr00
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lgar/raw/lgar
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgar'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lguv->off:
+    name: lguv->off
+
+  lguv_timeout->off:
+    name: lguv_timeout->off
+
+  lguv->net:
+    name: lguv->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0f
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lguv
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lguv'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lguv_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lguv"
+        timeout: 10
+        message: "Timeout: logger lguv produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lguv broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lguv'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lguv'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lguv->file/net:
+    name: lguv->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0f
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lguv/raw/lguv
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lguv'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lguv_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lguv/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lguv produced no output in  /data/current_cruise/lguv/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lguv writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lguv'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lguv'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lguv->file/net/db:
+    name: lguv->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0f
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lguv/raw/lguv
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lguv'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lgyr->off:
+    name: lgyr->off
+
+  lgyr_timeout->off:
+    name: lgyr_timeout->off
+
+  lgyr->net:
+    name: lgyr->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr02
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lgyr
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgyr'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgyr_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lgyr"
+        timeout: 10
+        message: "Timeout: logger lgyr produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lgyr broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lgyr'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lgyr'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgyr->file/net:
+    name: lgyr->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr02
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lgyr/raw/lgyr
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgyr'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgyr_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lgyr/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lgyr produced no output in  /data/current_cruise/lgyr/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lgyr writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lgyr'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lgyr'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lgyr->file/net/db:
+    name: lgyr->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr02
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lgyr/raw/lgyr
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lgyr'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lknu->off:
+    name: lknu->off
+
+  lknu_timeout->off:
+    name: lknu_timeout->off
+
+  lknu->net:
+    name: lknu->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr05
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lknu
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lknu'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lknu_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lknu"
+        timeout: 10
+        message: "Timeout: logger lknu produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lknu broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lknu'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lknu'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lknu->file/net:
+    name: lknu->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr05
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lknu/raw/lknu
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lknu'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lknu_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lknu/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lknu produced no output in  /data/current_cruise/lknu/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lknu writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lknu'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lknu'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lknu->file/net/db:
+    name: lknu->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr05
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lknu/raw/lknu
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lknu'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lmwx->off:
+    name: lmwx->off
+
+  lmwx_timeout->off:
+    name: lmwx_timeout->off
+
+  lmwx->net:
+    name: lmwx->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr15
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lmwx
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lmwx'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lmwx_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lmwx"
+        timeout: 10
+        message: "Timeout: logger lmwx produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lmwx broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lmwx'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lmwx'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lmwx->file/net:
+    name: lmwx->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr15
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lmwx/raw/lmwx
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lmwx'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lmwx_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lmwx/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lmwx produced no output in  /data/current_cruise/lmwx/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lmwx writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lmwx'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lmwx'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lmwx->file/net/db:
+    name: lmwx->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr15
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lmwx/raw/lmwx
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lmwx'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  loxy->off:
+    name: loxy->off
+
+  loxy_timeout->off:
+    name: loxy_timeout->off
+
+  loxy->net:
+    name: loxy->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0a
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: loxy
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:loxy'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  loxy_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^loxy"
+        timeout: 10
+        message: "Timeout: logger loxy produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger loxy broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:loxy'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:loxy'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  loxy->file/net:
+    name: loxy->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0a
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/loxy/raw/loxy
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:loxy'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  loxy_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/loxy/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger loxy produced no output in  /data/current_cruise/loxy/raw/ for 10 seconds"
+        resume_message: "Timeout: logger loxy writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:loxy'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:loxy'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  loxy->file/net/db:
+    name: loxy->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0a
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/loxy/raw/loxy
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:loxy'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lpco->off:
+    name: lpco->off
+
+  lpco_timeout->off:
+    name: lpco_timeout->off
+
+  lpco->net:
+    name: lpco->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr09
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lpco
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lpco'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lpco_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lpco"
+        timeout: 200
+        message: "Timeout: logger lpco produced no output on 6224 for 200 seconds"
+        resume_message: "Timeout: logger lpco broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lpco'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lpco'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lpco->file/net:
+    name: lpco->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr09
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lpco/raw/lpco
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lpco'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lpco_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lpco/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 200
+        message: "Timeout: logger lpco produced no output in  /data/current_cruise/lpco/raw/ for 200 seconds"
+        resume_message: "Timeout: logger lpco writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lpco'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lpco'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lpco->file/net/db:
+    name: lpco->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr09
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lpco/raw/lpco
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lpco'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lrtm->off:
+    name: lrtm->off
+
+  lrtm_timeout->off:
+    name: lrtm_timeout->off
+
+  lrtm->net:
+    name: lrtm->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr07
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lrtm
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lrtm'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lrtm_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lrtm"
+        timeout: 10
+        message: "Timeout: logger lrtm produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lrtm broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lrtm'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lrtm'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lrtm->file/net:
+    name: lrtm->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr07
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lrtm/raw/lrtm
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lrtm'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lrtm_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lrtm/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lrtm produced no output in  /data/current_cruise/lrtm/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lrtm writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lrtm'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lrtm'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lrtm->file/net/db:
+    name: lrtm->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr07
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lrtm/raw/lrtm
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lrtm'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lsea->off:
+    name: lsea->off
+
+  lsea_timeout->off:
+    name: lsea_timeout->off
+
+  lsea->net:
+    name: lsea->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr08
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lsea
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsea'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsea_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lsea"
+        timeout: 10
+        message: "Timeout: logger lsea produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lsea broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lsea'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lsea'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsea->file/net:
+    name: lsea->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr08
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lsea/raw/lsea
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsea'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsea_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lsea/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lsea produced no output in  /data/current_cruise/lsea/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lsea writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lsea'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lsea'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsea->file/net/db:
+    name: lsea->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr08
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lsea/raw/lsea
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsea'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lsep->off:
+    name: lsep->off
+
+  lsep_timeout->off:
+    name: lsep_timeout->off
+
+  lsep->net:
+    name: lsep->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0c
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lsep
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsep'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsep_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lsep"
+        timeout: 10
+        message: "Timeout: logger lsep produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lsep broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lsep'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lsep'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsep->file/net:
+    name: lsep->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0c
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lsep/raw/lsep
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsep'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsep_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lsep/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lsep produced no output in  /data/current_cruise/lsep/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lsep writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lsep'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lsep'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsep->file/net/db:
+    name: lsep->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0c
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lsep/raw/lsep
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsep'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lsvp->off:
+    name: lsvp->off
+
+  lsvp_timeout->off:
+    name: lsvp_timeout->off
+
+  lsvp->net:
+    name: lsvp->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0e
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lsvp
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsvp'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsvp_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lsvp"
+        timeout: 10
+        message: "Timeout: logger lsvp produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lsvp broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lsvp'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lsvp'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsvp->file/net:
+    name: lsvp->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0e
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lsvp/raw/lsvp
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsvp'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsvp_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lsvp/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lsvp produced no output in  /data/current_cruise/lsvp/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lsvp writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lsvp'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lsvp'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lsvp->file/net/db:
+    name: lsvp->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0e
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lsvp/raw/lsvp
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lsvp'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  tsg2->off:
+    name: tsg2->off
+
+  tsg2_timeout->off:
+    name: tsg2_timeout->off
+
+  tsg2->net:
+    name: tsg2->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr03
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: tsg2
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:tsg2'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  tsg2_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^tsg2"
+        timeout: 10
+        message: "Timeout: logger tsg2 produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger tsg2 broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:tsg2'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:tsg2'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  tsg2->file/net:
+    name: tsg2->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr03
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/tsg2/raw/tsg2
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:tsg2'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  tsg2_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/tsg2/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger tsg2 produced no output in  /data/current_cruise/tsg2/raw/ for 10 seconds"
+        resume_message: "Timeout: logger tsg2 writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:tsg2'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:tsg2'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  tsg2->file/net/db:
+    name: tsg2->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr03
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/tsg2/raw/tsg2
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:tsg2'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  utsg->off:
+    name: utsg->off
+
+  utsg_timeout->off:
+    name: utsg_timeout->off
+
+  utsg->net:
+    name: utsg->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: utsg
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:utsg'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  utsg_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^utsg"
+        timeout: 10
+        message: "Timeout: logger utsg produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger utsg broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:utsg'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:utsg'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  utsg->file/net:
+    name: utsg->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/utsg/raw/utsg
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:utsg'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  utsg_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/utsg/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger utsg produced no output in  /data/current_cruise/utsg/raw/ for 10 seconds"
+        resume_message: "Timeout: logger utsg writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:utsg'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:utsg'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  utsg->file/net/db:
+    name: utsg->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/utsg/raw/utsg
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:utsg'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lwn1->off:
+    name: lwn1->off
+
+  lwn1_timeout->off:
+    name: lwn1_timeout->off
+
+  lwn1->net:
+    name: lwn1->net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lwn1
+    writers:
+    - class: UDPWriter      # Send raw NMEA to UDP
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lwn1'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lwn1_timeout->net:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: ComposedReader
+          kwargs:
+            readers:
+              class: UDPReader
+              kwargs:
+                port: 6224
+            transforms:
+              class: RegexFilterTransform
+              kwargs:
+                pattern: "^lwn1"
+        timeout: 10
+        message: "Timeout: logger lwn1 produced no output on 6224 for 10 seconds"
+        resume_message: "Timeout: logger lwn1 broadcasting on 6224 again"
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lwn1'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lwn1'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lwn1->file/net:
+    name: lwn1->file/net
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lwn1/raw/lwn1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lwn1'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lwn1_timeout->file:
+    readers:
+    - class: TimeoutReader
+      kwargs:
+        reader:
+          class: LogfileReader
+          kwargs:
+            filebase: /data/current_cruise/lwn1/raw/
+            tail: True
+            refresh_file_spec: True
+        timeout: 10
+        message: "Timeout: logger lwn1 produced no output in  /data/current_cruise/lwn1/raw/ for 10 seconds"
+        resume_message: "Timeout: logger lwn1 writing to /data/current_cruise again"
+
+
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    writers:
+    # Send to a logfile
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/log/openrvdas/timeouts.log
+    # Send to stdout and the logger's stderr
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:lwn1'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: TextFileWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: TextFileWriter
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:timeout:lwn1'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lwn1->file/net/db:
+    name: lwn1->file/net/db
+    readers:                    # Read from serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/current_cruise/lwn1/raw/lwn1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        writers:
+        - class: UDPWriter      # Send raw NMEA to UDP
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lwn1'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  true_wind->off:
+    name: true_wind->off
+
+  true_wind->net:
+    name: true_wind->net
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
+    transforms:
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: CachedDataWriter          # Write back out to UDP
+      kwargs:
+        data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  true_wind->file/net:
+    name: true_wind->file/net
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
+    transforms:
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: CachedDataWriter          # Write back out to UDP
+      kwargs:
+        data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  true_wind->file/net/db:
+    name: true_wind->file/net/db
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
+    transforms:
+    - class: ComposedDerivedDataTransform
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+    writers:
+    - class: CachedDataWriter          # Write back out to UDP
+      kwargs:
+        data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:true_wind'
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
