@@ -9,7 +9,8 @@ from collections import OrderedDict
 ADD_TIMEOUTS = True
 
 VARS = {
-  '%INTERFACE%': '157.132.133.103',
+  #'%INTERFACE%': '157.132.133.103',   # lmg openrvdas
+  '%INTERFACE%': '157.132.133.194',   # lmg-dast-s1-t
   '%RAW_UDP%': '6224',
   '%CACHE_UDP%': '6225',
   '%FILE_ROOT%': '/data/current_cruise',
@@ -112,26 +113,26 @@ TRUE_WIND_TEMPLATE = """
   true_wind->net:
     name: true_wind->net
     readers:
-      class: CachedDataPReader
+      class: CachedDataReader
       kwargs:
-        server: localhost:%WEBSOCKET%
+        data_server: localhost:%WEBSOCKET%
         subscription:
-          S330CourseTrue:
-            seconds: 0
-          S330HeadingTrue:
-            seconds: 0
-          S330SpeedKt:
-            seconds: 0
-          MwxPortRelWindDir:
-            seconds: 0
-          MwxPortRelWindSpeed:
-            seconds: 0
-          MwxStbdRelWindDir:
-            seconds: 0
-          MwxStbdRelWindSpeed:
-            seconds: 0
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
     transforms:
-    - class: FromJSONTransform
     - class: ComposedDerivedDataTransform
       kwargs:
         transforms:
@@ -165,8 +166,8 @@ TRUE_WIND_TEMPLATE = """
     - class: CachedDataWriter          # Write back out to UDP
       kwargs:
         data_server: localhost:%WEBSOCKET%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -200,7 +201,6 @@ TRUE_WIND_TEMPLATE = """
             MwxStbdRelWindSpeed:
               seconds: 0
     transforms:
-    - class: FromJSONTransform
     - class: ComposedDerivedDataTransform
       kwargs:
         transforms:
@@ -234,8 +234,8 @@ TRUE_WIND_TEMPLATE = """
     - class: CachedDataWriter          # Write back out to UDP
       kwargs:
         data_server: localhost:%WEBSOCKET%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -269,7 +269,6 @@ TRUE_WIND_TEMPLATE = """
             MwxStbdRelWindSpeed:
               seconds: 0
     transforms:
-    - class: FromJSONTransform
     - class: ComposedDerivedDataTransform
       kwargs:
         transforms:
@@ -303,8 +302,8 @@ TRUE_WIND_TEMPLATE = """
     - class: CachedDataWriter          # Write back out to UDP
       kwargs:
         data_server: localhost:%WEBSOCKET%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -324,7 +323,7 @@ OFF_TEMPLATE="""
 NET_WRITER_TEMPLATE="""
   %LOGGER%->net:
     name: %LOGGER%->net
-    readers:                    # Read from simulated serial port
+    readers:                    # Read from serial port
       class: SerialReader
       kwargs:
         baudrate: %BAUD%
@@ -339,8 +338,8 @@ NET_WRITER_TEMPLATE="""
       kwargs:
         port: %RAW_UDP%
         interface: %INTERFACE%
-    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
-      kwargs:                   # port for CachedDataServer to pick up
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
         transforms:
         - class: ParseTransform
           kwargs:
@@ -349,8 +348,8 @@ NET_WRITER_TEMPLATE="""
           class: CachedDataWriter
           kwargs:
             data_server: localhost:%WEBSOCKET%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer 
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -365,7 +364,7 @@ NET_WRITER_TEMPLATE="""
 FILE_NET_WRITER_TEMPLATE="""
   %LOGGER%->file/net:
     name: %LOGGER%->file/net
-    readers:                    # Read from simulated serial port
+    readers:                    # Read from serial port
       class: SerialReader
       kwargs:
         baudrate: %BAUD%
@@ -387,8 +386,8 @@ FILE_NET_WRITER_TEMPLATE="""
           kwargs:
             port: %RAW_UDP%
             interface: %INTERFACE%
-    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
-      kwargs:                   # port for CachedDataServer to pick up
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer 
         transforms:
         - class: PrefixTransform
           kwargs:
@@ -400,8 +399,8 @@ FILE_NET_WRITER_TEMPLATE="""
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:%WEBSOCKET%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -416,7 +415,7 @@ FILE_NET_WRITER_TEMPLATE="""
 FULL_WRITER_TEMPLATE="""
   %LOGGER%->file/net/db:
     name: %LOGGER%->file/net/db
-    readers:                    # Read from simulated serial port
+    readers:                    # Read from serial port
       class: SerialReader
       kwargs:
         baudrate: %BAUD%
@@ -438,8 +437,8 @@ FULL_WRITER_TEMPLATE="""
           kwargs:
             port: %RAW_UDP%
             interface: %INTERFACE%
-    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
-      kwargs:                   # port for CachedDataServer to pick up
+    - class: ComposedWriter     # Also parse to fields and send via websocket
+      kwargs:                   # to CachedDataServer
         transforms:
         - class: PrefixTransform
           kwargs:
@@ -462,8 +461,8 @@ FULL_WRITER_TEMPLATE="""
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
+    - class: ComposedWriter  # to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -494,19 +493,17 @@ NET_TIMEOUT_TEMPLATE="""
                 pattern: "^%LOGGER%"
         timeout: %TIMEOUT%
         message: "Timeout: logger %LOGGER% produced no output on %RAW_UDP% for %TIMEOUT% seconds"
+        resume_message: "Timeout: logger %LOGGER% broadcasting on %RAW_UDP% again"
 
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: %LOGGER%_timeout
     writers:
     # Send to a logfile
     - class: LogfileWriter
       kwargs:
         filebase: /var/log/openrvdas/timeouts.log
     # Send to stdout and the logger's stderr
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    - class: ComposedWriter  # Send via websocket to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -517,9 +514,9 @@ NET_TIMEOUT_TEMPLATE="""
           kwargs:
             data_server: localhost:%WEBSOCKET%
         - class: TextFileWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
     - class: TextFileWriter
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    - class: ComposedWriter  # to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -543,6 +540,8 @@ FILE_TIMEOUT_TEMPLATE="""
             refresh_file_spec: True
         timeout: %TIMEOUT%
         message: "Timeout: logger %LOGGER% produced no output in  %FILE_ROOT%/%LOGGER%/raw/ for %TIMEOUT% seconds"
+        resume_message: "Timeout: logger %LOGGER% writing to %FILE_ROOT% again"
+
 
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
@@ -552,7 +551,7 @@ FILE_TIMEOUT_TEMPLATE="""
       kwargs:
         filebase: /var/log/openrvdas/timeouts.log
     # Send to stdout and the logger's stderr
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    - class: ComposedWriter  # Send to websocket for CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -563,9 +562,9 @@ FILE_TIMEOUT_TEMPLATE="""
           kwargs:
             data_server: localhost:%WEBSOCKET%
         - class: TextFileWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    stderr_writers:          # Turn stderr into DASRecord, send via websocket
     - class: TextFileWriter
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    - class: ComposedWriter  # to CachedDataServer
       kwargs:
         transforms:
         - class: ToDASRecordTransform
