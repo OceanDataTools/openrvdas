@@ -84,6 +84,7 @@ from logger.writers.logfile_writer import LogfileWriter
 from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
 from logger.writers.cached_data_writer import CachedDataWriter
+from logger.writers.timeout_writer import TimeoutWriter
 
 from logger.utils import read_config, timestamp, nmea_parser, record_parser
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
@@ -151,7 +152,7 @@ class ListenerFromLoggerConfig(Listener):
       # Declaration of readers, transforms and writers. Note that the
       # singular "reader" is a special case for TimeoutReader that
       # takes a single reader.
-      if key in ['readers', 'reader', 'transforms', 'writers']:
+      if key in ['readers', 'reader', 'transforms', 'writers', 'writer']:
         if not value:
           raise ValueError('declaration of "%s" in class has no kwargs?!?' % key)
         kwargs[key] = self._class_kwargs_from_config(value)
