@@ -503,6 +503,7 @@ NET_TIMEOUT_TEMPLATE="""
       kwargs:
         filebase: /var/log/openrvdas/timeouts.log
     # Send to stdout and the logger's stderr
+    - class: TextFileWriter
     - class: ComposedWriter  # Send via websocket to CachedDataServer
       kwargs:
         transforms:
@@ -513,7 +514,6 @@ NET_TIMEOUT_TEMPLATE="""
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:%WEBSOCKET%
-        - class: TextFileWriter
     stderr_writers:          # Turn stderr into DASRecord, send via websocket
     - class: TextFileWriter
     - class: ComposedWriter  # to CachedDataServer
@@ -551,6 +551,7 @@ FILE_TIMEOUT_TEMPLATE="""
       kwargs:
         filebase: /var/log/openrvdas/timeouts.log
     # Send to stdout and the logger's stderr
+    - class: TextFileWriter
     - class: ComposedWriter  # Send to websocket for CachedDataServer
       kwargs:
         transforms:
@@ -561,7 +562,6 @@ FILE_TIMEOUT_TEMPLATE="""
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:%WEBSOCKET%
-        - class: TextFileWriter
     stderr_writers:          # Turn stderr into DASRecord, send via websocket
     - class: TextFileWriter
     - class: ComposedWriter  # to CachedDataServer
