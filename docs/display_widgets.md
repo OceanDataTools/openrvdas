@@ -73,7 +73,7 @@ says to
    serve_requests() for insight):
 
    
-   ```{"type":"fields"}```
+   ```{"type":"variable_list"}```
    
    Return a list of fields for which cache has data
 
@@ -107,70 +107,9 @@ says to
    in that doesn't, e.g. have the same record size limits as a
    UDP packet).
 
-### Via a CachedDataWriter
-
-The CachedDataWriter is a thin wrapper around the CachedDataServer
-class. You may invoke it as part of a listen.py call:
-
-```
-    logger/listener/listen.py \
-      --udp 6225 \
-      --write_cached_data_server :8766
-```
-
-This command line creates a CachedDataWriter that performs the same
-function as the cached\_data\_server.py invocation above.
-
-Note that the listen.py script currently provides no way to override
-the default values for back_seconds (480) and cleanup (60). But a
-contributor who wished could easily add the appropriate flags to the
-listen.py script.
-
-The listen.py script allows a great deal of flexibility if, for example, you wish to read and serve data from raw NMEA messages, or to read records from another source such as with a LogfileReader, DatabaseReader,
-RedisReader or the like):
-
-```
-    logger/listener/listen.py \
-      --udp 6221,6224 \
-      --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
-      --transform_parse \
-      --write_cached_data_server :8766
-```
-
-Of course, it may be incorporated (again, within its CachedDataWriter
-wrapper) into a logger via a configuration file:
-
-```
-    logger/listener/listen.py --config_file data_server_config.yaml
-```
-
-where data\_server\_config.yaml contains:
-
-```
-readers:
-- class: UDPReader
-  kwargs:
-    port: 6221 
-- class: UDPReader
-  kwargs:
-    port: 6224 
-
-transforms:
-  class: ParseNMEATransform 
-
-writers:
-  class: CachedDataWriter
-  kwargs:
-    websocket: :8766
-    back_seconds: 480
-    cleanup: 60
-```
-
-Again, this will perform the same functionality as the original call.
-
 ### Via the LoggerManager
 
-Finally, the LoggerManager may be called upon to start a CachedDataWriter
+The LoggerManager may be called upon to start a CachedDataWriter
 via the ``--start_data_server`` flag:
 ```
   server/logger_manager.py \
