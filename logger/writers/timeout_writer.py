@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 
-import asyncio
-import json
 import logging
 import sys
 import threading
 import time
-import websockets
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
 ################################################################################
@@ -80,7 +76,7 @@ class TimeoutWriter(Writer):
 
     # Start the timeout loop in a separate thread
     self.timeout_thread = threading.Thread(target=self._timeout_thread,
-                                           name='timeout_thread')
+                                           name='timeout_thread', daemon=True)
     self.timeout_thread.start()
     
   ############################
@@ -114,7 +110,6 @@ class TimeoutWriter(Writer):
   ############################
   def quit(self):
     self.quit_signaled = True
-    self.timeout_thread.join()
 
   ############################
   def write(self, record):
