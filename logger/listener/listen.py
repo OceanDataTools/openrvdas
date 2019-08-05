@@ -59,6 +59,8 @@ from logger.readers.database_reader import DatabaseReader
 from logger.readers.timeout_reader import TimeoutReader
 
 from logger.transforms.prefix_transform import PrefixTransform
+from logger.transforms.extract_field_transform import ExtractFieldTransform
+from logger.transforms.prefix_transform import PrefixTransform
 from logger.transforms.regex_filter_transform import RegexFilterTransform
 from logger.transforms.qc_filter_transform import QCFilterTransform
 from logger.transforms.slice_transform import SliceTransform
@@ -333,6 +335,10 @@ if __name__ == '__main__':
   parser.add_argument('--transform_regex_filter', dest='regex_filter',
                       default='',
                       help='Only pass records containing this regex.')
+
+  parser.add_argument('--transform_extract', dest='extract',
+                      default='', help='Extract the named field from '
+                      'passed DASRecord or data dict.')
 
   parser.add_argument('--transform_qc_filter', dest='qc_filter',
                       default='', help='Pass nothing unless the fields in the '
@@ -690,6 +696,8 @@ if __name__ == '__main__':
         transforms.append(TimestampTransform(time_format=all_args.time_format))
       if new_args.prefix:
         transforms.append(PrefixTransform(new_args.prefix))
+      if new_args.extract:
+        transforms.append(ExtractFieldTransform(new_args.extract))
       if new_args.regex_filter:
         transforms.append(RegexFilterTransform(new_args.regex_filter))
       if new_args.qc_filter:
