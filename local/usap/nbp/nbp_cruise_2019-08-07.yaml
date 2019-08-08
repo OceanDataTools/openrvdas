@@ -3,8 +3,8 @@
 # YAML cruise definition file for OpenRVDAS.
 #
 # Created by:
-#   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Thu Aug  8 17:05:00 2019 UTC
+#   command:  local/usap/create_cruise.py local/usap/nbp/NBP_port_defs_2019-08-07.yaml
+#   time:     Thu Aug  8 16:57:19 2019 UTC
 #   user:     pablo
 #
 ########################################
@@ -289,7 +289,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -299,7 +299,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -328,7 +328,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -345,7 +345,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -377,7 +377,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -394,7 +394,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -440,7 +440,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -450,7 +450,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -479,7 +479,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -496,7 +496,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -528,7 +528,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -545,7 +545,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -591,7 +591,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -601,7 +601,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -630,7 +630,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -647,7 +647,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -679,7 +679,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -696,7 +696,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -742,7 +742,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -752,7 +752,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -781,7 +781,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -798,7 +798,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -830,7 +830,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -847,7 +847,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -893,7 +893,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -903,7 +903,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -932,7 +932,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -949,7 +949,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -981,7 +981,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -998,7 +998,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1044,7 +1044,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1054,7 +1054,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1083,7 +1083,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1100,7 +1100,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1132,7 +1132,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1149,7 +1149,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1195,7 +1195,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1205,7 +1205,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1234,7 +1234,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1251,7 +1251,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1283,7 +1283,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1300,7 +1300,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1346,7 +1346,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_bwnc
+        port: /dev/ttyr0a
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1356,7 +1356,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1385,7 +1385,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_bwnc
+        port: /dev/ttyr0a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1402,7 +1402,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1434,7 +1434,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_bwnc
+        port: /dev/ttyr0a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1451,7 +1451,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1497,7 +1497,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1507,7 +1507,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1536,7 +1536,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1553,7 +1553,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1585,7 +1585,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1602,7 +1602,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1648,7 +1648,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1658,7 +1658,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1687,7 +1687,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1704,7 +1704,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1736,7 +1736,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1753,7 +1753,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1799,7 +1799,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1809,7 +1809,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1838,7 +1838,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1855,7 +1855,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1887,7 +1887,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1904,7 +1904,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1950,7 +1950,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1960,7 +1960,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1989,7 +1989,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2006,7 +2006,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2038,7 +2038,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2055,7 +2055,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2101,7 +2101,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2111,7 +2111,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2140,7 +2140,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2157,7 +2157,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2189,7 +2189,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2206,7 +2206,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2252,7 +2252,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_ndfl
+        port: /dev/ttyr17
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2262,7 +2262,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2291,7 +2291,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_ndfl
+        port: /dev/ttyr17
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2308,7 +2308,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2340,7 +2340,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_ndfl
+        port: /dev/ttyr17
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2357,7 +2357,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2403,7 +2403,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2413,7 +2413,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2442,7 +2442,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2459,7 +2459,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2491,7 +2491,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2508,7 +2508,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2554,7 +2554,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2564,7 +2564,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2593,7 +2593,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2610,7 +2610,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2642,7 +2642,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2659,7 +2659,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2705,7 +2705,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2715,7 +2715,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2744,7 +2744,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2761,7 +2761,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2793,7 +2793,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2810,7 +2810,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2856,7 +2856,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_sp1b
+        port: /dev/ttyr23
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2866,7 +2866,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2895,7 +2895,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_sp1b
+        port: /dev/ttyr23
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2912,7 +2912,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2944,7 +2944,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_sp1b
+        port: /dev/ttyr23
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2961,7 +2961,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3007,7 +3007,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_ctdd
+        port: /dev/ttyr24
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -3017,7 +3017,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3046,7 +3046,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_ctdd
+        port: /dev/ttyr24
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3063,7 +3063,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3095,7 +3095,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_ctdd
+        port: /dev/ttyr24
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3112,7 +3112,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3158,7 +3158,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -3168,7 +3168,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3197,7 +3197,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3214,7 +3214,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3246,7 +3246,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3263,7 +3263,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3309,7 +3309,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -3319,7 +3319,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3348,7 +3348,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3365,7 +3365,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3397,7 +3397,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3414,7 +3414,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3460,7 +3460,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -3470,7 +3470,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3499,7 +3499,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3516,7 +3516,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3548,7 +3548,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3565,7 +3565,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3611,7 +3611,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -3621,7 +3621,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3650,7 +3650,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3667,7 +3667,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3699,7 +3699,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3716,7 +3716,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3762,7 +3762,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -3772,7 +3772,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3801,7 +3801,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3818,7 +3818,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3850,7 +3850,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -3867,7 +3867,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
