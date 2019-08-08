@@ -5,7 +5,10 @@ cruise:
   id: NBP_test
   start: 2019-07-01
   end: 2019-12-31
-  
+
+# Base path where logger logfiles should be written
+file_root: /data/logger
+
 # The path any RecordParsers should use.
 parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
   
