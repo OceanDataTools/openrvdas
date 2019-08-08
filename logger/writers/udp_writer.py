@@ -67,9 +67,14 @@ class UDPWriter(NetworkWriter):
     # our destination. The broadcast address is just the normal
     # address with the last tuple replaced by ".255".
     elif interface:
-      ipaddress.ip_address(interface)
-      # Change interface's lowest tuple to 'broadcast' value (255)
-      destination = interface[:interface.rfind('.')] + '.255'
+      if interface == '0.0.0.0':  # local network
+        destination = '255.255.255.255'
+      elif interface in ['<broadcast>', 'None']:
+        destination = '<broadcast>'
+      else:
+        # Change interface's lowest tuple to 'broadcast' value (255)
+        ipaddress.ip_address(interface)
+        destination = interface[:interface.rfind('.')] + '.255'
 
     # If we've been given a destination, make sure it's a valid IP
     elif destination:

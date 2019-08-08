@@ -160,7 +160,7 @@ class ListenerFromLoggerConfig(Listener):
         kwargs[key] = self._class_kwargs_from_config(value)
 
       # If value is a simple float/int/string/etc, just add to keywords
-      elif type(value) in [float, bool, int, str, list, dict]:
+      elif value is None or type(value) in [float, bool, int, str, list, dict]:
         kwargs[key] = value
 
       # Else what do we have?
