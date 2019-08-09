@@ -3,8 +3,8 @@
 # YAML cruise definition file for OpenRVDAS.
 #
 # Created by:
-#   command:  local/usap/create_cruise.py local/usap/nbp/NBP_port_defs_2019-08-07.yaml
-#   time:     Thu Aug  8 16:57:19 2019 UTC
+#   command:  local/usap/create_cruise.py local/usap/nbp/nbp_port_defs_2019-08-07.yaml
+#   time:     Fri Aug  9 13:33:11 2019 UTC
 #   user:     pablo
 #
 ########################################

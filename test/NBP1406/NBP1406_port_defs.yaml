@@ -14,10 +14,10 @@ parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap
   
 # Definitions for what network and ports the cruise is supposed to use
 network:
-
-  # The 'interface' key is used by UDPReaders/UDPWriters. Specify the broadcast
-  # address of the interface to use that interface, use 0.0.0.0 to specify local
-  # network only, or use '<broadcast>' to use any available interface.
+  # The 'interface' key is used by UDPWriters. Specify the broadcast
+  # address of the interface to use that interface, use 0.0.0.0 to
+  # specify local network only, or use '<broadcast>' to use any
+  # available interface.
   interface: 0.0.0.0           #157.132.129.255
   
   raw_udp_port: 6224           # port for broadcasting raw records
@@ -135,9 +135,9 @@ ports:
     rate: 1   # Hz
   # PortTrawlW  /tmp/tty_r08  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
   # StbdTrawlW  /tmp/tty_r09  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-  bwnc:
-    port_tab: BalticWinch  /tmp/tty_bwnc  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-    rate: 20   # Hz
+  #bwnc:
+  #  port_tab: BalticWinch  /tmp/tty_bwnc  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 20   # Hz
   twnc:
     port_tab: TrawlWinch  /tmp/tty_twnc  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 20   # Hz
@@ -162,9 +162,9 @@ ports:
   mwx1:
     port_tab: MastWx  /tmp/tty_mwx1  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1   # Hz
-  ndfl:
-    port_tab: Fluorometer  /tmp/tty_ndfl  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-    rate: 1   # Hz
+  #ndfl:
+  #  port_tab: Fluorometer  /tmp/tty_ndfl  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 1   # Hz
   pco2:
     port_tab: PCO2  /tmp/tty_pco2  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1   # Hz
@@ -184,12 +184,12 @@ ports:
   s330:
     port_tab: SeaPath330  /tmp/tty_s330  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1   # Hz
-  sp1b:
-    port_tab: SeaPath1B  /tmp/tty_sp1b  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-    rate: 1   # Hz
-  ctdd:
-    port_tab: CTDdepth  /tmp/tty_ctdd  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-    rate: 1   # Hz
+  #sp1b:
+  #  port_tab: SeaPath1B  /tmp/tty_sp1b  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 1   # Hz
+  #ctdd:
+  #  port_tab: CTDdepth  /tmp/tty_ctdd  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 1   # Hz
   tsg1:
     port_tab: TSG1  /tmp/tty_tsg1  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1   # Hz

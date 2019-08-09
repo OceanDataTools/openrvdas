@@ -1,5 +1,19 @@
 #! /usr/bin/env python3
+"""This script creates a fairly simple "standard" cruise definition
+file from a port_def.yaml specification. A typical invocation would be
 
+  local/usap/create_cruise.py \
+    test/NBP1406/NBP1406_port_defs.yaml > test/NBP1406/NBP1406_cruise.yaml
+
+It creates four modes:
+  off      - nothing running
+  monitor  - write raw UDP to network and parsed to cached data server
+  log      - as above, but also write raw to file
+  log+db   - as above, but also write parsed to database
+
+It also includes a true_wind derived data logger that writes to the
+cached data server. There is no timeout checking of any loggers.
+"""
 import argparse
 import getpass
 import logging

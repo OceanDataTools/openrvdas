@@ -14,10 +14,10 @@ parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap
   
 # Definitions for what network and ports the cruise is supposed to use
 network:
-
-  # The 'interface' key is used by UDPReaders/UDPWriters. Specify the broadcast
-  # address of the interface to use that interface, use 0.0.0.0 to specify local
-  # network only, or use '<broadcast>' to use any available interface.
+  # The 'interface' key is used by UDPWriters. Specify the broadcast
+  # address of the interface to use that interface, use 0.0.0.0 to
+  # specify local network only, or use '<broadcast>' to use any
+  # available interface.
 network:
   interface: 157.132.129.255   # address/interface to use for UDP broadcasts   
   raw_udp_port: 6224           # port for broadcasting raw records

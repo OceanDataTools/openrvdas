@@ -10,17 +10,17 @@ cruise:
 file_root: /data/logger
 
 # The path any RecordParsers should use.
-parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
 
 # Filesystem root for where loggers should write
 file_root: /data/logger
 
 # Definitions for what network and ports the cruise is supposed to use
 network:
-
-  # The 'interface' key is used by UDPReaders/UDPWriters. Specify the broadcast
-  # address of the interface to use that interface, use 0.0.0.0 to specify local
-  # network only, or use '<broadcast>' to use any available interface.
+  # The 'interface' key is used by UDPWriters. Specify the broadcast
+  # address of the interface to use that interface, use 0.0.0.0 to
+  # specify local network only, or use '<broadcast>' to use any
+  # available interface.
   interface: 157.132.133.103   # lmg openrvdas
   #interface: 157.132.133.194   # lmg-dast-s1-t
   

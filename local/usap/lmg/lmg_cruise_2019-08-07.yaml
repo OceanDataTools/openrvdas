@@ -3,8 +3,8 @@
 # YAML cruise definition file for OpenRVDAS.
 #
 # Created by:
-#   command:  local/usap/create_cruise.py test/LMG1903/LMG1903_port_defs.yaml
-#   time:     Fri Aug  9 13:00:38 2019 UTC
+#   command:  local/usap/create_cruise.py local/usap/lmg/lmg_port_defs-2019-08-07.yaml
+#   time:     Fri Aug  9 13:34:07 2019 UTC
 #   user:     pablo
 #
 ########################################
@@ -39,6 +39,12 @@ loggers:
     - lknu->net
     - lknu->file/net
     - lknu->file/net/db
+  utsg:
+    configs:
+    - utsg->off
+    - utsg->net
+    - utsg->file/net
+    - utsg->file/net/db
   lrtm:
     configs:
     - lrtm->off
@@ -63,12 +69,24 @@ loggers:
     - loxy->net
     - loxy->file/net
     - loxy->file/net/db
+  ldfl:
+    configs:
+    - ldfl->off
+    - ldfl->net
+    - ldfl->file/net
+    - ldfl->file/net/db
   lsep:
     configs:
     - lsep->off
     - lsep->net
     - lsep->file/net
     - lsep->file/net/db
+  ladc:
+    configs:
+    - ladc->off
+    - ladc->net
+    - ladc->file/net
+    - ladc->file/net/db
   lsvp:
     configs:
     - lsvp->off
@@ -93,6 +111,12 @@ loggers:
     - lmwx->net
     - lmwx->file/net
     - lmwx->file/net/db
+  lwn1:
+    configs:
+    - lwn1->off
+    - lwn1->net
+    - lwn1->file/net
+    - lwn1->file/net/db
   true_wind:
     configs:
     - true_wind->off
@@ -105,15 +129,19 @@ modes:
     lgyr: lgyr->off
     tsg2: tsg2->off
     lknu: lknu->off
+    utsg: utsg->off
     lrtm: lrtm->off
     lsea: lsea->off
     lpco: lpco->off
     loxy: loxy->off
+    ldfl: ldfl->off
     lsep: lsep->off
+    ladc: ladc->off
     lsvp: lsvp->off
     lguv: lguv->off
     lais: lais->off
     lmwx: lmwx->off
+    lwn1: lwn1->off
     true_wind: true_wind->off
 
   monitor:
@@ -121,15 +149,19 @@ modes:
     lgyr: lgyr->net
     tsg2: tsg2->net
     lknu: lknu->net
+    utsg: utsg->net
     lrtm: lrtm->net
     lsea: lsea->net
     lpco: lpco->net
     loxy: loxy->net
+    ldfl: ldfl->net
     lsep: lsep->net
+    ladc: ladc->net
     lsvp: lsvp->net
     lguv: lguv->net
     lais: lais->net
     lmwx: lmwx->net
+    lwn1: lwn1->net
     true_wind: true_wind->on
 
   log:
@@ -137,15 +169,19 @@ modes:
     lgyr: lgyr->file/net
     tsg2: tsg2->file/net
     lknu: lknu->file/net
+    utsg: utsg->file/net
     lrtm: lrtm->file/net
     lsea: lsea->file/net
     lpco: lpco->file/net
     loxy: loxy->file/net
+    ldfl: ldfl->file/net
     lsep: lsep->file/net
+    ladc: ladc->file/net
     lsvp: lsvp->file/net
     lguv: lguv->file/net
     lais: lais->file/net
     lmwx: lmwx->file/net
+    lwn1: lwn1->file/net
     true_wind: true_wind->on
 
   'log+db':
@@ -153,15 +189,19 @@ modes:
     lgyr: lgyr->file/net/db
     tsg2: tsg2->file/net/db
     lknu: lknu->file/net/db
+    utsg: utsg->file/net/db
     lrtm: lrtm->file/net/db
     lsea: lsea->file/net/db
     lpco: lpco->file/net/db
     loxy: loxy->file/net/db
+    ldfl: ldfl->file/net/db
     lsep: lsep->file/net/db
+    ladc: ladc->file/net/db
     lsvp: lsvp->file/net/db
     lguv: lguv->file/net/db
     lais: lais->file/net/db
     lmwx: lmwx->file/net/db
+    lwn1: lwn1->file/net/db
     true_wind: true_wind->on
 
 ########################################
@@ -179,7 +219,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_lgar
+        port: /dev/ttyr00
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -189,7 +229,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -218,7 +258,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_lgar
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -235,7 +275,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -267,7 +307,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_lgar
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -284,7 +324,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -330,7 +370,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_lgyr
+        port: /dev/ttyr02
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -340,7 +380,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -369,7 +409,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_lgyr
+        port: /dev/ttyr02
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -386,7 +426,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -418,7 +458,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_lgyr
+        port: /dev/ttyr02
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -435,7 +475,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -481,7 +521,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr03
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -491,7 +531,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -520,7 +560,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -537,7 +577,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -569,7 +609,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -586,7 +626,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -632,7 +672,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lknu
+        port: /dev/ttyr05
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -642,7 +682,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -671,7 +711,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lknu
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -688,7 +728,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -720,7 +760,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lknu
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -737,7 +777,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -774,6 +814,157 @@ configs:
           kwargs:
             data_server: localhost:8766
   ########
+  utsg->off:
+    name: utsg->off
+
+  utsg->net:
+    name: utsg->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: utsg
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:utsg'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  utsg->file/net:
+    name: utsg->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/utsg/raw/LMG1903_utsg
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:utsg'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  utsg->file/net/db:
+    name: utsg->file/net/db
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/utsg/raw/LMG1903_utsg
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103 
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:utsg'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
   lrtm->off:
     name: lrtm->off
 
@@ -783,7 +974,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lrtm
+        port: /dev/ttyr07
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -793,7 +984,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -822,7 +1013,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lrtm
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -839,7 +1030,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -871,7 +1062,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lrtm
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -888,7 +1079,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -934,7 +1125,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lsea
+        port: /dev/ttyr08
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -944,7 +1135,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -973,7 +1164,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lsea
+        port: /dev/ttyr08
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -990,7 +1181,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1022,7 +1213,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lsea
+        port: /dev/ttyr08
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1039,7 +1230,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1085,7 +1276,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lpco
+        port: /dev/ttyr09
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1095,7 +1286,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1124,7 +1315,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lpco
+        port: /dev/ttyr09
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1141,7 +1332,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1173,7 +1364,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lpco
+        port: /dev/ttyr09
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1190,7 +1381,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1236,7 +1427,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_loxy
+        port: /dev/ttyr0a
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1246,7 +1437,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1275,7 +1466,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_loxy
+        port: /dev/ttyr0a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1292,7 +1483,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1324,7 +1515,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_loxy
+        port: /dev/ttyr0a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1341,7 +1532,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1378,6 +1569,157 @@ configs:
           kwargs:
             data_server: localhost:8766
   ########
+  ldfl->off:
+    name: ldfl->off
+
+  ldfl->net:
+    name: ldfl->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: ldfl
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ldfl'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ldfl->file/net:
+    name: ldfl->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/ldfl/raw/LMG1903_ldfl
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ldfl'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ldfl->file/net/db:
+    name: ldfl->file/net/db
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/ldfl/raw/LMG1903_ldfl
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103 
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ldfl'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
   lsep->off:
     name: lsep->off
 
@@ -1387,7 +1729,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lsep
+        port: /dev/ttyr0c
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1397,7 +1739,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1426,7 +1768,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lsep
+        port: /dev/ttyr0c
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1443,7 +1785,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1475,7 +1817,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lsep
+        port: /dev/ttyr0c
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1492,7 +1834,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1529,6 +1871,157 @@ configs:
           kwargs:
             data_server: localhost:8766
   ########
+  ladc->off:
+    name: ladc->off
+
+  ladc->net:
+    name: ladc->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: ladc
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ladc'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ladc->file/net:
+    name: ladc->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/ladc/raw/LMG1903_ladc
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ladc'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  ladc->file/net/db:
+    name: ladc->file/net/db
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/ladc/raw/LMG1903_ladc
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103 
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:ladc'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
   lsvp->off:
     name: lsvp->off
 
@@ -1538,7 +2031,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lsvp
+        port: /dev/ttyr0e
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1548,7 +2041,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1577,7 +2070,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lsvp
+        port: /dev/ttyr0e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1594,7 +2087,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1626,7 +2119,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_lsvp
+        port: /dev/ttyr0e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1643,7 +2136,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1689,7 +2182,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lguv
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1699,7 +2192,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1728,7 +2221,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lguv
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1745,7 +2238,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1777,7 +2270,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lguv
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1794,7 +2287,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1840,7 +2333,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 38400
-        port: /tmp/tty_lais
+        port: /dev/ttyr14
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1850,7 +2343,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1879,7 +2372,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 38400
-        port: /tmp/tty_lais
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1896,7 +2389,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1928,7 +2421,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 38400
-        port: /tmp/tty_lais
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -1945,7 +2438,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1991,7 +2484,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lmwx
+        port: /dev/ttyr15
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2001,7 +2494,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2030,7 +2523,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lmwx
+        port: /dev/ttyr15
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2047,7 +2540,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.133.103
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2079,7 +2572,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_lmwx
+        port: /dev/ttyr15
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
@@ -2096,7 +2589,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.133.103 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2128,6 +2621,157 @@ configs:
         - class: ToDASRecordTransform
           kwargs:
             field_name: 'stderr:logger:lmwx'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+  ########
+  lwn1->off:
+    name: lwn1->off
+
+  lwn1->net:
+    name: lwn1->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lwn1
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lwn1'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lwn1->file/net:
+    name: lwn1->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lwn1/raw/LMG1903_lwn1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lwn1'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  lwn1->file/net/db:
+    name: lwn1->file/net/db
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lwn1/raw/LMG1903_lwn1
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 157.132.133.103 
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+        writers:
+        - class: DatabaseWriter
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:lwn1'
         writers:
         - class: CachedDataWriter
           kwargs:
