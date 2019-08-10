@@ -27,12 +27,24 @@ class SerialReader(Reader):
                stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
                exclusive=None, max_bytes=None, eol=None):
-    """
-    If max_bytes is specified on initialization, read up to that many
-    bytes when read() is called. If not specified, read() will read up to
-    the first newline it receives. In both cases, if timeout is specified,
-    it will return after timeout with as many bytes as it has succeeded in
-    reading.
+    """If max_bytes is specified on initialization, read up to that many
+    bytes when read() is called. If eol is not specified, read() will
+    read up to the first newline it receives. In both cases, if
+    timeout is specified, it will return after timeout with as many
+    bytes as it has succeeded in reading.
+
+    command line example:
+
+      # Read serial port ttyr05 expecting a LF as end of record
+      logger/listener/listen.py  --serial port=/dev/ttyr05,eol='\r'
+
+    config example:
+
+      class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr05
+        eol: \r
     """
     super().__init__(output_format=Text)
 
@@ -55,6 +67,11 @@ class SerialReader(Reader):
       sys.exit(1)
 
     self.max_bytes = max_bytes
+
+    # 'eol' comes in as a (probably escaped) string. We need to
+    # unescape it, which means converting to bytes and back.
+    if eol is not None:
+      eol = eol.encode().decode("unicode_escape").encode('utf8')
     self.eol = eol
 
   ############################
