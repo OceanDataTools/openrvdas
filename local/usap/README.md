@@ -1,4 +1,4 @@
-#USAP OpenRVDAS Quick Start
+# USAP OpenRVDAS Quick Start
 David Pablo Cohn; DRAFT: 2019-08-10
 
 OpenRVDAS is a yet-nascent Open Source Research Vessel Data Acquisition System. A few links for context:
@@ -144,7 +144,7 @@ Development server. As above, basic loggers, plus "timeout loggers" that inform 
 
 Note that each of these configurations has some network stuff specific to the machine in question (specifically the machine's UDP broadcast address) **and may not work on your newly-built machine**. To create a configuration for your machine, see "Creating your own cruise definitions," below, then come back to this point in the document.
 
-Whichever machine you're working on, you'll need to scp the appropriate file to your local machine so that the browser's file picker can load it. _There's a_[_feature request to replace the current file loader with a server-side file loader_](https://github.com/davidpablocohn/openrvdas/issues/145)_, which will both simplify loading and close the gaping security hole of allowing an authenticated user to run an arbitrary config which could, if they wanted, read/write/delete any file on the server that user rvdas had access to._
+Whichever machine you're working on, you'll need to scp the appropriate file to your local machine so that the browser's file picker can load it. _There's a [feature request to replace the current file loader with a server-side file loader](https://github.com/davidpablocohn/openrvdas/issues/145), which will both simplify loading and close the gaping security hole of allowing an authenticated user to run an arbitrary config which could, if they wanted, read/write/delete any file on the server that user rvdas had access to._
 
 Once you have identified a cruise definition to use, it may also be worth opening another terminal, logging in as rvdas, going to /opt/openrvdas and starting a listener on port 6224 to monitor the raw logger output:
 
