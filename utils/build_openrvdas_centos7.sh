@@ -23,7 +23,7 @@ DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
 
-DEFAULT_OPENRVDAS_REPO=http://github.com/davidpablocohn/openrvdas
+DEFAULT_OPENRVDAS_REPO=https://github.com/davidpablocohn/openrvdas
 DEFAULT_OPENRVDAS_BRANCH=master
 
 DEFAULT_RVDAS_USER=rvdas
