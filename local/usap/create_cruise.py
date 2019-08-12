@@ -171,7 +171,7 @@ FILE_NET_WRITER_TEMPLATE="""
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/%LOGGER%/raw/LMG1903_%LOGGER%
+        filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -222,7 +222,7 @@ FULL_WRITER_TEMPLATE="""
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/%LOGGER%/raw/LMG1903_%LOGGER%
+        filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -303,6 +303,8 @@ substitutions = {
   '%RAW_UDP_PORT%': port_def.get('network', {}).get('raw_udp_port'),
   '%PARSED_UDP_PORT%': port_def.get('network', {}).get('parsed_udp_port'),
   '%DATA_SERVER%': port_def.get('network', {}).get('data_server'),
+
+  '%FILE_ROOT%': port_def.get('file_root', '/var/tmp/log'),
 
   '%PARSE_DEFINITION_PATH%':  port_def.get('parse_definition_path', ''),
   
