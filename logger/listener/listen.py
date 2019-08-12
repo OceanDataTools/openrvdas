@@ -222,9 +222,29 @@ class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
 class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
   """Helper class for instantiating a Listener object from a JSON config."""
   ############################
-  def __init__(self, config_file, log_level=None):
-    """Create a Listener from a Python config file."""
+  def __init__(self, config_file, config_name=None, log_level=None):
+    """Create a Listener from a Python config file. If the file name
+    format is file_name:config, then assume the file_name is that of a
+    cruise definition, and look for the config itself under the
+    'configs:' key of the file's YAML.
+    """
+    # If they've got a ':' in the config file name, then we're
+    # expecting them to also give us a config name to look for.
+    if config_file.find(':') > 0:
+      (config_file, config_name) = config_file.split(':', maxsplit=1)
     config = read_config.read_config(config_file)
+
+    if config_name:
+      config_dict = config.get('configs', None)
+      if not config_dict:
+        raise ValueError('Configuration name "%s" specified, but no '
+                         '"configs" section found in file "%s"'
+                         % (config_name, config_file))
+      config = config_dict.get(config_name, None)
+      if not config:
+        raise ValueError('Configuration name "%s" not found in file "%s"'
+                         % (config_name, config_file))
+
     logging.info('Loaded config file:\n%s', pprint.pformat(config))
     super().__init__(config=config, log_level=log_level)
 
@@ -244,6 +264,10 @@ if __name__ == '__main__':
   # Set up from config file
   parser.add_argument('--config_file', dest='config_file', default=None,
                       help='Read Listener configuration from YAML/JSON file. '
+                      'If argument contains a colon, it will be interpreted '
+                      'as cruise_def_file_name:logger_config, and the script '
+                      'will look for a logger config name under the file\'s '
+                      '"configs" section. '
                       'If specified, no other command line arguments (except '
                       '-v) are allowed.')
 
@@ -804,7 +828,7 @@ if __name__ == '__main__':
       readers.append(TextFileReader())
     if not writers:
       writers.append(TextFileWriter())
-    
+
     ##########################
     # Now that we've got our readers, transforms and writers defined,
     # create the Listener.
