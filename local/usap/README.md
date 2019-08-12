@@ -249,35 +249,16 @@ If there's something wrong with the config file, you should get a front seat to 
 
 **A logger is dying mysteriously**
 
-Again, this needs better tools, but what I find myself doing most often is going to the cruise definition and extracting the definition of the logger config in question into a file of its own. Make sure you remove the dictionary key. E.g., extracting the lgyr->net configuration into a file called lgyr.yaml:
+Newly-added functionality (as of 2019-08-12) makes this a little easier, but it's still a mess. Right now, the best way to debug this is to run the logger in isolation, using ``listen.py``:
 
 ```
-#  lgyr->net:    #<- comment out config key
-    name: lgyr->net
-    readers:                    # Read from serial port
-      class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /dev/ttyr02
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: lgyr
-    writers:
-    - class: UDPWriter      # Send raw NMEA to UDP
-      kwargs:
-        port: 6224
-        interface: 157.132.133.103
+listen.py --config_file my_cruise_file:'my_logger_config_name' -v
 ```
-
-Run the configuration in isolation:
-
+e.g.
 ```
-listen.py --config_file lgyr.yaml
+listen.py --config_file test/NBP1406/NBP1406_cruise.yaml:'gyr1->net' -v
 ```
-
-And (hopefully) watch it die in a comprehensible and easy-to-fix way.
+And (hopefully) watch it die in a comprehensible and easy-to-fix way. You can add an extra ``-v`` to further increase logger verbosity.
 
 **Adding a new Cruise/Logger/Instrument**
 
