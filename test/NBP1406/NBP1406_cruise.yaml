@@ -4,12 +4,12 @@
 #
 # Created by:
 #   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Fri Aug  9 12:49:58 2019 UTC
+#   time:     Mon Aug 12 23:39:50 2019 UTC
 #   user:     pablo
 #
 ########################################
 cruise:
-  id: NBP_test
+  id: NBP1406
   start: '2019-07-01'
   end: '2019-12-31'
 
@@ -294,7 +294,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/PCOD/raw/LMG1903_PCOD
+        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -343,7 +343,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/PCOD/raw/LMG1903_PCOD
+        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -445,7 +445,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/cwnc/raw/LMG1903_cwnc
+        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -494,7 +494,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/cwnc/raw/LMG1903_cwnc
+        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -596,7 +596,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/gp02/raw/LMG1903_gp02
+        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -645,7 +645,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/gp02/raw/LMG1903_gp02
+        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -747,7 +747,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/gyr1/raw/LMG1903_gyr1
+        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -796,7 +796,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/gyr1/raw/LMG1903_gyr1
+        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -898,7 +898,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/adcp/raw/LMG1903_adcp
+        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -947,7 +947,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/adcp/raw/LMG1903_adcp
+        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1049,7 +1049,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/eng1/raw/LMG1903_eng1
+        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1098,7 +1098,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/eng1/raw/LMG1903_eng1
+        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1200,7 +1200,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/svp1/raw/LMG1903_svp1
+        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1249,7 +1249,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/svp1/raw/LMG1903_svp1
+        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1351,7 +1351,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/twnc/raw/LMG1903_twnc
+        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1400,7 +1400,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/twnc/raw/LMG1903_twnc
+        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1502,7 +1502,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/mbdp/raw/LMG1903_mbdp
+        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1551,7 +1551,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/mbdp/raw/LMG1903_mbdp
+        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1653,7 +1653,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/knud/raw/LMG1903_knud
+        filebase: /var/tmp/log/knud/raw/NBP1406_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1702,7 +1702,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/knud/raw/LMG1903_knud
+        filebase: /var/tmp/log/knud/raw/NBP1406_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1804,7 +1804,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/grv1/raw/LMG1903_grv1
+        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1853,7 +1853,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/grv1/raw/LMG1903_grv1
+        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1955,7 +1955,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/mwx1/raw/LMG1903_mwx1
+        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2004,7 +2004,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/mwx1/raw/LMG1903_mwx1
+        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2106,7 +2106,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/pco2/raw/LMG1903_pco2
+        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2155,7 +2155,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/pco2/raw/LMG1903_pco2
+        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2257,7 +2257,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/pguv/raw/LMG1903_pguv
+        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2306,7 +2306,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/pguv/raw/LMG1903_pguv
+        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2408,7 +2408,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/s330/raw/LMG1903_s330
+        filebase: /var/tmp/log/s330/raw/NBP1406_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2457,7 +2457,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/s330/raw/LMG1903_s330
+        filebase: /var/tmp/log/s330/raw/NBP1406_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2559,7 +2559,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/tsg1/raw/LMG1903_tsg1
+        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2608,7 +2608,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/tsg1/raw/LMG1903_tsg1
+        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2710,7 +2710,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/rtmp/raw/LMG1903_rtmp
+        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2759,7 +2759,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/rtmp/raw/LMG1903_rtmp
+        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2861,7 +2861,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/hdas/raw/LMG1903_hdas
+        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2910,7 +2910,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/hdas/raw/LMG1903_hdas
+        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3012,7 +3012,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/tsg2/raw/LMG1903_tsg2
+        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3061,7 +3061,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/tsg2/raw/LMG1903_tsg2
+        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3163,7 +3163,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/seap/raw/LMG1903_seap
+        filebase: /var/tmp/log/seap/raw/NBP1406_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3212,7 +3212,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/seap/raw/LMG1903_seap
+        filebase: /var/tmp/log/seap/raw/NBP1406_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:

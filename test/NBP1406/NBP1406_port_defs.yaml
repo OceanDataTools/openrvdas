@@ -2,12 +2,12 @@
 # needed to create a cruise definition for a specific ship/cruise.
 
 cruise:
-  id: NBP_test
+  id: NBP1406
   start: '2019-07-01'  # Enclose in quotes so they're strings
   end: '2019-12-31'
 
 # Base path where logger logfiles should be written
-file_root: /data/logger
+file_root: /var/tmp/log
 
 # The path any RecordParsers should use.
 parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
