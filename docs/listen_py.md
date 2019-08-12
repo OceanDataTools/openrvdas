@@ -311,6 +311,13 @@ If there is only one component defined for readers/transforms/writers, it doesn'
 
 One major advantage of using configuration files is the ability to use ComposedReaders and ComposedWriters, containers that allow efficient construction of sophisticated dataflows.
 
+You may also load a single configuration from a complete cruise definition file by separating the file name from the configuration name with a colon:
+
+```
+  listen.py --config_file test/NBP1406/NBP1406_cruise.yaml:'gyr1->net' -v
+```
+This functionality has proven useful for debugging a logger that is dying mysteriously. 
+
 Please see [OpenRVDAS Configuration Files](configuration_files.md) for
 a more complete description of the configuration file model, and
 [simple_logger.py](../test/configs/simple_logger.yaml),
