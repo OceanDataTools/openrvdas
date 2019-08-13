@@ -108,6 +108,13 @@ def runnable(config):
   """
   return config and ('readers' in config or 'writers' in config)
 
+############################
+def clear_queue(queue):
+  """Clear out a queue."""
+  if queue:
+    while not queue.empty():
+      queue.get()
+  
 ################################################################################
 class LoggerRunner:
   ############################
@@ -243,7 +250,10 @@ class LoggerRunner:
       # reset config, even if it is to same config.
       self.logger_configs[logger] = new_config
       self.num_tries[logger] = 0
-      self.errors[logger] = []
+
+      # We set up each error stash as a multiprocessing queue so that
+      # the subprocess itself can write error messages to it.
+      self.errors[logger] = multiprocessing.Queue()
 
       # Logger isn't running and shouldn't be running. Nothing to do here
       if not runnable(current_config) and not runnable(new_config):
@@ -256,11 +266,11 @@ class LoggerRunner:
         if not process:
           warning = 'No process found for "%s"' % config_name
           logging.warning(warning)
-          self.errors[logger].append(warning)
+          self.errors[logger].put(warning)
         elif not self.process_is_alive(process):
           warning = 'Process for "%s" unexpectedly dead!' % config_name
           logging.warning(warning)
-          self.errors[logger].append(warning)
+          self.errors[logger].put(warning)
         else:
           # Config hasn't changed, we have process and it's alive. All
           # is well - go home.
@@ -276,11 +286,6 @@ class LoggerRunner:
         logging.debug('Starting up new process for %s', config_name)
         self._start_logger(logger, new_config)
         self.num_tries[logger] = 1
-
-  ############################
-  def _start_listener_in_new_process(self, config):
-    listener = ListenerFromLoggerConfig(config)
-    listener.run()
 
   ############################
   def _process_logger_output(self, logger, stream):
@@ -308,10 +313,10 @@ class LoggerRunner:
         logging.warning(line)
       elif line.find(' :ERROR: ') > -1:
         logging.error(line)
-        self.errors[logger].append(line)
+        self.errors[logger].put(line)
       elif line.find(' :FATAL: ') > -1:
         logging.fatal(line)
-        self.errors[logger].append(line)
+        self.errors[logger].put(line)
       else:
         sys.stderr.write(line + '\n')
 
@@ -321,33 +326,43 @@ class LoggerRunner:
     config, and return the Process object.
     """
     #### Convenience routine so that Listener can be created in  own process
-    def _create_listener(config, logger_log_level):
-      listener = ListenerFromLoggerConfig(config=config,
-                                          log_level=logger_log_level)
-      listener.run()
+    def _create_listener(config, error_queue, logger_log_level):
+      """Load and run the config. If we die for any reason other than a
+      KeyboardInterrupt, pass the error back via a multiprocessing
+      queue.
+      """
+      try:
+        listener = ListenerFromLoggerConfig(config=config,
+                                            log_level=logger_log_level)
+        listener.run()
+      except Exception as e:
+        logging.warning('Listener exited with exception: %s', str(e))
+        if e is not KeyboardInterrupt:
+          error_queue.put(str(e))
 
     logging.info('Starting logger %s, config: %s',
                  logger, config.get('name', 'no-name'))
     logging.debug('Starting config:\n%s', pprint.pformat(config))
 
-    # The multiprocessing way of starting a process
     try:
+      # Start the logger in its own process; hand it its error queue
+      # so it can pass errors back if/when it dies.
       proc = multiprocessing.Process(
         name=logger,
         target=_create_listener,
-        args=(config, self.logger_log_level),
+        args=(config, self.errors[logger], self.logger_log_level),
         daemon=True)
       proc.start()
 
     # If something went wrong. If it was a KeyboardInterrupt, signal
-    # everybody to quit. Otherwise stash error and return None
+    # everybody to quit. Otherwise stash error and return.
     except Exception as e:
       if e is KeyboardInterrupt:
         self.quit()
         return
+      self.errors[logger].put(str(e))
       logging.error('Config %s got exception: %s', config['name'], str(e))
       proc = None
-      self.errors[logger].append(str(e))
 
     # Store the new setup (or the wreckage, depending)
     with self.config_lock:
@@ -376,8 +391,8 @@ class LoggerRunner:
     # Clean out debris from old logger process
     #self.logger_configs[logger] = None
     self.processes[logger] = None
-    self.errors[logger] = []
     self.failed_loggers.discard(logger)
+    clear_queue(self.errors[logger])
 
   ############################
   def _kill_and_delete_logger(self, logger):
@@ -391,7 +406,7 @@ class LoggerRunner:
     self.failed_loggers.discard(logger)
 
   ############################
-  def check_logger(self, logger, manage=False, clear_errors=False):
+  def check_logger(self, logger, manage=False):
     """Check whether passed logger is in state it should be. Restart/stop it
     as appropriate. Return True if logger is in desired state.
 
@@ -399,7 +414,6 @@ class LoggerRunner:
 
     manage - if True, and if logger isn't in state it's supposed to be,
              try restarting it.
-    clear_errors - if True, clear out accumulated error messages.
     """
     with self.config_lock:
       config = self.logger_configs.get(logger, None)
@@ -412,7 +426,8 @@ class LoggerRunner:
       if not runnable(config) and not process:
         running = None
         self.failed_loggers.discard(logger)
-        self.errors[logger] = []
+        if logger in self.errors:
+          clear_queue(self.errors[logger])
         self.num_tries[logger] = 0
 
       # If we are running and are supposed to be, also good.
@@ -442,34 +457,36 @@ class LoggerRunner:
                           'not retrying', logger, config_name, self.max_tries)
           elif self.max_tries and self.num_tries[logger] == self.max_tries:
             self.failed_loggers.add(logger)
-            logging.warning(
-              'Logger %s (config %s) has failed %d times; '
-              'not retrying', logger, config_name, self.max_tries)
-            logging.warning('FAILED %s: errors: %s', logger, self.errors[logger])
+            error_message = 'Logger %s (config %s) has failed %d times; ' \
+              'not retrying' %(logger, config_name, self.max_tries)
+            logging.warning(error_message)
+            self.errors[logger].put(error_message)
           else:
             # If we've not used up all our tries, try starting it again
             warning = 'Process for %s (config %s) unexpectedly dead; ' \
                       'restarting' % (logger, config_name)
             logging.warning(warning)
-            self.errors[logger].append(warning)
+            self.errors[logger].put(warning)
             self._start_logger(logger, self.logger_configs[logger])
             self.num_tries[logger] += 1
 
+      # Fetch all the errors from the logger's error queue
+      errors = []
+      error_queue = self.errors.get(logger)
+      while error_queue and not error_queue.empty():
+        errors.append(error_queue.get())
+
       status = {
         'config': config_name,
-        'errors': self.errors.get(logger, []),
+        'errors': errors,
         'running': running,
         'failed': logger in self.failed_loggers,
         'pid': process.pid if process else None
       }
-
-      # Clear accumulated errors for this logger if they've asked us to
-      if clear_errors:
-        self.errors[logger] = []
     return status
 
   ############################
-  def check_loggers(self, manage=False, clear_errors=False):
+  def check_loggers(self, manage=False):
     """Check logger status, returning a dict of
 
       logger_id:
@@ -482,8 +499,6 @@ class LoggerRunner:
     Parameters:
       manage - if True, try to restart/stop loggers to put them in the state
                their configs say they should be in.
-
-      clear_errors - if True, clear out any errors reported by checking.
     """
     with self.check_loggers_lock:
       # If there are any disappeared loggers, we want to give them one
@@ -493,11 +508,9 @@ class LoggerRunner:
       # This is an approximation to intent: if we're clearing errors,
       # guess that we're also going to be storing statuses, so will
       # have on record that the disappeared loggers have shut down.
-      if clear_errors:
-        self.disappeared_loggers = set()
+      self.disappeared_loggers = set()
 
-      status = {logger:self.check_logger(logger, manage, clear_errors)
-                for logger in loggers}
+      status = {logger:self.check_logger(logger, manage) for logger in loggers}
       logging.debug('check_loggers got status: %s', pprint.pformat(status))
       return status
 
@@ -506,7 +519,7 @@ class LoggerRunner:
     """ Check up on loggers and discard status report."""
     try:
       while not self.quit_flag:
-        status = self.check_loggers(manage=True, clear_errors=False)
+        status = self.check_loggers(manage=True)
         time.sleep(self.interval)
 
     except KeyboardInterrupt:

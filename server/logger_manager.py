@@ -218,20 +218,30 @@ class LoggerManager:
     self.max_tries = max_tries
     self.logger_log_level = logger_log_level
 
-    # Data server to which we're going to send status updates
-    self.data_server_websocket = data_server_websocket
-
     self.quit_flag = False
 
-    # Keep track of old configs so we only send updates to the
-    # LoggerRunners when things change.
+    # We'll loop to check the API for updates to our desired
+    # configs. Do this in a separate thread. Also keep track of
+    # old/current configs so that we know when an update is actually
+    # needed.
+    self.update_configs_thread = None
     self.old_configs = {}
     self.config_lock = threading.Lock()
 
-    self.update_configs_thread = None
+    # If we have a cached data server (either one we've started, or
+    # one we're just connecting to, we'll use a separate thread to
+    # send it status updates. We'll pop updates into the
+    # data_server_queue to get them sent by the thread.
+    self.send_to_data_server_thread = None
+    self.data_server_queue = queue.Queue()
+    self.data_server_lock = threading.Lock()
 
-    # If so, we're going to want to make sure it and our LoggerRunner
-    # (run in a separate thread) can use the same event loop
+    # Data server to which we're going to send status updates
+    self.data_server_websocket = data_server_websocket
+
+
+    # Grab event loop so everyone who wants can make sure they're
+    # using the same one.
     self.event_loop = asyncio.get_event_loop()
 
   ############################
@@ -243,8 +253,7 @@ class LoggerManager:
     """
     # Start the local LoggerRunner in its own thread.
     local_logger_thread = threading.Thread(
-      name='logger_runner',
-      target=self.local_logger_runner, daemon=True)
+      name='logger_runner', target=self.local_logger_runner, daemon=True)
     local_logger_thread.start()
 
     # Update configs in a separate thread.
@@ -256,10 +265,10 @@ class LoggerManager:
     # If we've got the address of a data server websocket, start a
     # thread to send our status updates to it.
     if self.data_server_websocket:
-      self.send_status_thread = threading.Thread(
-        name='send_status_loop',
-        target=self._send_status_loop, daemon=True)
-      self.send_status_thread.start()
+      self.send_to_data_server_thread = threading.Thread(
+        name='send_to_data_server_loop',
+        target=self._send_to_data_server_loop, daemon=True)
+      self.send_to_data_server_thread.start()
 
   ############################
   def quit(self):
@@ -279,7 +288,7 @@ class LoggerManager:
     # Instead of calling the LoggerRunner.run(), we iterate ourselves,
     # doing updates to retrieve status reports.
     while not self.quit_flag:
-      status = self.logger_runner.check_loggers(manage=True, clear_errors=False)
+      status = self.logger_runner.check_loggers(manage=True)
       message = {'status': status}
       self._process_logger_runner_message(message)
       time.sleep(self.interval)
@@ -313,19 +322,16 @@ class LoggerManager:
 
 
   ############################
-  def _send_status_loop(self):
-    """Iteratively grab status messages from the api and send them out as
-    JSON to whatever writer we're using to broadcast our logger
-    statuses. In theory we could be much more efficient and directly
-    grab status updates in _process_logger_runner_messages() when we
-    get them from the LoggerRunners.
+  def _send_to_data_server_loop(self):
+    """Iteratively grab messages to send to cached data server and send
+    them off via websocket.
 
     Websockets are async, so we need to use an inner function and a
     new event loop to handle the whole async/await thing.
     """
 
     ############################
-    async def _async_send_status_loop(self):
+    async def _async_send_to_data_server_loop(self):
       """Inner async function that actually implements the fetching and
       sending of status messages."""
 
@@ -347,6 +353,7 @@ class LoggerManager:
       # Even if things haven't changed, we want to send a full status
       # update every N seconds.
       SEND_EVERY_N_SECONDS = 5
+      last_cruise_def_sent = 0
       last_status_sent = 0
 
       while not self.quit_flag:
@@ -354,9 +361,26 @@ class LoggerManager:
           logging.info('Connecting to websocket: "%s"', ws_name)
           async with websockets.connect('ws://' + ws_name) as ws:
             while not self.quit_flag:
-              # Sleep for a bit before going around (also, before we try the
-              # first time, to let the LoggerManager start up).
-              await asyncio.sleep(self.interval)
+
+              # Work through the messages in the queue, sending the
+              # ones we already have before doing anything else.
+              next_message = None
+              with self.data_server_lock:
+                if not self.data_server_queue.empty():
+                  next_message = self.data_server_queue.get()
+
+              # If there's something to send, send it and immediately
+              # loop back to see if there's more to send
+              if next_message:
+                await ws.send(json.dumps(next_message))
+                continue;
+
+              # If we're here, we've caught up on sending stuff that's
+              # in the send queue. Check if anything has changed
+              # behind our back in the database.
+
+              now = time.time()
+
               # Assemble information to draw page
               try:
                 cruise_def = {
@@ -369,49 +393,54 @@ class LoggerManager:
                 logging.info('No cruise definition found')
                 cruise_def = {}
 
-              # Has our cruise definition changed? If so, send update
-              if not cruise_def == previous_cruise_def:
-                # Send cruise metadata
+              # Has our cruise definition changed, or has it been a
+              # while since we've sent it? If so, send update.
+              if not cruise_def == previous_cruise_def or \
+                 now - last_cruise_def_sent > SEND_EVERY_N_SECONDS:
                 cruise_message = {
                   'type':'publish',
                   'data':{'timestamp': time.time(),
                           'fields': {'status:cruise_definition': cruise_def}
                   }
-                }
+                 }
                 logging.info('sending cruise update: %s', cruise_message)
                 await ws.send(json.dumps(cruise_message))
                 previous_cruise_def = cruise_def
+                last_cruise_def_sent = now
 
-              # We expect status to be a dict of timestamp:{logger status
-              # dict} entries. If we don't have any yet, work with a dummy
-              # entry.
+              # Get a status update from API. We expect it to be a
+              # dict of timestamp:{logger status dict} entries. If we
+              # don't have any yet, work with a dummy entry.
               logger_status = self.api.get_status() or {0: {}}
 
-              # Has anything changed with logger statuses? If not, just send
-              # a heartbeat.
+              # Has anything changed with logger statuses?
               logger_status_changed = False
-              for timestamp in sorted(logger_status.keys()):
-                timestamped_status = logger_status[timestamp]
-                if not timestamped_status == previous_logger_status:
-                  previous_logger_status = timestamped_status
-                  logger_status_changed = True
-
-              # If it's been at least N seconds, force a send of status
-              if time.time() > last_status_sent + SEND_EVERY_N_SECONDS:
+              last_status_timestamp = sorted(logger_status.keys())[-1]
+              last_status = logger_status[last_status_timestamp]
+              if not last_status == previous_logger_status:
+                previous_logger_status = last_status
                 logger_status_changed = True
-                last_status_sent = time.time()
 
-              if not logger_status_changed:
-                logger_status = {}
+              # If status hans't changed, and it hasn't been at least
+              # N seconds since our last full status report, just send
+              # a heartbeat.
+              if not logger_status_changed and \
+                 now - last_status_sent < SEND_EVERY_N_SECONDS:
+                logger_status = {now: {}}
 
               status_message = {
                 'type':'publish',
-                'data':{'timestamp': time.time(),
+                'data':{'timestamp': now,
                         'fields': {'status:logger_status': logger_status}
                 }
               }
               logging.debug('sending status update: %s', status_message)
               await ws.send(json.dumps(status_message))
+
+              # Send queue is (or was recently) empty, and we've sent
+              # a status update. Snooze a bit before looping to check
+              # again.
+              await asyncio.sleep(self.interval)
 
         except BrokenPipeError:
           pass
@@ -427,7 +456,7 @@ class LoggerManager:
 
     # Now call the async process in its own event loop
     status_event_loop = asyncio.new_event_loop()
-    status_event_loop.run_until_complete(_async_send_status_loop(self))
+    status_event_loop.run_until_complete(_async_send_to_data_server_loop(self))
     status_event_loop.close()
 
   ##########################
@@ -446,10 +475,39 @@ class LoggerManager:
     logging.debug('LoggerRunner sent fields: %s', ', '.join(message.keys()))
     status = message.get('status', None)
     errors = message.get('errors', None)
+    now = time.time()
     if status:
       self.api.update_status(status)
+
+      # For each logger, publish any errors to the stderr for that
+      # logger. Aggregate them into a single message of [(timestamp,
+      # error), ...] for efficiency, but we fudge the timestamp as
+      # "now" rather than parsing it off of the error message
+      # itself. We may need to fix that.
+      for logger in status:
+        logger_status = status.get(logger)
+        logger_errors = logger_status.get('errors', [])
+        if logger_errors:
+          error_tuples = [(now, error) for error in logger_errors]
+          error_message = {
+            'type':'publish',
+            'data':{'fields':{'stderr:logger:'+logger: error_tuples}}
+           }
+          with self.data_server_lock:
+            self.data_server_queue.put(error_message)
+
+    # If there were any errors not associated with a specific logger,
+    # send those as general logger_manager errors.
     if errors:
       logging.error('Errors from LoggerRunner: %s', errors)
+      error_tuples = [(now, error) for error in errors]
+      error_message = {
+        'type':'publish',
+        'data':{'fields':{'stderr:logger_manager': error_tuples}}
+      }
+      with self.data_server_lock:
+        logging.warning('Enqueuing message: %s', error_message)
+        self.data_server_queue.put(error_message)
 
 ################################################################################
 def run_data_server(data_server_websocket, data_server_udp,

@@ -440,7 +440,10 @@ class DjangoServerAPI(ServerAPI):
                 'pid':lcs.pid,
                 'errors':lcs.errors.split('\n')
               }
-            except LoggerConfigState.DoesNotExist:
+            except (KeyError,
+                    Logger.DoesNotExist,
+                    LoggerConfig.DoesNotExist,
+                    LoggerConfigState.DoesNotExist):
               logging.warning('no LoggerConfigState for %s', logger)
               continue
         else:

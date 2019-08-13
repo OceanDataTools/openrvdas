@@ -114,6 +114,20 @@ function process_data_message(data_dict) {
       global_last_cruise_timestamp = cruise_timestamp;
       var cruise_definition = value[value.length-1][1];
 
+      // Make sure this definition has all the parts we need
+      if (!cruise_definition.modes) {
+        console.log('Cruise definition has no modes - ignoring.');
+        break;
+      }
+      if (!cruise_definition.active_mode) {
+        console.log('Cruise definition has no active mode - ignoring.');
+        break;
+      }
+      if (!cruise_definition.loggers) {
+        console.log('Cruise definition has no loggers - ignoring.');
+        break;
+      }
+
       ////////////////////////////////
       // Update the cruise id
       document.getElementById('cruise_id').innerHTML = cruise_definition['cruise_id'];

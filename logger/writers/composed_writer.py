@@ -59,7 +59,8 @@ class ComposedWriter(Writer):
 
     # One lock per writer, to prevent us from accidental re-entry if a
     # new write is requested before the previous one has completed.
-    self.writer_lock = [threading.Lock() for i in range(len(self.writers))]
+    self.writer_lock = [threading.Lock() for w in self.writers]
+    self.exceptions = [None for w in self.writers]
 
     # If they want, check that our writers and transforms have
     # compatible input/output formats.
@@ -76,9 +77,12 @@ class ComposedWriter(Writer):
   ############################
   def _run_writer(self, index, record):
     """Internal: grab the appropriate lock and call the appropriate
-    write() method."""
+    write() method. If there's an exception, save it."""
     with self.writer_lock[index]:
-      self.writers[index].write(record)
+      try:
+        self.writers[index].write(record)
+      except Exception as e:
+        self.exceptions[index] = e
 
   ############################
   def apply_transforms(self, record):
@@ -110,8 +114,21 @@ class ComposedWriter(Writer):
       return
 
     # Fire record off to write() requests for each writer.
+    writer_threads = []
     for i in range(len(self.writers)):
-      threading.Thread(target=self._run_writer, args=(i, record)).start()
+      t = threading.Thread(target=self._run_writer, args=(i, record),
+                           name=str(type(self.writers[i])))
+      t.start()
+      writer_threads.append(t)
+
+    # Wait for all writes to complete
+    for t in writer_threads:
+      t.join()
+
+    # Were there any exceptions? Arbitrarily raise the first one in list
+    for e in self.exceptions:
+      if e:
+        raise e
 
   ############################
   def _check_writer_formats(self):
