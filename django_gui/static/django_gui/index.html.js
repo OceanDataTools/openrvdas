@@ -345,7 +345,7 @@ function add_to_stderr(logger_name, new_messages) {
 ////////////////////////////////////////////////////////////////////////////////
 var NOW_TIMEOUT_INTERVAL = 1000;     // Update console clock every second
 var SERVER_TIMEOUT_INTERVAL = 5000;  // 5 seconds before warn about server
-var STATUS_TIMEOUT_INTERVAL = 6000;  // 6 seconds before warn about status
+var STATUS_TIMEOUT_INTERVAL = 10000; // 10 seconds before warn about status
 
 // Question on timer warnings: should we reserve space for the
 // warnings (e.g. use the commented-out "visibility=hidden" style), or
@@ -365,13 +365,11 @@ function flag_now_timeout() {
 
 ///////////////////////////////
 // Timer to check how long it's been since our last status update. If
-// no update in 10 seconds, change status background color to red, and
+// no update in N seconds, change status background color to yellow, and
 // flag all loggers in yellow to show that we're not confident of
 // their state.
 function flag_status_timeout() {
-  document.getElementById('status_time_row').style.display = 'block';
-  //document.getElementById('status_time_row').style.visibility = 'visible';
-  document.getElementById('status_time_row').style.backgroundColor ='yellow';
+  document.getElementById('status_time_td').style.backgroundColor ='yellow';
   for (var logger in global_loggers) {
     var config_button = document.getElementById(logger + '_config_button');
     if (config_button) {
@@ -382,10 +380,11 @@ function flag_status_timeout() {
   }
 }
 function reset_status_timeout() {
-  document.getElementById('status_time_row').style.display = 'none';
-  //document.getElementById('status_time_row').style.visibility = 'hidden';
-  document.getElementById('status_time_row').style.backgroundColor = 'white';
-  document.getElementById('status_time_td').innerHTML = 'Check logger manager - last status update ' + date_str();
+  var now = date_str();
+  document.getElementById('time_td').innerHTML = now;
+  var status_time_td = document.getElementById('status_time_td');
+  status_time_td.innerHTML = now;
+  status_time_td.style.backgroundColor = 'white';
   clearInterval(status_timeout_timer);
   status_timeout_timer = setInterval(flag_status_timeout,
                                      STATUS_TIMEOUT_INTERVAL);
@@ -394,17 +393,16 @@ function reset_status_timeout() {
 ///////////////////////////////
 // Timer to check how long it's been since our last update of any kind
 // from the data server. If no update in 5 seconds, change background
-// color to red
+// color to yellow
 function flag_server_timeout() {
-  document.getElementById('server_time_row').style.display = 'block';
-  //document.getElementById('server_time_row').style.visibility = 'visible';
-  document.getElementById('server_time_row').style.backgroundColor ='yellow';
+  document.getElementById('status_time_td').style.backgroundColor ='yellow';
 }
 function reset_server_timeout() {
-  document.getElementById('server_time_row').style.display = 'none';
-  //document.getElementById('server_time_row').style.visibility = 'hidden';
-  document.getElementById('server_time_row').style.backgroundColor = 'white';
-  document.getElementById('server_time_td').innerHTML = 'Check data server manager - last update ' + date_str();
+  var now = date_str();
+  document.getElementById('time_td').innerHTML = now;
+  var status_time_td = document.getElementById('status_time_td');
+  status_time_td.innerHTML = now;
+  status_time_td.style.backgroundColor = 'white';
   clearInterval(server_timeout_timer);
   server_timeout_timer = setInterval(flag_server_timeout,
                                      SERVER_TIMEOUT_INTERVAL);
