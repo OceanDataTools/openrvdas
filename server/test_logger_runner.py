@@ -17,7 +17,9 @@ from server.logger_runner import LoggerRunner
 
 CONFIG = {
   "modes": {
-    "off": {},
+    "off": {
+      "logger":{}
+    },
     "on": {
       "logger": {
         "readers": {
