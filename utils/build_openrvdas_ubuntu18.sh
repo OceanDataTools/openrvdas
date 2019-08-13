@@ -355,6 +355,11 @@ server {
         alias ${INSTALL_ROOT}/openrvdas/static; # project static files
     }
 
+    location /docs {
+        alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
+        autoindex on;
+    }
+
     # Finally, send all non-media requests to the Django server.
     location / {
         uwsgi_pass  django;
