@@ -135,12 +135,21 @@ function process_data_message(data_dict) {
       ////////////////////////////////
       // Now update the cruise modes
       var modes = cruise_definition.modes;
-      var active_mode = cruise_definition.active_mode;
-      global_active_mode = active_mode;
+      global_active_mode = cruise_definition.active_mode;
 
       var mode_selector = document.getElementById('select_mode');
       mode_selector.setAttribute('onchange', 'highlight_select_mode()');
 
+      // Check whether we have a manually-selected mode, and if so,
+      // whether it's in our list of new modes. If so, we'll keep it
+      // selected when we rebuild.
+      var manual_mode_is_in_new_modes = false;
+      for (m_i = 0; m_i < modes.length; m_i++) {
+        if (manually_selected_mode == mode_selector.options[m_i].value) {
+          manual_mode_is_in_new_modes = true;
+          break;
+        }
+      }
       // Remove all old mode options
       while (mode_selector.length) {
         mode_selector.remove(0);
@@ -151,10 +160,32 @@ function process_data_message(data_dict) {
         var opt = document.createElement('option');
         opt.setAttribute('id', 'mode_' + mode_name);
         opt.innerHTML = mode_name;
-        if (mode_name == active_mode) {
-          opt.setAttribute('selected', true);
+
+        if (manual_mode_is_in_new_modes) {
+          // If our manually-selected mode is still available, use
+          // that as our selected mode. If it doesn't match the
+          // officially active mode, set it yellow to indicate.
+          if (mode_name == manually_selected_mode) {
+            opt.setAttribute('selected', true);
+            if (mode_name != global_active_mode) {
+              mode_selector.style.backgroundColor = 'yellow'
+            } else {
+              mode_selector.style.backgroundColor = 'white'
+            }
+          }
+        } else {
+          // If our manually-selected mode is no longer available,
+          // set active mode to whatever 'official' active mode is.
+          if (mode_name == global_active_mode) {
+            opt.setAttribute('selected', true);
+          }
         }
         mode_selector.appendChild(opt);
+      }
+      // If our manually-selected mode isn't available anymore, bid
+      // it goodbye.
+      if (!manual_mode_is_in_new_modes) {
+        manually_selected_mode = null;
       }
 
       ////////////////////////////////
@@ -232,47 +263,40 @@ function process_data_message(data_dict) {
       break;
 
     ////////////////////////////////////////////////////
-    // If we've got a logger status update; the values will be a list
-    // of dicts where for each dict, the timestamp of the status is
-    // the key, and the value is a dict of {logger_name:
-    // logger_status}.
-
+    // If we've got a logger status update.
+    // value will be [[ timestamp, {status_dict} ]], where status_dict will
+    // be a dict of logger_name:status pairs. 'status' will be an array of:
+    //   logger_name: {
+    //     config:  config_name_string,
+    //     errors:  [list of error strings],
+    //     failed:  bool
+    //     pid:     number or null if not running
+    //     running: ternary value:
+    //       true:  we're running and is supposed to be
+    //       false: not running and is supposed to be
+    //       null:  not running and not supposed to be
+    //   }
     case 'status:logger_status':
-      //console.log('Got status update');
+      //console.log('Status value: ' + JSON.stringify(value));
       reset_status_timeout(); // We've gotten a status update
-
-
-      // The value array will be a list of [timestamp, status_update]
-      // pairs. We want to grab the most recently-timestamped status update.
-      var timestamp_status_array = value[value.length-1][1];
-
-      // The status update will be an associative array of {timestamp:
-      // {logger:status, logger:status,...}}.  Go through each
-      // timestamp and update the loggers it references.
-      for (var status_timestamp in timestamp_status_array) {
-        var status_array = timestamp_status_array[status_timestamp];
-        for (var logger_name in status_array) {
-          var logger_status = status_array[logger_name];
-          var button = document.getElementById(logger_name + '_config_button');
-          if (button == undefined) {
-            console.log('Button not found for logger ' + logger_name);
-            continue;
-          }
-          button.innerHTML = logger_status.config;
-          // Update status - status is ternary:
-          //   true:  we're running and is supposed to be
-          //   false: not running and is supposed to be
-          //   null:  not running and not supposed to be
-          if (logger_status.running == true) {
-            button.style.backgroundColor = "lightgreen";
-          } else if (logger_status.running == false) {
-            button.style.backgroundColor = "orange";
-          } else {
-            button.style.backgroundColor = "lightgray";
-          }
-          if (logger_status.failed) {
-            button.style.backgroundColor = "red";
-          }
+      var [timestamp, status_array] = value[0];
+      for (var logger_name in status_array) {
+        var logger_status = status_array[logger_name];
+        var button = document.getElementById(logger_name + '_config_button');
+        if (button == undefined) {
+          console.log('Button not found for logger ' + logger_name);
+          continue;
+        }
+        button.innerHTML = logger_status.config;
+        if (logger_status.running == true) {
+          button.style.backgroundColor = "lightgreen";
+        } else if (logger_status.running == false) {
+          button.style.backgroundColor = "orange";
+        } else {
+          button.style.backgroundColor = "lightgray";
+        }
+        if (logger_status.failed) {
+          button.style.backgroundColor = "red";
         }
       }
       break;
@@ -418,10 +442,16 @@ var server_timeout_timer = setInterval(flag_server_timeout,
 
 ///////////////////////////////
 // Turn select pull-down's text background yellow when it's been changed
+
+var manually_selected_mode = null;
+
 function highlight_select_mode() {
   var mode_selector = document.getElementById('select_mode');
-  var selected_mode = mode_selector.options[mode_selector.selectedIndex].text;
-  var new_color = (selected_mode == global_active_mode ? 'white' : 'yellow');
+  manually_selected_mode = mode_selector.options[mode_selector.selectedIndex].text;
+  var new_color = 'white';
+  if (manually_selected_mode != global_active_mode) {
+    var new_color = 'yellow';
+  }
   document.getElementById('select_mode').style.backgroundColor = new_color;
 }
 
