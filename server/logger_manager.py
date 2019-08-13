@@ -390,7 +390,7 @@ class LoggerManager:
                   'active_mode': api.get_active_mode()
                 }
               except (AttributeError, ValueError):
-                logging.info('No cruise definition found')
+                logging.debug('No cruise definition found')
                 cruise_def = {}
 
               # Has our cruise definition changed, or has it been a
@@ -403,7 +403,7 @@ class LoggerManager:
                           'fields': {'status:cruise_definition': cruise_def}
                   }
                  }
-                logging.info('sending cruise update: %s', cruise_message)
+                logging.debug('sending cruise update: %s', cruise_message)
                 await ws.send(json.dumps(cruise_message))
                 previous_cruise_def = cruise_def
                 last_cruise_def_sent = now
