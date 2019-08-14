@@ -135,23 +135,7 @@ In addition to simply transforming and storing data, OpenRVDAS includes a (still
 
 ## Roadmap
 
-### Derived data values
-
-See the [Derived Data Loggers document](derived_data.md) for the state of derived data loggers.
-
-### Generalized dataflow
-
-The pipeline implemented by listen.py is convenient, but necessarily limiting. A more general model supporting an arbitrary dataflow graph would allow more efficient data processing.
-
-An execution model in which each component ran as a node in its own thread (or even process) and pushed its output to the input queue of other specified nodes doesn't seem like it would be all that hard to define or implement.
-
-![General Dataflow Model](images/general_dataflow.png)
-
-### Automatic component discovery and incorporation
-
-It would be nice to have smarter version of the listen.py script that found what readers, transforms and writers were available, what arguments they took, and was able to automatically incorporate those components and arguments into a command line interface.
-
-There are plenty of desirable features that we've not yet figured out how to implement (well).
+Please see the [Milestones](https://github.com/davidpablocohn/openrvdas/milestones) page and [Projects](https://github.com/davidpablocohn/openrvdas/projects) page for information on upcoming feature additions. For finer granularity, you may also look at the page of [issues and feature requests](https://github.com/davidpablocohn/openrvdas/issues).
 
 ## More Documentation
 
