@@ -84,7 +84,7 @@ Once you have logged back on, open two terminal windows.
 
  ![NBP Widget Demo](images/nbp_display.png)
  
- What is going on here is that, in addition to writing raw data to port 6224, the loggers are also configured to send parsed data to 6225, where it is picked up by a CachedDataServer. The web console and display widgets connect to the CachedDataServer via websockets and request data to display.
+ What is going on here is that, in addition to writing raw data to port 6224, the loggers are also configured to send parsed data to a CachedDataServer via websocket (using a CachedDataWriter). The web console and display widgets connect to the CachedDataServer via websockets and request data to display.
 
 The sections below describe the architecture and control scripts in greater detail.
 
