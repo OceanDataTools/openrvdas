@@ -1,23 +1,90 @@
-# OpenRVDAS
-At the time of this writing OpenRVDAS was built and tested against MacOS X, CentOS 7 and the Ubuntu 16.04.3 LTS operating system. It may be possible to build against other linux-based operating systems, and guides will be added here as they are verified and documented.
+# OpenRVDAS Installation Guide
+At the time of this writing OpenRVDAS has been built and tested against MacOS X, CentOS 7 and  Ubuntu 18 operating systems. It may be possible to build against other Linux-based operating systems, and guides will be added here as they are verified and documented.
 
 *Note that OpenRVDAS is still very much under development and subject to unannounced changes.*
 
 ## Scripted Installation
 
-_This is the recommended way to install for CentOS 7, Ubuntu 16 and Ubuntu 18._
+_This is the recommended way to install for CentOS 7 and Ubuntu 18._
 
-Copy the script ``utils/build_openrvdas_centos7.sh`` (or respectively ``utils/build_openrvdas_ubuntu16.sh``
-or ``utils/build_openrvdas_ubuntu18.sh``) into the /tmp
-directory of your new machine. When run as root, it will install and
-set up the core logging, database and GUI services (NGINX web server
-and uWSGI). The script also provides the option of configuring the
-OpenRVDAS servers to start automatically on boot or manually, via
+Grab the script:
 
+```
+# Get build script from Github
+wget \
+  https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/utils/build\_openrvdas_centos7.sh
+```
+
+Now run the script as sudo
+
+```
+chmod 755 ./build_openrvdas_centos7.sh
+sudo ./build_openrvdas_centos7.sh
+```
+
+_The script will ask a lot of questions and provide default answers in parens that will be filled in if you hit "return"; without any other input:_
+
+############################################################################
+
+```
+OpenRVDAS configuration script
+Do you wish to continue? **y**
+Name to assign to host (lmg-dast-s1-t)?
+Hostname will be 'lmg-dast-s1-t'
+Install root? (/opt)
+Install root will be '/opt'
+```
+
+_Script will next ask which code repo and branch to use. Use the default repo, but specify branch "usap"_
+
+```
+Repository to install from? (http://github.com/davidpablocohn/openrvdas)
+Repository branch to install? (master) **usap**
+HTTP/HTTPS proxy to use (http://proxy.lmg.usap.gov:3128)?
+Setting up proxy http://proxy.lmg.usap.gov:3128
+Will install from github.com
+Repository: 'http://github.com/davidpablocohn/openrvdas'
+Branch: 'usap'
+```
+
+_Script will try to create the rvdas user under which the system will run. It won't mind if the user already exists:_
+
+```
+OpenRVDAS user to create? (rvdas)
+Checking if user rvdas exists yet
+User exists, skipping
+```
+
+_Script will next ask about database options. If this is the first time you've run the script and MariaDB has not already been installed, the current root database password will be empty:_
+
+```
+Database password to use for rvdas? (rvdas)
+Current database password for root? (if one exists - hit return if not)
+New database password for root? () **rvdas**
+
+############################################################################
+The OpenRVDAS server can be configured to start on boot. Otherwise
+you will need to either run it manually from a terminal (by running
+server/logger_manager.py from the openrvdas base directory) or
+start as a service (service openrvdas start).
+
+Do you wish to start the OpenRVDAS server on boot? **y**
+```
+
+The script will run a while and ask at the end if you want to reboot. If you need to do the post-installation step(s) below, say "no", perform those steps, then reboot. Otherwise, say yes, then log in afterwards and check ``/var/log/openrvdas/openrvdas.log`` to make sure things have come up properly.
+
+## Post-Installation
+
+The installation should allow you to connect via http to the server at the name you specified at the start of the script (e.g. ``lmg-dast-s1-t``). If you want to connect using any other names, e.g. the fully-qualified domain name ``lmg-dast-s1-t.lmg.usap.gov``, you'll need to add it to the Django server settings file in ``django_gui/settings.py``:
+
+```
+ALLOWED_HOSTS = [HOSTNAME, 'localhost', HOSTNAME + '.lmg.usap.gov']
+```
+If you didn't reboot immediately after installation, reboot now.
+
+If you answered 'no' to whether OpenRVDAS should start automatically on boot up, you can manually start/stop the service via:
 ```service openrvdas start```
-
-and shut down via
-
+and
 ```service openrvdas stop```
 
 ## Manual Installation
@@ -217,4 +284,3 @@ logger/listener/listen.py --network :6224 \
 
 ### GUI Functionality
 To use the Django-based GUI, you will need to follow the instructions in [django_gui/README.md](django_gui/README.md).
-
