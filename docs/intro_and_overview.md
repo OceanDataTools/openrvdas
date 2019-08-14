@@ -34,18 +34,9 @@ Because of this, instead of a system, we have focused on designing and building 
 
 ## Quick Start
 
-The surest (and still simplest) way to get started with OpenRVDAS is to bring up a clean dedicated Ubuntu (16 or 18) or Centos 7 machine in a virtual environment such as [VirtualBox](https://www.virtualbox.org/).
+The surest (and still simplest) way to get started with OpenRVDAS is to bring up a clean dedicated Ubuntu 18 or Centos 7 machine in a virtual environment such as [VirtualBox](https://www.virtualbox.org/).
 
-Install ``git``, then retrieve a copy of the code repository with
-```
-cd /tmp
-git clone https://github.com/davidpablocohn/openrvdas
-```
-Then, __as root__, run the installation script appropriate to your distribution:
-```
-source openrvdas/utils/build_openrvdas_ubuntu18.sh
-```
-For demo purposes, just set the passwords (for user, for database) to ``rvdas`` - yeah, I know, I know. But this is for a demo installation. Say "yes" to starting openrvdas service on boot and "no" to Redis. Script will ask if you want to reboot at end of installation; say "yes."
+Install the code following the instructions in the [OpenRVDAS Installation Guide](../INSTALL.md). Reboot when asked to.
 
 Once you have logged back on, open two terminal windows.
 
@@ -59,12 +50,17 @@ Once you have logged back on, open two terminal windows.
 2. In the other window, run a logger to verify that the serial ports are functioning as expected:
  ```
   cd /opt/openrvdas
-  logger/listener/listen.py --serial port=/tmp/tty_s330 --write_file -
+  logger/listener/listen.py --serial port=/tmp/tty_s330
  ```
  
- (The "-" says that the listener's TextFileWriter should write what it receives to stdout.)
+ This says to create a reader (SerialReader) that will listen to port ''/tmp/tty_s330''; there are no writers specified, so the ``listen.py`` script will pipe output to stdout.
 
-3. Open a web browser and direct it to http://openrvdas:8000 (assuming you named your openrvdas machine 'openrvdas'). You may need to edit your local host machine's ``/etc/host`` to include the name and IP address of your openrvdas machine for this to work.
+3. Try reading from the serial port, timestamping the data and saving it to a file:
+```
+  logger/listener/listen.py --serial port=/tmp/tty_s330 --transform_timestamp --write_file /tmp/s330.log
+```
+
+4. Open a web browser and direct it to http://openrvdas:8000 (assuming you named your openrvdas machine 'openrvdas'). You may need to edit your local host machine's ``/etc/host`` to include the name and IP address of your openrvdas machine for this to work.
 
  If all has gone well, you will see a cruise management startup page like the one below:
 
@@ -79,7 +75,7 @@ Once you have logged back on, open two terminal windows.
  After a few seconds of startup, the loggers should turn green and switch to "net" configuration, indicating that they are writing UDP to the network (in this case, to port 6224). You can verify this with another listener:
 
  ```
-  logger/listener/listen.py --udp 6224 --write_file -
+  logger/listener/listen.py --udp 6224
  ```
 
  You can change the active configuration of individual loggers by clicking on the button bearing the name of the current configuration.
