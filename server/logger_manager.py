@@ -220,6 +220,11 @@ class LoggerManager:
 
     self.quit_flag = False
 
+    # Where we store the latest status/error reports we've gotten from
+    # the LoggerRunner
+    self.status = {}
+    self.errors = {}
+    
     # We'll loop to check the API for updates to our desired
     # configs. Do this in a separate thread. Also keep track of
     # old/current configs so that we know when an update is actually
@@ -352,7 +357,8 @@ class LoggerManager:
 
       # Even if things haven't changed, we want to send a full status
       # update every N seconds.
-      SEND_EVERY_N_SECONDS = 5
+      SEND_CRUISE_EVERY_N_SECONDS = 10
+      SEND_STATUS_EVERY_N_SECONDS = 5
       last_cruise_def_sent = 0
       last_status_sent = 0
 
@@ -381,13 +387,31 @@ class LoggerManager:
 
               now = time.time()
 
-              # Assemble information to draw page
+              # Assemble information from DB about what loggers should
+              # exist and what states they *should* be in. We'll send
+              # this to the cached data server whenever it changes (or
+              # if it's been a while since we have).
+              #
+              # Looks like:
+              # {'active_mode': 'log',
+              #  'cruise_id': 'NBP1406',
+              #  'loggers': {'PCOD': {'active': 'PCOD->file/net',
+              #                       'configs': ['PCOD->off',
+              #                                   'PCOD->net',
+              #                                   'PCOD->file/net',
+              #                                   'PCOD->file/net/db']},
+              #               next_logger: next_configs,
+              #               ...
+              #             },
+              #  'modes': ['off', 'monitor', 'log', 'log+db']
+              # }
               try:
+                cruise = api.get_configuration() # a Cruise object
                 cruise_def = {
-                  'cruise_id': api.get_configuration().id,
+                  'cruise_id': cruise.id,
                   'loggers': api.get_loggers(),
-                  'modes': api.get_modes(),
-                  'active_mode': api.get_active_mode()
+                  'modes': cruise.modes(),
+                  'active_mode': cruise.current_mode.name
                 }
               except (AttributeError, ValueError):
                 logging.debug('No cruise definition found')
@@ -396,7 +420,7 @@ class LoggerManager:
               # Has our cruise definition changed, or has it been a
               # while since we've sent it? If so, send update.
               if not cruise_def == previous_cruise_def or \
-                 now - last_cruise_def_sent > SEND_EVERY_N_SECONDS:
+                 now - last_cruise_def_sent > SEND_CRUISE_EVERY_N_SECONDS:
                 cruise_message = {
                   'type':'publish',
                   'data':{'timestamp': time.time(),
@@ -408,26 +432,32 @@ class LoggerManager:
                 previous_cruise_def = cruise_def
                 last_cruise_def_sent = now
 
-              # Get a status update from API. We expect it to be a
-              # dict of timestamp:{logger status dict} entries. If we
-              # don't have any yet, work with a dummy entry.
-              logger_status = self.api.get_status() or {0: {}}
+              # Check our previously-sent logger status against the
+              # most-recently received one from the LoggerRunner. Has
+              # it changed? If so, send an update. Also send update if
+              # it's been a while since we've sent one.
+              logger_status = self.status
 
-              # Has anything changed with logger statuses?
-              logger_status_changed = False
-              last_status_timestamp = sorted(logger_status.keys())[-1]
-              last_status = logger_status[last_status_timestamp]
-              if not last_status == previous_logger_status:
-                previous_logger_status = last_status
-                logger_status_changed = True
+              # Has anything changed with logger statuses? If so, we'll
+              # send a full update. Otherwise we'll just send a heartbeat
+              status_changed = not logger_status == previous_logger_status
 
-              # If status hans't changed, and it hasn't been at least
-              # N seconds since our last full status report, just send
-              # a heartbeat.
-              if not logger_status_changed and \
-                 now - last_status_sent < SEND_EVERY_N_SECONDS:
-                logger_status = {now: {}}
-
+              # If it's been too long since we last sent an update,
+              # pretend status has changed so we'll send a new one
+              # just to keep up.
+              if now - last_status_sent > SEND_STATUS_EVERY_N_SECONDS:
+                status_changed = True
+                logging.debug('sending full status; time diff: %s',
+                              now - last_status_sent)
+                
+              if status_changed:
+                previous_logger_status = logger_status
+                last_status_sent = now
+                logging.debug('sending full status')
+              else:
+                logger_status = {}
+                logging.debug('sending heartbeat')
+                
               status_message = {
                 'type':'publish',
                 'data':{'timestamp': now,
@@ -473,19 +503,18 @@ class LoggerManager:
     }
     """
     logging.debug('LoggerRunner sent fields: %s', ', '.join(message.keys()))
-    status = message.get('status', None)
-    errors = message.get('errors', None)
+    self.status = message.get('status', None)
+    self.errors = message.get('errors', None)
     now = time.time()
-    if status:
-      self.api.update_status(status)
-
+    if self.status:
+      self.api.update_status(self.status)
       # For each logger, publish any errors to the stderr for that
       # logger. Aggregate them into a single message of [(timestamp,
       # error), ...] for efficiency, but we fudge the timestamp as
       # "now" rather than parsing it off of the error message
       # itself. We may need to fix that.
-      for logger in status:
-        logger_status = status.get(logger)
+      for logger in self.status:
+        logger_status = self.status.get(logger)
         logger_errors = logger_status.get('errors', [])
         if logger_errors:
           error_tuples = [(now, error) for error in logger_errors]
@@ -498,15 +527,14 @@ class LoggerManager:
 
     # If there were any errors not associated with a specific logger,
     # send those as general logger_manager errors.
-    if errors:
-      logging.error('Errors from LoggerRunner: %s', errors)
-      error_tuples = [(now, error) for error in errors]
+    if self.errors:
+      logging.error('Errors from LoggerRunner: %s', self.errors)
+      error_tuples = [(now, error) for error in self.errors]
       error_message = {
         'type':'publish',
         'data':{'fields':{'stderr:logger_manager': error_tuples}}
       }
       with self.data_server_lock:
-        logging.warning('Enqueuing message: %s', error_message)
         self.data_server_queue.put(error_message)
 
 ################################################################################

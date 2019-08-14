@@ -65,7 +65,7 @@ class Cruise(models.Model):
                                    blank=True, null=True,
                                    related_name='cruise_default_mode')
   def modes(self):
-    return Mode.objects.filter(cruise=self)
+    return list(Mode.objects.filter(cruise=self).values_list('name', flat=True))
 
   def __str__(self):
     return self.id

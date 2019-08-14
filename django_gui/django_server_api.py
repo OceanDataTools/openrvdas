@@ -150,7 +150,7 @@ class DjangoServerAPI(ServerAPI):
   def get_modes(self):
     """Return list of modes defined for given cruise."""
     cruise = self._get_cruise_object()
-    return [mode.name for mode in cruise.modes()]
+    return cruise.modes()
 
   ############################
   def get_active_mode(self):

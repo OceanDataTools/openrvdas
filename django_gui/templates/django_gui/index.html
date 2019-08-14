@@ -23,7 +23,10 @@
 <table>
   <tr id='time_row'>
     <td style='background-color:white'>
-      Now: <span id='time_td'></span>
+      Now:
+    </td>
+    <td style='background-color:white'>
+      <span id='time_td'></span>
     </td>
     <td>
       <button id="server_messages" type="submit"
@@ -32,6 +35,15 @@
       </button>
     </td>
   </tr>
+  <tr>
+    <td style='background-color:white'>
+      Updated:
+    </td>
+    <td style='background-color:white'>
+      <span id='status_time_td'>--no updates--</span>
+    </td>
+  </tr>
+  {% comment %}
   <tr id='server_time_row'>
     <td colspan=2>
       <span id='server_time_td'>no connection - is status server running?</span>
@@ -42,7 +54,6 @@
       <span id='status_time_td'>no connection - is logger manager running?</span>
     </td>
   </tr>
-  {% comment %}
   <tr id='server_row'>
     <td>
       <a href='#' onclick='message_window();return false;'>
