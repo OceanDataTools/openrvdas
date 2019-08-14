@@ -306,164 +306,165 @@ class WebSocketConnection:
 
     while not self.quit_flag:
       now = time.time()
-
       try:
         logging.debug('Waiting for client')
         raw_request = await self.websocket.recv()
         request = json.loads(raw_request)
+
+        # Make sure we've received a dict
+        if not type(request) is dict:
+          await self.send_json_response(
+            {'status':400, 'error':'non-dict request received'},
+            is_error=True)
+
+        # Make sure request dict has a 'type' field
+        elif not 'type' in request:
+          await self.send_json_response(
+            {'status':400, 'error':'no "type" field found in request'},
+            is_error=True)
+
+        # Let's see what type of request it is
+
+        # Send client a list of the variable names we're able to serve.
+        elif request['type'] == 'fields':
+          logging.debug('fields request')
+          await self.send_json_response(
+            {'type':'fields', 'status':200, 'data':list(self.cache.keys())})
+
+        # Client wants to publish to cache and provides a dict of data
+        elif request['type'] == 'publish':
+          logging.debug('publish request')
+          data = request.get('data', None)
+          if data is  None:
+            await self.send_json_response(
+              {'type':'publish', 'status':400,
+               'error':'no data field found in request'},
+               is_error=True)
+          elif type(data) is not dict:
+            await self.send_json_response(
+              {'type':'publish', 'status':400,
+               'error':'request has non-dict data field'},
+               is_error=True)
+          else:
+            cache_record(data, self.cache, self.cache_lock)
+            await self.send_json_response({'type':'publish', 'status':200})
+
+        # Client wants to subscribe, and provides a dict of requested fields
+        elif request['type'] == 'subscribe':
+          logging.debug('subscribe request')
+          # Have they given us a new subscription interval?
+          requested_interval = request.get('interval', None)
+          if requested_interval is not None:
+            try:
+              interval = float(requested_interval)
+            except ValueError:
+              await self.send_json_response(
+                {'type':'subscribe', 'status':400,
+                 'error':'non-numeric interval requested'},
+                is_error=True)
+              continue
+
+          requested_fields = request.get('fields', None)
+          if not requested_fields:
+            await self.send_json_response(
+              {'type':'subscribe', 'status':400,
+               'error':'no fields found in subscribe request'},
+              is_error=True)
+            continue
+
+          # Parse out request field names and number of back seconds
+          # requested. Encode that as 'last timestamp sent', unless back
+          # seconds == -1. If -1, save it as -1, so that we know we're
+          # always just sending the the most recent field value.
+          field_timestamps = {}
+          for field_name, field_spec in requested_fields.items():
+            if not type(field_spec) is dict:
+              back_seconds = 0
+            else:
+              back_seconds = field_spec.get('seconds', 0)
+            if back_seconds == -1:
+              field_timestamps[field_name] = -1
+            else:
+              field_timestamps[field_name] = time.time() - back_seconds
+
+          # Let client know request succeeded
+          await self.send_json_response({'type':'subscribe', 'status':200})
+
+        # Client just letting us know it's ready for more. If there are
+        # fields that have been requested, send along any new data for
+        # them.
+        elif request['type'] == 'ready':
+          logging.debug('Websocket got ready...')
+          if not field_timestamps:
+            await self.send_json_response(
+              {'type':'ready', 'status':400,
+               'error':'client ready, but no data requested.'},
+              is_error=True)
+            continue
+
+          results = {}
+          for field_name, latest_timestamp in field_timestamps.items():
+            field_cache = self.cache.get(field_name, None)
+            if field_cache is None:
+              logging.debug('No cached data for %s', field_name)
+              continue
+
+            # If no data for requested field, skip.
+            if not field_cache or not field_cache[-1]:
+              continue
+
+            # If special case -1, they want just single most recent
+            # value, then future results. Grab last value, then set its
+            # timestamp as the last one we've seen.
+            elif latest_timestamp == -1:
+              last_value = field_cache[-1]
+              results[field_name] = [ last_value ]
+              field_timestamps[field_name] = last_value[0] # ts of last value
+
+            # Otherwise - if no data newer than the latest
+            # timestamp we've already sent, skip,
+            elif not field_cache[-1][0] > latest_timestamp:
+              continue
+
+            # Otherwise, copy over records arrived since
+            # latest_timestamp and update the latest_timestamp sent
+            # (first element of last pair in field_cache).
+            else:
+              results[field_name] = [pair for pair in field_cache if
+                                     pair[0] > latest_timestamp]
+              if field_cache:
+                field_timestamps[field_name] = field_cache[-1][0]
+
+          logging.debug('Websocket results: %s...', str(results)[0:100])
+
+          # Package up what results we have (if any) and send them off
+          await self.send_json_response({'type':'data', 'status':200,
+                                         'data':results})
+
+          # New results or not, take a nap before trying to fetch more results
+          elapsed = time.time() - now
+          time_to_sleep = max(0, interval - elapsed)
+          logging.debug('Sleeping %g seconds', time_to_sleep)
+          await asyncio.sleep(time_to_sleep)
+
+        # If unrecognized request type - whine, then iterate
+        else:
+          await self.send_json_response(
+            {'status':400,
+             'error':'unrecognized request type: %s' % request_type},
+              is_error=True)
+
+      # If we got bad input, complain and loop
       except json.JSONDecodeError:
         await self.send_json_response(
           {'status':400, 'error':'received unparseable JSON'},
           is_error=True)
         logging.warning('unparseable JSON: %s', raw_request)
-        continue
+
+      # If our connection closed, complain and exit gracefully
       except websockets.exceptions.ConnectionClosed:
         logging.info('Client closed connection')
         self.quit()
-        continue
-
-      # Make sure we've received a dict
-      if not type(request) is dict:
-        await self.send_json_response(
-          {'status':400, 'error':'non-dict request received'},
-          is_error=True)
-
-      # Make sure request dict has a 'type' field
-      elif not 'type' in request:
-        await self.send_json_response(
-          {'status':400, 'error':'no "type" field found in request'},
-          is_error=True)
-
-      # Let's see what type of request it is
-
-      # Send client a list of the variable names we're able to serve.
-      elif request['type'] == 'fields':
-        logging.debug('fields request')
-        await self.send_json_response(
-          {'type':'fields', 'status':200, 'data':list(self.cache.keys())})
-
-      # Client wants to publish to cache and provides a dict of data
-      elif request['type'] == 'publish':
-        logging.debug('publish request')
-        data = request.get('data', None)
-        if data is  None:
-          await self.send_json_response(
-            {'type':'publish', 'status':400,
-             'error':'no data field found in request'},
-             is_error=True)
-        elif type(data) is not dict:
-          await self.send_json_response(
-            {'type':'publish', 'status':400,
-             'error':'request has non-dict data field'},
-             is_error=True)
-        else:
-          cache_record(data, self.cache, self.cache_lock)
-          await self.send_json_response({'type':'publish', 'status':200})
-
-      # Client wants to subscribe, and provides a dict of requested fields
-      elif request['type'] == 'subscribe':
-        logging.debug('subscribe request')
-        # Have they given us a new subscription interval?
-        requested_interval = request.get('interval', None)
-        if requested_interval is not None:
-          try:
-            interval = float(requested_interval)
-          except ValueError:
-            await self.send_json_response(
-              {'type':'subscribe', 'status':400,
-               'error':'non-numeric interval requested'},
-              is_error=True)
-            continue
-
-        requested_fields = request.get('fields', None)
-        if not requested_fields:
-          await self.send_json_response(
-            {'type':'subscribe', 'status':400,
-             'error':'no fields found in subscribe request'},
-            is_error=True)
-          continue
-
-        # Parse out request field names and number of back seconds
-        # requested. Encode that as 'last timestamp sent', unless back
-        # seconds == -1. If -1, save it as -1, so that we know we're
-        # always just sending the the most recent field value.
-        field_timestamps = {}
-        for field_name, field_spec in requested_fields.items():
-          if not type(field_spec) is dict:
-            back_seconds = 0
-          else:
-            back_seconds = field_spec.get('seconds', 0)
-          if back_seconds == -1:
-            field_timestamps[field_name] = -1
-          else:
-            field_timestamps[field_name] = time.time() - back_seconds
-
-        # Let client know request succeeded
-        await self.send_json_response({'type':'subscribe', 'status':200})
-
-      # Client just letting us know it's ready for more. If there are
-      # fields that have been requested, send along any new data for
-      # them.
-      elif request['type'] == 'ready':
-        logging.debug('Websocket got ready...')
-        if not field_timestamps:
-          await self.send_json_response(
-            {'type':'ready', 'status':400,
-             'error':'client ready, but no data requested.'},
-            is_error=True)
-          continue
-
-        results = {}
-        for field_name, latest_timestamp in field_timestamps.items():
-          field_cache = self.cache.get(field_name, None)
-          if field_cache is None:
-            logging.debug('No cached data for %s', field_name)
-            continue
-
-          # If no data for requested field, skip.
-          if not field_cache or not field_cache[-1]:
-            continue
-
-          # If special case -1, they want just single most recent
-          # value, then future results. Grab last value, then set its
-          # timestamp as the last one we've seen.
-          elif latest_timestamp == -1:
-            last_value = field_cache[-1]
-            results[field_name] = [ last_value ]
-            field_timestamps[field_name] = last_value[0] # ts of last value
-
-          # Otherwise - if no data newer than the latest
-          # timestamp we've already sent, skip,
-          elif not field_cache[-1][0] > latest_timestamp:
-            continue
-
-          # Otherwise, copy over records arrived since
-          # latest_timestamp and update the latest_timestamp sent
-          # (first element of last pair in field_cache).
-          else:
-            results[field_name] = [pair for pair in field_cache if
-                                   pair[0] > latest_timestamp]
-            if field_cache:
-              field_timestamps[field_name] = field_cache[-1][0]
-
-        logging.debug('Websocket results: %s...', str(results)[0:100])
-
-        # Package up what results we have (if any) and send them off
-        await self.send_json_response({'type':'data', 'status':200,
-                                       'data':results})
-
-        # New results or not, take a nap before trying to fetch more results
-        elapsed = time.time() - now
-        time_to_sleep = max(0, interval - elapsed)
-        logging.debug('Sleeping %g seconds', time_to_sleep)
-        await asyncio.sleep(time_to_sleep)
-
-      # If unrecognized request type - whine, then iterate
-      else:
-        await self.send_json_response(
-          {'status':400,
-           'error':'unrecognized request type: %s' % request_type},
-            is_error=True)
 
 ################################################################################
 class CachedDataServer:
