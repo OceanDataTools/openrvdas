@@ -245,7 +245,6 @@ class WebSocketConnection:
     """Close the connection from our end and quit."""
     logging.info('WebSocketConnection %s: quit signaled', self.websocket)
     self.quit_flag = True
-    self.websocket.close(reason='Server signaled quit.')
 
   ############################
   async def send_json_response(self, response, is_error=False):
@@ -638,10 +637,11 @@ class CachedDataServer:
       await connection.serve_requests()
     except websockets.ConnectionClosed:
       logging.warning('client disconnected')
-      connection.quit()
     except KeyboardInterrupt:
       logging.warning('Keyboard Interrupt')
-      connection.quit()
+
+    connection.quit()
+    await websocket.close()
 
 ################################################################################
 ################################################################################
