@@ -243,7 +243,7 @@ class WebSocketConnection:
   ############################
   def quit(self):
     """Close the connection from our end and quit."""
-    logging.info('WebSocketConnection %s: quit signaled', self.websocket)
+    logging.info('WebSocketConnection quit() signaled')
     self.quit_flag = True
 
   ############################
