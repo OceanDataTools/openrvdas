@@ -292,9 +292,9 @@ def assemble_timeout_template(ports):
   for logger in ports:
 
     # What data rate (in Hz) do we expect from this logger? Set
-    # timeout to arbitrarily be three times that rate.
+    # timeout to arbitrarily be 1/3 of that rate.
     rate = ports[logger].get('rate', 1)
-
+    timeout = 3 / rate
     writer_string = """
     - class: ComposedWriter
       kwargs:
@@ -321,7 +321,7 @@ def assemble_timeout_template(ports):
                   kwargs:
                     data_server: %DATA_SERVER%"""
     writer_string = fill_substitutions(
-      writer_string, {'%LOGGER%': logger, '%TIMEOUT%': rate * 3})
+      writer_string, {'%LOGGER%': logger, '%TIMEOUT%': timeout})
     timeout_logger += writer_string
   return timeout_logger
 

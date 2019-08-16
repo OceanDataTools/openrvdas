@@ -146,14 +146,14 @@ ports:
   # # not working 2/5/2015 kag  /tmp/tty_r0e  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
   mbdp:
     port_tab: MBdepth  /tmp/tty_mbdp  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-    rate: 5   # Hz
+    rate: 0.2   # Hz
   
   # Moxa box 2     10.1.1.51
   # #  /tmp/tty_r10  9600  8  2  0  1  1  0  1  0  1  1  0  0  0  0
   # SimEK500  /tmp/tty_r11  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
   knud:
     port_tab: Knudsen  /tmp/tty_knud  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-    rate: 5   # Hz
+    rate: 0.2   # Hz
   # Magnetics  /tmp/tty_r13  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
   grv1:
     port_tab: Gravity  /tmp/tty_grv1  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0

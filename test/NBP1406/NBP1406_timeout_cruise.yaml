@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_timeout_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Fri Aug 16 01:33:31 2019 UTC
+#   time:     Fri Aug 16 01:46:54 2019 UTC
 #   user:     pablo
 #
 ########################################
@@ -3360,8 +3360,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: PCOD logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: PCOD logged no data on port 6224 in 3.0 seconds
             resume_message: PCOD logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3384,8 +3384,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 60
-            message: cwnc logged no data on port 6224 in 60 seconds
+            timeout: 0.15
+            message: cwnc logged no data on port 6224 in 0.15 seconds
             resume_message: cwnc logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3408,8 +3408,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: gp02 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: gp02 logged no data on port 6224 in 3.0 seconds
             resume_message: gp02 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3432,8 +3432,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: gyr1 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: gyr1 logged no data on port 6224 in 3.0 seconds
             resume_message: gyr1 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3456,8 +3456,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: adcp logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: adcp logged no data on port 6224 in 3.0 seconds
             resume_message: adcp logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3480,8 +3480,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: eng1 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: eng1 logged no data on port 6224 in 3.0 seconds
             resume_message: eng1 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3504,8 +3504,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: svp1 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: svp1 logged no data on port 6224 in 3.0 seconds
             resume_message: svp1 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3528,8 +3528,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 60
-            message: twnc logged no data on port 6224 in 60 seconds
+            timeout: 0.15
+            message: twnc logged no data on port 6224 in 0.15 seconds
             resume_message: twnc logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3552,8 +3552,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 15
-            message: mbdp logged no data on port 6224 in 15 seconds
+            timeout: 15.0
+            message: mbdp logged no data on port 6224 in 15.0 seconds
             resume_message: mbdp logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3576,8 +3576,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 15
-            message: knud logged no data on port 6224 in 15 seconds
+            timeout: 15.0
+            message: knud logged no data on port 6224 in 15.0 seconds
             resume_message: knud logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3600,8 +3600,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: grv1 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: grv1 logged no data on port 6224 in 3.0 seconds
             resume_message: grv1 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3624,8 +3624,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: mwx1 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: mwx1 logged no data on port 6224 in 3.0 seconds
             resume_message: mwx1 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3648,8 +3648,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: pco2 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: pco2 logged no data on port 6224 in 3.0 seconds
             resume_message: pco2 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3672,8 +3672,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: pguv logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: pguv logged no data on port 6224 in 3.0 seconds
             resume_message: pguv logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3696,8 +3696,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: s330 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: s330 logged no data on port 6224 in 3.0 seconds
             resume_message: s330 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3720,8 +3720,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: tsg1 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: tsg1 logged no data on port 6224 in 3.0 seconds
             resume_message: tsg1 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3744,8 +3744,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: rtmp logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: rtmp logged no data on port 6224 in 3.0 seconds
             resume_message: rtmp logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3768,8 +3768,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: hdas logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: hdas logged no data on port 6224 in 3.0 seconds
             resume_message: hdas logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3792,8 +3792,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: tsg2 logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: tsg2 logged no data on port 6224 in 3.0 seconds
             resume_message: tsg2 logged new data on port 6224
             writer:
               class: ComposedWriter
@@ -3816,8 +3816,8 @@ configs:
         writers:
         - class: TimeoutWriter
           kwargs:
-            timeout: 3
-            message: seap logged no data on port 6224 in 3 seconds
+            timeout: 3.0
+            message: seap logged no data on port 6224 in 3.0 seconds
             resume_message: seap logged new data on port 6224
             writer:
               class: ComposedWriter
