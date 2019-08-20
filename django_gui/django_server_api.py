@@ -25,8 +25,8 @@ django.setup()
 from django.db import connection
 
 from .models import Logger, LoggerConfig, LoggerConfigState
-from .models import Mode, Cruise #, CruiseState
-from .models import LogMessage #, ServerState
+from .models import Mode, Cruise
+from .models import LogMessage
 from .models import LastUpdate
 
 from logger.utils.timestamp import datetime_obj, datetime_obj_from_timestamp
@@ -35,11 +35,6 @@ from server.server_api import ServerAPI
 
 DEFAULT_MAX_TRIES = 3
 
-# We're going to try to minimize the number of expensive queries we
-# make to the API by caching the last time any configurations were
-# updated. When we make a change to the DB, we'll update the most
-# recent LastUpdate entry, so that's all we'll have to check.
-
 ################################################################################
 class DjangoServerAPI(ServerAPI):
   ############################
@@ -47,9 +42,10 @@ class DjangoServerAPI(ServerAPI):
     super().__init__()
     self.update_callbacks = []
 
-    # We also cache in memory our 'LastUpdate'
-    self.last_configuration_update = 0
-    self.update_lock = threading.Lock()
+    # We're going to try to minimize the number of expensive queries we
+    # make to the API by caching the last time any configurations were
+    # updated. When we make a change to the DB, we'll update the most
+    # recent LastUpdate entry, so that's all we'll have to check.
 
     # Some values we're going to cache for efficiency
     self.active_mode = None
@@ -297,7 +293,14 @@ class DjangoServerAPI(ServerAPI):
       # And return them
       return configs
 
-    # If they've specified a mode, do it the hard way
+    # If they've specified a mode, do it the hard way. First, make
+    # sure it's a real mode.
+    try:
+      mode_obj = Mode.objects.get(name=mode)
+    except Mode.DoesNotExist:
+      raise ValueError('Cruise has no mode %s' % mode)
+
+    # Now fetch the relevant loggers
     for config in LoggerConfig.objects.filter(modes__name=mode):
       configs[config.logger.name] = json.loads(config.config_json)
     return configs
