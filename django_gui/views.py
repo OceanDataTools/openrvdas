@@ -15,10 +15,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
-from .models import Logger, LoggerConfig, LoggerConfigState
-from .models import Mode, Cruise, CurrentCruise, CruiseState
-from .models import LogMessage, ServerState
-
 from server.logger_manager import LoggerManager
 
 # Read in JSON with comments

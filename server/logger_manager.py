@@ -592,6 +592,11 @@ def run_data_server(data_server_websocket, data_server_udp,
 
 ################################################################################
 ################################################################################
+
+#python3 -m cProfile [-o output_file] [-s sort_order] (-m module | myscript.py)
+
+#sys.argv = ['server/logger_manager.py', '--database', 'django', '--start_data_server', '--config', 'test/NBP1406/NBP1406_cruise.yaml', '--mode', 'log']
+
 if __name__ == '__main__':
   import argparse
   import atexit
