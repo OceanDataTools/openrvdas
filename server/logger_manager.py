@@ -325,6 +325,21 @@ class LoggerManager:
         self.logger_runner.set_configs(new_configs)
         #self._send_status()
 
+  ############################
+  async def _publish_to_data_server(self, ws, data):
+    """Encode and publish a dict of values to the cached data server.
+    """
+    message = json.dumps({'type': 'publish', 'data': data})
+    await ws.send(message)
+    try:
+      result = await ws.recv()
+      response = json.loads(result)
+      if type(response) is dict and response.get('status', None) == 200:
+        return
+      logging.warning('Got bad response from data server: %s', result)
+    except json.JSONDecodeError:
+      logging.warning('Got unparseable response to "publish" message '
+                      'to data server: %s', result)
 
   ############################
   def _send_to_data_server_loop(self):
@@ -378,7 +393,7 @@ class LoggerManager:
               # If there's something to send, send it and immediately
               # loop back to see if there's more to send
               if next_message:
-                await ws.send(json.dumps(next_message))
+                await self._publish_to_data_server(ws, next_message)
                 continue;
 
               # If we're here, we've caught up on sending stuff that's
@@ -421,14 +436,13 @@ class LoggerManager:
               # while since we've sent it? If so, send update.
               if not cruise_def == previous_cruise_def or \
                  now - last_cruise_def_sent > SEND_CRUISE_EVERY_N_SECONDS:
-                cruise_message = {
-                  'type':'publish',
-                  'data':{'timestamp': time.time(),
-                          'fields': {'status:cruise_definition': cruise_def}
-                  }
-                 }
-                logging.debug('sending cruise update: %s', cruise_message)
-                await ws.send(json.dumps(cruise_message))
+                cruise_data = {
+                  'timestamp': time.time(),
+                  'fields': {'status:cruise_definition': cruise_def}
+                }
+                logging.debug('sending cruise update: %s', cruise_data)
+                await self._publish_to_data_server(ws, cruise_data)
+                
                 previous_cruise_def = cruise_def
                 last_cruise_def_sent = now
 
@@ -458,14 +472,12 @@ class LoggerManager:
                 logger_status = {}
                 logging.debug('sending heartbeat')
                 
-              status_message = {
-                'type':'publish',
-                'data':{'timestamp': now,
-                        'fields': {'status:logger_status': logger_status}
-                }
+              status_data = {
+                'timestamp': now,
+                'fields': {'status:logger_status': logger_status}
               }
-              logging.debug('sending status update: %s', status_message)
-              await ws.send(json.dumps(status_message))
+              logging.debug('sending status update: %s', status_data)
+              await self._publish_to_data_server(ws, status_data)
 
               # Send queue is (or was recently) empty, and we've sent
               # a status update. Snooze a bit before looping to check
@@ -518,10 +530,7 @@ class LoggerManager:
         logger_errors = logger_status.get('errors', [])
         if logger_errors:
           error_tuples = [(now, error) for error in logger_errors]
-          error_message = {
-            'type':'publish',
-            'data':{'fields':{'stderr:logger:'+logger: error_tuples}}
-           }
+          error_message = {'fields':{'stderr:logger:'+logger: error_tuples}}
           with self.data_server_lock:
             self.data_server_queue.put(error_message)
 
@@ -530,10 +539,7 @@ class LoggerManager:
     if self.errors:
       logging.error('Errors from LoggerRunner: %s', self.errors)
       error_tuples = [(now, error) for error in self.errors]
-      error_message = {
-        'type':'publish',
-        'data':{'fields':{'stderr:logger_manager': error_tuples}}
-      }
+      error_message = {'fields':{'stderr:logger_manager': error_tuples}}
       with self.data_server_lock:
         self.data_server_queue.put(error_message)
 
