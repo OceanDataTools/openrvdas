@@ -2,7 +2,7 @@
 """Low-level class to start/stop loggers according passed in
 definitions and commands.
 
-Intended to be used in one of four ways:
+Intended to be used in one of three ways:
 
 (See note below about simulated serial ports if you want to try the
 command lines below)
@@ -12,13 +12,15 @@ command lines below)
 
      server/logger_runner.py --config test/configs/sample_configs.yaml
 
-   Note: the LoggerRunner doesn't know anything about modes, and doesn't
-   take a full cruise definition - it just takes a dict of logger
-   configurations and runs them.
+   It may also be invoked with a cruise definition and a mode:
+
+     server/logger_runner.py \
+         --config test/NBP1406/NBP1406_cruise.yaml \
+         --mode log
 
 2. As instantiated by a LoggerManager:
 
-     server/logger_manager.py --config test/configs/sample_cruise.yaml -v
+     server/logger_manager.py --config test/NBP1406/NBP1406_cruise.yaml -v
 
    When invoked as above, the LoggerManager will instantiate a LoggerRunner
    interpret commands from the command line and dispatch the requested
@@ -28,45 +30,13 @@ command lines below)
 3. As instantiated by some other script that directly creates and
    manages a LoggerRunner object.
 
-4. As a websocket client taking orders from a LoggerManager:
-
-     server/run_loggers.py --websocket localhost:8765 --host_id knud.host
-
-   with a LoggerManager running like this:
-
-     server/logger_manager.py --websocket :8765 --host_id master.host
-
-   When invoked with the --websocket flag, a LoggerManager will
-   attempt to create a websocket server at the specified address and
-   listen for clients to connect.
-
-   When invoked with the --websocket and --host_id flags, a
-   LoggerRunner will attempt to connect to the named address and
-   identify itself by the provided host_id.
-
-   When the LoggerManager identifies a config to be run that includes
-   a host_id restriction, e.g.
-
-        "knud->net": {
-            "host_id": "knud.host",
-            "readers": ...
-            ...
-         }
-
-   it will attempt to dispatch that config to the appropriate
-   client. (Note: configs with no host restriction will be run by the
-   LoggerManager itself, and if a config has a host restriction and no
-   host by that name has connected, the LoggerManager will issue a
-   warning and not run the config.)
-
-
 Simulated Serial Ports:
 
-The sample_cruise.yaml and sample_configs.yaml files above specify
+The sample_configs.yaml and NBP1406_cruise.yaml files above specify
 configs that read from simulated serial ports and write to UDP port
 6224. To get the configs to actually run, you'll need to run
 
-  logger/utils/serial_sim.py --config test/serial_sim.yaml
+  logger/utils/serial_sim.py --config test/NBP1406/serial_sim_NBP1406.yaml
 
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
@@ -74,7 +44,7 @@ sample config references and feed simulated data through them.)
 To verify that the scripts are actually working as intended, you can
 create a network listener on port 6224 in yet another window:
 
-  logger/listener/listen.py --network :6224 --write_file -
+  logger/listener/listen.py --network :6224
 """
 import asyncio
 import json
@@ -114,7 +84,7 @@ def clear_queue(queue):
   if queue:
     while not queue.empty():
       queue.get()
-  
+
 ################################################################################
 class LoggerRunner:
   ############################
@@ -550,6 +520,10 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store', default=None,
                       help='Initial set of configs to run.')
+  parser.add_argument('--mode', dest='mode', action='store', default=None,
+                      help='If the config is a cruise definition, look for '
+                      'mode with the specified name and run its logger '
+                      'configurations.')
 
   parser.add_argument('--max_tries', dest='max_tries', action='store',
                       type=int, default=3, help='How many times to try a '
@@ -582,9 +556,42 @@ if __name__ == '__main__':
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
-  initial_configs = read_config(args.config) if args.config else None
+  configs = read_config(args.config) if args.config else None
 
-  runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
-                        initial_configs=initial_configs,
+  # If they've specified a mode, see if what we've read in is in fact
+  # a cruise definition with modes we can choose from.
+  if args.mode:
+    modes = configs.get('modes', None)
+    if not modes:
+      logging.fatal('--mode specified, but "%s" has no modes' % args.config)
+      sys.exit(1)
+    logger_configs = configs.get('configs', None)
+    if not logger_configs:
+      logging.fatal('File "%s" has no logger configs?' % args.config)
+      sys.exit(1)
+
+    # What are the names of the logger configs for the requested mode?
+    mode_configs = modes.get(args.mode, None)
+    if not mode_configs:
+      logging.fatal('No mode "%s" found in "%s"' % (args.mode, args.config))
+      sys.exit(1)
+    logging.info('Selecting mode configs: %s', mode_configs)
+    # Grab the configs themselves, and swap them in
+    this_mode_configs = {c:logger_configs[mode_configs[c]]
+                         for c in mode_configs}
+    configs = this_mode_configs
+
+  # Just a sanity check to head off inscrutable errors if they've
+  # passed in a cruise definition file but not told us which mode to
+  # use from it.
+  elif 'loggers' in configs and 'modes' in configs and 'configs' in configs:
+    logging.fatal('Config file "%s" appears to be a cruise definition file '
+                  'and no --mode argument found on command line.' % args.config)
+    sys.exit(1)
+
+  # Finally, create our runner and run it
+  runner = LoggerRunner(interval=args.interval,
+                        max_tries=args.max_tries,
+                        initial_configs=configs,
                         logger_log_level=logger_log_level)
   runner.run()
