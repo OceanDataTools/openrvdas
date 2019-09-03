@@ -76,8 +76,15 @@ class DjangoServerAPI(ServerAPI):
   def _last_config_update_time(self):
     """Get the time our database was last updated."""
     try:
-      last_update = LastUpdate.objects.latest('timestamp')
-      return last_update.timestamp.timestamp()
+      while True:
+        try:
+          last_update = LastUpdate.objects.latest('timestamp')
+        except django.db.utils.OperationalError:
+          logging.warning('Failed MySQL read - trying again')
+          connection.close()
+          time.sleep(0.05)
+          continue
+        return last_update.timestamp.timestamp()
     except LastUpdate.DoesNotExist:
       return 0
 
