@@ -20,6 +20,7 @@ class TextFileReader(StorageReader):
   def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
                retry_interval=0.1, interval=0):
     """
+    ```
     file_spec    Possibly wildcarded string speficying files to be opened.
                  Special case: if file_spec is None, read from stdin.
 
@@ -40,7 +41,7 @@ class TextFileReader(StorageReader):
     interval
                  How long to sleep between returning records. In general
                  this should be zero except for debugging purposes.
-
+    ```
     Note that the order in which files are opened will probably be in
     alphanumeric by filename, but this is not strictly enforced and
     depends on how glob returns them.

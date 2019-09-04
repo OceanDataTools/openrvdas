@@ -34,17 +34,18 @@ class SerialReader(Reader):
     bytes as it has succeeded in reading.
 
     command line example:
-
+    ```
       # Read serial port ttyr05 expecting a LF as end of record
       logger/listener/listen.py  --serial port=/dev/ttyr05,eol='\r'
-
+    ```
     config example:
-
+    ```
       class: SerialReader
       kwargs:
         baudrate: 4800
         port: /dev/ttyr05
         eol: \r
+    ```
     """
     super().__init__(output_format=Text)
 

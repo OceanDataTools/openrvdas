@@ -2,16 +2,16 @@
 """Read stored logger data and serve at realistic intervals over network ports.
 
 Run with, e.g.
-
+```
     logger/utils/simulate_network.py \
          --config test/SKQ201822S/network_sim_SKQ201822S.yaml \
          --loop
-
+```
 and you should be able to listen on the various ports that Sikuliaq
 instruments post data to:
-
+```
     logger/listener/listen.py --network :53131 --write_file -
-
+```
 for wind_mast_stbd (see test/sikuliaq/skq_ports.txt for a table of the
 instrument to port mappings active during cruise SKQ201822.
 """
@@ -36,14 +36,15 @@ class SimNetwork:
   """Open a network port and feed stored logfile data to it."""
   ############################
   def __init__(self, network, filebase, instrument):
-    """Open a network port and feed stored logfile data to it.
-
+    """
+    ```
     network port -  E.g.  my_host:80 for TCP or :54322 for UDP
 
     filebase - Prefix string to be matched (with a following "*") to fine
                files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
 
     instrument - Instrument name prefix to add before sendind out on wire
+    ```
     """
     self.filebase = filebase
     self.reader = LogfileReader(filebase=filebase, use_timestamps=True)

@@ -12,13 +12,13 @@ invoked on the command line via the listen.py script of via a
 configuration file.
 
 The following direct invocation of this script
-
+```
     logger/utils/cached_data_server.py \
       --udp 6225 \
       --port 8766 \
       --back_seconds 480 \
       --v
-
+```
 says to
 
 1. Listen on the UDP port specified by --udp for JSON-encoded,
@@ -32,7 +32,7 @@ says to
    them the requested data. Web clients may issue JSON-encoded
    requests of the following formats (see the definition of
    serve_requests() for insight):
-
+```
    {'type':'fields'}   - return a list of fields for which cache has data
 
    {'type':'subscribe',
@@ -59,22 +59,21 @@ says to
                                         'field_2':'value_2'}}}
 
        - submit new data to the cache (an alternative way to get data
-         in that doesn't, e.g. have the same record size limits as a
-         UDP packet).
-
+         in without the same record size limits of a UDP packet).
+```
 A CachedDataServer may also be created by invoking the listen.py
 script and creating a CachedDataWriter (which is just a wrapper around
 CachedDataServer). It may be invoked with the same options, and has
 the added benefit that you can have your server take data from a wider
 variety of sources (by using a LogfileReader, DatabaseReader,
 RedisReader or the like):
-
+```
     logger/listener/listen.py \
       --udp 6221,6224 \
       --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
       --transform_parse \
       --write_cached_data_writer 8766
-
+```
 This command  line creates  a CachedDataWriter that  reads timestamped
 NMEA sentences, parses them into  field:value pairs, then stores them,
 as above, in in-memory cached to be served to connected webclients.
@@ -86,11 +85,11 @@ listen.py script.
 
 Finally, it may be incorporated (again, within its CachedDataWriter
 wrapper) into a logger via a configuration file:
-
+```
     logger/listener/listen.py --config_file data_server_config.yaml
-
+```
 where data_server_config.yaml contains:
-
+```
 readers:
 - class: UDPReader
   kwargs:
@@ -106,21 +105,7 @@ writers:
     back_seconds: 480
     cleanup: 60
     port: 8766
-
-*****************
-NOTE: We get have some inexplicable behavior here. When called
-directly using the __main__ below or via a config with listen.py,
-everything works just fine.
-
-But for reasons I can't fathom, when launched from logger_runner.py or
-logger_manager.py, it fails mysteriously. Specifically: the Connection
-objects spawned by the asyncio websocket server only ever get the
-initial copy of the (empty) cache, regardless of what's in the shared
-cache.
-
-See note in _serve_websocket_data() for site of behavior.
-*****************
-
+```
 """
 import asyncio
 import json
@@ -146,10 +131,10 @@ def cache_record(record, cache, cache_lock):
 
   1) DASRecord
 
-  2) a dict encoding optionally a source data_id and timestamp and a
+  2) A dict encoding optionally a source data_id and timestamp and a
      mandatory 'fields' key of field_name: value pairs. This is the format
      emitted by default by ParseTransform:
-
+```
      {
        'data_id': ...,    # optional
        'timestamp': ...,  # optional - use time.time() if missing
@@ -159,13 +144,13 @@ def cache_record(record, cache, cache_lock):
          ...
        }
      }
-
+```
   A twist on format (2) is that the values may either be a singleton
   (int, float, string, etc) or a list. If the value is a singleton,
   it is taken at face value. If it is a list, it is assumed to be a
   list of (value, timestamp) tuples, in which case the top-level
   timestamp, if any, is ignored.
-
+```
      {
        'data_id': ...,  # optional
        'fields': {
@@ -174,6 +159,7 @@ def cache_record(record, cache, cache_lock):
           ...
        }
      }
+```
   """
   logging.debug('cache_record() received: %s', record)
   if not record:
@@ -260,7 +246,7 @@ class WebSocketConnection:
     """Wait for requests and serve data, if it exists, from
     cache. Requests are in JSON with request type encoded in
     'request_type' field. Recognized request types are:
-
+    ```
     fields - return a (JSON encoded) list of fields for which cache
         has data.
 
@@ -294,7 +280,7 @@ class WebSocketConnection:
 
     ready - client has processed the previous data message and is ready
         for more.
-
+    ```
     """
     # A map from field_name:latest_timestamp_sent. If
     # latest_timestamp_sent is -1, then we'll always send just the
@@ -480,24 +466,24 @@ class CachedDataServer:
      most likely this one:
 
   2. If the request is a python dict, assume it is of the form:
-
+  ```
       {field_1_name: {'seconds': num_secs},
        field_2_name: {'seconds': num_secs},
        ...}
-
+  ```
      where seconds is a float representing the number of seconds of
      back data being requested.
 
      This field dict is passed to serve_fields(), which will to retrieve
      num_secs of back data for each of the specified fields and return it
      as a JSON-encoded dict of the form:
-
+  ```
        {
          field_1_name: [(timestamp, value), (timestamp, value), ...],
          field_2_name: [(timestamp, value), (timestamp, value), ...],
          ...
        }
-
+  ```
   The server will then await a "ready" message from the client, and when
   received, will loop and send a JSON-encoded dict of all the
   (timestamp, value) tuples that have come in since the previous

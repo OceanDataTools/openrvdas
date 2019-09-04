@@ -16,6 +16,7 @@ class ParseTransform(Transform):
                return_json=False, return_das_record=False):
                
     """
+    ```
     definition_path
             Wildcarded path matching YAML definitions for devices.
 
@@ -25,6 +26,7 @@ class ParseTransform(Transform):
 
     return_das_record
             Return a DASRecord object.
+    ```
     """
     self.parser = record_parser.RecordParser(
       definition_path=definition_path,

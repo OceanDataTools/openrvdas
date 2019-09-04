@@ -53,7 +53,7 @@ class ComposedReader(Reader):
   def __init__(self, readers, transforms=[], check_format=False):
     """
     Instantiation:
-
+    ```
     reader = ComposedReader(readers, transforms=[], check_format=True)
 
     readers        A single Reader or a list of Readers.
@@ -64,15 +64,17 @@ class ComposedReader(Reader):
                    are compatible, and throw a ValueError if they are not.
                    If check_format is False (the default) the output_format()
                    of the whole reader will be formats.Unknown.
+    ```
     Use:
-
+    ```
     record = reader.read()
-
+    ```
     Sample:
-
+    ```
     reader = ComposedReader(readers=[NetworkReader(':6221'),
                                      NetworkReader(':6223')],
                             transforms=[TimestampTransform()])
+    ```
     """
     # Make readers a list, even if it's only a single reader.
     self.readers = readers if type(readers) == type([]) else [readers]

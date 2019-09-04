@@ -10,7 +10,7 @@ interested.
 
 A ComposedDerivedDataTransform is initialized with a list of
 DerivedDataTransforms. The transform() method then takes either
-DASRecords or {field:[[timestamp, value],...]} dictionaries, caches
+DASRecords or ``{field:[[timestamp, value],...]}`` dictionaries, caches
 the received values, distributes them among the contained
 DerivedDataTransforms, and aggregates their outputs, either into an
 anonymous DASRecord or a field dictionary, depending on how it was
@@ -18,11 +18,15 @@ initialized.
 
 The transforms can take data in one of three formats (and will return
 data in the same format as the input:
+
  - DASRecord
  - a single record dict with keys 'timestamp' and 'fields'
- - a field dict of format {data_id: [(timestamp, value), 
-                                     (timestamp, value),
-                                     ...)]}
+ - a field dict of format
+```
+     {data_id: [(timestamp, value), 
+                (timestamp, value),
+               ...)]}
+```
 """
 import logging
 import pprint
@@ -42,16 +46,17 @@ class DerivedDataTransform(Transform):
   some of which they are interested in) and emit a dict of derived values.
 
   Required methods are:
-
+  ```
   fields() - return a list of field_names in which we are interested. We
     will only be called when there are new values available for one or
     more of these fields.
 
-  transform(value_dict, timestamp_dict=None) - look for the fields we're
+  transform(value_dict, timestamp_dict=None) - look for the fields we are
     interested in (and optionally, their timestamps, if available) and
     generate a DASRecord containing the derived values. If timestamp_dict
     is available, the timestamp on the DASRecord would typically be the
     latest timestamp of any field value used, otherwise the current time.
+  ```
   """
   ############################
   def __init__(self):
@@ -75,7 +80,7 @@ class DerivedDataTransform(Transform):
 class ComposedDerivedDataTransform(Transform):
   """Container for DerivedDataTransforms. Initialize with a list of
   DerivedDataTransforms. The transform() method then takes either
-  DASRecords or {field:[[timestamp, value],...]} dictionaries, caches
+  DASRecords or ``{field:[[timestamp, value],...]}`` dictionaries, caches
   the received values, distributes them among the contained
   DerivedDataTransforms, and aggregates their outputs (either into an
   anonymous DASRecord or a field dictionary, depending on how it was
@@ -111,11 +116,14 @@ class ComposedDerivedDataTransform(Transform):
   def transform(self, record):
     """Take input in one of three formats, transform it appropriately, and
     return data in that same format as received:
-       - DASRecord
-       - a single record dict with keys 'timestamp' and 'fields'
-       - a field dict of format {data_id: [(timestamp, value), 
-                                           (timestamp, value),
-                                           ...]}
+
+    - DASRecord
+    - a single record dict with keys 'timestamp' and 'fields'
+    - a field dict of format
+      ``` {data_id: [(timestamp, value), 
+                     (timestamp, value),
+                     ...]}
+      ```
     """
     if not record:
       return

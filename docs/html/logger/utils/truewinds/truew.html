@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>logger.utils.truewinds.truew API documentation</title>
+<meta name="description" content="Calculate true winds from vessel speed, course and relative wind …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>logger.utils.truewinds.truew</code></h1>
+</header>
+<section id="section-intro">
+<p>Calculate true winds from vessel speed, course and relative wind</p>
+<p>These routines will compute meteorological true winds (direction from
+which wind is blowing, relative to true north; and speed relative to
+the fixed earth).</p>
+<p>8/08/2017 : Converted from Matlab to python by David Pablo Cohn
+(david.cohn@gmail.com) using SMOP 0.1; verified on
+python 2.7-3.5</p>
+<p>9/30/2014 : If the true wind has speed and its coming from the north
+then its direction should be 360deg. The problem was fixed
+in which the programss output showed 0deg instead of 360deg.</p>
+<p>Created: 12/17/96
+Developed by: Shawn R. Smith and Mark A. Bourassa
+Programmed by: Mylene Remigio</p>
+<p>Direct questions about algorithm to:
+wocemet@coaps.fsu.edu</p>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">#!/usr/bin/env python
+
+&#34;&#34;&#34;
+Calculate true winds from vessel speed, course and relative wind
+
+These routines will compute meteorological true winds (direction from
+which wind is blowing, relative to true north; and speed relative to
+the fixed earth).
+
+8/08/2017 : Converted from Matlab to python by David Pablo Cohn
+            (david.cohn@gmail.com) using SMOP 0.1; verified on
+            python 2.7-3.5
+
+9/30/2014 : If the true wind has speed and its coming from the north
+            then its direction should be 360deg. The problem was fixed
+            in which the programss output showed 0deg instead of 360deg.
+
+Created: 12/17/96
+Developed by: Shawn R. Smith and Mark A. Bourassa
+Programmed by: Mylene Remigio
+
+Direct questions about algorithm to:  wocemet@coaps.fsu.edu
+&#34;&#34;&#34;
+
+import logging
+
+from math import pi, cos, sin, atan2, sqrt
+
+DEFAULT_ZRL = 0.0  # clockwise angle between bow and anemometer reference line
+DEFAULT_MISSING_VALUES = [-1111.0, # missing val for course_over_ground
+                          -9999.0, # missing val for speed_over_ground
+                          1111.0,  # missing val for wind_dir
+                          9999.0,  # missing val for wind_speed
+                          5555.0,  # missing val for heading
+                         ]
+
+################################################################################
+def truew(crse=None,
+          cspd=None,
+          hd=None,
+          wdir=None,
+          wspd=None,
+          zlr=DEFAULT_ZRL,
+          wmis=DEFAULT_MISSING_VALUES,
+          ):
+    &#34;&#34;&#34;
+    FUNCTION truew() - calculates true winds from vessel speed, course and
+    relative wind
+
+    INPUTS
+
+    crse      real    Course TOWARD WHICH the vessel is moving over
+                          the ground. Referenced to true north and the
+                          fixed earth.
+    cspd      real    Speed of vessel over the ground. Referenced
+                          to the fixed earth.
+    hd        real    Heading toward which bow of vessel is pointing.
+                          Referenced to true north.
+    zlr       real    Zero line reference -- angle between bow and
+                          zero line on anemometer.  Direction is clockwise
+                          from the bow.  (Use bow=0 degrees as default
+                          when reference not known.)
+    wdir      real    Wind direction measured by anemometer,
+                          referenced to the ship.
+    wspd      real    Wind speed measured by anemometer,referenced to
+                          the vessel&#39;s frame of reference.
+    wmis      real    Five element array containing missing values for
+                          crse, cspd, wdir, wspd, and hd. In the output,
+                          the missing value for tdir is identical to the
+                          missing value specified in wmis for wdir.
+                          Similarly, tspd uses the missing value assigned
+                          to wmis for wspd.
+
+    *** WDIR MUST BE METEOROLOGICAL (DIRECTION FROM)! CRSE AND CSPD MUST
+        BE RELATIVE TO A FIXED EARTH! ***
+
+    OUTPUT VALUES:
+
+    tdir      real    True wind direction - referenced to true north
+                          and the fixed earth with a direction from which
+                          the wind is blowing (meteorological).
+    tspd      real    True wind speed - referenced to the fixed earth.
+    adir      real    Apparent wind direction (direction measured by
+                          wind vane, relative to true north). IS
+                          REFERENCED TO TRUE NORTH &amp; IS DIRECTION FROM
+                          WHICH THE WIND IS BLOWING. Apparent wind
+                          direction is the sum of the ship relative wind
+                          direction (measured by wind vane relative to the
+                          bow), the ship&#39;s heading, and the zero-line
+                          reference angle.  NOTE:  The apparent wind speed
+                          has a magnitude equal to the wind speed measured
+                          by the anemometer.
+
+    &#34;&#34;&#34;
+    # INITIALIZE VARIABLES
+    adir = 0
+    dtor = pi / 180
+
+    # Check course, ship speed, heading, wind direction, and
+    # wind speed for valid values (i.e. neither missing nor
+    # outside physically acceptable ranges).
+    err_mesg = []
+    if crse is None or crse &lt; 0 or crse &gt; 360 or crse == wmis[0]:
+        err_mesg.append(&#39;Bad or missing course: %g&#39; % crse)
+    if cspd is None or cspd &lt; 0 or cspd == wmis[1]:
+        err_mesg.append(&#39;Bad or missing cspd: %g&#39; % cspd)
+    if wdir is None or wdir &lt; 0 or wdir &gt; 360 or wdir == wmis[2]:
+        err_mesg.append(&#39;Bad or missing wind dir: %g&#39; % wdir)
+    if wspd is None or wspd &lt; 0 or wspd == wmis[3]:
+        err_mesg.append(&#39;Bad or missing wind speed: %g&#39; % wspd)
+    if hd is None or hd &lt; 0 or hd &gt; 360 or hd == wmis[4]:
+        err_mesg.append(&#39;Bad or missing heading: %g&#39; % hd)
+    if zlr &lt; 0.0 or zlr &gt; 360.0:
+        err_mesg.append(&#39;Bad or missing zero line reference: %g&#39; % zlr)
+        zlr = 0.0
+
+    if err_mesg:
+        logging.warning(&#39;TrueWinds: %s&#39;, &#39;; &#39;.join(err_mesg))
+        return (None, None, None)
+
+    # Convert from navigational coordinates to
+    # angles commonly used in mathematics
+    mcrse = 90 - crse
+    # Keep the value between 0 and 360 degrees
+    if (mcrse &lt;= 0.0):
+        mcrse = mcrse + 360.0
+    # Calculate apparent wind direction
+    adir = hd + wdir + zlr
+    # Keep adir between 0 and 360 degrees
+    while adir &gt;= 360.0:
+        adir = adir - 360.0
+
+    # Convert from meteorological coordinates to angles
+    # commonly used in mathematics
+    mwdir = 270.0 - adir
+    # Keep mdir between 0 and 360 degrees
+    if (mwdir &lt;= 0.0):
+        mwdir = mwdir + 360.0
+    if (mwdir &gt; 360.0):
+        mwdir = mwdir - 360.0
+    # Determine the east-west vector component and the
+    # north-south vector component of the true wind
+    x = wspd*cos(mwdir*dtor) + cspd*cos(mcrse*dtor)
+    y = wspd*sin(mwdir*dtor) + cspd*sin(mcrse*dtor)
+    # Use the two vector components to calculate the true wind
+    # speed
+    tspd = sqrt(x*x + y*y)
+    calm_flag = 1
+    # Determine the angle for the true wind
+    if (abs(x) &gt; 1e-05):
+        mtdir = (atan2(y,x)) / dtor
+    else:
+        if (abs(y) &gt; 1e-05):
+            mtdir = 180.0 - (90.0*y) / abs(y)
+        else:
+            # The true wind speed is essentially zero: winds
+            # are calm and direction is not well defined
+            mtdir = 270.0
+            calm_flag = 0
+    # Convert from the common mathematical angle coordinate to
+    # the meteorological wind direction
+    tdir = 270.0 - mtdir
+    # Make sure that the true wind angle is between
+    # 0 and 360 degrees
+    while tdir &lt; 0.0:
+        tdir = (tdir + 360.0)*calm_flag
+
+    while tdir &gt; 360.0:
+        tdir = (tdir - 360.0)*calm_flag
+
+    # Ensure wmo convention for tdir = 360 for win
+    # from north and tspd &gt; 0
+    if (calm_flag == 1 and (tdir &lt; 0.0001)):
+        tdir = 360.0
+
+    return (tdir, tspd, adir)
+
+################################################################################
+if __name__ == &#39;__main__&#39;:
+    pass</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="logger.utils.truewinds.truew.truew"><code class="name flex">
+<span>def <span class="ident">truew</span></span>(<span>crse=None, cspd=None, hd=None, wdir=None, wspd=None, zlr=0.0, wmis=[-1111.0, -9999.0, 1111.0, 9999.0, 5555.0])</span>
+</code></dt>
+<dd>
+<section class="desc"><p>FUNCTION truew() - calculates true winds from vessel speed, course and
+relative wind</p>
+<p>INPUTS</p>
+<p>crse
+real
+Course TOWARD WHICH the vessel is moving over
+the ground. Referenced to true north and the
+fixed earth.
+cspd
+real
+Speed of vessel over the ground. Referenced
+to the fixed earth.
+hd
+real
+Heading toward which bow of vessel is pointing.
+Referenced to true north.
+zlr
+real
+Zero line reference &ndash; angle between bow and
+zero line on anemometer.
+Direction is clockwise
+from the bow.
+(Use bow=0 degrees as default
+when reference not known.)
+wdir
+real
+Wind direction measured by anemometer,
+referenced to the ship.
+wspd
+real
+Wind speed measured by anemometer,referenced to
+the vessel's frame of reference.
+wmis
+real
+Five element array containing missing values for
+crse, cspd, wdir, wspd, and hd. In the output,
+the missing value for tdir is identical to the
+missing value specified in wmis for wdir.
+Similarly, tspd uses the missing value assigned
+to wmis for wspd.</p>
+<p><strong><em> WDIR MUST BE METEOROLOGICAL (DIRECTION FROM)! CRSE AND CSPD MUST
+BE RELATIVE TO A FIXED EARTH! </em></strong></p>
+<p>OUTPUT VALUES:</p>
+<p>tdir
+real
+True wind direction - referenced to true north
+and the fixed earth with a direction from which
+the wind is blowing (meteorological).
+tspd
+real
+True wind speed - referenced to the fixed earth.
+adir
+real
+Apparent wind direction (direction measured by
+wind vane, relative to true north). IS
+REFERENCED TO TRUE NORTH &amp; IS DIRECTION FROM
+WHICH THE WIND IS BLOWING. Apparent wind
+direction is the sum of the ship relative wind
+direction (measured by wind vane relative to the
+bow), the ship's heading, and the zero-line
+reference angle.
+NOTE:
+The apparent wind speed
+has a magnitude equal to the wind speed measured
+by the anemometer.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def truew(crse=None,
+          cspd=None,
+          hd=None,
+          wdir=None,
+          wspd=None,
+          zlr=DEFAULT_ZRL,
+          wmis=DEFAULT_MISSING_VALUES,
+          ):
+    &#34;&#34;&#34;
+    FUNCTION truew() - calculates true winds from vessel speed, course and
+    relative wind
+
+    INPUTS
+
+    crse      real    Course TOWARD WHICH the vessel is moving over
+                          the ground. Referenced to true north and the
+                          fixed earth.
+    cspd      real    Speed of vessel over the ground. Referenced
+                          to the fixed earth.
+    hd        real    Heading toward which bow of vessel is pointing.
+                          Referenced to true north.
+    zlr       real    Zero line reference -- angle between bow and
+                          zero line on anemometer.  Direction is clockwise
+                          from the bow.  (Use bow=0 degrees as default
+                          when reference not known.)
+    wdir      real    Wind direction measured by anemometer,
+                          referenced to the ship.
+    wspd      real    Wind speed measured by anemometer,referenced to
+                          the vessel&#39;s frame of reference.
+    wmis      real    Five element array containing missing values for
+                          crse, cspd, wdir, wspd, and hd. In the output,
+                          the missing value for tdir is identical to the
+                          missing value specified in wmis for wdir.
+                          Similarly, tspd uses the missing value assigned
+                          to wmis for wspd.
+
+    *** WDIR MUST BE METEOROLOGICAL (DIRECTION FROM)! CRSE AND CSPD MUST
+        BE RELATIVE TO A FIXED EARTH! ***
+
+    OUTPUT VALUES:
+
+    tdir      real    True wind direction - referenced to true north
+                          and the fixed earth with a direction from which
+                          the wind is blowing (meteorological).
+    tspd      real    True wind speed - referenced to the fixed earth.
+    adir      real    Apparent wind direction (direction measured by
+                          wind vane, relative to true north). IS
+                          REFERENCED TO TRUE NORTH &amp; IS DIRECTION FROM
+                          WHICH THE WIND IS BLOWING. Apparent wind
+                          direction is the sum of the ship relative wind
+                          direction (measured by wind vane relative to the
+                          bow), the ship&#39;s heading, and the zero-line
+                          reference angle.  NOTE:  The apparent wind speed
+                          has a magnitude equal to the wind speed measured
+                          by the anemometer.
+
+    &#34;&#34;&#34;
+    # INITIALIZE VARIABLES
+    adir = 0
+    dtor = pi / 180
+
+    # Check course, ship speed, heading, wind direction, and
+    # wind speed for valid values (i.e. neither missing nor
+    # outside physically acceptable ranges).
+    err_mesg = []
+    if crse is None or crse &lt; 0 or crse &gt; 360 or crse == wmis[0]:
+        err_mesg.append(&#39;Bad or missing course: %g&#39; % crse)
+    if cspd is None or cspd &lt; 0 or cspd == wmis[1]:
+        err_mesg.append(&#39;Bad or missing cspd: %g&#39; % cspd)
+    if wdir is None or wdir &lt; 0 or wdir &gt; 360 or wdir == wmis[2]:
+        err_mesg.append(&#39;Bad or missing wind dir: %g&#39; % wdir)
+    if wspd is None or wspd &lt; 0 or wspd == wmis[3]:
+        err_mesg.append(&#39;Bad or missing wind speed: %g&#39; % wspd)
+    if hd is None or hd &lt; 0 or hd &gt; 360 or hd == wmis[4]:
+        err_mesg.append(&#39;Bad or missing heading: %g&#39; % hd)
+    if zlr &lt; 0.0 or zlr &gt; 360.0:
+        err_mesg.append(&#39;Bad or missing zero line reference: %g&#39; % zlr)
+        zlr = 0.0
+
+    if err_mesg:
+        logging.warning(&#39;TrueWinds: %s&#39;, &#39;; &#39;.join(err_mesg))
+        return (None, None, None)
+
+    # Convert from navigational coordinates to
+    # angles commonly used in mathematics
+    mcrse = 90 - crse
+    # Keep the value between 0 and 360 degrees
+    if (mcrse &lt;= 0.0):
+        mcrse = mcrse + 360.0
+    # Calculate apparent wind direction
+    adir = hd + wdir + zlr
+    # Keep adir between 0 and 360 degrees
+    while adir &gt;= 360.0:
+        adir = adir - 360.0
+
+    # Convert from meteorological coordinates to angles
+    # commonly used in mathematics
+    mwdir = 270.0 - adir
+    # Keep mdir between 0 and 360 degrees
+    if (mwdir &lt;= 0.0):
+        mwdir = mwdir + 360.0
+    if (mwdir &gt; 360.0):
+        mwdir = mwdir - 360.0
+    # Determine the east-west vector component and the
+    # north-south vector component of the true wind
+    x = wspd*cos(mwdir*dtor) + cspd*cos(mcrse*dtor)
+    y = wspd*sin(mwdir*dtor) + cspd*sin(mcrse*dtor)
+    # Use the two vector components to calculate the true wind
+    # speed
+    tspd = sqrt(x*x + y*y)
+    calm_flag = 1
+    # Determine the angle for the true wind
+    if (abs(x) &gt; 1e-05):
+        mtdir = (atan2(y,x)) / dtor
+    else:
+        if (abs(y) &gt; 1e-05):
+            mtdir = 180.0 - (90.0*y) / abs(y)
+        else:
+            # The true wind speed is essentially zero: winds
+            # are calm and direction is not well defined
+            mtdir = 270.0
+            calm_flag = 0
+    # Convert from the common mathematical angle coordinate to
+    # the meteorological wind direction
+    tdir = 270.0 - mtdir
+    # Make sure that the true wind angle is between
+    # 0 and 360 degrees
+    while tdir &lt; 0.0:
+        tdir = (tdir + 360.0)*calm_flag
+
+    while tdir &gt; 360.0:
+        tdir = (tdir - 360.0)*calm_flag
+
+    # Ensure wmo convention for tdir = 360 for win
+    # from north and tspd &gt; 0
+    if (calm_flag == 1 and (tdir &lt; 0.0001)):
+        tdir = 360.0
+
+    return (tdir, tspd, adir)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="logger.utils.truewinds" href="index.html">logger.utils.truewinds</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="logger.utils.truewinds.truew.truew" href="#logger.utils.truewinds.truew.truew">truew</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

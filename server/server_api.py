@@ -20,7 +20,7 @@ class ServerAPI:
   can interact with a data store.
 
   Parameters below have the following semantics:
-
+  ```
   configuration - dict definition of a OpenRVDAS configuration
   mode          - dict name of mode, and logger_config_names associated with that mode
   default_mode  - name of mode to use at startup or when returning to a default state
@@ -33,10 +33,10 @@ class ServerAPI:
                   valid configs and optional host restriction
 
   logger_configs - dict of {logger_config_name:logger_config,...}
-
+  ```
   For the purposes of documentation below, assume a sample
   cruise_config as follows:
-
+  ```
   {
     "loggers": {
       "knud": {
@@ -62,7 +62,7 @@ class ServerAPI:
       "gyr1->file/net/dbnet": { config_spec }
     }
   }
-
+  ```
   """
 
   ############################

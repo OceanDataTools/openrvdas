@@ -20,7 +20,7 @@ class UDPWriter(NetworkWriter):
                ttl=3, num_retry=2, eol=''):
     """
     Write text records to a network socket.
-
+    ```
     port         Port to which packets should be sent
 
     destination  If specified, either multicast group or unicast IP addr
@@ -33,6 +33,7 @@ class UDPWriter(NetworkWriter):
 
     eol          If specified, an end of line string to append to record
                  before sending.
+    ```
     """
     self.num_retry = num_retry
     self.eol = eol

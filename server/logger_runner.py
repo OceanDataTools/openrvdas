@@ -9,19 +9,19 @@ command lines below)
 
 1. As a simple standalone logger runner: you give it an intial dict of
    logger configurations, and it tries to keep them running.
-
+```
      server/logger_runner.py --config test/configs/sample_configs.yaml
-
+```
    It may also be invoked with a cruise definition and a mode:
-
-     server/logger_runner.py \
-         --config test/NBP1406/NBP1406_cruise.yaml \
+```
+     server/logger_runner.py \ 
+         --config test/NBP1406/NBP1406_cruise.yaml \ 
          --mode log
-
+```
 2. As instantiated by a LoggerManager:
-
+```
      server/logger_manager.py --config test/NBP1406/NBP1406_cruise.yaml -v
-
+```
    When invoked as above, the LoggerManager will instantiate a LoggerRunner
    interpret commands from the command line and dispatch the requested
    loggers to its LoggerRunner. (Type "help" on the LoggerManager command
@@ -35,16 +35,17 @@ Simulated Serial Ports:
 The sample_configs.yaml and NBP1406_cruise.yaml files above specify
 configs that read from simulated serial ports and write to UDP port
 6224. To get the configs to actually run, you'll need to run
-
+```
   logger/utils/serial_sim.py --config test/NBP1406/serial_sim_NBP1406.yaml
-
+```
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
 
 To verify that the scripts are actually working as intended, you can
 create a network listener on port 6224 in yet another window:
-
+```
   logger/listener/listen.py --network :6224
+```
 """
 import asyncio
 import json
@@ -91,6 +92,7 @@ class LoggerRunner:
   def __init__(self, interval=0.5, max_tries=3, initial_configs=None,
                event_loop=None, logger_log_level=logging.WARNING):
     """Create a LoggerRunner.
+    ```
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a dead logger config. If zero, then
@@ -98,11 +100,12 @@ class LoggerRunner:
 
     initial_configs - optional dict of configs to start up on creation.
 
-    event_loop - Optional event loop, if we're instantiated in a thread
-                that doesn't have its own.
+    event_loop - Optional event loop, if we are instantiated in a thread
+                that does not have its own.
 
     logger_log_level - At what logging level our component loggers
                 should operate.
+    ```
     """
     logging.info('Starting LoggerRunner')
     # Map logger name to config, process running it, and any errors
@@ -169,9 +172,10 @@ class LoggerRunner:
   def set_configs(self, new_configs):
     """Start/stop loggers as necessary to move from current configs
     to new configs.
-
+    ```
     new_configs - a dict of {logger_name:config} for all loggers that
                   should be running
+    ```
     """
     # All loggers, whether in current configuration or desired mode.
     with self.config_lock:
@@ -201,10 +205,11 @@ class LoggerRunner:
   ############################
   def set_config(self, logger, new_config):
     """Start/stop individual logger to put into new config.
-
+    ```
     logger - name of logger
 
     new_config - dict containing Listener configuration.
+    ```
     """
     with self.config_lock:
       current_config = self.logger_configs.get(logger, None)
@@ -379,11 +384,12 @@ class LoggerRunner:
   def check_logger(self, logger, manage=False):
     """Check whether passed logger is in state it should be. Restart/stop it
     as appropriate. Return True if logger is in desired state.
-
+    ```
     logger - name of logger to check.
 
     manage - if True, and if logger isn't in state it's supposed to be,
              try restarting it.
+    ```
     """
     with self.config_lock:
       config = self.logger_configs.get(logger, None)
@@ -458,17 +464,19 @@ class LoggerRunner:
   ############################
   def check_loggers(self, manage=False):
     """Check logger status, returning a dict of
-
+    ```
       logger_id:
           config  - name of config (or None)
           errors  - list of errors
           running - Bool whether logger process is running
           failed  - Bool whether logger process has failed
           pid:    - logger pid or None, if not running
-
+    ```
     Parameters:
+    ```
       manage - if True, try to restart/stop loggers to put them in the state
                their configs say they should be in.
+    ```
     """
     with self.check_loggers_lock:
       # If there are any disappeared loggers, we want to give them one

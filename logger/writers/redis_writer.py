@@ -27,8 +27,9 @@ class RedisWriter(Writer):
   def __init__(self, channel, password=None):
     """
     Write text records to a Redis pubsub server channel.
-
+    ```
     channel      Redis channel to write to, format channel[@hostname[:port]]
+    ```
     """
     super().__init__(input_format=Text)
 

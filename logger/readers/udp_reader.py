@@ -27,6 +27,7 @@ class UDPReader(Reader):
   def __init__(self, port, source='', eol=None,
                read_buffer_size=READ_BUFFER_SIZE):
     """
+    ```
     port         Port to listen to for packets
 
     source       If specified, multicast group id to listen for
@@ -39,6 +40,7 @@ class UDPReader(Reader):
                  are encountered in a packet, split the packet and return
                  the first of them, buffering the remainder for subsequent
                  calls.
+    ```
     """
     super().__init__(output_format=Text)
 

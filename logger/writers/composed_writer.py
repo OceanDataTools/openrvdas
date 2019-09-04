@@ -18,7 +18,7 @@ class ComposedWriter(Writer):
     Apply zero or more Transforms (in series) to passed records, then
     write them (in parallel threads) using the specified Writers.
 
-
+    ```
     transforms     A single Transform, a list of Transforms, or None.
 
     writers        A single Writer or a list of Writers.
@@ -27,15 +27,15 @@ class ComposedWriter(Writer):
                    are compatible, and throw a ValueError if they are not.
                    If check_format is False (the default) the output_format()
                    of the whole reader will be formats.Unknown.
-
+    ```
     Example:
-
+    ```
     writer = ComposedWriter(transforms=[TimestampTransform(),
                                         PrefixTransform('gyr1')],
                             writers=[NetworkWriter(':6221'),
                                      LogfileWriter('/logs/gyr1')],
                             check_format=True)
-
+    ```
     NOTE: we make the rash assumption that transforms are thread-safe,
     that is, that no mischief or corrupted internal state will result if
     more than one thread calls a transform at the same time. To be

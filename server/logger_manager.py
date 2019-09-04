@@ -5,14 +5,14 @@ by dispatching requests to a local LoggerRunner.
 
 To run the LoggerManager from the command line with (using the default
 of an InMemoryServerAPI):
-
+```
   server/logger_manager.py
-
+```
 If an initial configuration is specified on the command line, as
 below:
-
+```
   server/logger_manager.py --config test/configs/sample_cruise.yaml
-
+```
 the configuration will be loaded and set to its default mode. If a
 --mode argument is included, it will be used in place of the default
 mode.
@@ -40,21 +40,21 @@ To try out the scripts, open four(!) terminal windows.
    configured to read from simulated serial ports. To create those
    simulated ports and start feeding data to them, use a third
    terminal window to run:
-
+```
    logger/utils/simulate_serial.py --config test/serial_sim.yaml -v
-
+```
 3. Finally, we'd like to be able to easily glimpse the data that the
    loggers are producing. The sample configuration tells the loggers
    to write to UDP port 6224 when running, so use the fourth terminal
    to run a Listener that will monitor that port. The '-' filename
    tells the Listener to write to stdout (see listen.py --help for all
    Listener options):
-
+```
    logger/listener/listen.py --network :6224 --write_file -
-
+```
 4. Whew! Now try a few commands in the terminal running the
    LoggerManager (you can type 'help' for a full list):
-
+```
    # Load a cruise configuration
 
    command? load_configuration test/configs/sample_cruise.yaml
@@ -86,16 +86,10 @@ To try out the scripts, open four(!) terminal windows.
    command? set_active_mode off
 
    command? quit
-
+```
    When setting the mode to port, you should notice data appearing in
    the listener window, and should see diagnostic output in the
    LoggerManager window.
-
-   When setting the mode to underway, you should see more data
-   appearing in the listener window (due to more logger configs
-   running), and should see the LoggerRunner leap into action as the
-   LoggerManager dispatches the configs for "knud.host" to it.
-
 """
 import asyncio
 import getpass  # to get username
@@ -188,11 +182,11 @@ class LoggerManager:
                interval=0.5, max_tries=3, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
-
+    ```
     api - ServerAPI (or subclass) instance by which LoggerManager will get
           its data store updates
 
-    data_server_websocket - websocket address to which we're going to send
+    data_server_websocket - websocket address to which we are going to send
           our status updates.
 
     interval - number of seconds to sleep between checking/updating loggers
@@ -201,6 +195,7 @@ class LoggerManager:
 
     logger_log_level - At what logging level our component loggers
           should operate.
+    ```
     """
     # Set signal to catch SIGTERM and convert it into a
     # KeyboardInterrupt so we can shut things down gracefully.

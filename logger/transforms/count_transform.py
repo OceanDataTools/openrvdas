@@ -16,12 +16,12 @@ class CountTransform(Transform):
   (or DASRecord, depending on what was passed in) where the keys are
   'field_name:count' and the values are the number of times the passed
   in fields have been seen. E.g:
-
+  ```
   counts = CountTransform()
   counts.transform({'f1': 1, 'f2': 1.5}) -> {'f1:count':1, 'f2:count':1}
   counts.transform({'f1': 1}) -> {'f1:count':2}
   counts.transform({'f1': 1.1, 'f2': 1.4}) -> {'f1:count':3, 'f2:count':2}
-
+  ```
   """
   def __init__(self):
     """

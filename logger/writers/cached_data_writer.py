@@ -11,7 +11,6 @@ import websockets
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.das_record import DASRecord
-from logger.utils.cached_data_server import CachedDataServer
 from logger.writers.writer import Writer
 
 ################################################################################
@@ -19,10 +18,8 @@ class CachedDataWriter(Writer):
   def __init__(self, data_server, start_server=False, back_seconds=480,
                cleanup_interval=6, update_interval=1):
     """Feed passed records to a CachedDataServer via a websocket. Expects
-    records in DASRecord or dict formats. If the --start_server flag
-    is True, try to start the server ourselves, using the rest of the provided
-    parameters as defaults.
-
+    records in DASRecord or dict formats.
+    ```
     data_server    [host:]port on which to look for data server
 
     back_seconds   Number of seconds of back data to hold in cache
@@ -30,8 +27,7 @@ class CachedDataWriter(Writer):
     cleanup_interval   Remove old data every N seconds
 
     update_interval    Serve updates to websocket clients every N seconds
-
-    start_server       If true, start the server ourselves
+    ```
     """
     host_port = data_server.split(':')
     if len(host_port) == 1: 
@@ -49,17 +45,6 @@ class CachedDataWriter(Writer):
     # Event loop we'll use to asynchronously manage writes to websocket
     self.event_loop = asyncio.new_event_loop()
     self.send_queue = asyncio.Queue(loop=self.event_loop)
-
-    if start_server:
-      host_port = self.data_server.split(':')
-      if host_port[0] != 'localhost':
-        raise ValueError('CachedDataWriter host specification for data server '
-                         'must be either "localhost" or empty if starting '
-                         'our own cached data server: "%s"' % host_port)
-      self.port = int(host_port[-1])
-      
-      # Instantiate (and start) CachedDataServer
-      self.server = CachedDataServer(port=port, interval=update_interval)
 
     # Start the thread that will asynchronously pull stuff from the
     # queue and send to the websocket. Also will, if we've got our oue

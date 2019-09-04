@@ -16,7 +16,7 @@ class TextFileWriter(Writer):
     """
     Write text records to a file. If no filename is specified, write to
     stdout.
-
+    ```
     filename     Name of file to write to. If None, write to stdout
 
     flush        If True (default), flush after every write() call
@@ -24,6 +24,7 @@ class TextFileWriter(Writer):
     truncate     Truncate file before beginning to write
 
     create_path  Create directory path to file if it doesn't exist
+    ```
     """
     super().__init__(input_format=Text)
 

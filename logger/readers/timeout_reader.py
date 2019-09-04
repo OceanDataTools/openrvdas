@@ -35,6 +35,7 @@ class TimeoutReader(Reader):
   def __init__(self, reader, timeout, message=None, resume_message=None,
                empty_is_okay=False, none_is_okay=False):
     """
+    ```
     reader         A client reader instance
 
     timeout        Timeout interval in seconds
@@ -49,13 +50,15 @@ class TimeoutReader(Reader):
                   the timer.
     none_is_okay  If True, receiving a 'None' record is sufficient to reset
                     the timer.
+    ```
     Sample:
-
+    ```
     gyr1_reader = ComposedReader(NetworkReader(':6224'),
                                  RegexFilterTransform('^gyr1'))
     reader = TimeoutReader(reader=gyr1_reader,
                            timeout=15,
                            message='No Gyroscope records received for 15 seconds')
+    ```
     """
     super().__init__(output_format=Text)
 

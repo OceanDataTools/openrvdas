@@ -21,19 +21,19 @@ class Writer:
 
     A subclassed writer that accepts, e.g. text format records, should
     specify that in its init definition by, for example:
-
+    ```
     class TextFileWriter(Writer):
       def __init__(self, filename):
         super().__init__(input_format=formats.Text)
         ...other things...
-
+    ```
     The can_accept() method is intended to take an instance of a Reader or
     Transform - something that produces data and implements an
     output_format() method. To determine whether a writer can take input
     from a reader, call
-
+    ```
       writer.can_accept(reader)
-
+    ```
     The test will also return False if either the reader or writer have
     format specification of "Unknown".
     """
