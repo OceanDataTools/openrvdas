@@ -1,5 +1,5 @@
 # OpenRVDAS Configuration Files
-© 2018-2019 David Pablo Cohn - DRAFT 2019-03-15
+© 2018-2019 David Pablo Cohn - DRAFT 2019-09-05
 
 
 ## Table of Contents
@@ -45,7 +45,7 @@ following text:
 
 ```
 readers: # A single reader in this case
-  class: SerialReader
+- class: SerialReader
   kwargs:
     baudrate: 9600
     port: /dev/ttyr15
@@ -73,21 +73,37 @@ The configuration text contains three essential keys: "readers",
 "check_format" are also accepted, in keeping with the arguments taken
 by the Listener class constructor).
 
-The values for these keys may either be
+The values for these keys should be a list of dicts each dict defining
+a component.
 
-1. a dict defining a component, or
-1. a list of dicts, each dict defining a component
-
-Note that if a list of components is provided for in the "readers" or
-"writers", section, the listener will operate them all in parallel. If
-a list of components is provided in the "transforms" section, the
-listener will run them in series, as in the following diagram:
+Recall that a Listener instance runs all its Readers in parallel, pipes
+their output to its Transforms in series, and dispatches their resulting
+output to all its Writers in parallel, as illustrated below:
 
 ![Generic listener data flow](images/generic_listener.png)
 
-In the case of gyr1_logger.yaml, the logger requires only a single
-reader, so it is defined directly as a dict; the two transforms and
-two writers are both defined by enclosing the pair in a list.
+Each Reader, Transform and Writer is specified by a dict with two keys:
+``class`` and ``kwargs``. Unsurprisingly, the ``class`` key specifies the
+class name of the component to be instantiated, e.g. ``SerialReader`` or
+``TimestampTransform``.  The ``kwargs`` key should be a dict whose key-value
+pairs are the argument names and values to be used in instantiated that class.
+For example, the definition above corresponds to instantiating the following
+components in Python:
+```
+readers = [
+ SerialReader(baudrate=9600, port='/dev/ttyr15')
+]
+transforms = [
+ TimestampTransform(),  # no kwargs needed for TimestampTransform
+ PrefixTransform(prefix='gyr1')
+]
+writers = [
+  LogfileWriter(filebase='/log/current/gyr1'),
+  UDPWriter(port=6224)
+]
+```
+Arguments for which the class provides default values may be omitted if 
+desired.
 
 ## Cruise Definitions
 
