@@ -2,6 +2,8 @@
 © David Pablo Cohn - david.cohn@gmail.com  
 2019-09-03
 
+This directory contains auto-generated HTML documentation for logger and server components. Please see the index file at <a href=index.html>index.html</a> to view the files.
+
  - [Logger component documentation here](logger/index.html)
  - [Server component documentation here](server/index.html)
 
