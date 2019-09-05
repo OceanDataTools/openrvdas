@@ -6,7 +6,7 @@
 
 * [Overview](#overview)
 * [Logger Configurations](#logger-configurations)
-* [Cruise configurations](#cruise-configurations)
+* [Cruise Definitions](#cruise-definitions)
   * [Modes](#modes)
 
 ## Overview
@@ -15,7 +15,7 @@ Please see the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md)
 for a general introduction to loggers.
 
 The workhorse utility of the OpenRVDAS system is the Listener class,
-which can be invoked either indirectly by ```server/run_loggers.py```
+which can be invoked either indirectly by ```server/logger_runner.py```
 or ```server/logger_manager.py``` or directly via the ```listen.py```
 script. When the listen.py script is run, it can take (among other
 things) a configuration file describing what Readers, Transforms and
@@ -26,17 +26,6 @@ logger/listener/listen.py --config_file gyr_logger.yaml
 ```
 This document describes the format and rationale behind those
 configuration files.
-
-## YAML vs JSON?
-
-Configuration files may be either in YAML or JSON format. YAML is a
-strict superset of JSON (with the caveat that it is unable to accept
-tab characters as whitespace), so either are acceptable.
-
-Historically, configurations were JSON, but JSON's lack of comments
-increased the inscrutability of configuration files. I believe we are
-following the growing consensus in the community that YAML is for
-configurations, and JSON is for serialization.
 
 ## Logger Configurations
 
@@ -63,12 +52,15 @@ writers:  # List of writers - these will be called in parallel
     port: 6224
 ```
 
-The configuration definition is a YAML-formatted dictionary with the
-following workflow:
+The configuration is in [YAML format](https://yaml.org/). YAML is a strict
+superset of JSON, but is more concise and allows comments, so is preferred
+for readability.
+
+In this case, the configuration definition specifies the following workflow:
 
 ![Dual output configuration](images/dual_writer.png)
 
-The configuration text contains three essential keys: "readers",
+The definition contains three essential keys: "readers",
 "transforms", and "writers" (optional keys "name", "interval" and
 "check_format" are also accepted, in keeping with the arguments taken
 by the Listener class constructor).
@@ -104,6 +96,13 @@ writers = [
 ```
 Arguments for which the class provides default values may be omitted if 
 desired.
+
+### Redirecting Standard Error
+
+The Listener class accepts a further (optional) special key,
+``stderr_writers``, that tells the Listener where to send any
+diagnostic messages. Its format is the same as that for the normal
+``writers`` key.
 
 ## Cruise Definitions
 
