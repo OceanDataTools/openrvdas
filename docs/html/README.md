@@ -2,8 +2,8 @@
 © David Pablo Cohn - david.cohn@gmail.com  
 2019-09-03
 
- - [Logger component documentation here](https://raw.githubusercontent.com/davidpablocohn/openrvdas/issue_148/docs/html/logger/index.html)
- - [Server component documentation here](https://raw.githubusercontent.com/davidpablocohn/openrvdas/issue_148/docs/html/server/index.html)
+ - [Logger component documentation here](logger/index.html)
+ - [Server component documentation here](server/index.html)
 
 The documents in this directory were generated automatically by [pdoc](https://pdoc3.github.io/pdoc/) using the commands:
 
