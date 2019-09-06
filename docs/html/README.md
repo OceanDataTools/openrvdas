@@ -2,6 +2,9 @@
 © David Pablo Cohn - david.cohn@gmail.com  
 2019-09-03
 
+The following directories of documentation are best accessed by pointing your browser directly at
+the files in your local copy of the repository:
+
  - [Logger component documentation here](logger/index.html)
  - [Server component documentation here](server/index.html)
 
