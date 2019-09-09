@@ -122,7 +122,7 @@ from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 
 # Imports for running CachedDataServer
-from logger.utils.cached_data_server import CachedDataServer
+from server.cached_data_server import CachedDataServer
 from logger.readers.udp_reader import UDPReader
 from logger.transforms.from_json_transform import FromJSONTransform
 

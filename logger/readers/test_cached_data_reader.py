@@ -14,7 +14,7 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 
 from logger.readers.text_file_reader import TextFileReader
 from logger.readers.cached_data_reader import CachedDataReader
-from logger.utils.cached_data_server import CachedDataServer
+from server.cached_data_server import CachedDataServer
 from logger.listener.listen import ListenerFromLoggerConfigFile
 
 WEBSOCKET_PORT = 8769
