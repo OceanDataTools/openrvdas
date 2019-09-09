@@ -2,7 +2,8 @@
 © David Pablo Cohn - david.cohn@gmail.com  
 2019-09-03
 
-This directory contains auto-generated HTML documentation for logger and server components. Please see the index file at <a href=http://htmlpreview.github.com/?https://github.com/davidpablocohn/openrvdas/blob/issue_148/docs/html/index.html>index.html</a> to view the files.
+The following directories of documentation are best accessed by pointing your browser directly at
+the files in your local copy of the repository:
 
  - [Logger component documentation here](logger/index.html)
  - [Server component documentation here](server/index.html)
@@ -14,7 +15,7 @@ pip3 install pdoc
 
 # Generate docs for logger components and some server scripts
 pdoc3 --html -o docs/html logger
-pdoc3 -f --html --filter logger_,server_api -o docs/html server
+pdoc3 -f --html --filter logger_,server_api,cached -o docs/html server
 
 # Get rid of docs for all test_*.py files
 rm docs/html/logger/*/test_*.html docs/html/server/test_*.html
