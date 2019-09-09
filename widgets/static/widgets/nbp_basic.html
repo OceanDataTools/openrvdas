@@ -9,52 +9,53 @@
       .ship_table {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         border-collapse: collapse;
-        width: 100%;
+        width: 540px;
+        background-color: lightslategray;
       }
       .ship_table td, .ship_table th {
         border: 1px solid #ddd;
         padding: 8px;
       }
-      .td_70 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 70%;
-      }
       .td_50 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 50%;
+        width: 270px;
+      }
+      .name_td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 270px;
+      }
+      .name_td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 135px;
+      }
+      .val_td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 270px;
+      }
+      .val_td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 135px;
       }
       .td_30 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
         width: 30%;
       }
-      .name_td_25 {
+      .td_70 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        font-weight: bold;
-        width: 25%;
-      }
-      .name_td_50 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        font-weight: bold;
-        width: 50%;
+        width: 70%;
       }
       .val_td {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-      }
-      .val_td_50 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 50%;
-      }
-      .val_td_25 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 25%;
       }
     </style>
   </head>
@@ -115,14 +116,14 @@
         </td>
       </tr>
       <tr>
-        <td>Course: <span id="course_true">-</span>°</td>
-        <td>SOG: <span id="sog_kt">-</span> kts</td>
-        <td class="val_td">Pitch: <span id="pitch"></span>°</td>
+        <td class="val_td_25">Course: <span id="course_true">-</span>°</td>
+        <td class="val_td_25">SOG: <span id="sog_kt">-</span> kts</td>
+        <td class="val_td_50">Pitch: <span id="pitch"></span>°</td>
       </tr>
       <tr>
-        <td>Heading: <span id="heading_true"></span>°</td>
+        <td class="val_td_25">Heading: <span id="heading_true"></span>°</td>
         <td></td>
-        <td class="val_td">Roll: <span id="roll"></span>°</td>
+        <td class="val_td_50">Roll: <span id="roll"></span>°</td>
       </tr>
     </table>
 
@@ -230,7 +231,16 @@
     }
   };
   widget_list.push(new DialWidget('rel_wind_dir', rel_wind_fields,
-                                  {title:{text:''}, credits:false, maxPadding: 0.05}));
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
 
   //////////////////
   // True winds
@@ -247,7 +257,16 @@
     }
   };
   widget_list.push(new DialWidget('true_wind_dir', true_wind_fields,
-                           {title:{text:''}, credits:false}));
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
   var port_rel_speed_fields = {
     MwxPortRelWindSpeed: {
       name: "Port Rel Wind Speed",

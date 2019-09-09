@@ -86,6 +86,9 @@ TrimbleGPS:
     GPSYear:
       units: ""
       description: ""
+    GPSDate:
+      units: ""
+      description: ""
     LocalHours:
       units: ""
       description: ""
@@ -132,6 +135,11 @@ TrimbleGPS:
       description: "Longitude in degrees; east or west depends on value of EorW"
     EorW:
       description: "E if Longitude value is east, W otherwise"
+    MagneticVar:
+      units: "degrees"
+      description: "Magnetic variation in degrees; east or west depends on value of MagneticVarEorW"
+    MagneticVarEorW:
+      description: "E if Magnetic variation value is east, W otherwise"
     DataValid:
       description: "A = Data valid, V = Data not valid"
     Mode:

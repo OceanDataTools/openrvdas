@@ -201,7 +201,7 @@ SVP:
   format: "{Velocity:g}"
 
   fields:
-    Temp:
+    Velocity:
       units: "m/s"
       description: "Sound Velocity, from ADCP sonar well"
 
