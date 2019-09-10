@@ -205,7 +205,7 @@ pguv:
 ######################################
 rtmp:
   category: "device"
-  device_type: "RemoteTemp"
+  device_type: "SBE38"
   description: "Seawater intake temperature"
 
   fields:

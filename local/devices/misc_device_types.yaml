@@ -182,7 +182,7 @@ PGUV:
       description: "Sensor input voltage"
 
 ######################################
-RemoteTemp:
+SBE38:
   category: "device_type"
   description: "Digital Remote Temperature Sensor Sea-Bird SBE-38"
 
@@ -192,6 +192,22 @@ RemoteTemp:
     Temp:
       units: "C"
       description: "Seawater intake temperature"
+
+######################################
+SBE48:
+  category: "device_type"
+  description: "Digital Remote Temperature Sensor Sea-Bird SBE-48"
+
+  format: "# {Temp:g}, {Date:nc}, {Time:nc}"
+
+  fields:
+    Temp:
+      units: "C"
+      description: "Seawater intake temperature"
+    Date:
+      description: "Date in 'DD Mon YYYY' format"
+    Time:
+      description: "Time in HH:MM:SS format"
 
 ######################################
 SVP:
