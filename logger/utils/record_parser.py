@@ -248,9 +248,9 @@ class RecordParser:
       logging.error('Internal error: No "device_type" for device %s!', device)
       return None
 
-    # Extract the message we're going to parse
-    message = parsed_record.get('message', None)
-    if message is None:
+    # Extract the message we're going to parse; remove trailing whitespace
+    message = parsed_record.get('message', '').rstrip()
+    if not message:
       logging.warning('No message found in record: %s', record)
       return None
     del parsed_record['message']
@@ -351,7 +351,7 @@ class RecordParser:
         return fields.named
 
     # Nothing matched, go home empty-handed
-    logging.warning('No formats for %s matched message %s',
+    logging.warning('No formats for %s matched message "%s"',
                     device_type, message)
     return {}
 
