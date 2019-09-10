@@ -52,7 +52,7 @@ def optional_d(text):
     return int(text)
   else:
     return None
-optional_d.pattern = r'\d*'
+optional_d.pattern = r'\s*\d*'
 
 def optional_f(text):
   """Method for parsing an 'optional' generalized float."""
@@ -60,7 +60,7 @@ def optional_f(text):
     return float(text)
   else:
     return None
-optional_f.pattern = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'
+optional_f.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'
 
 def optional_g(text):
   """Method for parsing an 'optional' generalized number."""
@@ -68,7 +68,7 @@ def optional_g(text):
     return float(text)
   else:
     return None
-optional_g.pattern = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
+optional_g.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
 
 def optional_w(text):
   """Method for parsing an 'optional' letters/numbers/underscore

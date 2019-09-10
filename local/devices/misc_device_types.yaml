@@ -211,10 +211,8 @@ TSG_SBE45:
   description: "Thermosalinograph Sea-Bird SBE-45"
 
   format:
-  - "{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g},{:s}{SoundVelocity:g}"
-  - "{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g}"
-  - "{:s}{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g}"
-
+  - "{Temp:og},{Conductivity:og},{Salinity:og},{SoundVelocity:og}"
+  - "{Temp:og},{Conductivity:og},{Salinity:og}"
   fields:
     Temp:
       units: "C"
