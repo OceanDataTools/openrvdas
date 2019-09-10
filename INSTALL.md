@@ -7,12 +7,12 @@ At the time of this writing OpenRVDAS has been built and tested against MacOS X,
 
 _This is the recommended way to install for CentOS 7 and Ubuntu 18._
 
-Grab the script:
+Grab the script (centos7 or ubuntu18, as appropriate for your distribution):
 
 ```
 # Get build script from Github
 wget \
-  https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/utils/build\_openrvdas_centos7.sh
+  https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/utils/build_openrvdas_centos7.sh
 ```
 
 Now run the script as sudo

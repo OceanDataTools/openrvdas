@@ -26,9 +26,8 @@ class CachedDataReader(Reader):
   websocket connection.
   """
   def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET):
-    """Subscribe to and read field values from a CachedDataServer via
-    websocket connection.
-
+    """
+    ```
     subscription - a dictionary corresponding to the full
         fields/seconds, etc that the reader wishes, following the
         conventions described in logger/utils/cached_data_server.py
@@ -39,9 +38,9 @@ class CachedDataReader(Reader):
 
     data_server - the host and port at which to try to connect to a
         CachedDataServer
-
+    ```
     When invoked in a config file, this would be:
-
+    ```
       readers:
         class: CachedDataServer
         kwargs:
@@ -52,7 +51,7 @@ class CachedDataReader(Reader):
                 seconds: 0
               S330HeadingTrue:
                 seconds: 0
-
+    ```
     """
 
     if not WEBSOCKETS_ENABLED:

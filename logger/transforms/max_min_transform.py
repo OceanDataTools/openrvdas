@@ -16,13 +16,13 @@ class MaxMinTransform(Transform):
   dict are greater than/less than the largest/smallest values seen for
   their respective variables. Otherwise returns dict of colon-suffixed
   field names that have new max or min values. E.g.:
-
+  ```
   max_min = MaxMinTransform()
   max_min.transform({'f1': 1, 'f2': 1.5}) -> {'f1:max':1, 'f1:min':1,
                                               'f2:max':1.5, 'f2:min':1.5}
   max_min.transform({'f1': 1, 'f2': 1.5}) -> {}
   max_min.transform({'f1': 1.1, 'f2': 1.4}) -> {'f1:max':1.1, 'f2:min':1.4,}
-
+  ```
   Note: ignores fields that are not bool, int or float.
   """
   def __init__(self):

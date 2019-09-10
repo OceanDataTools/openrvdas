@@ -19,7 +19,7 @@ class NetworkWriter(Writer):
     Write text records to a network socket.
 
     NOTE: tcp is nominally implemented, but DOES NOT WORK!
-
+    ```
     network      Network address to write, in host:port format (e.g.
                  'rvdas:6202'). If host is omitted (e.g. ':6202'),
                  broadcast via UDP on specified port.
@@ -28,6 +28,7 @@ class NetworkWriter(Writer):
 
     eol          If specified, an end of line string to append to record
                  before sending
+    ```
     """
 
     super().__init__(input_format=Text)

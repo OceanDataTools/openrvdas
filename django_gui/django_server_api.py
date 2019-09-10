@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import sys
+import threading
 import time
 
 from json import dumps as json_dumps
@@ -24,8 +25,9 @@ django.setup()
 from django.db import connection
 
 from .models import Logger, LoggerConfig, LoggerConfigState
-from .models import Mode, Cruise, CruiseState
-from .models import LogMessage, ServerState
+from .models import Mode, Cruise
+from .models import LogMessage
+from .models import LastUpdate
 
 from logger.utils.timestamp import datetime_obj, datetime_obj_from_timestamp
 from logger.utils.timestamp import DATE_FORMAT
@@ -40,6 +42,24 @@ class DjangoServerAPI(ServerAPI):
     super().__init__()
     self.update_callbacks = []
 
+    # We're going to try to minimize the number of expensive queries we
+    # make to the API by caching the last time any configurations were
+    # updated. When we make a change to the DB, we'll update the most
+    # recent LastUpdate entry, so that's all we'll have to check.
+
+    # Some values we're going to cache for efficiency
+    self.active_mode = None
+    self.active_mode_time = 0
+
+    self.logger_configs = None
+    self.logger_configs_time = 0
+
+    self.status = None
+    self.status_time = 0
+  
+    self.retrieved_status = None
+    self.retrieved_status_time = 0
+  
     # Test whether Django is in fact initialized. If we get a DoesNotExist
     # error, that means that our tables are working.
     try:
@@ -53,9 +73,41 @@ class DjangoServerAPI(ServerAPI):
       sys.exit(1)
 
   #############################
+  def _last_config_update_time(self):
+    """Get the time our database was last updated."""
+    try:
+      while True:
+        try:
+          last_update = LastUpdate.objects.latest('timestamp')
+        except django.db.utils.OperationalError:
+          logging.warning('Failed MySQL read - trying again')
+          connection.close()
+          time.sleep(0.05)
+          continue
+        return last_update.timestamp.timestamp()
+    except LastUpdate.DoesNotExist:
+      return 0
+
+  #############################
+  def _set_update_time(self):
+    """Mark that our database has just been updated (and therefore any
+    caches may be invalid."""
+
+    while True:
+      try:
+        LastUpdate().save()
+        return
+      except django.db.utils.OperationalError as e:
+        logging.warning('_set_update_time() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.01)
+
+  #############################
   def _get_cruise_object(self):
     """Helper function for getting cruise object from id. Raise exception
     if it does not exist."""
+    #logging.info('_get_cruise_object')
     while True:
       try:
         return Cruise.objects.get()
@@ -71,6 +123,7 @@ class DjangoServerAPI(ServerAPI):
   def _get_logger_object(self, logger_id):
     """Helper function for getting logger object from cruise and
     name. Raise exception if it does not exist."""
+    #logging.info('_get_logger_object')
     while True:
       try:
         return Logger.objects.get(name=logger_id)
@@ -88,6 +141,7 @@ class DjangoServerAPI(ServerAPI):
     logger_id. If mode is specified, get logger's config in that mode
     (or None if no config). If mode is None, get logger's
     current_config."""
+    #logging.info('_get_logger_config_object')
     while True:
       try:
         if mode is None:
@@ -121,6 +175,7 @@ class DjangoServerAPI(ServerAPI):
   def _get_logger_config_object_by_name(self, config_name):
     """Helper function for getting LoggerConfig object from
     config name. Raise exception if it does not exist."""
+    #logging.info('_get_config_object_by_name')
     while True:
       try:
         return LoggerConfig.objects.get(name=config_name)
@@ -144,26 +199,37 @@ class DjangoServerAPI(ServerAPI):
   def get_configuration(self):
     """Get OpenRVDAS configuration from the data store.
     """
+    #logging.info('get_config')
     return self._get_cruise_object()
 
   ############################
   def get_modes(self):
     """Return list of modes defined for given cruise."""
+    #logging.info('get_modes')
     cruise = self._get_cruise_object()
     return cruise.modes()
 
   ############################
   def get_active_mode(self):
     """Return active mode for current cruise."""
+    #logging.info('get_active_mode')
+    last_update = self._last_config_update_time()
+    
+    if (self.active_mode and self.active_mode_time >= last_update):
+      return self.active_mode
+    
     cruise = self._get_cruise_object()
     if cruise.current_mode:
-      return cruise.current_mode.name
+      self.active_mode = cruise.current_mode.name
+      self.active_mode_time = time.time()
+      return self.active_mode
     return None
 
   ############################
   def get_default_mode(self):
     """Get the name of the default mode for current cruise
     from the data store."""
+    #logging.info('get_default')
     while True:
       try:
         cruise = self._get_cruise_objects.get()
@@ -179,12 +245,14 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def get_logger(self, logger):
     """Retrieve the logger spec for the specified logger id."""
+    #logging.info('get_logger')
     return self.get_logger_object(logger_id)
 
   ############################
   def get_loggers(self):
     """Get a dict of {logger_id:logger_spec,...} defined for the
     current cruise."""
+    #logging.info('get_loggers')
     while True:
       try:
         loggers = Logger.objects.all()
@@ -204,6 +272,7 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def get_logger_config(self, config_name):
     """Retrieve the config associated with the specified name."""
+    #logging.info('get_logger_config')
     config = self._get_logger_config_object_by_name(config_name)
     return json.loads(config.config_json)
 
@@ -214,16 +283,47 @@ class DjangoServerAPI(ServerAPI):
     the cruise's current logger configs."""
 
     configs = {}
-    for logger_id in self.get_loggers():
-      config_obj = self._get_logger_config_object(logger_id, mode)
-      configs[logger_id] = json.loads(config_obj.config_json)
+    if mode is None:
+      last_update = self._last_config_update_time()    
+      if (self.logger_configs and self.logger_configs_time >= last_update):
+        return self.logger_configs
+
+      # If cache isn't good, mark our time and fetch configs from DB
+      self.logger_configs_time = time.time()
+
+      for config in LoggerConfig.objects.filter(current_config=True):
+        configs[config.logger.name] = json.loads(config.config_json)
+
+      # Cache the configs we've gathered
+      self.logger_configs = configs
+
+      # And return them
+      return configs
+
+    # If they've specified a mode, do it the hard way. First, make
+    # sure it's a real mode.
+    try:
+      mode_obj = Mode.objects.get(name=mode)
+    except Mode.DoesNotExist:
+      raise ValueError('Cruise has no mode %s' % mode)
+
+    # Now fetch the relevant loggers
+    for config in LoggerConfig.objects.filter(modes__name=mode):
+      configs[config.logger.name] = json.loads(config.config_json)
     return configs
+    
+    # If they've specified a mode, do it the hard way..
+    #for logger_id in self.get_loggers():
+    #  config_obj = self._get_logger_config_object(logger_id, mode)
+    #  configs[logger_id] = json.loads(config_obj.config_json)
+    #return configs
 
   ############################
   def get_logger_config_name(self, logger_id, mode=None):
     """Retrieve name of the config associated with the specified logger
     in the specified mode. If mode is omitted, retrieve name of logger's
     current config."""
+    #logging.info('get_logger_config_name')
     config = self._get_logger_config_object(logger_id, mode)
     if not config:
       logging.debug('No config found for logger %s', logger_id)
@@ -236,6 +336,7 @@ class DjangoServerAPI(ServerAPI):
     > api.get_logger_config_names('NBP1406', 'knud')
           ["off", "knud->net", "knud->net/file", "knud->net/file/db"]
     """
+    #logging.info('get_logger_config_names')
     while True:
       try:
         return [config.name for config in
@@ -254,6 +355,7 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def set_active_mode(self, mode):
     """Set the current mode of the current cruise in the data store."""
+    #logging.info('set_active_mode')
     while True:
       try:
         cruise = self._get_cruise_object()
@@ -265,10 +367,16 @@ class DjangoServerAPI(ServerAPI):
         cruise.save()
 
         # Store the fact that our mode has been changed.
-        CruiseState(cruise=cruise, current_mode=mode_obj).save()
+        #CruiseState(cruise=cruise, current_mode=mode_obj).save()
 
         for logger in Logger.objects.filter(cruise=cruise):
           logger_id = logger.name
+
+          # Old config is no longer the current config
+          old_config = logger.config
+          old_config.current_config = False
+          old_config.save()
+
           new_config = self._get_logger_config_object(logger_id=logger_id,
                                                       mode=mode)
           # Save new config and note that its state has been updated
@@ -276,6 +384,12 @@ class DjangoServerAPI(ServerAPI):
           logger.save()
           LoggerConfigState(logger=logger, config=new_config, pid=0,
                             running=False).save()
+          new_config.current_config = True
+          new_config.save()
+        
+        # Register that we've updated the configs, so our cached
+        # values are stale.
+        self._set_update_time()
 
         # Notify any update_callbacks that wanted to be called when the state of
         # the world changes.
@@ -291,9 +405,17 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def set_active_logger_config(self, logger, config_name):
     """Set specified logger to new config."""
+    logging.warning('set_active_config')
     while True:
       try:
         logger = self._get_logger_object(logger)
+
+        # Old config is no longer the current config
+        old_config = logger.config
+        old_config.current_config = False
+        old_config.save()
+
+        # Get the new config
         new_config = self._get_logger_config_object_by_name(config_name)
         if not new_config.logger == logger:
           raise ValueError('Config %s is not compatible with logger %s)'
@@ -304,6 +426,13 @@ class DjangoServerAPI(ServerAPI):
         # Save that we've updated the logger's config
         LoggerConfigState(logger=logger, config=new_config, pid=0,
                           running=False).save()
+
+        new_config.current_config = True
+        new_config.save()
+
+        # Register that we've updated at least one config, so our
+        # cached values are stale.
+        self._set_update_time()
 
         # Notify any update_callbacks that wanted to be called when the state of
         # the world changes.
@@ -339,10 +468,20 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def update_status(self, status):
     """Save/register the loggers' retrieved status report with the API."""
-    logging.debug('Got status: %s', status)
+    if status == self.status:
+      logging.debug('No status change detected - not updating database.')
+      return
+
+    logging.debug('Status has updated - writing to database:\n %s', status)
+    # If status has changed, cache it and record change in database
+    self.status = status
+    self.status_time = time.time()
+
+    # Mark that any caches are now suspect
+    self._set_update_time()
+    
     while True:
       try:
-        now = datetime_obj()
         try:
           for logger_id, logger_report in status.items():
             logger_config = logger_report.get('config', None)
@@ -415,11 +554,23 @@ class DjangoServerAPI(ServerAPI):
     """Retrieve a dict of the most-recent status report from each
     logger. If since_timestamp is specified, retrieve all status reports
     since that time."""
+
     status = {}
     while True:
       try:
         if since_timestamp is None:
-          # We just want the latest config state message from each logger
+          # If they just want the latest status and our cache is good,
+          # return it.
+          last_update = self._last_config_update_time()
+          if (self.retrieved_status and
+              self.retrieved_status_time >= last_update) and None:
+            logging.debug('Returning cached status')
+            return self.retrieved_status
+
+          # If here, cache was suspect - retrieve fresh
+          logging.debug('Cache is stale, retrieving status')
+          self.retrieved_status_time = time.time()
+          
           for logger in Logger.objects.all():
             try:
               lcs = LoggerConfigState.objects.filter(
@@ -446,13 +597,16 @@ class DjangoServerAPI(ServerAPI):
                     LoggerConfigState.DoesNotExist):
               logging.warning('no LoggerConfigState for %s', logger)
               continue
-        else:
-          # We want all status updates since specified timestamp
-          since_datetime = datetime_obj_from_timestamp(since_timestamp)
-          for lcs in LoggerConfigState.objects.filter(
-              last_checked__gt=since_datetime):
-            _add_lcs_to_status(lcs)
+          self.retrieved_status = status
+          return status
+        
+        # If here, we want all status updates since specified timestamp
+        since_datetime = datetime_obj_from_timestamp(since_timestamp)
+        for lcs in LoggerConfigState.objects.filter(
+            last_checked__gt=since_datetime):
+          _add_lcs_to_status(lcs)
         return status
+
       except django.db.utils.OperationalError as e:
         logging.warning('set_active_logger_config() '
                         'Got DjangoOperationalError. Trying again: %s', e)

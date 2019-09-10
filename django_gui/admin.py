@@ -1,8 +1,9 @@
 from django.contrib import admin
 
 from .models import Logger, LoggerConfig, LoggerConfigState
-from .models import Mode, Cruise, CurrentCruise, CruiseState
-from .models import LogMessage, StatusUpdate, ServerState
+from .models import Mode, Cruise
+from .models import LastUpdate
+from .models import LogMessage
 
 #############################################
 class ModeInline(admin.TabularInline):
@@ -20,7 +21,7 @@ class LoggerConfigModeInline(admin.TabularInline):
   model = LoggerConfig.modes.through
   extra = 0
   #fields = ('logger', 'name')
-  #readonly_fields = ('name', 'logger', 'enabled', 'modes', 'config_json')
+  #readonly_fields = ('name', 'logger', 'current_config', 'enabled', 'modes', 'config_json')
   can_delete = False
   show_change_link = True
 
@@ -31,7 +32,8 @@ class LoggerAdmin(admin.ModelAdmin):
 
 #############################################
 class LoggerConfigAdmin(admin.ModelAdmin):
-  list_display = ('name', 'logger', 'get_modes', 'enabled', 'config_json')
+  list_display = ('name', 'logger', 'get_modes', 'current_config',
+                  'enabled', 'config_json')
   list_filter = ('logger', 'enabled')
 
   def get_modes(self, obj):
@@ -76,25 +78,36 @@ class CruiseAdmin(admin.ModelAdmin):
     ]
   inlines = [ ModeInline ]
 
-class CurrentCruiseAdmin(admin.ModelAdmin):
-  list_display = ('cruise', 'as_of')
-
-class CruiseStateAdmin(admin.ModelAdmin):
-  list_display = ('cruise', 'current_mode', 'started')
-  list_filter = ('cruise',)
+#############################################
+class LastUpdateAdmin(admin.ModelAdmin):
+  list_display = ('timestamp',)
 
 #############################################
-class ServerStateAdmin(admin.ModelAdmin):
-  list_display = ('timestamp', 'server', 'running', 'desired', 'process_id')
-  list_filter = ('server', 'running', 'desired')
+class LogMessageAdmin(admin.ModelAdmin):
+  list_display = ('timestamp', 'source', 'user', 'log_level',
+                  'cruise_id', 'message')
+  list_filter = ('source', 'user', 'log_level', 'cruise_id')
+
+#############################################
+#class CurrentCruiseAdmin(admin.ModelAdmin):
+#  list_display = ('cruise', 'as_of')
+
+#class CruiseStateAdmin(admin.ModelAdmin):
+#  list_display = ('cruise', 'current_mode', 'started')
+#  list_filter = ('cruise',)
+
+#############################################
+#class ServerStateAdmin(admin.ModelAdmin):
+#  list_display = ('timestamp', 'server', 'running', 'desired', 'process_id')
+#  list_filter = ('server', 'running', 'desired')
 
 class LogMessageAdmin(admin.ModelAdmin):
   list_display = ('timestamp', 'source', 'user', 'log_level',
                   'cruise_id', 'message')
   list_filter = ('source', 'user', 'log_level', 'cruise_id')
 
-class StatusUpdateAdmin(admin.ModelAdmin):
-  list_display = ('timestamp', 'server', 'cruise', 'status')
+#class StatusUpdateAdmin(admin.ModelAdmin):
+#  list_display = ('timestamp', 'server', 'cruise', 'status')
 
 #############################################
 admin.site.register(Logger, LoggerAdmin)
@@ -104,9 +117,11 @@ admin.site.register(LoggerConfigState, LoggerConfigStateAdmin)
 admin.site.register(Mode, ModeAdmin)
 
 admin.site.register(Cruise, CruiseAdmin)
-admin.site.register(CurrentCruise, CurrentCruiseAdmin)
-admin.site.register(CruiseState, CruiseStateAdmin)
-
 admin.site.register(LogMessage, LogMessageAdmin)
-admin.site.register(StatusUpdate, StatusUpdateAdmin)
-admin.site.register(ServerState, ServerStateAdmin)
+admin.site.register(LastUpdate, LastUpdateAdmin)
+
+#admin.site.register(CurrentCruise, CurrentCruiseAdmin)
+#admin.site.register(CruiseState, CruiseStateAdmin)
+
+#admin.site.register(StatusUpdate, StatusUpdateAdmin)
+#admin.site.register(ServerState, ServerStateAdmin)

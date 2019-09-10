@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """Instantiates and runs the Listener class. Try
-
+```
   listen.py --help
-
+```
 for details.
 
 Examples:
-
-  logger/listener/listen.py \
-    --logfile test/NBP1700/s330/raw/NBP1700_s330 \
-    --interval 0.25 \
-    --transform_slice 1: \
-    --transform_timestamp \
-    --transform_prefix s330 \
+  ```
+  logger/listener/listen.py \ 
+    --logfile test/NBP1700/s330/raw/NBP1700_s330 \ 
+    --interval 0.25 \ 
+    --transform_slice 1: \ 
+    --transform_timestamp \ 
+    --transform_prefix s330 \ 
     --write_file -
-
+  ```
 (Reads lines from the Seapath300 sample logfiles every 0.25 seconds,
 strips the old timestamps off, prepends a new one, then the prefix
 's330', then writes the result to stdout.)
-
-  logger/listener/listen.py \
+  ```
+  logger/listener/listen.py \ 
     --config_file test/configs/simple_logger.yaml
-
+  ```
 (Instantiates logger from config file that says to read from the
 project's LICENSE file, prepend a timestamp and the string "license:"
 and writ to stdout every 0.2 seconds.)
@@ -32,10 +32,10 @@ receives, then writing it back out to somewhere else.
 
 For fun, you can even run listen.py as an Ouroboros script, feeding it on its
 own output:
-
+```
   echo x > tmp
   listen.py --file tmp --prefix p --write_file tmp --tail --interval 1 -v -v
-
+```
 """
 import argparse
 import logging
@@ -487,8 +487,7 @@ if __name__ == '__main__':
 
   parser.add_argument('--write_cached_data_server',
                       dest='write_cached_data_server', default=None,
-                      help='instantiate a CachedDataServer to serve the '
-                      'passed data via a websocket server at the specified '
+                      help='Write to a CachedDataServer at the specified '
                       'host:port')
 
   parser.add_argument('--write_record_screen', dest='write_record_screen',

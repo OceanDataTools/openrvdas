@@ -25,6 +25,7 @@ class LogfileReader(TimestampedReader):
                time_format=timestamp.TIME_FORMAT,
                date_format=timestamp.DATE_FORMAT):
     """
+    ```
     filebase     Possibly wildcarded string specifying files to be opened.
                  Special case: if file_spec is None, read from stdin.
 
@@ -45,7 +46,7 @@ class LogfileReader(TimestampedReader):
     interval
                  How long to sleep between returning records. In general
                  this should be zero except for debugging purposes.
-
+    ```
     Note that the order in which files are opened will probably be in
     alphanumeric by filename, but this is not strictly enforced and
     depends on how glob returns them.

@@ -1,12 +1,15 @@
 # OpenRVDAS Configuration Files
-© 2018-2019 David Pablo Cohn - DRAFT 2019-03-15
+© 2018-2019 David Pablo Cohn - DRAFT 2019-09-05
 
 
 ## Table of Contents
 
 * [Overview](#overview)
 * [Logger Configurations](#logger-configurations)
-* [Cruise configurations](#cruise-configurations)
+  * [Redirecting Standard Error](#redirecting-standard-error)
+  * [Reader, Transform and Writer Documentation](#reader-transform-and-writer-documentation)
+
+* [Cruise Definitions](#cruise-definitions)
   * [Modes](#modes)
 
 ## Overview
@@ -15,7 +18,7 @@ Please see the [OpenRVDAS Introduction to Loggers](intro_to_loggers.md)
 for a general introduction to loggers.
 
 The workhorse utility of the OpenRVDAS system is the Listener class,
-which can be invoked either indirectly by ```server/run_loggers.py```
+which can be invoked either indirectly by ```server/logger_runner.py```
 or ```server/logger_manager.py``` or directly via the ```listen.py```
 script. When the listen.py script is run, it can take (among other
 things) a configuration file describing what Readers, Transforms and
@@ -27,17 +30,6 @@ logger/listener/listen.py --config_file gyr_logger.yaml
 This document describes the format and rationale behind those
 configuration files.
 
-## YAML vs JSON?
-
-Configuration files may be either in YAML or JSON format. YAML is a
-strict superset of JSON (with the caveat that it is unable to accept
-tab characters as whitespace), so either are acceptable.
-
-Historically, configurations were JSON, but JSON's lack of comments
-increased the inscrutability of configuration files. I believe we are
-following the growing consensus in the community that YAML is for
-configurations, and JSON is for serialization.
-
 ## Logger Configurations
 
 In the example above, the file gyr\_logger.yaml might contain the
@@ -45,7 +37,7 @@ following text:
 
 ```
 readers: # A single reader in this case
-  class: SerialReader
+- class: SerialReader
   kwargs:
     baudrate: 9600
     port: /dev/ttyr15
@@ -63,32 +55,66 @@ writers:  # List of writers - these will be called in parallel
     port: 6224
 ```
 
-The configuration definition is a YAML-formatted dictionary with the
-following workflow:
+The configuration is in [YAML format](https://yaml.org/). YAML is a strict
+superset of JSON, but is more concise and allows comments, so is preferred
+for readability.
+
+In this case, the configuration definition specifies the following workflow:
 
 ![Dual output configuration](images/dual_writer.png)
 
-The configuration text contains three essential keys: "readers",
+The definition contains three essential keys: "readers",
 "transforms", and "writers" (optional keys "name", "interval" and
 "check_format" are also accepted, in keeping with the arguments taken
 by the Listener class constructor).
 
-The values for these keys may either be
+The values for these keys should be a list of dicts each dict defining
+a component.
 
-1. a dict defining a component, or
-1. a list of dicts, each dict defining a component
-
-Note that if a list of components is provided for in the "readers" or
-"writers", section, the listener will operate them all in parallel. If
-a list of components is provided in the "transforms" section, the
-listener will run them in series, as in the following diagram:
+Recall that a Listener instance runs all its Readers in parallel, pipes
+their output to its Transforms in series, and dispatches their resulting
+output to all its Writers in parallel, as illustrated below:
 
 ![Generic listener data flow](images/generic_listener.png)
 
-In the case of gyr1_logger.yaml, the logger requires only a single
-reader, so it is defined directly as a dict; the two transforms and
-two writers are both defined by enclosing the pair in a list.
+Each Reader, Transform and Writer is specified by a dict with two keys:
+``class`` and ``kwargs``. Unsurprisingly, the ``class`` key specifies the
+class name of the component to be instantiated, e.g. ``SerialReader`` or
+``TimestampTransform``.  The ``kwargs`` key should be a dict whose key-value
+pairs are the argument names and values to be used in instantiated that class.
+For example, the definition above corresponds to instantiating the following
+components in Python:
+```
+readers = [
+ SerialReader(baudrate=9600, port='/dev/ttyr15')
+]
+transforms = [
+ TimestampTransform(),  # no kwargs needed for TimestampTransform
+ PrefixTransform(prefix='gyr1')
+]
+writers = [
+  LogfileWriter(filebase='/log/current/gyr1'),
+  UDPWriter(port=6224)
+]
+```
+Arguments for which the class provides default values may be omitted if 
+desired.
 
+### Redirecting Standard Error
+
+The Listener class accepts a further (optional) special key,
+``stderr_writers``, that tells the Listener where to send any
+diagnostic messages. Its format is the same as that for the normal
+``writers`` key.
+
+### Reader, Transform and Writer Documentation
+
+Machine-extracted documentation on which Reader, Transform and Writer components
+are available, along with their arguments, is available in HTML format in the
+[doc/html](html) directory of this project. The [README.md](html/README.md) file
+in that directory explains how the documentation is generated.
+The Listener class acceps a further (optional) special key,
+`
 ## Cruise Definitions
 
 A full cruise definition file (such as

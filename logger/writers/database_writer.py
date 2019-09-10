@@ -37,10 +37,10 @@ class DatabaseWriter(Writer):
 
     1) DASRecord
 
-    2) a dict encoding optionally a source data_id and timestamp and a
+    2) A dict encoding optionally a source data_id and timestamp and a
        mandatory 'fields' key of field_name: value pairs. This is the format
        emitted by default by ParseTransform:
-
+    ```
        {
          'data_id': ...,
          'timestamp': ...,
@@ -50,13 +50,13 @@ class DatabaseWriter(Writer):
            ...
          }
        }
-
+    ```
     A twist on format (2) is that the values may either be a singleton
     (int, float, string, etc) or a list. If the value is a singleton,
     it is taken at face value. If it is a list, it is assumed to be a
     list of (value, timestamp) tuples, in which case the top-level
     timestamp, if any, is ignored.
-
+    ```
        {
          'data_id': ...,
          'timestamp': ...,
@@ -66,7 +66,7 @@ class DatabaseWriter(Writer):
             ...
          }
        }
-
+    ```
     """
     super().__init__(input_format=Python_Record)
 
@@ -133,7 +133,7 @@ class DatabaseWriter(Writer):
     timestamp = record.get('timestamp', time.time())
     fields = record.get('fields', None)
     if fields is None:
-      logging.error('Dict record passed to CachedDataServer has no "fields" '
+      logging.error('Dict record passed to DatabaseWriter has no "fields" '
                     'key, which either means it\'s not a dict you should be '
                     'passing, or it is in the old "field_dict" format that '
                     'assumes key:value pairs are at the top level.')

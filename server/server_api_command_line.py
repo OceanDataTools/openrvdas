@@ -3,9 +3,9 @@
 
 Includes a script that maintains an InMemoryServerAPI instance and
 allows you to modify it. Run via
-
+```
     server/server_api_command_line.py
-
+```
 and type "help" for list of valid commands.
 
 Also see server/server_api.py for full documentation on the ServerAPI.

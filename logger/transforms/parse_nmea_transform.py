@@ -18,12 +18,14 @@ class ParseNMEATransform(Transform):
                sensor_model_path=nmea_parser.DEFAULT_SENSOR_MODEL_PATH,
                time_format=None):
     """
+    ```
     json    Return a JSON-encoded representation of the DASRecord instead
             of DASRecord itself.
 
     message_path, sensor_path, sensor_model_path
             Wildcarded path matching JSON definitions for sensor messages,
             sensors and sensor models.
+    ```
     """
     super().__init__(input_format=formats.NMEA,
                      output_format=formats.Python_Record)

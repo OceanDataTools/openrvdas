@@ -48,6 +48,7 @@ class TrueWindsTransform(DerivedDataTransform):
                convert_wind_factor=1,
                convert_speed_factor=1):
     """
+    ```
     course_field
     speed_field
     heading_field
@@ -79,6 +80,7 @@ class TrueWindsTransform(DerivedDataTransform):
              Typically, only one of these will be not equal to 1; e.g. to
              output true winds as meters/sec, we'll leave convert_wind_factor
              as 1 and specify convert_speed_factor=0.5144
+    ```
     """
     super().__init__()
 

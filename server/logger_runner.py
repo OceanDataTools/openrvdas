@@ -2,24 +2,26 @@
 """Low-level class to start/stop loggers according passed in
 definitions and commands.
 
-Intended to be used in one of four ways:
+Intended to be used in one of three ways:
 
 (See note below about simulated serial ports if you want to try the
 command lines below)
 
 1. As a simple standalone logger runner: you give it an intial dict of
    logger configurations, and it tries to keep them running.
-
+```
      server/logger_runner.py --config test/configs/sample_configs.yaml
-
-   Note: the LoggerRunner doesn't know anything about modes, and doesn't
-   take a full cruise definition - it just takes a dict of logger
-   configurations and runs them.
-
+```
+   It may also be invoked with a cruise definition and a mode:
+```
+     server/logger_runner.py \ 
+         --config test/NBP1406/NBP1406_cruise.yaml \ 
+         --mode log
+```
 2. As instantiated by a LoggerManager:
-
-     server/logger_manager.py --config test/configs/sample_cruise.yaml -v
-
+```
+     server/logger_manager.py --config test/NBP1406/NBP1406_cruise.yaml -v
+```
    When invoked as above, the LoggerManager will instantiate a LoggerRunner
    interpret commands from the command line and dispatch the requested
    loggers to its LoggerRunner. (Type "help" on the LoggerManager command
@@ -28,53 +30,22 @@ command lines below)
 3. As instantiated by some other script that directly creates and
    manages a LoggerRunner object.
 
-4. As a websocket client taking orders from a LoggerManager:
-
-     server/run_loggers.py --websocket localhost:8765 --host_id knud.host
-
-   with a LoggerManager running like this:
-
-     server/logger_manager.py --websocket :8765 --host_id master.host
-
-   When invoked with the --websocket flag, a LoggerManager will
-   attempt to create a websocket server at the specified address and
-   listen for clients to connect.
-
-   When invoked with the --websocket and --host_id flags, a
-   LoggerRunner will attempt to connect to the named address and
-   identify itself by the provided host_id.
-
-   When the LoggerManager identifies a config to be run that includes
-   a host_id restriction, e.g.
-
-        "knud->net": {
-            "host_id": "knud.host",
-            "readers": ...
-            ...
-         }
-
-   it will attempt to dispatch that config to the appropriate
-   client. (Note: configs with no host restriction will be run by the
-   LoggerManager itself, and if a config has a host restriction and no
-   host by that name has connected, the LoggerManager will issue a
-   warning and not run the config.)
-
-
 Simulated Serial Ports:
 
-The sample_cruise.yaml and sample_configs.yaml files above specify
+The sample_configs.yaml and NBP1406_cruise.yaml files above specify
 configs that read from simulated serial ports and write to UDP port
 6224. To get the configs to actually run, you'll need to run
-
-  logger/utils/serial_sim.py --config test/serial_sim.yaml
-
+```
+  logger/utils/serial_sim.py --config test/NBP1406/serial_sim_NBP1406.yaml
+```
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
 
 To verify that the scripts are actually working as intended, you can
 create a network listener on port 6224 in yet another window:
-
-  logger/listener/listen.py --network :6224 --write_file -
+```
+  logger/listener/listen.py --network :6224
+```
 """
 import asyncio
 import json
@@ -114,13 +85,14 @@ def clear_queue(queue):
   if queue:
     while not queue.empty():
       queue.get()
-  
+
 ################################################################################
 class LoggerRunner:
   ############################
   def __init__(self, interval=0.5, max_tries=3, initial_configs=None,
                event_loop=None, logger_log_level=logging.WARNING):
     """Create a LoggerRunner.
+    ```
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a dead logger config. If zero, then
@@ -128,11 +100,12 @@ class LoggerRunner:
 
     initial_configs - optional dict of configs to start up on creation.
 
-    event_loop - Optional event loop, if we're instantiated in a thread
-                that doesn't have its own.
+    event_loop - Optional event loop, if we are instantiated in a thread
+                that does not have its own.
 
     logger_log_level - At what logging level our component loggers
                 should operate.
+    ```
     """
     logging.info('Starting LoggerRunner')
     # Map logger name to config, process running it, and any errors
@@ -199,9 +172,10 @@ class LoggerRunner:
   def set_configs(self, new_configs):
     """Start/stop loggers as necessary to move from current configs
     to new configs.
-
+    ```
     new_configs - a dict of {logger_name:config} for all loggers that
                   should be running
+    ```
     """
     # All loggers, whether in current configuration or desired mode.
     with self.config_lock:
@@ -231,10 +205,11 @@ class LoggerRunner:
   ############################
   def set_config(self, logger, new_config):
     """Start/stop individual logger to put into new config.
-
+    ```
     logger - name of logger
 
     new_config - dict containing Listener configuration.
+    ```
     """
     with self.config_lock:
       current_config = self.logger_configs.get(logger, None)
@@ -409,11 +384,12 @@ class LoggerRunner:
   def check_logger(self, logger, manage=False):
     """Check whether passed logger is in state it should be. Restart/stop it
     as appropriate. Return True if logger is in desired state.
-
+    ```
     logger - name of logger to check.
 
     manage - if True, and if logger isn't in state it's supposed to be,
              try restarting it.
+    ```
     """
     with self.config_lock:
       config = self.logger_configs.get(logger, None)
@@ -488,17 +464,19 @@ class LoggerRunner:
   ############################
   def check_loggers(self, manage=False):
     """Check logger status, returning a dict of
-
+    ```
       logger_id:
           config  - name of config (or None)
           errors  - list of errors
           running - Bool whether logger process is running
           failed  - Bool whether logger process has failed
           pid:    - logger pid or None, if not running
-
+    ```
     Parameters:
+    ```
       manage - if True, try to restart/stop loggers to put them in the state
                their configs say they should be in.
+    ```
     """
     with self.check_loggers_lock:
       # If there are any disappeared loggers, we want to give them one
@@ -550,6 +528,10 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store', default=None,
                       help='Initial set of configs to run.')
+  parser.add_argument('--mode', dest='mode', action='store', default=None,
+                      help='If the config is a cruise definition, look for '
+                      'mode with the specified name and run its logger '
+                      'configurations.')
 
   parser.add_argument('--max_tries', dest='max_tries', action='store',
                       type=int, default=3, help='How many times to try a '
@@ -582,9 +564,42 @@ if __name__ == '__main__':
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
-  initial_configs = read_config(args.config) if args.config else None
+  configs = read_config(args.config) if args.config else None
 
-  runner = LoggerRunner(interval=args.interval, max_tries=args.max_tries,
-                        initial_configs=initial_configs,
+  # If they've specified a mode, see if what we've read in is in fact
+  # a cruise definition with modes we can choose from.
+  if args.mode:
+    modes = configs.get('modes', None)
+    if not modes:
+      logging.fatal('--mode specified, but "%s" has no modes' % args.config)
+      sys.exit(1)
+    logger_configs = configs.get('configs', None)
+    if not logger_configs:
+      logging.fatal('File "%s" has no logger configs?' % args.config)
+      sys.exit(1)
+
+    # What are the names of the logger configs for the requested mode?
+    mode_configs = modes.get(args.mode, None)
+    if not mode_configs:
+      logging.fatal('No mode "%s" found in "%s"' % (args.mode, args.config))
+      sys.exit(1)
+    logging.info('Selecting mode configs: %s', mode_configs)
+    # Grab the configs themselves, and swap them in
+    this_mode_configs = {c:logger_configs[mode_configs[c]]
+                         for c in mode_configs}
+    configs = this_mode_configs
+
+  # Just a sanity check to head off inscrutable errors if they've
+  # passed in a cruise definition file but not told us which mode to
+  # use from it.
+  elif 'loggers' in configs and 'modes' in configs and 'configs' in configs:
+    logging.fatal('Config file "%s" appears to be a cruise definition file '
+                  'and no --mode argument found on command line.' % args.config)
+    sys.exit(1)
+
+  # Finally, create our runner and run it
+  runner = LoggerRunner(interval=args.interval,
+                        max_tries=args.max_tries,
+                        initial_configs=configs,
                         logger_log_level=logger_log_level)
   runner.run()

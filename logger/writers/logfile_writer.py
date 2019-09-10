@@ -20,7 +20,7 @@ class LogfileWriter(Writer):
     date appended, in keeping with R2R format recommendations
     (http://www.rvdata.us/operators/directory). When timestamped date on
     records rolls over to next day, create new file with new date suffix.
-
+    ```
     filebase     Base name of file to write to. Will have record date
                  appended, e.g.
 
@@ -28,6 +28,7 @@ class LogfileWriter(Writer):
 
     date_fomat   A strftime-compatible string, such as '%Y-%m-%d'; defaults
                  to whatever's defined in utils.timestamps.DATE_FORMAT.
+    ```
     """
     super().__init__(input_format=Text)
 

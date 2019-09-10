@@ -21,7 +21,7 @@ class TimeoutWriter(Writer):
     a call to its write() method after timing out, call the client's
     write method with 'resume_message' to indicate that it is no
     longer timed out.
-
+    ```
     writer         A client writer instance
 
     timeout        Timeout interval in seconds
@@ -36,9 +36,9 @@ class TimeoutWriter(Writer):
                   the timer.
     none_is_okay  If True, receiving a 'None' record is sufficient to reset
                     the timer.
-
+    ```
     Sample config that echos stdin and issues timeouts if no input for 5 secs:
-
+    ```
       readers:
       - class: TextFileReader
       transforms:
@@ -52,6 +52,7 @@ class TimeoutWriter(Writer):
           timeout: 5
           message: No message received for 5 seconds
           resume_message: Okay, got another message
+    ```
     """
     self.writer = writer
     self.timeout = timeout

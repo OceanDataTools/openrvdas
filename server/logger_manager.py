@@ -5,14 +5,14 @@ by dispatching requests to a local LoggerRunner.
 
 To run the LoggerManager from the command line with (using the default
 of an InMemoryServerAPI):
-
+```
   server/logger_manager.py
-
+```
 If an initial configuration is specified on the command line, as
 below:
-
+```
   server/logger_manager.py --config test/configs/sample_cruise.yaml
-
+```
 the configuration will be loaded and set to its default mode. If a
 --mode argument is included, it will be used in place of the default
 mode.
@@ -40,21 +40,21 @@ To try out the scripts, open four(!) terminal windows.
    configured to read from simulated serial ports. To create those
    simulated ports and start feeding data to them, use a third
    terminal window to run:
-
+```
    logger/utils/simulate_serial.py --config test/serial_sim.yaml -v
-
+```
 3. Finally, we'd like to be able to easily glimpse the data that the
    loggers are producing. The sample configuration tells the loggers
    to write to UDP port 6224 when running, so use the fourth terminal
    to run a Listener that will monitor that port. The '-' filename
    tells the Listener to write to stdout (see listen.py --help for all
    Listener options):
-
+```
    logger/listener/listen.py --network :6224 --write_file -
-
+```
 4. Whew! Now try a few commands in the terminal running the
    LoggerManager (you can type 'help' for a full list):
-
+```
    # Load a cruise configuration
 
    command? load_configuration test/configs/sample_cruise.yaml
@@ -86,16 +86,10 @@ To try out the scripts, open four(!) terminal windows.
    command? set_active_mode off
 
    command? quit
-
+```
    When setting the mode to port, you should notice data appearing in
    the listener window, and should see diagnostic output in the
    LoggerManager window.
-
-   When setting the mode to underway, you should see more data
-   appearing in the listener window (due to more logger configs
-   running), and should see the LoggerRunner leap into action as the
-   LoggerManager dispatches the configs for "knud.host" to it.
-
 """
 import asyncio
 import getpass  # to get username
@@ -128,7 +122,7 @@ from server.server_api import ServerAPI
 from server.logger_runner import LoggerRunner
 
 # Imports for running CachedDataServer
-from logger.utils.cached_data_server import CachedDataServer
+from server.cached_data_server import CachedDataServer
 from logger.readers.udp_reader import UDPReader
 from logger.transforms.from_json_transform import FromJSONTransform
 
@@ -188,11 +182,11 @@ class LoggerManager:
                interval=0.5, max_tries=3, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
-
+    ```
     api - ServerAPI (or subclass) instance by which LoggerManager will get
           its data store updates
 
-    data_server_websocket - websocket address to which we're going to send
+    data_server_websocket - websocket address to which we are going to send
           our status updates.
 
     interval - number of seconds to sleep between checking/updating loggers
@@ -201,6 +195,7 @@ class LoggerManager:
 
     logger_log_level - At what logging level our component loggers
           should operate.
+    ```
     """
     # Set signal to catch SIGTERM and convert it into a
     # KeyboardInterrupt so we can shut things down gracefully.
@@ -325,6 +320,21 @@ class LoggerManager:
         self.logger_runner.set_configs(new_configs)
         #self._send_status()
 
+  ############################
+  async def _publish_to_data_server(self, ws, data):
+    """Encode and publish a dict of values to the cached data server.
+    """
+    message = json.dumps({'type': 'publish', 'data': data})
+    await ws.send(message)
+    try:
+      result = await ws.recv()
+      response = json.loads(result)
+      if type(response) is dict and response.get('status', None) == 200:
+        return
+      logging.warning('Got bad response from data server: %s', result)
+    except json.JSONDecodeError:
+      logging.warning('Got unparseable response to "publish" message '
+                      'to data server: %s', result)
 
   ############################
   def _send_to_data_server_loop(self):
@@ -378,7 +388,7 @@ class LoggerManager:
               # If there's something to send, send it and immediately
               # loop back to see if there's more to send
               if next_message:
-                await ws.send(json.dumps(next_message))
+                await self._publish_to_data_server(ws, next_message)
                 continue;
 
               # If we're here, we've caught up on sending stuff that's
@@ -421,14 +431,13 @@ class LoggerManager:
               # while since we've sent it? If so, send update.
               if not cruise_def == previous_cruise_def or \
                  now - last_cruise_def_sent > SEND_CRUISE_EVERY_N_SECONDS:
-                cruise_message = {
-                  'type':'publish',
-                  'data':{'timestamp': time.time(),
-                          'fields': {'status:cruise_definition': cruise_def}
-                  }
-                 }
-                logging.debug('sending cruise update: %s', cruise_message)
-                await ws.send(json.dumps(cruise_message))
+                cruise_data = {
+                  'timestamp': time.time(),
+                  'fields': {'status:cruise_definition': cruise_def}
+                }
+                logging.debug('sending cruise update: %s', cruise_data)
+                await self._publish_to_data_server(ws, cruise_data)
+                
                 previous_cruise_def = cruise_def
                 last_cruise_def_sent = now
 
@@ -458,14 +467,12 @@ class LoggerManager:
                 logger_status = {}
                 logging.debug('sending heartbeat')
                 
-              status_message = {
-                'type':'publish',
-                'data':{'timestamp': now,
-                        'fields': {'status:logger_status': logger_status}
-                }
+              status_data = {
+                'timestamp': now,
+                'fields': {'status:logger_status': logger_status}
               }
-              logging.debug('sending status update: %s', status_message)
-              await ws.send(json.dumps(status_message))
+              logging.debug('sending status update: %s', status_data)
+              await self._publish_to_data_server(ws, status_data)
 
               # Send queue is (or was recently) empty, and we've sent
               # a status update. Snooze a bit before looping to check
@@ -518,10 +525,7 @@ class LoggerManager:
         logger_errors = logger_status.get('errors', [])
         if logger_errors:
           error_tuples = [(now, error) for error in logger_errors]
-          error_message = {
-            'type':'publish',
-            'data':{'fields':{'stderr:logger:'+logger: error_tuples}}
-           }
+          error_message = {'fields':{'stderr:logger:'+logger: error_tuples}}
           with self.data_server_lock:
             self.data_server_queue.put(error_message)
 
@@ -530,10 +534,7 @@ class LoggerManager:
     if self.errors:
       logging.error('Errors from LoggerRunner: %s', self.errors)
       error_tuples = [(now, error) for error in self.errors]
-      error_message = {
-        'type':'publish',
-        'data':{'fields':{'stderr:logger_manager': error_tuples}}
-      }
+      error_message = {'fields':{'stderr:logger_manager': error_tuples}}
       with self.data_server_lock:
         self.data_server_queue.put(error_message)
 
@@ -592,6 +593,11 @@ def run_data_server(data_server_websocket, data_server_udp,
 
 ################################################################################
 ################################################################################
+
+#python3 -m cProfile [-o output_file] [-s sort_order] (-m module | myscript.py)
+
+#sys.argv = ['server/logger_manager.py', '--database', 'django', '--start_data_server', '--config', 'test/NBP1406/NBP1406_cruise.yaml', '--mode', 'log']
+
 if __name__ == '__main__':
   import argparse
   import atexit

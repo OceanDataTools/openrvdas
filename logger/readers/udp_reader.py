@@ -27,6 +27,7 @@ class UDPReader(Reader):
   def __init__(self, port, source='', eol=None,
                read_buffer_size=READ_BUFFER_SIZE):
     """
+    ```
     port         Port to listen to for packets
 
     source       If specified, multicast group id to listen for
@@ -39,9 +40,14 @@ class UDPReader(Reader):
                  are encountered in a packet, split the packet and return
                  the first of them, buffering the remainder for subsequent
                  calls.
+    ```
     """
     super().__init__(output_format=Text)
 
+    # 'eol' comes in as a (probably escaped) string. We need to
+    # unescape it, which means converting to bytes and back.
+    if eol is not None:
+      eol = eol.encode().decode("unicode_escape")
     self.eol = eol
     self.read_buffer_size = read_buffer_size
 
@@ -89,7 +95,7 @@ class UDPReader(Reader):
         # We have an eol string somewhere in our buffer. Return
         # everything up to it.
         record_end = eol_pos + len(self.eol)
-        record = self.record_buffer[0:record_end]
+        record = self.record_buffer[0:record_end-1]
         logging.debug('UDPReader found eol; returning record')
         self.record_buffer = self.record_buffer[record_end:]
         return record

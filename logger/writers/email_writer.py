@@ -19,6 +19,7 @@ class EmailWriter(Writer):
   """Send the record as an email message."""
   def __init__(self, to, sender=None, subject=None, max_freq=3*60):
     """
+    ```
     to           Comma-separated list of email addresses
 
     sender       Identity of sender; default is <user>@<hostname>
@@ -28,7 +29,7 @@ class EmailWriter(Writer):
 
     max_freq     maximum frequency, in seconds between messages, with which
                  to send email. Default is 3 minutes.
-
+    ```
     NOTE: Of course, you'll need to make sure your machine has SMTP
     configured and running if you wish to send email anywhere other than
     localhost.

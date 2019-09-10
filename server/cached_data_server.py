@@ -12,13 +12,13 @@ invoked on the command line via the listen.py script of via a
 configuration file.
 
 The following direct invocation of this script
-
+```
     logger/utils/cached_data_server.py \
       --udp 6225 \
       --port 8766 \
       --back_seconds 480 \
       --v
-
+```
 says to
 
 1. Listen on the UDP port specified by --udp for JSON-encoded,
@@ -32,8 +32,13 @@ says to
    them the requested data. Web clients may issue JSON-encoded
    requests of the following formats (see the definition of
    serve_requests() for insight):
-
+```
    {'type':'fields'}   - return a list of fields for which cache has data
+
+   {'type':'describe',
+    'fields':['field_1', 'field_2', 'field_3']}
+       - return a dict of metadata descriptions for each specified field. If
+         'fields' is omitted, return a dict of metadata for *all* fields
 
    {'type':'subscribe',
     'fields':{'field_1':{'seconds':50},
@@ -59,22 +64,21 @@ says to
                                         'field_2':'value_2'}}}
 
        - submit new data to the cache (an alternative way to get data
-         in that doesn't, e.g. have the same record size limits as a
-         UDP packet).
-
+         in without the same record size limits of a UDP packet).
+```
 A CachedDataServer may also be created by invoking the listen.py
 script and creating a CachedDataWriter (which is just a wrapper around
 CachedDataServer). It may be invoked with the same options, and has
 the added benefit that you can have your server take data from a wider
 variety of sources (by using a LogfileReader, DatabaseReader,
 RedisReader or the like):
-
+```
     logger/listener/listen.py \
       --udp 6221,6224 \
       --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
       --transform_parse \
       --write_cached_data_writer 8766
-
+```
 This command  line creates  a CachedDataWriter that  reads timestamped
 NMEA sentences, parses them into  field:value pairs, then stores them,
 as above, in in-memory cached to be served to connected webclients.
@@ -86,11 +90,11 @@ listen.py script.
 
 Finally, it may be incorporated (again, within its CachedDataWriter
 wrapper) into a logger via a configuration file:
-
+```
     logger/listener/listen.py --config_file data_server_config.yaml
-
+```
 where data_server_config.yaml contains:
-
+```
 readers:
 - class: UDPReader
   kwargs:
@@ -106,21 +110,7 @@ writers:
     back_seconds: 480
     cleanup: 60
     port: 8766
-
-*****************
-NOTE: We get have some inexplicable behavior here. When called
-directly using the __main__ below or via a config with listen.py,
-everything works just fine.
-
-But for reasons I can't fathom, when launched from logger_runner.py or
-logger_manager.py, it fails mysteriously. Specifically: the Connection
-objects spawned by the asyncio websocket server only ever get the
-initial copy of the (empty) cache, regardless of what's in the shared
-cache.
-
-See note in _serve_websocket_data() for site of behavior.
-*****************
-
+```
 """
 import asyncio
 import json
@@ -139,99 +129,153 @@ LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
 ############################
-def cache_record(record, cache, cache_lock):
-  """Add the passed record to the passed cache.
+class RecordCache:
+  """Structure for storing/retrieving record data and metadata."""
+  def __init__(self):
+    self.data = {}
+    self.metadata = {}
+    self.lock = threading.Lock()
+    
+  ############################
+  def cache_record(self, record):
+    """Add the passed record to the cache.
 
-  Expects passed records to be in one of two formats:
+    Expects passed records to be in one of two formats:
 
-  1) DASRecord
+    1) DASRecord
 
-  2) a dict encoding optionally a source data_id and timestamp and a
-     mandatory 'fields' key of field_name: value pairs. This is the format
-     emitted by default by ParseTransform:
-
-     {
-       'data_id': ...,    # optional
-       'timestamp': ...,  # optional - use time.time() if missing
-       'fields': {
-         field_name: value,
-         field_name: value,
-         ...
+    2) A dict encoding optionally a source data_id and timestamp and a
+       mandatory 'fields' key of field_name: value pairs. This is the format
+       emitted by default by ParseTransform:
+  ```
+       {
+         'data_id': ...,    # optional
+         'timestamp': ...,  # optional - use time.time() if missing
+         'fields': {
+           field_name: value,
+           field_name: value,
+           ...
+         }
        }
-     }
-
-  A twist on format (2) is that the values may either be a singleton
-  (int, float, string, etc) or a list. If the value is a singleton,
-  it is taken at face value. If it is a list, it is assumed to be a
-  list of (value, timestamp) tuples, in which case the top-level
-  timestamp, if any, is ignored.
-
-     {
-       'data_id': ...,  # optional
-       'fields': {
-          field_name: [(timestamp, value), (timestamp, value),...],
-          field_name: [(timestamp, value), (timestamp, value),...],
-          ...
+  ```
+    A twist on format (2) is that the values may either be a singleton
+    (int, float, string, etc) or a list. If the value is a singleton,
+    it is taken at face value. If it is a list, it is assumed to be a
+    list of (value, timestamp) tuples, in which case the top-level
+    timestamp, if any, is ignored.
+  ```
+       {
+         'data_id': ...,  # optional
+         'fields': {
+            field_name: [(timestamp, value), (timestamp, value),...],
+            field_name: [(timestamp, value), (timestamp, value),...],
+            ...
+         }
        }
-     }
-  """
-  logging.debug('cache_record() received: %s', record)
-  if not record:
-    logging.debug('cache_record() received empty record.')
-    return
-
-  # If we've been passed a DASRecord, the field:value pairs are in a
-  # field called, uh, 'fields'; if we've been passed a dict, look
-  # for its 'fields' key.
-  if type(record) is DASRecord:
-    record_timestamp = record.timestamp
-    fields = record.fields
-  elif type(record) is dict:
-    record_timestamp = record.get('timestamp', time.time())
-    fields = record.get('fields', None)
-    if fields is None:
-      logging.error('Dict record passed to cache_record() has no '
-                    '"fields" key, which either means it\'s not a dict '
-                    'you should be passing, or it is in the old "field_dict" '
-                    'format that assumes key:value pairs are at the top '
-                    'level.')
-      logging.error('The record in question: %s', str(record))
+  ```
+    In addition to a 'fields' field, a record may contain a 'metadata'
+    field. If present, the data server will look for a 'fields' dict
+    inside the metadata dict and add the key-value pairs there to its
+    cache of metadata about the fields:
+  ```
+       {'data_id': 's330',
+        'fields': {'S330CourseMag': 244.29,
+                   'S330CourseTrue': 219.61,
+                   'S330Mode': 'A',
+                   'S330SpeedKm': 16.5,
+                   'S330SpeedKt': 8.9},
+        'metadata': {'fields': {
+          'S330CourseMag': {'description': 'Magnetic course',
+                            'device': 's330',
+                            'device_type': 'Seapath330',
+                            'device_type_field': 'CourseMag',
+                            'units': 'degrees'},
+          'S330CourseTrue': {'description': 'True course',
+                             ...}
+          }
+        }}
+  ```
+    This metadata field will be generated sent at intervals by a
+    RecordParser (and its enclosing ParseTransform) if the parser's
+    ``metadata_interval`` value is not None.
+    """
+    logging.debug('cache_record() received: %s', record)
+    if not record:
+      logging.debug('cache_record() received empty record.')
       return
-  else:
-    logging.warning('Received non-DASRecord, non-dict input (type: %s): %s',
-                      type(record), record)
-    return
 
-  # Add values from record to cache
-  with cache_lock:
-    for field, value in fields.items():
-      if not field in cache:
-        cache[field] = []
+    # If we've been passed a DASRecord, the field:value pairs are in a
+    # field called, uh, 'fields'; if we've been passed a dict, look
+    # for its 'fields' key.
+    if type(record) is DASRecord:
+      record_timestamp = record.timestamp
+      fields = record.fields
+      metadata = record.metadata
+    elif type(record) is dict:
+      record_timestamp = record.get('timestamp', time.time())
+      fields = record.get('fields', None)
+      metadata = record.get('metadata', None)
+      if fields is None:
+        logging.error('Dict record passed to cache_record() has no '
+                      '"fields" key, which either means it\'s not a dict '
+                      'you should be passing, or it is in the old "field_dict" '
+                      'format that assumes key:value pairs are at the top '
+                      'level.')
+        logging.error('The record in question: %s', str(record))
+        return
+    else:
+      logging.warning('Received non-DASRecord, non-dict input (type: %s): %s',
+                        type(record), record)
+      return
 
-      if type(value) is list:
-        # Okay, for this field we have a list of values - iterate through
-        for val in value:
-          # If element in the list is itself a list or a tuple,
-          # we'll assume it's a (timestamp, value) pair. Otherwise,
-          # use the default timestamp of 'now'.
-          if type(val) in [list, tuple]:
-            cache[field].append(val)
-          else:
-            cache[field].append((record_timestamp, value))
-      else:
-        # If type(value) is *not* a list, assume it's the value
-        # itself. Add it using the default timestamp.
-        cache[field].append((record_timestamp, value))
+    # Add values from record to cache
+    with self.lock:
+      for field, value in fields.items():
+        if not field in self.data:
+          self.data[field] = []
 
+        if type(value) is list:
+          # Okay, for this field we have a list of values - iterate through
+          for val in value:
+            # If element in the list is itself a list or a tuple,
+            # we'll assume it's a (timestamp, value) pair. Otherwise,
+            # use the default timestamp of 'now'.
+            if type(val) in [list, tuple]:
+              self.data[field].append(val)
+            else:
+              self.data[field].append((record_timestamp, value))
+        else:
+          # If type(value) is *not* a list, assume it's the value
+          # itself. Add it using the default timestamp.
+          self.data[field].append((record_timestamp, value))
+
+      # Is there any metadata to add? Cache whatever is in the
+      # metadata.data.fields dict. Blithely overwrite whatever might
+      # be there already.
+      if metadata:
+        metadata_fields = metadata.get('fields', {})
+        for field, value in metadata_fields.items():
+          self.metadata[field] = value
+
+  ############################
+  def cleanup(self, oldest):
+    """Remove any data from cache with a timestamp older than 'oldest'
+    seconds, but keep at least one (most recent) value.
+    """
+    logging.debug('Cleaning up cache')
+    with self.lock:
+      for field in self.data:
+        value_list = self.data[field]
+        while value_list and len(value_list) > 1 and value_list[0][0] < oldest:
+          value_list.pop(0)
 
 ############################
 class WebSocketConnection:
   """Handle the websocket connection, serving data as requested."""
   ############################
-  def __init__(self, websocket, cache, cache_lock, interval):
+  def __init__(self, websocket, cache, interval):
     self.websocket = websocket
     self.cache = cache
-    self.cache_lock = cache_lock
     self.interval = interval
     self.quit_flag = False
 
@@ -260,9 +304,12 @@ class WebSocketConnection:
     """Wait for requests and serve data, if it exists, from
     cache. Requests are in JSON with request type encoded in
     'request_type' field. Recognized request types are:
-
+    ```
     fields - return a (JSON encoded) list of fields for which cache
         has data.
+
+    describe - return a (JSON encoded) dict of metadata for the listed
+        fields.
 
     publish - look for a field called 'data' and expect its value to
         be a dict containing data in one of the formats accepted by
@@ -294,7 +341,7 @@ class WebSocketConnection:
 
     ready - client has processed the previous data message and is ready
         for more.
-
+    ```
     """
     # A map from field_name:latest_timestamp_sent. If
     # latest_timestamp_sent is -1, then we'll always send just the
@@ -328,7 +375,22 @@ class WebSocketConnection:
         elif request['type'] == 'fields':
           logging.debug('fields request')
           await self.send_json_response(
-            {'type':'fields', 'status':200, 'data':list(self.cache.keys())})
+            {'type':'fields', 'status':200,
+             'data':list(self.cache.data.keys())})
+
+        # Send client a dict of metadata descriptions; if they've
+        # specified a set of fields, give just metadata for those;
+        # otherwise send everything.
+        elif request['type'] == 'describe':
+          logging.debug('describe request')
+          fields = request.get('fields', None)
+          if fields:
+            result = {field:self.cache.metadata.get(field, {})
+                      for field in fields}
+          else:
+            result = self.cache.metadata
+          await self.send_json_response(
+            {'type':'describe', 'status':200, 'data':result})
 
         # Client wants to publish to cache and provides a dict of data
         elif request['type'] == 'publish':
@@ -345,7 +407,7 @@ class WebSocketConnection:
                'error':'request has non-dict data field'},
                is_error=True)
           else:
-            cache_record(data, self.cache, self.cache_lock)
+            self.cache.cache_record(data)
             await self.send_json_response({'type':'publish', 'status':200})
 
         # Client wants to subscribe, and provides a dict of requested fields
@@ -403,7 +465,7 @@ class WebSocketConnection:
 
           results = {}
           for field_name, latest_timestamp in field_timestamps.items():
-            field_cache = self.cache.get(field_name, None)
+            field_cache = self.cache.data.get(field_name, None)
             if field_cache is None:
               logging.debug('No cached data for %s', field_name)
               continue
@@ -480,38 +542,36 @@ class CachedDataServer:
      most likely this one:
 
   2. If the request is a python dict, assume it is of the form:
-
+  ```
       {field_1_name: {'seconds': num_secs},
        field_2_name: {'seconds': num_secs},
        ...}
-
+  ```
      where seconds is a float representing the number of seconds of
      back data being requested.
 
      This field dict is passed to serve_fields(), which will to retrieve
      num_secs of back data for each of the specified fields and return it
      as a JSON-encoded dict of the form:
-
+  ```
        {
          field_1_name: [(timestamp, value), (timestamp, value), ...],
          field_2_name: [(timestamp, value), (timestamp, value), ...],
          ...
        }
-
+  ```
   The server will then await a "ready" message from the client, and when
   received, will loop and send a JSON-encoded dict of all the
   (timestamp, value) tuples that have come in since the previous
   request. It will continue this behavior indefinitely, waiting for a
   "ready" request and sending updates.
-
   """
 
   ############################
   def __init__(self, port, interval=1, event_loop=None):
     self.port = port
     self.interval = interval
-    self.cache = {}
-    self.cache_lock = threading.Lock()
+    self.cache = RecordCache() # defined above
 
     # List where we'll store our websocket connections so that we can
     # keep track of which are still open, and signal them to close
@@ -545,20 +605,13 @@ class CachedDataServer:
 
   ############################
   def cache_record(self, record):
-    """Add the passed record to the cache."""
-    cache_record(record, self.cache, self.cache_lock)
+    """Cache the passed record."""
+    self.cache.cache_record(record)
 
   ############################
-  def cleanup(self, oldest):
-    """Remove any data from cache with a timestamp older than 'oldest'
-    seconds, but keep at least one (most recent) value.
-    """
-    logging.debug('Cleaning up cache')
-    with self.cache_lock:
-      for field in self.cache:
-        value_list = self.cache[field]
-        while value_list and len(value_list) > 1 and value_list[0][0] < oldest:
-          value_list.pop(0)
+  def cleanup_cache(self, oldest):
+    """Clear out records older than oldest seconds."""
+    self.cache.cleanup(oldest)
 
   ############################
   def _run_websocket_server(self):
@@ -615,8 +668,7 @@ class CachedDataServer:
     #    proc.start()
     #
     # then self.cache always appears ins in its initial (empty) state.
-    connection = WebSocketConnection(websocket, self.cache, self.cache_lock,
-                                     self.interval)
+    connection = WebSocketConnection(websocket, self.cache, self.interval)
 
     # Stash the connection so we can tell it to exit when we receive a
     # quit(). But first do some cleanup, getting rid of old
@@ -720,7 +772,7 @@ if __name__ == '__main__':
       # Is it time for next cleanup?
       now = time.time()
       if now > next_cleanup_time:
-        server.cleanup(now - args.back_seconds)
+        server.cleanup_cache(now - args.back_seconds)
         next_cleanup_time = now + args.cleanup_interval
   except KeyboardInterrupt:
     logging.warning('Received KeyboardInterrupt - shutting down')

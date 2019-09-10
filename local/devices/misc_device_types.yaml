@@ -182,7 +182,7 @@ PGUV:
       description: "Sensor input voltage"
 
 ######################################
-RemoteTemp:
+SBE38:
   category: "device_type"
   description: "Digital Remote Temperature Sensor Sea-Bird SBE-38"
 
@@ -194,6 +194,22 @@ RemoteTemp:
       description: "Seawater intake temperature"
 
 ######################################
+SBE48:
+  category: "device_type"
+  description: "Digital Remote Temperature Sensor Sea-Bird SBE-48"
+
+  format: "# {Temp:g}, {Date:nc}, {Time:nc}"
+
+  fields:
+    Temp:
+      units: "C"
+      description: "Seawater intake temperature"
+    Date:
+      description: "Date in 'DD Mon YYYY' format"
+    Time:
+      description: "Time in HH:MM:SS format"
+
+######################################
 SVP:
   category: "device_type"
   description: "Sound velocity profiler"
@@ -201,7 +217,7 @@ SVP:
   format: "{Velocity:g}"
 
   fields:
-    Temp:
+    Velocity:
       units: "m/s"
       description: "Sound Velocity, from ADCP sonar well"
 
@@ -211,10 +227,8 @@ TSG_SBE45:
   description: "Thermosalinograph Sea-Bird SBE-45"
 
   format:
-  - "{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g},{:s}{SoundVelocity:g}"
-  - "{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g}"
-  - "{:s}{Temp:g},{:s}{Conductivity:g},{:s}{Salinity:g}"
-
+  - "{Temp:og},{Conductivity:og},{Salinity:og},{SoundVelocity:og}"
+  - "{Temp:og},{Conductivity:og},{Salinity:og}"
   fields:
     Temp:
       units: "C"

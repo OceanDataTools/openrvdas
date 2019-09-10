@@ -24,6 +24,7 @@ class QCFilterTransform(Transform):
   bounds, in which case return a warning message."""
   def __init__(self, bounds, message=None):
     """
+    ```
     bounds   A comma-separated list of conditions of the format
 
                 <field_name>:<lower_bound>:<upper_bound>
@@ -32,6 +33,7 @@ class QCFilterTransform(Transform):
 
     message  Optional string to be output instead of default when bounds
              are violated
+    ```
     """
     super().__init__(input_format=formats.Python_Record,
                      output_format=formats.Text)

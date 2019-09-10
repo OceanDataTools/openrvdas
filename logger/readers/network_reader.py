@@ -27,6 +27,7 @@ class NetworkReader(Reader):
   ############################
   def __init__(self, network, eol=None, read_buffer_size=READ_BUFFER_SIZE):
     """
+    ```
     network      Network address to read, in host:port format (e.g.
                  'rvdas:6202'). If host is omitted (e.g. ':6202'),
                  read via UDP on specified port.
@@ -39,6 +40,7 @@ class NetworkReader(Reader):
                  are encountered in a packet, split the packet and return
                  the first of them, buffering the remainder for subsequent
                  calls.
+    ```
     """
     super().__init__(output_format=Text)
 

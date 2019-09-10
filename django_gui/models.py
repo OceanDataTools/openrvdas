@@ -30,6 +30,9 @@ class LoggerConfig(models.Model):
   # A config may be used by a logger in more than one mode
   modes = models.ManyToManyField('Mode')
 
+  # Is this the currently-selected config for a logger?
+  current_config = models.BooleanField(default=False)
+  
   config_json = models.TextField('configuration string')
 
   # If this config is disabled, don't run it, even when mode
@@ -38,6 +41,23 @@ class LoggerConfig(models.Model):
 
   def __str__(self):
     return '%s (%s)' % (self.name, self.modes.all())
+
+##############################
+# Do we want this logger_config running? Is it? If so, since when, and
+# what's its pid?  If run state doesn't align with current mode, then
+# highlight in interface
+class LoggerConfigState(models.Model):
+  logger = models.ForeignKey('Logger', on_delete=models.CASCADE,
+                             blank=True, null=True)
+  config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
+                             blank=True, null=True)
+  timestamp = models.DateTimeField(auto_now_add=True)
+  last_checked = models.DateTimeField(auto_now=True)
+
+  running = models.NullBooleanField(default=False, blank=True, null=True)
+  failed = models.BooleanField(default=False, blank=True)
+  pid = models.IntegerField(default=0, blank=True, null=True)
+  errors = models.TextField(default='', blank=True, null=True)
 
 ##############################
 class Mode(models.Model):
@@ -71,41 +91,10 @@ class Cruise(models.Model):
     return self.id
 
 ##############################
-# Which is our current cruise? Since when?
-class CurrentCruise(models.Model):
-  cruise = models.ForeignKey('Cruise', on_delete=models.SET_NULL,
-                             blank=True, null=True)
-  as_of = models.DateTimeField(auto_now_add=True)
-
-  def __str__(self):
-    return self.cruise.id
-
-##############################
-# What mode is cruise in? Since when?
-class CruiseState(models.Model):
-  cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE)
-  current_mode = models.ForeignKey('Mode', on_delete=models.CASCADE)
-  started = models.DateTimeField(auto_now_add=True)
-
-  def __str__(self):
-    return '%s: %s' % (self.cruise, self.current_mode)
-
-##############################
-# Do we want this logger_config running? Is it? If so, since when, and
-# what's its pid?  If run state doesn't align with current mode, then
-# highlight in interface
-class LoggerConfigState(models.Model):
-  logger = models.ForeignKey('Logger', on_delete=models.CASCADE,
-                             blank=True, null=True)
-  config = models.ForeignKey('LoggerConfig', on_delete=models.CASCADE,
-                             blank=True, null=True)
-  timestamp = models.DateTimeField(auto_now_add=True)
-  last_checked = models.DateTimeField(auto_now=True)
-
-  running = models.NullBooleanField(default=False, blank=True, null=True)
-  failed = models.BooleanField(default=False, blank=True)
-  pid = models.IntegerField(default=0, blank=True, null=True)
-  errors = models.TextField(default='', blank=True, null=True)
+# Last time state was updated. Use this to avoid having to do
+# expensive queries all the time.
+class LastUpdate(models.Model):
+  timestamp = models.DateTimeField(auto_now=True)
 
 ##############################
 # Messages that our servers log. Note that, to avoid a lookup every
@@ -120,19 +109,39 @@ class LogMessage(models.Model):
   timestamp = models.DateTimeField(auto_now_add=True)
 
 ##############################
+# What mode is cruise in? Since when?
+#class CruiseState(models.Model):
+#  cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE)
+#  current_mode = models.ForeignKey('Mode', on_delete=models.CASCADE)
+#  started = models.DateTimeField(auto_now_add=True)
+#
+#  def __str__(self):
+#    return '%s: %s' % (self.cruise, self.current_mode)
+
+##############################
+# Which is our current cruise? Since when?
+#class CurrentCruise(models.Model):
+#  cruise = models.ForeignKey('Cruise', on_delete=models.SET_NULL,
+#                             blank=True, null=True)
+#  as_of = models.DateTimeField(auto_now_add=True)
+#
+#  def __str__(self):
+#    return self.cruise.id
+
+##############################
 # Which servers are running, and when?
 # If run state doesn't align with current mode, then highlight in interface
-class ServerState(models.Model):
-  timestamp = models.DateTimeField(auto_now_add=True)
-  server = models.CharField(max_length=80, blank=True, null=True)
-  running = models.BooleanField(default=False)
-  desired = models.BooleanField(default=False)
-  process_id = models.IntegerField(default=0, blank=True, null=True)
+#class ServerState(models.Model):
+#  timestamp = models.DateTimeField(auto_now_add=True)
+#  server = models.CharField(max_length=80, blank=True, null=True)
+#  running = models.BooleanField(default=False)
+#  desired = models.BooleanField(default=False)
+#  process_id = models.IntegerField(default=0, blank=True, null=True)
 
 ##############################
 # JSON-encoded status message saved various servers
-class StatusUpdate(models.Model):
-  timestamp = models.DateTimeField(auto_now_add=True)
-  server = models.CharField(max_length=80, blank=True, null=True)
-  cruise = models.CharField(max_length=80, blank=True, null=True)
-  status = models.TextField(blank=True, null=True)
+#class StatusUpdate(models.Model):
+#  timestamp = models.DateTimeField(auto_now_add=True)
+#  server = models.CharField(max_length=80, blank=True, null=True)
+#  cruise = models.CharField(max_length=80, blank=True, null=True)
+#  status = models.TextField(blank=True, null=True)

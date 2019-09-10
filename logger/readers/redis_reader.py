@@ -27,8 +27,9 @@ class RedisReader(Reader):
   def __init__(self, channel, password=None):
     """
     Read text records from a Redis pubsub server channel.
-
+    ```
     channel      Redis channel to read from, format channel[@hostname[:port]]
+    ```
     """
     super().__init__(output_format=Text)
 
