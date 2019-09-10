@@ -154,8 +154,8 @@ lguv:
 ######################################
 lrtm:
   category: "device"
-  device_type: "RemoteTemp"
-  description: "Seawater intake temperature"
+  device_type: "SBE38"
+  description: "Seawater intake temperature SBE-38"
 
   fields:
     Temp: "RTMPTemp"
