@@ -38,6 +38,8 @@ class UDPWriter(NetworkWriter):
     self.num_retry = num_retry
     self.eol = eol
 
+    self.target_str = 'interface: %s, destination: %s, port: %d' % (interface, destination, port)
+
     self.socket = socket.socket(family=socket.AF_INET,
                                 type=socket.SOCK_DGRAM,
                                 proto=socket.IPPROTO_UDP)
@@ -110,7 +112,10 @@ class UDPWriter(NetworkWriter):
     bytes_sent = 0
     rec_len = len(record)
     while num_tries < self.num_retry and bytes_sent < rec_len:
-      bytes_sent = self.socket.send(record.encode('utf-8'))
+      try:
+        bytes_sent = self.socket.send(record.encode('utf-8'))
+      except ConnectionRefusedError as e:
+        logging.error('ERROR: %s: %s', self.target_str, str(e))
       num_tries += 1
 
     logging.debug('UDPWriter.write() wrote %d/%d bytes after %d tries',
