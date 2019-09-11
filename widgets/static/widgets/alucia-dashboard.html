@@ -67,6 +67,9 @@
           <div id="rel_wind_dial" style="min-width: 100px"></div>
         </td>
         <td colspan=2 class="td_50">
+          <div id="true_wind_dial" style="min-width: 100px"></div>
+        </td>
+        <td colspan=2 class="td_50">
           <div id="wind_speed_line" style="min-width: 100px;  height: 250px;"></div>
           <div id="barometer_line" style="min-width: 100px; height: 250px;"></div>
         </td>
@@ -141,6 +144,17 @@
                                 {title:{text:'Relative Wind Direction'}}
                                 ));
 
+  var true_wind_dial_fields = {
+    TrueWindDir: {
+      name: 'Relative Wind Dir',
+      color: 'green',
+    }
+  };
+
+
+  widget_list.push(new DialWidget('true_wind_dial', true_wind_dial_fields,
+                                {title:{text:'True Wind Direction'}}
+                                ));
   widget_list.push(new TextWidget('rel_wind_dir',
                                { AvgWindDir: {name: 'Rel Wind Dir'}}));
 
