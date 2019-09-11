@@ -173,15 +173,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/MET_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter # write to database
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -190,9 +191,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:wix'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ############# End WIX ###############
 
   ############# CNAV ###############
@@ -232,15 +234,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/CNAV_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter  # write parsed to database
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -249,9 +252,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:cnav'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ############# End CNAV ###############
 
   ############# PosMV ###############
@@ -287,13 +291,14 @@ configs:
           kwargs:
             definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
         writers:
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
         - class: TextFileWriter  # write parsed to logfile
           kwargs: 
             filename: /data/openrvdas/proc/POSMV_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter  # write parsed to database
         #  kwargs: 
         #    database: data
@@ -308,9 +313,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:posmv'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ############# End PosMV ###############
 
   ############# SBE45 ###############
@@ -341,15 +347,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/SBE45_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -358,9 +365,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:sbe45'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ############# End SBE45 ###############
 
   ############# SBE48 ###############
@@ -399,15 +407,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/SBE48_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -416,9 +425,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:sbe48'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ############# End SBE48 ###############
 
   ############# Flowmeter ###############
@@ -450,15 +460,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/FLOW_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -467,9 +478,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:flow'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ######### End Flowmeter ############
 
   ############# Gyro ###############
@@ -503,15 +515,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/GYRO_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20       
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -520,9 +533,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:gyro'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ######### End Gyro ############
 
   ############# Fluorometer ###############
@@ -553,15 +567,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/FLUOROMETER_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -570,9 +585,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:fluorometer'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ############# End Fluorometer ############
  
   ############# Transmissometer ###############
@@ -603,9 +619,10 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/CSTAR_PARSED
             split_by_date: True
-        - class: CachedDataWriter
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
@@ -620,9 +637,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:cstar'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ######### End Transmissometer ############   
   
   ############# Sonardyne ###############
@@ -653,15 +671,16 @@ configs:
           kwargs: 
             filename: /data/openrvdas/proc/SONARDYNE_PARSED
             split_by_date: True
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -670,9 +689,10 @@ configs:
           kwargs:
             field_name: 'stderr:logger:sonardyne'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ######### End Sonardyne ############  
  
   ######### Knudsen ############
@@ -701,15 +721,16 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/KNUDSEN
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
         #    host: localhost
         #    user: rvdas
         #    password: rvdas
+        - class: UDPWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            interface: 172.16.60.20
+            port: 6225
     stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
     - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
       kwargs:
@@ -718,9 +739,11 @@ configs:
           kwargs:
             field_name: 'stderr:logger:knudsen'
         writers:
-        - class: CachedDataWriter
+          class: UDPWriter
           kwargs:
-            data_server: localhost:8766
+            interface: 172.16.60.20
+            port: 6225
   ######### End Knudsen ############
+ 
  
  # end of configs
