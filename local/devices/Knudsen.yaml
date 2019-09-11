@@ -4,17 +4,29 @@ Knudsen3260:
   description: "Knudsen Chirp 3260"
 
   format:
-    - "3.5kHz,{LFDepth:of},{LFValid:od},12kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
-    - ",,,12.0kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
-    - "3.5kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - ",,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "$PKEL99,,,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
 
   fields:
+    LF:
+      units: "kHz"
+      description: "Frequency of low frequency transducer"
+    HF:
+      units: "kHz"
+      description: "Frequency of high frequency transducer"
     LFDepth:
       units: "meters"
       description:  Depth in meters from transducer"
     LFValid:
       units: "0"
       description: "Valid if present (value may always be zero?)"
+    HF:
+      units: "kHz"
+      description: "Frequency of high frequency transducer"
     HFDepth:
       units: "meters"
       description:  Depth in meters from transducer"
