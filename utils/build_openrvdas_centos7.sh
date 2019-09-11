@@ -465,23 +465,25 @@ mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-# Comment out line below to have logger manager *not* start a data server
-START_DATA_SERVER='--start_data_server'
-
-DATA_SERVER_WEBSOCKET=:8766
-DATA_SERVER_UDP=:6225
+DATA_SERVER_UDP_PORT=6225
+DATA_SERVER_WEBSOCKET_PORT=8766
 DATA_SERVER_LISTEN_ON_UDP=
+DATA_SERVER_WEBSOCKET=:\$DATA_SERVER_WEBSOCKET_PORT
 
-# Comment out line below to have data server we start *not* listen on UDP
-# DATA_SERVER_LISTEN_ON_UDP='--data_server_udp $DATA_SERVER_UDP'
+# Comment out line below to have data server we start *not* listen on UDP       
+#DATA_SERVER_LISTEN_ON_UDP='--udp \$DATA_SERVER_UDP_PORT'  
 
-sudo -u rvdas -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET \$DATA_SERVER_LISTEN_ON_UDP \$START_DATA_SERVER"
+# Run cached data server in background                                          
+sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP &"
+
+# Run logger manager in foreground                                              
+sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET"
 EOF
 
 cat > ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh <<EOF
 #!/bin/bash
-USER=rvdas
-sudo -u $USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
+sudo -u $RVDAS_USER sh -c 'pkill -f "/usr/bin/python3 server/cached_data_server.py"'
+sudo -u $RVDAS_USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
 EOF
 
 chmod 755 ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh
