@@ -172,6 +172,7 @@ configs:
         - class: TextFileWriter # write parsed data to logfile
           kwargs: 
             filename: /data/openrvdas/proc/MET_PARSED
+            split_by_date: True
         #- class: DatabaseWriter # write to database
         #  kwargs: 
         #    database: data
@@ -232,6 +233,7 @@ configs:
         - class: TextFileWriter  # write parsed to logfile
           kwargs: 
             filename: /data/openrvdas/proc/CNAV_PARSED
+            split_by_date: True
         #- class: DatabaseWriter  # write parsed to database
         #  kwargs: 
         #    database: data
@@ -296,6 +298,7 @@ configs:
         - class: TextFileWriter  # write parsed to logfile
           kwargs: 
             filename: /data/openrvdas/proc/POSMV_PARSED
+            split_by_date: True
         #- class: DatabaseWriter  # write parsed to database
         #  kwargs: 
         #    database: data
@@ -343,6 +346,7 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/SBE45_PARSED
+            split_by_date: True
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
@@ -402,6 +406,7 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/SBE48_PARSED
+            split_by_date: True
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
@@ -454,6 +459,7 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/FLOW_PARSED
+            split_by_date: True
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
@@ -508,6 +514,7 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/GYRO_PARSED
+            split_by_date: True
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
@@ -559,6 +566,7 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/FLUOROMETER_PARSED
+            split_by_date: True
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
@@ -610,6 +618,7 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/CSTAR_PARSED
+            split_by_date: True
         - class: UDPWriter  # write parsed to 6225 for CachedDataServer
           kwargs:
             interface: 172.16.60.20
@@ -661,6 +670,7 @@ configs:
         - class: TextFileWriter
           kwargs: 
             filename: /data/openrvdas/proc/SONARDYNE_PARSED
+            split_by_date: True
         #- class: DatabaseWriter
         #  kwargs: 
         #    database: data
