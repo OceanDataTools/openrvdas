@@ -186,6 +186,7 @@ NET_WRITER_TEMPLATE="""
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 120
             definition_path: local/devices/*.yaml,local/lmg/devices/*.yaml
         writers:
           class: UDPWriter
