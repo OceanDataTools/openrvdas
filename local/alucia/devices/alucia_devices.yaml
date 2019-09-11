@@ -188,3 +188,23 @@ fluorometer:
     SignalCounts: "FluorometerSignalCounts"
     
 ######################################
+
+######################################
+knudsen:
+  category: "device"
+  device_type: "Knudsen3260"
+
+  # Map from device_type field names to names specific for this
+  # specific device.
+  fields:
+    LF: "KnudLF"
+    LFDepth: "KnudDepthLF"
+    LFValid: "KnudValidLF"
+    HF: "KnudHF"
+    HFDepth: "KnudDepthHF"
+    HFValid: "KnudValidHF"
+    SoundSpeed: "KnudSoundSpeed"
+    Latitude: "KnudLatitude"
+    Longitude: "KnudLongitude"
+    
+######################################

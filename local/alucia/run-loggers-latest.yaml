@@ -705,6 +705,8 @@ configs:
           kwargs:  
             prefix: knudsen 
         - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
         writers:
         - class: TextFileWriter
           kwargs: 
