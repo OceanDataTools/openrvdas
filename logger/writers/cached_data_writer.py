@@ -16,7 +16,8 @@ from logger.writers.writer import Writer
 ################################################################################
 class CachedDataWriter(Writer):
   def __init__(self, data_server, start_server=False, back_seconds=480,
-               cleanup_interval=6, update_interval=1):
+               cleanup_interval=6, update_interval=1,
+               max_backup=60*60*24):
     """Feed passed records to a CachedDataServer via a websocket. Expects
     records in DASRecord or dict formats.
     ```
@@ -27,6 +28,14 @@ class CachedDataWriter(Writer):
     cleanup_interval   Remove old data every N seconds
 
     update_interval    Serve updates to websocket clients every N seconds
+
+    max_backup    If the writer isn't able to connect to the data server,
+                  it will locally cache records until it can. To avoid
+                  unbounded memory usage, if max_backup is nonzero, it will
+                  cache at most max_backup records before dropping the 
+                  oldest records. By default, cache one day's worth of
+                  records at 1 Hz (86,400 records). If max_backup is zero,
+                  cache size is unbounded.
     ```
     """
     host_port = data_server.split(':')
@@ -38,13 +47,12 @@ class CachedDataWriter(Writer):
       self.data_server = data_server                 # they gave us 'host:8766'
 
     self.websocket = None
-    self.server = None
     self.back_seconds = back_seconds
     self.cleanup_interval = cleanup_interval
 
     # Event loop we'll use to asynchronously manage writes to websocket
     self.event_loop = asyncio.new_event_loop()
-    self.send_queue = asyncio.Queue(loop=self.event_loop)
+    self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
 
     # Start the thread that will asynchronously pull stuff from the
     # queue and send to the websocket. Also will, if we've got our oue
@@ -82,13 +90,6 @@ class CachedDataWriter(Writer):
                 logging.debug('received response: %s', response)
               except asyncio.QueueEmpty:
                 await asyncio.sleep(.2)
-
-              # If we've started our own server, see if it's time to
-              # clean up
-              if self.server and time.time() > next_cleanup:
-                now = time.time()
-                self.server.cleanup(now - self.back_seconds)
-                next_cleanup = now + self.cleanup_interval
 
         # If the websocket connection failed
         except OSError as e:
@@ -146,6 +147,15 @@ class CachedDataWriter(Writer):
     if type(record) is DASRecord:
       record = json.loads(record.as_json())
     if type(record) is dict:
+      # If our local queue is full, throw away the oldest entries
+      while self.send_queue.full():
+        try:
+          logging.debug('CachedDataWriter queue full - dropping oldest...')
+          self.send_queue.get_nowait()
+        except asyncio.QueueEmpty:
+          logging.warning('CachedDataWriter queue is both full and empty?!?')
+
+      # Enqueue our latest record for send
       self.send_queue.put_nowait(record)
     else:
       logging.warning('CachedDataWriter got non-dict/DASRecord object of '
