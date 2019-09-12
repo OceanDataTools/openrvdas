@@ -9,7 +9,7 @@
       .ship_table {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         border-collapse: collapse;
-        width: 540px;
+        width: 1080px;
         background-color: lightslategray;
       }
       .ship_table td, .ship_table th {
@@ -20,6 +20,12 @@
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
         width: 270px;
+      }
+      .name_td_100 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 540px;
       }
       .name_td_50 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -32,6 +38,11 @@
         text-align: left;
         font-weight: bold;
         width: 135px;
+      }
+      .val_td_100 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 540px;
       }
       .val_td_50 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -74,10 +85,6 @@
 
     <table class="ship_table">
       <tr>
-        <td>
-
-    <table class="ship_table">
-      <tr>
         <td class="name_td_50" colspan=2>
           Alucia Console
 	  <span id="gmt_day">--</span>-<span id="gmt_month">---</span>-<span id="gmt_year">----</span><br>
@@ -89,18 +96,26 @@
           Lon: <span id="gps_lon">--.----</span>°
           <span id="gps_e_or_w"></span>
         </td>
+        <td class="val_td_25">Course: <span id="course_true"></span>°</td>
+        <td class="val_td_25">Heading: <span id="heading_true"></span>°</td>
+        <td class="val_td_25">SOG: <span id="sog_kt">-</span> kts</td>
+        <td class="val_td_25"></td>
       </tr>
       <tr>
-        <td colspan=2>
+        <td class="val_td_50" colspan=2>
           Relative Wind: <span id="rel_wind_speed" style="color:red"></span> kt
           <div id="rel_wind_dir"
                style="height: 200px; width: 200px"></div>
         </td>
-        <td colspan=2>
+        <td class="val_td_50" colspan=2>
           True Wind: <span id="true_wind_speed" style="color:green"></span> kt
           <div id="true_wind_dir"
                style="height: 200px; width: 200px"></div>
         </td>
+	<td class="name_td_100" colspan=4 rowspan=3>
+          <div id="true_wind_speed_line" style="min-width: 100px;  height: 150px;"></div><br>
+          <div id="barometer_line" style="min-width: 100px;  height: 150px;"></div>
+	</td>
       </tr>
       <tr>
         <td class="val_td_50" colspan=2>Air Temp: <span id="air_temp">-</span></td>
@@ -111,23 +126,22 @@
         <td class="val_td_50" colspan=2>Barometer: <span id="barometer">-</span> mB</td>
       </tr>
       <tr>
-	<td colspan=4>
+	<td class="val_td_100" colspan=4>
           <div id="air_temp_line" style="min-width: 100px;  height: 125px;"></div>
 	</td>
-      </tr>
-      <tr>
-	<td colspan=4>
-          <div id="sea_temp_line" style="min-width: 100px;  height: 125px;"></div>
+	<td class="name_td_100" colspan=4>
+          <div id="flowmeter_line" style="min-width: 100px;  height: 125px;"></div>
 	</td>
       </tr>
       <tr>
-        <td class="val_td_25">Course: <span id="course_true"></span>°</td>
-        <td class="val_td_25">Heading: <span id="heading_true"></span>°</td>
-        <td class="val_td_25">SOG: <span id="sog_kt">-</span> kts</td>
-        <td class="val_td_25"></td>
+	<td class="val_td_100" colspan=4>
+          <div id="sea_temp_line" style="min-width: 100px;  height: 125px;"></div>
+	</td>
+	<td class="name_td_100" colspan=4>
+          <div id="fluorometer_line" style="min-width: 100px;  height: 125px;"></div>
+	</td>
       </tr>
     </table>
-
 
   <script type="text/javascript">
   var widget_list = [];
@@ -323,6 +337,65 @@
      credits:{enabled: false}}
   ));
 			       
+  var true_wind_speed_line_fields = {
+    TrueWindSpeed: {
+      name: 'True Wind Speed',
+      seconds: 3600,
+      color: 'green'
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'true_wind_speed_line', true_wind_speed_line_fields, 'True Wind Speed, kts',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
+  var barometer_line_fields = {
+    Pressure: {
+      name: 'Atmospheric Pressure, mB',
+      seconds: 3600,
+      color: 'slategray'
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'barometer_line', barometer_line_fields, 'Atmospheric Pressure, mB',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
+  var flowmeter_line_fields = {
+    UnderwayFlowRate: {
+      name: 'Flow Rate',
+      seconds: 3600,
+      color: 'brown',
+      transform: function(val) {
+        return parseFloat(val)}
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'flowmeter_line', flowmeter_line_fields, 'Flowmeter liters per eon',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+  var fluorometer_line_fields = {
+    FluorometerSignalCounts: {
+      name: 'Fluorometer Counts',
+      seconds: 3600,
+      color: 'green',
+      transform: function(val) {
+        return parseFloat(val)}
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'fluorometer_line', fluorometer_line_fields, 'Fluorometer Counts',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
   //widget_list.push(new TextWidget('pitch',
   //    {CNAVPitch: {name: 'Pitch', transform: round_1}}));
   //widget_list.push(new TextWidget('roll',
