@@ -121,22 +121,22 @@ class XDRTransform(DerivedDataTransform):
     # Grab any relevant values
     if self.barometer_field in fields:
       barometer = fields.get(self.barometer_field)
-      barometer_data = '%s,P,%s,%s' % (self.talker_id, barometer,
-                                       self.barometer_output_field)
+      barometer_data = '%s,P,%s,B,%s' % (self.talker_id, barometer,
+                                         self.barometer_output_field)
       barometer_str = '$%s*%s\r\n' % (barometer_data, checksum(barometer_data))
       result_str += barometer_str
 
     if self.air_temp_field in fields:
       air_temp = fields.get(self.air_temp_field)
-      air_temp_data = '%s,C,%s,%s' % (self.talker_id, air_temp,
-                                      self.air_temp_output_field)
+      air_temp_data = '%s,C,%3.2f,C,%s' % (self.talker_id, float(air_temp),
+                                           self.air_temp_output_field)
       air_temp_str = '$%s*%s\r\n' % (air_temp_data, checksum(air_temp_data))
       result_str += air_temp_str
 
     if self.sea_temp_field in fields:
       sea_temp = fields.get(self.sea_temp_field)
-      sea_temp_data = '%s,C,%s,%s' % (self.talker_id, sea_temp,
-                                      self.sea_temp_output_field)
+      sea_temp_data = '%s,C,%3.2f,C,%s' % (self.talker_id, float(sea_temp),
+                                           self.sea_temp_output_field)
       sea_temp_str = '$%s*%s\r\n' % (sea_temp_data, checksum(sea_temp_data))
       result_str += sea_temp_str
 
