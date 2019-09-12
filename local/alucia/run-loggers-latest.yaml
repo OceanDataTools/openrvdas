@@ -52,6 +52,10 @@ loggers:
     configs:
     - true_wind->off
     - true_wind->on
+  wind_nmea:
+    configs:
+    - wind_nmea->off
+    - wind_nmea->on
 
 #################################
 modes:
@@ -68,6 +72,7 @@ modes:
     sonardyne: sonardyne->off
     knudsen: knudsen->off
     true_wind: true_wind->off
+    wind_nmea: wind_nmea->off
 
   port:
     wix: wix->file/db
@@ -82,6 +87,7 @@ modes:
     sonardyne: sonardyne->off
     knudsen: knudsen->off
     true_wind: true_wind->on
+    wind_nmea: wind_nmea->on
 
   underway:
     wix: wix->file/db
@@ -96,6 +102,7 @@ modes:
     sonardyne: sonardyne->off
     knudsen: knudsen->file/db
     true_wind: true_wind->on
+    wind_nmea: wind_nmea->on
 
   subops:
     wix: wix->file/db
@@ -110,6 +117,7 @@ modes:
     sonardyne: sonardyne->file/db
     knudsen: knudsen->file/db
     true_wind: true_wind->on
+    wind_nmea: wind_nmea->on
 
 default_mode: port
 
@@ -153,6 +161,9 @@ configs:
 
   true_wind->off:
     name: true_wind->off
+
+  wind_nmea->off:
+    name: wind_nmea->off
 
   #################################
   # 'file/db' configs
@@ -792,5 +803,32 @@ configs:
             data_server: localhost:8766
   
   ######### End True Wind ############
+
+  ######### Wind NMEA $ALMWD ############
+  wind_nmea->on:
+    name: wind_nmea->on
+    readers:
+    - class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            TrueWindDir:
+              seconds: 0
+            TrueWindSpeed:
+              seconds: 0
+    transforms:
+    - class: MWDTransform
+      kwargs:
+        true_wind_dir_field: TrueWindDir
+        true_wind_speed_kt_field: TrueWindSpeed
+        talker_id: ALMWD
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 55400
+        interface: 172.16.60.20
+
+  ######### End Wind NMEA $ALMWD ############
 
  # end of configs
