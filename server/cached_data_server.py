@@ -716,7 +716,7 @@ if __name__ == '__main__':
                       'to specify multicast.')
 
   parser.add_argument('--back_seconds', dest='back_seconds', action='store',
-                      type=float, default=480,
+                      type=float, default=24*60*60,
                       help='Maximum number of seconds of old data to keep '
                       'for serving to new clients.')
 
