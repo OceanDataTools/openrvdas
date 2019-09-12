@@ -77,6 +77,9 @@ from logger.transforms.to_json_transform import ToJSONTransform
 from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.transforms.count_transform import CountTransform
 
+# Compute NMEA MWD string
+from logger.transforms.mwd_transform import MWDTransform
+
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
 from logger.writers.udp_writer import UDPWriter
