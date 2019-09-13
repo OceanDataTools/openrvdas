@@ -61,7 +61,7 @@ class NMEATransform:
 
     # Concatenate them with a \r\n in-between
     if pruned_results:
-      return '\r\n'.join(pruned_results) + '\n'
+      return '\r\n'.join(pruned_results) + '\r\n'
     else:
       return None
 
