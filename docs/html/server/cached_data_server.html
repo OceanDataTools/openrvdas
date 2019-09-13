@@ -250,7 +250,7 @@ import threading
 import time
 import websockets
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.das_record import DASRecord
 
@@ -845,7 +845,7 @@ if __name__ == &#39;__main__&#39;:
                       &#39;to specify multicast.&#39;)
 
   parser.add_argument(&#39;--back_seconds&#39;, dest=&#39;back_seconds&#39;, action=&#39;store&#39;,
-                      type=float, default=480,
+                      type=float, default=24*60*60,
                       help=&#39;Maximum number of seconds of old data to keep &#39;
                       &#39;for serving to new clients.&#39;)
 
