@@ -62,6 +62,8 @@ class UDPWriter(NetworkWriter):
     self.num_retry = num_retry
     self.eol = eol
 
+    self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (interface, destination, port)
+
     self.socket = socket.socket(family=socket.AF_INET,
                                 type=socket.SOCK_DGRAM,
                                 proto=socket.IPPROTO_UDP)
@@ -134,7 +136,10 @@ class UDPWriter(NetworkWriter):
     bytes_sent = 0
     rec_len = len(record)
     while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
-      bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+      try:
+        bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+      except ConnectionRefusedError as e:
+        logging.error(&#39;ERROR: %s: %s&#39;, self.target_str, str(e))
       num_tries += 1
 
     logging.debug(&#39;UDPWriter.write() wrote %d/%d bytes after %d tries&#39;,
@@ -196,6 +201,8 @@ eol          If specified, an end of line string to append to record
     self.num_retry = num_retry
     self.eol = eol
 
+    self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (interface, destination, port)
+
     self.socket = socket.socket(family=socket.AF_INET,
                                 type=socket.SOCK_DGRAM,
                                 proto=socket.IPPROTO_UDP)
@@ -268,7 +275,10 @@ eol          If specified, an end of line string to append to record
     bytes_sent = 0
     rec_len = len(record)
     while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
-      bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+      try:
+        bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+      except ConnectionRefusedError as e:
+        logging.error(&#39;ERROR: %s: %s&#39;, self.target_str, str(e))
       num_tries += 1
 
     logging.debug(&#39;UDPWriter.write() wrote %d/%d bytes after %d tries&#39;,

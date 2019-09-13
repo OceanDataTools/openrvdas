@@ -134,6 +134,9 @@ from logger.transforms.to_json_transform import ToJSONTransform
 from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.transforms.count_transform import CountTransform
 
+# Compute and emit various NMEA strings
+from logger.transforms.nmea_transform import NMEATransform
+
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
 from logger.writers.udp_writer import UDPWriter
@@ -509,6 +512,11 @@ if __name__ == &#39;__main__&#39;:
                       help=&#39;Convert the passed string, assumed to be JSON &#39;
                       &#39;to a DASRecord.&#39;)
 
+  parser.add_argument(&#39;--transform_to_das_record&#39;, dest=&#39;to_das_record&#39;,
+                      default=None, help=&#39;Convert the passed value to a &#39;
+                      &#39;DASRecord with single field whose name is the string &#39;
+                      &#39;specified here.&#39;)
+
   ############################
   # Writers
   parser.add_argument(&#39;--write_file&#39;, dest=&#39;write_file&#39;, default=None,
@@ -817,6 +825,10 @@ if __name__ == &#39;__main__&#39;:
 
       if new_args.from_json_to_das_record:
         transforms.append(FromJSONTransform(das_record=True))
+
+      if new_args.to_das_record:
+        transforms.append(
+          ToDASRecordTransform(field_name=new_args.to_das_record))
 
       ##########################
       # Writers
