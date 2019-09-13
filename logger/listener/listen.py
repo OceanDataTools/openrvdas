@@ -78,8 +78,7 @@ from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.transforms.count_transform import CountTransform
 
 # Compute and emit various NMEA strings
-from logger.transforms.mwd_transform import MWDTransform
-from logger.transforms.xdr_transform import XDRTransform
+from logger.transforms.nmea_transform import NMEATransform
 
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
