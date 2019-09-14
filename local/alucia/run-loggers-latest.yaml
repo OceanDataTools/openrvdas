@@ -1,6 +1,6 @@
 # Cruise definition file for Alucia
 
-# Hand coded - 2019-09-10
+# Hand coded - 2019-09-13
 
 #################################
 loggers:
@@ -228,7 +228,7 @@ configs:
     writers:
     - class: UDPWriter
       kwargs:
-        port: 55001
+        port: 55001 #The everything-goes-to-it port
         interface: 172.16.60.20
         eol: "\n"
     - class: ComposedWriter
@@ -501,19 +501,27 @@ configs:
       class: UDPReader
       kwargs:
         port: 56332
-    transforms:
-      class: TimestampTransform
     writers:
-    - class: LogfileWriter
+    - class: ComposedWriter
       kwargs:
-        filebase: /data/openrvdas/raw/GYRO
+        transforms:
+        - class: TimestampTransform
+        writers:
+        - class: LogfileWriter
+          kwargs:
+            filebase: /data/openrvdas/raw/GYRO
     - class: UDPWriter
       kwargs:
-        port: 55100
+        port: 55001  # The everything-goes-to-it port
+        interface: 172.16.60.20
+    - class: UDPWriter
+      kwargs:
+        port: 55100  # Gyro-only port
         interface: 172.16.60.20
     - class: ComposedWriter
       kwargs:
         transforms:
+        - class: TimestampTransform
         - class: PrefixTransform
           kwargs:
             prefix: gyro
@@ -839,7 +847,11 @@ configs:
     writers:
     - class: UDPWriter
       kwargs:
-        port: 55400
+        port: 55001  # The everything-goes-to-it port
+        interface: 172.16.60.20
+    - class: UDPWriter
+      kwargs:
+        port: 55400  # MET data port
         interface: 172.16.60.20
 
   ######### End NMEA Writer - $ALMWD, $ALXDR ############
