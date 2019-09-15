@@ -296,11 +296,43 @@ attempting to connect to the data server you think is should be.
 
 ## Creating New Widgets
 
+OpenRVDAS is designed to support easy creation of new types of
+JavaScript display widgets. Three things are required of a widget:
+
+1. A constructor that takes the name of a div or span into which it
+   will place its output. A constructor will also typically include an
+   argument specifying what data fields a widget should display, along
+   with any parameters for displaying them.
+
+2. A ``fields()` method that, when called, returns a list of the names
+   of field names that the widget wants data for. Typically, these
+   field names will be passed in, along with other customization
+   information, in the widget's constructor.
+
+3. A ``process_message(data)`` method that accepts a dictionary 
+   and uses it to draw/update whatever it is displaying in its
+   div/span.
+
+   The format of the data dictionary is the same as that delivered by
+   the CachedDataServer (described in the [Cached Data
+   Server](cached_data_server.md) document):
+   
+   ```
+   {
+     field_name: [(timestamp, value), (timestamp, value),...],
+     field_name: [(timestamp, value), (timestamp, value),...],
+     field_name: [(timestamp, value), (timestamp, value),...],
+   }
+   ```
+
+We recommend you examine the widgets defined in
+[display/js/widgets/](../display/js/widgets) for insight and
+inspiration on the construction of new widget types.
 
 ## Contributing
 
-Please contact David Pablo Cohn (*david dot cohn at gmail dot com*) - to discuss
-opportunities for participating in code development.
+Please contact David Pablo Cohn (*david dot cohn at gmail dot com*) -
+to discuss opportunities for participating in code development.
 
 ## License
 
