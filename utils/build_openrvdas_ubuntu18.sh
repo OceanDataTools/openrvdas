@@ -318,6 +318,10 @@ python3 manage.py migrate
 python3 manage.py collectstatic --no-input --clear --link
 chmod -R og+rX static
 
+# A temporary hack to allow the display/ pages to be accessed by Django
+# in their old location of static/widgets/
+cd static;ln -s html widgets;cd ..
+
 # Bass-ackwards way of creating superuser $RVDAS_USER, as the createsuperuser
 # command won't work from a script
 echo "from django.contrib.auth.models import User; User.objects.filter(email='${RVDAS_USER}@example.com').delete(); User.objects.create_superuser('${RVDAS_USER}', '${RVDAS_USER}@example.com', '${RVDAS_DATABASE_PASSWORD}')" | python3 manage.py shell
