@@ -20,7 +20,7 @@ from server.logger_manager import LoggerManager
 # Read in JSON with comments
 from logger.utils.read_config import parse
 
-from django_gui.settings import HOSTNAME
+from django_gui.settings import HOSTNAME, STATIC_ROOT
 from django_gui.settings import WEBSOCKET_DATA_SERVER
 
 ############################
@@ -114,6 +114,16 @@ def index(request):
 
 ################################################################################
 # Page to display messages from the openrvdas server
+def display(request, page_path=None):
+  if not page_path:
+    return HttpResponse('Directory listing not yet available...')
+  
+  with open(STATIC_ROOT + '/html/' + page_path) as f:
+    page_content = f.read()
+    return HttpResponse(page_content)
+
+################################################################################
+# Page to display messages from the openrvdas server
 def server_messages(request, log_level=logging.INFO):
   global api
   if api is None:
@@ -122,6 +132,18 @@ def server_messages(request, log_level=logging.INFO):
   template_vars = {'websocket_server': WEBSOCKET_DATA_SERVER,
                    'log_level': int(log_level)}
   return render(request, 'django_gui/server_messages.html', template_vars)
+
+################################################################################
+# Some hacks so that the display pages can find their JS and CSS
+def js(request, js_path=None):
+  with open(STATIC_ROOT + '/js/' + js_path) as f:
+    page_content = f.read()
+    return HttpResponse(page_content)
+
+def css(request, css_path=None):
+  with open(STATIC_ROOT + '/css/' + css_path) as f:
+    page_content = f.read()
+    return HttpResponse(page_content)
 
 ################################################################################
 def edit_config(request, logger_id):

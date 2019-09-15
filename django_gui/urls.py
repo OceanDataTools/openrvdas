@@ -36,18 +36,17 @@ urlpatterns = [
   path('edit_config/<str:logger_id>',
        views.edit_config, name='edit_config'),
 
+  # Display html pages at '/display' URL
+  path('display/', views.display, name='display'),
+  path('display/<path:page_path>', views.display, name='display'),
+
+  # Some hacks so that the display pages can find their JS and CSS
+  path('css/<path:css_path>', views.css, name='css'),
+  path('js/<path:js_path>', views.js, name='js'),
+
   path('widget/<str:field_list>', views.widget, name='widget'),
   path('widget/', views.widget, name='widget'),
 
   path('', views.index, name='index'),
-  #path('cruise/', views.index, name='index'),
-  #path('cruise/<str:cruise_id>', views.index, name='index'),
-
-  path('demo/', TemplateView.as_view(template_name='widgets/demo.html'),
-       name='demo'),
-  path('demo/', TemplateView.as_view(template_name='widgets/demo.html'),
-       name='demo'),
-  path('demo/', TemplateView.as_view(template_name='widgets/demo.html'),
-       name='demo'),
-  #path('demo/', include('widgets.urls')),
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
