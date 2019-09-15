@@ -1,228 +1,112 @@
-# OpenRVDAS Display Widgets
-© 2018-2019 David Pablo Cohn - DRAFT 2019-03-16
+# OpenRVDAS Displays and Widgets
+© 2018-2019 David Pablo Cohn - DRAFT 2019-09-15
 
 ## Table of Contents
 
 * [Overview](#overview)
-* [Data Servers](#data-servers)
-   * [Via a CachedDataServer](#via-a-cacheddataserver)
-   * [Via a CachedDataWriter](#via-a-cacheddatawriter)
-   * [Via the LoggerManager](#via-the-loggermanager)
-
-* [Feeding the CachedDataServer](#feeding-the-cached-data-server)
-* [Connecting Widgets to Data Servers](#connecting-widgets-to-data-servers)
-* [Widget content](#widget-content)
-   * [Supported static widgets](#supported-static-widgets)
-   * [Static widget transforms](#static-widget-transforms)
+* [Viewing Display Pages](#viewing-display-pages)
+* [Creating New Display Pages](#creating-new-display-pages)
+   * [Coding with Display Widgets](#coding-with-display-widgets)
+   * [Supported Widget Types](#supported-widget-types)
+   * [Widget Transforms](#widget-transforms)
+   * [Debugging Widgets](#debugging-widgets)
+   * [Connecting Widgets to Data Servers](#connecting-widgets-to-data-servers)
+* [Creating New Widgets](#creating-new-widgets)
 * [Contributing](#contributing)
 * [License](#license)
 * [Additional Licenses](#additional-licenses)
 
 ## Overview
 
-This document discusses writing, configuring and feeding OpenRVDAS web display widgets. Please see the [OpenRVDAS Introduction and Overview](intro_and_overview.md)
-for an introduction to the OpenRVDAS system. 
+This document discusses writing, configuring and feeding OpenRVDAS web
+displays and widgets. Please see the [OpenRVDAS Introduction and
+Overview](intro_and_overview.md) for an introduction to the OpenRVDAS
+system.
 
-![Django GUI Static Widget Example](images/django_gui_static_widget.png)
+![OpenRVDAS Display Example](images/django_gui_static_widget.png)
 
+The active portions of a display are composed of widgets that retrieve
+and display data gathered by OpenRVDAS. The above diagram illustrates
+three widget types: DialWidget, TimelineWidget and TextWidget. There is
+also a MapWidget, and users can create their own widget types, as long
+as they adhere to the API for communicating with the OpenRVDAS
+WidgetServer code.
 
-The above diagram illustrates three widget types in an excerpt from the "static" page defined in [widgets/static/widgets/nbp_demo.html](../widgets/static/widgets/nbp_demo.html). At present, there are two general classes of widgets supported by the OpenRVDAS framework:
+## Viewing Display Pages
 
-  * **"dynamic" widgets** which vary their display based on the parameters in the requested URL. At present, the only such widget supported is the Django display widget at [http://localhost:8000/widget](http://localhost:8000/widget).
+By default, display pages are located in the OpenRVDAS display/html
+directory. From there they may be opened directly from the browser as
+files, or may be served by Django.
 
-  * **"static" widgets** coded in HTML with fixed content and layout. These all currently live in the [widgets/static/widgets](../widgets/static/widgets) directory. The figure above is an example of a static widget demonstrating dial, line chart and text elements.
-  
-    These static widgets are currently configured to be served by the Django interface with the path /static/widgets/[widget_name], e.g. [http://localhost:8000/static/widgets/nbp_demo.html](http://localhost:8000/static/widgets/nbp_demo.html), if for example, there is a Django test server is running from the command ```./manage.py runserver localhost:8000```.
-
-## Data Servers
-
-Both kinds of widgets attempt to open a websocket connection to a data
-server to request and receive the data they display. At present, there
-are two ways to run data servers that will feed this need. (One used
-to be able to connect to a database-backed DataServer via the
-LoggerManager, but we have disabled and deprecated that functionality
-to simplify code. It was pretty dodgy, anyways.)
-
-### Via a CachedDataServer
-
-You may invoke a standalone CachedDataServer directly from the command
-line. The following invocation
+To open as a file in your browser, you would load a path like:
 
 ```
-    logger/utils/cached_data_server.py \
-      --udp 6225 \
-      --port 8766 \
-      --back_seconds 480 \
-      --cleanup 60 \
-      --v
+file:///opt/openrvdas/display/html/nbp_basic.html
 ```
 
-says to
+Note that when opening a display page this way, the Javascript widget
+code on the page will need to know where to try to connect to a data
+server to receive data. That information is stored in the file
+`display/js/widget/settings.py` and is, by default,
+``http://localhost:8766``. This will work if you are using a standard
+installation of OpenRVDAS and are using a browser on the same machine
+on which the system is running. Otherwise, you will need to edit the
+settings.py file to point to the machine (and port) where OpenRVDAS is
+running.
 
-1. Listen on the UDP port specified by --network for JSON-encoded,
-   timestamped, field:value pairs. See Data Input Formats, below, for
-   the formats it is able to parse.
+Django has a mechanism for serving files, which it calls "static" to
+distinguish them from those it generates on the fly. The guts of
+where it looks for files to serve and what URI's it uses for them are
+encoded in ``django_gui/settings.py`` which, on installation, is
+created from ``django_gui/settings.py.dist``.
 
+The files in ``display/html`` are served by Django using the path
+``display``:
 
-2. Store the received data in an in-memory cache, retaining the most
-   recent 480 seconds for each field.
-
-3. Wait for clients to connect to the websocket at port 8766 and serve
-   them the requested data. Web clients may issue JSON-encoded
-   requests of the following formats (see the definition of
-   serve_requests() for insight):
-
-   
-   ```{"type":"variable_list"}```
-   
-   Return a list of fields for which cache has data
-
-   ```
-   {"type":"subscribe",
-    "fields":{"field_1":{"seconds":50},
-              "field_2":{"seconds":0},
-              "field_3":{"seconds":-1}}}
-   ```
-   Subscribe to updates for field\_1, field\_2 and field\_3. Allowable
-   values for 'seconds':
-
-     - 0  - provide only new values that arrive after subscription
-     - -1  - provide the most recent value, and then all future new ones
-     - num - provide num seconds of back data, then all future new ones
-         
-     If 'seconds' is missing, use '0' as the default.
-
-   ```
-   {"type":"ready"}
-   ```
-   Indicate that client is ready to receive the next set of updates
-   for subscribed fields.
-
-   ```
-   {"type":"publish", "data":{"timestamp":1555468528.452,
-                              "fields":{"field_1":"value_1",
-                                        "field_2":"value_2"}}}
-   ```
-   Submit new data to the cache (an alternative way to get data
-   in that doesn't, e.g. have the same record size limits as a
-   UDP packet).
-
-### Via the LoggerManager
-
-The LoggerManager may be called upon to start a CachedDataWriter
-via the ``--start_data_server`` flag:
 ```
-  server/logger_manager.py \
-    --database django \
-    --config test/NBP1406/NBP1406_cruise.yaml \
-    --start_data_server
-```
-By default it will use websocket port 8766 and network UDP port 6225, but these
-may be overridden with additional command line flags:
-```
-  server/logger_manager.py \
-    --database django \
-    --config test/NBP1406/NBP1406_cruise.yaml \
-    --data_server_websocket 8765 \
-    --data_server_udp 6226 \
-    --start_data_server
+http://openrvdas/display/nbp_basic.html
 ```
 
-## Feeding the CachedDataServer
+## Creating New Display Pages
 
-The CachedDataServer expects to be passed records in one of two formats:
+There is one wrinkle in simply coding up a new display page and adding
+it to the ``display/html`` directory:
 
-1. DASRecord
+Django has a quirk in that it likes to have all its "static" files in
+one place but, for architectural reasons, may have them scattered
+across multiple directories. To accommodate that, Django collects the
+scattered files (either via copying or symlinks) into a dedicated
+directory via a utility script command:
 
-2. A dict encoding optionally a source data\_id and timestamp and a
-   mandatory 'fields' key of field\_name: value pairs. This is the format
-   emitted by default by ParseTransform:
+```
+python3 manage.py collectstatic --no-input --link --clear
+```
 
-   ```
-   {
-     "data_id": ...,    # optional
-     "timestamp": ...,  # optional - use time.time() if missing
-     "fields": {
-       field_name: value,
-       field_name: value,
-       ...
-     }
-   }
-   ```
-   
-A twist on format (2) is that the values may either be a singleton
-(int, float, string, etc) or a list. If the value is a singleton,
-it is taken at face value. If it is a list, it is assumed to be a
-list of (value, timestamp) tuples, in which case the top-level
-timestamp, if any, is ignored.
+This command looks in ``django_gui/settings.py`` for a ``STATIC_ROOT``
+definition and uses the path there as the destination for its static
+files. It then looks for a``STATICFILES_DIRS`` definition and creates
+symlinks to all of the files in the specified directories to the
+``STATIC_ROOT`` definition. The ``--link`` argument says to make
+symlinks rather than copying the source files, and the ``--clear``
+argument says to clear out/refresh all old links. (The advantage of
+using ``--link`` is that there is no need to re-collect after making
+changes to an existing display page).
 
-   ```
-   {
-     "data_id": ...,  # optional
-     "fields": {
-        field_name: [(timestamp, value), (timestamp, value),...],
-        field_name: [(timestamp, value), (timestamp, value),...],
-        ...
-     }
-   }
-   ```
+### Coding with Display Widgets
 
-You may have noticed the "publish" request described in the previous
-section. This provides a secondary way to deliver new data directly to the
-CachedDataServer.
+The active, useful part of these display pages are made up of display
+widgets, coded in JavaScript and located in the `display/js/widgets`
+directory. As mentioned above, there are currently four types of
+widgets available, but creation of new widgets is encouraged.
 
-## Connecting Widgets to Data Servers
+_**NOTE:** Two types of widgets, DialWidget and TimelineWidget,
+currently use the Highcharts library. We hope to soon provide purely
+open source alternatives to these, but for now, if you are using them,
+you should ensure that you and your organization have the appropriate
+license ([Highcharts licensing is free for academic
+institutions](https://shop.highsoft.com/faq))._
 
-The trick with connecting a display widget or web console to a data server is telling it to what websocket it should try to connect.
-
-The Django-based dynamic widget is coded to look in
-[django_gui/settings.py](../django_gui/settings.py) for the value of
-```WEBSOCKET_DATA_SERVER``` and attempts to connect to a data server
-at that address.
-
-The static widgets rely on the file
-[widgets/static/js/widgets/settings.js](../static/js/widgets/settings.js)
-for their definition of ```WEBSOCKET_DATA_SERVER```. The settings.py
-file must be copied over from
-[widgets/static/js/widgets/settings.js.dist](../static/js/widgets/settings.js.dist)
-and modified to match your installation.
-
-In either case, the Django server and web server should be restarted
-whenever either of these definitions are changed to ensure that the
-latest values are retrieved.
-
-Note that, with Django, there is a further complication with the
-static files. For efficiency, Django can be directed to collect the
-static files for all its subprojects into a single directory (via the
-```./manage.py collectstatic``` command). If your instance was built
-using one of the installation scripts in the [utils/](../utils/)
-directory, these static files have been copied into the
-```openrvdas/static/``` directory, and you will need to change the
-definition of ```WEBSOCKET_DATA_SERVER``` in the ```settings.py```
-file contained there.
-
-If you are running a data server and displaying widgets that are not
-updating, a good first step is to open a Javascript console on the
-browser page displaying the widget to check that the widget is
-attempting to connect to the data server you think is should be.
-
-## Widget content
-
-The provided static widgets are intended to be pedagogical,
-demonstrating how to create custom widgets that meet your
-installation's specific needs.
-
-They are:
-
-* For use with the ```test/NBP1406/NBP1406_cruise.yaml``` configuration:
-  * [nbp\_demo.html](../widgets/static/widgets/nbp_demo.html)
-  * [true\_winds\_demo.html](../widgets/static/widgets/true_winds_demo.html)
-  * [winch\_demo.html](../widgets/static/widgets/winch_demo.html)
-  * [map\_demo.html](../widgets/static/widgets/map_demo.html)
-* For use with the ```test/SKQ201822S/SKQ201822S_cruise.yaml``` configuration:
-  * [skq\_bridge.html](../widgets/static/widgets/skq_bridge.html)
-
-A simple widget might be constructed as follows
+A simple display page might be constructed as follows
 
 ```
 <!DOCTYPE HTML>
@@ -232,17 +116,17 @@ A simple widget might be constructed as follows
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- This is where we define location of data server. -->
-    <script src="/static/js/widgets/settings.js"></script>
+    <script src="../js/widgets/settings.js"></script>
     
-    <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="../js/jquery/jquery-3.1.1.min.js"></script>
 
     <!-- For highcharts-widget.js -->
-    <script src="/static/js/highcharts/code/highstock.js"></script>
-    <script src="/static/js/highcharts/code/highcharts-more.js"></script>
-    <script src="/static/js/highcharts/code/modules/data.js"></script>
+    <script src="../js/highcharts/code/highcharts.js"></script>
+    <script src="../js/highcharts/code/highcharts-more.js"></script>
+    <script src="../js/highcharts/code/modules/data.js"></script>
 
-    <script src="/static/js/widgets/highcharts_widget.js"></script>
-    <script src="/static/js/widgets/widget_server.js"></script>
+    <script src="../js/widgets/highcharts_widget.js"></script>
+    <script src="../js/widgets/widget_server.js"></script>
   </head>
   <body>
     <div id="line-container" style="height: 400px; min-width: 310px"></div>
@@ -283,21 +167,78 @@ A simple widget might be constructed as follows
 </html>
 ```
 
-### Supported static widgets
+The best way to get started coding up widgets for a new display is to
+look at existing displays in [display/html](../display/html). But the
+basic recipe is that you create a `<div>` or a `<span>` for each
+widget on a page and give it an id that is unique to the page.
+
+```
+  Heading: <span id="heading-container"></span>
+```
+
+Then in JavaScript, you create an appropriate widget, passing it the
+id of the div/span in question, along with parameters telling it what
+it should be displaying there.
+
+```
+  var my_widget = new TextWidget('heading-container',
+                                 {S330HeadingTrue: {name: 'Heading (True)'}});
+```
+
+At the end of the JavaScript, a WidgetServer is instantiated and
+passed a list of all the page's widgets:
+
+```
+  var widget_server = new WidgetServer(widget_list, WEBSOCKET_DATA_SERVER);
+  widget_server.serve();
+```
+
+Note the use of variable `WEBSOCKET_DATA_SERVER`, which is defined in
+the `display/js/widgets/settings.js` file we described earlier.
+
+
+### Supported Widget Types
 
 The types of static widgets that are currently supported are
 
-* ```TimelineWidget(container, field_dict, [y_label], [widget_options])``` - produces a sliding timeline, as in the above example. May include any number of fields and each field may specify the name to be displayed (via "name:"), how many seconds of "back" data should be displayed (via "seconds:"), a transform (described below) and in what color to draw the line (via "color:"). Users proficient with Highcharts may specify additional Highcharts timeline widget options to override the defaults defined in [widgets/static/js/highcharts_widget.js](../widgets/static/js/highcharts_widget.js).
+* ``TimelineWidget(container, field_dict, [y_label], [widget_options])``
+  Produces a sliding timeline, as in the above
+  example. May include any number of fields and each field may specify
+  the name to be displayed (via "name:"), how many seconds of "back"
+  data should be displayed (via "seconds:"), a transform (described
+  below) and in what color to draw the line (via "color:"). Users
+  proficient with Highcharts may specify additional Highcharts
+  timeline widget options to override the defaults defined in
+  [display/js/widgets/highcharts_widget.js](../display/js/widgets/highcharts_widget.js).
 
-* ```DialWidget(container, field_dict, [widget_options])``` - produces a dial gauge with as many dial hands as fields provided.  May include any number of fields and each field may specify the name to be displayed (via "name:"), a transform (described below) and in what color to draw the line (via "color:"). Users proficient with Highcharts may specify additional Highcharts dial widget options to override the defaults defined in [widgets/static/js/highcharts_widget.js](../widgets/static/js/highcharts_widget.js).
+* ``DialWidget(container, field_dict, [widget_options])``
+  Produces a dial gauge with as many dial hands as fields provided.
+  May include any number of fields and each field may specify the name
+  to be displayed (via "name:"), a transform (described below) and in
+  what color to draw the line (via "color:"). Users proficient with
+  Highcharts may specify additional Highcharts dial widget options to
+  override the defaults defined in
+  [display/js/widgets/highcharts_widget.js](../display/js/widgets/highcharts_widget.js).
 
-* ```TextWidget(container, field_dict)``` - inserts the text value of the fields in question. Field dict may specify a "separator: <str>" value to indicate what string should separate the retrieved fields, and may also specify "append: true" if new values are to be appended to prior ones rather than replacing them. As above, a transform may also be specified.
+* ``TextWidget(container, field_dict)``
+  Inserts the text value of the fields in question. Field dict may
+  specify a "separator: <str>" value to indicate what string should
+  separate the retrieved fields, and may also specify "append: true"
+  if new values are to be appended to prior ones rather than replacing
+  them. As above, a transform may also be specified. Defined in 
+  [display/js/widgets/text_widget.js](../display/js/widgets/highcharts_widget.js).
+  
+Again, we recommend looking at the sample pages in
+[display/html/](../display/html/) to better understand widget
+construction and available options.
 
-Again, we recommend looking at the sample static widgets in [widgets/static/widgets/](../widgets/static/widgets/) to better understand widget construction and available options.
+### Widget Transforms
 
-### Static widget transforms
-
-Sometimes an available value may not be in the form in which we would like to display it. The desired transformation may be a question of formatting or of mathematical manipulation. To support this, all static widgets are able to parse and apply a "transform" definition in the field dict.
+Sometimes an available value may not be in the form in which we would
+like to display it. The desired transformation may be a question of
+formatting or of mathematical manipulation. To support this, all
+display widgets are able to parse and apply a "transform" definition in
+the field dict.
 
 For example:
 
@@ -319,6 +260,42 @@ For example:
                                         return ((val*9/5) + 32) + "°F";
                                   }}));
 ```
+
+### Debugging Widgets
+
+By far, the easiest way to debug misbehaving widgets is by opening
+your browser's developer console. On a Mac, using Chrome, pressing
+Command-Option-J will do this. From there you will be able to see
+whether you have syntax errors in your JavaScript and whether the
+WidgetServer is successfully connecting to its intended data server.
+
+### Connecting Widgets to Data Servers
+
+The WidgetServer instantiated with a page is what feeds display data
+to that page's widgets. The WidgetServer does this by opening a
+websocket connection to a CachedDataServer and subscribing to the
+fields specified in each of its widgets' definitions.
+
+After syntax errors, failure to connect to a data server is the most
+common problem for newly-coded widgets and pages. The trick with
+connecting a display widget or web console to a data server is telling
+it to what websocket it should try to connect (recall that by
+convention, the WidgetServer looks for a definition of
+``WEBSOCKET_DATA_SERVER`` in the file
+[display/js/widgets/settings.js](../static/js/widgets/settings.js)).
+
+If you are using the default OpenRVDAS installation, you will have a
+CachedDataServer running and servicing websocket connections on port
+8766. Please see the [Cached Data Server](cached_data_server.md)
+document for information on configuring and using Cached Data Servers.
+
+If you are running a data server and displaying widgets that are not
+updating, a good first step is to open a Javascript console on the
+browser page displaying the widget to check that the widget is
+attempting to connect to the data server you think is should be.
+
+## Creating New Widgets
+
 
 ## Contributing
 

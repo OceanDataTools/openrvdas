@@ -80,7 +80,7 @@ Once you have logged back on, open two terminal windows.
 
  You can change the active configuration of individual loggers by clicking on the button bearing the name of the current configuration.
 
-4. Open a second browser window and direct it to http://openrvdas:8000/static/widgets/nbp_demo.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
+4. Open a second browser window and direct it to http://openrvdas:8000/display/nbp_demo.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
 
  ![NBP Widget Demo](images/nbp_display.png)
  
