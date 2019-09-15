@@ -19,6 +19,7 @@ Other relevant documents are:
 * [OpenRVDAS Django Web User Interface](django_interface.md) - an introduction to the web-based GUI
 * [Data Display Widgets](display_widgets.md) - an introduction to widgets for data display
 * [Parsing](parsing.md) - how to work with the included RecordParser to turn raw text records into structured data fields
+* [Security assumptions](security.md) - the (rather naive) security assumptions made about the environment in which OpenRVDAS runs.
 
 A very rudimentary project website is available at [OpenRVDAS.org](http://openrvdas.org)
 
