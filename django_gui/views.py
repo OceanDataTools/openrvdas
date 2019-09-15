@@ -9,7 +9,7 @@ import time
 from json import JSONDecodeError
 from signal import SIGTERM, SIGINT
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -116,7 +116,9 @@ def index(request):
 # Page to display messages from the openrvdas server
 def display(request, page_path=None):
   if not page_path:
-    return HttpResponse('Directory listing not yet available...')
+    # Ideally this would provide the listing using the display/ url
+    # but there are many higher priorities at this point.
+    return redirect('/static/widgets')
   
   with open(STATIC_ROOT + '/html/' + page_path) as f:
     page_content = f.read()
