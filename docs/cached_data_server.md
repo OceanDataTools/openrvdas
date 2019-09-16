@@ -48,38 +48,48 @@ says to
 The data server knows how to respond to a set of requests sent to it
 by websocket clients:
 
-* ```{"type":"fields"}```
-
+* ```
+  {"type":"fields"}
+  ```
+  
    Return a list of fields for which cache has data.
 
-* ```{'type':'describe',
-    'fields':['field_1', 'field_2', 'field_3']}```
+* ```
+  {'type':'describe',
+    'fields':['field_1', 'field_2', 'field_3']}
+  ```
 
   Return a dict of metadata descriptions for each specified field. If
   'fields' is omitted, return a dict of metadata for *all* fields.
 
-* ```{"type":"subscribe",
+* ```
+  {"type":"subscribe",
     "fields":{"field_1":{"seconds":50},
               "field_2":{"seconds":0},
-              "field_3":{"seconds":-1}}}```
+              "field_3":{"seconds":-1}}}
+  ```
 
   Subscribe to updates for field\_1, field\_2 and field\_3. Allowable
   values for 'seconds':
 
-  - 0  - provide only new values that arrive after subscription
-  - -1  - provide the most recent value, and then all future new ones
-  - num - provide num seconds of back data, then all future new ones
+  - ``0``  - provide only new values that arrive after subscription
+  - ``-1``  - provide the most recent value, and then all future new ones
+  - ``num`` - provide num seconds of back data, then all future new ones
 
   If 'seconds' is missing, use '0' as the default.
 
-* ```{"type":"ready"}``1
+* ```
+  {"type":"ready"}
+  ```
 
   Indicate that client is ready to receive the next set of updates
   for subscribed fields.
 
-* ```{"type":"publish", "data":{"timestamp":1555468528.452,
+* ```
+  {"type":"publish", "data":{"timestamp":1555468528.452,
                               "fields":{"field_1":"value_1",
-                                        "field_2":"value_2"}}}```
+                                        "field_2":"value_2"}}}
+  ```
                                         
   Submit new data to the cache (an alternative way to get data
   in that doesn't, e.g. have the same record size limits as a
