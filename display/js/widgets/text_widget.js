@@ -128,9 +128,6 @@ function TextWidget(container, fields) {
     // When passed a websocket server /data report, sifts through
     // fields and updates any series with matching field names.
     this.process_message = function(message) {
-        if (this.timeout_styler != null) {
-            this.timeout_styler.reset_timers()
-        }
         var container_div = document.getElementById(this.container);
         if (!container_div) {
             console.log('Unable to find container id "' + this.container
@@ -170,6 +167,9 @@ function TextWidget(container, fields) {
             }
             // Finally, assign to container html
             container_div.innerHTML = value_str;
+            if (this.timeout_styler != null) {
+              this.timeout_styler.reset_timers()
+            }
         }
     }
 }
