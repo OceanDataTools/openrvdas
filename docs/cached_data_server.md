@@ -1,10 +1,15 @@
-# The OpenRVDAS Cached Data Server
+# The OpenRVDAS Cached Data Server [DRAFT]
 © 2019 David Pablo Cohn - DRAFT 2019-09-15
 
 ## Table of Contents
 
-NOTE: This document is still a partial stub broken off from the
-Displays and Widgets document.
+* [Table of Contents](#table-of-contents)
+* [Overview](#overview)
+* [Websocket Request Types](#websocket-request-types)
+* [Feeding the CachedDataServer](#feeding-the-cacheddataserver)
+* [Input Data Formats](#input-data-formats)
+* [Contributing](#contributing)
+* [License](#license)
 
 ## Overview
 
