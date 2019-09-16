@@ -1,0 +1,24 @@
+################################################################################
+# Atlas-Scientific Flowmeter
+#
+# See README.md in this directory
+
+######################################
+AtlasFlowmeter:
+  category: "device_type"
+  description: "Atlas-Scientific Flowmeter SEN203F with EZO Circuit"
+  # If device type can output multiple formats, include them as a
+  # list. Parser will use the first one that matches the whole line.
+  format:
+    - "{TotalFlowVolume:f},{FlowRate:f}"
+
+
+  ########
+  # Optional metadata to help make sense of the parsed values.
+  fields:
+    TotalFlowVolume:
+      units: "milliliters"
+      description: ""
+    FlowRate:
+      units: "milliliters per second"
+      description: ""

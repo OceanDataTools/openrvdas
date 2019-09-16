@@ -309,14 +309,18 @@ cp database/settings.py.dist database/settings.py
 sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
 sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
 
-cp widgets/static/js/widgets/settings.js.dist \
-   widgets/static/js/widgets/settings.js
-sed -i -e "s/localhost/${HOSTNAME}/g" widgets/static/js/widgets/settings.js
+cp display/js/widgets/settings.js.dist \
+   display/js/widgets/settings.js
+sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
 
 python3 manage.py makemigrations django_gui
 python3 manage.py migrate
 python3 manage.py collectstatic --no-input --clear --link
 chmod -R og+rX static
+
+# A temporary hack to allow the display/ pages to be accessed by Django
+# in their old location of static/widgets/
+cd static;ln -s html widgets;cd ..
 
 # Bass-ackwards way of creating superuser $RVDAS_USER, as the createsuperuser
 # command won't work from a script
@@ -353,6 +357,7 @@ server {
 
     location /static {
         alias ${INSTALL_ROOT}/openrvdas/static; # project static files
+        autoindex on;
     }
 
     location /docs {
@@ -439,28 +444,32 @@ cat > ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh <<EOF
 # Start openrvdas servers as service
 OPENRVDAS_LOG_DIR=/var/log/openrvdas
 OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
+DATA_SERVER_LOGFILE=\$OPENRVDAS_LOG_DIR/cached_data_server.log
 
 mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-# Comment out line below to have logger manager *not* start a data server
-START_DATA_SERVER='--start_data_server'
-
-DATA_SERVER_WEBSOCKET=:8766
-DATA_SERVER_UDP=:6225
+DATA_SERVER_UDP_PORT=6225
+DATA_SERVER_WEBSOCKET_PORT=8766
 DATA_SERVER_LISTEN_ON_UDP=
+DATA_SERVER_WEBSOCKET=:\$DATA_SERVER_WEBSOCKET_PORT
 
-# Comment out line below to have data server we start *not* listen on UDP
-# DATA_SERVER_LISTEN_ON_UDP='--data_server_udp $DATA_SERVER_UDP'
+# Comment out line below to have data server we start *not* listen on UDP       
+#DATA_SERVER_LISTEN_ON_UDP='--udp \$DATA_SERVER_UDP_PORT'  
 
-sudo -u rvdas -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET \$DATA_SERVER_LISTEN_ON_UDP \$START_DATA_SERVER"
+# Run cached data server in background                                          
+sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP  2>&1 | tee \$DATA_SERVER_LOGFILE &"
+
+# Run logger manager in foreground                                              
+sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET"
 EOF
 
 cat > ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh <<EOF
 #!/bin/bash
 USER=rvdas
-sudo -u $USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
+sudo -u $RVDAS_USER sh -c 'pkill -f "/usr/bin/python3 server/cached_data_server.py"'
+sudo -u $RVDAS_USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
 EOF
 
 chmod 755 ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh

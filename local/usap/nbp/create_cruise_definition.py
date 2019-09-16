@@ -427,7 +427,8 @@ NET_WRITER_TEMPLATE="""
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,loca
+            metadata_interval: 120
         writers:
         - class: CachedDataWriter
           kwargs:

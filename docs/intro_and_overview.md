@@ -80,7 +80,7 @@ Once you have logged back on, open two terminal windows.
 
  You can change the active configuration of individual loggers by clicking on the button bearing the name of the current configuration.
 
-4. Open a second browser window and direct it to http://openrvdas:8000/static/widgets/nbp_demo.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
+4. Open a second browser window and direct it to http://openrvdas:8000/display/nbp_basic.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
 
  ![NBP Widget Demo](images/nbp_display.png)
  
@@ -145,6 +145,7 @@ In addition to the documents referenced above, some other relevant documents are
 -   [Simulating Serial Input](simulating_serial_input.md)
 -   [Running OpenRVDAS Loggers (web - deprecated)](https://docs.google.com/document/d/1w_wkdprtA31Fx4yTHLL6WoTtFrPmE3jskTeV6YSuOJI/edit)
 -   [Parsing](parsing.md)
+-   [Security assumptions][security.md]
 
 [^1]: Recommended version of Python is 3.6 or higher, but most listener     code has been verified to run on 3.5 and higher. Server code such as     logger\_runner.py and logger\_manager.py may experience problems on     3.5 due to changes in the async module.
 

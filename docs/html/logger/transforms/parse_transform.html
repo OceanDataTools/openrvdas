@@ -37,8 +37,8 @@ class ParseTransform(Transform):
   &#34;&#34;&#34;Parse a &#34;&lt;data_id&gt; &lt;timestamp&gt; &lt;message&gt;&#34; record and return
   corresponding dict of values (or JSON or DASRecord if specified).&#34;&#34;&#34;
   def __init__(self, definition_path=record_parser.DEFAULT_DEFINITION_PATH,
-               return_json=False, return_das_record=False):
-               
+               return_json=False, return_das_record=False,
+               metadata_interval=None):
     &#34;&#34;&#34;
     ```
     definition_path
@@ -50,12 +50,18 @@ class ParseTransform(Transform):
 
     return_das_record
             Return a DASRecord object.
+
+    metadata_interval
+            If not None, include the description, units and other metadata
+            pertaining to each field in the returned record if those data
+            haven&#39;t been returned in the last metadata_interval seconds.
     ```
     &#34;&#34;&#34;
     self.parser = record_parser.RecordParser(
       definition_path=definition_path,
       return_json=return_json,
-      return_das_record=return_das_record)
+      return_das_record=return_das_record,
+      metadata_interval=metadata_interval)
 
   ############################
   def transform(self, record):
@@ -76,7 +82,7 @@ class ParseTransform(Transform):
 <dl>
 <dt id="logger.transforms.parse_transform.ParseTransform"><code class="flex name class">
 <span>class <span class="ident">ParseTransform</span></span>
-<span>(</span><span>definition_path='local/devices/*.yaml', return_json=False, return_das_record=False)</span>
+<span>(</span><span>definition_path='local/devices/*.yaml', return_json=False, return_das_record=False, metadata_interval=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Parse a "<data_id> <timestamp> <message>" record and return
@@ -90,6 +96,11 @@ return_json
 
 return_das_record
         Return a DASRecord object.
+
+metadata_interval
+        If not None, include the description, units and other metadata
+        pertaining to each field in the returned record if those data
+        haven't been returned in the last metadata_interval seconds.
 </code></pre></section>
 <details class="source">
 <summary>Source code</summary>
@@ -97,8 +108,8 @@ return_das_record
   &#34;&#34;&#34;Parse a &#34;&lt;data_id&gt; &lt;timestamp&gt; &lt;message&gt;&#34; record and return
   corresponding dict of values (or JSON or DASRecord if specified).&#34;&#34;&#34;
   def __init__(self, definition_path=record_parser.DEFAULT_DEFINITION_PATH,
-               return_json=False, return_das_record=False):
-               
+               return_json=False, return_das_record=False,
+               metadata_interval=None):
     &#34;&#34;&#34;
     ```
     definition_path
@@ -110,12 +121,18 @@ return_das_record
 
     return_das_record
             Return a DASRecord object.
+
+    metadata_interval
+            If not None, include the description, units and other metadata
+            pertaining to each field in the returned record if those data
+            haven&#39;t been returned in the last metadata_interval seconds.
     ```
     &#34;&#34;&#34;
     self.parser = record_parser.RecordParser(
       definition_path=definition_path,
       return_json=return_json,
-      return_das_record=return_das_record)
+      return_das_record=return_das_record,
+      metadata_interval=metadata_interval)
 
   ############################
   def transform(self, record):

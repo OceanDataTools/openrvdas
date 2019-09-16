@@ -27,6 +27,7 @@
 import logging
 import serial
 import sys
+import time
 
 sys.path.append(&#39;.&#39;)
 
@@ -42,10 +43,14 @@ class PolledSerialReader(SerialReader):
                write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
                exclusive=None, max_bytes=None, eol=None, start_cmd=None,
                pre_read_cmd=None, stop_cmd=None):
-    &#34;&#34;&#34;
-    Extends the standard serial reader by allowing the user to define
-    strings to send to the serial host on startup, before each read and 
-    just prior to the reader being destroyed
+    &#34;&#34;&#34;Extends the standard serial reader by allowing the user to define
+    strings to send to the serial host on startup, before each read and
+    just prior to the reader being destroyed.
+
+    If start_cmd, pre_read_cmd or stop_cmd are lists of strings, send
+    as sequential commands. The string ``__PAUSE__``, followed by a
+    number, is interpreted as a command to pause for that many seconds
+    prior to sending the next command.
     &#34;&#34;&#34;
     self.start_cmd = start_cmd
     self.pre_read_cmd = pre_read_cmd
@@ -59,15 +64,56 @@ class PolledSerialReader(SerialReader):
 
     if self.start_cmd:
       try:
-        self.serial.write(self.start_cmd.encode(&#39;utf-8&#39;))
+        self._send_command(start_cmd)
       except serial.serialutil.SerialException as e:
         logging.error(str(e))
+
+  ############################
+  def _to_bytes(self, the_str):
+    &#34;&#34;&#34;Convert a string to bytes, unescaping things like \n and \r.&#34;&#34;&#34;
+    return the_str.encode().decode(&#34;unicode_escape&#34;).encode(&#39;utf8&#39;)
+    
+  ############################
+  def _send_command(self, command):
+    &#34;&#34;&#34;Send a command, or list of commands to the serial port.&#34;&#34;&#34;
+    if not command:
+      return
+    if type(command) is str:
+      # Do some craziness to unescape escape sequences like &#39;\n&#39;
+      self.serial.write(self._to_bytes(command))
+      return
+
+    if not type(command) is list:
+      raise ValueError(&#39;PolledSerialReader commands must be either strings or &#39;
+                       &#39;lists. Received: type %s: %s&#39; % (type(command), command))
+
+    # Iterate through commands, pausing as necessary
+    for cmd in command:
+      # Is it our special &#39;pause&#39; command?
+      if cmd.find(&#39;__PAUSE__&#39;) == 0:
+        pause_cmd = cmd.split()
+        if len(pause_cmd) == 1:
+          pause_length = 1
+        elif len(pause_cmd) == 2:
+          try:
+            pause_length = float(pause_cmd[1])
+          except ValueError:
+            raise ValueError(&#39;__PAUSE__ interval in PolledSerialReader must be &#39;
+                             &#39;a float. Found: %s&#39; % cmd)
+        else:
+          raise ValueError(&#39;Pause format &#34;__PAUSE__ &lt;seconds&gt;&#34;; found %s&#39; % cmd)
+        logging.info(&#39;Pausing %g seconds&#39;, pause_length)
+        time.sleep(pause_length)
+      else:
+        # If it&#39;s a normal command we&#39;re sending
+        logging.info(&#39;Sending serial command &#34;%s&#34;&#39;, cmd)
+        self.serial.write(self._to_bytes(cmd))
 
   ############################
   def read(self):
     try:
       if self.pre_read_cmd:
-        self.serial.write(self.pre_read_cmd.encode(&#39;utf-8&#39;))
+        self._send_command(self.pre_read_cmd)
 
       record = super().read()
       return record
@@ -79,7 +125,7 @@ class PolledSerialReader(SerialReader):
   def __del__(self):
     if self.stop_cmd:
       try:
-        self.serial.write(self.stop_cmd.encode(&#39;utf-8&#39;))
+        self._send_command(self.stop_cmd)
       except serial.serialutil.SerialException as e:
         logging.error(str(e))</code></pre>
 </details>
@@ -101,7 +147,11 @@ class PolledSerialReader(SerialReader):
 <section class="desc"><p>Read text records from a serial port.</p>
 <p>Extends the standard serial reader by allowing the user to define
 strings to send to the serial host on startup, before each read and
-just prior to the reader being destroyed</p></section>
+just prior to the reader being destroyed.</p>
+<p>If start_cmd, pre_read_cmd or stop_cmd are lists of strings, send
+as sequential commands. The string <code>__PAUSE__</code>, followed by a
+number, is interpreted as a command to pause for that many seconds
+prior to sending the next command.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class PolledSerialReader(SerialReader):
@@ -113,10 +163,14 @@ just prior to the reader being destroyed</p></section>
                write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
                exclusive=None, max_bytes=None, eol=None, start_cmd=None,
                pre_read_cmd=None, stop_cmd=None):
-    &#34;&#34;&#34;
-    Extends the standard serial reader by allowing the user to define
-    strings to send to the serial host on startup, before each read and 
-    just prior to the reader being destroyed
+    &#34;&#34;&#34;Extends the standard serial reader by allowing the user to define
+    strings to send to the serial host on startup, before each read and
+    just prior to the reader being destroyed.
+
+    If start_cmd, pre_read_cmd or stop_cmd are lists of strings, send
+    as sequential commands. The string ``__PAUSE__``, followed by a
+    number, is interpreted as a command to pause for that many seconds
+    prior to sending the next command.
     &#34;&#34;&#34;
     self.start_cmd = start_cmd
     self.pre_read_cmd = pre_read_cmd
@@ -130,15 +184,56 @@ just prior to the reader being destroyed</p></section>
 
     if self.start_cmd:
       try:
-        self.serial.write(self.start_cmd.encode(&#39;utf-8&#39;))
+        self._send_command(start_cmd)
       except serial.serialutil.SerialException as e:
         logging.error(str(e))
+
+  ############################
+  def _to_bytes(self, the_str):
+    &#34;&#34;&#34;Convert a string to bytes, unescaping things like \n and \r.&#34;&#34;&#34;
+    return the_str.encode().decode(&#34;unicode_escape&#34;).encode(&#39;utf8&#39;)
+    
+  ############################
+  def _send_command(self, command):
+    &#34;&#34;&#34;Send a command, or list of commands to the serial port.&#34;&#34;&#34;
+    if not command:
+      return
+    if type(command) is str:
+      # Do some craziness to unescape escape sequences like &#39;\n&#39;
+      self.serial.write(self._to_bytes(command))
+      return
+
+    if not type(command) is list:
+      raise ValueError(&#39;PolledSerialReader commands must be either strings or &#39;
+                       &#39;lists. Received: type %s: %s&#39; % (type(command), command))
+
+    # Iterate through commands, pausing as necessary
+    for cmd in command:
+      # Is it our special &#39;pause&#39; command?
+      if cmd.find(&#39;__PAUSE__&#39;) == 0:
+        pause_cmd = cmd.split()
+        if len(pause_cmd) == 1:
+          pause_length = 1
+        elif len(pause_cmd) == 2:
+          try:
+            pause_length = float(pause_cmd[1])
+          except ValueError:
+            raise ValueError(&#39;__PAUSE__ interval in PolledSerialReader must be &#39;
+                             &#39;a float. Found: %s&#39; % cmd)
+        else:
+          raise ValueError(&#39;Pause format &#34;__PAUSE__ &lt;seconds&gt;&#34;; found %s&#39; % cmd)
+        logging.info(&#39;Pausing %g seconds&#39;, pause_length)
+        time.sleep(pause_length)
+      else:
+        # If it&#39;s a normal command we&#39;re sending
+        logging.info(&#39;Sending serial command &#34;%s&#34;&#39;, cmd)
+        self.serial.write(self._to_bytes(cmd))
 
   ############################
   def read(self):
     try:
       if self.pre_read_cmd:
-        self.serial.write(self.pre_read_cmd.encode(&#39;utf-8&#39;))
+        self._send_command(self.pre_read_cmd)
 
       record = super().read()
       return record
@@ -150,7 +245,7 @@ just prior to the reader being destroyed</p></section>
   def __del__(self):
     if self.stop_cmd:
       try:
-        self.serial.write(self.stop_cmd.encode(&#39;utf-8&#39;))
+        self._send_command(self.stop_cmd)
       except serial.serialutil.SerialException as e:
         logging.error(str(e))</code></pre>
 </details>

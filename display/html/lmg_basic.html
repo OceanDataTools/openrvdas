@@ -3,74 +3,73 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NBP UNOLS Widget Example</title>
+    <title>LMG UNOLS Widget Example</title>
 
     <style type="text/css">
       .ship_table {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         border-collapse: collapse;
-        width: 540px;
-        background-color: lightslategray;
+        width: 100%;
       }
       .ship_table td, .ship_table th {
         border: 1px solid #ddd;
         padding: 8px;
-      }
-      .td_50 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 270px;
-      }
-      .name_td_50 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        font-weight: bold;
-        width: 270px;
-      }
-      .name_td_25 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        font-weight: bold;
-        width: 135px;
-      }
-      .val_td_50 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 270px;
-      }
-      .val_td_25 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 135px;
-      }
-      .td_30 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 30%;
       }
       .td_70 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
         width: 70%;
       }
+      .td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 50%;
+      }
+      .td_30 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .name_td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 25%;
+      }
+      .name_td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 50%;
+      }
       .val_td {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
+      }
+      .val_td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 50%;
+      }
+      .val_td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 25%;
       }
     </style>
   </head>
   <body>
     <!-- This is where we define location of data server. -->
-    <script src="/static/js/widgets/settings.js"></script>
+    <script src="../js/widgets/settings.js"></script>
 
-    <script src="/static/js/jquery/jquery-3.1.1.min.js"></script>
-    <script src="/static/js/highcharts/code/highstock.js"></script>
-    <script src="/static/js/highcharts/code/highcharts-more.js"></script>
-    <script src="/static/js/highcharts/code/modules/data.js"></script>
+    <script src="../js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="../js/highcharts/code/highcharts.js"></script>
+    <script src="../js/highcharts/code/highcharts-more.js"></script>
+    <script src="../js/highcharts/code/modules/data.js"></script>
 
-    <script src="/static/js/widgets/highcharts_widget.js"></script>
-    <script src="/static/js/widgets/text_widget.js"></script>
-    <script src="/static/js/widgets/widget_server.js"></script>
+    <script src="../js/widgets/highcharts_widget.js"></script>
+    <script src="../js/widgets/text_widget.js"></script>
+    <script src="../js/widgets/widget_server.js"></script>
 
     <table class="ship_table">
       <tr>
@@ -79,7 +78,7 @@
     <table class="ship_table">
       <tr>
         <td class="name_td_50" colspan=2>
-          Nathaniel B. Palmer Console<br>
+          Lawrence M. Gould Console<br>
           GMT Day: <span id="gmt_julian_date">---</span>,
           Date: <span id="gmt_day">--</span>-<span id="gmt_month">---</span>-<span id="gmt_year">----</span>
         </td>
@@ -116,14 +115,14 @@
         </td>
       </tr>
       <tr>
-        <td class="val_td_25">Course: <span id="course_true">-</span>°</td>
-        <td class="val_td_25">SOG: <span id="sog_kt">-</span> kts</td>
-        <td class="val_td_50">Pitch: <span id="pitch"></span>°</td>
+        <td>Course: <span id="course_true">-</span>°</td>
+        <td>SOG: <span id="sog_kt">-</span> kts</td>
+        <td class="val_td">Pitch: <span id="pitch"></span>°</td>
       </tr>
       <tr>
-        <td class="val_td_25">Heading: <span id="heading_true"></span>°</td>
+        <td>Heading: <span id="heading_true"></span>°</td>
         <td></td>
-        <td class="val_td_50">Roll: <span id="roll"></span>°</td>
+        <td class="val_td">Roll: <span id="roll"></span>°</td>
       </tr>
     </table>
 
@@ -231,16 +230,7 @@
     }
   };
   widget_list.push(new DialWidget('rel_wind_dir', rel_wind_fields,
-                                  {title:{text:''},
-                                   chart:{type: 'gauge',
-                                          backgroundColor:'lightslategray',
-                                          maxPadding:0,
-                                          marginTop:0,
-                                          marginBottom:0,
-                                          marginLeft:0,
-                                          marginRight:0,
-                                         },
-                                   credits:false, maxPadding: 0.05}));
+                                  {title:{text:''}, credits:false, maxPadding: 0.05}));
 
   //////////////////
   // True winds
@@ -257,16 +247,7 @@
     }
   };
   widget_list.push(new DialWidget('true_wind_dir', true_wind_fields,
-                                  {title:{text:''},
-                                   chart:{type: 'gauge',
-                                          backgroundColor:'lightslategray',
-                                          maxPadding:0,
-                                          marginTop:0,
-                                          marginBottom:0,
-                                          marginLeft:0,
-                                          marginRight:0,
-                                         },
-                                   credits:false, maxPadding: 0.05}));
+                           {title:{text:''}, credits:false}));
   var port_rel_speed_fields = {
     MwxPortRelWindSpeed: {
       name: "Port Rel Wind Speed",

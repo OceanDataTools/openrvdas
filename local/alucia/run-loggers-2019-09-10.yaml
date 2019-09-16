@@ -1,0 +1,657 @@
+# Cruise definition file for Alucia
+  
+# Hand coded - 2019-09-10
+
+loggers: 
+  wix: 
+    configs:
+    - wix->off
+    - wix->file/db
+  cnav: 
+    configs:
+    - cnav->off
+    - cnav->file/db
+  posmv: 
+    configs:
+    - posmv->off
+    - posmv->file/db 
+  sbe45: 
+    configs:
+    - sbe45->off
+    - sbe45->file/db
+  sbe48: 
+    configs:
+    - sbe48->off
+    - sbe48->file/db
+  flow: 
+    configs:
+    - flow->off
+    - flow->file/db
+  cstar: 
+    configs:
+    - cstar->off
+    - cstar->file/db
+  fluorometer: 
+    configs:
+    - fluorometer->off
+    - fluorometer->file/db
+  sonarydyne: 
+    configs:
+    - sonarydyne->off
+    - sonarydyne->file/db
+  knudsen: 
+    configs:
+    - knudsen->off
+    - knudsen->file/db
+
+
+modes: 
+  'off': 
+    wix: wix->off
+    cnav: cnav->off
+    posmv: posmv->off    
+    sbe45: sbe45->off
+    sbe48: sbe48->off
+    flow: flow->off
+    fluorometer: fluorometer->off
+    cstar: cstar->off
+    sonarydyne: sonarydyne->off
+    knudsen: knudsen->off
+    
+  port: 
+    wix: wix->file/db
+    cnav: cnav->file/db
+    posmv: posmv->file/db
+    sbe45: sbe45->off
+    sbe48: sbe48->file/db
+    flow: flow->file/db
+    fluorometer: fluorometer->off
+    cstar: cstar->off
+    sonarydyne: sonarydyne->off
+    knudsen: knudsen->off
+    
+  underway: 
+    wix: wix->file/db
+    cnav: cnav->file/db
+    posmv: posmv->file/db
+    sbe45: sbe45->file/db
+    sbe48: sbe48->file/db
+    flow: flow->file/db
+    fluorometer: fluorometer->file/db
+    cstar: cstar->file/db
+    sonarydyne: sonarydyne->off
+    knudsen: knudsen->file/db
+
+  subops: 
+    wix: wix->file/db
+    cnav: cnav->file/db
+    posmv: posmv->file/db
+    sbe45: sbe45->file/db
+    sbe48: sbe48->file/db
+    flow: flow->file/db
+    fluorometer: fluorometer->file/db
+    cstar: cstar->file/db
+    sonarydyne: sonarydyne->file/db
+    knudsen: knudsen->file/db
+
+default_mode: port
+
+configs:
+  # 'off' configs
+  wix->off:
+    name: wix->off
+
+  cnav->off: 
+    name: cnav->off
+
+  posmv->off: 
+    name: posmv->off
+
+  sbe45->off: 
+    name: sbe45->off
+
+  sbe48->off: 
+    name: sbe48->off
+
+  flow->off: 
+    name: flow->off
+    
+  cstar->off:
+    name: cstar->off
+    
+  sonarydyne->off:
+    name: sonarydyne->off
+  
+  fluorometer->off:
+    name: fluorometer->off
+
+  knudsen->off:
+    name: knudsen->off
+    
+  # 'file/db' configs
+  wix->file/db: 
+    name: wix->file/db
+    readers: 
+      class: SerialReader 
+      kwargs:  
+        port: /dev/ttyr02 
+        baudrate: 19200
+    transforms:
+      class: TimestampTransform        
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/MET
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: met 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        - class: TextFileWriter # write parsed data to logfile
+          kwargs: 
+            filename: /data/openrvdas/proc/MET_PARSED
+        - class: DatabaseWriter # write to database
+          kwargs: 
+            database: data
+            host: localhost
+            user: rvdas
+            password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:wix'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  cnav->file/db: 
+    name: cnav->file/db
+    readers: 
+      class: UDPReader
+      kwargs:  
+        port: 56410
+        eol: "\n"
+    writers:
+    - class: UDPWriter 
+      kwargs:  
+        port: 55001
+        interface: 172.16.60.66
+        eol: "\n"
+    # UDP feed to MC MOXA for Science GPS Feed
+    #- class: UDPWriter 
+    #  kwargs:
+    #    port: 56300
+    #    interface: 10.10.10.250
+    #    eol: "\r\n"        
+    # UDP feed to MC MOXA for Sonardyne GPS feed
+    - class: UDPWriter 
+      kwargs:  
+        port: 56301
+        interface: 10.10.10.250
+    # UDP feed to MC MOXA for Gyro GPS feed
+    #- class: UDPWriter 
+    #  kwargs:
+    #    port: 56302
+    #    destination: 10.10.10.250
+    #    eol: "\n"
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+          class: TimestampTransform 
+        writers:
+          class: LogfileWriter
+          kwargs: 
+            filebase: /data/openrvdas/raw/CNAV
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: TimestampTransform 
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: cnav 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        #- class: TextFileWriter  # write parsed to logfile
+        #  kwargs: 
+        #    filename: /data/openrvdas/proc/CNAV_PARSED
+        #- class: DatabaseWriter  # write parsed to database
+        #  kwargs: 
+        #    database: data
+        #    host: localhost
+        #    user: rvdas
+        #    password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    #stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    #- class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    #  kwargs:
+    #    transforms:
+    #    - class: ToDASRecordTransform
+    #      kwargs:
+    #        field_name: 'stderr:logger:cnav'
+    #    writers:
+    #      class: NetworkWriter
+    #      kwargs:
+    #        network: :6225
+
+  posmv->file/db: 
+    name: posmv->file/db
+    readers: 
+      class: SerialReader 
+      kwargs:  
+        port: /dev/ttyr18
+        baudrate: 19200
+    writers:
+    - class: UDPWriter 
+      kwargs:  
+        port: 55002
+        destination: 172.16.60.66
+        eol: "\n"
+    #    eol: "\r\n"
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+          class: TimestampTransform 
+        writers:
+          class: LogfileWriter
+          kwargs: 
+            filebase: /data/openrvdas/raw/POSMV
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: TimestampTransform 
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: cnav 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        #- class: TextFileWriter  # write parsed to logfile
+        #  kwargs: 
+        #    filename: /data/openrvdas/proc/POSMV_PARSED
+        #- class: DatabaseWriter  # write parsed to database
+        #  kwargs: 
+        #    database: data
+        #    host: localhost
+        #    user: rvdas
+        #    password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    #stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    #- class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    #  kwargs:
+    #    transforms:
+    #    - class: ToDASRecordTransform
+    #      kwargs:
+    #        field_name: 'stderr:logger:posmv'
+    #    writers:
+    #      class: NetworkWriter
+    #      kwargs:
+    #        network: :6225
+
+  sbe45->file/db: 
+    name: sbe45->file/db
+    readers: 
+      class: SerialReader 
+      kwargs:  
+        port: /dev/ttyr03 
+        baudrate: 9600 
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/SBE45
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: sbe45 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        - class: TextFileWriter
+          kwargs: 
+            filename: /data/openrvdas/proc/SBE45_PARSED
+        - class: DatabaseWriter
+          kwargs: 
+            database: data
+            host: localhost
+            user: rvdas
+            password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:sbe45'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  sbe48->file/db: 
+    name: sbe48->file/db
+    readers: 
+      class: PolledSerialReader 
+      kwargs:  
+        start_cmd:
+        - Stop\r\n
+        - __PAUSE__ 3
+        - Interval=0\r\n
+        - __PAUSE__ 3
+        - StartNow\r\n
+        stop_cmd:
+        - Stop\r\n
+        port: /dev/ttyr00
+        baudrate: 9600 
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/SBE48
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: sbe48 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        - class: TextFileWriter
+          kwargs: 
+            filename: /data/openrvdas/proc/SBE48_PARSED
+        - class: DatabaseWriter
+          kwargs: 
+            database: data
+            host: localhost
+            user: rvdas
+            password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:sbe48'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+
+  ############# Flowmeter ###############
+  flow->file/db: 
+    name: flow->file/db
+    readers: 
+      class: SerialReader 
+      kwargs:  
+        port: /dev/ttyr06 
+        baudrate: 9600 
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/FLOW
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: flow 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        - class: TextFileWriter
+          kwargs: 
+            filename: /data/openrvdas/proc/FLOW_PARSED
+        - class: DatabaseWriter
+          kwargs: 
+            database: data
+            host: localhost
+            user: rvdas
+            password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:flow'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ######### End Flowmeter ############
+
+  ############# Fluorometer ###############
+  fluorometer->file/db: 
+    name: fluorometer->file/db
+    readers: 
+      class: SerialReader 
+      kwargs:  
+        port: /dev/ttyr04 
+        baudrate: 9600 
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/FLUOROMETER
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: fluorometer 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        - class: TextFileWriter
+          kwargs: 
+            filename: /data/openrvdas/proc/FLUOROMETER_PARSED
+        - class: DatabaseWriter
+          kwargs: 
+            database: data
+            host: localhost
+            user: rvdas
+            password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:fluorometer'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ######### End Fluorometer ############
+ 
+############# Transmissometer ###############
+  cstar->file/db: 
+    name: cstar->file/db
+    readers: 
+      class: SerialReader 
+      kwargs:  
+        port: /dev/ttyr05
+        baudrate: 19200 
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/CSTAR
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: cstar 
+        #- class: ParseTransform
+        #  kwargs:
+        #    definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        #writers:
+        #- class: TextFileWriter
+        #  kwargs: 
+        #    filename: /data/openrvdas/proc/CSTAR_PARSED
+        #- class: DatabaseWriter
+        #  kwargs: 
+        #    database: data
+        #    host: localhost
+        #    user: rvdas
+        #    password: rvdas
+        #- class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+        #  kwargs:
+        #    network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:cstar'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ######### End Transmissometer ############   
+  
+ ############# Sonardyne ###############
+  sonarydyne->file/db: 
+    name: sonarydyne->file/db
+    readers: 
+      class: SerialReader 
+      kwargs:  
+        port: /dev/ttyr11 
+        baudrate: 9600 
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/SONARDYNE
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: sonardyne 
+        - class: ParseTransform
+          kwargs:
+            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+        writers:
+        - class: TextFileWriter
+          kwargs: 
+            filename: /data/openrvdas/proc/SONARDYNE_PARSED
+        - class: DatabaseWriter
+          kwargs: 
+            database: data
+            host: localhost
+            user: rvdas
+            password: rvdas
+        - class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+          kwargs:
+            network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:sonardyne'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ######### End Sonardyne ############  
+ 
+   ######### Knudsen ############
+    name: knudsen->file/db
+    readers: 
+      class: NetworkReader 
+      kwargs:
+        interface: 172.16.60.66
+        network: :55605
+    transforms:
+      class: TimestampTransform
+    writers:
+    - class: LogfileWriter
+      kwargs: 
+        filebase: /data/openrvdas/raw/KNUDSEN
+    - class: ComposedWriter
+      kwargs: 
+        transforms:
+        - class: PrefixTransform 
+          kwargs:  
+            prefix: knudsen 
+        #- class: ParseTransform
+        #writers:
+        #- class: TextFileWriter
+        #  kwargs: 
+        #    filename: /data/openrvdas/proc/KNUDSEN
+        #- class: DatabaseWriter
+        #  kwargs: 
+        #    database: data
+        #    host: localhost
+        #    user: rvdas
+        #    password: rvdas
+        #- class: NetworkWriter  # write parsed to 6225 for CachedDataServer
+        #  kwargs:
+        #    network: :6225
+    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
+    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:knudsen'
+        writers:
+          class: NetworkWriter
+          kwargs:
+            network: :6225
+  ######### End Knudsen ############
+ 
+
+
+ 
+ # end of configs
+

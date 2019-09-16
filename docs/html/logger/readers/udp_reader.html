@@ -68,6 +68,10 @@ class UDPReader(Reader):
     &#34;&#34;&#34;
     super().__init__(output_format=Text)
 
+    # &#39;eol&#39; comes in as a (probably escaped) string. We need to
+    # unescape it, which means converting to bytes and back.
+    if eol is not None:
+      eol = eol.encode().decode(&#34;unicode_escape&#34;)
     self.eol = eol
     self.read_buffer_size = read_buffer_size
 
@@ -115,7 +119,7 @@ class UDPReader(Reader):
         # We have an eol string somewhere in our buffer. Return
         # everything up to it.
         record_end = eol_pos + len(self.eol)
-        record = self.record_buffer[0:record_end]
+        record = self.record_buffer[0:record_end-1]
         logging.debug(&#39;UDPReader found eol; returning record&#39;)
         self.record_buffer = self.record_buffer[record_end:]
         return record
@@ -191,6 +195,10 @@ eol          If not specified, assume one record per network packet.  If
     &#34;&#34;&#34;
     super().__init__(output_format=Text)
 
+    # &#39;eol&#39; comes in as a (probably escaped) string. We need to
+    # unescape it, which means converting to bytes and back.
+    if eol is not None:
+      eol = eol.encode().decode(&#34;unicode_escape&#34;)
     self.eol = eol
     self.read_buffer_size = read_buffer_size
 
@@ -238,7 +246,7 @@ eol          If not specified, assume one record per network packet.  If
         # We have an eol string somewhere in our buffer. Return
         # everything up to it.
         record_end = eol_pos + len(self.eol)
-        record = self.record_buffer[0:record_end]
+        record = self.record_buffer[0:record_end-1]
         logging.debug(&#39;UDPReader found eol; returning record&#39;)
         self.record_buffer = self.record_buffer[record_end:]
         return record
@@ -283,7 +291,7 @@ eol          If not specified, assume one record per network packet.  If
       # We have an eol string somewhere in our buffer. Return
       # everything up to it.
       record_end = eol_pos + len(self.eol)
-      record = self.record_buffer[0:record_end]
+      record = self.record_buffer[0:record_end-1]
       logging.debug(&#39;UDPReader found eol; returning record&#39;)
       self.record_buffer = self.record_buffer[record_end:]
       return record

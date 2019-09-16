@@ -31,7 +31,7 @@ class ToJSONTransform(Transform):
     if type(record) is DASRecord:
       return record.as_json(self.pretty)
 
-    if type(record) in [float, int, bool, dict, list, set]:
+    if type(record) in [float, int, bool, str, dict, list, set]:
       if self.pretty:
         return json.dumps(record, sort_keys=True, indent=4)
       else:

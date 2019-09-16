@@ -78,7 +78,7 @@ def optional_d(text):
     return int(text)
   else:
     return None
-optional_d.pattern = r&#39;\d*&#39;
+optional_d.pattern = r&#39;\s*\d*&#39;
 
 def optional_f(text):
   &#34;&#34;&#34;Method for parsing an &#39;optional&#39; generalized float.&#34;&#34;&#34;
@@ -86,7 +86,7 @@ def optional_f(text):
     return float(text)
   else:
     return None
-optional_f.pattern = r&#39;([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)&#39;
+optional_f.pattern = r&#39;(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)&#39;
 
 def optional_g(text):
   &#34;&#34;&#34;Method for parsing an &#39;optional&#39; generalized number.&#34;&#34;&#34;
@@ -94,7 +94,7 @@ def optional_g(text):
     return float(text)
   else:
     return None
-optional_g.pattern = r&#39;([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)&#39;
+optional_g.pattern = r&#39;(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)&#39;
 
 def optional_w(text):
   &#34;&#34;&#34;Method for parsing an &#39;optional&#39; letters/numbers/underscore
@@ -122,7 +122,8 @@ class RecordParser:
   ############################
   def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
                definition_path=DEFAULT_DEFINITION_PATH,
-               return_das_record=False, return_json=False):
+               return_das_record=False, return_json=False,
+               metadata_interval=None):
     &#34;&#34;&#34;Create a parser that will parse field values out of a text record
     and return either a Python dict of data_id, timestamp and fields,
     a JSON encoding of that dict, or a binary DASRecord.
@@ -138,6 +139,10 @@ class RecordParser:
 
     return_das_record - return the parsed fields as a DASRecord object
 
+    metadata_interval - if not None, include the description, units
+        and other metadata pertaining to each field in the returned
+        record if those data haven&#39;t been returned in the last
+        metadata_interval seconds.
     &#34;&#34;&#34;
     self.record_format = record_format
     self.compiled_record_format = parse.compile(format=record_format,
@@ -157,6 +162,48 @@ class RecordParser:
                          for name, definition in definitions.items()
                          if definition.get(&#39;category&#39;, None) == &#39;device_type&#39;}
 
+    # If we&#39;re to be sending field metadata on occasion, compile it
+    # now. It&#39;s a map from variable name to the device and device type
+    # it came from, along with device type variable and its units and
+    # description, if provided in the device type definition. Compiling
+    # this information is kind of excruciating and voluminous.
+    self.metadata_interval = metadata_interval
+    self.field_metadata = {}
+    self.field_metadata_last_sent = {}
+    if metadata_interval is not None:
+      for device, device_def in self.devices.items(): # e.g. s330
+        device_type_name = device_def.get(&#39;device_type&#39;, None) # Seapath330
+        if not device_type_name:
+          raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
+                           &#39;its device_type.&#39; % device)
+        device_type_def = self.device_types.get(device_type_name, None)
+        if not device_type_def:
+          raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
+                           &#39;is undefined.&#39; % (device_type_name, device))
+        device_type_fields = device_type_def.get(&#39;fields&#39;, None)
+        if not device_type_fields:
+          raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39; % device_type_name)
+
+        fields = device_def.get(&#39;fields&#39;, None)
+        if not fields:
+          raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
+
+        # e.g. device_type_field = GPSTime, device_field = S330GPSTime
+        for device_type_field, device_field in fields.items():
+          # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
+          field_desc = device_type_fields.get(device_type_field, None)
+          if not field_desc:
+            raise ValueError(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
+                             &#39;device field &#34;%s&#34;&#39; % (device_type_name,
+                                                    device_type_field))
+          self.field_metadata_last_sent[device_field] = 0
+          self.field_metadata[device_field] = {
+            &#39;device&#39;: device,
+            &#39;device_type&#39;: device_type_name,
+            &#39;device_type_field&#39;: device_type_field,
+          }
+          self.field_metadata[device_field].update(field_desc)
+
     # Some limited error checking: make sure that all devices have a
     # defined device_type.
     for device, device_def in self.devices.items():
@@ -167,7 +214,7 @@ class RecordParser:
       if not device_type in self.device_types:
         raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
                          &#39;is undefined.&#39; % (device_type, device))
-    
+
     # Compile format definitions so that we can run them more
     # quickly. If format is a single string, normalize it into a list
     # to simplify later code.
@@ -202,7 +249,7 @@ class RecordParser:
       logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
       logging.warning(&#39;Record: %s&#39;, record)
       return None
-    
+
     # Convert timestamp to numeric, if it&#39;s there
     timestamp = parsed_record.get(&#39;timestamp&#39;, None)
     if timestamp is not None and type(timestamp) is datetime.datetime:
@@ -227,15 +274,15 @@ class RecordParser:
       logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
       return None
 
-    # Extract the message we&#39;re going to parse
-    message = parsed_record.get(&#39;message&#39;, None)
-    if message is None:
+    # Extract the message we&#39;re going to parse; remove trailing whitespace
+    message = parsed_record.get(&#39;message&#39;, &#39;&#39;).rstrip()
+    if not message:
       logging.warning(&#39;No message found in record: %s&#39;, record)
       return None
     del parsed_record[&#39;message&#39;]
 
     # Now parse the message, based on device type. If something goes
-    # wrong during parsing, expect a ValueError.      
+    # wrong during parsing, expect a ValueError.
     try:
       parsed_fields = self.parse(device_type=device_type, message=message)
       logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
@@ -251,7 +298,12 @@ class RecordParser:
 
     # Assign field values to the appropriate named variable.
     fields = {}
+    metadata_fields = {}
     for field_name, value in parsed_fields.items():
+      variable_name = device_fields.get(field_name, None)
+      # None means we&#39;re not supposed to report it.
+      if variable_name is None:
+        continue
       # None means we didn&#39;t have a value for this field; omit it.
       if value is None:
         continue
@@ -259,19 +311,34 @@ class RecordParser:
       if type(value) is datetime.datetime:
         value = value.timestamp()
 
-      variable_name = device_fields.get(field_name, None)
-      if variable_name is None:
-        logging.debug(&#39;Field &#34;%s&#34; (%s) not converted to variable in %s&#39;,
-                      field_name, device_type, message)
-      else:
-        fields[variable_name] = value
+      fields[variable_name] = value
+
+      # Are we supposed to occasionally send metadata on our
+      # variables? Is it time to send it again?
+      if self.metadata_interval:
+        last_metadata_sent = self.field_metadata_last_sent[variable_name]
+        time_since_send = timestamp - last_metadata_sent
+        if time_since_send &gt; self.metadata_interval:
+          metadata_fields[variable_name] =self.field_metadata.get(variable_name)
+          self.field_metadata_last_sent[variable_name] = timestamp
 
     parsed_record[&#39;fields&#39;] = fields
-    logging.debug(&#39;Returning parsed record: %s&#39;, pprint.pformat(parsed_record))
-        
+
+    # Are we sending metadata on any fields? If so, add the &#39;metadata&#39;
+    # key into our parsed_record.
+    if metadata_fields:
+      metadata = {&#39;fields&#39;: metadata_fields}
+      parsed_record[&#39;metadata&#39;] = metadata
+    else:
+      metadata = None
+
+    logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
+
+    # What are we going to do with the parsed_record we&#39;ve created?
     if self.return_das_record:
       try:
-        return DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+        return DASRecord(data_id=data_id, timestamp=timestamp,
+                         fields=fields, metadata=metadata)
       except KeyError:
         return None
 
@@ -310,7 +377,7 @@ class RecordParser:
         return fields.named
 
     # Nothing matched, go home empty-handed
-    logging.warning(&#39;No formats for %s matched message %s&#39;,
+    logging.warning(&#39;No formats for %s matched message &#34;%s&#34;&#39;,
                     device_type, message)
     return {}
 
@@ -451,7 +518,7 @@ string.</p></section>
 <dl>
 <dt id="logger.utils.record_parser.RecordParser"><code class="flex name class">
 <span>class <span class="ident">RecordParser</span></span>
-<span>(</span><span>record_format='{data_id:w} {timestamp:ti} {message}', definition_path='local/devices/*.yaml', return_das_record=False, return_json=False)</span>
+<span>(</span><span>record_format='{data_id:w} {timestamp:ti} {message}', definition_path='local/devices/*.yaml', return_das_record=False, return_json=False, metadata_interval=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Create a parser that will parse field values out of a text record
@@ -463,14 +530,19 @@ look for 'data_id timestamp device_message'.</p>
 <p>definition_path - a comma-separated set of file globs in which to look
 for device and device_type definitions with which to parse message.</p>
 <p>return_json - return the parsed fields as a JSON encoded dict</p>
-<p>return_das_record - return the parsed fields as a DASRecord object</p></section>
+<p>return_das_record - return the parsed fields as a DASRecord object</p>
+<p>metadata_interval - if not None, include the description, units
+and other metadata pertaining to each field in the returned
+record if those data haven't been returned in the last
+metadata_interval seconds.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class RecordParser:
   ############################
   def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
                definition_path=DEFAULT_DEFINITION_PATH,
-               return_das_record=False, return_json=False):
+               return_das_record=False, return_json=False,
+               metadata_interval=None):
     &#34;&#34;&#34;Create a parser that will parse field values out of a text record
     and return either a Python dict of data_id, timestamp and fields,
     a JSON encoding of that dict, or a binary DASRecord.
@@ -486,6 +558,10 @@ for device and device_type definitions with which to parse message.</p>
 
     return_das_record - return the parsed fields as a DASRecord object
 
+    metadata_interval - if not None, include the description, units
+        and other metadata pertaining to each field in the returned
+        record if those data haven&#39;t been returned in the last
+        metadata_interval seconds.
     &#34;&#34;&#34;
     self.record_format = record_format
     self.compiled_record_format = parse.compile(format=record_format,
@@ -505,6 +581,48 @@ for device and device_type definitions with which to parse message.</p>
                          for name, definition in definitions.items()
                          if definition.get(&#39;category&#39;, None) == &#39;device_type&#39;}
 
+    # If we&#39;re to be sending field metadata on occasion, compile it
+    # now. It&#39;s a map from variable name to the device and device type
+    # it came from, along with device type variable and its units and
+    # description, if provided in the device type definition. Compiling
+    # this information is kind of excruciating and voluminous.
+    self.metadata_interval = metadata_interval
+    self.field_metadata = {}
+    self.field_metadata_last_sent = {}
+    if metadata_interval is not None:
+      for device, device_def in self.devices.items(): # e.g. s330
+        device_type_name = device_def.get(&#39;device_type&#39;, None) # Seapath330
+        if not device_type_name:
+          raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
+                           &#39;its device_type.&#39; % device)
+        device_type_def = self.device_types.get(device_type_name, None)
+        if not device_type_def:
+          raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
+                           &#39;is undefined.&#39; % (device_type_name, device))
+        device_type_fields = device_type_def.get(&#39;fields&#39;, None)
+        if not device_type_fields:
+          raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39; % device_type_name)
+
+        fields = device_def.get(&#39;fields&#39;, None)
+        if not fields:
+          raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
+
+        # e.g. device_type_field = GPSTime, device_field = S330GPSTime
+        for device_type_field, device_field in fields.items():
+          # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
+          field_desc = device_type_fields.get(device_type_field, None)
+          if not field_desc:
+            raise ValueError(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
+                             &#39;device field &#34;%s&#34;&#39; % (device_type_name,
+                                                    device_type_field))
+          self.field_metadata_last_sent[device_field] = 0
+          self.field_metadata[device_field] = {
+            &#39;device&#39;: device,
+            &#39;device_type&#39;: device_type_name,
+            &#39;device_type_field&#39;: device_type_field,
+          }
+          self.field_metadata[device_field].update(field_desc)
+
     # Some limited error checking: make sure that all devices have a
     # defined device_type.
     for device, device_def in self.devices.items():
@@ -515,7 +633,7 @@ for device and device_type definitions with which to parse message.</p>
       if not device_type in self.device_types:
         raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
                          &#39;is undefined.&#39; % (device_type, device))
-    
+
     # Compile format definitions so that we can run them more
     # quickly. If format is a single string, normalize it into a list
     # to simplify later code.
@@ -550,7 +668,7 @@ for device and device_type definitions with which to parse message.</p>
       logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
       logging.warning(&#39;Record: %s&#39;, record)
       return None
-    
+
     # Convert timestamp to numeric, if it&#39;s there
     timestamp = parsed_record.get(&#39;timestamp&#39;, None)
     if timestamp is not None and type(timestamp) is datetime.datetime:
@@ -575,15 +693,15 @@ for device and device_type definitions with which to parse message.</p>
       logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
       return None
 
-    # Extract the message we&#39;re going to parse
-    message = parsed_record.get(&#39;message&#39;, None)
-    if message is None:
+    # Extract the message we&#39;re going to parse; remove trailing whitespace
+    message = parsed_record.get(&#39;message&#39;, &#39;&#39;).rstrip()
+    if not message:
       logging.warning(&#39;No message found in record: %s&#39;, record)
       return None
     del parsed_record[&#39;message&#39;]
 
     # Now parse the message, based on device type. If something goes
-    # wrong during parsing, expect a ValueError.      
+    # wrong during parsing, expect a ValueError.
     try:
       parsed_fields = self.parse(device_type=device_type, message=message)
       logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
@@ -599,7 +717,12 @@ for device and device_type definitions with which to parse message.</p>
 
     # Assign field values to the appropriate named variable.
     fields = {}
+    metadata_fields = {}
     for field_name, value in parsed_fields.items():
+      variable_name = device_fields.get(field_name, None)
+      # None means we&#39;re not supposed to report it.
+      if variable_name is None:
+        continue
       # None means we didn&#39;t have a value for this field; omit it.
       if value is None:
         continue
@@ -607,19 +730,34 @@ for device and device_type definitions with which to parse message.</p>
       if type(value) is datetime.datetime:
         value = value.timestamp()
 
-      variable_name = device_fields.get(field_name, None)
-      if variable_name is None:
-        logging.debug(&#39;Field &#34;%s&#34; (%s) not converted to variable in %s&#39;,
-                      field_name, device_type, message)
-      else:
-        fields[variable_name] = value
+      fields[variable_name] = value
+
+      # Are we supposed to occasionally send metadata on our
+      # variables? Is it time to send it again?
+      if self.metadata_interval:
+        last_metadata_sent = self.field_metadata_last_sent[variable_name]
+        time_since_send = timestamp - last_metadata_sent
+        if time_since_send &gt; self.metadata_interval:
+          metadata_fields[variable_name] =self.field_metadata.get(variable_name)
+          self.field_metadata_last_sent[variable_name] = timestamp
 
     parsed_record[&#39;fields&#39;] = fields
-    logging.debug(&#39;Returning parsed record: %s&#39;, pprint.pformat(parsed_record))
-        
+
+    # Are we sending metadata on any fields? If so, add the &#39;metadata&#39;
+    # key into our parsed_record.
+    if metadata_fields:
+      metadata = {&#39;fields&#39;: metadata_fields}
+      parsed_record[&#39;metadata&#39;] = metadata
+    else:
+      metadata = None
+
+    logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
+
+    # What are we going to do with the parsed_record we&#39;ve created?
     if self.return_das_record:
       try:
-        return DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+        return DASRecord(data_id=data_id, timestamp=timestamp,
+                         fields=fields, metadata=metadata)
       except KeyError:
         return None
 
@@ -658,7 +796,7 @@ for device and device_type definitions with which to parse message.</p>
         return fields.named
 
     # Nothing matched, go home empty-handed
-    logging.warning(&#39;No formats for %s matched message %s&#39;,
+    logging.warning(&#39;No formats for %s matched message &#34;%s&#34;&#39;,
                     device_type, message)
     return {}
 
@@ -723,7 +861,7 @@ match to the provided formats.</p></section>
       return fields.named
 
   # Nothing matched, go home empty-handed
-  logging.warning(&#39;No formats for %s matched message %s&#39;,
+  logging.warning(&#39;No formats for %s matched message &#34;%s&#34;&#39;,
                   device_type, message)
   return {}</code></pre>
 </details>
@@ -751,7 +889,7 @@ timestamp and fields.</p></section>
     logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
     logging.warning(&#39;Record: %s&#39;, record)
     return None
-  
+
   # Convert timestamp to numeric, if it&#39;s there
   timestamp = parsed_record.get(&#39;timestamp&#39;, None)
   if timestamp is not None and type(timestamp) is datetime.datetime:
@@ -776,15 +914,15 @@ timestamp and fields.</p></section>
     logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
     return None
 
-  # Extract the message we&#39;re going to parse
-  message = parsed_record.get(&#39;message&#39;, None)
-  if message is None:
+  # Extract the message we&#39;re going to parse; remove trailing whitespace
+  message = parsed_record.get(&#39;message&#39;, &#39;&#39;).rstrip()
+  if not message:
     logging.warning(&#39;No message found in record: %s&#39;, record)
     return None
   del parsed_record[&#39;message&#39;]
 
   # Now parse the message, based on device type. If something goes
-  # wrong during parsing, expect a ValueError.      
+  # wrong during parsing, expect a ValueError.
   try:
     parsed_fields = self.parse(device_type=device_type, message=message)
     logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
@@ -800,7 +938,12 @@ timestamp and fields.</p></section>
 
   # Assign field values to the appropriate named variable.
   fields = {}
+  metadata_fields = {}
   for field_name, value in parsed_fields.items():
+    variable_name = device_fields.get(field_name, None)
+    # None means we&#39;re not supposed to report it.
+    if variable_name is None:
+      continue
     # None means we didn&#39;t have a value for this field; omit it.
     if value is None:
       continue
@@ -808,19 +951,34 @@ timestamp and fields.</p></section>
     if type(value) is datetime.datetime:
       value = value.timestamp()
 
-    variable_name = device_fields.get(field_name, None)
-    if variable_name is None:
-      logging.debug(&#39;Field &#34;%s&#34; (%s) not converted to variable in %s&#39;,
-                    field_name, device_type, message)
-    else:
-      fields[variable_name] = value
+    fields[variable_name] = value
+
+    # Are we supposed to occasionally send metadata on our
+    # variables? Is it time to send it again?
+    if self.metadata_interval:
+      last_metadata_sent = self.field_metadata_last_sent[variable_name]
+      time_since_send = timestamp - last_metadata_sent
+      if time_since_send &gt; self.metadata_interval:
+        metadata_fields[variable_name] =self.field_metadata.get(variable_name)
+        self.field_metadata_last_sent[variable_name] = timestamp
 
   parsed_record[&#39;fields&#39;] = fields
-  logging.debug(&#39;Returning parsed record: %s&#39;, pprint.pformat(parsed_record))
-      
+
+  # Are we sending metadata on any fields? If so, add the &#39;metadata&#39;
+  # key into our parsed_record.
+  if metadata_fields:
+    metadata = {&#39;fields&#39;: metadata_fields}
+    parsed_record[&#39;metadata&#39;] = metadata
+  else:
+    metadata = None
+
+  logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
+
+  # What are we going to do with the parsed_record we&#39;ve created?
   if self.return_das_record:
     try:
-      return DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+      return DASRecord(data_id=data_id, timestamp=timestamp,
+                       fields=fields, metadata=metadata)
     except KeyError:
       return None
 

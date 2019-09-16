@@ -131,7 +131,7 @@ In ``monitor`` mode, the system will (should) also be feeding the CachedDataServ
 that the LoggerManager has started up. You can verify this
 by opening one of the sample displays at
 
- [```http://localhost:8000/static/widgets/nbp_demo.html```](http://localhost:8000/static/widgets/nbp_demo.html)
+ [```http://localhost:8000/display/nbp_basic.html```](http://localhost:8000/display/nbp_basic.html)
  
 If you select mode ``log`` the system will not only write data to UDP, but
 also write to the configured database and to file. You may use
