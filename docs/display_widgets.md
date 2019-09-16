@@ -154,7 +154,13 @@ A simple display page might be constructed as follows
                                           line_fields, 'Degrees'));
       widget_list.push(
           new TextWidget('heading-container',
-                         {S330HeadingTrue: {name: 'Heading (True)'}}));
+                         {S330HeadingTrue: {
+                           name: 'Heading (True)',
+                           timeout_css: {
+                                 5: "background-color:yellow",
+                                 15: "background-color:red"
+                               }
+                         }}));
       widget_list.push(
           new TextWidget('speed-container',
                          {S330SOGKt: {name: 'Speed over Ground'}}));
@@ -182,7 +188,13 @@ it should be displaying there.
 
 ```
   var my_widget = new TextWidget('heading-container',
-                                 {S330HeadingTrue: {name: 'Heading (True)'}});
+                                 {S330HeadingTrue: {
+                                   name: 'Heading (True)',
+                                   timeout_css: {
+                                     5: "background-color:yellow",
+                                     15: "background-color:red"
+                                   }
+                                 }});
 ```
 
 At the end of the JavaScript, a WidgetServer is instantiated and
@@ -201,12 +213,12 @@ the `display/js/widgets/settings.js` file we described earlier.
 
 The types of static widgets that are currently supported are
 
-* ``TimelineWidget(container, field_dict, [y_label], [widget_options])``
-  Produces a sliding timeline, as in the above
+* ``TimelineWidget(container, field_dict, [y_label],
+  [widget_options])`` Produces a sliding timeline, as in the above
   example. May include any number of fields and each field may specify
   the name to be displayed (via "name:"), how many seconds of "back"
   data should be displayed (via "seconds:"), a transform (described
-  below) and in what color to draw the line (via "color:"). Users
+  below), and in what color to draw the line (via "color:"). Users
   proficient with Highcharts may specify additional Highcharts
   timeline widget options to override the defaults defined in
   [display/js/widgets/highcharts_widget.js](../display/js/widgets/highcharts_widget.js).
@@ -220,12 +232,36 @@ The types of static widgets that are currently supported are
   override the defaults defined in
   [display/js/widgets/highcharts_widget.js](../display/js/widgets/highcharts_widget.js).
 
-* ``TextWidget(container, field_dict)``
-  Inserts the text value of the fields in question. Field dict may
-  specify a "separator: <str>" value to indicate what string should
-  separate the retrieved fields, and may also specify "append: true"
-  if new values are to be appended to prior ones rather than replacing
-  them. As above, a transform may also be specified. Defined in 
+* ``TextWidget(container, field_dict)`` Inserts the text value of the
+  fields in question. Field dict may specify a "separator: <str>"
+  value to indicate what string should separate the retrieved fields,
+  and may also specify "append: true" if new values are to be appended
+  to prior ones rather than replacing them. As above, a transform may
+  also be specified.
+
+  TextWidget users may also specify what styling to apply to the
+  container if too much time passes between updates (via
+  "timeout_css:"). Given the field specification:
+
+  ```
+    {
+      S330Course: {
+        name: "Course",
+        timeout_css: {
+          5: "background-color:yellow",
+          15: "background-color:red"
+        }
+      }
+    }
+
+  ```
+  
+  the text will turn yellow if 5 seconds pass with no updated values,
+  and red if 10 more seconds pass with no updated valuesIt will reset
+  the div to its original styling and reset the timers when a new
+  value next arrives.
+  
+  Defined in
   [display/js/widgets/text_widget.js](../display/js/widgets/highcharts_widget.js).
   
 Again, we recommend looking at the sample pages in
