@@ -15,18 +15,22 @@ data transforms and others.
 
 If you are using the default OpenRVDAS installation, you will have a
 CachedDataServer running and servicing websocket connections on port
-8766 (you can see how it is invoked by looking at the
-``scripts/start_openrvdas.sh`` file in your installation. You may also
-invoke a CachedDataServer directly from the command line. The
+8766.
+
+If you are manually running a LoggerManager, you may specify that it
+start up its own CachedDataServer by specifying the ``--start_data_server``
+argument on its command line. You may also invoke a standalone 
+CachedDataServer directly from the command line (as is done by the script
+in ``scripts/start_openrvdas.sh`` in your local installation). The
 following command line
 
 ```
-    server/cached_data_server.py \
-      --udp 6225 \
-      --port 8766 \
-      --back_seconds 480 \
-      --cleanup 60 \
-      --v
+server/cached_data_server.py \
+  --udp 6225 \
+  --port 8766 \
+  --back_seconds 480 \
+  --cleanup 60 \
+  --v
 ```
 
 says to
@@ -38,10 +42,11 @@ says to
 2. Store the received data in an in-memory cache, retaining the most
    recent 480 seconds for each field.
 
-3. Wait for clients to connect to the websocket at port 8766 and serve
-   them the requested data. Web clients may issue JSON-encoded
-   requests of the following formats (see the definition of
-   serve_requests() for insight):
+3. Wait for clients to connect to the websocket at port 8766 (the default
+   port)and serve them the requested data. Web clients may issue JSON-encoded
+   requests of the following formats (note that the invocation in
+   the default OpenRVDAS installation does *not* listen on a UDP
+   port, and relies on websocket connections for its data).
 
 ## Websocket Request Types
 
@@ -91,30 +96,9 @@ by websocket clients:
                                         "field_2":"value_2"}}}
   ```
                                         
-  Submit new data to the cache (an alternative way to get data
-  in that doesn't, e.g. have the same record size limits as a
-  UDP packet).
-
-### Via the LoggerManager
-
-The LoggerManager may be called upon to start a CachedDataWriter
-via the ``--start_data_server`` flag:
-```
-  server/logger_manager.py \
-    --database django \
-    --config test/NBP1406/NBP1406_cruise.yaml \
-    --start_data_server
-```
-By default it will use websocket port 8766 and network UDP port 6225, but these
-may be overridden with additional command line flags:
-```
-  server/logger_manager.py \
-    --database django \
-    --config test/NBP1406/NBP1406_cruise.yaml \
-    --data_server_websocket 8765 \
-    --data_server_udp 6226 \
-    --start_data_server
-```
+  Submit new data to the cache. This is the mechanism that the 
+  [CachedDataWriter](../logger/writers/cached_data_writer.py)
+  component uses to send data to the server.
 
 ## Feeding the CachedDataServer
 
@@ -135,13 +119,19 @@ data to cache.
 3. By broadcasting a JSON-encoded dict of data (described below) on
    UDP to a port that the data server is listening on, if the data
    server has been invoked with a ``--data_server_udp`` argument.
+   The service start script created by the default installation does
+   *not* listen to a UDP port; this can be changed by uncommenting the
+   line in ``scripts/start_openrvdas.sh`` that reads:
+   
+   ``#DATA_SERVER_LISTEN_ON_UDP='--udp $DATA_SERVER_UDP_PORT'``
 
 ## Input Data Formats
 
-The CachedDataServer expects to be passed records in the format of a
-dict encoding optionally a source data\_id and timestamp and a
-mandatory 'fields' key of field\_name: value pairs. This is the
-format emitted by default by ParseTransform:
+Whether by UDP or websocket, the CachedDataServer expects to be
+passed records in the format of a dict encoding optionally a
+source data\_id and timestamp and a mandatory 'fields' key of
+field\_name: value pairs. This is the format emitted by default
+by ParseTransform:
 
    ```
    {
