@@ -1,10 +1,15 @@
-# The OpenRVDAS Cached Data Server
+# The OpenRVDAS Cached Data Server [DRAFT]
 © 2019 David Pablo Cohn - DRAFT 2019-09-15
 
 ## Table of Contents
 
-NOTE: This document is still a partial stub broken off from the
-Displays and Widgets document.
+* [Table of Contents](#table-of-contents)
+* [Overview](#overview)
+* [Websocket Request Types](#websocket-request-types)
+* [Feeding the CachedDataServer](#feeding-the-cacheddataserver)
+* [Input Data Formats](#input-data-formats)
+* [Contributing](#contributing)
+* [License](#license)
 
 ## Overview
 
@@ -15,16 +20,22 @@ data transforms and others.
 
 If you are using the default OpenRVDAS installation, you will have a
 CachedDataServer running and servicing websocket connections on port
-8766. You may invoke a standalone CachedDataServer directly from the
-command line. The following invocation
+8766.
+
+If you are manually running a LoggerManager, you may specify that it
+start up its own CachedDataServer by specifying the ``--start_data_server``
+argument on its command line. You may also invoke a standalone 
+CachedDataServer directly from the command line (as is done by the script
+in ``scripts/start_openrvdas.sh`` in your local installation). The
+following command line
 
 ```
-    server/cached_data_server.py \
-      --udp 6225 \
-      --port 8766 \
-      --back_seconds 480 \
-      --cleanup 60 \
-      --v
+server/cached_data_server.py \
+  --udp 6225 \
+  --port 8766 \
+  --back_seconds 480 \
+  --cleanup 60 \
+  --v
 ```
 
 says to
@@ -36,84 +47,96 @@ says to
 2. Store the received data in an in-memory cache, retaining the most
    recent 480 seconds for each field.
 
-3. Wait for clients to connect to the websocket at port 8766 and serve
-   them the requested data. Web clients may issue JSON-encoded
-   requests of the following formats (see the definition of
-   serve_requests() for insight):
+3. Wait for clients to connect to the websocket at port 8766 (the default
+   port)and serve them the requested data. Web clients may issue JSON-encoded
+   requests of the following formats (note that the invocation in
+   the default OpenRVDAS installation does *not* listen on a UDP
+   port, and relies on websocket connections for its data).
 
-   
-   ```{"type":"fields"}```
-   
-   Return a list of fields for which cache has data
+## Websocket Request Types
 
-   ```
-   {'type':'describe',
+The data server knows how to respond to a set of requests sent to it
+by websocket clients:
+
+* ```
+  {"type":"fields"}
+  ```
+  
+   Return a list of fields for which cache has data.
+
+* ```
+  {'type':'describe',
     'fields':['field_1', 'field_2', 'field_3']}
-   ```
+  ```
 
-   Return a dict of metadata descriptions for each specified field. If
-   'fields' is omitted, return a dict of metadata for *all* fields.
+  Return a dict of metadata descriptions for each specified field. If
+  'fields' is omitted, return a dict of metadata for *all* fields.
 
-   ```
-   {"type":"subscribe",
+* ```
+  {"type":"subscribe",
     "fields":{"field_1":{"seconds":50},
               "field_2":{"seconds":0},
               "field_3":{"seconds":-1}}}
-   ```
-   Subscribe to updates for field\_1, field\_2 and field\_3. Allowable
-   values for 'seconds':
+  ```
 
-     - 0  - provide only new values that arrive after subscription
-     - -1  - provide the most recent value, and then all future new ones
-     - num - provide num seconds of back data, then all future new ones
-         
-     If 'seconds' is missing, use '0' as the default.
+  Subscribe to updates for field\_1, field\_2 and field\_3. Allowable
+  values for 'seconds':
 
-   ```
-   {"type":"ready"}
-   ```
-   Indicate that client is ready to receive the next set of updates
-   for subscribed fields.
+  - ``0``  - provide only new values that arrive after subscription
+  - ``-1``  - provide the most recent value, and then all future new ones
+  - ``num`` - provide num seconds of back data, then all future new ones
 
-   ```
-   {"type":"publish", "data":{"timestamp":1555468528.452,
+  If 'seconds' is missing, use '0' as the default.
+
+* ```
+  {"type":"ready"}
+  ```
+
+  Indicate that client is ready to receive the next set of updates
+  for subscribed fields.
+
+* ```
+  {"type":"publish", "data":{"timestamp":1555468528.452,
                               "fields":{"field_1":"value_1",
                                         "field_2":"value_2"}}}
-   ```
-   Submit new data to the cache (an alternative way to get data
-   in that doesn't, e.g. have the same record size limits as a
-   UDP packet).
-
-### Via the LoggerManager
-
-The LoggerManager may be called upon to start a CachedDataWriter
-via the ``--start_data_server`` flag:
-```
-  server/logger_manager.py \
-    --database django \
-    --config test/NBP1406/NBP1406_cruise.yaml \
-    --start_data_server
-```
-By default it will use websocket port 8766 and network UDP port 6225, but these
-may be overridden with additional command line flags:
-```
-  server/logger_manager.py \
-    --database django \
-    --config test/NBP1406/NBP1406_cruise.yaml \
-    --data_server_websocket 8765 \
-    --data_server_udp 6226 \
-    --start_data_server
-```
+  ```
+                                        
+  Submit new data to the cache. This is the mechanism that the 
+  [CachedDataWriter](../logger/writers/cached_data_writer.py)
+  component uses to send data to the server.
 
 ## Feeding the CachedDataServer
 
-The CachedDataServer expects to be passed records in one of two formats:
+As indicated above, there are several ways of feeding the server with
+data to cache.
 
-1. DASRecord
+1. A process that has instantiated a CachedDataServer object can
+   directly call its ``cache_record() method. See [the code
+   itself](../server/cached_data_server.py) or [the pdoc-extracted
+   code documentation
+   page](https://htmlpreview.github.io/?https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/docs/html/server/cached_data_server.html)
+   for details.
 
-2. A dict encoding optionally a source data\_id and timestamp and a
-   mandatory 'fields' key of field\_name: value pairs. This is the format
-   emitted by default by ParseTransform:
+2. By connecting to the server with a websocket and sending it a
+   ``publish`` message, as described in [Websocket Request
+   Types](websocket-request-types), above.
+
+3. By broadcasting a JSON-encoded dict of data (described below) on
+   UDP to a port that the data server is listening on, if the data
+   server has been invoked with a ``--data_server_udp`` argument.
+   The service start script created by the default installation does
+   *not* listen to a UDP port; this can be changed by uncommenting the
+   line in ``scripts/start_openrvdas.sh`` that reads:
+   
+   ``#DATA_SERVER_LISTEN_ON_UDP='--udp $DATA_SERVER_UDP_PORT'``
+
+## Input Data Formats
+
+Whether by UDP or websocket, the CachedDataServer expects to be
+passed records in the format of a dict encoding optionally a
+source data\_id and timestamp and a mandatory 'fields' key of
+field\_name: value pairs. This is the format emitted by default
+by ParseTransform:
 
    ```
    {
@@ -126,8 +149,8 @@ The CachedDataServer expects to be passed records in one of two formats:
      }
    }
    ```
-   
-A twist on format (2) is that the values may either be a singleton
+
+A twist on this is that the values may either be a singleton
 (int, float, string, etc) or a list. If the value is a singleton,
 it is taken at face value. If it is a list, it is assumed to be a
 list of (value, timestamp) tuples, in which case the top-level
@@ -143,7 +166,7 @@ timestamp, if any, is ignored.
      }
    }
    ```
-   
+
 In addition to a 'fields' field, a record may contain a 'metadata'
 field. If present, the data server will look for a 'fields' dict
 inside the metadata dict and add the key-value pairs there to its
@@ -202,4 +225,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Additional Licenses
-
