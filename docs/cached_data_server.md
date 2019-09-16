@@ -15,8 +15,10 @@ data transforms and others.
 
 If you are using the default OpenRVDAS installation, you will have a
 CachedDataServer running and servicing websocket connections on port
-8766. You may invoke a standalone CachedDataServer directly from the
-command line. The following invocation
+8766 (you can see how it is invoked by looking at the
+``scripts/start_openrvdas.sh`` file in your installation. You may also
+invoke a CachedDataServer directly from the command line. The
+following command line
 
 ```
     server/cached_data_server.py \
@@ -41,35 +43,44 @@ says to
    requests of the following formats (see the definition of
    serve_requests() for insight):
 
-   
-   ```{"type":"fields"}```
-   
-   Return a list of fields for which cache has data
+## Websocket Request Types
 
-   ```
-   {'type':'describe',
-    'fields':['field_1', 'field_2', 'field_3']}
-   ```
+The data server knows how to respond to a set of requests sent to it
+by websocket clients:
+
+* ```{"type":"fields"}```
+
+   Return a list of fields for which cache has data.
+
+* ```{'type':'describe',
+    'fields':['field_1', 'field_2', 'field_3']}```
 
    Return a dict of metadata descriptions for each specified field. If
    'fields' is omitted, return a dict of metadata for *all* fields.
 
-   ```
-   {"type":"subscribe",
+* ```{'type':'describe',
+    'fields':['field_1', 'field_2', 'field_3']}```
+
+   Return a dict of metadata descriptions for each specified field. If
+   'fields' is omitted, return a dict of metadata for *all* fields.
+
+```
+  {"type":"subscribe",
     "fields":{"field_1":{"seconds":50},
               "field_2":{"seconds":0},
               "field_3":{"seconds":-1}}}
-   ```
+```
+
    Subscribe to updates for field\_1, field\_2 and field\_3. Allowable
    values for 'seconds':
 
      - 0  - provide only new values that arrive after subscription
      - -1  - provide the most recent value, and then all future new ones
      - num - provide num seconds of back data, then all future new ones
-         
+
      If 'seconds' is missing, use '0' as the default.
 
-   ```
+-  ```
    {"type":"ready"}
    ```
    Indicate that client is ready to receive the next set of updates
@@ -107,13 +118,30 @@ may be overridden with additional command line flags:
 
 ## Feeding the CachedDataServer
 
-The CachedDataServer expects to be passed records in one of two formats:
+As indicated above, there are several ways of feeding the server with
+data to cache.
 
-1. DASRecord
+1. A process that has instantiated a CachedDataServer object can
+   directly call its ``cache_record() method. See [the code
+   itself](../server/cached_data_server.py) or [the pdoc-extracted
+   code documentation
+   page](https://htmlpreview.github.io/?https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/docs/html/server/cached_data_server.html)
+   for details.
 
-2. A dict encoding optionally a source data\_id and timestamp and a
-   mandatory 'fields' key of field\_name: value pairs. This is the format
-   emitted by default by ParseTransform:
+2. By connecting to the server with a websocket and sending it a
+   ``publish`` message, as described in [Websocket Request
+   Types](websocket-request-types), above.
+
+3. By broadcasting a JSON-encoded dict of data (described below) on
+   UDP to a port that the data server is listening on, if the data
+   server has been invoked with a ``--data_server_udp`` argument.
+
+## Input Data Formats
+
+The CachedDataServer expects to be passed records in the format of a
+dict encoding optionally a source data\_id and timestamp and a
+mandatory 'fields' key of field\_name: value pairs. This is the
+format emitted by default by ParseTransform:
 
    ```
    {
@@ -126,8 +154,8 @@ The CachedDataServer expects to be passed records in one of two formats:
      }
    }
    ```
-   
-A twist on format (2) is that the values may either be a singleton
+
+A twist on this is that the values may either be a singleton
 (int, float, string, etc) or a list. If the value is a singleton,
 it is taken at face value. If it is a list, it is assumed to be a
 list of (value, timestamp) tuples, in which case the top-level
@@ -143,7 +171,7 @@ timestamp, if any, is ignored.
      }
    }
    ```
-   
+
 In addition to a 'fields' field, a record may contain a 'metadata'
 field. If present, the data server will look for a 'fields' dict
 inside the metadata dict and add the key-value pairs there to its
@@ -202,4 +230,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ## Additional Licenses
-
