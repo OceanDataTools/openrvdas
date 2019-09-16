@@ -48,12 +48,16 @@ says to
 The data server knows how to respond to a set of requests sent to it
 by websocket clients:
 
-* ```{"type":"fields"}```
+* ```
+  {"type":"fields"}
+  ```
 
    Return a list of fields for which cache has data.
 
-* ```{'type':'describe',
-    'fields':['field_1', 'field_2', 'field_3']}```
+* ```
+  {'type':'describe',
+    'fields':['field_1', 'field_2', 'field_3']}
+  ```
 
    Return a dict of metadata descriptions for each specified field. If
    'fields' is omitted, return a dict of metadata for *all* fields.
