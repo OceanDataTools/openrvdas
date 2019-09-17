@@ -35,16 +35,16 @@ Install root? (/opt)
 Install root will be '/opt'
 ```
 
-_Script will next ask which code repo and branch to use. Use the default repo, but specify branch "usap"_
+_Script will next ask which code repo and branch to use. Use the default repo, and branch unless you have a project-specific branch in mind (e.g. "usap"). If you need to access the internet via a proxy (as shown below), enter it when asked; otherwise just hit return._
 
 ```
 Repository to install from? (http://github.com/davidpablocohn/openrvdas)
-Repository branch to install? (master) **usap**
+Repository branch to install? (master)
 HTTP/HTTPS proxy to use (http://proxy.lmg.usap.gov:3128)?
 Setting up proxy http://proxy.lmg.usap.gov:3128
 Will install from github.com
 Repository: 'http://github.com/davidpablocohn/openrvdas'
-Branch: 'usap'
+Branch: 'master'
 ```
 
 _Script will try to create the rvdas user under which the system will run. It won't mind if the user already exists:_
