@@ -26,7 +26,7 @@ STATICFILES_DIRS = [
 ]
 
 # What URL to use to serve static files
-STATIC_URL = '/'
+STATIC_URL = '/static'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
