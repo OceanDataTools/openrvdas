@@ -378,6 +378,11 @@ server {
         alias ${INSTALL_ROOT}/openrvdas/media;  # project media files
     }
 
+    location /display {
+        alias ${INSTALL_ROOT}/openrvdas/display/html; # display pages
+        autoindex on;
+    }
+
     location /static {
         alias ${INSTALL_ROOT}/openrvdas/static; # project static files
         autoindex on;

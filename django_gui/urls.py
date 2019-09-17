@@ -36,16 +36,10 @@ urlpatterns = [
   path('edit_config/<str:logger_id>',
        views.edit_config, name='edit_config'),
 
-  # Display html pages at '/display' URL
-  path('display/', views.display, name='display'),
-  path('display/<path:page_path>', views.display, name='display'),
-
-  # Some hacks so that the display pages can find their JS and CSS
-  path('css/<path:css_path>', views.css, name='css'),
-  path('js/<path:js_path>', views.js, name='js'),
-
   path('widget/<str:field_list>', views.widget, name='widget'),
   path('widget/', views.widget, name='widget'),
+
+  path('fields/', views.fields, name='fields'),
 
   path('', views.index, name='index'),
 ]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
