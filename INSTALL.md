@@ -35,7 +35,7 @@ Install root? (/opt)
 Install root will be '/opt'
 ```
 
-_Script will next ask which code repo and branch to use. Use the default repo, and branch unless you have a project-specific branch in mind (e.g. "usap"). If you need to access the internet via a proxy (as shown below), enter it when asked; otherwise just hit return._
+_Script will next ask which code repo and branch to use. Use the default repo and branch unless you have a project-specific branch in mind (e.g. "usap"). If you need to access the internet via a proxy (as shown below), enter it when asked; otherwise just hit return._
 
 ```
 Repository to install from? (http://github.com/davidpablocohn/openrvdas)
@@ -55,7 +55,7 @@ Checking if user rvdas exists yet
 User exists, skipping
 ```
 
-_Script will next ask about database options. If this is the first time you've run the script and MariaDB has not already been installed, the current root database password will be empty:_
+_Script will next ask about database options. If this is the first time you've run the script and MySQL/MariaDB has not already been installed, the current root database password will be empty:_
 
 ```
 Database password to use for rvdas? (rvdas)
