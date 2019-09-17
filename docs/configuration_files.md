@@ -113,8 +113,7 @@ Machine-extracted documentation on which Reader, Transform and Writer components
 are available, along with their arguments, is available in HTML format in the
 [doc/html](html) directory of this project. The [README.md](html/README.md) file
 in that directory explains how the documentation is generated.
-The Listener class acceps a further (optional) special key,
-`
+
 ## Cruise Definitions
 
 A full cruise definition file (such as
