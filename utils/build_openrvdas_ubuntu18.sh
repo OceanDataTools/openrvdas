@@ -183,8 +183,8 @@ update-rc.d mysql defaults
 
 echo "#########################################################################"
 echo Setting up database users
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF 
-drop user if exists 'test'@'localhost'; 
+mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
+drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
 
 drop user if exists 'rvdas'@'localhost';
@@ -355,6 +355,11 @@ server {
         alias ${INSTALL_ROOT}/openrvdas/media;  # project media files
     }
 
+    location /display {
+        alias ${INSTALL_ROOT}/openrvdas/display/html; # display pages
+        autoindex on;
+    }
+
     location /static {
         alias ${INSTALL_ROOT}/openrvdas/static; # project static files
         autoindex on;
@@ -374,7 +379,7 @@ server {
 EOF
 
 # Make symlink to nginx dir
-ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf /etc/nginx/sites-enabled 
+ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf /etc/nginx/sites-enabled
 
 
 
@@ -455,13 +460,13 @@ DATA_SERVER_WEBSOCKET_PORT=8766
 DATA_SERVER_LISTEN_ON_UDP=
 DATA_SERVER_WEBSOCKET=:\$DATA_SERVER_WEBSOCKET_PORT
 
-# Comment out line below to have data server we start *not* listen on UDP       
-#DATA_SERVER_LISTEN_ON_UDP='--udp \$DATA_SERVER_UDP_PORT'  
+# Comment out line below to have data server we start *not* listen on UDP
+#DATA_SERVER_LISTEN_ON_UDP='--udp \$DATA_SERVER_UDP_PORT'
 
-# Run cached data server in background                                          
+# Run cached data server in background
 sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP  2>&1 | tee \$DATA_SERVER_LOGFILE &"
 
-# Run logger manager in foreground                                              
+# Run logger manager in foreground
 sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET"
 EOF
 
@@ -509,12 +514,12 @@ echo "##########################################################################
 echo "#########################################################################"
 echo "#########################################################################"
 echo Installation complete.
-echo 
+echo
 echo To manually run server, go to install directory and run logger_manager.py
-echo 
+echo
 echo '  cd $INSTALL_ROOT/openrvdas'
 echo '  python3 server/logger_manager.py --database django -v'
-echo 
+echo
 echo "#########################################################################"
 echo Finished installation and configuration. You must reboot before some
 echo changes take effect.
@@ -526,4 +531,3 @@ while true; do
         * ) echo "Please answer yes or no.";;
     esac
 done
-

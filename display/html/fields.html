@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data Server Fields</title>
+    <style type="text/css">
+      .ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 540px;
+        background-color: lightslategray;
+      }
+      .ship_table td {
+        border: 1px solid #ddd;
+        text-align: left;
+        padding: 8px;
+      }
+      .ship_table th {
+        border: 1px solid #ddd;
+        text-align: left;
+        padding: 8px;
+        background-color: lightslategray;
+      }
+      .name_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+      }
+      .val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+      }
+      .h1_style {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- This is where we define location of data server. -->
+    <script src="../js/widgets/settings.js"></script>
+
+    <script src="../js/jquery/jquery-3.1.1.min.js"></script>
+
+    <h1 class='h1_style'>Data Server Fields</h1>
+    <table id='field_table' class='ship_table'>
+      <tbody id='field_table_body'>
+        <tr>
+          <th>Field Name</th>
+          <th>Description</th>
+          <th>Units</th>
+          <th>Device Type</th>
+        </tr>
+        <tr>
+          <td colspan=4>
+            No connection to data server - is it running?
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
+
+<script type="text/javascript">
+//////////////////////////////////////////////////////////////////////////////
+// Javascript behind and specific to the fields.html page.
+// Note that this also counts on variable WEBSOCKET_DATA_SERVER being set.
+
+///////////////////////////
+function initial_send_message() {
+  //return {'type':'describe', 'fields': fields};
+  console.log('Sending initial message');
+  return ;
+}
+
+///////////////////////////
+function format_description(desc) {
+  var desc_str = '';
+  description = desc['description'];
+  if (description != undefined) {
+    desc_str += description;
+  }
+  description = desc['units'];
+  if (description != undefined) {
+    desc_str += description;
+  }
+  //return {'type':'describe', 'fields': fields};
+  console.log('Sending initial message');
+  return {'type':'describe'};
+}
+
+///////////////////////////////////////////////////////////////
+function process_message(message_str) {
+  var message = JSON.parse(message_str);
+  //console.log('Got message_str: ' + message_str);
+
+  // Figure out what kind of message we got
+  var message_type = message.type;
+  var status = message.status;
+
+  if (message_type != 'describe') {
+    console.log('Got unknown message type: ' + message_type);
+    return
+  }
+  var data_dict = message.data;
+  if (data_dict == undefined) {
+    console.log('Got data message with no data?!?: ' + message_str);
+    return;
+  }
+
+  // Remove all existing rows
+  var table = document.getElementById('field_table');
+  while (table.rows.length > 1) {
+    table.deleteRow(1);
+  }
+
+  // Add new rows
+  var table_body = document.getElementById('field_table_body');
+  for (var field_name in data_dict) {
+    var desc_fields = data_dict[field_name];
+
+    var tr = document.createElement('tr');
+    tr.setAttribute('id', field_name);
+
+    var name_td = document.createElement('td');
+    name_td.innerHTML = field_name;
+    name_td.className = 'val_td'
+    tr.appendChild(name_td);
+
+    var desc_td = document.createElement('td');
+    desc_td.innerHTML = desc_fields.description;
+    tr.appendChild(desc_td);
+
+    var units_td = document.createElement('td');
+    units_td.innerHTML = desc_fields.units;
+    tr.appendChild(units_td);
+    
+    var type_td = document.createElement('td');
+    type_td.innerHTML = desc_fields.device_type_field;
+    tr.appendChild(type_td);
+
+    table_body.appendChild(tr);
+  }
+
+  // If there aren't any rows, add a note that we're not getting any
+  // metadata from the server.
+  if (table.rows.length == 1) {
+    var td = document.createElement('td');
+    td.innerHTML = 'No metadata received from data server; are loggers running and configured to send metadata?';
+    td.colSpan = 4
+
+    var tr = document.createElement('tr');
+    tr.setAttribute('id', field_name);
+    tr.appendChild(td);
+    table_body.appendChild(tr);
+  }
+}
+
+var websocket_server = "ws://" + WEBSOCKET_DATA_SERVER + "/";
+
+//////////////////////////////////////////////////////////////
+if (! "WebSocket" in window) {
+  alert("Warning: websockets not supported by your Browser!");
+}
+
+// Set timer to retry websocket connection if it closes. Interval is
+// turned off in ws.onopen() if/when we succeed.
+var retry_interval = 3000;
+var retry_websocket_connection;
+var ws;
+
+var request_fields = {'type':'describe'};
+var resend_interval = 3000;
+
+// Try connecting right off the bat
+connect_websocket();
+
+//////////////////////////////////////////////////////
+function connect_websocket() {
+  console.log("Trying to connect to websocket at " + websocket_server);
+  ws = new WebSocket(websocket_server);
+  
+  ws.onopen = function() {
+    // We've succeeded in opening - don't try anymore
+    console.log("Connected - clearing retry interval");
+    clearTimeout(retry_websocket_connection);
+
+    // Send our first message to get things going.
+    send(request_fields);
+  }
+  ws.onclose = function() { 
+    // websocket is closed.
+    console.log("Connection is closed...");
+
+    // Set up an alarm to sleep, then try re-opening websocket
+    console.log("Setting timer to reconnect");
+    retry_websocket_connection = setTimeout(connect_websocket,
+                                            retry_interval);
+  };
+
+  ws.onmessage = function (received_message) { 
+    //console.log("Got status update message: " + received_message.data);
+    process_message(received_message.data);
+
+    // Sleep a little, then send another 'describe' message
+    setTimeout(send, 3000, request_fields);
+
+  };
+};
+
+window.onbeforeunload = function(event) {
+  console.log("Closing websocket");
+  ws.close();
+};
+
+function send(message) {
+  //console.log("Sending message '" + JSON.stringify(message) + "'");
+  ws.send(JSON.stringify(message));
+};
+</script>
