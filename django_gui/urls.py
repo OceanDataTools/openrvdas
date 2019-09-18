@@ -25,9 +25,10 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
   path('admin/', admin.site.urls),
-  path('login/', auth_views.login, name='login'),
-  path('logout/', auth_views.logout,
-      {'next_page': '../'}, name='logout'),
+  path('accounts/', include('django.contrib.auth.urls')),
+  #path('login/', auth_views.login, name='login'),
+  #path('logout/', auth_views.logout,
+  #    {'next_page': '../'}, name='logout'),
 
   path('server_messages', views.server_messages, name='server_messages'),
   path('server_messages/<int:log_level>', views.server_messages,
@@ -42,5 +43,5 @@ urlpatterns = [
   path('fields/', views.fields, name='fields'),
 
   path('', views.index, name='index'),
-]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] # + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
