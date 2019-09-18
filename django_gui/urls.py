@@ -43,5 +43,5 @@ urlpatterns = [
   path('fields/', views.fields, name='fields'),
 
   path('', views.index, name='index'),
-] # + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

@@ -123,10 +123,10 @@ import websockets
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
+from logger.writers.text_file_writer import TextFileWriter
 from logger.utils.das_record import DASRecord
-
-LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+from logger.utils.stderr_logging import setUpStdErrLogging
+from logger.utils.stderr_logging import StdErrLoggingHandler
 
 ############################
 class RecordCache:
@@ -729,13 +729,26 @@ if __name__ == '__main__':
                       help='How many seconds to sleep between successive '
                       'sends of data to clients.')
 
+  parser.add_argument('--stderr_file', dest='stderr_file', default=None,
+                      help='Optional file to which stderr messages should '
+                      'be written.')
+
   parser.add_argument('-v', '--verbosity', dest='verbosity', default=0,
                       action='count', help='Increase output verbosity')
   args = parser.parse_args()
 
   # Set logging verbosity
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+  LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+
+  log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
+  logging.basicConfig(format=LOGGING_FORMAT)
+  logging.getLogger().setLevel(log_level)
+  setUpStdErrLogging(log_level=log_level)
+  if args.stderr_file:
+    stderr_writer = [TextFileWriter(filename=args.stderr_file,
+                                    split_by_date=True)]
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
 
   # Only create reader(s) if they've given us a network to read from;
   # otherwise, count on data coming from websocket publish
