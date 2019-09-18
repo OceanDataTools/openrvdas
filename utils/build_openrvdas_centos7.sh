@@ -491,7 +491,7 @@ DATA_SERVER_WEBSOCKET=:\$DATA_SERVER_WEBSOCKET_PORT
 #DATA_SERVER_LISTEN_ON_UDP='--udp \$DATA_SERVER_UDP_PORT'
 
 # Run cached data server in background
-sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP  2>&1 | tee \$DATA_SERVER_LOGFILE &"
+sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP --stderr_file \$DATA_SERVER_LOGFILE &"
 
 # Run logger manager in foreground
 sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET"
