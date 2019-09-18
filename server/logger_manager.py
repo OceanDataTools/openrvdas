@@ -668,8 +668,11 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   # Set up logging first of all
+  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
+  logging.basicConfig(format=LOGGING_FORMAT)
   setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
     stderr_writers = [TextFileWriter(args.stderr_file)]
