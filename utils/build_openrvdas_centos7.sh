@@ -382,6 +382,12 @@ server {
         alias ${INSTALL_ROOT}/openrvdas/display/html; # display pages
         autoindex on;
     }
+    location /js {
+        alias /opt/openrvdas/display/js; # display pages                                                           
+    }
+    location /css {
+        alias /opt/openrvdas/display/css; # display pages                                                          
+    }
 
     location /static {
         alias ${INSTALL_ROOT}/openrvdas/static; # project static files

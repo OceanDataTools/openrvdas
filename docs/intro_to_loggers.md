@@ -96,9 +96,6 @@ A configuration file is a YAML or JSON (a subset of YAML) specification of compo
 logger/listener/listen.py --config_file gyr_logger.yaml
 ```
 
-(A coder may also use config files by instantiating the
-```ListenerFromLoggerConfig``` class)
-
 The file gyr_logger.yaml might consist of the YAML/JSON definition
 
 ```
@@ -120,6 +117,15 @@ The file gyr_logger.yaml might consist of the YAML/JSON definition
     kwargs: 
       port: 6224 
 ```
+
+The listen.py script may also read a specific logger config from a cruise definition file, e.g.:
+
+```
+# Run the gyr1->net config from cruise definition NBP1406_cruise.yaml
+logger/listener/listen.py --config_file test/NBP1406/NBP1406_cruise.yaml:"gyr1->net"
+```
+
+This functionality is especially handy when trying to debug new logger configurations.
 
 Again, use of listen.py script with and without configuration files is described in [The Listener Script](listen_py.md), and  configuration files are described in detail in [OpenRVDAS Configuration Files](configuration_files.md).
 
