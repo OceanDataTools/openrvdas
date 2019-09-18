@@ -675,7 +675,8 @@ if __name__ == '__main__':
   logging.basicConfig(format=LOGGING_FORMAT)
   setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
-    stderr_writers = [TextFileWriter(args.stderr_file)]
+    stderr_writers = [TextFileWriter(args.stderr_file,
+                                     split_by_date=True)]
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
 
   # If we have (or are going to have) a cached data server, set up
