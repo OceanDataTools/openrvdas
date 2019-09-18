@@ -157,9 +157,9 @@
 <p>
   {% if user.is_authenticated %}
   Logged in as <b>{{ user }}.</b>
-  <a href='../logout'>Log out</a>
+  <a href='/accounts/logout'>Log out</a>
   {% else %}
-  <a href='../login'><b>Log in</b></a> to manage servers, configurations or mode
+  <a href='/accounts/login'><b>Log in</b></a> to manage servers, configurations or mode
   {% endif %}
 </p>
 

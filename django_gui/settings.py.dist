@@ -26,7 +26,7 @@ STATICFILES_DIRS = [
 ]
 
 # What URL to use to serve static files
-STATIC_URL = '/static'
+STATIC_URL = '/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
@@ -77,7 +77,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'django_gui.urls'
 
-LOGIN_REDIRECT_URL = '../'
+LOGIN_REDIRECT_URL = '../../'
+LOGOUT_REDIRECT_URL = '../../'
 
 TEMPLATES = [
     {
