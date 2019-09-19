@@ -16,7 +16,8 @@ from logger.transforms.derived_data_transform import DerivedDataTransform
 class SubsampleTransform(DerivedDataTransform):
   """Transform that computes subsamples of the specified variables.
   """
-  def __init__(self, field_spec, back_seconds=60*60):
+  def __init__(self, field_spec, back_seconds=60*60,
+               metadata_interval=None):
     """
     ```
     field_spec - a dict that contains the fields to be subsampled,
@@ -40,6 +41,8 @@ class SubsampleTransform(DerivedDataTransform):
 
     back_seconds - the number of seconds of data to cache for use by sampler
 
+    metadata_interval - how many seconds between when we attach field metadata
+                 to a record we send out.
     ```
     """
     super().__init__()
@@ -54,10 +57,30 @@ class SubsampleTransform(DerivedDataTransform):
     # Last timestamp that's been emitted for each field
     self.last_timestamp = {f:0 for f in self.field_list}
 
+    self.metadata_interval = metadata_interval
+    self.last_metadata_send = 0
+    
   ############################
   def fields(self):
     """Which fields are we interested in to produce transformed data?"""
     return self.field_list
+
+  ############################
+  def _metadata(self):
+    """Return a dict of metadata for our derived fields."""
+    metadata_fields = {
+      self.field_spec[field]['output']:{
+        'description':
+          'Subsampled values of %s via %s' % \
+          (field, self.field_spec[field].get('subsample',
+                                             'unspecified algorithm')),
+        'device': 'SubsampleTransform',
+        'device_type': 'DerivedDataTransform',
+        'device_type_field': field
+        }
+      for field in self.field_list
+    }
+    return metadata_fields
 
   ############################
   def _add_record(self, record):
@@ -120,7 +143,7 @@ class SubsampleTransform(DerivedDataTransform):
 
     now = time.time()
 
-    result = {}
+    result_fields = {}
     for field in self.field_list:
       if not self.cached_values[field]:
         continue
@@ -136,10 +159,18 @@ class SubsampleTransform(DerivedDataTransform):
       field_result = subsample(algorithm, self.cached_values[field],
                                self.last_timestamp[field], now)
       if field_result:
-        result[output_field] = field_result
+        result_fields[output_field] = field_result
         self.last_timestamp[field] = field_result[-1][0]
 
-    if result:
-      return {'fields': result}
-    else:
+    if not result_fields:
       return None
+
+    # Form the response, adding in metadata if so specified and it's
+    # been long enough since we last sent it.
+    result = {'fields': result_fields}
+    if self.metadata_interval and \
+       now - self.metadata_interval > self.last_metadata_send:
+      result['metadata'] = {'fields': self._metadata()}
+      self.last_metadata_send = now
+
+    return result

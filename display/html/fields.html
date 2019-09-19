@@ -8,7 +8,6 @@
       .ship_table {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         border-collapse: collapse;
-        width: 540px;
         background-color: lightslategray;
       }
       .ship_table td {
@@ -50,7 +49,9 @@
           <th>Field Name</th>
           <th>Description</th>
           <th>Units</th>
+          <th>Device</th>
           <th>Device Type</th>
+          <th>Device Type Field</th>
         </tr>
         <tr>
           <td colspan=4>
@@ -72,22 +73,6 @@ function initial_send_message() {
   //return {'type':'describe', 'fields': fields};
   console.log('Sending initial message');
   return ;
-}
-
-///////////////////////////
-function format_description(desc) {
-  var desc_str = '';
-  description = desc['description'];
-  if (description != undefined) {
-    desc_str += description;
-  }
-  description = desc['units'];
-  if (description != undefined) {
-    desc_str += description;
-  }
-  //return {'type':'describe', 'fields': fields};
-  console.log('Sending initial message');
-  return {'type':'describe'};
 }
 
 ///////////////////////////////////////////////////////////////
@@ -116,8 +101,11 @@ function process_message(message_str) {
   }
 
   // Add new rows
+  var sorted_fields = Object.keys(data_dict);
+  sorted_fields.sort();
   var table_body = document.getElementById('field_table_body');
-  for (var field_name in data_dict) {
+  for (var idx=0; idx < sorted_fields.length; idx++) {
+    var field_name = sorted_fields[idx];
     var desc_fields = data_dict[field_name];
 
     var tr = document.createElement('tr');
@@ -136,9 +124,17 @@ function process_message(message_str) {
     units_td.innerHTML = desc_fields.units;
     tr.appendChild(units_td);
     
-    var type_td = document.createElement('td');
-    type_td.innerHTML = desc_fields.device_type_field;
-    tr.appendChild(type_td);
+    var device_td = document.createElement('td');
+    device_td.innerHTML = desc_fields.device;
+    tr.appendChild(device_td);
+
+    var device_type_td = document.createElement('td');
+    device_type_td.innerHTML = desc_fields.device_type;
+    tr.appendChild(device_type_td);
+
+    var type_field_td = document.createElement('td');
+    type_field_td.innerHTML = desc_fields.device_type_field;
+    tr.appendChild(type_field_td);
 
     table_body.appendChild(tr);
   }
