@@ -376,7 +376,8 @@ class LoggerManager:
         try:
           logging.info('Connecting to websocket: "%s"', ws_name)
           async with websockets.connect('ws://' + ws_name) as ws:
-            while not self.quit_flag:
+             logging.info('Connected to websocket: "%s"', ws_name)
+             while not self.quit_flag:
 
               # Work through the messages in the queue, sending the
               # ones we already have before doing anything else.
