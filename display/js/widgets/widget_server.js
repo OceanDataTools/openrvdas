@@ -125,8 +125,12 @@ function build_data_request(widget_list) {
           field_seconds > field_array[field_name].seconds) {
         field_array[field_name].seconds = field_seconds;
       }
+      if (widget.fields[field_name].subsample) {
+        field_array[field_name].subsample = widget.fields[field_name].subsample;
+      }
     }
   }
   var request = {'type':'subscribe', 'fields':field_array}
-  return JSON.stringify(request);
+  return JSON.stringify(request, undefined, 2);
+  //return JSON.stringify(request);
 }

@@ -58,13 +58,15 @@ says to
 The data server knows how to respond to a set of requests sent to it
 by websocket clients:
 
-* ```
+### {"type":"fields"}
+  ```
   {"type":"fields"}
   ```
   
    Return a list of fields for which cache has data.
 
-* ```
+### {"type":"describe"}
+  ```
   {'type':'describe',
     'fields':['field_1', 'field_2', 'field_3']}
   ```
@@ -72,7 +74,8 @@ by websocket clients:
   Return a dict of metadata descriptions for each specified field. If
   'fields' is omitted, return a dict of metadata for *all* fields.
 
-* ```
+### {"type":"subscribe"}
+  ```
   {"type":"subscribe",
     "fields":{"field_1":{"seconds":50},
               "field_2":{"seconds":0},
@@ -86,9 +89,51 @@ by websocket clients:
   - ``-1``  - provide the most recent value, and then all future new ones
   - ``num`` - provide num seconds of back data, then all future new ones
 
+
   If 'seconds' is missing, use '0' as the default.
 
-* ```
+  The entire specification may also have a field called 'interval',
+  specifying how often server should provide updates. Will
+  default to what was specified on command line with --interval
+  flag (which itself defaults to 1 second intervals):
+  
+  ```
+  {"type":"subscribe",
+    "fields":{"field_1":{"seconds":50},
+              "field_2":{"seconds":0},
+              "field_3":{"seconds":-1}}
+   "interval": 15
+  }  
+  ```
+
+  Each field name may also have a 'subsample' specification
+  that will cause the CachedDataServer to preprocess its data
+  via the subsample() function in logger/utils/subsample.py:
+
+  ```
+    {
+      "field_1":{
+        "seconds":600,
+        "subsample":{
+          "type":"boxcar_average", "window": 30, "interval": 30
+        }
+      },
+      "field_1":{
+        "seconds":600,
+        "subsample":{
+          "type":"boxcar_average", "window": 15, "interval": 5
+        }
+      }
+    }
+  ```
+
+  Note that subsampling can be a computation-intensive process and may
+  put a heavy load on the CachedDataServer process. When practical, we
+  recommend subsampling via a separate logger performing
+  aDerivedDataTransform.
+  
+### {"type":"ready"}
+  ```
   {"type":"ready"}
   ```
 
