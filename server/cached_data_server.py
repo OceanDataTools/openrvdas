@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""NOTE: See below for mysterious cache behavior when invoked via
-logger_manager.py
-
+"""
 Accept data in DASRecord or dict format via the cache_record() method,
 then serve it to anyone who connects via a websocket. A
 CachedDataServer can be instantiated by running this script from the
@@ -124,6 +122,7 @@ import websockets
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.writers.text_file_writer import TextFileWriter
+from logger.utils.subsample import subsample
 from logger.utils.das_record import DASRecord
 from logger.utils.stderr_logging import setUpStdErrLogging
 from logger.utils.stderr_logging import StdErrLoggingHandler
@@ -317,21 +316,48 @@ class WebSocketConnection:
 
     subscribe - look for a field called 'fields' in the request whose
         value is a dict of the format
-
+        ```
           {field_name:{seconds:600}, field_name:{seconds:0},...}
+        ```
 
-        May also have a field called 'interval', specifying how often
-        server should provide updates. Will default to what was
-        specified on command line with --interval flag (which itself
-        defaults to 1 second intervals).
+        Each field name may also have a 'subsample' specification
+        that will cause the CachedDataServer to preprocess its data
+        via the subsample() function in logger/utils/subsample.py:
+        ```
+          {
+            field_name1:{
+              seconds:600,
+              subsample:{
+                'type':'boxcar_average', 'window': 30, 'interval': 30
+              }
+            },
+            field_name1:{
+              seconds:600,
+              subsample:{
+                'type':'boxcar_average', 'window': 15, 'interval': 5
+              }
+            }
+          }
+        ```
 
-        Begin serving JSON messages of the format
+        The entire specification may also have a field called
+        'interval', specifying how often server should provide
+        updates. Will default to what was specified on command line
+        with --interval flag (which itself defaults to 1 second
+        intervals):
+        ```
+
+        ```
+
+        A subscription will instruct the CachedDataServer to begin
+        serving JSON messages of the format
+        ```
           {
             field_name: [(timestamp, value), (timestamp, value),...],
             field_name: [(timestamp, value), (timestamp, value),...],
             field_name: [(timestamp, value), (timestamp, value),...],
           }
-
+        ```
         Initially provide the number of seconds worth of back data
         requested, and on subsequent calls, return all data that have
         arrived since last call.
@@ -342,7 +368,11 @@ class WebSocketConnection:
     ready - client has processed the previous data message and is ready
         for more.
     ```
+
     """
+    # The field details specified in a subscribe request
+    requested_fields = {}
+
     # A map from field_name:latest_timestamp_sent. If
     # latest_timestamp_sent is -1, then we'll always send just the
     # most recent value we have for the field, regardless of how many
@@ -437,16 +467,22 @@ class WebSocketConnection:
           # requested. Encode that as 'last timestamp sent', unless back
           # seconds == -1. If -1, save it as -1, so that we know we're
           # always just sending the the most recent field value.
+          now = time.time()
           field_timestamps = {}
           for field_name, field_spec in requested_fields.items():
+            # If we don't have a field spec dict
             if not type(field_spec) is dict:
               back_seconds = 0
             else:
               back_seconds = field_spec.get('seconds', 0)
-            if back_seconds == -1:
+
+            # If we're going to process the values with an subsampler
+            if 'subsample' in field_spec:
+              field_timestamps[field_name] = 0
+            elif back_seconds == -1:
               field_timestamps[field_name] = -1
             else:
-              field_timestamps[field_name] = time.time() - back_seconds
+              field_timestamps[field_name] = now - back_seconds
 
           # Let client know request succeeded
           await self.send_json_response({'type':'subscribe', 'status':200})
@@ -464,7 +500,8 @@ class WebSocketConnection:
             continue
 
           results = {}
-          for field_name, latest_timestamp in field_timestamps.items():
+          for field_name, field_spec in requested_fields.items():
+            latest_timestamp = field_timestamps.get(field_name, 0)
             field_cache = self.cache.data.get(field_name, None)
             if field_cache is None:
               logging.debug('No cached data for %s', field_name)
@@ -474,6 +511,20 @@ class WebSocketConnection:
             if not field_cache or not field_cache[-1]:
               continue
 
+            # Check if we're returning raw values or
+            # processing/averaging them somehow.
+            subsample_spec = field_spec.get('subsample', None)
+            if subsample_spec:
+              field_results = subsample(subsample_spec, field_cache,
+                                        latest_timestamp, now)
+              results[field_name] = field_results
+
+              # If we did get results, store the timestamp of that
+              # last one.
+              if field_results:
+                field_timestamps[field_name] = field_results[-1][0]
+              continue
+            
             # If special case -1, they want just single most recent
             # value, then future results. Grab last value, then set its
             # timestamp as the last one we've seen.
@@ -481,6 +532,7 @@ class WebSocketConnection:
               last_value = field_cache[-1]
               results[field_name] = [ last_value ]
               field_timestamps[field_name] = last_value[0] # ts of last value
+              continue
 
             # Otherwise - if no data newer than the latest
             # timestamp we've already sent, skip,
@@ -491,10 +543,11 @@ class WebSocketConnection:
             # latest_timestamp and update the latest_timestamp sent
             # (first element of last pair in field_cache).
             else:
-              results[field_name] = [pair for pair in field_cache if
-                                     pair[0] > latest_timestamp]
-              if field_cache:
-                field_timestamps[field_name] = field_cache[-1][0]
+              field_results = [pair for pair in field_cache if
+                               pair[0] > latest_timestamp]
+              results[field_name] = field_results
+              if field_results:
+                field_timestamps[field_name] = field_results[-1][0]
 
           logging.debug('Websocket results: %s...', str(results)[0:100])
 

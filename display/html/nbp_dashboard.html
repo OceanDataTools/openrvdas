@@ -385,7 +385,7 @@
                                }
                                }}));
   var air_temp_line_fields = {
-    MwxAirTemp: {
+    AvgMwxAirTemp: {
       name: 'Air Temp',
       seconds: 3600,
       color: 'green',
@@ -401,7 +401,7 @@
   ));
 
   var sea_temp_line_fields = {
-    RTMPTemp: {
+    AvgRTMPTemp: {
       name: 'Sea Temp',
       seconds: 3600,
       color: 'blue',
@@ -415,15 +415,15 @@
   ));
 			       
   var true_wind_speed_line_fields = {
-    PortTrueWindSpeed: {
+    AvgPortTrueWindSpeed: {
       name: 'Port True Wind Speed',
       seconds: 3600,
-      color: 'red'
+      color: 'red',
     },
-    StbdTrueWindSpeed: {
+    AvgStbdTrueWindSpeed: {
       name: 'Stbd True Wind Speed',
       seconds: 3600,
-      color: 'green'
+      color: 'green',
     }
   };
   widget_list.push(new TimelineWidget(
@@ -434,10 +434,10 @@
   ));
 
   var barometer_line_fields = {
-    MwxBarometer: {
+    AvgMwxBarometer: {
       name: 'Atmospheric Pressure, mB',
       seconds: 3600,
-      color: 'slategray'
+      color: 'slategray',
     }
   };
   widget_list.push(new TimelineWidget(
@@ -448,19 +448,19 @@
   ));
 
   var knudsen_line_fields = {
-    KnudDepthLF: {
+    AvgKnudDepthLF: {
       name: 'LF Depth',
       seconds: 3600,
       color: 'brown',
       transform: function(val) {
-        return parseFloat(val)}
+        return parseFloat(val)},
     },
-    KnudDepthHF: {
+    AvgKnudDepthHF: {
       name: 'HF Depth',
       seconds: 3600,
       color: 'black',
       transform: function(val) {
-        return parseFloat(val)}
+        return parseFloat(val)},
     }
   };
   widget_list.push(new TimelineWidget(
@@ -470,13 +470,13 @@
      credits:{enabled: false}}
   ));
   var gravity_line_fields = {
-    Grv1Value: {
+    AvgGrv1Value: {
       name: 'Gravity Flit Count',
       seconds: 3600,
       color: 'green',
       transform: function(val) {
-        return parseFloat(val)}
-    }
+        return parseFloat(val)},
+    },
   };
   widget_list.push(new TimelineWidget(
     'gravity_line', gravity_line_fields, 'Gravity Flit Count',
