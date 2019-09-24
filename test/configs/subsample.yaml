@@ -1,0 +1,120 @@
+  # An example derived data logger that takes a set of variables from the
+  # cached data server, computes subsampled averages of them, and outputs
+  # them back to the cached data server.
+  #
+  # See code at logger/transforms/subsample_transform.py
+
+  name: subsample->on
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            MwxAirTemp:
+              seconds: 0
+            RTMPTemp:
+              seconds: 0
+            PortTrueWindDir:
+              seconds: 0
+            PortTrueWindSpeed:
+              seconds: 0
+            StbdTrueWindDir:
+              seconds: 0
+            StbdTrueWindSpeed:
+              seconds: 0
+            MwxBarometer:
+              seconds: 0
+            KnudDepthHF:
+              seconds: 0
+            KnudDepthLF:
+              seconds: 0
+            Grv1Value:
+              seconds: 0
+
+    transforms:
+    - class: SubsampleTransform
+      kwargs:
+        back_seconds: 3600
+        metadata_interval: 20  # send metadata every 20 seconds
+        field_spec:
+          MwxAirTemp:
+            output: AvgMwxAirTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          RTMPTemp:
+            output: AvgRTMPTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindDir:
+            output: AvgPortTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindSpeed:
+            output: AvgPortTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindDir:
+            output: AvgStbdTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindSpeed:
+            output: AvgStbdTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+
+          MwxBarometer:
+            output: AvgMwxBarometer
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthHF:
+            output: AvgKnudDepthHF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthLF:
+            output: AvgKnudDepthLF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          Grv1Value:
+            output: AvgGrv1Value
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+    writers:
+    - class: TextFileWriter
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
+
+    # Send stderr to stdout and to CachedDataServer
+    stderr_writers:
+    - class: TextFileWriter
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:subsample'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
