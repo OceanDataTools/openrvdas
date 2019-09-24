@@ -34,14 +34,18 @@ def subsample(algorithm, values, latest_timestamp, now):
   now          Timestamp now
   """
   if not type(algorithm) is dict:
-    logging.warning('Function compute_average handed non-dict algorithm '
+    logging.warning('Function subsample() handed non-dict algorithm '
                     'specification: %s', algorithm)
     return None
   if not values:
-    logging.info('Function compute_average handed empty values list')
+    logging.info('Function subsample() handed empty values list')
     return None
   
   alg_type = algorithm.get('type', None)
+
+  ##################
+  # Select algorithm
+  
   # boxcar_average: all values within symmetric interval window get
   # same weight.
   if alg_type == 'boxcar_average':
@@ -88,5 +92,6 @@ def subsample(algorithm, values, latest_timestamp, now):
     return results
 
   else:
-    logging.warning('compute_average unrecognized algorithm type: %s', alg_type)
+    logging.warning('Function subsample() received unrecognized algorithm '
+                    'type: %s', alg_type)
     return None
