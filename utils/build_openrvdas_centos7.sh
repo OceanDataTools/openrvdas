@@ -476,34 +476,54 @@ cat > ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh <<EOF
 # Start openrvdas servers as service
 OPENRVDAS_LOG_DIR=/var/log/openrvdas
 OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
-DATA_SERVER_LOGFILE=\$OPENRVDAS_LOG_DIR/cached_data_server.log
 
 mkdir -p \$OPENRVDAS_LOG_DIR
 chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
 chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
 
-DATA_SERVER_UDP_PORT=6225
+# On what port will the data server be serving websocket connections?
 DATA_SERVER_WEBSOCKET_PORT=8766
-DATA_SERVER_LISTEN_ON_UDP=
-DATA_SERVER_WEBSOCKET=:\$DATA_SERVER_WEBSOCKET_PORT
 
-# Comment out line below to have data server we start *not* listen on UDP
+# Run cached data server in background
+/opt/openrvdas/scripts/run_data_server.sh &
+
+# Run logger manager in foreground
+sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket :\$DATA_SERVER_WEBSOCKET_PORT"
+EOF
+
+cat > ${INSTALL_ROOT}/openrvdas/scripts/run_data_server.sh <<EOF
+#!/bin/bash
+# Start openrvdas servers as service
+OPENRVDAS_LOG_DIR=/var/log/openrvdas
+DATA_SERVER_LOGFILE=\$OPENRVDAS_LOG_DIR/cached_data_server.log
+
+# On what port should the data server serve websocket connections?
+DATA_SERVER_WEBSOCKET_PORT=8766
+
+# Whether or not data server should listen for records on a UDP port. If so,
+# uncomment the line specifying what port it should listen on.
+DATA_SERVER_LISTEN_ON_UDP=
+DATA_SERVER_UDP_PORT=6225
 #DATA_SERVER_LISTEN_ON_UDP='--udp \$DATA_SERVER_UDP_PORT'
 
 # Run cached data server in background
-sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP --stderr_file \$DATA_SERVER_LOGFILE &"
-
-# Run logger manager in foreground
-sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket \$DATA_SERVER_WEBSOCKET"
+while true
+do
+  echo "Starting cached_data_server.py"
+  sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/bin/python3 server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP  --stderr_file \$DATA_SERVER_LOGFILE -v"
+  echo "Server cached_data_server.py has exited"
+done
 EOF
 
 cat > ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh <<EOF
 #!/bin/bash
-sudo -u $RVDAS_USER sh -c 'pkill -f "/usr/bin/python3 server/cached_data_server.py"'
-sudo -u $RVDAS_USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
+USER=$RVDAS_USER
+sudo -u \$USER sh -c 'pkill -f "/opt/openrvdas/scripts/run_data_server.sh"'
+sudo -u \$USER sh -c 'pkill -f "/usr/bin/python3 server/cached_data_server.py"'
+sudo -u \$USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
 EOF
 
-chmod 755 ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh
+chmod 755 ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh ${INSTALL_ROOT}/openrvdas/scripts/run_data_server.sh ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh
 
 # Enable openrvdas as a service
 echo "############################################################################"
@@ -537,23 +557,10 @@ echo "##########################################################################
 #    esac
 #done
 
+
 echo "#########################################################################"
+echo Restarting services: openrvdas, nginx, uwsgi
+systemctl restart openrvdas nginx uwsgi
 echo "#########################################################################"
-echo Installation complete.
+echo Installation complete - happy logging!
 echo
-echo To manually run server, go to install directory and run logger_manager.py
-echo
-echo '  cd $INSTALL_ROOT/openrvdas'
-echo '  python3 server/logger_manager.py --database django -v'
-echo
-echo "############################################################################"
-echo Finished installation and configuration. You must reboot before some
-echo changes take effect.
-while true; do
-    read -p "Do you wish to reboot now? " yn
-    case $yn in
-        [Yy]* ) reboot now; break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done

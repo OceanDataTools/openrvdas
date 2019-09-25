@@ -818,6 +818,7 @@ if __name__ == '__main__':
     transform = FromJSONTransform()
     reader = ComposedReader(readers=readers, transforms=[transform])
 
+  logging.info('Starting CachedDataServer')
   server = CachedDataServer(args.port, args.interval)
 
   # Every N seconds, we're going to detour to clean old data out of cache
