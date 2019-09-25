@@ -30,6 +30,7 @@ TimeoutStyler
   reset_timers() is called, it will reset the div's style to what it was
   when the TimeoutStyler was initialized.
 ********************************************************************************/
+
 function TimeoutStyler(div, timeout_styles) {
   this.div = div;
   this.styles = timeout_styles;
@@ -40,7 +41,7 @@ function TimeoutStyler(div, timeout_styles) {
     var style = this.styles[seconds]
     this.div.style = style;
   }.bind(this);
-
+  
   // Set up a timer for each timeout:style entry
   this.timers = {};
   for (var seconds in this.styles) {
@@ -51,7 +52,7 @@ function TimeoutStyler(div, timeout_styles) {
   this.reset_timers = function() {
     // First, set the div's style back to what it was at the start
     this.div.style = this.base_style;
-
+    
     // Now create one timer for each timeout style
     for (var seconds in this.styles) {
       // Clear out the old timer and set up a new one
@@ -95,81 +96,90 @@ TextWidget
   div red. It will reset the div to its original styling and reset the
   timers when a new value next arrives.
 
+  The default timeout css style is to turn yellow after a minute and red
+  after 5 minutes.
+
 ********************************************************************************/
+var default_timeout_styles = {
+  60: "background-color:yellow",  // by default, yellow after 1 minute
+ 300: "background-color:red",     // red after 5 minutes
+};
+
 function TextWidget(container, fields) {
-    this.fields = fields;
-    this.container = container;
-    this.timeout_styler = null;
+  this.fields = fields;
+  this.container = container;
+  this.timeout_styler = null;
   
-    if (Object.keys(this.fields).length > 1) {
-        console.log('Error: TextWidget should contain only one field. Found: '
-                    + JSON.stringify(fields));
+  if (Object.keys(this.fields).length > 1) {
+    console.log('Error: TextWidget should contain only one field. Found: '
+                + JSON.stringify(fields));
+  }
+  
+  this.chart = function() {
+    this.container_div = document.getElementById(container);
+    if (!this.container_div) {
+      console.log('TextWidget unable to find container div \"'
+                  + container +'\"');
+    }
+    
+    // Create TimeoutStyler for each widget
+    for (var field in this.fields) {
+      var field_spec = this.fields[field];
+      if (field_spec.timeout_css == undefined) {
+        field_spec.timeout_css = default_timeout_styles;
+      }
+      this.timeout_styler = new TimeoutStyler(this.container_div,
+                                              field_spec.timeout_css);
     }
 
-    this.chart = function() {
-        this.container_div = document.getElementById(container);
-        if (!this.container_div) {
-            console.log('TextWidget unable to find container div \"'
-                        + container +'\"');
-        }
-
-        // See if var has any timeout styling css
-        for (var field in this.fields) {
-            var field_spec = this.fields[field];
-            if (field_spec.timeout_css != undefined) {
-                this.timeout_styler = new TimeoutStyler(this.container_div,
-                                                        field_spec.timeout_css);
-            }
-        }
-
-    }.bind(this);
-    document.addEventListener('DOMContentLoaded', this.chart);
-
-    // When passed a websocket server /data report, sifts through
-    // fields and updates any series with matching field names.
-    this.process_message = function(message) {
-        var container_div = document.getElementById(this.container);
-        if (!container_div) {
-            console.log('Unable to find container id "' + this.container
-                        + '" in page?')
-            return;
-        }
-        for (var field_name in this.fields) {
-            if (!message[field_name]) {
-                continue;
-            }
-            var value_list = message[field_name],
-                value_str = '';
-
-            // If they've instructed us to append new values (and
-            // if new value is non-empty), append it. If they've
-            // specified a separator, use it; otherwise use
-            // semicolon.
-            if (this.fields[field_name].append) {
-                // Values are [timestamp, value] pairs. Add sequentially.
-                for (var list_i = 0; list_i < value_list.length; list_i++) {
-                    var value = value_list[list_i][1];
-                    if (this.fields[field_name].transform) {
-                        value = this.fields[field_name].transform(value);
-                    }
-                    if (value.length > 0) {
-                        var sep = this.fields[field_name].separator || '; ';
-                        value_str += sep + value;
-                    }
-                }
-            }
-            // If not appending, just set to last value in list
-            else {
-                value_str = value_list[value_list.length-1][1];
-                if (this.fields[field_name].transform) {
-                    value_str = this.fields[field_name].transform(value_str);
-                }
-            }
-            // Finally, assign to container html
-            container_div.innerHTML = value_str;
-            if (this.timeout_styler != null) {
-              this.timeout_styler.reset_timers()
-            }
-        }
+  }.bind(this);
+  document.addEventListener('DOMContentLoaded', this.chart);
+  
+  // When passed a websocket server /data report, sifts through
+  // fields and updates any series with matching field names.
+  this.process_message = function(message) {
+    var container_div = document.getElementById(this.container);
+    if (!container_div) {
+      console.log('Unable to find container id "' + this.container
+                  + '" in page?')
+      return;
     }
+    for (var field_name in this.fields) {
+      if (!message[field_name]) {
+        continue;
+      }
+      var value_list = message[field_name],
+          value_str = '';
+      
+      // If they've instructed us to append new values (and
+      // if new value is non-empty), append it. If they've
+      // specified a separator, use it; otherwise use
+      // semicolon.
+      if (this.fields[field_name].append) {
+        // Values are [timestamp, value] pairs. Add sequentially.
+        for (var list_i = 0; list_i < value_list.length; list_i++) {
+          var value = value_list[list_i][1];
+          if (this.fields[field_name].transform) {
+            value = this.fields[field_name].transform(value);
+          }
+          if (value.length > 0) {
+            var sep = this.fields[field_name].separator || '; ';
+            value_str += sep + value;
+          }
+        }
+      }
+      // If not appending, just set to last value in list
+      else {
+        value_str = value_list[value_list.length-1][1];
+        if (this.fields[field_name].transform) {
+          value_str = this.fields[field_name].transform(value_str);
+        }
+      }
+      // Finally, assign to container html
+      container_div.innerHTML = value_str;
+      if (this.timeout_styler != null) {
+        this.timeout_styler.reset_timers()
+      }
+    }
+  }
 }
