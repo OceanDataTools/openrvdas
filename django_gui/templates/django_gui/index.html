@@ -1,5 +1,7 @@
 {% extends 'django_gui/base.html' %}
 
+{% load static %}
+
 {% block content %}
 
 <script type="text/javascript">
@@ -75,7 +77,7 @@
       <td id="{{ logger_name }}_td">{{ logger_name }}</td>
       <td id="{{ logger_name }}_config_td">
         <button id="{{ logger_name }}_config_button" type="submit"
-                onclick="window.open('../edit_config/{{logger_name }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');"
+                onclick="open_edit_config(event, '{{logger_name }}');"
                 {% if not user.is_authenticated %}
                   disabled
                 {% endif %}
