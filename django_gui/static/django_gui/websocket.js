@@ -30,7 +30,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 var [ws_hostname, ws_port] = WEBSOCKET_SERVER.split(':');
-if (ws_host.length == 0) {
+if (ws_hostname.length == 0) {
   // If we have no hostname, get it from our containing page
   ws_hostname = window.location.hostname;
 }
