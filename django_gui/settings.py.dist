@@ -44,12 +44,19 @@ import socket
 # your own hostname in its place.
 
 HOSTNAME = socket.gethostname()
-#HOSTNAME = 'localhost'
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
-# Websocket we'll connect to for logger data updates.
-WEBSOCKET_DATA_HOST = HOSTNAME
+# Websocket we'll connect to for logger data updates. By default,
+# we'll pass in an empty host, which will tell the client that it
+# should figure things out for itself. In the case of a local Python
+# program, it should use HOSTNAME; in the case of JS running on a
+# client page, it should use the page's hostname (encoded in
+# window.location.hostname).
+#
+# If, on the other hand, our data server is running somewhere else,
+# specify it here.
+WEBSOCKET_DATA_HOST = '' # HOSTNAME
 WEBSOCKET_DATA_PORT = 8766
 WEBSOCKET_DATA_SERVER = '%s:%d' % (WEBSOCKET_DATA_HOST,
                                    WEBSOCKET_DATA_PORT)
