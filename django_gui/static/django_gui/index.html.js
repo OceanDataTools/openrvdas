@@ -514,7 +514,7 @@ function open_edit_config(click_event, logger_name) {
   if (!event) event = window.event;
   var window_args = [
     'location=yes',
-    'height=180',
+    'height=300',
     'width=520',
     'top=' + click_event.clientY,
     'left=' + (click_event.clientX + 520),

@@ -45,8 +45,8 @@ var jsonViewer = new JSONViewer();
 document.querySelector("#config_json").appendChild(jsonViewer.getContainer());
 
 // Parse map from config_name->config_json and show JSON of current config
-var config_map = JSON.parse(clean_json('{{ config_map }}'));
-set_config_json('{{ current_config }}');
+var config_map = JSON.parse(clean_json("{{ config_map }}"));
+set_config_json("{{ current_config }}");
 
 // Remove all those ugly escapes
 function clean_json(source) {
@@ -64,7 +64,8 @@ function set_config_json(config_name) {
 function update_select() {
   var sel = document.getElementById("select_config");
   var selected_value = sel.options[sel.selectedIndex].value;
-  if (selected_value == "{{ current_config }}") {
+  var current_config = clean_json("{{ current_config }}");
+  if (selected_value == current_config) {
     sel.style.backgroundColor="white";
   } else {
     sel.style.backgroundColor="yellow";
