@@ -36,7 +36,7 @@ Because of this, instead of a system, we have focused on designing and building 
 
 The surest (and still simplest) way to get started with OpenRVDAS is to bring up a clean dedicated Ubuntu 18 or Centos 7 machine in a virtual environment such as [VirtualBox](https://www.virtualbox.org/).
 
-Install the code following the instructions in the [OpenRVDAS Installation Guide](../INSTALL.md). Reboot when asked to.
+Install the code following the instructions in the [OpenRVDAS Installation Guide](../INSTALL.md). Use default answers when asked, and answer "yes" that OpenRVDAS should be started on boot up.
 
 Once you have logged back on, open two terminal windows.
 

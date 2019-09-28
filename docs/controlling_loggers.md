@@ -238,16 +238,20 @@ running in another terminal for the logger manager to load and run it without co
 
 In addition to being stored, logger data may be displayed in real time
 via [display widgets](display_widgets.md). The most straightforward
-way to do this is by configuring loggers to echo their output to a UDP
-port (such as 6225) where it can be read, cached and served by a
-[CachedDataServer](../logger/utils/cached_data_server.py). Widgets
-connect to the server via a websocket and request data, as described
-in the [Display Widgets document](display_widgets.md).
+way to do this is by configuring loggers to echo their output to a
+[CachedDataServer](../logger/utils/cached_data_server.py). This may be
+done either via UDP (if the CachedDataServer has been initialized to
+listen on a UDP port) or via CachedDataWriter that will connect using
+a websocket. Widgets on display pages will then connect to the data server
+via a websocket and request data, as described in the [Display Widgets
+document](display_widgets.md).
 
 ![Logger Manager with CachedDataServer](images/console_based_logger_manager.png)
 
-A CachedDataServer may be run as a standalone process. Or it may be invoked by the
-LoggerManager when handed a ``--start_data_server`` flag:
+In the default installation, a CachedDataServer may be run as a
+standalone process, but it may also be invoked by the LoggerManager
+when handed a ``--start_data_server`` flag:
+
 ```
   server/logger_manager.py \
     --database django \
@@ -274,7 +278,7 @@ of each logger.
 ### Web-based control of the logger_manager.py
 
 In addition to being controlled from a command line console, the
-logger\manager.py may be controlled by a web console.
+logger\_manager.py may be controlled by a web console.
 
 ![Logger Manager with
  CachedDataServer](images/web_based_logger_manager.png)
@@ -291,6 +295,6 @@ Please see the [server/README.md](../server/README.md) file and [logger_manager.
 
 ### Managing loggers via a web interface
 
-There is a still-rudimentary Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [Django Web Interface](django_interface.md) document and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
+There is a Django-based GUI for controlling logger\_manager.py via a web interface. If you have installed OpenRVDAS using one of the utility installation scripts described in the appendix, they will have installed the NGINX web server and logger\_manager.py to run as system services. Please see the [Django Web Interface](django_interface.md) document and [django_gui/README.md](../django_gui/README.md) for up-to-date information.
 
 
