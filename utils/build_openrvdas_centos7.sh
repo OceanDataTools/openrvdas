@@ -93,17 +93,20 @@ NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_
 
 echo
 echo "############################################################################"
-echo The OpenRVDAS server can be configured to start on boot. Otherwise
-echo you will need to either run it manually from a terminal \(by running
-echo 'server/logger_manager.py' from the openrvdas base directory\) or
-echo start as a service \('service openrvdas start'\).
+echo The OpenRVDAS server can be configured to start on boot. If you wish this
+echo to happen, it will be run/monitored by the supervisord service using the
+echo configuration file in /etc/supervisord.d/openrvdas.ini.
+echo
+echo If you do not wish it to start automatically, it may still be run manually
+echo from the command line or started via supervisor by running supervisorctl
+echo and starting processes logger_manager and cached_data_server.
 echo
 while true; do
     read -p "Do you wish to start the OpenRVDAS server on boot? " yn
     case $yn in
         [Yy]* )
             START_OPENRVDAS_AS_SERVICE=True
-            echo Enabled openrvdas server run on boot.
+            echo Will enable openrvdas server run on boot.
             break;;
         [Nn]* )
             break;;
@@ -120,6 +123,10 @@ fi
 # world readable/executable.
 umask 022
 
+# Create openrvdas log directory 
+mkdir -p /var/log/openrvdas
+chown $RVDAS_USER /var/log/openrvdas
+
 # Set hostname
 echo "############################################################################"
 echo Setting hostname...
@@ -135,7 +142,7 @@ yum -y update
 
 yum install -y socat git nginx sqlite-devel readline-devel \
     wget gcc zlib-devel openssl-devel \
-    python36 python36-devel python36-pip firewalld
+    python36 python36-devel python36-pip firewalld supervisor
 [ -e /usr/bin/python3 ] || ln -s /usr/bin/python36 /usr/bin/python3
 
 # Set permissions
@@ -456,79 +463,47 @@ systemctl enable nginx.service
 service nginx start
 
 echo "############################################################################"
-echo Installing OpenRVDAS server as a service
-cat > /etc/systemd/system/openrvdas.service <<EOF
-[Unit]
-Description = Run openrvdas/server/logger_manager.py as service
-After = network.target
+echo Setting up openrvdas service with supervisord
+if [ -z $START_OPENRVDAS_AS_SERVICE ]; then
+    echo Openrvdas will *not* start on boot. To start it, run supervisorctl
+    echo and start processes logger_manager and cached_data_server.
+    SUPERVISOR_AUTOSTART=false
+else
+    echo Openrvdas will start on boot
+    SUPERVISOR_AUTOSTART=true
+fi
 
-[Service]
-ExecStart = ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh
-ExecStop = ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh
+cat > /etc/supervisord.d/openrvdas.ini <<EOF
+[program:cached_data_server]
+command=/usr/bin/python3 server/cached_data_server.py --port 8766 -v
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
+stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
+user=$RVDAS_USER
 
-[Install]
-WantedBy = multi-user.target
+[program:logger_manager]
+command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/logger_manager.err.log
+stdout_logfile=/var/log/openrvdas/logger_manager.out.log
+user=$RVDAS_USER
+
+[program:simulate_serial]
+command=/usr/bin/python3 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
+directory=${INSTALL_ROOT}/openrvdas
+autostart=false
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/simulate_serial.err.log
+stdout_logfile=/var/log/openrvdas/simulate_serial.out.log
+user=$RVDAS_USER
 EOF
-
-[ -e ${INSTALL_ROOT}/openrvdas/scripts ] || mkdir -p ${INSTALL_ROOT}/openrvdas/scripts
-cat > ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh <<EOF
-#!/bin/bash
-# Start openrvdas servers as service
-OPENRVDAS_LOG_DIR=/var/log/openrvdas
-OPENRVDAS_LOGFILE=\$OPENRVDAS_LOG_DIR/openrvdas.log
-
-mkdir -p \$OPENRVDAS_LOG_DIR
-chown $RVDAS_USER \$OPENRVDAS_LOG_DIR
-chgrp $RVDAS_USER \$OPENRVDAS_LOG_DIR
-
-# On what port will the data server be serving websocket connections?
-DATA_SERVER_WEBSOCKET_PORT=8766
-
-# Run cached data server in background
-/opt/openrvdas/scripts/run_data_server.sh &
-
-# Run logger manager in foreground
-sudo -u $RVDAS_USER -- sh -c "cd ${INSTALL_ROOT}/openrvdas;/usr/bin/python3 ${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console -v --stderr_file \$OPENRVDAS_LOGFILE --data_server_websocket :\$DATA_SERVER_WEBSOCKET_PORT"
-EOF
-
-cat > ${INSTALL_ROOT}/openrvdas/scripts/run_data_server.sh <<EOF
-#!/bin/bash
-# Start openrvdas servers as service
-OPENRVDAS_LOG_DIR=/var/log/openrvdas
-DATA_SERVER_LOGFILE=\$OPENRVDAS_LOG_DIR/cached_data_server.log
-
-# On what port should the data server serve websocket connections?
-DATA_SERVER_WEBSOCKET_PORT=8766
-
-# Whether or not data server should listen for records on a UDP port. If so,
-# uncomment the line specifying what port it should listen on.
-DATA_SERVER_LISTEN_ON_UDP=
-DATA_SERVER_UDP_PORT=6225
-#DATA_SERVER_LISTEN_ON_UDP='--udp \$DATA_SERVER_UDP_PORT'
-
-# Run cached data server in background
-while true
-do
-  echo "Starting cached_data_server.py"
-  sudo -u rvdas -- sh -c "cd /opt/openrvdas;/usr/bin/python3 server/cached_data_server.py --port \$DATA_SERVER_WEBSOCKET_PORT \$DATA_SERVER_LISTEN_ON_UDP  --stderr_file \$DATA_SERVER_LOGFILE -v"
-  echo "Server cached_data_server.py has exited"
-done
-EOF
-
-cat > ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh <<EOF
-#!/bin/bash
-USER=$RVDAS_USER
-sudo -u \$USER sh -c 'pkill -f "/opt/openrvdas/scripts/run_data_server.sh"'
-sudo -u \$USER sh -c 'pkill -f "/usr/bin/python3 server/cached_data_server.py"'
-sudo -u \$USER sh -c 'pkill -f "/usr/bin/python3 server/logger_manager.py"'
-EOF
-
-chmod 755 ${INSTALL_ROOT}/openrvdas/scripts/start_openrvdas.sh ${INSTALL_ROOT}/openrvdas/scripts/run_data_server.sh ${INSTALL_ROOT}/openrvdas/scripts/stop_openrvdas.sh
-
-# Enable openrvdas as a service
-echo "############################################################################"
-[ -z $START_OPENRVDAS_AS_SERVICE ] ||  echo Enabling openrvdas as a service
-[ -z $START_OPENRVDAS_AS_SERVICE ] ||  systemctl enable openrvdas.service;
 
 #echo "############################################################################"
 #while true; do
@@ -557,10 +532,10 @@ echo "##########################################################################
 #    esac
 #done
 
-
 echo "#########################################################################"
-echo Restarting services: openrvdas, nginx, uwsgi
-systemctl restart openrvdas nginx uwsgi
+systemctl enable supervisord
+echo Restarting services: nginx, uwsgi, supervisor
+systemctl restart nginx uwsgi supervisord
 echo "#########################################################################"
 echo Installation complete - happy logging!
 echo
