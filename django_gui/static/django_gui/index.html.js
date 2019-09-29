@@ -237,9 +237,9 @@ function process_data_message(data_dict) {
         button.innerHTML = logger.active;
 
         // Disable if user is not authenticated
-        if (! USER_AUTHENTICATED) {
-          button.setAttribute('disabled', true);
-        }
+        //if (! USER_AUTHENTICATED) {
+        //  button.setAttribute('disabled', true);
+        //}
         button.setAttribute('onclick',
                             'button_clicked(\'' + logger_name + '\')');
         config_td.appendChild(button);
@@ -507,3 +507,20 @@ function message_window() {
   window.open(path, '_blank',
   'height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,copyhistory=no');
 }
+
+///////////////////////////////
+// When user clicks a logger config button.
+function open_edit_config(click_event, logger_name) {
+  if (!event) event = window.event;
+  var window_args = [
+    'location=yes',
+    'height=300',
+    'width=520',
+    'top=' + click_event.clientY,
+    'left=' + (click_event.clientX + 520),
+    'scrollbars=yes',
+    'status=yes'
+  ];
+  window.open('../edit_config/' + logger_name, '_blank', window_args.join());
+}
+

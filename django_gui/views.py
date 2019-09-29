@@ -145,14 +145,20 @@ def edit_config(request, logger_id):
 
   # What's our current mode? What's the default config for this logger
   # in this mode?
-  config_options = api.get_logger_config_names(logger_id)
-  current_config = api.get_logger_config_name(logger_id)
   current_mode = api.get_active_mode()
+  config_options = api.get_logger_config_names(logger_id)
   default_config = api.get_logger_config_name(logger_id, current_mode)
+  current_config = api.get_logger_config_name(logger_id)
+
+  # dict of config_name: config_json
+  config_map = {config_name: api.get_logger_config(config_name)
+                for config_name in config_options}
+  
   return render(request, 'django_gui/edit_config.html',
                 {
                   'logger_id': logger_id,
                   'current_config': current_config,
+                  'config_map': json.dumps(config_map),
                   'default_config': default_config,
                   'config_options': config_options
                 })

@@ -6,5 +6,7 @@ name copied in) FOR WIDGETS TO BE OPERATIONAL.
 
 *******************************************************************************/
 
-// Location of data server
-var WEBSOCKET_DATA_SERVER = "localhost:8766";
+// Location of data server - unless otherwise specified, assume that the
+// data server is on the same host as is serving the page, but on port 8766.
+var WEBSOCKET_HOST = window.location.hostname || 'localhost';
+var WEBSOCKET_DATA_SERVER = WEBSOCKET_HOST + ":8766";

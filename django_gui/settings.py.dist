@@ -42,14 +42,33 @@ import socket
 # If the system-defined hostname from gethostname(), below, is
 # incorrect or unacceptable for some reason, comment it out and define
 # your own hostname in its place.
-
 HOSTNAME = socket.gethostname()
-#HOSTNAME = 'localhost'
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
-# Websocket we'll connect to for logger data updates.
-WEBSOCKET_DATA_HOST = HOSTNAME
+# Try to get (at least one) machine IP address to add to ALLOWED_HOSTS
+HOST_IP = socket.gethostbyname(HOSTNAME)
+if HOST_IP.find('127.0') != 0:
+  ALLOWED_HOSTS.append(HOST_IP)
+else: # if we got 127.0.1.1, try an expensive way of getting HOST_IP
+  try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ALLOWED_HOSTS.append(s.getsockname()[0])
+    s.close()
+  except OSError:
+    pass  # failed to get interface
+
+# Websocket we'll connect to for logger data updates. By default,
+# we'll pass in an empty host, which will tell the client that it
+# should figure things out for itself. In the case of a local Python
+# program, it should use HOSTNAME; in the case of JS running on a
+# client page, it should use the page's hostname (encoded in
+# window.location.hostname).
+#
+# If, on the other hand, our data server is running somewhere else,
+# specify it here.
+WEBSOCKET_DATA_HOST = '' # HOSTNAME
 WEBSOCKET_DATA_PORT = 8766
 WEBSOCKET_DATA_SERVER = '%s:%d' % (WEBSOCKET_DATA_HOST,
                                    WEBSOCKET_DATA_PORT)
@@ -153,4 +172,3 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
