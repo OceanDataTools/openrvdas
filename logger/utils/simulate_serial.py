@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import logging
+import os.path
 import subprocess
 import sys
 import threading
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from logger.readers.logfile_reader import LogfileReader
 from logger.transforms.slice_transform import SliceTransform
@@ -47,8 +48,12 @@ class SimSerial:
                           'exclusive': exclusive}
     self.quit = False
 
-    # Finally, check that our needed 'socat' actually exists
-    if not subprocess.run(['which', 'socat'], stdout=subprocess.PIPE).stdout:
+    # Finally, find path to socat executable
+    self.socat_path = None
+    for socat_path in ['/usr/bin/socat', '/usr/local/bin/socat']:
+      if os.path.exists(socat_path) and os.path.isfile(socat_path):
+        self.socat_path = socat_path
+    if not self.socat_path:
       raise NameError('Executable "socat" not found on path. Please refer '
                       'to installation guide to install socat.')
 
@@ -59,8 +64,7 @@ class SimSerial:
     write_port_params =   'pty,link=%s,raw,echo=0' % self.write_port
     read_port_params = 'pty,link=%s,raw,echo=0' % self.read_port
 
-    cmd = ['/usr/bin/env',
-           'socat',
+    cmd = [self.socat_path,
            verbose,
            #verbose,   # repeating makes it more verbose
            read_port_params,
