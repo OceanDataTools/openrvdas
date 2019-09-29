@@ -14,7 +14,8 @@ The following direct invocation of this script
     logger/utils/cached_data_server.py \
       --udp 6225 \
       --port 8766 \
-      --back_seconds 480 \
+      --disk_cache /var/tmp/openrvdas/disk_cache \
+      --back_seconds 3600 \
       --v
 ```
 says to
@@ -23,8 +24,9 @@ says to
    timestamped, field:value pairs. (See the definition for cache_record(),
    below for formats understood.)
 
-2. Store the received data in an in-memory cache, retaining the most
-   recent 480 seconds for each field.
+2. Store the received data in a disk-backed cache, retaining the most
+   recent 3600 seconds for each field. (If --disk_cache is omitted,
+   data will be stored in memory and will not persist between restarts.)
 
 3. Wait for clients to connect to the websocket at port 8766 and serve
    them the requested data. Web clients may issue JSON-encoded
@@ -130,8 +132,12 @@ from logger.utils.stderr_logging import StdErrLoggingHandler
 ############################
 class RecordCache:
   """Structure for storing/retrieving record data and metadata."""
-  def __init__(self):
-    self.data = {}
+  def __init__(self, disk_cache=None):
+    if disk_cache:
+      from diskcache import Cache
+      self.data = Cache(disk_cache)
+    else:
+      self.data = {}
     self.metadata = {}
     self.lock = threading.Lock()
     
@@ -621,10 +627,10 @@ class CachedDataServer:
   """
 
   ############################
-  def __init__(self, port, interval=1, event_loop=None):
+  def __init__(self, port, interval=1, disk_cache=None, event_loop=None):
     self.port = port
     self.interval = interval
-    self.cache = RecordCache() # defined above
+    self.cache = RecordCache(disk_cache) # defined above
 
     # List where we'll store our websocket connections so that we can
     # keep track of which are still open, and signal them to close
@@ -768,6 +774,11 @@ if __name__ == '__main__':
                       'for data on, e.g. 6221,6224. Prefix by group id '
                       'to specify multicast.')
 
+  parser.add_argument('--disk_cache', dest='disk_cache', default=None,
+                      action='store', help='If specified, the file to use '
+                      'as a disk-based backing cache. If omitted, caching '
+                      'will be done non-persistently in memory.')
+
   parser.add_argument('--back_seconds', dest='back_seconds', action='store',
                       type=float, default=24*60*60,
                       help='Maximum number of seconds of old data to keep '
@@ -819,7 +830,7 @@ if __name__ == '__main__':
     reader = ComposedReader(readers=readers, transforms=[transform])
 
   logging.info('Starting CachedDataServer')
-  server = CachedDataServer(args.port, args.interval)
+  server = CachedDataServer(args.port, args.interval, args.disk_cache)
 
   # Every N seconds, we're going to detour to clean old data out of cache
   next_cleanup_time = time.time() + args.cleanup_interval

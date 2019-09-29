@@ -123,9 +123,9 @@ fi
 # world readable/executable.
 umask 022
 
-# Create openrvdas log directory 
-mkdir -p /var/log/openrvdas
-chown $RVDAS_USER /var/log/openrvdas
+# Create openrvdas log and tmp directories
+mkdir -p /var/log/openrvdas /var/tmp/openrvdas
+chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
 
 # Set hostname
 echo "############################################################################"
@@ -225,7 +225,7 @@ export PATH=/usr/bin:/usr/local/bin:$PATH
 #/usr/bin/env pip install --upgrade pip || echo Upgrading new pip if it\'s there
 
 /usr/bin/env pip install Django==2.0 pyserial uwsgi websockets PyYAML \
-       parse mysqlclient mysql-connector
+       parse mysqlclient mysql-connector diskcache
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
 
@@ -367,10 +367,10 @@ server {
         autoindex on;
     }
     location /js {
-        alias /opt/openrvdas/display/js; # display pages                                                           
+        alias /opt/openrvdas/display/js; # display pages
     }
     location /css {
-        alias /opt/openrvdas/display/css; # display pages                                                          
+        alias /opt/openrvdas/display/css; # display pages
     }
 
     location /static {
@@ -452,7 +452,7 @@ fi
 
 cat > /etc/supervisor/conf.d/openrvdas.conf <<EOF
 [program:cached_data_server]
-command=/usr/bin/python3 server/cached_data_server.py --port 8766 -v
+command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true

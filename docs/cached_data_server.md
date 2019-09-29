@@ -33,7 +33,8 @@ following command line
 server/cached_data_server.py \
   --udp 6225 \
   --port 8766 \
-  --back_seconds 480 \
+  --disk_cache /var/tmp/openrvdas/disk_cache \
+  --back_seconds 3600 \
   --cleanup 60 \
   --v
 ```
@@ -44,8 +45,9 @@ says to
    timestamped, field:value pairs. See Data Input Formats, below, for
    the formats it is able to parse.
 
-2. Store the received data in an in-memory cache, retaining the most
-   recent 480 seconds for each field.
+2. Store the received data in a disk-backed cache, retaining the most
+   recent 3600 seconds for each field. (If --disk_cache is omitted,
+   data will be stored in memory and will not persist between restarts.)
 
 3. Wait for clients to connect to the websocket at port 8766 (the default
    port)and serve them the requested data. Web clients may issue JSON-encoded
