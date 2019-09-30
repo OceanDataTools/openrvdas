@@ -139,8 +139,12 @@ class RecordCache:
     if disk_cache:
       from diskcache import Cache
       self.data = Cache(disk_cache)
+      self.data.reset('sqlite_mmap_size', 268435456) # set memory mapping
     else:
       self.data = {}
+
+    # Create a lock for each key so threads don't step on each other
+    self.locks = {key: threading.Lock() for key in self.keys()}
     
   ############################
   def cache_record(self, record):
@@ -235,8 +239,10 @@ class RecordCache:
       return
 
     # Add values from record to cache
-    with self.lock:
-      for field, value in fields.items():
+    for field, value in fields.items():
+      if not field in self.locks:
+        self.locks[field] = threading.Lock()
+      with self.locks[field]:
         if not field in self.data:
           self.data[field] = []
 
@@ -287,8 +293,10 @@ class RecordCache:
     seconds, but keep at least one (most recent) value.
     """
     logging.debug('Cleaning up cache')
-    with self.lock:
-      for field in self.data:
+    for field in self.keys():
+      if not field in self.locks[field]:
+        self.locks[field] = threading.Lock()
+      with self.locks[field]:
         value_list = self.data[field]
         while value_list and len(value_list) > 1 and value_list[0][0] < oldest:
           value_list.pop(0)
@@ -528,6 +536,10 @@ class WebSocketConnection:
 
           results = {}
           for field_name, field_spec in requested_fields.items():
+           if not field_name in self.cache.locks:
+             logging.debug('No data for requested field %s', field_name)
+             continue
+           with self.cache.locks[field_name]:
             latest_timestamp = field_timestamps.get(field_name, 0)
             field_cache = self.cache.data.get(field_name, None)
             if field_cache is None:
@@ -737,7 +749,7 @@ class CachedDataServer:
   """Top-level coroutine for running CachedDataServer."""
   @asyncio.coroutine
   async def _serve_websocket_data(self, websocket, path):
-    logging.info('New data websocket client attached: %s', path)
+    logging.debug('New data websocket client attached: %s', path)
 
     # Here is where we see the anomalous behavior - when constructed
     # directly, self.cache is as it should be: a shared cache. But
