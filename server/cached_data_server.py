@@ -133,13 +133,14 @@ from logger.utils.stderr_logging import StdErrLoggingHandler
 class RecordCache:
   """Structure for storing/retrieving record data and metadata."""
   def __init__(self, disk_cache=None):
+    self.metadata = {}
+    self.lock = threading.Lock()
+    self.disk_cache = disk_cache
     if disk_cache:
       from diskcache import Cache
       self.data = Cache(disk_cache)
     else:
       self.data = {}
-    self.metadata = {}
-    self.lock = threading.Lock()
     
   ############################
   def cache_record(self, record):
@@ -246,14 +247,14 @@ class RecordCache:
             # we'll assume it's a (timestamp, value) pair. Otherwise,
             # use the default timestamp of 'now'.
             if type(val) in [list, tuple]:
-              self.data[field].append(val)
+              self._add_tuple(field, val)
             else:
-              self.data[field].append((record_timestamp, value))
+              self._add_tuple(field, (record_timestamp, value))
         else:
           # If type(value) is *not* a list, assume it's the value
           # itself. Add it using the default timestamp.
-          self.data[field].append((record_timestamp, value))
-
+          self._add_tuple(field, (record_timestamp, value))
+          
       # Is there any metadata to add? Cache whatever is in the
       # metadata.data.fields dict. Blithely overwrite whatever might
       # be there already.
@@ -261,6 +262,24 @@ class RecordCache:
         metadata_fields = metadata.get('fields', {})
         for field, value in metadata_fields.items():
           self.metadata[field] = value
+
+  ############################
+  def _add_tuple(self, field, value_tuple):
+    #logging.debug('adding cache[%s] = %s', field, value_tuple)
+    if self.disk_cache:
+      flist = self.data.get(field, [])
+      flist.append(value_tuple)
+      self.data[field] = flist
+    else:
+      self.data[field].append(value_tuple)
+
+  ############################
+  def keys(self):
+    """Return a list of all keys in the cache."""
+    if self.disk_cache:
+      return list(self.data.iterkeys())
+    else:
+      return list(self.data.keys())
 
   ############################
   def cleanup(self, oldest):
@@ -273,6 +292,8 @@ class RecordCache:
         value_list = self.data[field]
         while value_list and len(value_list) > 1 and value_list[0][0] < oldest:
           value_list.pop(0)
+        # This last bit is only necessary when using diskcache
+        self.data[field] = value_list
 
 ############################
 class WebSocketConnection:
@@ -412,7 +433,7 @@ class WebSocketConnection:
           logging.debug('fields request')
           await self.send_json_response(
             {'type':'fields', 'status':200,
-             'data':list(self.cache.data.keys())})
+             'data': self.cache.keys()})
 
         # Send client a dict of metadata descriptions; if they've
         # specified a set of fields, give just metadata for those;
