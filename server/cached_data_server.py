@@ -294,7 +294,7 @@ class RecordCache:
     """
     logging.debug('Cleaning up cache')
     for field in self.keys():
-      if not field in self.locks[field]:
+      if not field in self.locks:
         self.locks[field] = threading.Lock()
       with self.locks[field]:
         value_list = self.data[field]
@@ -321,7 +321,6 @@ class WebSocketConnection:
   ############################
   def quit(self):
     """Close the connection from our end and quit."""
-    logging.info('WebSocketConnection quit() signaled')
     self.quit_flag = True
 
   ############################
