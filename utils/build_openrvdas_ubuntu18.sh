@@ -194,7 +194,7 @@ mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
 
-drop user if exists 'rvdas'@'localhost';
+drop user if exists '$RVDAS_USER'@'localhost';
 create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
 
 create database if not exists data character set utf8;
