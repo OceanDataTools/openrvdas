@@ -56,14 +56,14 @@ class CachedDataWriter(Writer):
     max_backup    If the writer isn&#39;t able to connect to the data server,
                   it will locally cache records until it can. To avoid
                   unbounded memory usage, if max_backup is nonzero, it will
-                  cache at most max_backup records before dropping the 
+                  cache at most max_backup records before dropping the
                   oldest records. By default, cache one day&#39;s worth of
                   records at 1 Hz (86,400 records). If max_backup is zero,
                   cache size is unbounded.
     ```
     &#34;&#34;&#34;
     host_port = data_server.split(&#39;:&#39;)
-    if len(host_port) == 1: 
+    if len(host_port) == 1:
       self.data_server = &#39;localhost:&#39; + data_server  # they gave us &#39;:8765&#39;
     elif not len(host_port[0]):
       self.data_server = &#39;localhost&#39; + data_server   # they gave us &#39;:8766&#39;
@@ -95,7 +95,7 @@ class CachedDataWriter(Writer):
 
     ############################
     async def _async_send_records_loop(self):
-      &#34;&#34;&#34;Inner async function that actually does websocket writes 
+      &#34;&#34;&#34;Inner async function that actually does websocket writes
       and cleanups.
       &#34;&#34;&#34;
       next_cleanup = 0
@@ -115,13 +115,18 @@ class CachedDataWriter(Writer):
               except asyncio.QueueEmpty:
                 await asyncio.sleep(.2)
 
+        except websockets.exceptions.ConnectionClosed:
+          logging.warning(&#39;CachedDataWriter lost websocket connection to &#39;
+                          &#39;data server; trying to reconnect.&#39;)
+          await asyncio.sleep(0.2)
+
         # If the websocket connection failed
         except OSError as e:
           logging.warning(&#39;CachedDataWriter websocket connection to %s &#39;
                           &#39;failed; sleeping before trying again: %s&#39;,
                           self.data_server, str(e))
           await asyncio.sleep(5)
-          
+
     # Now call the async process in its own event loop
     self.event_loop.run_until_complete(_async_send_records_loop(self))
     self.event_loop.close()
@@ -215,7 +220,7 @@ update_interval    Serve updates to websocket clients every N seconds
 max_backup    If the writer isn't able to connect to the data server,
               it will locally cache records until it can. To avoid
               unbounded memory usage, if max_backup is nonzero, it will
-              cache at most max_backup records before dropping the 
+              cache at most max_backup records before dropping the
               oldest records. By default, cache one day's worth of
               records at 1 Hz (86,400 records). If max_backup is zero,
               cache size is unbounded.
@@ -240,14 +245,14 @@ max_backup    If the writer isn't able to connect to the data server,
     max_backup    If the writer isn&#39;t able to connect to the data server,
                   it will locally cache records until it can. To avoid
                   unbounded memory usage, if max_backup is nonzero, it will
-                  cache at most max_backup records before dropping the 
+                  cache at most max_backup records before dropping the
                   oldest records. By default, cache one day&#39;s worth of
                   records at 1 Hz (86,400 records). If max_backup is zero,
                   cache size is unbounded.
     ```
     &#34;&#34;&#34;
     host_port = data_server.split(&#39;:&#39;)
-    if len(host_port) == 1: 
+    if len(host_port) == 1:
       self.data_server = &#39;localhost:&#39; + data_server  # they gave us &#39;:8765&#39;
     elif not len(host_port[0]):
       self.data_server = &#39;localhost&#39; + data_server   # they gave us &#39;:8766&#39;
@@ -279,7 +284,7 @@ max_backup    If the writer isn't able to connect to the data server,
 
     ############################
     async def _async_send_records_loop(self):
-      &#34;&#34;&#34;Inner async function that actually does websocket writes 
+      &#34;&#34;&#34;Inner async function that actually does websocket writes
       and cleanups.
       &#34;&#34;&#34;
       next_cleanup = 0
@@ -299,13 +304,18 @@ max_backup    If the writer isn't able to connect to the data server,
               except asyncio.QueueEmpty:
                 await asyncio.sleep(.2)
 
+        except websockets.exceptions.ConnectionClosed:
+          logging.warning(&#39;CachedDataWriter lost websocket connection to &#39;
+                          &#39;data server; trying to reconnect.&#39;)
+          await asyncio.sleep(0.2)
+
         # If the websocket connection failed
         except OSError as e:
           logging.warning(&#39;CachedDataWriter websocket connection to %s &#39;
                           &#39;failed; sleeping before trying again: %s&#39;,
                           self.data_server, str(e))
           await asyncio.sleep(5)
-          
+
     # Now call the async process in its own event loop
     self.event_loop.run_until_complete(_async_send_records_loop(self))
     self.event_loop.close()

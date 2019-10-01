@@ -490,7 +490,8 @@ class LoggerManager:
         try:
           logging.info(&#39;Connecting to websocket: &#34;%s&#34;&#39;, ws_name)
           async with websockets.connect(&#39;ws://&#39; + ws_name) as ws:
-            while not self.quit_flag:
+             logging.info(&#39;Connected to websocket: &#34;%s&#34;&#39;, ws_name)
+             while not self.quit_flag:
 
               # Work through the messages in the queue, sending the
               # ones we already have before doing anything else.
@@ -1251,7 +1252,8 @@ logger_log_level - At what logging level our component loggers
         try:
           logging.info(&#39;Connecting to websocket: &#34;%s&#34;&#39;, ws_name)
           async with websockets.connect(&#39;ws://&#39; + ws_name) as ws:
-            while not self.quit_flag:
+             logging.info(&#39;Connected to websocket: &#34;%s&#34;&#39;, ws_name)
+             while not self.quit_flag:
 
               # Work through the messages in the queue, sending the
               # ones we already have before doing anything else.
