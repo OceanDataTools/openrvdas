@@ -97,7 +97,7 @@ class SimSerial:
   def run(self, loop=False):
     """Create the virtual port with socat and start feeding it records from
     the designated logfile. If loop==True, loop when reaching end of input."""
-    self.socat_thread = threading.Thread(target=self._run_socat)
+    self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
     self.socat_thread.start()
     time.sleep(0.2)
 
@@ -175,7 +175,8 @@ if __name__ == '__main__':
       config = configs[inst]
       sim = SimSerial(port=config['port'], source_file=config['logfile'],
                       time_format=config.get('time_format', args.time_format))
-      sim_thread = threading.Thread(target=sim.run, kwargs={'loop': args.loop})
+      sim_thread = threading.Thread(target=sim.run, kwargs={'loop': args.loop},
+                                    daemon=True)
       sim_thread.start()
       thread_list.append(sim_thread)
 

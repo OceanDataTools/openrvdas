@@ -163,7 +163,8 @@ class ComposedReader(Reader):
          and not self.reader_returned_eof[i]:
         logging.info('read() - starting thread for Reader #%d', i)
         self.reader_returned_eof[i] = False
-        thread = threading.Thread(target=self._run_reader, args=(i,))
+        thread = threading.Thread(target=self._run_reader, args=(i,),
+                                  daemon=True)
         self.reader_threads[i] = thread
         thread.start()
 
