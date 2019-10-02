@@ -141,7 +141,8 @@ if __name__ == '__main__':
       writer = SimNetwork(network=network, filebase=filebase,
                           instrument=instrument)
       writer_thread = threading.Thread(target=writer.run,
-                                       kwargs={'loop': args.loop})
+                                       kwargs={'loop': args.loop},
+                                       daemon=True)
       writer_thread.start()
       thread_list.append(writer_thread)
       writer_list.append('%s %s, %s' % (instrument, network, filebase))
