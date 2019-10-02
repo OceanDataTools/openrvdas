@@ -254,7 +254,7 @@ cat > /etc/uwsgi/scripts/start_uwsgi_daemon.sh <<EOF
 # Start uWSGI as a daemon; installed as service
 /usr/local/bin/uwsgi \
   --emperor /etc/uwsgi/vassals \
-  --uid rvdas --gid rvdas \
+  --uid ${RVDAS_USER} --gid ${RVDAS_USER} \
   --pidfile /etc/uwsgi/process.pid \
   --daemonize /var/log/uwsgi-emperor.log
 EOF
@@ -428,8 +428,8 @@ ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
 
 # Make everything accessible to nginx
 chmod 755 ${INSTALL_ROOT}/openrvdas
-chown -R rvdas ${INSTALL_ROOT}/openrvdas
-chgrp -R rvdas ${INSTALL_ROOT}/openrvdas
+chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+chgrp -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
 
 # Make uWSGI run on boot
 systemctl enable uwsgi.service
