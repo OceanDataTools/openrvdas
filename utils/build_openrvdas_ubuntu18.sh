@@ -194,7 +194,7 @@ mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
 
-drop user if exists '$RVDAS_USER'@'localhost';
+drop user if exists 'rvdas'@'localhost';
 create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
 
 create database if not exists data character set utf8;
@@ -254,7 +254,7 @@ cat > /etc/uwsgi/scripts/start_uwsgi_daemon.sh <<EOF
 # Start uWSGI as a daemon; installed as service
 /usr/local/bin/uwsgi \
   --emperor /etc/uwsgi/vassals \
-  --uid rvdas --gid rvdas \
+  --uid ${RVDAS_USER} --gid ${RVDAS_USER} \
   --pidfile /etc/uwsgi/process.pid \
   --daemonize /var/log/uwsgi-emperor.log
 EOF
@@ -428,8 +428,8 @@ ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
 
 # Make everything accessible to nginx
 chmod 755 ${INSTALL_ROOT}/openrvdas
-chown -R rvdas ${INSTALL_ROOT}/openrvdas
-chgrp -R rvdas ${INSTALL_ROOT}/openrvdas
+chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+chgrp -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
 
 # Make uWSGI run on boot
 systemctl enable uwsgi.service
