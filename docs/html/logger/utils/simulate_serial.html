@@ -24,12 +24,13 @@
 <summary>Source code</summary>
 <pre><code class="python">#!/usr/bin/env python3
 import logging
+import os.path
 import subprocess
 import sys
 import threading
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from logger.readers.logfile_reader import LogfileReader
 from logger.transforms.slice_transform import SliceTransform
@@ -71,8 +72,12 @@ class SimSerial:
                           &#39;exclusive&#39;: exclusive}
     self.quit = False
 
-    # Finally, check that our needed &#39;socat&#39; actually exists
-    if not subprocess.run([&#39;which&#39;, &#39;socat&#39;], stdout=subprocess.PIPE).stdout:
+    # Finally, find path to socat executable
+    self.socat_path = None
+    for socat_path in [&#39;/usr/bin/socat&#39;, &#39;/usr/local/bin/socat&#39;]:
+      if os.path.exists(socat_path) and os.path.isfile(socat_path):
+        self.socat_path = socat_path
+    if not self.socat_path:
       raise NameError(&#39;Executable &#34;socat&#34; not found on path. Please refer &#39;
                       &#39;to installation guide to install socat.&#39;)
 
@@ -83,8 +88,7 @@ class SimSerial:
     write_port_params =   &#39;pty,link=%s,raw,echo=0&#39; % self.write_port
     read_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.read_port
 
-    cmd = [&#39;/usr/bin/env&#39;,
-           &#39;socat&#39;,
+    cmd = [self.socat_path,
            verbose,
            #verbose,   # repeating makes it more verbose
            read_port_params,
@@ -266,8 +270,12 @@ timestamps, and the standard parameters that a serial port takes.</p></section>
                           &#39;exclusive&#39;: exclusive}
     self.quit = False
 
-    # Finally, check that our needed &#39;socat&#39; actually exists
-    if not subprocess.run([&#39;which&#39;, &#39;socat&#39;], stdout=subprocess.PIPE).stdout:
+    # Finally, find path to socat executable
+    self.socat_path = None
+    for socat_path in [&#39;/usr/bin/socat&#39;, &#39;/usr/local/bin/socat&#39;]:
+      if os.path.exists(socat_path) and os.path.isfile(socat_path):
+        self.socat_path = socat_path
+    if not self.socat_path:
       raise NameError(&#39;Executable &#34;socat&#34; not found on path. Please refer &#39;
                       &#39;to installation guide to install socat.&#39;)
 
@@ -278,8 +286,7 @@ timestamps, and the standard parameters that a serial port takes.</p></section>
     write_port_params =   &#39;pty,link=%s,raw,echo=0&#39; % self.write_port
     read_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.read_port
 
-    cmd = [&#39;/usr/bin/env&#39;,
-           &#39;socat&#39;,
+    cmd = [self.socat_path,
            verbose,
            #verbose,   # repeating makes it more verbose
            read_port_params,

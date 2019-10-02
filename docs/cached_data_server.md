@@ -24,7 +24,7 @@ CachedDataServer running and servicing websocket connections on port
 
 If you are manually running a LoggerManager, you may specify that it
 start up its own CachedDataServer by specifying the ``--start_data_server``
-argument on its command line. You may also invoke a standalone 
+argument on its command line. You may also invoke a standalone
 CachedDataServer directly from the command line (as is done by the script
 in ``scripts/start_openrvdas.sh`` in your local installation). The
 following command line
@@ -45,15 +45,24 @@ says to
    timestamped, field:value pairs. See Data Input Formats, below, for
    the formats it is able to parse.
 
-2. Store the received data in a disk-backed cache, retaining the most
-   recent 3600 seconds for each field. (If --disk_cache is omitted,
-   data will be stored in memory and will not persist between restarts.)
+2. Store the received data in memory, retaining the most recent 3600
+   seconds for each field (default is 86400 seconds = 24 hours).
 
-3. Wait for clients to connect to the websocket at port 8766 (the default
-   port)and serve them the requested data. Web clients may issue JSON-encoded
-   requests of the following formats (note that the invocation in
-   the default OpenRVDAS installation does *not* listen on a UDP
-   port, and relies on websocket connections for its data).
+   (The total number of values cached per field is also limited by the
+   ``max_records`` parameter and defaults to 2880, equivalent to two
+   records per minute for 24 hours. It may be overridden to "infinite"
+   by setting ``--max_records=0`` on the command line.)
+
+3. Periodically back up the in-memory cache to a disk-based cache at
+   /var/tmp/openrvdas/disk_cache (By default, back up every 60
+   seconds; this can be overridden with the --cleanup_interval
+   argument).
+
+4. Wait for clients to connect to the websocket at port 8766 (the
+   default port)and serve them the requested data. Web clients may
+   issue JSON-encoded requests of the following formats (note that the
+   invocation in the default OpenRVDAS installation does *not* listen
+   on a UDP port, and relies on websocket connections for its data).
 
 ## Websocket Request Types
 
@@ -64,7 +73,7 @@ by websocket clients:
   ```
   {"type":"fields"}
   ```
-  
+
    Return a list of fields for which cache has data.
 
 ### {"type":"describe"}
@@ -98,14 +107,14 @@ by websocket clients:
   specifying how often server should provide updates. Will
   default to what was specified on command line with --interval
   flag (which itself defaults to 1 second intervals):
-  
+
   ```
   {"type":"subscribe",
     "fields":{"field_1":{"seconds":50},
               "field_2":{"seconds":0},
               "field_3":{"seconds":-1}}
    "interval": 15
-  }  
+  }
   ```
 
   Each field name may also have a 'subsample' specification
@@ -133,7 +142,7 @@ by websocket clients:
   put a heavy load on the CachedDataServer process. When practical, we
   recommend subsampling via a separate logger performing
   aDerivedDataTransform.
-  
+
 ### {"type":"ready"}
   ```
   {"type":"ready"}
@@ -147,8 +156,8 @@ by websocket clients:
                               "fields":{"field_1":"value_1",
                                         "field_2":"value_2"}}}
   ```
-                                        
-  Submit new data to the cache. This is the mechanism that the 
+
+  Submit new data to the cache. This is the mechanism that the
   [CachedDataWriter](../logger/writers/cached_data_writer.py)
   component uses to send data to the server.
 
@@ -174,7 +183,7 @@ data to cache.
    The service start script created by the default installation does
    *not* listen to a UDP port; this can be changed by uncommenting the
    line in ``scripts/start_openrvdas.sh`` that reads:
-   
+
    ``#DATA_SERVER_LISTEN_ON_UDP='--udp $DATA_SERVER_UDP_PORT'``
 
 ## Input Data Formats

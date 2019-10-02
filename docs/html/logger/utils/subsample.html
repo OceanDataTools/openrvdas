@@ -59,14 +59,18 @@ def subsample(algorithm, values, latest_timestamp, now):
   now          Timestamp now
   &#34;&#34;&#34;
   if not type(algorithm) is dict:
-    logging.warning(&#39;Function compute_average handed non-dict algorithm &#39;
+    logging.warning(&#39;Function subsample() handed non-dict algorithm &#39;
                     &#39;specification: %s&#39;, algorithm)
     return None
   if not values:
-    logging.info(&#39;Function compute_average handed empty values list&#39;)
+    logging.info(&#39;Function subsample() handed empty values list&#39;)
     return None
   
   alg_type = algorithm.get(&#39;type&#39;, None)
+
+  ##################
+  # Select algorithm
+  
   # boxcar_average: all values within symmetric interval window get
   # same weight.
   if alg_type == &#39;boxcar_average&#39;:
@@ -113,7 +117,8 @@ def subsample(algorithm, values, latest_timestamp, now):
     return results
 
   else:
-    logging.warning(&#39;compute_average unrecognized algorithm type: %s&#39;, alg_type)
+    logging.warning(&#39;Function subsample() received unrecognized algorithm &#39;
+                    &#39;type: %s&#39;, alg_type)
     return None</code></pre>
 </details>
 </section>
@@ -158,14 +163,18 @@ Timestamp now</p></section>
   now          Timestamp now
   &#34;&#34;&#34;
   if not type(algorithm) is dict:
-    logging.warning(&#39;Function compute_average handed non-dict algorithm &#39;
+    logging.warning(&#39;Function subsample() handed non-dict algorithm &#39;
                     &#39;specification: %s&#39;, algorithm)
     return None
   if not values:
-    logging.info(&#39;Function compute_average handed empty values list&#39;)
+    logging.info(&#39;Function subsample() handed empty values list&#39;)
     return None
   
   alg_type = algorithm.get(&#39;type&#39;, None)
+
+  ##################
+  # Select algorithm
+  
   # boxcar_average: all values within symmetric interval window get
   # same weight.
   if alg_type == &#39;boxcar_average&#39;:
@@ -212,7 +221,8 @@ Timestamp now</p></section>
     return results
 
   else:
-    logging.warning(&#39;compute_average unrecognized algorithm type: %s&#39;, alg_type)
+    logging.warning(&#39;Function subsample() received unrecognized algorithm &#39;
+                    &#39;type: %s&#39;, alg_type)
     return None</code></pre>
 </details>
 </dd>
