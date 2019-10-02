@@ -236,6 +236,9 @@ mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 
+GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
+GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
+
 GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
@@ -248,8 +251,8 @@ echo "##########################################################################
 echo Installing Django, uWSGI and other Python-dependent packages
 export PATH=/usr/bin:/usr/local/bin:$PATH
 /usr/bin/env pip3 install --upgrade pip
-/usr/local/bin/pip3 install Django==2.0 pyserial uwsgi websockets PyYAML \
-       parse mysqlclient mysql-connector diskcache
+/usr/local/bin/pip3 install Django==2.2 pyserial uwsgi \
+                   websockets PyYAML parse mysqlclient mysql-connector diskcache
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
 echo "############################################################################"

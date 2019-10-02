@@ -207,9 +207,8 @@ create database if not exists test character set utf8;
 GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
 GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
 
-create database if not exists test_$RVDAS_USER character set utf8;
-GRANT ALL PRIVILEGES ON test_$RVDAS_USER.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test_$RVDAS_USER.* TO 'test'@'localhost' identified by 'test';
+GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
+GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
 
 flush privileges;
 \q
@@ -224,8 +223,8 @@ export PATH=/usr/bin:/usr/local/bin:$PATH
 /usr/bin/pip3 install --upgrade pip &> /dev/null || echo Upgrading old pip if it's there
 #/usr/bin/env pip install --upgrade pip || echo Upgrading new pip if it\'s there
 
-/usr/bin/env pip install Django==2.0 pyserial uwsgi websockets PyYAML \
-       parse mysqlclient mysql-connector diskcache
+/usr/bin/env pip install Django==2.2 pyserial uwsgi \
+             websockets PyYAML parse mysqlclient mysql-connector diskcache
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
 
