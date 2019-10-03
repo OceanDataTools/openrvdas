@@ -618,7 +618,7 @@ if __name__ == '__main__':
                       'to use.')
 
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
-                      action='store', default='8766',
+                      action='store', default=None,
                       help='Address at which to connect to cached data server '
                       'to send status updates.')
 
