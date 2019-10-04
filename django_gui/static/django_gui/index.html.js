@@ -241,7 +241,7 @@ function process_data_message(data_dict) {
         //  button.setAttribute('disabled', true);
         //}
         button.setAttribute('onclick',
-                            'button_clicked(\'' + logger_name + '\')');
+                            'open_edit_config(event, \'' + logger_name + '\')');
         config_td.appendChild(button);
         tr.appendChild(config_td);
 
@@ -284,7 +284,6 @@ function process_data_message(data_dict) {
         var logger_status = status_array[logger_name];
         var button = document.getElementById(logger_name + '_config_button');
         if (button == undefined) {
-          console.log('Button not found for logger ' + logger_name);
           continue;
         }
         button.innerHTML = logger_status.config;
@@ -456,52 +455,6 @@ function highlight_select_mode() {
 }
 
 ///////////////////////////////
-// When a config button is clicked, change its color and open a
-// config window.
-function button_clicked(logger) {
-  var config_button = document.getElementById(logger + '_config_button');
-  config_button.style.backgroundColor = 'yellow';
-  window.open('../edit_config/' + logger,
-              '_blank',
-              'location=yes,height=180,width=520,scrollbars=yes,status=yes');
-}
-
-///////////////////////////////
-function load_cruise() {
-  var select = document.getElementById('select_cruise');
-  var cruise = select.options[select.selectedIndex].value;
-  console.log('Loading page: /cruise/' + cruise);
-  history.pushState(cruise, cruise, '/cruise/' + cruise);
-  window.location.assign('/cruise/' + cruise);
-}
-
-///////////////////////////////
-// Toggle whether the cruise file selector is visible
-function toggle_load_config_div() {
-  var x = document.getElementById('load_div_button');
-  var y = document.getElementById('load_config_div');
-  if (x.style.display === 'none') {
-      x.style.display = 'block';
-      y.style.display = 'none';
-  } else {
-      x.style.display = 'none';
-      y.style.display = 'block';
-  }
-}
-
-///////////////////////////////
-// When the cruise file selector has a file selected, show the
-// 'load' button
-function show_load_button(files) {
-  var load_button_div = document.getElementById('load_button_div');
-  if (files.length) {
-    load_button_div.style.display = 'block';
-  } else {
-    load_button_div.style.display = 'none';
-  }
-}
-
-///////////////////////////////
 function message_window() {
   var path = '/server_messages/20/';
   window.open(path, '_blank',
@@ -511,16 +464,34 @@ function message_window() {
 ///////////////////////////////
 // When user clicks a logger config button.
 function open_edit_config(click_event, logger_name) {
-  if (!event) event = window.event;
+  if (!click_event) click_event = window.event;
   var window_args = [
-    'location=yes',
+    'titlebar=no',
+    'location=no',
     'height=300',
     'width=520',
     'top=' + click_event.clientY,
     'left=' + (click_event.clientX + 520),
     'scrollbars=yes',
-    'status=yes'
+    'status=no'
   ];
   window.open('../edit_config/' + logger_name, '_blank', window_args.join());
+}
+
+///////////////////////////////
+// When user clicks the Load new definition button.
+function open_load_definition(click_event) {
+  if (!click_event) click_event = window.event;
+  var window_args = [
+    'titlebar=no',
+    'location=no',
+    'height=320',
+    'width=370',
+    'top=' + click_event.clientY,
+    'left=' + (click_event.clientX + 520),
+    'scrollbars=yes',
+    'status=no'
+  ];
+  window.open('../choose_file/', '_blank', window_args.join());
 }
 

@@ -119,41 +119,13 @@
 </div>
 
 {# ######################################################################## #}
-{# Load configuration                                                       #}
+{# Load new definition                                                      #}
 {% if user.is_authenticated %}
-<hr>
-<div id='load_div_button'>
-  <button type='submit' onclick='toggle_load_config_div()'>
-  Load configuration file
+  <hr>
+  <button id="server_messages" type="submit"
+     onclick="open_load_definition(event);">
+    Load new definition file
   </button>
-</div>
-<div id='load_config_div' style='display:none'>
-  <form method='post' enctype='multipart/form-data'>
-    {% csrf_token %}
-    <table>
-      <tr>
-        <td>
-          <input id='config_file' type='file' name='config_file' size='20'
-                 onchange='show_load_button(this.files)'>
-        </td>
-        <td>
-          <div id='load_button_div'  style='display:none'>
-            <button type='submit' id='load_config_button'
-                    name='load_config'>
-              Load
-            </button>
-          </div>
-        </td>
-        <td>
-          <button onclick='toggle_load_config_div();' name='cancel'>
-            Cancel
-          </button>
-        </td>
-      </tr>
-    </table>
-  </form>
-</div>
-
 {% endif %}
 <hr>
 <p>

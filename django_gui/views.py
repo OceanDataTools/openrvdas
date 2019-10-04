@@ -7,13 +7,15 @@ import threading
 import time
 
 from json import JSONDecodeError
-from signal import SIGTERM, SIGINT
+from os import listdir
+from os.path import dirname, realpath, isfile, isdir, abspath
+from yaml.scanner import ScannerError
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
+sys.path.append(dirname(dirname(realpath(__file__))))
 
 from server.logger_manager import LoggerManager
 
@@ -22,6 +24,7 @@ from logger.utils.read_config import parse
 
 from django_gui.settings import HOSTNAME, STATIC_ROOT
 from django_gui.settings import WEBSOCKET_DATA_SERVER
+from django_gui.settings import FILECHOOSER_DIRS
 
 ############################
 # We're going to interact with the Django DB via its API class
@@ -163,6 +166,104 @@ def edit_config(request, logger_id):
                   'config_options': config_options
                 })
 
+################################################################################
+def choose_file(request, selection=None):
+  """Render a chooser to pick and load a configuration file from the
+  server side.
+
+  Files can be navigated/selected starting at a base defined by the list in 
+  django_gui.settings.FILECHOOSER_DIRS.
+  """
+  global api
+  if api is None:
+    api = DjangoServerAPI()
+
+  ##################
+  # Internal function to create listing from dirname
+  def get_dir_contents(dir_name):
+    # If at root, set empty selection, otherwise, allow to pop back up a level
+    contents = {'..': '' if abspath(dir_name) in FILECHOOSER_DIRS
+                else abspath(dir_name + '/..')}
+    for filename in listdir(dir_name):
+      path = dir_name + '/' + filename
+      if isdir(path):
+        filename += '/'
+      contents[filename] = abspath(path)
+    return contents
+
+  ##################
+  # Start of choose_file() code
+  target_file = None  # file we're going to load
+  load_errors = []    # where we store any errors
+
+  # If post, figure out what user selected
+  if request.method == 'POST':
+    dir_name = request.POST.get('dir_name', None)
+    selection = [request.POST.get('select_file', '')]
+
+    # Was this a request to load the target file?
+    target_file = request.POST.get('target_file', None)
+    if target_file:
+      try:
+        with open(target_file, 'r') as config_file:
+          configuration = parse(config_file.read())
+          api.load_configuration(configuration)
+      except (JSONDecodeError, ScannerError) as e:
+          load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
+      except ValueError as e:
+        load_errors.append(str(e))
+
+      # If no errors, go home; otherwise reset back to previous page
+      if not load_errors:
+        return HttpResponse('<script>window.close()</script>')
+      else:
+        logging.warning('Errors loading cruise definition: %s', load_errors)
+        target_file = None
+    
+    # Okay, it wasn't a request to load a target file. Do we have a
+    # selection? If no target and no selection, it means they canceled
+    # the choice.
+    elif selection is None or selection[0] is None:
+      return HttpResponse('<script>window.close()</script>')
+
+  # If we don't have a selection, use the complete listing from our settings.
+  if not selection or selection == ['']:
+    logging.debug('No selection, so setting up with: %s', FILECHOOSER_DIRS)
+    dir_name = ''
+    selection = FILECHOOSER_DIRS
+
+  # Here, we should have a selection of *some* sort. Figure out how to
+  # display it: if a single element and a directory, expand the
+  # directory. If single element and a file, it's our target file. If
+  # multiple elements, just display list of elements.
+  if len(selection) == 1:
+    # If it's a file, designate it as the target_file; we won't bother
+    # with a listing.
+    if isfile(selection[0]):
+      target_file = selection[0]
+      listing = []
+
+    # If it's a directory, fetch/expand its contents into the listing
+    else:
+      dir_name = selection[0]
+      listing = get_dir_contents(dir_name)
+
+  # If here, 'selection' is a list of files/dirs; use them as our listing
+  else:
+    # If selection includes one of our top dirs, use the complete
+    # listing from our settings.
+    if set(selection).intersection(FILECHOOSER_DIRS):
+      dir_name = ''
+      selection = FILECHOOSER_DIRS
+    listing = {f.split('/')[-1]:f for f in selection}
+
+  # Render the page
+  return render(request, 'django_gui/choose_file.html',
+                {'target_file': target_file,
+                 'dir_name': dir_name,
+                 'listing': listing,
+                 'load_errors': load_errors})
+    
 ################################################################################
 def widget(request, field_list=''):
   global logger_server

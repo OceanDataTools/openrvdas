@@ -1,0 +1,86 @@
+{% extends 'django_gui/base.html' %}
+
+{% block content %}
+
+<style type="text/css">
+* {
+    box-sizing: border-box
+} 
+
+.button {
+    background-color: #bbb;
+    display: block;
+    margin: 0px 0;
+    padding: 0px;
+    width: 100%;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    text-align: left;
+}
+.error {
+    color: orangered;
+    background-color: white;
+    display: block;
+    margin: 0px 0;
+    padding: 0px;
+    width: 100%;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    text-align: left;
+}
+</style>
+
+<title>Choose Cruise Definition File</title>
+<h1>Choose Cruise Definition File</h1>
+<hr>
+
+{% if target_file %}
+  {# ############################################################ #}
+  {# If we have a target file, ask them to confirm loading it.    #}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+  Load definition file "{{ target_file }}"?<p>
+      <button id="load-target" type="submit"
+              name = "target_file"    value = "{{ target_file }}">
+        Load
+      </button>
+    <button type="submit" onclick="window.close();">Cancel</button>
+  </form>
+  
+{% else %}
+  {# ############################################################ #}
+  {# Here, we're going to display the file listing and any errors #}
+  {% if load_errors %}
+    {% for error in load_errors %}
+      <div class='error'>{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {# ############################################################ #}
+  {# Directory listing here...                                    #}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type=hidden name="dir_name" value="{{ dir_name }}">
+    <h3>
+      {% if dir_name %}
+        {{ dir_name }}
+      {% else %}
+        Select definition from directory
+      {% endif %}
+    </h3>
+    <table>
+    {% for selection, path in listing.items %}
+    <tr style="background-color:white"><td>
+      <button class="button" id="{{ selection }}-submit" type="submit"
+              style="padding: 0;border: none;background: none;"
+              name = "select_file"    value = "{{ path }}">
+        {{ selection }}
+      </button>
+    </td></tr>
+    {% endfor %}
+    <tr><td>
+        <button type="submit" onclick="window.close();">Cancel</button>
+    </td></tr>
+    </table>
+  </form>
+{% endif %}
+
+{% endblock %}

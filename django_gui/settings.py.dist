@@ -59,6 +59,12 @@ else: # if we got 127.0.1.1, try an expensive way of getting HOST_IP
   except OSError:
     pass  # failed to get interface
 
+# We'll allow the user to load cruise definition files from the
+# server-side system, but restrict them to loading from these
+# directories.
+FILECHOOSER_DIRS = [BASE_DIR + '/local',
+                    BASE_DIR + '/test']
+
 # Websocket we'll connect to for logger data updates. By default,
 # we'll pass in an empty host, which will tell the client that it
 # should figure things out for itself. In the case of a local Python
