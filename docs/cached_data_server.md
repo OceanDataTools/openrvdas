@@ -1,5 +1,5 @@
-# The OpenRVDAS Cached Data Server [DRAFT]
-© 2019 David Pablo Cohn - DRAFT 2019-09-15
+# The OpenRVDAS Cached Data Server
+© 2019 David Pablo Cohn - DRAFT 2019-10-04
 
 ## Table of Contents
 
@@ -55,7 +55,7 @@ says to
 
 3. Periodically back up the in-memory cache to a disk-based cache at
    /var/tmp/openrvdas/disk_cache (By default, back up every 60
-   seconds; this can be overridden with the --cleanup_interval
+   seconds; this can be overridden with the ``--cleanup_interval``
    argument).
 
 4. Wait for clients to connect to the websocket at port 8766 (the
@@ -63,6 +63,55 @@ says to
    issue JSON-encoded requests of the following formats (note that the
    invocation in the default OpenRVDAS installation does *not* listen
    on a UDP port, and relies on websocket connections for its data).
+
+In the default installation, the ``supervisor`` package starts and
+maintains a cached\_data\_server with the following invocation:
+
+```
+    server/cached_data_server.py --port 8766 \
+        --disk_cache /var/tmp/openrvdas/disk_cache \
+        --max_records 86400 -v
+```
+
+This invocation serves websocket connections on port 8766, but does
+not listen on any UDP port. It maintains at most 86400 records per
+field (equivalent to 24 hours of 1 Hz reporting), and maintains a disk
+cache in /var/tmp/openrvdas/disk\_cache that it can call on to "warm
+up" the in-memory cache if it is terminated and restarted.
+
+Its stderr and stdout are written to
+``/var/log/openrvdas/cached_data_server.[err,out].log`` respectively.
+
+The full specification can be found in
+``/etc/supervisor/conf.d/openrvdas.conf`` in Ubuntu and
+``/etc/supervisord.d/openrvdas.ini`` in CentOS/Redhat.
+
+To start/stop/restart the supervisor-maintained configuration, run
+
+```
+root@openrvdas:~# supervisorctl
+cached_data_server               RUNNING   pid 5641, uptime 1:35:54
+logger_manager                   RUNNING   pid 5646, uptime 1:35:53
+simulate_serial                  RUNNING   pid 5817, uptime 1:23:46
+
+supervisor> stop cached_data_server
+cached_data_server: stopped
+
+supervisor> status
+cached_data_server               STOPPED   Oct 05 04:58 AM
+logger_manager                   RUNNING   pid 5646, uptime 1:36:02
+simulate_serial                  RUNNING   pid 5817, uptime 1:23:55
+
+supervisor> start cached_data_server
+cached_data_server: started
+
+supervisor> status
+cached_data_server               RUNNING   pid 15187, uptime 0:00:03
+logger_manager                   RUNNING   pid 5646, uptime 1:36:09
+simulate_serial                  RUNNING   pid 5817, uptime 1:24:02
+
+supervisor> exit
+```
 
 ## Websocket Request Types
 
@@ -151,7 +200,8 @@ by websocket clients:
   Indicate that client is ready to receive the next set of updates
   for subscribed fields.
 
-* ```
+### {"type": "publish"}
+  ```
   {"type":"publish", "data":{"timestamp":1555468528.452,
                               "fields":{"field_1":"value_1",
                                         "field_2":"value_2"}}}
@@ -167,7 +217,7 @@ As indicated above, there are several ways of feeding the server with
 data to cache.
 
 1. A process that has instantiated a CachedDataServer object can
-   directly call its ``cache_record() method. See [the code
+   directly call its ``cache_record()`` method. See [the code
    itself](../server/cached_data_server.py) or [the pdoc-extracted
    code documentation
    page](https://htmlpreview.github.io/?https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/docs/html/server/cached_data_server.html)

@@ -1,5 +1,5 @@
 # OpenRVDAS Controlling Loggers
-© 2018-2019 David Pablo Cohn - DRAFT 2019-06-26
+© 2018-2019 David Pablo Cohn - DRAFT 2019-10-04
 
 ## Overview
 
@@ -9,6 +9,7 @@ This document describes two scripts that allow running, controlling and monitori
 
 ## Table of Contents
 
+* [The high-order bits](#the-high-order-bits)
 * [The logger_runner.py script](#logger_runnerpy)
 * [The logger_manager.py script](#logger_managerpy)
    * [Cruises, modes and configurations](#cruises-modes-and-configurations)
@@ -17,6 +18,36 @@ This document describes two scripts that allow running, controlling and monitori
    * [Driving widget-based data display with the logger_manager.py](#driving-widget-based-data-display-with-the-logger_managerpy)
    * [Web-based control of the logger_manager.py](#web-based-control-of-the-logger_managerpy)
    * [Managing loggers via a web interface](#managing-loggers-via-a-web-interface)
+
+## The High-Order Bits
+
+The ``listen.py`` script will run a single logger defined either from command line parameters, or by loading a logger configuration file. The ``logger_runner.py`` script will run a set of loggers loaded from a configuration file whose format is a YAML/JSON map:
+
+```
+  logger1_name:
+    logger1_configuration
+  logger2_name:
+    logger2_configuration
+  ...
+  
+```
+
+If a logger dies, the logger runner will restart it a specified number
+of times.
+
+The ``logger_manager.py`` script take a more complicated file (called
+a "cruise definition file") that consists not only of a list of named
+configurations, but also of "modes" such as "off", "in port" and
+"underway", specifying which configurations should be running in which
+mode. In addition to using a logger runner to run the loggers for the
+current mode, it supports and API that lets one control and monitor it
+from the command line or via a web interface.
+
+In the default installation, a logger manager and its companion, the
+cached data server, are run by the system's ``supervisor``
+daemon.
+
+Below, we go into greater detail on these points.
 
 ## logger\_runner.py
 
@@ -65,7 +96,7 @@ logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
 in a separate terminal. To observe the data being logged by the above sample configs, you can start a Listener in yet another terminal:
 
 ```
-logger/listener/listen.py --udp 6224 --write_file -
+logger/listener/listen.py --udp 6224
 ```
 Please see the [server/README.md](../server/README.md) file and [logger_runner.py](../server/logger_runner.py) headers for the most up-to-date information on running logger\_runner.py.
 
@@ -248,18 +279,22 @@ document](display_widgets.md).
 
 ![Logger Manager with CachedDataServer](images/console_based_logger_manager.png)
 
-In the default installation, a CachedDataServer may be run as a
-standalone process, but it may also be invoked by the LoggerManager
-when handed a ``--start_data_server`` flag:
+A CachedDataServer may be run as a standalone process, but it may also
+be invoked by the LoggerManager when handed a ``--start_data_server``
+flag:
 
 ```
   server/logger_manager.py \
     --database django \
     --config test/NBP1406/NBP1406_cruise.yaml \
+    --data_server_websocket 8766 \
     --start_data_server
 ```
-By default it will use websocket port 8766 and network UDP port 6225, but these
-may be overridden with additional command line flags:
+
+The CachedDataServer may be invoked to also listen for data on a UDP
+port. This parameter may be passed along by the logger manager via an
+additional command line flag:
+
 ```
   server/logger_manager.py \
     --database django \
@@ -269,11 +304,12 @@ may be overridden with additional command line flags:
     --start_data_server
 ```
 
-The LoggerManager will start a CachedDataServer and publish logger and status
-updates to it via the specified websocket. The fields it will make available
-are ``status:cruise_definition`` for the list of logger names, configurations
-and active configuration, and ``status:logger_status`` for actual running state
-of each logger.
+When the logger manager has been invoked with a data server websocket
+address, it will publish its own status reports to the
+CachedDataServer at that that address. The fields it will make
+available are ``status:cruise_definition`` for the list of logger
+names, configurations and active configuration, and
+``status:logger_status`` for actual running state of each logger.
 
 ### Web-based control of the logger_manager.py
 
@@ -286,10 +322,85 @@ logger\_manager.py may be controlled by a web console.
 If the system is installed using the default build scripts in the
 [utils directory](../utils), it will be configured to serve a
 Django-based web console served by Nginx. The logger manager will be
-configured to use the Django-based database (backed by MySQL) to
+configured to use the Django-based database (backed by MySQL/MariaDB) to
 maintain logger state.
 
-But while the system will use Django and the webserver to load the web console HTML and Javascript, the loaded Javascript will look for a CachedDataServer from which to draw information about what loggers are and should be running.
+But while the system will use Django and the webserver to load the web
+console HTML and Javascript, the loaded Javascript will look for a
+CachedDataServer from which to draw information about what loggers are
+and should be running.
+
+In the default installation, the Linux ``supervisor`` daemon is configured to be able to run and monitor both the logger manager and CachedDataServer on demand. The configuration file for this is in ``/etc/supervisor/conf.d/openrvdas`` on Ubuntu and ``/etc/supervisord/openrvdas.ini`` on CentOS/RedHat:
+
+```
+[program:cached_data_server]
+command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 86400 -v
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
+stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
+user=$RVDAS_USER
+
+[program:logger_manager]
+command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/logger_manager.err.log
+stdout_logfile=/var/log/openrvdas/logger_manager.out.log
+user=$RVDAS_USER
+```
+
+The servers may be started/stopped using the ``supervisorctl`` command:
+
+```
+  root@openrvdas:~# supervisorctl
+  cached_data_server               STOPPED   Oct 05 03:22 AM
+  logger_manager                   STOPPED   Oct 05 03:22 AM
+  simulate_serial                  STOPPED   Oct 05 03:22 AM
+
+  supervisor> start cached_data_server logger_manager
+  cached_data_server: started
+  logger_manager: started
+
+  supervisor> status
+  cached_data_server               RUNNING   pid 5641, uptime 0:00:04
+  logger_manager                   RUNNING   pid 5646, uptime 0:00:03
+  simulate_serial                  STOPPED   Oct 05 03:22 AM
+
+  supervisor> exit
+```
+
+and, as you may see from the configuration file, stderr and stdout for
+the processes will be written to appropriately-named files in
+`/var/log/openrvdas``.
+
+You will have noticed that many of the examples in this documentation
+make use of the ``NBP1406`` sample cruise definition, and that using
+that example requires creating and feeding simulated serial ports. As
+a convenience, the supervisor configuration file also contains a
+definition that lets you create and feed those ports via
+supervisorctl:
+
+```
+  root@openrvdas:~# supervisorctl
+  cached_data_server               RUNNING   pid 5641, uptime 0:12:00
+  logger_manager                   RUNNING   pid 5646, uptime 0:11:59
+  simulate_serial                  STOPPED   Oct 05 03:22 AM
+
+  supervisor> start simulate_serial
+  simulate_serial: started
+
+  supervisor> status
+  cached_data_server               RUNNING   pid 5641, uptime 0:12:13
+  logger_manager                   RUNNING   pid 5646, uptime 0:12:12
+  simulate_serial                  RUNNING   pid 5817, uptime 0:00:05
+
+  supervisor> exit
+```
 
 Please see the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_manager.py.
 
