@@ -35,24 +35,11 @@ class UDPWriter(NetworkWriter):
                  before sending.
     ```
     """
+    self.ttl = ttl
     self.num_retry = num_retry
     self.eol = eol
 
     self.target_str = 'interface: %s, destination: %s, port: %d' % (interface, destination, port)
-
-    self.socket = socket.socket(family=socket.AF_INET,
-                                type=socket.SOCK_DGRAM,
-                                proto=socket.IPPROTO_UDP)
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-    try: # Raspbian doesn't recognize SO_REUSEPORT
-      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-    except AttributeError:
-      logging.warning('Unable to set socket REUSEPORT; may be unsupported')
-
-    # Set the time-to-live for messages, in case of multicast
-    self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                           struct.pack('b', ttl))
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
     if interface and destination:
       ipaddress.ip_address(interface) # throw a ValueError if bad addr
@@ -88,13 +75,42 @@ class UDPWriter(NetworkWriter):
     else:
       destination = '<broadcast>'
 
-    self.socket.connect((destination, port))
+    self.destination = destination
+    self.port = port
+
+    # Try opening the socket
+    self.socket = self._open_socket()
+
+  ############################
+  def _open_socket(self):
+    """Try to open and return the network socket.
+    """
+    udp_socket = socket.socket(family=socket.AF_INET,
+                               type=socket.SOCK_DGRAM,
+                               proto=socket.IPPROTO_UDP)
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+    try: # Raspbian doesn't recognize SO_REUSEPORT
+      udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+    except AttributeError:
+      logging.warning('Unable to set socket REUSEPORT; may be unsupported')
+
+    # Set the time-to-live for messages, in case of multicast
+    udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+                          struct.pack('b', self.ttl))
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+
+    try:
+      udp_socket.connect((self.destination, self.port))
+      return udp_socket
+    except OSError as e:
+      logging.warning('Unable to connect to %s:%d', self.destination, self.port)
+      return None
 
   ############################
   def write(self, record):
     """Write the record to the network."""
-    if not record:
-      return
+    # If we don't have a record, there's nothing to do
+    if not record: return
 
     # If record is not a string, try converting to JSON. If we don't know
     # how, throw a hail Mary and force it into str format
@@ -108,8 +124,16 @@ class UDPWriter(NetworkWriter):
     if self.eol:
       record += self.eol
 
-    num_tries = 0
-    bytes_sent = 0
+    # If socket isn't connected, try reconnecting. If we can't
+    # reconnect, complain and return without writing.
+    if not self.socket:
+      self.socket = self._open_socket()
+    if not self.socket:
+      logging.error('Unable to write record to %s:%d',
+                      self.destination, self.port)
+      return
+
+    num_tries = bytes_sent = 0
     rec_len = len(record)
     while num_tries < self.num_retry and bytes_sent < rec_len:
       try:
