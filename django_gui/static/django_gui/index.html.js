@@ -145,7 +145,7 @@ function process_data_message(data_dict) {
       // selected when we rebuild.
       var manual_mode_is_in_new_modes = false;
       for (m_i = 0; m_i < modes.length; m_i++) {
-        if (manually_selected_mode == modes[m_i].value) {
+        if (manually_selected_mode == modes[m_i]) {
           manual_mode_is_in_new_modes = true;
           break;
         }
@@ -178,6 +178,7 @@ function process_data_message(data_dict) {
           // set active mode to whatever 'official' active mode is.
           if (mode_name == global_active_mode) {
             opt.setAttribute('selected', true);
+            mode_selector.style.backgroundColor = 'white'
           }
         }
         mode_selector.appendChild(opt);
