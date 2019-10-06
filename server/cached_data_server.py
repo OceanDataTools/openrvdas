@@ -328,7 +328,7 @@ class RecordCache:
           with open(disk_cache + '/' + field, 'r') as cache_file:
             self.data[field] = json.load(cache_file)
 
-      except json.decoder.JSONDecodeError:
+      except (json.decoder.JSONDecodeError, UnicodeDecodeError):
         logging.warning('Failed to parse cache for %s', field)
 
 ############################
@@ -710,6 +710,7 @@ class CachedDataServer:
     self.back_seconds = back_seconds
     self.max_records = max_records
     self.cleanup_interval = cleanup_interval
+    self.event_loop = event_loop
 
     self.cache = RecordCache()
 
