@@ -63,7 +63,7 @@ issue and include a link to the original issue in the body of your new one.
 
 #### Before Submitting A Bug Report
 
-* **Perform a [cursory search](https://github.com/davidpablocohn/openrvdas/issues)** to see if the problem has already been
+* **Perform a [cursory search](https://github.com/oceandatatools/openrvdas/issues)** to see if the problem has already been
   reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Bug Report?
@@ -98,7 +98,7 @@ Before creating enhancement suggestions, please check [this list](#before-submit
 
 #### Before Submitting An Enhancement Suggestion
 
-* **Perform a [cursory search](https://github.com/davidpablocohn/openrvdas/issues)** to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
+* **Perform a [cursory search](https://github.com/oceandatatools/openrvdas/issues)** to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Enhancement Suggestion?
 
@@ -138,7 +138,7 @@ should look like this:
     > 
     > A paragraph describing what changed and its impact."
     
-Please send a [GitHub Pull Request to opengovernment](https://github.com/davidpablocohn/openrvdas/pull/new/master) with
+Please send a [GitHub Pull Request to opengovernment](https://github.com/oceandatatools/openrvdas/pull/new/master) with
 a clear list of what you've done (read more about [pull requests](http://help.github.com/pull-requests/)). When you send
 a pull request, we will love you forever if you include examples. We can always use more test coverage. Please follow
 our coding conventions (below) and make sure all of your commits are atomic (one feature per commit).

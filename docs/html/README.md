@@ -2,7 +2,7 @@
 © David Pablo Cohn - david.cohn@gmail.com  
 2019-09-03
 
-This directory contains automatically-generated HTML documentation for OpenRVDAS logger components and servers.  It is best viewed by viewing [the directory's index.html page](https://htmlpreview.github.io/?https://github.com/davidpablocohn/openrvdas/blob/master/docs/html/index.html).
+This directory contains automatically-generated HTML documentation for OpenRVDAS logger components and servers.  It is best viewed by viewing [the directory's index.html page](https://htmlpreview.github.io/?https://github.com/oceandatatools/openrvdas/blob/master/docs/html/index.html).
 
 The documents in this directory were generated automatically by [pdoc](https://pdoc3.github.io/pdoc/) using the commands:
 

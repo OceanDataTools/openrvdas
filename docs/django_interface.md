@@ -16,7 +16,7 @@ While most of the system's core functionality can be accessed via individual com
 
 ## Installation and Running
 
-The code repository currently lives at [https://github.com/davidpablocohn/openrvdas](https://github.com/davidpablocohn/openrvdas), with installation instructions that can be found on the project's [INSTALL.md](../INSTALL.md) page. This document assumes that you have installed OpenRVDAS using one of the standard installation scripts described on that page.
+The code repository currently lives at [https://github.com/oceandatatools/openrvdas](https://github.com/oceandatatools/openrvdas), with installation instructions that can be found on the project's [INSTALL.md](../INSTALL.md) page. This document assumes that you have installed OpenRVDAS using one of the standard installation scripts described on that page.
 
 If you have selected "yes" to run OpenRVDAS servers on start, then both the  ``logger_manager.py`` and ``cached_data_server.py`` should be running (you can check by running ``supervisorctl`` as root).
 

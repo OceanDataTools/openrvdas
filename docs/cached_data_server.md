@@ -220,7 +220,7 @@ data to cache.
    directly call its ``cache_record()`` method. See [the code
    itself](../server/cached_data_server.py) or [the pdoc-extracted
    code documentation
-   page](https://htmlpreview.github.io/?https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/docs/html/server/cached_data_server.html)
+   page](https://htmlpreview.github.io/?https://raw.githubusercontent.com/oceandatatools/openrvdas/master/docs/html/server/cached_data_server.html)
    for details.
 
 2. By connecting to the server with a websocket and sending it a

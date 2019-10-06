@@ -11,7 +11,7 @@
 # bandwidth budgets.
 
 # OpenRVDAS is available as open source under the MIT License at
-#   https:/github.com/davidpablocohn/openrvdas
+#   https:/github.com/oceandatatools/openrvdas
 
 # This script is VERY rudimentary and has not been extensively tested. If it
 # fails on some part of the installation, there is no guarantee that fixing
@@ -23,7 +23,7 @@ DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
 
-DEFAULT_OPENRVDAS_REPO=https://github.com/davidpablocohn/openrvdas
+DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
 DEFAULT_OPENRVDAS_BRANCH=master
 
 DEFAULT_RVDAS_USER=rvdas

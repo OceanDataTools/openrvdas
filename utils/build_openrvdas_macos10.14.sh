@@ -11,7 +11,7 @@
 # bandwidth budgets.
 
 # OpenRVDAS is available as open source under the MIT License at
-#   https:/github.com/davidpablocohn/openrvdas
+#   https:/github.com/oceandatatools/openrvdas
 
 # This script is VERY rudimentary and has not been extensively tested. If it
 # fails on some part of the installation, there is no guarantee that fixing
@@ -23,7 +23,7 @@ DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
 
-DEFAULT_OPENRVDAS_REPO=https://github.com/davidpablocohn/openrvdas
+DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
 DEFAULT_OPENRVDAS_BRANCH=master
 
 DEFAULT_RVDAS_USER=`whoami`
@@ -175,8 +175,8 @@ echo Installing python and supporting packages
 [ -e /usr/local/bin/uwsgi ]  || brew install uwsgi
 [ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
-brew upgrade python socat openssh mysql nginx uwsgi supervisor
-brew link --overwrite python
+brew upgrade python socat openssh mysql nginx uwsgi supervisor || echo Upgraded packages
+brew link --overwrite python || echo Linking Python
 
 echo Starting services mysql and supervisor
 brew tap homebrew/services
@@ -259,7 +259,7 @@ echo Please enter sudo password if prompted...
 export PATH=/usr/bin:/usr/local/bin:$PATH
 /usr/local/bin/pip3 install --upgrade pip &> /dev/null || echo Upgrading old pip if it\'s there
 
-sudo /usr/local/bin/pip3 install Django==2.0 pyserial uwsgi websockets PyYAML \
+sudo /usr/local/bin/pip3 install Django==2.2 pyserial uwsgi websockets PyYAML \
        parse mysqlclient mysql-connector diskcache
 
 # uWSGI configuration
@@ -296,15 +296,18 @@ echo "##########################################################################
 echo Fetching and setting up OpenRVDAS code...
 cd $INSTALL_ROOT
 
-if [ -e openrvdas ]; then
-  cd openrvdas
-  git checkout $OPENRVDAS_BRANCH
-  git pull
-else
+if [ ! -e openrvdas ]; then
   echo Making openrvdas directory.
   echo Please enter sudo password if prompted...
   sudo mkdir openrvdas
   sudo chown ${RVDAS_USER} openrvdas
+fi    
+
+if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+  cd openrvdas
+  git checkout $OPENRVDAS_BRANCH
+  git pull
+else                              # If we don't already have and installation
   git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
   cd openrvdas
 fi
@@ -315,6 +318,7 @@ fi
 #EOF
 
 echo Initializing OpenRVDAS database...
+cd ${INSTALL_ROOT}/openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
 sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
 sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py

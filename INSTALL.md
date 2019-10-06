@@ -12,7 +12,7 @@ Grab the script (centos7 or ubuntu18, as appropriate for your distribution):
 ```
 # Get build script from Github
 wget \
-  https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/utils/build_openrvdas_centos7.sh
+  https://raw.githubusercontent.com/oceandatatools/openrvdas/master/utils/build_openrvdas_centos7.sh
 ```
 
 Now run the script as sudo
@@ -38,12 +38,12 @@ Install root will be '/opt'
 _Script will next ask which code repo and branch to use. Use the default repo and branch unless you have a project-specific branch in mind (e.g. "usap"). If you need to access the internet via a proxy (as shown below), enter it when asked; otherwise just hit return._
 
 ```
-Repository to install from? (http://github.com/davidpablocohn/openrvdas)
+Repository to install from? (http://github.com/oceandatatools/openrvdas)
 Repository branch to install? (master)
 HTTP/HTTPS proxy to use (http://proxy.lmg.usap.gov:3128)?
 Setting up proxy http://proxy.lmg.usap.gov:3128
 Will install from github.com
-Repository: 'http://github.com/davidpablocohn/openrvdas'
+Repository: 'http://github.com/oceandatatools/openrvdas'
 Branch: 'master'
 ```
 
@@ -236,7 +236,7 @@ OpenRVDAS requires some additional Python packages as well. Install them with pi
 Go to the directory where you want the system installed (/opt in this example) and clone the code using Git:
 ```
 cd /opt
-git clone  http://github.com/davidpablocohn/openrvdas
+git clone  http://github.com/oceandatatools/openrvdas
 ```
 
 Copy over and modify a few of the config files so that they reflect our choice of OpenRVDAS user and password:
