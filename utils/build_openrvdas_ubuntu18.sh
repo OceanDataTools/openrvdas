@@ -451,7 +451,7 @@ fi
 
 cat > /etc/supervisor/conf.d/openrvdas.conf <<EOF
 [program:cached_data_server]
-command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 86400 -v
+command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
