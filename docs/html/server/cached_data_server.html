@@ -42,12 +42,12 @@ below for formats understood.)</p>
 </li>
 <li>
 <p>Store the received data in memory, retaining the most recent 3600
-seconds for each field.</p>
+seconds for each field (default is 86400 seconds = 24 hours).</p>
 </li>
 </ol>
 <p>(The total number of values cached per field is also limited by the
-<code>max_records</code> parameter and defaults to 1440, equivalent to one
-record per minute for 24 hours. It may be overridden to "infinite"
+<code>max_records</code> parameter and defaults to 2880, equivalent to two
+records per minute for 24 hours. It may be overridden to "infinite"
 by setting <code>--max_records=0</code> on the command line.)</p>
 <ol>
 <li>
@@ -123,11 +123,11 @@ says to
    below for formats understood.)
 
 2. Store the received data in memory, retaining the most recent 3600
-   seconds for each field.
+   seconds for each field (default is 86400 seconds = 24 hours).
 
    (The total number of values cached per field is also limited by the
-   ``max_records`` parameter and defaults to 1440, equivalent to one
-   record per minute for 24 hours. It may be overridden to &#34;infinite&#34;
+   ``max_records`` parameter and defaults to 2880, equivalent to two
+   records per minute for 24 hours. It may be overridden to &#34;infinite&#34;
    by setting ``--max_records=0`` on the command line.)
 
 3. Periodically back up the in-memory cache to a disk-based cache at
@@ -984,7 +984,7 @@ if __name__ == &#39;__main__&#39;:
                       &#39;for serving to new clients.&#39;)
 
   parser.add_argument(&#39;--max_records&#39;, dest=&#39;max_records&#39;, action=&#39;store&#39;,
-                      type=int, default=24*60,
+                      type=int, default=24*60*2,
                       help=&#39;Maximum number of records to store per variable.&#39;)
 
   parser.add_argument(&#39;--cleanup_interval&#39;, dest=&#39;cleanup_interval&#39;,

@@ -121,7 +121,7 @@ class SimSerial:
   def run(self, loop=False):
     &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
     the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-    self.socat_thread = threading.Thread(target=self._run_socat)
+    self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
     self.socat_thread.start()
     time.sleep(0.2)
 
@@ -199,7 +199,8 @@ if __name__ == &#39;__main__&#39;:
       config = configs[inst]
       sim = SimSerial(port=config[&#39;port&#39;], source_file=config[&#39;logfile&#39;],
                       time_format=config.get(&#39;time_format&#39;, args.time_format))
-      sim_thread = threading.Thread(target=sim.run, kwargs={&#39;loop&#39;: args.loop})
+      sim_thread = threading.Thread(target=sim.run, kwargs={&#39;loop&#39;: args.loop},
+                                    daemon=True)
       sim_thread.start()
       thread_list.append(sim_thread)
 
@@ -319,7 +320,7 @@ timestamps, and the standard parameters that a serial port takes.</p></section>
   def run(self, loop=False):
     &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
     the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-    self.socat_thread = threading.Thread(target=self._run_socat)
+    self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
     self.socat_thread.start()
     time.sleep(0.2)
 
@@ -366,7 +367,7 @@ the designated logfile. If loop==True, loop when reaching end of input.</p></sec
 <pre><code class="python">def run(self, loop=False):
   &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
   the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-  self.socat_thread = threading.Thread(target=self._run_socat)
+  self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
   self.socat_thread.start()
   time.sleep(0.2)
 
