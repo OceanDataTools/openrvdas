@@ -52,7 +52,7 @@ for line in sys.stdin.readlines():
   (inst, port) = line.split('\t', maxsplit=2)
 
   config_str = """%s:
-  network: :%s
+  port: %s
   filebase: test/%s/%s/raw/%s_%s-%s""" % (inst, port, cruise, inst, cruise, inst, date)
   print(config_str)
 

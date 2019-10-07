@@ -10,6 +10,7 @@
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         border-collapse: collapse;
         width: 100%;
+        background-color: lightslategray;      
       }
       .ship_table td, .ship_table th {
         border: 1px solid #ddd;
@@ -235,7 +236,9 @@
                                       'Knots',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Knots'},min:0, max:15, tickInterval:5},
+                                       yAxis:{title:{text:'Speed over Ground and Through Water (Knots)'},min:0, max:15, tickInterval:5},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }));
   var baro_pressure_fields = {
       met_ptu307_pressure: {
@@ -249,7 +252,9 @@
                                       'hPA',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'hPA'},min:1019, max:1023, tickInterval:1},
+                                       yAxis:{title:{text:'Baro Pressure (hPA)'},min:1019, max:1023, tickInterval:1},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }
                                    ));
 
@@ -287,7 +292,10 @@
                                       'Degrees, True',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Degrees, True'},min:0, max:359, tickInterval:30},}
+                                       yAxis:{title:{text:'Heading and Course over Ground (Degrees, True)'},min:0, max:359, tickInterval:30},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
+                                      }
                                    ));
 
   var wind_speed_fields = {
@@ -312,7 +320,9 @@
                                       'Knots',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Knots'},min:0, max:40, tickInterval:10},
+                                       yAxis:{title:{text:'Wind Speed, True (Knots)'},min:0, max:40, tickInterval:10},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }
                                    ));
 
@@ -384,7 +394,7 @@
                                       'Degrees F',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Degrees F'},min:30, max:60, tickInterval:5},
+                                       yAxis:{title:{text:'Air, Sea and Wind Chill Temp (Degrees F)'},min:30, max:60, tickInterval:5},
 }
                                    ));
   var wind_dir_fields = {
@@ -409,7 +419,9 @@
                                       'Degrees',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Degrees'},min:0, max:359, tickInterval:30},
+                                       yAxis:{title:{text:'True Wind Direction (Degrees)'},min:0, max:359, tickInterval:30},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }
                                    ));
   ////////////////////////
