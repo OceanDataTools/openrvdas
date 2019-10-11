@@ -16,25 +16,20 @@
         border: 1px solid #ddd;
         padding: 8px;
       }
-      .td_70 {
+      .td_24 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 70%;
+        width: 16%;
       }
-      .td_50 {
+      .td_38 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 50%;
+        width: 42%;
       }
-      .td_25 {
+      .td_62 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 25%;
-      }
-      .td_30 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 30%;
+        width: 58%;
       }
       .name_td {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -68,43 +63,12 @@
 
     <table class="ship_table">
       <tr>
-        <td class="td_25">
-          Date: <span id="year">----</span>-<span id="month">--</span>-<span id="day">--</span><br>
-          Time: <span id="time">--:--:--.--</span>
+        <td colspan=2 class='td_62'>
+          <b>R/V Sikuliaq Underway Bridge Display,</b>
+          <span id="year">----</span>-<span id="month">--</span>-<span id="day">--</span> <span id="time">--:--:--.--</span> UTC
         </td>
-        <td class="td_25">
-          <b>R/V Sikuliaq</b>
-        </td>
-        <td class="td_25">
-          <b>Underway Bridge Display</b>
-        </td>
-        <td class="td_25">
+        <td class='td_38'>
           Water Depth: <span id="water_depth">---.-</span> m
-        </td>
-      </tr>
-
-      <tr>
-        <td>
-          Speed Over Ground and Through Water
-        </td>
-        <td>
-          <span style="color:blue;">SOG: <span id="sog">--.-</span> kts</span>,
-          <span style="color:green;">STW: <span id="stw">--.-</span> kts</span>
-        </td>
-        <td>
-          Barometric Pressure (@sea level)
-        </td>
-        <td>
-          <span id="baro_pressure">----</span> hPA
-        </td>
-      </tr>
-      
-      <tr>
-        <td colspan=2>
-          <div id="speed_over_ground_and_water_hist"></div>
-        </td>
-        <td colspan=2>
-          <div id="baro_pressure_hist"></div>
         </td>
       </tr>
 
@@ -115,22 +79,52 @@
           <span style="color:green;">COG: <span id="course">---</span>°</span>
         </td>
         <td colspan=2>
+          Speed Over Ground and Through Water
+          <span style="color:blue;">SOG: <span id="sog">--.-</span> kts</span>,
+          <span style="color:green;">STW: <span id="stw">--.-</span> kts</span>
+        </td>
+
+      </tr>
+
+      <tr>
+        <td class='td_24'>
+          <div id="heading_and_course_dial"></div>
+        </td>
+        <td class='td_38'>
+          <div id="heading_and_course"></div>
+        </td>
+        <td class='td_38'>
+          <div id="speed_over_ground_and_water_hist"></div>
+        </td>
+      </tr>
+
+
+      <tr>
+        <td colspan=2>
+          Wind Direction (true):
+          <span style="color:blue;">FWD: <span id="fwd_wind_direction">---.-</span>°</span>,
+          <span style="color:green;">STBD: <span id="stbd_wind_direction">---.-</span>°</span>,
+          <span style="color:red;">PORT: <span id="port_wind_direction">---.-</span>°</span>
+        </td>
+        <td colspan=2>
           Wind Speed (true):
           <span style="color:blue;">FWD: <span id="fwd_wind_speed">--.-</span> kts</span>,
           <span style="color:green;">STBD: <span id="stbd_wind_speed">--.-</span> kts</span>,
           <span style="color:red;">PORT: <span id="port_wind_speed">--.-</span> kts</span>
         </td>
       </tr>
-
+      
       <tr>
-        <td colspan=2>
-          <div id="heading_and_course"></div>
+        <td>
+          <div id="wind_dir_true_dial"></div>
+        </td>
+        <td>
+          <div id="wind_dir_true"></div>
         </td>
         <td colspan=2>
           <div id="wind_speed_true"></div>
         </td>
       </tr>
-
 
       <tr>
         <td colspan=2>
@@ -140,20 +134,17 @@
           <span style="color:black;">Wind Chill: <span id="wind_chill">--.-</span>°F</span>
         </td>
         <td colspan=2>
-          Wind Direction (true):
-          <span style="color:blue;">FWD: <span id="fwd_wind_direction">---.-</span>°</span>,
-          <span style="color:green;">STBD: <span id="stbd_wind_direction">---.-</span>°</span>,
-          <span style="color:red;">PORT: <span id="port_wind_direction">---.-</span>°</span>
+          Barometric Pressure
+          <span id="baro_pressure">----</span> hPA
         </td>
       </tr>
-
 
       <tr>
         <td colspan=2>
           <div id="temperature"></div>
         </td>
         <td colspan=2>
-          <div id="wind_dir_true"></div>
+          <div id="baro_pressure_hist"></div>
         </td>
       </tr>
 
@@ -274,19 +265,47 @@
          wind_mast_port_true_speed_knots: {name: 'Port Wind Speed'}}));
 
   var heading_and_course_fields = {
+    ins_seapath_position_heading_true: {
+      name: 'Heading',
+      color: 'blue',
+      transform: function(val) { return Math.round(val); }
+    },
+    ins_seapath_position_course_true: {
+      name: 'Course over Ground',
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
+    }
+  };
+  widget_list.push(new DialWidget('heading_and_course_dial',
+                                      heading_and_course_fields,
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                          height:200,
+                                          width:200,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
+  var avg_heading_and_course_fields = {
     avg_ins_seapath_position_heading_true: {
       name: 'Heading',
       seconds: 43200,
       color: 'blue',
+      transform: function(val) { return Math.round(val); }
     },
     avg_ins_seapath_position_course_true: {
       name: 'Course over Ground',
       seconds: 43200,
       color: 'green',
+      transform: function(val) { return Math.round(val); }
     }
   };
   widget_list.push(new TimelineWidget('heading_and_course',
-                                      heading_and_course_fields,
+                                      avg_heading_and_course_fields,
                                       'Degrees, True',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
@@ -313,6 +332,7 @@
       color: 'green',
     },
   };
+
   widget_list.push(new TimelineWidget('wind_speed_true',
                                       wind_speed_fields,
                                       'Knots',
@@ -396,24 +416,58 @@
 }
                                    ));
   var wind_dir_fields = {
+    wind_gill_fwdmast_true_direction: {
+      name: 'Wind Gill True Wind',
+      color: 'blue',
+      transform: function(val) { return Math.round(val); }
+    },
+    wind_mast_port_true_direction: {
+      name: 'Port True Wind',
+      color: 'red',
+      transform: function(val) { return Math.round(val); }
+    },
+    wind_mast_stbd_true_direction: {
+      name: 'Stbd True Wind',
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
+    },
+  };
+  widget_list.push(new DialWidget('wind_dir_true_dial',
+                                      wind_dir_fields,
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                          height:200,
+                                          width:200,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
+  var avg_wind_dir_fields = {
     avg_wind_gill_fwdmast_true_direction: {
       name: 'Wind Gill True Wind',
       seconds: 43200,
       color: 'blue',
+      transform: function(val) { return Math.round(val); }
     },
     avg_wind_mast_port_true_direction: {
       name: 'Port True Wind',
       seconds: 43200,
       color: 'red',
+      transform: function(val) { return Math.round(val); }
     },
     avg_wind_mast_stbd_true_direction: {
       name: 'Stbd True Wind',
       seconds: 43200,
       color: 'green',
+      transform: function(val) { return Math.round(val); }
     },
   };
   widget_list.push(new TimelineWidget('wind_dir_true',
-                                      wind_dir_fields,
+                                      avg_wind_dir_fields,
                                       'Degrees',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},

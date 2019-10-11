@@ -265,6 +265,11 @@ loggers:
     - mb_em302_centerbeam->file
     - mb_em302_centerbeam->db
     - mb_em302_centerbeam->file/db
+  subsample:
+    configs:
+    - subsample->off
+    - subsample->on
+
 ##########
 modes:
   "off":
@@ -305,6 +310,7 @@ modes:
     cruiseid: cruiseid->off
     tsg_emssv: tsg_emssv->off
     mb_em302_centerbeam: mb_em302_centerbeam->off
+    subsample: subsample->off
   net:
     met_ptu307: met_ptu307->net
     rain_rmy50202: rain_rmy50202->net
@@ -343,6 +349,7 @@ modes:
     cruiseid: cruiseid->net
     tsg_emssv: tsg_emssv->net
     mb_em302_centerbeam: mb_em302_centerbeam->net
+    subsample: subsample->on
   file:
     met_ptu307: met_ptu307->file
     rain_rmy50202: rain_rmy50202->file
@@ -381,6 +388,7 @@ modes:
     cruiseid: cruiseid->file
     tsg_emssv: tsg_emssv->file
     mb_em302_centerbeam: mb_em302_centerbeam->file
+    subsample: subsample->on
   db:
     met_ptu307: met_ptu307->db
     rain_rmy50202: rain_rmy50202->db
@@ -419,6 +427,7 @@ modes:
     cruiseid: cruiseid->db
     tsg_emssv: tsg_emssv->db
     mb_em302_centerbeam: mb_em302_centerbeam->db
+    subsample: subsample->on
   file/db:
     met_ptu307: met_ptu307->file/db
     rain_rmy50202: rain_rmy50202->file/db
@@ -457,6 +466,7 @@ modes:
     cruiseid: cruiseid->file/db
     tsg_emssv: tsg_emssv->file/db
     mb_em302_centerbeam: mb_em302_centerbeam->file/db
+    subsample: subsample->on
 ##########
 default_mode: "off"
 ##########
@@ -6642,6 +6652,154 @@ configs:
         - class: ToJSONTransform
         writers:
           class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+
+  # Derived data subsampling logger
+  subsample->off:
+    name: subsample->off
+
+  subsample->on:
+    name: subsample->on
+
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            ins_seapath_position_sog_kt:
+              seconds: 0
+            speedlog_lon_water_speed:
+              seconds: 0
+            met_ptu307_pressure:
+              seconds: 0
+
+            ins_seapath_position_heading_true:
+              seconds: 0
+            ins_seapath_position_course_true:
+              seconds: 0
+
+            wind_gill_fwdmast_true_speed_knots:
+              seconds: 0
+            wind_mast_port_true_speed_knots:
+              seconds: 0
+            wind_mast_stbd_true_speed_knots:
+              seconds: 0
+
+            wind_gill_fwdmast_true_direction:
+              seconds: 0
+            wind_mast_port_true_direction:
+              seconds: 0
+            wind_mast_stbd_true_direction:
+              seconds: 0
+
+            fluoro_turner-c6_temp:
+              seconds: 0
+            met_ptu307_temp:
+              seconds: 0
+
+    transforms:
+    - class: SubsampleTransform
+      kwargs:
+        back_seconds: 3600
+        metadata_interval: 60  # send metadata every 60 seconds
+        field_spec:
+          ins_seapath_position_sog_kt:
+            output: avg_ins_seapath_position_sog_kt
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          speedlog_lon_water_speed:
+            output: avg_speedlog_lon_water_speed
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          met_ptu307_pressure:
+            output: avg_met_ptu307_pressure
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          ins_seapath_position_heading_true:
+            output: avg_ins_seapath_position_heading_true
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          ins_seapath_position_course_true:
+            output: avg_ins_seapath_position_course_true
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          wind_gill_fwdmast_true_speed_knots:
+            output: avg_wind_gill_fwdmast_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_port_true_speed_knots:
+            output: avg_wind_mast_port_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_stbd_true_speed_knots:
+            output: avg_wind_mast_stbd_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          wind_gill_fwdmast_true_direction:
+            output: avg_wind_gill_fwdmast_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_port_true_direction:
+            output: avg_wind_mast_port_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_stbd_true_direction:
+            output: avg_wind_mast_stbd_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          fluoro_turner-c6_temp:
+            output: avg_fluoro_turner-c6_temp
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          met_ptu307_temp:
+            output: avg_met_ptu307_temp
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
+    stderr_writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:subsample'
+        writers:
+        - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 

@@ -213,7 +213,7 @@ function DialWidget(container, fields, widget_options={}) {
         value = this.fields[field_name].transform(value);
       }
       var point = field_series.points[0];
-      point.update(value);       
+      point.update(value);
     }
   }
 }

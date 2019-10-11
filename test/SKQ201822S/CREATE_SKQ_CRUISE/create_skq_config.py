@@ -210,6 +210,155 @@ db_config = """    readers:
             data_server: localhost:%DATASERVER_PORT%
 """
 
+subsample_config = """  # Derived data subsampling logger
+  subsample->off:
+    name: subsample->off
+
+  subsample->on:
+    name: subsample->on
+
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:%DATASERVER_PORT%
+        subscription:
+          fields:
+            ins_seapath_position_sog_kt:
+              seconds: 0
+            speedlog_lon_water_speed:
+              seconds: 0
+            met_ptu307_pressure:
+              seconds: 0
+
+            ins_seapath_position_heading_true:
+              seconds: 0
+            ins_seapath_position_course_true:
+              seconds: 0
+
+            wind_gill_fwdmast_true_speed_knots:
+              seconds: 0
+            wind_mast_port_true_speed_knots:
+              seconds: 0
+            wind_mast_stbd_true_speed_knots:
+              seconds: 0
+
+            wind_gill_fwdmast_true_direction:
+              seconds: 0
+            wind_mast_port_true_direction:
+              seconds: 0
+            wind_mast_stbd_true_direction:
+              seconds: 0
+
+            fluoro_turner-c6_temp:
+              seconds: 0
+            met_ptu307_temp:
+              seconds: 0
+
+    transforms:
+    - class: SubsampleTransform
+      kwargs:
+        back_seconds: 3600
+        metadata_interval: 60  # send metadata every 60 seconds
+        field_spec:
+          ins_seapath_position_sog_kt:
+            output: avg_ins_seapath_position_sog_kt
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          speedlog_lon_water_speed:
+            output: avg_speedlog_lon_water_speed
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          met_ptu307_pressure:
+            output: avg_met_ptu307_pressure
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          ins_seapath_position_heading_true:
+            output: avg_ins_seapath_position_heading_true
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          ins_seapath_position_course_true:
+            output: avg_ins_seapath_position_course_true
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          wind_gill_fwdmast_true_speed_knots:
+            output: avg_wind_gill_fwdmast_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_port_true_speed_knots:
+            output: avg_wind_mast_port_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_stbd_true_speed_knots:
+            output: avg_wind_mast_stbd_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          wind_gill_fwdmast_true_direction:
+            output: avg_wind_gill_fwdmast_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_port_true_direction:
+            output: avg_wind_mast_port_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_stbd_true_direction:
+            output: avg_wind_mast_stbd_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          fluoro_turner-c6_temp:
+            output: avg_fluoro_turner-c6_temp
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          met_ptu307_temp:
+            output: avg_met_ptu307_temp
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:%DATASERVER_PORT%
+    stderr_writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:subsample'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%DATASERVER_PORT%
+"""
+
 lines = [line.strip() for line in sys.stdin.readlines()]
 
 print('##########')
@@ -237,6 +386,12 @@ for logger in loggers:
     - %s->file/db""" % (logger, logger, logger, logger, logger, logger)
   print(logger_def)
 
+print("""  subsample:
+    configs:
+    - subsample->off
+    - subsample->on
+""")
+
 print('##########')
 print('modes:')
 for mode in modes:
@@ -246,6 +401,10 @@ for mode in modes:
     print('  %s:' % mode)
   for logger in loggers:
     print('    %s: %s->%s' % (logger, logger, mode))
+  if mode == 'off':
+    print('    subsample: subsample->off')
+  else:
+    print('    subsample: subsample->on')
 
 print('##########')
 print('default_mode: "off"')
@@ -276,3 +435,8 @@ for mode in modes:
     config_str = config_str.replace('%CACHE_UDP%', CACHE_UDP)
     config_str = config_str.replace('%DATASERVER_PORT%', DATASERVER_PORT)
     print(config_str)
+
+config_str = subsample_config
+config_str = config_str.replace('%CACHE_UDP%', CACHE_UDP)
+config_str = config_str.replace('%DATASERVER_PORT%', DATASERVER_PORT)
+print(config_str)
