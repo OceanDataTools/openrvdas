@@ -225,7 +225,7 @@
                                       'Knots',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Speed over Ground and Through Water (Knots)'},min:0, max:15, tickInterval:5},
+                                       yAxis:{title:{text:'Speed over Ground and Through Water (Knots)'},min:0, minRange:10, tickInterval:5},
                                        legend:{enabled: false},
                                        credits:{enabled: false}
                                       }));
@@ -241,7 +241,7 @@
                                       'hPA',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Baro Pressure (hPA)'},min:1019, max:1023, tickInterval:1},
+                                       yAxis:{title:{text:'Baro Pressure (hPA)'},minRange:4, tickInterval:1},
                                        legend:{enabled: false},
                                        credits:{enabled: false}
                                       }
@@ -338,7 +338,7 @@
                                       'Knots',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Wind Speed, True (Knots)'},min:0, max:40, tickInterval:10},
+                                       yAxis:{title:{text:'Wind Speed, True (Knots)'},min:0, minRange:15, tickInterval:5},
                                        legend:{enabled: false},
                                        credits:{enabled: false}
                                       }
@@ -412,7 +412,7 @@
                                       'Degrees F',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Air, Sea and Wind Chill Temp (Degrees F)'}, min:20, tickInterval:5},
+                                       yAxis:{title:{text:'Air, Sea and Wind Chill Temp (Degrees F)'}, min:20, minRange:40, tickInterval:5},
 }
                                    ));
   var wind_dir_fields = {
