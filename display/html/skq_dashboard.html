@@ -68,6 +68,8 @@
           <span id="year">----</span>-<span id="month">--</span>-<span id="day">--</span> <span id="time">--:--:--.--</span> UTC
         </td>
         <td class='td_38'>
+          Lat: <span id="gps_lat">--.----</span>°<span id="gps_n_or_s"></span>;
+          Lon: <span id="gps_lon">--.----</span>°<span id="gps_e_or_w"></span>;
           Water Depth: <span id="water_depth">---.-</span> m
         </td>
       </tr>
@@ -185,6 +187,39 @@
          }
      }}));
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Next cluster:  Lat/Lon text widgets
+  function num_to_lat_lon(val) {
+    return ((val/100).toFixed(4)).padStart(9);
+  }
+  widget_list.push(new TextWidget('gps_lat',
+                                  {ins_seapath_position_lat:
+                                    {
+                                      name: "Latitude",
+                                      transform: num_to_lat_lon,
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_n_or_s', {ins_seapath_position_n_or_s: {name: "N/S"}}));
+
+  widget_list.push(new TextWidget('gps_lon',
+                                  {ins_seapath_position_lon:
+                                    {
+                                      name: "Longitude",
+                                      transform: num_to_lat_lon,
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_e_or_w', {ins_seapath_position_e_or_w: {name: "E/W"}}));
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Next cluster: Knudsen
   widget_list.push(
      new TextWidget('water_depth', {
          sb_echosounder_2_rel_depth_meters: {name: 'Water Depth'}}));
