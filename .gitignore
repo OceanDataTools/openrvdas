@@ -19,5 +19,9 @@ hapi/settings.py
 display/js/widgets/settings.js
 static/
 
+django_gui/openrvdas_nginx.conf
+django_gui/openrvdas_uwsgi.ini
+django_gui/uwsgi_params
+
 # PyCharm
 .idea/
