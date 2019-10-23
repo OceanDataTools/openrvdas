@@ -480,8 +480,8 @@ cat > /etc/supervisord.d/openrvdas.ini <<EOF
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
 [unix_http_server]
-file=/var/run/supervisor.sock   ; (the path to the socket file)
-chmod=0770                      ; socket file mode (default 0700)
+file=/var/run/supervisor/supervisor.sock ; (the path to the socket file)
+chmod=0770                               ; socket file mode (default 0700)
 chown=nobody:${RVDAS_USER}
 
 ; The scripts we're going to run
@@ -515,6 +515,8 @@ stderr_logfile=/var/log/openrvdas/simulate_serial.err.log
 stdout_logfile=/var/log/openrvdas/simulate_serial.out.log
 user=$RVDAS_USER
 EOF
+mkdir -p /var/run/supervisor/
+chgrp $RVDAS_USER /var/run/supervisor
 
 #echo "############################################################################"
 #while true; do
