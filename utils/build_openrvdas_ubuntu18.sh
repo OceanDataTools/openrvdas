@@ -450,6 +450,14 @@ else
 fi
 
 cat > /etc/supervisor/conf.d/openrvdas.conf <<EOF
+; First, override the default socket permissions to allow user
+; $RVDAS_USER to run supervisorctl
+[unix_http_server]
+file=/var/run/supervisor.sock   ; (the path to the socket file)
+chmod=0770                      ; socket file mode (default 0700)
+chown=nobody:${RVDAS_USER}
+
+; The scripts we're going to run
 [program:cached_data_server]
 command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
