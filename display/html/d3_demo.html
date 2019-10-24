@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>D3 TimelineWidget Example</title>
+
+    <style type="text/css">
+      .ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      .ship_table td, .ship_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      .td_70 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 70%;
+      }
+      .td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 50%;
+      }
+      .td_30 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .name_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 20%;
+      }
+      g.axis.y path.domain {
+        stroke: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- This is where we define location of data server. -->
+    <script src="../js/widgets/settings.js"></script>
+
+    <script src="../js/d3/d3.min.js"></script>
+
+    <script src="../js/widgets/text_widget.js"></script>
+    <script src="../js/widgets/widget_server.js"></script>
+
+    <table class="ship_table">
+      <tr>
+        <td colspan=2 class="td_50">
+          <div id="rel_wind_dial" style="min-width: 100px"></div>
+        </td>
+        <td colspan=2 class="td_50">
+          <div id="wind_speed_line" style="min-width: 100px"></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="name_td" style="color:red">Port Wind Dir</td>
+        <td class="val_td"><span id="rel_port_dir"></span>° M</td>
+        <td class="name_td" style="color:red">Speed</td>
+        <td class="val_td"><span id="rel_port_speed"></span> kt</td>
+      </tr>
+      <tr>
+        <td class="name_td" style="color:green">Stbd Wind Dir</td>
+        <td class="val_td"><span id="rel_stbd_dir"></span>° M</td>
+        <td class="name_td" style="color:green">Speed</td>
+        <td class="val_td"><span id="rel_stbd_speed"></span> kt</td>
+      </tr>
+    </table>
+
+    <script type="module">
+      import {TimelineWidget as D3TimelineWidget} from '../js/widgets/d3_widgets.js'
+      import {DialWidget as D3DialWidget} from '../js/widgets/d3_widgets.js'
+      const widget_list = [];
+      var rel_wind_dial_fields = {
+        MwxPortRelWindDir: {
+          name: 'Port Relative Wind',
+          color: 'red',
+        },
+        MwxStbdRelWindDir: {
+          name: 'Stbd Relative Wind',
+          color: 'green',
+        }
+      };
+      widget_list.push(new D3DialWidget('#rel_wind_dial', rel_wind_dial_fields,
+                                    {title:{text:''}}
+                                    ));
+      widget_list.push(new TextWidget('rel_port_dir',
+                                   { MwxPortRelWindDir: {name: 'Port Rel Wind Dir'}}));
+      widget_list.push(new TextWidget('rel_stbd_dir',
+                                   { MwxStbdRelWindDir: {name: 'Stbd Rel Wind Dir'}}));
+      widget_list.push(new TextWidget('rel_port_speed',
+                                   { MwxPortRelWindSpeed: {name: 'Port Rel Wind Speed'}}));
+      widget_list.push(new TextWidget('rel_stbd_speed',
+                                   { MwxStbdRelWindSpeed: {name: 'Stbd Rel Wind Speed'}}));
+      var rel_wind_line_fields = {
+        MwxPortRelWindSpeed: {
+          name: 'Port Relative Wind Speed',
+          seconds: 45,
+          color: 'red',
+	  //transform: x => 10 * x
+        },
+        MwxStbdRelWindSpeed: {
+          name: 'Stbd Relative Wind Speed',
+          seconds: 45,
+          color: 'green',
+        }
+      };
+      widget_list.push(new D3TimelineWidget(
+        '#wind_speed_line', rel_wind_line_fields,
+        'Knots', {
+	  //maxPoints: 30,
+	  //height: 300
+	}
+      ));
+      var widget_server = new WidgetServer(widget_list,
+                                           WEBSOCKET_DATA_SERVER);
+      widget_server.serve();
+    </script>
+  </body>
+</html>
