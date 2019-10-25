@@ -7,11 +7,6 @@
 //      // Need to define for following JS scripts. For now, count on the
 //      // relevant variables being set by Django.
 //      var WEBSOCKET_SERVER = "{{ websocket_server }}";
-//      {% if user.is_authenticated %}
-//        var USER_AUTHENTICATED = true;
-//      {% else %}
-//        var USER_AUTHENTICATED = false;
-//      {% endif %}
 //    </script>
 //
 //    <script src="/static/django_gui/index.html.js"></script>
@@ -24,11 +19,16 @@
 // will be called on the data received from that initial message and
 // future messages.
 //
-// Note that this also counts on variables USER_AUTHENTICATED and
-// WEBSOCKET_SERVER  being set in the calling page.
+// Note that this also counts on variable WEBSOCKET_SERVER  being set
+// in the calling page.
 
 ////////////////////////////////////////////////////////////////////////////////
-var websocket_server = "ws://" + WEBSOCKET_SERVER + "/";
+var [ws_hostname, ws_port] = WEBSOCKET_SERVER.split(':');
+if (ws_hostname.length == 0) {
+  // If we have no hostname, get it from our containing page
+  ws_hostname = window.location.hostname;
+}
+var websocket_server = "ws://" + ws_hostname + ':' + ws_port + "/";
 
 //////////////////////////////////////////////////////////////
 if (! "WebSocket" in window) {

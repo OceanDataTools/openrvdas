@@ -187,7 +187,8 @@ class ComposedReader(Reader):
          and not self.reader_returned_eof[i]:
         logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
         self.reader_returned_eof[i] = False
-        thread = threading.Thread(target=self._run_reader, args=(i,))
+        thread = threading.Thread(target=self._run_reader, args=(i,),
+                                  daemon=True)
         self.reader_threads[i] = thread
         thread.start()
 
@@ -517,7 +518,8 @@ check_format   If True, attempt to check that Reader/Transform formats
          and not self.reader_returned_eof[i]:
         logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
         self.reader_returned_eof[i] = False
-        thread = threading.Thread(target=self._run_reader, args=(i,))
+        thread = threading.Thread(target=self._run_reader, args=(i,),
+                                  daemon=True)
         self.reader_threads[i] = thread
         thread.start()
 
@@ -689,7 +691,8 @@ check_format   If True, attempt to check that Reader/Transform formats
        and not self.reader_returned_eof[i]:
       logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
       self.reader_returned_eof[i] = False
-      thread = threading.Thread(target=self._run_reader, args=(i,))
+      thread = threading.Thread(target=self._run_reader, args=(i,),
+                                daemon=True)
       self.reader_threads[i] = thread
       thread.start()
 

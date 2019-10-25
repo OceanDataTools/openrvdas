@@ -140,8 +140,8 @@ class CachedDataReader(Reader):
       # Iterate if we lose the websocket for some reason other than a &#39;quit&#39;
       while not self.quit_flag:
         try:
-          logging.info(&#39;Connecting to websocket: &#34;%s&#34;&#39;, self.data_server)
           async with websockets.connect(&#39;ws://&#39; + self.data_server) as ws:
+            logging.info(&#39;Connected to data server %s&#39;, self.data_server)
             # Send our subscription request
             await ws.send(json.dumps(self.subscription))
             result = await ws.recv()
@@ -157,8 +157,8 @@ class CachedDataReader(Reader):
         except BrokenPipeError:
           pass
         except websockets.exceptions.ConnectionClosed:
-          logging.warning(&#39;Lost websocket connection to data server; &#39;
-                          &#39;trying to reconnect.&#39;)
+          logging.warning(&#39;CachedDataReader lost websocket connection to &#39;
+                          &#39;data server; trying to reconnect.&#39;)
           await asyncio.sleep(0.2)
         except OSError as e:
           logging.info(&#39;Unable to connect to data server. &#39;
@@ -345,8 +345,8 @@ data_server - the host and port at which to try to connect to a
       # Iterate if we lose the websocket for some reason other than a &#39;quit&#39;
       while not self.quit_flag:
         try:
-          logging.info(&#39;Connecting to websocket: &#34;%s&#34;&#39;, self.data_server)
           async with websockets.connect(&#39;ws://&#39; + self.data_server) as ws:
+            logging.info(&#39;Connected to data server %s&#39;, self.data_server)
             # Send our subscription request
             await ws.send(json.dumps(self.subscription))
             result = await ws.recv()
@@ -362,8 +362,8 @@ data_server - the host and port at which to try to connect to a
         except BrokenPipeError:
           pass
         except websockets.exceptions.ConnectionClosed:
-          logging.warning(&#39;Lost websocket connection to data server; &#39;
-                          &#39;trying to reconnect.&#39;)
+          logging.warning(&#39;CachedDataReader lost websocket connection to &#39;
+                          &#39;data server; trying to reconnect.&#39;)
           await asyncio.sleep(0.2)
         except OSError as e:
           logging.info(&#39;Unable to connect to data server. &#39;

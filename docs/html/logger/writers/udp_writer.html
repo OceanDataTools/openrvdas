@@ -59,24 +59,11 @@ class UDPWriter(NetworkWriter):
                  before sending.
     ```
     &#34;&#34;&#34;
+    self.ttl = ttl
     self.num_retry = num_retry
     self.eol = eol
 
     self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (interface, destination, port)
-
-    self.socket = socket.socket(family=socket.AF_INET,
-                                type=socket.SOCK_DGRAM,
-                                proto=socket.IPPROTO_UDP)
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-    try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
-      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-    except AttributeError:
-      logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
-
-    # Set the time-to-live for messages, in case of multicast
-    self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                           struct.pack(&#39;b&#39;, ttl))
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
     if interface and destination:
       ipaddress.ip_address(interface) # throw a ValueError if bad addr
@@ -112,13 +99,42 @@ class UDPWriter(NetworkWriter):
     else:
       destination = &#39;&lt;broadcast&gt;&#39;
 
-    self.socket.connect((destination, port))
+    self.destination = destination
+    self.port = port
+
+    # Try opening the socket
+    self.socket = self._open_socket()
+
+  ############################
+  def _open_socket(self):
+    &#34;&#34;&#34;Try to open and return the network socket.
+    &#34;&#34;&#34;
+    udp_socket = socket.socket(family=socket.AF_INET,
+                               type=socket.SOCK_DGRAM,
+                               proto=socket.IPPROTO_UDP)
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+    try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
+      udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+    except AttributeError:
+      logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
+
+    # Set the time-to-live for messages, in case of multicast
+    udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+                          struct.pack(&#39;b&#39;, self.ttl))
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+
+    try:
+      udp_socket.connect((self.destination, self.port))
+      return udp_socket
+    except OSError as e:
+      logging.warning(&#39;Unable to connect to %s:%d&#39;, self.destination, self.port)
+      return None
 
   ############################
   def write(self, record):
     &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-    if not record:
-      return
+    # If we don&#39;t have a record, there&#39;s nothing to do
+    if not record: return
 
     # If record is not a string, try converting to JSON. If we don&#39;t know
     # how, throw a hail Mary and force it into str format
@@ -132,8 +148,16 @@ class UDPWriter(NetworkWriter):
     if self.eol:
       record += self.eol
 
-    num_tries = 0
-    bytes_sent = 0
+    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+    # reconnect, complain and return without writing.
+    if not self.socket:
+      self.socket = self._open_socket()
+    if not self.socket:
+      logging.error(&#39;Unable to write record to %s:%d&#39;,
+                      self.destination, self.port)
+      return
+
+    num_tries = bytes_sent = 0
     rec_len = len(record)
     while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
       try:
@@ -198,24 +222,11 @@ eol          If specified, an end of line string to append to record
                  before sending.
     ```
     &#34;&#34;&#34;
+    self.ttl = ttl
     self.num_retry = num_retry
     self.eol = eol
 
     self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (interface, destination, port)
-
-    self.socket = socket.socket(family=socket.AF_INET,
-                                type=socket.SOCK_DGRAM,
-                                proto=socket.IPPROTO_UDP)
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-    try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
-      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-    except AttributeError:
-      logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
-
-    # Set the time-to-live for messages, in case of multicast
-    self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                           struct.pack(&#39;b&#39;, ttl))
-    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
     if interface and destination:
       ipaddress.ip_address(interface) # throw a ValueError if bad addr
@@ -251,13 +262,42 @@ eol          If specified, an end of line string to append to record
     else:
       destination = &#39;&lt;broadcast&gt;&#39;
 
-    self.socket.connect((destination, port))
+    self.destination = destination
+    self.port = port
+
+    # Try opening the socket
+    self.socket = self._open_socket()
+
+  ############################
+  def _open_socket(self):
+    &#34;&#34;&#34;Try to open and return the network socket.
+    &#34;&#34;&#34;
+    udp_socket = socket.socket(family=socket.AF_INET,
+                               type=socket.SOCK_DGRAM,
+                               proto=socket.IPPROTO_UDP)
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+    try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
+      udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+    except AttributeError:
+      logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
+
+    # Set the time-to-live for messages, in case of multicast
+    udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+                          struct.pack(&#39;b&#39;, self.ttl))
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+
+    try:
+      udp_socket.connect((self.destination, self.port))
+      return udp_socket
+    except OSError as e:
+      logging.warning(&#39;Unable to connect to %s:%d&#39;, self.destination, self.port)
+      return None
 
   ############################
   def write(self, record):
     &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-    if not record:
-      return
+    # If we don&#39;t have a record, there&#39;s nothing to do
+    if not record: return
 
     # If record is not a string, try converting to JSON. If we don&#39;t know
     # how, throw a hail Mary and force it into str format
@@ -271,8 +311,16 @@ eol          If specified, an end of line string to append to record
     if self.eol:
       record += self.eol
 
-    num_tries = 0
-    bytes_sent = 0
+    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+    # reconnect, complain and return without writing.
+    if not self.socket:
+      self.socket = self._open_socket()
+    if not self.socket:
+      logging.error(&#39;Unable to write record to %s:%d&#39;,
+                      self.destination, self.port)
+      return
+
+    num_tries = bytes_sent = 0
     rec_len = len(record)
     while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
       try:

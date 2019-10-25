@@ -36,6 +36,7 @@ urlpatterns = [
 
   path('edit_config/<str:logger_id>',
        views.edit_config, name='edit_config'),
+  path('choose_file/', views.choose_file, name='choose_file'),
 
   path('widget/<str:field_list>', views.widget, name='widget'),
   path('widget/', views.widget, name='widget'),

@@ -12,7 +12,7 @@ Grab the script (centos7 or ubuntu18, as appropriate for your distribution):
 ```
 # Get build script from Github
 wget \
-  https://raw.githubusercontent.com/davidpablocohn/openrvdas/master/utils/build_openrvdas_centos7.sh
+  https://raw.githubusercontent.com/oceandatatools/openrvdas/master/utils/build_openrvdas_centos7.sh
 ```
 
 Now run the script as sudo
@@ -38,12 +38,12 @@ Install root will be '/opt'
 _Script will next ask which code repo and branch to use. Use the default repo and branch unless you have a project-specific branch in mind (e.g. "usap"). If you need to access the internet via a proxy (as shown below), enter it when asked; otherwise just hit return._
 
 ```
-Repository to install from? (http://github.com/davidpablocohn/openrvdas)
+Repository to install from? (http://github.com/oceandatatools/openrvdas)
 Repository branch to install? (master)
 HTTP/HTTPS proxy to use (http://proxy.lmg.usap.gov:3128)?
 Setting up proxy http://proxy.lmg.usap.gov:3128
 Will install from github.com
-Repository: 'http://github.com/davidpablocohn/openrvdas'
+Repository: 'http://github.com/oceandatatools/openrvdas'
 Branch: 'master'
 ```
 
@@ -71,7 +71,7 @@ start as a service (service openrvdas start).
 Do you wish to start the OpenRVDAS server on boot? **y**
 ```
 
-The script will run a while and ask at the end if you want to reboot. If you need to do the post-installation step(s) below, say "no", perform those steps, then reboot. Otherwise, say yes, then log in afterwards and check ``/var/log/openrvdas/openrvdas.log`` to make sure things have come up properly.
+The script will run a while and, if all has gone well, wish you "Happy logging" when it has completed.
 
 ## Post-Installation
 
@@ -80,12 +80,42 @@ The installation should allow you to connect via http to the server at the name 
 ```
 ALLOWED_HOSTS = [HOSTNAME, 'localhost', HOSTNAME + '.lmg.usap.gov']
 ```
-If you didn't reboot immediately after installation, reboot now.
+If you make this change, you will want to restart several services:
 
-If you answered 'no' to whether OpenRVDAS should start automatically on boot up, you can manually start/stop the service via:
-```service openrvdas start```
-and
-```service openrvdas stop```
+```
+systemctl restart nginx uwsgi
+```
+
+## Starting and Stopping Servers
+
+In addition to the NGINX webserver (and its Python helper interface UWSGI), OpenRVDAS relies on two servers: ``logger_manager.py`` and ``cached_data_server.py`` (see [Controlling Loggers](../docs/controlling_loggers.md) for details). If you answered 'no' when asked whether OpenRVDAS should start automatically on boot up, you you will need to manually start/stop them via the ``supervisorctl`` command:
+
+```
+  root@openrvdas:~# supervisorctl
+  cached_data_server               STOPPED   Oct 05 03:22 AM
+  logger_manager                   STOPPED   Oct 05 03:22 AM
+  simulate_serial                  STOPPED   Oct 05 03:22 AM
+
+  supervisor> start cached_data_server logger_manager
+  cached_data_server: started
+  logger_manager: started
+
+  supervisor> status
+  cached_data_server               RUNNING   pid 5641, uptime 0:00:04
+  logger_manager                   RUNNING   pid 5646, uptime 0:00:03
+  simulate_serial                  STOPPED   Oct 05 03:22 AM
+
+  supervisor> exit
+```
+
+If you are planning to run the test cruise definition in ``test/NBP1406/NBP1406_cruise.yaml`` then you should also start the process that creates the simulated serial ports that it's configured for:
+
+```
+    supervisor> start simulate_serial
+```
+
+You may also use broader acting commands with supervisorctl, such as
+``start all``, ``stop all`` and ``restart all``.
 
 ## Manual Installation
 
@@ -206,7 +236,7 @@ OpenRVDAS requires some additional Python packages as well. Install them with pi
 Go to the directory where you want the system installed (/opt in this example) and clone the code using Git:
 ```
 cd /opt
-git clone  http://github.com/davidpablocohn/openrvdas
+git clone  http://github.com/oceandatatools/openrvdas
 ```
 
 Copy over and modify a few of the config files so that they reflect our choice of OpenRVDAS user and password:

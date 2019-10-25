@@ -1,5 +1,7 @@
 {% extends 'django_gui/base.html' %}
 
+{% load static %}
+
 {% block content %}
 
 <script type="text/javascript">
@@ -42,6 +44,12 @@
     <td style='background-color:white'>
       <span id='status_time_td'>--no updates--</span>
     </td>
+    <td>
+      <button id="display_window" type="submit"
+              onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
+        display pages
+      </button>
+    </td>
   </tr>
   {% comment %}
   <tr id='server_time_row'>
@@ -75,7 +83,7 @@
       <td id="{{ logger_name }}_td">{{ logger_name }}</td>
       <td id="{{ logger_name }}_config_td">
         <button id="{{ logger_name }}_config_button" type="submit"
-                onclick="window.open('../edit_config/{{logger_name }}', '_blank', 'location=yes,height=180,width=520,scrollbars=yes,status=yes');"
+                onclick="open_edit_config(event, '{{logger_name }}');"
                 {% if not user.is_authenticated %}
                   disabled
                 {% endif %}
@@ -117,41 +125,13 @@
 </div>
 
 {# ######################################################################## #}
-{# Load configuration                                                       #}
+{# Load new definition                                                      #}
 {% if user.is_authenticated %}
-<hr>
-<div id='load_div_button'>
-  <button type='submit' onclick='toggle_load_config_div()'>
-  Load configuration file
+  <hr>
+  <button id="server_messages" type="submit"
+     onclick="open_load_definition(event);">
+    Load new definition file
   </button>
-</div>
-<div id='load_config_div' style='display:none'>
-  <form method='post' enctype='multipart/form-data'>
-    {% csrf_token %}
-    <table>
-      <tr>
-        <td>
-          <input id='config_file' type='file' name='config_file' size='20'
-                 onchange='show_load_button(this.files)'>
-        </td>
-        <td>
-          <div id='load_button_div'  style='display:none'>
-            <button type='submit' id='load_config_button'
-                    name='load_config'>
-              Load
-            </button>
-          </div>
-        </td>
-        <td>
-          <button onclick='toggle_load_config_div();' name='cancel'>
-            Cancel
-          </button>
-        </td>
-      </tr>
-    </table>
-  </form>
-</div>
-
 {% endif %}
 <hr>
 <p>

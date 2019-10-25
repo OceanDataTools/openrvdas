@@ -490,7 +490,8 @@ class LoggerManager:
         try:
           logging.info(&#39;Connecting to websocket: &#34;%s&#34;&#39;, ws_name)
           async with websockets.connect(&#39;ws://&#39; + ws_name) as ws:
-            while not self.quit_flag:
+             logging.info(&#39;Connected to websocket: &#34;%s&#34;&#39;, ws_name)
+             while not self.quit_flag:
 
               # Work through the messages in the queue, sending the
               # ones we already have before doing anything else.
@@ -731,7 +732,7 @@ if __name__ == &#39;__main__&#39;:
                       &#39;to use.&#39;)
 
   parser.add_argument(&#39;--data_server_websocket&#39;, dest=&#39;data_server_websocket&#39;,
-                      action=&#39;store&#39;, default=&#39;8766&#39;,
+                      action=&#39;store&#39;, default=None,
                       help=&#39;Address at which to connect to cached data server &#39;
                       &#39;to send status updates.&#39;)
 
@@ -1251,7 +1252,8 @@ logger_log_level - At what logging level our component loggers
         try:
           logging.info(&#39;Connecting to websocket: &#34;%s&#34;&#39;, ws_name)
           async with websockets.connect(&#39;ws://&#39; + ws_name) as ws:
-            while not self.quit_flag:
+             logging.info(&#39;Connected to websocket: &#34;%s&#34;&#39;, ws_name)
+             while not self.quit_flag:
 
               # Work through the messages in the queue, sending the
               # ones we already have before doing anything else.

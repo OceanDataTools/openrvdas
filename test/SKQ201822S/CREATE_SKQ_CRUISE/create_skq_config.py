@@ -45,6 +45,7 @@ from collections import OrderedDict
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 CACHE_UDP = '6225'
+DATASERVER_PORT = '8766'
 
 # Set to desired cruise ID
 cruise = 'SKQ201822S'
@@ -64,9 +65,12 @@ file_db_config = """    readers:
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
         - class: DatabaseWriter
-        - class: UDPWriter
+        #- class: UDPWriter
+        #  kwargs:
+        #    port: 6225
+        - class: CachedDataWriter
           kwargs:
-            port: 6225
+            data_server: localhost:%DATASERVER_PORT%
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -78,8 +82,8 @@ file_db_config = """    readers:
           kwargs:
             filebase: /var/tmp/log/%CRUISE%/%LOGGER%/raw/%CRUISE%_%LOGGER%
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+    stderr_writers:          # Turn stderr into DASRecord, send to CDS
+    - class: ComposedWriter  # via websocket.
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -87,9 +91,9 @@ file_db_config = """    readers:
             field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
+            data_server: localhost:%DATASERVER_PORT%
 """
 
 file_config = """    readers:
@@ -117,11 +121,14 @@ file_config = """    readers:
             sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
         writers:
-          class: UDPWriter
+        #- class: UDPWriter
+        #  kwargs:
+        #    port: 6225
+        - class: CachedDataWriter
           kwargs:
-            port: 6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+            data_server: localhost:%DATASERVER_PORT%
+    stderr_writers:          # Turn stderr into DASRecord, send to CDS
+    - class: ComposedWriter  # via websocket.
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -129,9 +136,42 @@ file_config = """    readers:
             field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
+            data_server: localhost:%DATASERVER_PORT%
+"""
+net_config = """    readers:
+      class: UDPReader
+      kwargs:
+        port: %PORT%
+    writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+          class: ParseNMEATransform
+          kwargs:
+            sensor_path: local/sensor/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensors.yaml
+            sensor_model_path: local/sensor_model/*.yaml,test/SKQ201822S/CREATE_SKQ_CRUISE/sensor_models.yaml
+            time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6225
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%DATASERVER_PORT%
+    stderr_writers:          # Turn stderr into DASRecord, send to CDS
+    - class: ComposedWriter  # via websocket.
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:%LOGGER%'
+        - class: ToJSONTransform
+        writers:
+          class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%DATASERVER_PORT%
 """
 
 db_config = """    readers:
@@ -153,8 +193,11 @@ db_config = """    readers:
         - class: UDPWriter
           kwargs:
             port: 6225
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache 
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%DATASERVER_PORT%
+    stderr_writers:          # Turn stderr into DASRecord, send to CDS
+    - class: ComposedWriter  # via websocket.
       kwargs:
         transforms:
         - class: ToDASRecordTransform
@@ -162,15 +205,164 @@ db_config = """    readers:
             field_name: 'stderr:logger:%LOGGER%'
         - class: ToJSONTransform
         writers:
-          class: UDPWriter
+          class: CachedDataWriter
           kwargs:
-            port: %CACHE_UDP%
+            data_server: localhost:%DATASERVER_PORT%
+"""
+
+subsample_config = """  # Derived data subsampling logger
+  subsample->off:
+    name: subsample->off
+
+  subsample->on:
+    name: subsample->on
+
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:%DATASERVER_PORT%
+        subscription:
+          fields:
+            ins_seapath_position_sog_kt:
+              seconds: 0
+            speedlog_lon_water_speed:
+              seconds: 0
+            met_ptu307_pressure:
+              seconds: 0
+
+            ins_seapath_position_heading_true:
+              seconds: 0
+            ins_seapath_position_course_true:
+              seconds: 0
+
+            wind_gill_fwdmast_true_speed_knots:
+              seconds: 0
+            wind_mast_port_true_speed_knots:
+              seconds: 0
+            wind_mast_stbd_true_speed_knots:
+              seconds: 0
+
+            wind_gill_fwdmast_true_direction:
+              seconds: 0
+            wind_mast_port_true_direction:
+              seconds: 0
+            wind_mast_stbd_true_direction:
+              seconds: 0
+
+            fluoro_turner-c6_temp:
+              seconds: 0
+            met_ptu307_temp:
+              seconds: 0
+
+    transforms:
+    - class: SubsampleTransform
+      kwargs:
+        back_seconds: 3600
+        metadata_interval: 60  # send metadata every 60 seconds
+        field_spec:
+          ins_seapath_position_sog_kt:
+            output: avg_ins_seapath_position_sog_kt
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          speedlog_lon_water_speed:
+            output: avg_speedlog_lon_water_speed
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          met_ptu307_pressure:
+            output: avg_met_ptu307_pressure
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          ins_seapath_position_heading_true:
+            output: avg_ins_seapath_position_heading_true
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          ins_seapath_position_course_true:
+            output: avg_ins_seapath_position_course_true
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          wind_gill_fwdmast_true_speed_knots:
+            output: avg_wind_gill_fwdmast_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_port_true_speed_knots:
+            output: avg_wind_mast_port_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_stbd_true_speed_knots:
+            output: avg_wind_mast_stbd_true_speed_knots
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          wind_gill_fwdmast_true_direction:
+            output: avg_wind_gill_fwdmast_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_port_true_direction:
+            output: avg_wind_mast_port_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          wind_mast_stbd_true_direction:
+            output: avg_wind_mast_stbd_true_direction
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+
+          fluoro_turner-c6_temp:
+            output: avg_fluoro_turner-c6_temp
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+          met_ptu307_temp:
+            output: avg_met_ptu307_temp
+            subsample:
+              type: boxcar_average
+              window: 60
+              interval: 60
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:%DATASERVER_PORT%
+    stderr_writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: ToDASRecordTransform
+          kwargs:
+            field_name: 'stderr:logger:subsample'
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:%DATASERVER_PORT%
 """
 
 lines = [line.strip() for line in sys.stdin.readlines()]
 
 print('##########')
-cruise_def = """cruise: 
+cruise_def = """cruise:
   id: %s
   start: "2018-04-01"
   end: "2018-05-01"
@@ -180,7 +372,7 @@ print(cruise_def)
 loggers = [line.split('\t', maxsplit=2)[0] for line in lines]
 ports = {line.split('\t', maxsplit=2)[0]: line.split('\t', maxsplit=2)[1]
          for line in lines}
-modes = ['off', 'file', 'db', 'file/db']
+modes = ['off', 'net', 'file', 'db', 'file/db']
 
 print('##########')
 print('loggers:')
@@ -188,10 +380,17 @@ for logger in loggers:
   logger_def = """  %s:
     configs:
     - %s->off
+    - %s->net
     - %s->file
     - %s->db
-    - %s->file/db""" % (logger, logger, logger, logger, logger)
+    - %s->file/db""" % (logger, logger, logger, logger, logger, logger)
   print(logger_def)
+
+print("""  subsample:
+    configs:
+    - subsample->off
+    - subsample->on
+""")
 
 print('##########')
 print('modes:')
@@ -202,6 +401,10 @@ for mode in modes:
     print('  %s:' % mode)
   for logger in loggers:
     print('    %s: %s->%s' % (logger, logger, mode))
+  if mode == 'off':
+    print('    subsample: subsample->off')
+  else:
+    print('    subsample: subsample->on')
 
 print('##########')
 print('default_mode: "off"')
@@ -217,16 +420,23 @@ for mode in modes:
 
     if mode == 'off':
       continue
+    elif mode == 'net':
+      config_str = net_config
     elif mode == 'file':
       config_str = file_config
     elif mode == 'db':
       config_str = db_config
     elif mode == 'file/db':
       config_str = file_db_config
-      
+
     config_str = config_str.replace('%LOGGER%', logger)
     config_str = config_str.replace('%PORT%', ports[logger])
     config_str = config_str.replace('%CRUISE%', cruise)
     config_str = config_str.replace('%CACHE_UDP%', CACHE_UDP)
+    config_str = config_str.replace('%DATASERVER_PORT%', DATASERVER_PORT)
     print(config_str)
 
+config_str = subsample_config
+config_str = config_str.replace('%CACHE_UDP%', CACHE_UDP)
+config_str = config_str.replace('%DATASERVER_PORT%', DATASERVER_PORT)
+print(config_str)

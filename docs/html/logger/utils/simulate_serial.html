@@ -24,12 +24,13 @@
 <summary>Source code</summary>
 <pre><code class="python">#!/usr/bin/env python3
 import logging
+import os.path
 import subprocess
 import sys
 import threading
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from logger.readers.logfile_reader import LogfileReader
 from logger.transforms.slice_transform import SliceTransform
@@ -71,8 +72,12 @@ class SimSerial:
                           &#39;exclusive&#39;: exclusive}
     self.quit = False
 
-    # Finally, check that our needed &#39;socat&#39; actually exists
-    if not subprocess.run([&#39;which&#39;, &#39;socat&#39;], stdout=subprocess.PIPE).stdout:
+    # Finally, find path to socat executable
+    self.socat_path = None
+    for socat_path in [&#39;/usr/bin/socat&#39;, &#39;/usr/local/bin/socat&#39;]:
+      if os.path.exists(socat_path) and os.path.isfile(socat_path):
+        self.socat_path = socat_path
+    if not self.socat_path:
       raise NameError(&#39;Executable &#34;socat&#34; not found on path. Please refer &#39;
                       &#39;to installation guide to install socat.&#39;)
 
@@ -83,8 +88,7 @@ class SimSerial:
     write_port_params =   &#39;pty,link=%s,raw,echo=0&#39; % self.write_port
     read_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.read_port
 
-    cmd = [&#39;/usr/bin/env&#39;,
-           &#39;socat&#39;,
+    cmd = [self.socat_path,
            verbose,
            #verbose,   # repeating makes it more verbose
            read_port_params,
@@ -117,7 +121,7 @@ class SimSerial:
   def run(self, loop=False):
     &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
     the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-    self.socat_thread = threading.Thread(target=self._run_socat)
+    self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
     self.socat_thread.start()
     time.sleep(0.2)
 
@@ -195,7 +199,8 @@ if __name__ == &#39;__main__&#39;:
       config = configs[inst]
       sim = SimSerial(port=config[&#39;port&#39;], source_file=config[&#39;logfile&#39;],
                       time_format=config.get(&#39;time_format&#39;, args.time_format))
-      sim_thread = threading.Thread(target=sim.run, kwargs={&#39;loop&#39;: args.loop})
+      sim_thread = threading.Thread(target=sim.run, kwargs={&#39;loop&#39;: args.loop},
+                                    daemon=True)
       sim_thread.start()
       thread_list.append(sim_thread)
 
@@ -266,8 +271,12 @@ timestamps, and the standard parameters that a serial port takes.</p></section>
                           &#39;exclusive&#39;: exclusive}
     self.quit = False
 
-    # Finally, check that our needed &#39;socat&#39; actually exists
-    if not subprocess.run([&#39;which&#39;, &#39;socat&#39;], stdout=subprocess.PIPE).stdout:
+    # Finally, find path to socat executable
+    self.socat_path = None
+    for socat_path in [&#39;/usr/bin/socat&#39;, &#39;/usr/local/bin/socat&#39;]:
+      if os.path.exists(socat_path) and os.path.isfile(socat_path):
+        self.socat_path = socat_path
+    if not self.socat_path:
       raise NameError(&#39;Executable &#34;socat&#34; not found on path. Please refer &#39;
                       &#39;to installation guide to install socat.&#39;)
 
@@ -278,8 +287,7 @@ timestamps, and the standard parameters that a serial port takes.</p></section>
     write_port_params =   &#39;pty,link=%s,raw,echo=0&#39; % self.write_port
     read_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.read_port
 
-    cmd = [&#39;/usr/bin/env&#39;,
-           &#39;socat&#39;,
+    cmd = [self.socat_path,
            verbose,
            #verbose,   # repeating makes it more verbose
            read_port_params,
@@ -312,7 +320,7 @@ timestamps, and the standard parameters that a serial port takes.</p></section>
   def run(self, loop=False):
     &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
     the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-    self.socat_thread = threading.Thread(target=self._run_socat)
+    self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
     self.socat_thread.start()
     time.sleep(0.2)
 
@@ -359,7 +367,7 @@ the designated logfile. If loop==True, loop when reaching end of input.</p></sec
 <pre><code class="python">def run(self, loop=False):
   &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
   the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-  self.socat_thread = threading.Thread(target=self._run_socat)
+  self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
   self.socat_thread.start()
   time.sleep(0.2)
 

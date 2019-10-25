@@ -264,14 +264,20 @@
                                           marginRight:0,
                                          },
                                    credits:false, maxPadding: 0.05}));
+  // Transform to convert speeds in meters per second to knots
+  function ms_to_knots(val) {
+    return (val * 1.94384).toFixed(2);
+  }
+
   var rel_wind_speed_fields = {
     AvgWindSpeed: {
       name: "Avg Rel Wind Speed",
-      transform: round_2
+      transform: ms_to_knots
     }
   };
   widget_list.push(new TextWidget('rel_wind_speed', rel_wind_speed_fields));
 
+  // True wind speed is already in knots
   var true_wind_speed_fields = {
     TrueWindSpeed: {
       name: "True Wind Speed",

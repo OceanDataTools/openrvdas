@@ -10,30 +10,26 @@
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         border-collapse: collapse;
         width: 100%;
+        background-color: lightslategray;      
       }
       .ship_table td, .ship_table th {
         border: 1px solid #ddd;
         padding: 8px;
       }
-      .td_70 {
+      .td_24 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 70%;
+        width: 16%;
       }
-      .td_50 {
+      .td_38 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 50%;
+        width: 42%;
       }
-      .td_25 {
+      .td_62 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
-        width: 25%;
-      }
-      .td_30 {
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-        text-align: left;
-        width: 30%;
+        width: 58%;
       }
       .name_td {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -56,8 +52,6 @@
     <script src="../js/highcharts/code/highcharts.js"></script>
     <script src="../js/highcharts/code/highcharts-more.js"></script>
     <script src="../js/highcharts/code/modules/data.js"></script>
-    <script src="../js/highcharts/code/modules/exporting.js"></script>
-    <script src="../js/highcharts/code/modules/export-data.js"></script>
 
     <script src="../js/widgets/highcharts_widget.js"></script>
     <script src="../js/widgets/text_widget.js"></script>
@@ -69,92 +63,90 @@
 
     <table class="ship_table">
       <tr>
-        <td class="td_25">
-          Date: <span id="year"></span>-<span id="month"></span>-<span id="day"></span><br>
-          Time: <span id="time"></span>
+        <td colspan=2 class='td_62'>
+          <b>R/V Sikuliaq Underway Bridge Display,</b>
+          <span id="year">----</span>-<span id="month">--</span>-<span id="day">--</span> <span id="time">--:--:--.--</span> UTC
         </td>
-        <td class="td_25">
-          <b>R/V Sikuliaq</b>
-        </td>
-        <td class="td_25">
-          <b>Underway Bridge Display</b>
-        </td>
-        <td class="td_25">
-          Water Depth: <span id="water_depth"></span> m
-        </td>
-      </tr>
-
-      <tr>
-        <td>
-          Speed Over Ground and Through Water
-        </td>
-        <td>
-          <span style="color:blue;">SOG: <span id="sog"></span> kts</span>,
-          <span style="color:green;">STW: <span id="stw"></span> kts</span>
-        </td>
-        <td>
-          Barometric Pressure (@sea level)
-        </td>
-        <td>
-          <span id="baro_pressure"></span> hPA
-        </td>
-      </tr>
-      
-      <tr>
-        <td colspan=2>
-          <div id="speed_over_ground_and_water_hist"></div>
-        </td>
-        <td colspan=2>
-          <div id="baro_pressure_hist"></div>
+        <td class='td_38'>
+          Lat: <span id="gps_lat">--.----</span>°<span id="gps_n_or_s"></span>;
+          Lon: <span id="gps_lon">--.----</span>°<span id="gps_e_or_w"></span>;
+          Water Depth: <span id="water_depth">---.-</span> m
         </td>
       </tr>
 
       <tr>
         <td colspan=2>
           Heading and Course Over Ground:
-          <span style="color:blue;">HDG: <span id="heading"></span>°</span>,
-          <span style="color:green;">COG: <span id="course"></span>°</span>
+          <span style="color:blue;">HDG: <span id="heading">---</span>°</span>,
+          <span style="color:green;">COG: <span id="course">---</span>°</span>
         </td>
         <td colspan=2>
-          Wind Speed (true):
-          <span style="color:blue;">FWD: <span id="fwd_wind_speed"></span> kts</span>,
-          <span style="color:green;">STBD: <span id="stbd_wind_speed"></span> kts</span>,
-          <span style="color:red;">PORT: <span id="port_wind_speed"></span> kts</span>
+          Speed Over Ground and Through Water
+          <span style="color:blue;">SOG: <span id="sog">--.-</span> kts</span>,
+          <span style="color:green;">STW: <span id="stw">--.-</span> kts</span>
         </td>
+
       </tr>
 
       <tr>
-        <td colspan=2>
+        <td class='td_24'>
+          <div id="heading_and_course_dial"></div>
+        </td>
+        <td class='td_38'>
           <div id="heading_and_course"></div>
+        </td>
+        <td class='td_38'>
+          <div id="speed_over_ground_and_water_hist"></div>
+        </td>
+      </tr>
+
+
+      <tr>
+        <td colspan=2>
+          Wind Direction (true):
+          <span style="color:blue;">FWD: <span id="fwd_wind_direction">---.-</span>°</span>,
+          <span style="color:green;">STBD: <span id="stbd_wind_direction">---.-</span>°</span>,
+          <span style="color:red;">PORT: <span id="port_wind_direction">---.-</span>°</span>
+        </td>
+        <td colspan=2>
+          Wind Speed (true):
+          <span style="color:blue;">FWD: <span id="fwd_wind_speed">--.-</span> kts</span>,
+          <span style="color:green;">STBD: <span id="stbd_wind_speed">--.-</span> kts</span>,
+          <span style="color:red;">PORT: <span id="port_wind_speed">--.-</span> kts</span>
+        </td>
+      </tr>
+      
+      <tr>
+        <td>
+          <div id="wind_dir_true_dial"></div>
+        </td>
+        <td>
+          <div id="wind_dir_true"></div>
         </td>
         <td colspan=2>
           <div id="wind_speed_true"></div>
         </td>
       </tr>
 
-
       <tr>
         <td colspan=2>
           Temperature:
-          <span style="color:blue;">Sea: <span id="sea_temp"></span>°F</span>,
-          <span style="color:green;">Air: <span id="air_temp"></span>°F</span>
-          <span style="color:black;">Wind Chill: <span id="wind_chill"></span>°F</span>
+          <span style="color:blue;">Sea: <span id="sea_temp">--.-</span>°F</span>,
+          <span style="color:green;">Air: <span id="air_temp">--.-</span>°F</span>
+          <span style="color:black;">Wind Chill: <span id="wind_chill">--.-</span>°F</span>
         </td>
         <td colspan=2>
-          Wind Direction (true):
-          <span style="color:blue;">FWD: <span id="fwd_wind_direction"></span>°</span>,
-          <span style="color:green;">STBD: <span id="stbd_wind_direction"></span>°</span>,
-          <span style="color:red;">PORT: <span id="port_wind_direction"></span>°</span>
+          Barometric Pressure
+          <span id="baro_pressure">----</span> hPA
         </td>
       </tr>
-
 
       <tr>
         <td colspan=2>
           <div id="temperature"></div>
         </td>
         <td colspan=2>
-          <div id="wind_dir_true"></div>
+          <div id="baro_pressure_hist"></div>
         </td>
       </tr>
 
@@ -195,6 +187,39 @@
          }
      }}));
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Next cluster:  Lat/Lon text widgets
+  function num_to_lat_lon(val) {
+    return ((val/100).toFixed(4)).padStart(9);
+  }
+  widget_list.push(new TextWidget('gps_lat',
+                                  {ins_seapath_position_lat:
+                                    {
+                                      name: "Latitude",
+                                      transform: num_to_lat_lon,
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_n_or_s', {ins_seapath_position_n_or_s: {name: "N/S"}}));
+
+  widget_list.push(new TextWidget('gps_lon',
+                                  {ins_seapath_position_lon:
+                                    {
+                                      name: "Longitude",
+                                      transform: num_to_lat_lon,
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_e_or_w', {ins_seapath_position_e_or_w: {name: "E/W"}}));
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Next cluster: Knudsen
   widget_list.push(
      new TextWidget('water_depth', {
          sb_echosounder_2_rel_depth_meters: {name: 'Water Depth'}}));
@@ -219,14 +244,14 @@
          met_ptu307_pressure  : {name: 'Barometric Pressure'}}));
 
   var sog_stw_fields = {
-      ins_seapath_position_sog_kt: {
+      avg_ins_seapath_position_sog_kt: {
           name: 'SOG',
-          seconds: 1200,
+          seconds: 43200,
           color: 'blue'
       },
-      speedlog_lon_water_speed: {
+      avg_speedlog_lon_water_speed: {
           name: 'STW',
-          seconds: 1200,
+          seconds: 43200,
           color: 'green'
       },
   };
@@ -235,12 +260,14 @@
                                       'Knots',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Knots'},min:0, max:15, tickInterval:5},
+                                       yAxis:{title:{text:'Speed over Ground and Through Water (Knots)'},min:0, minRange:10, tickInterval:5},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }));
   var baro_pressure_fields = {
-      met_ptu307_pressure: {
+      avg_met_ptu307_pressure: {
           name: 'Barometric Pressure',
-          seconds: 1200,
+          seconds: 43200,
           color: 'blue'
       },
   };
@@ -249,7 +276,9 @@
                                       'hPA',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'hPA'},min:1019, max:1023, tickInterval:1},
+                                       yAxis:{title:{text:'Baro Pressure (hPA)'},minRange:4, tickInterval:1},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }
                                    ));
 
@@ -273,46 +302,80 @@
   var heading_and_course_fields = {
     ins_seapath_position_heading_true: {
       name: 'Heading',
-      seconds: 1200,
       color: 'blue',
+      transform: function(val) { return Math.round(val); }
     },
     ins_seapath_position_course_true: {
       name: 'Course over Ground',
-      seconds: 1200,
       color: 'green',
+      transform: function(val) { return Math.round(val); }
+    }
+  };
+  widget_list.push(new DialWidget('heading_and_course_dial',
+                                      heading_and_course_fields,
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                          height:200,
+                                          width:200,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
+  var avg_heading_and_course_fields = {
+    avg_ins_seapath_position_heading_true: {
+      name: 'Heading',
+      seconds: 43200,
+      color: 'blue',
+      transform: function(val) { return Math.round(val); }
+    },
+    avg_ins_seapath_position_course_true: {
+      name: 'Course over Ground',
+      seconds: 43200,
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
     }
   };
   widget_list.push(new TimelineWidget('heading_and_course',
-                                      heading_and_course_fields,
+                                      avg_heading_and_course_fields,
                                       'Degrees, True',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Degrees, True'},min:0, max:359, tickInterval:30},}
+                                       yAxis:{title:{text:'Heading and Course over Ground (Degrees, True)'},min:0, max:359, tickInterval:30},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
+                                      }
                                    ));
 
   var wind_speed_fields = {
-    wind_gill_fwdmast_true_speed_knots: {
+    avg_wind_gill_fwdmast_true_speed_knots: {
       name: 'Wind Gill True Wind',
-      seconds: 1200,
+      seconds: 43200,
       color: 'blue',
     },
-    wind_mast_port_true_speed_knots: {
+    avg_wind_mast_port_true_speed_knots: {
       name: 'Port True Wind',
-      seconds: 1200,
+      seconds: 43200,
       color: 'red',
     },
-    wind_mast_stbd_true_speed_knots: {
+    avg_wind_mast_stbd_true_speed_knots: {
       name: 'Stbd True Wind',
-      seconds: 1200,
+      seconds: 43200,
       color: 'green',
     },
   };
+
   widget_list.push(new TimelineWidget('wind_speed_true',
                                       wind_speed_fields,
                                       'Knots',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Knots'},min:0, max:40, tickInterval:10},
+                                       yAxis:{title:{text:'Wind Speed, True (Knots)'},min:0, minRange:15, tickInterval:5},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }
                                    ));
 
@@ -355,25 +418,25 @@
          wind_mast_port_true_direction: {name: 'Port Wind Dir'}}));
 
   var temperature_fields = {
-      "fluoro_turner-c6_temp": {
+      "avg_fluoro_turner-c6_temp": {
           name: 'Turner Sea Temp',
           color: 'blue',
-          seconds: 1200,
+          seconds: 43200,
           transform: function(val) {
               return Math.round(val*90/5.0)/10+32;
           }
       },
-      met_ptu307_temp: {
+      avg_met_ptu307_temp: {
           name: 'Vaisala Air Temp',
           color: 'green',
-          seconds: 1200,
+          seconds: 43200,
           transform: function(val) {
               return Math.round(val*90/5.0)/10+32;
           }
       },
       missing_variable_for_wind_chill: {
           name: 'Wind Chill',
-          seconds: 1200,
+          seconds: 43200,
           transform: function(val) {
               return Math.round(val*90/5.0)/10+32;
           }
@@ -384,32 +447,68 @@
                                       'Degrees F',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Degrees F'},min:30, max:60, tickInterval:5},
+                                       yAxis:{title:{text:'Air, Sea and Wind Chill Temp (Degrees F)'}, min:20, minRange:40, tickInterval:5},
 }
                                    ));
   var wind_dir_fields = {
     wind_gill_fwdmast_true_direction: {
       name: 'Wind Gill True Wind',
-      seconds: 1200,
       color: 'blue',
+      transform: function(val) { return Math.round(val); }
     },
     wind_mast_port_true_direction: {
       name: 'Port True Wind',
-      seconds: 1200,
       color: 'red',
+      transform: function(val) { return Math.round(val); }
     },
     wind_mast_stbd_true_direction: {
       name: 'Stbd True Wind',
-      seconds: 1200,
       color: 'green',
+      transform: function(val) { return Math.round(val); }
+    },
+  };
+  widget_list.push(new DialWidget('wind_dir_true_dial',
+                                      wind_dir_fields,
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                          height:200,
+                                          width:200,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
+  var avg_wind_dir_fields = {
+    avg_wind_gill_fwdmast_true_direction: {
+      name: 'Wind Gill True Wind',
+      seconds: 43200,
+      color: 'blue',
+      transform: function(val) { return Math.round(val); }
+    },
+    avg_wind_mast_port_true_direction: {
+      name: 'Port True Wind',
+      seconds: 43200,
+      color: 'red',
+      transform: function(val) { return Math.round(val); }
+    },
+    avg_wind_mast_stbd_true_direction: {
+      name: 'Stbd True Wind',
+      seconds: 43200,
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
     },
   };
   widget_list.push(new TimelineWidget('wind_dir_true',
-                                      wind_dir_fields,
+                                      avg_wind_dir_fields,
                                       'Degrees',
                                       {title:{text:''},
                                        chart: {type: 'line', height:200},
-                                       yAxis:{title:{text:'Degrees'},min:0, max:359, tickInterval:30},
+                                       yAxis:{title:{text:'True Wind Direction (Degrees)'},min:0, max:359, tickInterval:30},
+                                       legend:{enabled: false},
+                                       credits:{enabled: false}
                                       }
                                    ));
   ////////////////////////

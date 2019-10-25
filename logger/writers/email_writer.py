@@ -105,4 +105,5 @@ class EmailWriter(Writer):
 
     # Start up a separate thread so we can go ahead and return while
     # it possibly sleeps and waits.
-    threading.Thread(target=self._send_email, args=(time_to_sleep,)).start()
+    threading.Thread(target=self._send_email, args=(time_to_sleep,),
+                     daemon=True).start()

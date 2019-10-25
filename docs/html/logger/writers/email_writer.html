@@ -129,7 +129,8 @@ class EmailWriter(Writer):
 
     # Start up a separate thread so we can go ahead and return while
     # it possibly sleeps and waits.
-    threading.Thread(target=self._send_email, args=(time_to_sleep,)).start()</code></pre>
+    threading.Thread(target=self._send_email, args=(time_to_sleep,),
+                     daemon=True).start()</code></pre>
 </details>
 </section>
 <section>
@@ -252,7 +253,8 @@ localhost.</p></section>
 
     # Start up a separate thread so we can go ahead and return while
     # it possibly sleeps and waits.
-    threading.Thread(target=self._send_email, args=(time_to_sleep,)).start()</code></pre>
+    threading.Thread(target=self._send_email, args=(time_to_sleep,),
+                     daemon=True).start()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -282,7 +284,8 @@ localhost.</p></section>
 
   # Start up a separate thread so we can go ahead and return while
   # it possibly sleeps and waits.
-  threading.Thread(target=self._send_email, args=(time_to_sleep,)).start()</code></pre>
+  threading.Thread(target=self._send_email, args=(time_to_sleep,),
+                   daemon=True).start()</code></pre>
 </details>
 </dd>
 </dl>

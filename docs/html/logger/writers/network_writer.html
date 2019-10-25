@@ -63,39 +63,49 @@ class NetworkWriter(Writer):
     self.network = network
     self.num_retry = num_retry
     self.eol = eol
-    (host, port) = network.split(&#39;:&#39;)
-    port = int(port)
+    
+    # Try opening the socket
+    self.socket = self._open_socket()
 
+  ############################
+  def _open_socket(self):
+    &#34;&#34;&#34;Try to open and return the network socket.
+    &#34;&#34;&#34;
     # TCP if host is specified
+    (host, port) = self.network.split(&#39;:&#39;)
+    port = int(port)
     if host:
-      self.socket = socket.socket(family=socket.AF_INET,
+      this_socket = socket.socket(family=socket.AF_INET,
                                   type=socket.SOCK_STREAM,
                                   proto=socket.IPPROTO_TCP)
-      # Should this be bind()?
-      self.socket.connect((host, port))
 
     # UDP broadcast if no host specified. Note that there&#39;s some
     # dodginess I don&#39;t understand about networks: if &#39;&lt;broadcast&gt;&#39; is
     # specified, socket tries to send on *all* interfaces. if &#39;&#39; is
     # specified, it tries to send on *any* interface.
     else:
-      host = &#39;&lt;broadcast&gt;&#39; # special code for broadcast
-      self.socket = socket.socket(family=socket.AF_INET,
+      this_socket = socket.socket(family=socket.AF_INET,
                                   type=socket.SOCK_DGRAM,
                                   proto=socket.IPPROTO_UDP)
-      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+      this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
       try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+        this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
       except AttributeError:
         logging.warning(&#39;Unable to set socket REUSEPORT; system may not support it.&#39;)
 
-      self.socket.connect((host, port))
+    # Try connecting
+    try:
+      this_socket.connect((host, port)) # should this be bind()?
+      return this_socket
+    except OSError as e:
+      logging.warning(&#39;Unable to connect to %s&#39;, self.network)
+      return None
 
   ############################
   def write(self, record):
     &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-    if not record:
-      return
+    # If we don&#39;t have a record, there&#39;s nothing to do
+    if not record: return
 
     # If record is not a string, try converting to JSON. If we don&#39;t know
     # how, throw a hail Mary and force it into str format
@@ -109,8 +119,16 @@ class NetworkWriter(Writer):
     if self.eol:
       record += self.eol
 
-    num_tries = 0
-    bytes_sent = 0
+    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+    # reconnect, complain and return without writing.
+    if not self.socket:
+      self.socket = self._open_socket()
+    if not self.socket:
+      logging.error(&#39;Unable to write record to %s:%d&#39;,
+                      self.destination, self.port)
+      return
+      
+    num_tries = bytes_sent = 0
     rec_len = len(record)
     while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
       try:
@@ -178,39 +196,49 @@ eol          If specified, an end of line string to append to record
     self.network = network
     self.num_retry = num_retry
     self.eol = eol
-    (host, port) = network.split(&#39;:&#39;)
-    port = int(port)
+    
+    # Try opening the socket
+    self.socket = self._open_socket()
 
+  ############################
+  def _open_socket(self):
+    &#34;&#34;&#34;Try to open and return the network socket.
+    &#34;&#34;&#34;
     # TCP if host is specified
+    (host, port) = self.network.split(&#39;:&#39;)
+    port = int(port)
     if host:
-      self.socket = socket.socket(family=socket.AF_INET,
+      this_socket = socket.socket(family=socket.AF_INET,
                                   type=socket.SOCK_STREAM,
                                   proto=socket.IPPROTO_TCP)
-      # Should this be bind()?
-      self.socket.connect((host, port))
 
     # UDP broadcast if no host specified. Note that there&#39;s some
     # dodginess I don&#39;t understand about networks: if &#39;&lt;broadcast&gt;&#39; is
     # specified, socket tries to send on *all* interfaces. if &#39;&#39; is
     # specified, it tries to send on *any* interface.
     else:
-      host = &#39;&lt;broadcast&gt;&#39; # special code for broadcast
-      self.socket = socket.socket(family=socket.AF_INET,
+      this_socket = socket.socket(family=socket.AF_INET,
                                   type=socket.SOCK_DGRAM,
                                   proto=socket.IPPROTO_UDP)
-      self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+      this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
       try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+        this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
       except AttributeError:
         logging.warning(&#39;Unable to set socket REUSEPORT; system may not support it.&#39;)
 
-      self.socket.connect((host, port))
+    # Try connecting
+    try:
+      this_socket.connect((host, port)) # should this be bind()?
+      return this_socket
+    except OSError as e:
+      logging.warning(&#39;Unable to connect to %s&#39;, self.network)
+      return None
 
   ############################
   def write(self, record):
     &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-    if not record:
-      return
+    # If we don&#39;t have a record, there&#39;s nothing to do
+    if not record: return
 
     # If record is not a string, try converting to JSON. If we don&#39;t know
     # how, throw a hail Mary and force it into str format
@@ -224,8 +252,16 @@ eol          If specified, an end of line string to append to record
     if self.eol:
       record += self.eol
 
-    num_tries = 0
-    bytes_sent = 0
+    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+    # reconnect, complain and return without writing.
+    if not self.socket:
+      self.socket = self._open_socket()
+    if not self.socket:
+      logging.error(&#39;Unable to write record to %s:%d&#39;,
+                      self.destination, self.port)
+      return
+      
+    num_tries = bytes_sent = 0
     rec_len = len(record)
     while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
       try:
@@ -256,8 +292,8 @@ eol          If specified, an end of line string to append to record
 <summary>Source code</summary>
 <pre><code class="python">def write(self, record):
   &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-  if not record:
-    return
+  # If we don&#39;t have a record, there&#39;s nothing to do
+  if not record: return
 
   # If record is not a string, try converting to JSON. If we don&#39;t know
   # how, throw a hail Mary and force it into str format
@@ -271,8 +307,16 @@ eol          If specified, an end of line string to append to record
   if self.eol:
     record += self.eol
 
-  num_tries = 0
-  bytes_sent = 0
+  # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+  # reconnect, complain and return without writing.
+  if not self.socket:
+    self.socket = self._open_socket()
+  if not self.socket:
+    logging.error(&#39;Unable to write record to %s:%d&#39;,
+                    self.destination, self.port)
+    return
+    
+  num_tries = bytes_sent = 0
   rec_len = len(record)
   while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
     try:

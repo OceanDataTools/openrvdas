@@ -291,7 +291,7 @@ TRUE_WIND_TEMPLATE = """
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: PortApparentWindDir
-            convert_speed_factor: 0.5144
+            convert_wind_factor: 1.94384
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -304,7 +304,7 @@ TRUE_WIND_TEMPLATE = """
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
-            convert_speed_factor: 0.5144
+            convert_wind_factor: 1.94384
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -359,7 +359,7 @@ TRUE_WIND_TEMPLATE = """
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: PortApparentWindDir
-            convert_speed_factor: 0.5144
+            convert_wind_factor: 1.94384
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -372,7 +372,7 @@ TRUE_WIND_TEMPLATE = """
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
-            convert_speed_factor: 0.5144
+            convert_wind_factor: 1.94384
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt

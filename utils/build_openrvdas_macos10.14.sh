@@ -18,7 +18,7 @@
 # the specific issue and simply re-running will produce the desired result.
 # Bug reports, and even better, bug fixes, will be greatly appreciated.
 
-DEFAULT_HOSTNAME=$HOSTNAME
+#DEFAULT_HOSTNAME=$HOSTNAME
 DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
@@ -26,27 +26,27 @@ DEFAULT_HTTP_PROXY=$http_proxy
 DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
 DEFAULT_OPENRVDAS_BRANCH=master
 
-DEFAULT_RVDAS_USER=rvdas
+DEFAULT_RVDAS_USER=`whoami`
 
-if [ "$(whoami)" != "root" ]; then
-  echo "ERROR: installation script must be run as root."
+if [ "$(whoami)" == "root" ]; then
+  echo "ERROR: installation script must *not* be run as root."
   return -1 2> /dev/null || exit -1  # terminate correctly if sourced/bashed
 fi
 
 echo "############################################################################"
 echo OpenRVDAS configuration script
-while true; do
-    read -p "Do you wish to continue? " yn
-    case $yn in
-        [Yy]* ) break;;
-        [Nn]* ) exit;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+#while true; do
+#    read -p "Do you wish to continue? " yn
+#    case $yn in
+#        [Yy]* ) break;;
+#        [Nn]* ) exit;;
+#        * ) echo "Please answer yes or no.";;
+#    esac
+#done
 
-read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
-HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
-echo "Hostname will be '$HOSTNAME'"
+#read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
+#HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
+#echo "Hostname will be '$HOSTNAME'"
 
 read -p "Install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
@@ -70,23 +70,36 @@ echo "Repository: '$OPENRVDAS_REPO'"
 echo "Branch: '$OPENRVDAS_BRANCH'"
 echo
 
-# Create user if they don't exist yet
-read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
-RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
-echo Checking if user $RVDAS_USER exists yet
-if id -u $RVDAS_USER > /dev/null; then
-  echo User exists, skipping
-else
-  echo Creating $RVDAS_USER
-  adduser $RVDAS_USER
-  passwd $RVDAS_USER
-  usermod -a -G tty $RVDAS_USER
-fi
+# Set up for pre-existing user; haven't quite figured out how to create
+# new users properly on the command line
+while true; do
+  read -p "Existing user to set system up for? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+  RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
+
+  if id -u $RVDAS_USER > /dev/null; then
+    break
+  else
+    echo User \"${RVDAS_USER}\" not found - try again?
+  fi
+done
+
+## Create user if they don't exist yet
+#read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+#RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
+#echo Checking if user $RVDAS_USER exists yet
+#if id -u $RVDAS_USER > /dev/null; then
+#  echo User exists, skipping
+#else
+#  echo Creating $RVDAS_USER
+#  adduser $RVDAS_USER
+#  #passwd $RVDAS_USER
+#  usermod -a -G tty $RVDAS_USER
+#fi
 
 # Get current and new passwords for database
 echo
-read -p "Database password to use for $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
-RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
+read -p "Database password to use for $RVDAS_USER? ($DEFAULT_RVDAS_DATABASE_PASSWORD) " RVDAS_DATABASE_PASSWORD
+RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$DEFAULT_RVDAS_DATABASE_PASSWORD}
 read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD
 read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
 NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
@@ -95,7 +108,7 @@ echo
 echo "############################################################################"
 echo The OpenRVDAS server can be configured to start on boot. If you wish this
 echo to happen, it will be run/monitored by the supervisord service using the
-echo configuration file in /etc/supervisord.d/openrvdas.ini.
+echo configuration file in /usr/local/etc/supervisor.d/openrvdas.ini.
 echo
 echo If you do not wish it to start automatically, it may still be run manually
 echo from the command line or started via supervisor by running supervisorctl
@@ -114,81 +127,65 @@ while true; do
     esac
 done
 
-# Convenient way of commenting out stuff
-if [ 0 -eq 1 ]; then
-  Commented out stuff goes here
-fi
-
+echo "############################################################################"
+echo Beginning installation
 # Set creation mask so that everything we install is, by default,
 # world readable/executable.
 umask 022
 
+###### START OF SKIP
+# Convenient way of commenting out stuff
+if [ 0 -eq 1 ]; then
+  Commented out stuff goes here
+fi
+###### END OF SKIP
+
 # Create openrvdas log and tmp directories
-mkdir -p /var/log/openrvdas /var/tmp/openrvdas
+echo Creating openrvdas working directories in /var/tmp
+echo Please enter sudo password if prompted...
+sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
 chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
 
-# Set hostname
-echo "############################################################################"
-echo Setting hostname...
-hostnamectl set-hostname $HOSTNAME
-echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
+## Set hostname
+#echo "############################################################################"
+#echo Setting hostname...
+#sudo hostname $HOSTNAME
+#if grep -q "^127.0.0.1" /etc/hosts | grep $HOSTNAME ; then
+#  echo Hostname already in /etc/hosts
+#else
+#  sudo echo "127.0.0.1    $HOSTNAME" >> /etc/hosts
+#fi
 
-# Install yum stuff
-echo "############################################################################"
-echo Installing required packages from yum...
-yum install -y deltarpm
-yum install -y epel-release
-yum -y update
+# Install git:
+echo Looking for/installing git
+git --version  # prompts for installation of command line tools
 
-yum install -y socat git nginx sqlite-devel readline-devel \
-    wget gcc zlib-devel openssl-devel \
-    python36 python36-devel python36-pip firewalld supervisor
-[ -e /usr/bin/python3 ] || ln -s /usr/bin/python36 /usr/bin/python3
+# Install homebrew:
+echo Checking for homebrew
+[ -e /usr/local/bin/brew ] || echo Installing homebrew
+[ -e /usr/local/bin/brew ] || ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-# Set permissions
-echo "############################################################################"
-echo Setting SELINUX permissions and firewall ports
+# Install system packages we need
+echo Installing python and supporting packages
+[ -e /usr/local/bin/python ] || brew install python
+[ -e /usr/local/bin/socat ]  || brew install socat
+[ -e /usr/local/bin/ssh ]    || brew install openssh
+[ -e /usr/local/bin/mysql ]  || brew install mysql
+[ -e /usr/local/bin/nginx ]  || brew install nginx
+[ -e /usr/local/bin/uwsgi ]  || brew install uwsgi
+[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
-# The old way of enabling things...
-# (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
+brew upgrade python socat openssh mysql nginx uwsgi supervisor || echo Upgraded packages
+brew link --overwrite python || echo Linking Python
 
-# The new way of more selectively enabling things
-setsebool -P nis_enabled 1
-setsebool -P use_nfs_home_dirs 1
-setsebool -P httpd_can_network_connect 1
-semanage permissive -a httpd_t
-
-# Set up the firewall and open some holes in it
-systemctl start firewalld
-systemctl enable firewalld
-
-firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
-firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
-firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
-
-# Websocket ports
-firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
-firewall-cmd -q --permanent --add-port=8766/tcp > /dev/null # data
-
-# Our favorite UDP port for network data
-firewall-cmd -q --permanent --add-port=6224/udp > /dev/null
-firewall-cmd -q --permanent --add-port=6225/udp > /dev/null
-
-# For unittest access
-firewall-cmd -q --permanent --add-port=8000/udp > /dev/null
-firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
-firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
-firewall-cmd -q --reload > /dev/null
+echo Starting services mysql and supervisor
+brew tap homebrew/services
+brew services restart mysql
+brew services restart supervisor
 
 # Install database stuff and set up as service.
-echo "############################################################################"
-echo Installing Mariadb \(MySQL replacement in CentOS 7\)...
-yum install -y mariadb-server mariadb-devel mariadb-libs # CentOS
-service mariadb restart              # to manually start db server
-systemctl enable mariadb.service     # to make it start on boot
-
-echo "############################################################################"
-echo Setting up database tables and permissions
+echo "#########################################################################"
+echo Setting up MySQL database tables and permissions
 # Verify current root password for mysql
 while true; do
   # Check whether they're right about the current password; need
@@ -204,7 +201,7 @@ done
 
 # Set the new root password
 cat > /tmp/set_pwd <<EOF
-UPDATE mysql.user SET Password=PASSWORD('$NEW_ROOT_DATABASE_PASSWORD') WHERE User='root';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$NEW_ROOT_DATABASE_PASSWORD';
 FLUSH PRIVILEGES;
 EOF
 
@@ -223,94 +220,74 @@ DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
 FLUSH PRIVILEGES;
 EOF
 
-# Try creating databases. Command will fail if they exist, so we need
-# to do one at a time and trap any possible errors.
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"data\" appears to already exist - no problem
-create database data character set utf8;
-EOF
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"openrvdas\" appears to already exist - no problem
-create database openrvdas character set utf8;
-EOF
+#echo EXITING!
+#return -1 2> /dev/null || exit -1  # terminate correctly if sourced/bashed
 
+echo "#########################################################################"
+echo Setting up database users
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+drop user if exists 'test'@'localhost';
+create user 'test'@'localhost' identified by 'test';
 
-GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
+drop user if exists '$RVDAS_USER'@'localhost';
+create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
 
-GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
+create database if not exists data character set utf8;
+GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
+
+create database if not exists openrvdas character set utf8;
+GRANT ALL PRIVILEGES ON openrvdas.* TO '$RVDAS_USER'@'localhost';
+
+create database if not exists test character set utf8;
+GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
+GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
+
+create database if not exists test_$RVDAS_USER character set utf8;
+GRANT ALL PRIVILEGES ON test_$RVDAS_USER.* TO '$RVDAS_USER'@'localhost';
+GRANT ALL PRIVILEGES ON test_$RVDAS_USER.* TO 'test'@'localhost' identified by 'test';
+
+flush privileges;
+\q
 EOF
 echo Done setting up database
 
 # Django and uWSGI
 echo "############################################################################"
 
-echo Installing Django, uWSGI and other Python-dependent packages
+echo Installing Django, uWSGI and other Python-dependent packages.
+echo Please enter sudo password if prompted...
 export PATH=/usr/bin:/usr/local/bin:$PATH
-/usr/bin/env pip3 install --upgrade pip
-/usr/local/bin/pip3 install Django==2.2 pyserial uwsgi \
-                   websockets PyYAML parse mysqlclient mysql-connector diskcache
+/usr/local/bin/pip3 install --upgrade pip &> /dev/null || echo Upgrading old pip if it\'s there
+
+sudo /usr/local/bin/pip3 install Django==2.2 pyserial uwsgi websockets PyYAML \
+       parse mysqlclient mysql-connector diskcache
+
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
-echo "############################################################################"
+echo "#########################################################################"
 echo Configuring uWSGI as service
-
-# Create uwsgi.service file
-cat > /etc/systemd/system/uwsgi.service <<EOF
-[Unit]
-Description = Run uWSGI as a daemon
-After = network.target
-
-[Service]
-ExecStart = /etc/uwsgi/scripts/start_uwsgi_daemon.sh
-RemainAfterExit=true
-ExecStop = /etc/uwsgi/scripts/top_uwsgi_daemon.sh
-
-[Install]
-WantedBy = multi-user.target
-EOF
-
-# Create uWSGI start/stop scripts
-[ -e /etc/uwsgi/scripts ] || mkdir -p /etc/uwsgi/scripts
-cat > /etc/uwsgi/scripts/start_uwsgi_daemon.sh <<EOF
-#!/bin/bash
-# Start uWSGI as a daemon; installed as service
-/usr/local/bin/uwsgi \
-  --emperor /etc/uwsgi/vassals \
-  --uid ${RVDAS_USER} --gid ${RVDAS_USER} \
-  --pidfile /etc/uwsgi/process.pid \
-  --daemonize /var/log/uwsgi-emperor.log
-EOF
-
-cat > /etc/uwsgi/scripts/stop_uwsgi_daemon.sh <<EOF
-#!/bin/bash
-/usr/local/bin/uwsgi --stop /etc/uwsgi/process.pid
-EOF
-
-chmod 755 /etc/uwsgi/scripts/start_uwsgi_daemon.sh /etc/uwsgi/scripts/stop_uwsgi_daemon.sh
 
 # Set up nginx
 echo "############################################################################"
 echo Setting up NGINX
-[ -e /etc/nginx/sites-available ] || mkdir /etc/nginx/sites-available
-[ -e /etc/nginx/sites-enabled ] || mkdir /etc/nginx/sites-enabled
+[ -e /usr/local/etc/nginx/sites-available ] || mkdir /usr/local/etc/nginx/sites-available
+[ -e /usr/local/etc/nginx/sites-enabled ] || mkdir /usr/local/etc/nginx/sites-enabled
 
 # We need to add a couple of lines to not quite the end of nginx.conf,
 # so do a bit of hackery: chop off the closing "}" with head, append
 # the lines we need and a new closing "}" into a temp file, then copy back.
-if grep -q "/etc/nginx/sites-enabled/" /etc/nginx/nginx.conf; then
+if grep -q "/usr/local/etc/nginx/sites-enabled/" /usr/local/etc/nginx/nginx.conf; then
   echo NGINX sites-available already registered. Skipping...
 else
-  head --lines=-2 /etc/nginx/nginx.conf > /tmp/nginx.conf
+  NGINX_CONF_LEN=`wc -l /usr/local/etc/nginx/nginx.conf | cut   -c1-8` 
+
+  head -n $(($NGINX_CONF_LEN-1)) /usr/local/etc/nginx/nginx.conf > /tmp/nginx.conf
   cat >> /tmp/nginx.conf <<EOF
-     include /etc/nginx/sites-enabled/*.conf;
+     include /usr/local/etc/nginx/sites-enabled/*.conf;
      server_names_hash_bucket_size 64;
 }
 EOF
-  mv -f /tmp/nginx.conf /etc/nginx/nginx.conf
+  mv -f /tmp/nginx.conf /usr/local/etc/nginx/nginx.conf
   echo Done setting up NGINX
 fi
 
@@ -319,21 +296,29 @@ echo "##########################################################################
 echo Fetching and setting up OpenRVDAS code...
 cd $INSTALL_ROOT
 
-if [ -e openrvdas ]; then
+if [ ! -e openrvdas ]; then
+  echo Making openrvdas directory.
+  echo Please enter sudo password if prompted...
+  sudo mkdir openrvdas
+  sudo chown ${RVDAS_USER} openrvdas
+fi    
+
+if [ -e openrvdas/.git ] ; then   # If we've already got an installation
   cd openrvdas
   git checkout $OPENRVDAS_BRANCH
   git pull
-else
+else                              # If we don't already have and installation
   git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
   cd openrvdas
 fi
 
-cat > /etc/profile.d/openrvdas.sh <<EOF
-export PYTHONPATH=$PYTHONPATH:${INSTALL_ROOT}/openrvdas
-export PATH=$PATH:${INSTALL_ROOT}/openrvdas/logger/listener
-EOF
+#cat > /etc/profile.d/openrvdas.sh <<EOF
+#export PYTHONPATH=$PYTHONPATH:${INSTALL_ROOT}/openrvdas
+#export PATH=$PATH:${INSTALL_ROOT}/openrvdas/logger/listener
+#EOF
 
 echo Initializing OpenRVDAS database...
+cd ${INSTALL_ROOT}/openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
 sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
 sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
@@ -362,7 +347,7 @@ echo "from django.contrib.auth.models import User; User.objects.filter(email='${
 # Connect uWSGI with our project installation
 echo "############################################################################"
 echo Creating OpenRVDAS-specific uWSGI files
-cp /etc/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
+cp /usr/local/etc/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
 
 cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
 # openrvdas_nginx.conf
@@ -418,7 +403,7 @@ server {
 EOF
 
 # Make symlink to nginx dir
-ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf /etc/nginx/sites-enabled
+ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf /usr/local/etc/nginx/sites-enabled
 
 cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 # openrvdas_uwsgi.ini file
@@ -431,7 +416,7 @@ chdir           = ${INSTALL_ROOT}/openrvdas
 module          = django_gui.wsgi
 # the base directory from which bin/python is available
 # Do an ln -s bin/python3 bin/python in this dir!!!
-home            = /usr
+home            = /usr/local
 
 # process-related settings
 # master
@@ -448,22 +433,20 @@ vacuum          = true
 EOF
 
 # Make vassal directory and copy symlink in
-[ -e /etc/uwsgi/vassals ] || mkdir -p /etc/uwsgi/vassals
+[ -e /usr/local/etc/uwsgi/vassals ] || mkdir -p /usr/local/etc/uwsgi/vassals
 ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
-      /etc/uwsgi/vassals/
+   /usr/local/etc/uwsgi/vassals/
 
 # Make everything accessible to nginx
 chmod 755 ${INSTALL_ROOT}/openrvdas
 chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
-chgrp -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+chgrp -R `id -n -g ${RVDAS_USER}` ${INSTALL_ROOT}/openrvdas
 
 # Make uWSGI run on boot
-systemctl enable uwsgi.service
-service uwsgi start
+brew services restart uwsgi
 
 # Make nginx run on boot:
-systemctl enable nginx.service
-service nginx start
+brew services restart nginx
 
 echo "############################################################################"
 echo Setting up openrvdas service with supervisord
@@ -476,17 +459,10 @@ else
     SUPERVISOR_AUTOSTART=true
 fi
 
-cat > /etc/supervisord.d/openrvdas.ini <<EOF
-; First, override the default socket permissions to allow user
-; $RVDAS_USER to run supervisorctl
-[unix_http_server]
-file=/var/run/supervisor/supervisor.sock ; (the path to the socket file)
-chmod=0770                               ; socket file mode (default 0700)
-chown=nobody:${RVDAS_USER}
-
-; The scripts we're going to run
+echo Copying supervisor file openrvdas.ini into place.
+cat > /tmp/openrvdas.ini <<EOF
 [program:cached_data_server]
-command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+command=/usr/local/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -496,7 +472,7 @@ stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
+command=/usr/local/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -506,7 +482,7 @@ stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 
 [program:simulate_serial]
-command=/usr/bin/python3 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
+command=/usr/local/bin/python3 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
@@ -515,23 +491,23 @@ stderr_logfile=/var/log/openrvdas/simulate_serial.err.log
 stdout_logfile=/var/log/openrvdas/simulate_serial.out.log
 user=$RVDAS_USER
 EOF
-mkdir -p /var/run/supervisor/
-chgrp $RVDAS_USER /var/run/supervisor
+echo Please enter sudo password if prompted...
+sudo cp /tmp/openrvdas.ini /usr/local/etc/supervisor.d/openrvdas.ini
 
 #echo "############################################################################"
 #while true; do
 #    read -p "Do you wish to install Redis? " yn
 #    case $yn in
 #        [Yy]* )
-#            yum install -y redis;
-#            pip3.6 install redis;
+#            apt-get install -y redis-server;
+#            pip3 install redis;
 #
 #            while true; do
 #                read -p "Do you wish to start a Redis server on boot? " ynb
 #                case $ynb in
 #                    [Yy]* )
 #                        systemctl start redis
-#                        systemctl enable redis.service;
+#                        #systemctl enable redis.service;
 #                        break;;
 #                    [Nn]* )
 #                        break;;
@@ -546,9 +522,8 @@ chgrp $RVDAS_USER /var/run/supervisor
 #done
 
 echo "#########################################################################"
-systemctl enable supervisord
-echo Restarting services: nginx, uwsgi, supervisor
-systemctl restart nginx uwsgi supervisord
+echo Restarting services: nginx, uwsgi, supervisor.
+brew services restart nginx uwsgi supervisor
 echo "#########################################################################"
 echo Installation complete - happy logging!
 echo

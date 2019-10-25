@@ -117,7 +117,7 @@ class ComposedWriter(Writer):
     writer_threads = []
     for i in range(len(self.writers)):
       t = threading.Thread(target=self._run_writer, args=(i, record),
-                           name=str(type(self.writers[i])))
+                           name=str(type(self.writers[i])), daemon=True)
       t.start()
       writer_threads.append(t)
 

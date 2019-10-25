@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Accept data in DASRecord or dict format via the cache_record() method,
+"""Accept data in DASRecord or dict format via the cache_record() method,
 then serve it to anyone who connects via a websocket. A
 CachedDataServer can be instantiated by running this script from the
 command line and providing one or more UDP ports on which to listen
@@ -14,7 +13,8 @@ The following direct invocation of this script
     logger/utils/cached_data_server.py \
       --udp 6225 \
       --port 8766 \
-      --back_seconds 480 \
+      --disk_cache /var/tmp/openrvdas/disk_cache \
+      --back_seconds 3600 \
       --v
 ```
 says to
@@ -23,10 +23,19 @@ says to
    timestamped, field:value pairs. (See the definition for cache_record(),
    below for formats understood.)
 
-2. Store the received data in an in-memory cache, retaining the most
-   recent 480 seconds for each field.
+2. Store the received data in memory, retaining the most recent 3600
+   seconds for each field (default is 86400 seconds = 24 hours).
 
-3. Wait for clients to connect to the websocket at port 8766 and serve
+   (The total number of values cached per field is also limited by the
+   ``max_records`` parameter and defaults to 2880, equivalent to two
+   records per minute for 24 hours. It may be overridden to "infinite"
+   by setting ``--max_records=0`` on the command line.)
+
+3. Periodically back up the in-memory cache to a disk-based cache at
+   /var/tmp/openrvdas/disk_cache (By default, back up every 60 seconds;
+   this can be overridden with the --cleanup_interval argument).
+
+4. Wait for clients to connect to the websocket at port 8766 and serve
    them the requested data. Web clients may issue JSON-encoded
    requests of the following formats (see the definition of
    serve_requests() for insight):
@@ -64,62 +73,19 @@ says to
        - submit new data to the cache (an alternative way to get data
          in without the same record size limits of a UDP packet).
 ```
-A CachedDataServer may also be created by invoking the listen.py
-script and creating a CachedDataWriter (which is just a wrapper around
-CachedDataServer). It may be invoked with the same options, and has
-the added benefit that you can have your server take data from a wider
-variety of sources (by using a LogfileReader, DatabaseReader,
-RedisReader or the like):
-```
-    logger/listener/listen.py \
-      --udp 6221,6224 \
-      --parse_definition_path local/devices/*.yaml,test/sikuliaq/devices.yaml \
-      --transform_parse \
-      --write_cached_data_writer 8766
-```
-This command  line creates  a CachedDataWriter that  reads timestamped
-NMEA sentences, parses them into  field:value pairs, then stores them,
-as above, in in-memory cached to be served to connected webclients.
-
-Note that the listen.py script currently provides no way to override
-the default values for back_seconds (480) and cleanup (60). But a
-contributor who wished could easily add the appropriate flags to the
-listen.py script.
-
-Finally, it may be incorporated (again, within its CachedDataWriter
-wrapper) into a logger via a configuration file:
-```
-    logger/listener/listen.py --config_file data_server_config.yaml
-```
-where data_server_config.yaml contains:
-```
-readers:
-- class: UDPReader
-  kwargs:
-    port: 6221
-- class: UDPReader
-  kwargs:
-    port: 6224
-transforms:
-- class: ParseTransform
-writers:
-- class: CachedDataWriter
-  kwargs:
-    back_seconds: 480
-    cleanup: 60
-    port: 8766
-```
 """
 import asyncio
 import json
 import logging
+import os
+import os.path
 import pprint
 import sys
 import threading
 import time
 import websockets
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from logger.writers.text_file_writer import TextFileWriter
 from logger.utils.subsample import subsample
@@ -131,10 +97,18 @@ from logger.utils.stderr_logging import StdErrLoggingHandler
 class RecordCache:
   """Structure for storing/retrieving record data and metadata."""
   def __init__(self):
+    """
+    In-memory storage for key:value pairs.
+    """
     self.data = {}
+    self.data_lock = threading.Lock() # When operating on whole dict
+
     self.metadata = {}
-    self.lock = threading.Lock()
-    
+    self.metadata_lock = threading.Lock()
+
+    # Create a lock for each key so threads don't step on each other
+    self.locks = {key: threading.Lock() for key in self.keys()}
+
   ############################
   def cache_record(self, record):
     """Add the passed record to the cache.
@@ -228,8 +202,10 @@ class RecordCache:
       return
 
     # Add values from record to cache
-    with self.lock:
-      for field, value in fields.items():
+    for field, value in fields.items():
+      if not field in self.locks:
+        self.locks[field] = threading.Lock()
+      with self.locks[field]:
         if not field in self.data:
           self.data[field] = []
 
@@ -240,33 +216,120 @@ class RecordCache:
             # we'll assume it's a (timestamp, value) pair. Otherwise,
             # use the default timestamp of 'now'.
             if type(val) in [list, tuple]:
-              self.data[field].append(val)
+              self._add_tuple(field, val)
             else:
-              self.data[field].append((record_timestamp, value))
+              self._add_tuple(field, (record_timestamp, value))
         else:
           # If type(value) is *not* a list, assume it's the value
           # itself. Add it using the default timestamp.
-          self.data[field].append((record_timestamp, value))
+          self._add_tuple(field, (record_timestamp, value))
 
       # Is there any metadata to add? Cache whatever is in the
       # metadata.data.fields dict. Blithely overwrite whatever might
       # be there already.
       if metadata:
         metadata_fields = metadata.get('fields', {})
-        for field, value in metadata_fields.items():
-          self.metadata[field] = value
+        with self.metadata_lock:
+          for field, value in metadata_fields.items():
+            self.metadata[field] = value
 
   ############################
-  def cleanup(self, oldest):
+  def _add_tuple(self, field, value_tuple):
+    #logging.debug('adding cache[%s] = %s', field, value_tuple)
+    self.data[field].append(value_tuple)
+
+  ############################
+  def keys(self):
+    """Return a list of all keys in the cache."""
+    return list(self.data.keys())
+
+  ############################
+  def get_metadata(self, fields=None):
+    """Return a dict of metadata for the specified list of fields. If no
+    fields are specified, return metadata for all fields.
+    """
+    with self.metadata_lock:
+      if fields:
+        return {field:self.metadata.get(field, {}) for field in fields}
+      else:
+        return self.metadata
+
+  ############################
+  def cleanup(self, oldest=0, max_records=0):
     """Remove any data from cache with a timestamp older than 'oldest'
     seconds, but keep at least one (most recent) value.
+
+    If max_records is non-zero, truncate to that many of the most
+    recent records.
     """
     logging.debug('Cleaning up cache')
-    with self.lock:
-      for field in self.data:
+    fields = self.keys()
+    for field in fields:
+      if not field in self.locks:
+        self.locks[field] = threading.Lock()
+      with self.locks[field]:
         value_list = self.data[field]
-        while value_list and len(value_list) > 1 and value_list[0][0] < oldest:
-          value_list.pop(0)
+
+        # If max_records is specified, truncate to keep that many of
+        # most recent records.
+        if max_records and len(value_list) > max_records:
+          #logging.warning('Truncating %s %d->%d records', field,
+          #                len(value_list), max_records)
+          value_list = value_list[-max_records:]
+
+        for i in range(len(value_list)): # Iterate until find value that's
+          if value_list[i][0] > oldest:  # not too old
+            break
+        last_index = min(i, len(value_list)-1) # But keep at least one value
+        self.data[field] = value_list[i:]
+
+  ############################
+  def save_to_disk(self, disk_cache):
+    """Create one JSON-encoded cache file per field in the directory named
+    by disk_cache.
+    """
+    logging.debug('Saving to cache.')
+    if not disk_cache:
+      logging.warning('save_to_disk called, but no disk_cache defined')
+      return
+
+    if not os.path.exists(disk_cache):
+      os.makedirs(disk_cache)
+
+    fields = self.keys()
+    for field in fields:
+      if not field in self.locks:
+        self.locks[field] = threading.Lock()
+      with self.locks[field]:
+        with open(disk_cache + '/' + field, 'w') as cache_file:
+          json.dump(self.data[field], cache_file)
+
+  ############################
+  def load_from_disk(self, disk_cache):
+    """Load the data dict from directory of JSON-encoded cache files.
+    """
+    logging.info('Loading from disk at %s', disk_cache)
+    if not disk_cache:
+      logging.warning('load_from_disk called, but no disk_cache defined')
+      return
+
+    if not os.path.exists(disk_cache):
+      logging.warning('load_from_disk: no cache found at "%s"', disk_cache)
+      return
+
+    field_files = [f for f in os.listdir(disk_cache)
+                   if os.path.isfile(os.path.join(disk_cache, f))]
+    logging.debug('Got cached fields: %s', field_files)
+    for field in field_files:
+      if not field in self.locks:
+        self.locks[field] = threading.Lock()
+      try:
+        with self.locks[field]:
+          with open(disk_cache + '/' + field, 'r') as cache_file:
+            self.data[field] = json.load(cache_file)
+
+      except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+        logging.warning('Failed to parse cache for %s', field)
 
 ############################
 class WebSocketConnection:
@@ -286,7 +349,6 @@ class WebSocketConnection:
   ############################
   def quit(self):
     """Close the connection from our end and quit."""
-    logging.info('WebSocketConnection quit() signaled')
     self.quit_flag = True
 
   ############################
@@ -406,7 +468,7 @@ class WebSocketConnection:
           logging.debug('fields request')
           await self.send_json_response(
             {'type':'fields', 'status':200,
-             'data':list(self.cache.data.keys())})
+             'data': self.cache.keys()})
 
         # Send client a dict of metadata descriptions; if they've
         # specified a set of fields, give just metadata for those;
@@ -414,11 +476,7 @@ class WebSocketConnection:
         elif request['type'] == 'describe':
           logging.debug('describe request')
           fields = request.get('fields', None)
-          if fields:
-            result = {field:self.cache.metadata.get(field, {})
-                      for field in fields}
-          else:
-            result = self.cache.metadata
+          result = self.cache.get_metadata(fields)
           await self.send_json_response(
             {'type':'describe', 'status':200, 'data':result})
 
@@ -501,6 +559,10 @@ class WebSocketConnection:
 
           results = {}
           for field_name, field_spec in requested_fields.items():
+           if not field_name in self.cache.locks:
+             logging.debug('No data for requested field %s', field_name)
+             continue
+           with self.cache.locks[field_name]:
             latest_timestamp = field_timestamps.get(field_name, 0)
             field_cache = self.cache.data.get(field_name, None)
             if field_cache is None:
@@ -524,7 +586,7 @@ class WebSocketConnection:
               if field_results:
                 field_timestamps[field_name] = field_results[-1][0]
               continue
-            
+
             # If special case -1, they want just single most recent
             # value, then future results. Grab last value, then set its
             # timestamp as the last one we've seen.
@@ -621,10 +683,42 @@ class CachedDataServer:
   """
 
   ############################
-  def __init__(self, port, interval=1, event_loop=None):
+  def __init__(self, port, interval=1, back_seconds=60*60, max_records=60*24,
+               cleanup_interval=60, disk_cache=None, event_loop=None):
+    """
+    port         Port on which to serve websocket connections
+
+    interval     How frequently to serve updates
+
+    back_seconds
+                 How many seconds of back data to retain
+
+    max_records
+                 Maximum number of records to store for each variable.
+
+    cleanup_interval
+                 How many seconds between calls to cleanup old cache entries
+                 and save to disk (if disk_cache is specified)
+
+    disk_cache   If not None, name of directory in which to backup values
+                 from in-memory cache
+
+    event_loop   If not None, the event loop to use for websocket events
+    """
     self.port = port
     self.interval = interval
-    self.cache = RecordCache() # defined above
+    self.back_seconds = back_seconds
+    self.max_records = max_records
+    self.cleanup_interval = cleanup_interval
+    self.event_loop = event_loop
+
+    self.cache = RecordCache()
+
+    # If they've given us the name of a disk cache, try loading our
+    # RecordCache from it.
+    self.disk_cache = disk_cache
+    if disk_cache:
+      self.cache.load_from_disk(disk_cache)
 
     # List where we'll store our websocket connections so that we can
     # keep track of which are still open, and signal them to close
@@ -642,6 +736,10 @@ class CachedDataServer:
       asyncio.set_event_loop(event_loop)
 
     self.quit_flag = False
+
+    # Start a thread to loop through, cleaning up the cache and (if we've
+    # been given a disk_cache file) backing memory up to it.
+    threading.Thread(target=self.cleanup_loop, daemon=True).start()
 
     # Fire up the thread that's going to the websocket server in our
     # event loop. Calling quit() it will close any remaining
@@ -662,9 +760,18 @@ class CachedDataServer:
     self.cache.cache_record(record)
 
   ############################
-  def cleanup_cache(self, oldest):
+  def cleanup_loop(self):
     """Clear out records older than oldest seconds."""
-    self.cache.cleanup(oldest)
+    while not self.quit_flag:
+      time.sleep(self.cleanup_interval)
+
+      # What's the oldest record we should retain?
+      oldest = time.time() - self.back_seconds
+      self.cache.cleanup(oldest=oldest, max_records=self.max_records)
+
+      # If we're using a disk cache, save things now
+      if self.disk_cache:
+        self.cache.save_to_disk(self.disk_cache)
 
   ############################
   def _run_websocket_server(self):
@@ -710,7 +817,7 @@ class CachedDataServer:
   """Top-level coroutine for running CachedDataServer."""
   @asyncio.coroutine
   async def _serve_websocket_data(self, websocket, path):
-    logging.info('New data websocket client attached: %s', path)
+    logging.debug('New data websocket client attached: %s', path)
 
     # Here is where we see the anomalous behavior - when constructed
     # directly, self.cache is as it should be: a shared cache. But
@@ -768,10 +875,19 @@ if __name__ == '__main__':
                       'for data on, e.g. 6221,6224. Prefix by group id '
                       'to specify multicast.')
 
+  parser.add_argument('--disk_cache', dest='disk_cache', default=None,
+                      action='store', help='If specified, periodically '
+                      'backup the in-memory cache to disk. On restart, '
+                      'data will be reloaded from this cache.')
+
   parser.add_argument('--back_seconds', dest='back_seconds', action='store',
                       type=float, default=24*60*60,
                       help='Maximum number of seconds of old data to keep '
                       'for serving to new clients.')
+
+  parser.add_argument('--max_records', dest='max_records', action='store',
+                      type=int, default=24*60*2,
+                      help='Maximum number of records to store per variable.')
 
   parser.add_argument('--cleanup_interval', dest='cleanup_interval',
                       action='store', type=float, default=60,
@@ -803,6 +919,14 @@ if __name__ == '__main__':
                                     split_by_date=True)]
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
 
+  logging.info('Starting CachedDataServer')
+  server = CachedDataServer(port=args.port,
+                            interval=args.interval,
+                            back_seconds=args.back_seconds,
+                            max_records=args.max_records,
+                            cleanup_interval=args.cleanup_interval,
+                            disk_cache=args.disk_cache)
+
   # Only create reader(s) if they've given us a network to read from;
   # otherwise, count on data coming from websocket publish
   # connections.
@@ -818,29 +942,19 @@ if __name__ == '__main__':
     transform = FromJSONTransform()
     reader = ComposedReader(readers=readers, transforms=[transform])
 
-  logging.info('Starting CachedDataServer')
-  server = CachedDataServer(args.port, args.interval)
-
-  # Every N seconds, we're going to detour to clean old data out of cache
-  next_cleanup_time = time.time() + args.cleanup_interval
 
   # Loop, reading data and writing it to the cache
   try:
     while True:
       if args.udp:
         record = reader.read()
-        logging.debug('Got record: %s', record)
-
-        # If, for some reason, we get empty record try again
         server.cache_record(record)
       else:
         time.sleep(args.interval)
 
-      # Is it time for next cleanup?
-      now = time.time()
-      if now > next_cleanup_time:
-        server.cleanup_cache(now - args.back_seconds)
-        next_cleanup_time = now + args.cleanup_interval
   except KeyboardInterrupt:
     logging.warning('Received KeyboardInterrupt - shutting down')
+    if args.disk_cache:
+      logging.warning('Will try to save to disk cache prior to shutdown...')
+      server.cache.save_to_disk(args.disk_cache)
     server.quit()

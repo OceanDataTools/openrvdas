@@ -24,7 +24,7 @@ The OpenRVDAS code base has been written from a clean slate as modular and exten
 
 The code base is written in Python 3 (tested extensively for 3.6.2 and above). Connector classes are implemented for using SQLite, MySQL and MariaDB as backing databases and MySQL, and the Django-based web interface is designed to be compatible with most modern browsers.
 
-Please see [http://openrvdas.org](http://openrvdas.org) and [http://github.com/davidpablocohn/openrvdas](http://github.com/davidpablocohn/openrvdas) for the most recent code and documentation.
+Please see [http://openrvdas.org](http://openrvdas.org) and [http://github.com/oceandatatools/openrvdas](http://github.com/oceandatatools/openrvdas) for the most recent code and documentation.
 
 ### Design Philosophy
 
@@ -36,7 +36,7 @@ Because of this, instead of a system, we have focused on designing and building 
 
 The surest (and still simplest) way to get started with OpenRVDAS is to bring up a clean dedicated Ubuntu 18 or Centos 7 machine in a virtual environment such as [VirtualBox](https://www.virtualbox.org/).
 
-Install the code following the instructions in the [OpenRVDAS Installation Guide](../INSTALL.md). Reboot when asked to.
+Install the code following the instructions in the [OpenRVDAS Installation Guide](../INSTALL.md). Use default answers when asked, and answer "yes" that OpenRVDAS should be started on boot up.
 
 Once you have logged back on, open two terminal windows.
 
@@ -135,7 +135,7 @@ In addition to simply transforming and storing data, OpenRVDAS includes a (still
 
 ## Roadmap
 
-Please see the [Milestones](https://github.com/davidpablocohn/openrvdas/milestones) page and [Projects](https://github.com/davidpablocohn/openrvdas/projects) page for information on upcoming feature additions. For finer granularity, you may also look at the page of [issues and feature requests](https://github.com/davidpablocohn/openrvdas/issues).
+Please see the [Milestones](https://github.com/oceandatatools/openrvdas/milestones) page and [Projects](https://github.com/oceandatatools/openrvdas/projects) page for information on upcoming feature additions. For finer granularity, you may also look at the page of [issues and feature requests](https://github.com/oceandatatools/openrvdas/issues).
 
 ## More Documentation
 

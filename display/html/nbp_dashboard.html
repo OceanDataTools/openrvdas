@@ -86,7 +86,7 @@
     <table class="ship_table">
       <tr>
         <td class="name_td_50" colspan=2>
-          NB Palmer 
+          NB Palmer
 	  <span id="gmt_day">--</span>-<span id="gmt_month">---</span>-<span id="gmt_year">----</span><br>
           GMT Time: <span id="gmt_time">--:--:--.--</span>
         </td>
@@ -165,7 +165,7 @@
 
   /////////////////////////
   // Start of widgets
-  
+
   // Lat/Lon text widgets
   widget_list.push(new TextWidget('gps_lat',
                                   {S330Latitude:
@@ -252,6 +252,7 @@
                                       }
 }}));
 
+
   //////////////////
   // Relative winds
   var rel_wind_fields = {
@@ -303,10 +304,17 @@
                                           marginRight:0,
                                          },
                                    credits:false, maxPadding: 0.05}));
+
+  // Transform to convert speeds in meters per second to knots
+  function ms_to_knots(val) {
+    return (val * 1.94384).toFixed(2);
+  }
+
+  // Relative wind is in m/s, so convert to knots
   var rel_wind_speed_fields = {
     MwxPortRelWindSpeed: {
-      name: "Avg Rel Wind Speed",
-      transform: round_2,
+      name: "Port Rel Wind Speed",
+      transform: ms_to_knots,
       timeout_css: {
         5: "background-color:yellow",
        15: "background-color:red"
@@ -413,7 +421,7 @@
      legend:{enabled: false},
      credits:{enabled: false}}
   ));
-			       
+
   var true_wind_speed_line_fields = {
     AvgPortTrueWindSpeed: {
       name: 'Port True Wind Speed',

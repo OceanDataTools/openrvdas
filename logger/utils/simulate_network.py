@@ -27,7 +27,7 @@ from logger.readers.logfile_reader import LogfileReader
 from logger.transforms.slice_transform import SliceTransform
 from logger.transforms.timestamp_transform import TimestampTransform
 from logger.transforms.prefix_transform import PrefixTransform
-from logger.writers.network_writer import NetworkWriter
+from logger.writers.udp_writer import UDPWriter
 
 from logger.utils.read_config import read_config
 
@@ -35,10 +35,10 @@ from logger.utils.read_config import read_config
 class SimNetwork:
   """Open a network port and feed stored logfile data to it."""
   ############################
-  def __init__(self, network, filebase, instrument):
+  def __init__(self, port, filebase, instrument):
     """
     ```
-    network port -  E.g.  my_host:80 for TCP or :54322 for UDP
+    port -  UDP port on which to write records.
 
     filebase - Prefix string to be matched (with a following "*") to fine
                files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
@@ -51,7 +51,7 @@ class SimNetwork:
     self.slice_n = SliceTransform(fields='1:') # grab 2nd and subsequent fields
     self.timestamp = TimestampTransform()
     self.prefix = PrefixTransform(instrument)
-    self.writer = NetworkWriter(network=network)
+    self.writer = UDPWriter(port=port)
     self.instrument = instrument
     self.first_time = True
     self.quit_flag = False
@@ -102,9 +102,8 @@ if __name__ == '__main__':
   parser.add_argument('--config', dest='config', default=None,
                       help='Config file of JSON specs for port-file mappings.')
 
-  parser.add_argument('--network', dest='network', default=None,
-                      help='Network to write to. E.g. localhost:6224 for '
-                      'TCP or :6224 for UDP.')
+  parser.add_argument('--port', dest='port', default=None, type=int,
+                      help='UDP port to write to. E.g. 6224.')
 
   parser.add_argument('--filebase', dest='filebase', default=None,
                       help='Base string of log file to be read from (with '
@@ -136,15 +135,15 @@ if __name__ == '__main__':
     thread_list = []
     writer_list = []
     for instrument, config in configs.items():
-      network = config['network']
+      port = config['port']
       filebase = config['filebase']
-      writer = SimNetwork(network=network, filebase=filebase,
-                          instrument=instrument)
+      writer = SimNetwork(port=port, filebase=filebase, instrument=instrument)
       writer_thread = threading.Thread(target=writer.run,
-                                       kwargs={'loop': args.loop})
+                                       kwargs={'loop': args.loop},
+                                       daemon=True)
       writer_thread.start()
       thread_list.append(writer_thread)
-      writer_list.append('%s %s, %s' % (instrument, network, filebase))
+      writer_list.append('%s %d, %s' % (instrument, port, filebase))
 
     logging.warning('Running simulated ports for:\n%s', '\n'.join(writer_list))
 
@@ -153,12 +152,12 @@ if __name__ == '__main__':
       thread.join()
 
   # If no config file, just a simple, single network writer
-  elif args.network and args.filebase:
-    sim_network = SimNetwork(network=args.network, filebase=args.filebase,
+  elif args.port and args.filebase:
+    sim_network = SimNetwork(network=args.port, filebase=args.filebase,
                              instrument=args.instrument)
     sim_network.run(args.loop)
 
   # Otherwise, we don't have enough information to run
   else:
-    parser.error('Either --config or --network, --filebase and --instrument '
+    parser.error('Either --config or --port, --filebase and --instrument '
                  'must be specified')

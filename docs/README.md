@@ -6,7 +6,7 @@ The Open Research Vessel Data Acquisition System (OpenRVDAS) is a software frame
 
 OpenRVDAS is designed to be modular and extensible, relying on simple composition of Readers, Transforms and Writers to achieve the needed datalogging functionality.
 
-The project code repository is at [https://github.com/davidpablocohn/openrvdas](https://github.com/davidpablocohn/openrvdas).
+The project code repository is at [https://github.com/oceandatatools/openrvdas](https://github.com/oceandatatools/openrvdas).
 
 Please see the [OpenRVDAS Introduction and Overview](intro_and_overview.md), the [Introduction to Loggers](intro_to_loggers.md) and [Controlling Loggers](controlling_loggers.md) to get started.
 

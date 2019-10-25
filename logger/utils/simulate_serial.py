@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import logging
+import os.path
 import subprocess
 import sys
 import threading
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from logger.readers.logfile_reader import LogfileReader
 from logger.transforms.slice_transform import SliceTransform
@@ -47,8 +48,12 @@ class SimSerial:
                           'exclusive': exclusive}
     self.quit = False
 
-    # Finally, check that our needed 'socat' actually exists
-    if not subprocess.run(['which', 'socat'], stdout=subprocess.PIPE).stdout:
+    # Finally, find path to socat executable
+    self.socat_path = None
+    for socat_path in ['/usr/bin/socat', '/usr/local/bin/socat']:
+      if os.path.exists(socat_path) and os.path.isfile(socat_path):
+        self.socat_path = socat_path
+    if not self.socat_path:
       raise NameError('Executable "socat" not found on path. Please refer '
                       'to installation guide to install socat.')
 
@@ -59,8 +64,7 @@ class SimSerial:
     write_port_params =   'pty,link=%s,raw,echo=0' % self.write_port
     read_port_params = 'pty,link=%s,raw,echo=0' % self.read_port
 
-    cmd = ['/usr/bin/env',
-           'socat',
+    cmd = [self.socat_path,
            verbose,
            #verbose,   # repeating makes it more verbose
            read_port_params,
@@ -93,7 +97,7 @@ class SimSerial:
   def run(self, loop=False):
     """Create the virtual port with socat and start feeding it records from
     the designated logfile. If loop==True, loop when reaching end of input."""
-    self.socat_thread = threading.Thread(target=self._run_socat)
+    self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
     self.socat_thread.start()
     time.sleep(0.2)
 
@@ -171,7 +175,8 @@ if __name__ == '__main__':
       config = configs[inst]
       sim = SimSerial(port=config['port'], source_file=config['logfile'],
                       time_format=config.get('time_format', args.time_format))
-      sim_thread = threading.Thread(target=sim.run, kwargs={'loop': args.loop})
+      sim_thread = threading.Thread(target=sim.run, kwargs={'loop': args.loop},
+                                    daemon=True)
       sim_thread.start()
       thread_list.append(sim_thread)
 
