@@ -461,6 +461,11 @@ fi
 
 echo Copying supervisor file openrvdas.ini into place.
 cat > /tmp/openrvdas.ini <<EOF
+[inet_http_server]
+port=*:8001
+username=${RVDAS_USER}
+password=${RVDAS_USER}
+
 [program:cached_data_server]
 command=/usr/local/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
@@ -481,14 +486,24 @@ stderr_logfile=/var/log/openrvdas/logger_manager.err.log
 stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 
-[program:simulate_serial]
+[program:simulate_nbp_serial]
 command=/usr/local/bin/python3 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_serial.err.log
-stdout_logfile=/var/log/openrvdas/simulate_serial.out.log
+stderr_logfile=/var/log/openrvdas/simulate_nbp_serial.err.log
+stdout_logfile=/var/log/openrvdas/simulate_nbp_serial.out.log
+user=$RVDAS_USER
+
+[program:simulate_skq_network]
+command=/usr/local/bin/python3 logger/utils/simulate_network.py --config test/SKQ201822S/network_sim_SKQ201822S.yaml --loop
+directory=${INSTALL_ROOT}/openrvdas
+autostart=false
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/simulate_skq_network.err.log
+stdout_logfile=/var/log/openrvdas/simulate_skq_network.out.log
 user=$RVDAS_USER
 EOF
 echo Please enter sudo password if prompted...

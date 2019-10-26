@@ -112,12 +112,21 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 
 ### Your First Code Contribution
 
-Unsure where to begin contributing to OpenRVDAS? You can start by looking through these `beginner` and `help-wanted` issues:
+Unsure where to begin contributing to OpenRVDAS? You can start by looking through these `good first issue` and `help-wanted` issues:
 
-* [Beginner issues][beginner] - issues which should only require a few lines of code, and a test or two.
-* [Help wanted issues][help-wanted] - issues which should be a bit more involved than `beginner` issues.
+* [Good first issue](good-first-issue) - issues which should only require a few lines of code, and a test or two.
+* [Help wanted issues](help-wanted) - issues which should be a bit more involved than `beginner` issues.
 
 Both issue lists are sorted by total number of comments. While not perfect, number of comments is a reasonable proxy for impact a given change will have.
+
+Once you have selected an issue to work on, say 'issue 57', check out the ``dev`` branch and create from it a new branch with the name of the issue you've selected:
+
+```
+git branch issue_57
+git checkout issue_57
+```
+
+The expectation will be that when your contribution is ready, it will be merged back into the ``dev`` branch. The ``dev`` branch will be merged into the ``master`` branch when new numbered versions are released.
 
 ### Git Commits and Pull Requests
 

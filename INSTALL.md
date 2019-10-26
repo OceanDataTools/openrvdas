@@ -10,9 +10,13 @@ _This is the recommended way to install for CentOS 7 and Ubuntu 18._
 Grab the script (centos7 or ubuntu18, as appropriate for your distribution):
 
 ```
-# Get build script from Github
+# For CentOS 7 or RedHat
 wget \
   https://raw.githubusercontent.com/oceandatatools/openrvdas/master/utils/build_openrvdas_centos7.sh
+
+# For Ubuntu 18
+wget \
+  https://raw.githubusercontent.com/oceandatatools/openrvdas/master/utils/build_openrvdas_ubuntu18.sh
 ```
 
 Now run the script as sudo
@@ -88,13 +92,17 @@ systemctl restart nginx uwsgi
 
 ## Starting and Stopping Servers
 
-In addition to the NGINX webserver (and its Python helper interface UWSGI), OpenRVDAS relies on two servers: ``logger_manager.py`` and ``cached_data_server.py`` (see [Controlling Loggers](../docs/controlling_loggers.md) for details). If you answered 'no' when asked whether OpenRVDAS should start automatically on boot up, you you will need to manually start/stop them via the ``supervisorctl`` command:
+In addition to the NGINX webserver (and its Python helper interface UWSGI), OpenRVDAS relies on two servers: ``logger_manager.py`` and ``cached_data_server.py`` (see [Controlling Loggers](../docs/controlling_loggers.md) for details). 
+
+The easiest way to manage these servers is via the supervisord package that is installed by the installation script. If you answered 'yes' when asked whether OpenRVDAS should start automatically on boot up, supervisord will start them for you; if you answered 'no', the supervisord configurations will have still be created, but you will need to manually tell supervisord to start/stop them.
+
+You can do this two ways, either via the local webserver at [http://openrvdas:8001](http://openrvdas:8001) (assuming your machine is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 
 ```
-  root@openrvdas:~# supervisorctl
+  rvdas@openrvdas:~> supervisorctl
   cached_data_server               STOPPED   Oct 05 03:22 AM
   logger_manager                   STOPPED   Oct 05 03:22 AM
-  simulate_serial                  STOPPED   Oct 05 03:22 AM
+  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
 
   supervisor> start cached_data_server logger_manager
   cached_data_server: started
@@ -103,7 +111,7 @@ In addition to the NGINX webserver (and its Python helper interface UWSGI), Open
   supervisor> status
   cached_data_server               RUNNING   pid 5641, uptime 0:00:04
   logger_manager                   RUNNING   pid 5646, uptime 0:00:03
-  simulate_serial                  STOPPED   Oct 05 03:22 AM
+  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
 
   supervisor> exit
 ```
@@ -111,7 +119,7 @@ In addition to the NGINX webserver (and its Python helper interface UWSGI), Open
 If you are planning to run the test cruise definition in ``test/NBP1406/NBP1406_cruise.yaml`` then you should also start the process that creates the simulated serial ports that it's configured for:
 
 ```
-    supervisor> start simulate_serial
+    supervisor> start simulate_nbp_serial
 ```
 
 You may also use broader acting commands with supervisorctl, such as
@@ -275,6 +283,7 @@ cd /opt/openrvdas
 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
 ```
 In another terminal, try reading from one of the simulated serial ports as user **rvdas**:
+
 ```
 cd /opt/openrvdas
 logger/listener/listen.py --serial port=/tmp/tty_s330 \
@@ -282,7 +291,9 @@ logger/listener/listen.py --serial port=/tmp/tty_s330 \
   --transform_prefix s330 \
   --write_file -
 ```
+
 Try reading from the simulated serial port and writing to the database:
+
 ```
 logger/listener/listen.py --serial port=/tmp/tty_s330 \
   --transform_timestamp \
@@ -291,13 +302,17 @@ logger/listener/listen.py --serial port=/tmp/tty_s330 \
   --database_password <your database password> \
   --write_database rvdas@localhost:data
 ```
+
 Go to the database in another terminal to verify data are being written:
+
 ```
 mysql -u rvdas -p
 > use data;
 > select * from data;
 ```
+
 Try writing to the network and reading the written records in another terminal:
+
 ```
 cd /opt/openrvdas
 logger/listener/listen.py --serial port=/tmp/tty_s330 \

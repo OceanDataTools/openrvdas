@@ -354,13 +354,13 @@ stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 ```
 
-The servers may be started/stopped using the ``supervisorctl`` command:
+The servers may be started/stopped either via the local webserver at [http://openrvdas:8001](http://openrvdas:8001) (assuming your machine is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 
 ```
   root@openrvdas:~# supervisorctl
   cached_data_server               STOPPED   Oct 05 03:22 AM
   logger_manager                   STOPPED   Oct 05 03:22 AM
-  simulate_serial                  STOPPED   Oct 05 03:22 AM
+  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
 
   supervisor> start cached_data_server logger_manager
   cached_data_server: started
@@ -369,7 +369,7 @@ The servers may be started/stopped using the ``supervisorctl`` command:
   supervisor> status
   cached_data_server               RUNNING   pid 5641, uptime 0:00:04
   logger_manager                   RUNNING   pid 5646, uptime 0:00:03
-  simulate_serial                  STOPPED   Oct 05 03:22 AM
+  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
 
   supervisor> exit
 ```
@@ -389,15 +389,15 @@ supervisorctl:
   root@openrvdas:~# supervisorctl
   cached_data_server               RUNNING   pid 5641, uptime 0:12:00
   logger_manager                   RUNNING   pid 5646, uptime 0:11:59
-  simulate_serial                  STOPPED   Oct 05 03:22 AM
+  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
 
-  supervisor> start simulate_serial
-  simulate_serial: started
+  supervisor> start simulate_nbp_serial
+  simulate_nbp_serial: started
 
   supervisor> status
   cached_data_server               RUNNING   pid 5641, uptime 0:12:13
   logger_manager                   RUNNING   pid 5646, uptime 0:12:12
-  simulate_serial                  RUNNING   pid 5817, uptime 0:00:05
+  simulate_nbp_serial              RUNNING   pid 5817, uptime 0:00:05
 
   supervisor> exit
 ```
