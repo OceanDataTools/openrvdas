@@ -64,7 +64,7 @@ says to
    invocation in the default OpenRVDAS installation does *not* listen
    on a UDP port, and relies on websocket connections for its data).
 
-In the default installation, the ``supervisor`` package starts and
+In the default installation, the ``supervisord`` package starts and
 maintains a cached\_data\_server with the following invocation:
 
 ```
@@ -86,13 +86,16 @@ The full specification can be found in
 ``/etc/supervisor/conf.d/openrvdas.conf`` in Ubuntu and
 ``/etc/supervisord.d/openrvdas.ini`` in CentOS/Redhat.
 
-To start/stop/restart the supervisor-maintained configuration, run
+To start/stop/restart the supervisor-maintained configuration, either
+via the local webserver at
+[http://openrvdas:8001](http://openrvdas:8001) (assuming your machine
+is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 
 ```
 root@openrvdas:~# supervisorctl
 cached_data_server               RUNNING   pid 5641, uptime 1:35:54
 logger_manager                   RUNNING   pid 5646, uptime 1:35:53
-simulate_serial                  RUNNING   pid 5817, uptime 1:23:46
+simulate_nbp_serial              RUNNING   pid 5817, uptime 1:23:46
 
 supervisor> stop cached_data_server
 cached_data_server: stopped
@@ -100,7 +103,7 @@ cached_data_server: stopped
 supervisor> status
 cached_data_server               STOPPED   Oct 05 04:58 AM
 logger_manager                   RUNNING   pid 5646, uptime 1:36:02
-simulate_serial                  RUNNING   pid 5817, uptime 1:23:55
+simulate_nbp_serial              RUNNING   pid 5817, uptime 1:23:55
 
 supervisor> start cached_data_server
 cached_data_server: started
@@ -108,7 +111,7 @@ cached_data_server: started
 supervisor> status
 cached_data_server               RUNNING   pid 15187, uptime 0:00:03
 logger_manager                   RUNNING   pid 5646, uptime 1:36:09
-simulate_serial                  RUNNING   pid 5817, uptime 1:24:02
+simulate_nbp_serial              RUNNING   pid 5817, uptime 1:24:02
 
 supervisor> exit
 ```

@@ -484,6 +484,11 @@ file=/var/run/supervisor/supervisor.sock ; (the path to the socket file)
 chmod=0770                               ; socket file mode (default 0700)
 chown=nobody:${RVDAS_USER}
 
+[inet_http_server]
+port=*:8001
+username=${RVDAS_USER}
+password=${RVDAS_USER}
+
 ; The scripts we're going to run
 [program:cached_data_server]
 command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
@@ -505,14 +510,24 @@ stderr_logfile=/var/log/openrvdas/logger_manager.err.log
 stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 
-[program:simulate_serial]
+[program:simulate_nbp_serial]
 command=/usr/bin/python3 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_serial.err.log
-stdout_logfile=/var/log/openrvdas/simulate_serial.out.log
+stderr_logfile=/var/log/openrvdas/simulate_nbp_serial.err.log
+stdout_logfile=/var/log/openrvdas/simulate_nbp_serial.out.log
+user=$RVDAS_USER
+
+[program:simulate_skq_network]
+command=/usr/bin/python3 logger/utils/simulate_network.py --config test/SKQ201822S/network_sim_SKQ201822S.yaml --loop
+directory=${INSTALL_ROOT}/openrvdas
+autostart=false
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/simulate_skq_network.err.log
+stdout_logfile=/var/log/openrvdas/simulate_skq_network.out.log
 user=$RVDAS_USER
 EOF
 mkdir -p /var/run/supervisor/
