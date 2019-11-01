@@ -9,6 +9,8 @@ import traceback
 from os import makedirs
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
+from logger.readers.text_file_reader import TextFileReader
+from logger.writers.text_file_writer import TextFileWriter
 from logger.readers.composed_reader import ComposedReader
 from logger.writers.composed_writer import ComposedWriter
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
@@ -25,7 +27,7 @@ class Listener:
 
   """
   ############################
-  def __init__(self, readers, transforms=[], writers=[], stderr_writers=[],
+  def __init__(self, readers=[], transforms=[], writers=[], stderr_writers=[],
                host_id='', interval=0, name=None, check_format=False,
                log_level=None):
     """listener = Listener(readers, transforms=[], writers=[],
@@ -73,9 +75,15 @@ class Listener:
       logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
 
     logging.info('Instantiating %s logger', name or 'unnamed')
-    
+
+    # If we're missing readers or writers, set up default of stdin/stdout
+    if not readers:
+      readers = [TextFileReader()]
+    if not writers:
+      writers = [TextFileWriter()]
+
     ###########
-    # Create readers, writers, etc.
+    # Create readers, writers, etc.      
     self.reader = ComposedReader(readers=readers, check_format=check_format)
     self.writer = ComposedWriter(transforms=transforms, writers=writers,
                                  check_format=check_format)
