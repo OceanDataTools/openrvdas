@@ -109,17 +109,27 @@ class SupervisorConnector:
     group - process group in which the configs were defined; will be
         prepended to config names.
     """
-    for config in configs_to_start:
+    configs = list(configs_to_start)  # so we can order results
+    config_calls = []
+    
+    for config in configs:
       config = self.clean_name(config)  # get rid of objectionable characters
       if group:
         config = group + ':' + config
-      try:
-        self.supervisor_rpc.supervisor.startProcess(config)
-      except XmlRpcFault as e:
-        if e.faultCode == 60:
-          logging.info('Starting process %s, but already started', config)
+      config_calls.append({'methodName':'supervisor.startProcess',
+                           'params':[config, False]})
+
+    results = self.supervisor_rpc.system.multicall(config_calls)
+    # Let's see what the results are
+    for i in range(len(results)):
+      result = results[i]
+      config = configs[i]
+      if type(result) is dict:
+        if result['faultCode'] == 60:
+          logging.warning('Starting process %s, but already started', config)
         else:
-          logging.warning('Starting process %s: %s', config, e.faultString)
+          logging.warning('Starting process %s: %s', config,
+                          result['faultString'])
 
   ############################
   def start_group(self, group):
@@ -140,11 +150,27 @@ class SupervisorConnector:
     group - process group in which the configs were defined; will be
         prepended to config names.
     """
-    for config in configs_to_stop:
+    configs = list(configs_to_stop)  # so we can order results
+    config_calls = []
+    
+    for config in configs:
       config = self.clean_name(config)  # get rid of objectionable characters
       if group:
         config = group + ':' + config
-      self.supervisor_rpc.supervisor.stopProcess(config)
+      config_calls.append({'methodName':'supervisor.stopProcess',
+                           'params':[config, False]})
+
+    results = self.supervisor_rpc.system.multicall(config_calls)
+    # Let's see what the results are
+    for i in range(len(results)):
+      result = results[i]
+      config = configs[i]
+      if type(result) is dict:
+        if result['faultCode'] == 60:
+          logging.warning('Stopping process %s, but already stopped', config)
+        else:
+          logging.warning('Stopping process %s: %s', config,
+                          result['faultString'])
 
   ############################
   def create_new_supervisor_file(self, configs, group=None,
