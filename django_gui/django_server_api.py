@@ -246,7 +246,7 @@ class DjangoServerAPI(ServerAPI):
   def get_logger(self, logger):
     """Retrieve the logger spec for the specified logger id."""
     #logging.info('get_logger')
-    return self.get_logger_object(logger_id)
+    return self._get_logger_object(logger)
 
   ############################
   def get_loggers(self):
