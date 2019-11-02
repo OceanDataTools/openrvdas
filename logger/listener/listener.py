@@ -15,7 +15,7 @@ from logger.readers.composed_reader import ComposedReader
 from logger.writers.composed_writer import ComposedWriter
 from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 
-    
+
 ################################################################################
 class Listener:
   """Listener is a simple, yet relatively self-contained class that
@@ -76,14 +76,8 @@ class Listener:
 
     logging.info('Instantiating %s logger', name or 'unnamed')
 
-    # If we're missing readers or writers, set up default of stdin/stdout
-    if not readers:
-      readers = [TextFileReader()]
-    if not writers:
-      writers = [TextFileWriter()]
-
     ###########
-    # Create readers, writers, etc.      
+    # Create readers, writers, etc.
     self.reader = ComposedReader(readers=readers, check_format=check_format)
     self.writer = ComposedWriter(transforms=transforms, writers=writers,
                                  check_format=check_format)
@@ -109,6 +103,11 @@ class Listener:
     component readers have returned EOF.
     """
     logging.info('Running %s', self.name)
+
+    if not self.reader and not self.writer:
+      logging.info('No readers or writers defined - exiting.')
+      return
+
     record = ''
     try:
       while not self.quit_signalled and record is not None:

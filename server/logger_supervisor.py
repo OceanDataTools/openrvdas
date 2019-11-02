@@ -5,6 +5,7 @@ import asyncio
 import getpass  # to get username
 import json
 import logging
+import multiprocessing
 import os
 import pprint
 import queue
@@ -92,7 +93,7 @@ class SupervisorConnector:
       logging.warning('Retrying connection to %s', supervisor_url)
 
   ############################
-  def clean_name(self, config_name):
+  def _clean_name(self, config_name):
     """Remove characters from a string that supervisord can't handle as
     a process name.
     """
@@ -113,7 +114,7 @@ class SupervisorConnector:
     config_calls = []
     
     for config in configs:
-      config = self.clean_name(config)  # get rid of objectionable characters
+      config = self._clean_name(config)  # get rid of objectionable characters
       if group:
         config = group + ':' + config
       config_calls.append({'methodName':'supervisor.startProcess',
@@ -154,7 +155,7 @@ class SupervisorConnector:
     config_calls = []
     
     for config in configs:
-      config = self.clean_name(config)  # get rid of objectionable characters
+      config = self._clean_name(config)  # get rid of objectionable characters
       if group:
         config = group + ':' + config
       config_calls.append({'methodName':'supervisor.stopProcess',
@@ -174,7 +175,6 @@ class SupervisorConnector:
 
   ############################
   def create_new_supervisor_file(self, configs, group=None,
-                                 config_filepath=None,
                                  user=None, base_dir=None, max_tries=3):
     """Create a new configuration file for supervisord to read.
 
@@ -182,9 +182,6 @@ class SupervisorConnector:
 
     group - process group in which the configs will be defined; will be
         prepended to config names.
-
-    config_filepath - where the file should be written. If omitted, will
-        use the value passed in when the SupervisorConnector was created.
 
     user - user name under which processes should run. Will default to
         current user.
@@ -194,8 +191,9 @@ class SupervisorConnector:
     max_tries - number of times a process should be tried before
         giving it up as failed.
     """
+    logging.warning('Writing new configurations to "%s"', self.config_filepath)
+
     # Fill in some defaults if they weren't provided
-    config_filepath = config_filepath or self.config_filepath
     user = user or getpass.getuser()
     base_dir = base_dir or dirname(dirname(realpath(__file__)))
 
@@ -211,17 +209,23 @@ class SupervisorConnector:
     for logger, logger_configs in configs.items():
       for config_name, config in logger_configs.items():
         # Supervisord doesn't like '/' in program names
-        config_name = self.clean_name(config_name)
+        config_name = self._clean_name(config_name)
         config_names.append(config_name)
         config_json = json.dumps(config)
 
+        # If a logger doesn't have readers or writers, e.g. if it's an
+        # "off" config, then it'll terminate quietly after
+        # starting. We don't want to restart it.
+        autorestart_bool = 'readers' in config and 'writers' in config
+        autorestart = 'true' if autorestart_bool else 'false'
+        
         # Use fancy new f-strings for formatting
         config_str += '\n'.join([
           f'[program:{config_name}]',
           f'command=/usr/local/bin/python3 logger/listener/listen.py --config_string \'{config_json}\' -v',
           f'directory={base_dir}',
           f'autostart=false',
-          f'autorestart=true',
+          f'autorestart={autorestart}',
           f'startretries={max_tries}',
           f'stderr_logfile=/var/log/openrvdas/{logger}.err.log',
           f'stdout_logfile=/var/log/openrvdas/{logger}.out.log',
@@ -240,28 +244,20 @@ class SupervisorConnector:
       ])
 
     # Open and write the config file.
-    with open(config_filepath, 'w') as config_file:
+    with open(self.config_filepath, 'w') as config_file:
       config_file.write(config_str)
 
-    # Force supervisord to reload the logger group, which should get
-    # it to recognize the new file.
-    if group:
-      self.update_group(group)
-
-  ############################
-  def update_group(self, group):
-    """Ask supervisord to re-read the config file and start/stop relevant
-    processes/configs as specified in it.
-    """
+    # Get supervisord to reload the new file and refresh groups.
     self.supervisor_rpc.supervisor.reloadConfig()
-    try:
-      self.supervisor_rpc.supervisor.removeProcessGroup(group)
-    except XmlRpcFault:
-      pass
-    try:
-      self.supervisor_rpc.supervisor.addProcessGroup(group)
-    except XmlRpcFault:
-      pass
+    if group:
+      try:
+        self.supervisor_rpc.supervisor.removeProcessGroup(group)
+      except XmlRpcFault:
+        pass
+      try:
+        self.supervisor_rpc.supervisor.addProcessGroup(group)
+      except XmlRpcFault:
+        pass
 
 ################################################################################
 ################################################################################
@@ -302,7 +298,9 @@ class LoggerSupervisor:
                       'shutting down with Ctl-C may not work.')
 
     # Set up XMLRPC connection to supervisord
-    self.supervisor = SupervisorConnector(supervisor_url=supervisor_url)
+    self.supervisor = SupervisorConnector(
+      supervisor_url=supervisor_url,
+      config_filepath=supervisor_config_filepath)
 
     # Where we expect supervisord to look for config process file.
     self.supervisor_config_filepath = supervisor_config_filepath
@@ -395,14 +393,8 @@ class LoggerSupervisor:
 
     # Now create a .ini file of those configs for supervisord to run.
     with self.config_lock:
-      config_filepath = self.supervisor_config_filepath
-      logging.warning('Creating new configs in %s.', config_filepath)
-      self.supervisor.create_new_supervisor_file(
-        configs=self.loggers,
-        config_filepath=config_filepath,
-        group='logger')
-      logging.warning('Done creating new configs - reloading.')
-      self.supervisor.update_group('logger')
+      self.supervisor.create_new_supervisor_file(configs=self.loggers,
+                                                 group='logger')
 
     # Finally, reset the currently active configurations
     self._update_configs()
@@ -675,7 +667,7 @@ class LoggerSupervisor:
         self.data_server_queue.put(error_message)
 
 ################################################################################
-def run_data_server(data_server_websocket, data_server_udp,
+def run_data_server(data_server_websocket, 
                     data_server_back_seconds, data_server_cleanup_interval,
                     data_server_interval):
   """Run a CachedDataServer (to be called as a separate process),
@@ -688,44 +680,11 @@ def run_data_server(data_server_websocket, data_server_udp,
   websocket_port = int(data_server_websocket.split(':')[-1])
   server = CachedDataServer(port=websocket_port, interval=data_server_interval)
 
-  # If we have a data_server_udp specified, start up a reader that
-  # will listen on that UDP port and cache what it receives.
-  if data_server_udp:
-    group_port = data_server_udp.split(':')
-    port = int(group_port[-1])
-    multicast_group = group_port[-2] if len(group_port) == 2 else ''
-    reader = UDPReader(port=port, source=multicast_group)
-    transform = FromJSONTransform()
-
-  # Every N seconds, we're going to detour to clean old data out of cache
-  next_cleanup_time = time.time() + data_server_cleanup_interval
-
-  # Loop, reading data and writing it to the cache
-  try:
-    while True:
-      # If we have a reader, try reading from it
-      if data_server_udp:
-        try:
-          record = reader.read()
-          if record:
-            server.cache_record(transform.transform(record))
-        except ValueError as e:
-          logging.warning(
-            'Data Server UDP port received non-JSON message: %s', str(e))
-          continue
-
-      # If no reader, sleep until it's time to do another cleanup
-      else:
-        time.sleep(data_server_cleanup_interval)
-
-      # Is it time for next cleanup?
-      now = time.time()
-      if now > next_cleanup_time:
-        server.cleanup(oldest=now - data_server_back_seconds)
-        next_cleanup_time = now + data_server_cleanup_interval
-  except KeyboardInterrupt:
-    logging.warning('Received KeyboardInterrupt - shutting down')
-    server.quit()
+  # The server will start serving in its own thread after
+  # initialization, but we need to manually fire up the cleanup loop
+  # if we want it. Maybe we should have this also run automatically in
+  # its own thread after initialization?
+  server.cleanup_loop()
 
 ################################################################################
 if __name__ == '__main__':
@@ -840,11 +799,6 @@ if __name__ == '__main__':
     max_tries=args.max_tries,
     logger_log_level=logger_log_level)
 
-  # Register a callback: when api.set_active_mode() or api.set_config()
-  # have completed, they call api.signal_update(). We're registering
-  # update_configs() with the API so that it gets called when the api
-  # signals that an update has occurred.
-
   # When an active config changes in the database, update our configs here
   api.on_update(callback=logger_supervisor._update_configs)
 
@@ -859,8 +813,9 @@ if __name__ == '__main__':
   # here in its own process.
   if args.start_data_server:
     data_server_proc = multiprocessing.Process(
+      name='CachedDataServer',
       target=run_data_server,
-      args=(args.data_server_websocket, args.data_server_udp,
+      args=(args.data_server_websocket,
             args.data_server_back_seconds, args.data_server_cleanup_interval,
             args.data_server_interval),
       daemon=True)
