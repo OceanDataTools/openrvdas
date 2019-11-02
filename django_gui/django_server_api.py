@@ -39,9 +39,7 @@ DEFAULT_MAX_TRIES = 3
 class DjangoServerAPI(ServerAPI):
   ############################
   def __init__(self):
-    super().__init__()
-    self.update_callbacks = []
-
+    super().__init__()    
     # We're going to try to minimize the number of expensive queries we
     # make to the API by caching the last time any configurations were
     # updated. When we make a change to the DB, we'll update the most
@@ -445,24 +443,6 @@ class DjangoServerAPI(ServerAPI):
         connection.close()
         time.sleep(0.1)
 
-  #############################
-  # API method to register a callback. When the data store changes,
-  # methods that are registered via on_update() will be called so they
-  # can fetch updated results.
-  #############################
-  def on_update(self, callback, kwargs=None):
-    """Register a method to be called when datastore changes."""
-    if kwargs is None:
-      kwargs = {}
-    self.update_callbacks.append((callback, kwargs))
-
-  #############################
-  def signal_update(self):
-    """Call the registered methods when an update has been signalled."""
-    for (callback, kwargs) in self.update_callbacks:
-      logging.debug('Executing update callback: %s', callback)
-      callback(**kwargs)
-
   ############################
   # Methods for feeding data from LoggerManager back into the API
   ############################
@@ -767,6 +747,9 @@ class DjangoServerAPI(ServerAPI):
     logging.info('Cruise loaded - setting to default mode %s', default_mode)
     self.set_active_mode(default_mode)
 
+    # Let anyone who's interested know that we've got new configurations.
+    self.signal_load()
+    
   ############################
   def delete_configuration(self):
     """Remove the current cruise from the data store."""

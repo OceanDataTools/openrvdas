@@ -201,35 +201,6 @@ class InMemoryServerAPI(ServerAPI):
     logging.info('Signaling update')
     self.signal_update()
 
-  #############################
-  # API method to register a callback. When the data store changes,
-  # methods that are registered via on_update() will be called so they
-  # can fetch updated results. If cruise_id==None, make callback when
-  # any cruise_id update is registered.
-  #############################
-  def on_update(self, callback, kwargs=None):
-    """Register a method to be called when datastore changes."""
-    # if not cruise_id in self.callbacks:
-    #   self.callbacks[cruise_id] = []
-    if kwargs is None:
-      kwargs = {}
-    self.callbacks.append((callback, kwargs))
-
-  #############################
-  def signal_update(self):
-    """Call the registered methods when an update has been signalled."""
-
-    for (callback, kwargs) in self.callbacks:
-      logging.debug('Executing update callback: %s',
-                    callback)
-      callback(**kwargs)
-
-    # If cruise_id is *not* None, then we've now done the callbacks
-    # for that specified cruise. But we may also have callbacks (filed
-    # under None) that are supposed to be executed when *any* cruise
-    # is updated. Do those now.
-    # self.signal_update()
-
   ############################
   # Methods for feeding data from LoggerServer back into the API
   ############################
@@ -344,21 +315,15 @@ class InMemoryServerAPI(ServerAPI):
   def load_configuration(self, config):
     """Add a complete cruise configuration (id, modes, configs, 
     default) to the data store."""
-    # if 'cruise' in cruise_config and 'id' in cruise_config['cruise']:
-    #   cruise_id = cruise_config['cruise']['id']
-    # else:
-    #   cruise_id = 'cruise_%d' % len(cruise_configs.keys())
-
-    # if ID_SEPARATOR in cruise_id:
-    #   raise ValueError('Illegal character "%s" in cruise id: "%s"' %
-    #                    ID_SEPARATOR, cruise_id)
-
     self.config = config
 
     # Set cruise into default mode, if one is defined
     if 'default_mode' in config:
       self.set_active_mode(config['default_mode'])
 
+    # Let anyone who's interested know that we've got new configurations.
+    self.signal_load()
+    
   ############################
   def delete_configuration(self):
     """Remove the specified cruise from the data store."""

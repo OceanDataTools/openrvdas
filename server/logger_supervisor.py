@@ -58,7 +58,7 @@ def kill_handler(self, signum):
   KeyboardInterrupt, which will signal the start() loop to exit nicely."""
   raise KeyboardInterrupt('Received external kill signal')
 
-
+################################################################################
 ################################################################################
 class SupervisorConnector:
   ############################
@@ -99,7 +99,7 @@ class SupervisorConnector:
     return config_name.replace('/', '+')
 
   ############################
-  def start_configs(self, configs_to_start, group=None, wait=True):
+  def start_configs(self, configs_to_start, group=None):
     """Ask supervisord to start the listed configs. Note that all logger
     configs are part of group 'logger', so we need to prefix all names
     with 'logger:' when talking to supervisord about them.
@@ -108,27 +108,29 @@ class SupervisorConnector:
 
     group - process group in which the configs were defined; will be
         prepended to config names.
-
-    wait - whether to wait for processes to start before returning.
     """
     for config in configs_to_start:
       config = self.clean_name(config)  # get rid of objectionable characters
       if group:
         config = group + ':' + config
-      self.supervisor_rpc.supervisor.startProcess(config, wait=wait)
+      try:
+        self.supervisor_rpc.supervisor.startProcess(config)
+      except XmlRpcFault as e:
+        if e.faultCode == 60:
+          logging.info('Starting process %s, but already started', config)
+        else:
+          logging.warning('Starting process %s: %s', config, e.faultString)
 
   ############################
-  def start_group(self, group, wait=True):
+  def start_group(self, group):
     """Ask supervisord to start the listed process config group.
 
     group - name of process group to start.
-
-    wait - whether to wait for processes to start before returning.
     """
-    self.supervisor_rpc.supervisor.startProcessGroup(group) #, wait=wait)
+    self.supervisor_rpc.supervisor.startProcessGroup(group)
 
   ############################
-  def stop_configs(self, configs_to_stop, group=None, wait=True):
+  def stop_configs(self, configs_to_stop, group=None):
     """Ask supervisord to stop the listed configs. Note that all logger
     configs are part of group 'logger', so we need to prefix all names
     with 'logger:' when talking to supervisord about them.
@@ -137,21 +139,20 @@ class SupervisorConnector:
 
     group - process group in which the configs were defined; will be
         prepended to config names.
-
-    wait - whether to wait for processes to stop before returning.
     """
     for config in configs_to_stop:
       config = self.clean_name(config)  # get rid of objectionable characters
       if group:
         config = group + ':' + config
-      self.supervisor_rpc.supervisor.stopProcess(config) #, wait=wait)
+      self.supervisor_rpc.supervisor.stopProcess(config)
 
   ############################
-  def create_new_configs(self, configs, group=None, config_filepath=None,
-                         user=None, base_dir=None, max_tries=3):
+  def create_new_supervisor_file(self, configs, group=None,
+                                 config_filepath=None,
+                                 user=None, base_dir=None, max_tries=3):
     """Create a new configuration file for supervisord to read.
 
-    configs - a dict of {logger_name:config_spec} entries.
+    configs - a dict of {logger_name:{config_name:config_spec}} entries.
 
     group - process group in which the configs will be defined; will be
         prepended to config names.
@@ -181,31 +182,26 @@ class SupervisorConnector:
       ])
 
     config_names = []
-    for logger, logger_config in configs.items():
-      config_name = logger_config.get('name', None)
-      if not config_name:
-        logging.error('Logger config is missing name; skipping: %s: %s',
-                      logger, logger_config)
-        continue
+    for logger, logger_configs in configs.items():
+      for config_name, config in logger_configs.items():
+        # Supervisord doesn't like '/' in program names
+        config_name = self.clean_name(config_name)
+        config_names.append(config_name)
+        config_json = json.dumps(config)
 
-      # Supervisord doesn't like '/' in program names
-      config_name = self.clean_name(config_name)
-      config_names.append(config_name)
-      config_json = json.dumps(logger_config)
-
-      # Use fancy new f-strings for formatting
-      config_str += '\n'.join([
-        f'[program:{config_name}]',
-        f'command=/usr/local/bin/python3 logger/listener/listen.py --config_string \'{config_json}\' -v',
-        f'directory={base_dir}',
-        f'autostart=true',
-        f'autorestart=true',
-        f'startretries={max_tries}',
-        f'stderr_logfile=/var/log/openrvdas/{logger}.err.log',
-        f'stdout_logfile=/var/log/openrvdas/{logger}.out.log',
-        f'user={user}',
-        '', '',
-      ])
+        # Use fancy new f-strings for formatting
+        config_str += '\n'.join([
+          f'[program:{config_name}]',
+          f'command=/usr/local/bin/python3 logger/listener/listen.py --config_string \'{config_json}\' -v',
+          f'directory={base_dir}',
+          f'autostart=false',
+          f'autorestart=true',
+          f'startretries={max_tries}',
+          f'stderr_logfile=/var/log/openrvdas/{logger}.err.log',
+          f'stdout_logfile=/var/log/openrvdas/{logger}.out.log',
+          f'user={user}',
+          '', '',
+        ])
 
     # If we've been given a group name, group all the logger configs
     # together under it so we can start them all at the same time with
@@ -220,6 +216,11 @@ class SupervisorConnector:
     # Open and write the config file.
     with open(config_filepath, 'w') as config_file:
       config_file.write(config_str)
+
+    # Force supervisord to reload the logger group, which should get
+    # it to recognize the new file.
+    if group:
+      self.update_group(group)
 
   ############################
   def update_group(self, group):
@@ -236,6 +237,7 @@ class SupervisorConnector:
     except XmlRpcFault:
       pass
 
+################################################################################
 ################################################################################
 class LoggerSupervisor:
   ############################
@@ -273,8 +275,10 @@ class LoggerSupervisor:
       logging.warning('LoggerSupervisor not running in main thread; '
                       'shutting down with Ctl-C may not work.')
 
-      # Set up XMLRPC connection to supervisord
+    # Set up XMLRPC connection to supervisord
     self.supervisor = SupervisorConnector(supervisor_url=supervisor_url)
+
+    # Where we expect supervisord to look for config process file.
     self.supervisor_config_filepath = supervisor_config_filepath
 
     # api class must be subclass of ServerAPI
@@ -284,7 +288,6 @@ class LoggerSupervisor:
     self.interval = interval
     self.max_tries = max_tries
     self.logger_log_level = logger_log_level
-
     self.quit_flag = False
 
     # Where we store the latest status/error reports.
@@ -293,11 +296,17 @@ class LoggerSupervisor:
 
     # We'll loop to check the API for updates to our desired
     # configs. Do this in a separate thread. Also keep track of
-    # old/current configs so that we know when an update is actually
-    # needed.
+    # currently active configs so that we know when an update is
+    # actually needed.
     self.update_configs_thread = None
-    self.old_configs = {}
     self.config_lock = threading.Lock()
+    self.loggers = {}                 # dict of all loggers and their configs
+    self.active_configs = set()       # which of those configs are active now?
+
+    # Fetch the complete set of loggers and configs from API; store
+    # them in self.loggers and create a .ini file for supervisord to
+    # run them.
+    self._build_new_config_file()
 
     # If we have a cached data server (either one we've started, or
     # one we're just connecting to, we'll use a separate thread to
@@ -344,6 +353,35 @@ class LoggerSupervisor:
     self.quit_flag = True
 
   ############################
+  def _build_new_config_file(self):
+    """Fetch latest dict of configs from API. Update self.loggers to
+    reflect them and build a .ini file to run them.
+    """
+    # Inefficient: first fetch loggers, then one by one grab their
+    # configs.
+    loggers = self.api.get_loggers()
+    self.loggers = {}
+    for logger, configs in loggers.items():
+      config_names = configs.get('configs', [])
+      logger_configs = {config_name:api.get_logger_config(config_name)
+                        for config_name in config_names}
+      self.loggers[logger] = logger_configs
+
+    # Now create a .ini file of those configs for supervisord to run.
+    with self.config_lock:
+      config_filepath = self.supervisor_config_filepath
+      logging.warning('Creating new configs in %s.', config_filepath)
+      self.supervisor.create_new_supervisor_file(
+        configs=self.loggers,
+        config_filepath=config_filepath,
+        group='logger')
+      logging.warning('Done creating new configs - reloading.')
+      self.supervisor.update_group('logger')
+
+    # Finally, reset the currently active configurations
+    self._update_configs()
+
+  ############################
   def _update_configs_loop(self):
     """Iteratively check the API for updated configs and send them to the
     appropriate LoggerRunners.
@@ -356,48 +394,36 @@ class LoggerSupervisor:
   def _update_configs(self):
     """Get list of new (latest) configs. If any have changed,
 
-    1. Shut down any configs that aren't a part of new configs
-    2. Create new supervisord file that includes (all) new configs
-    3. Refresh, starting all new configs, but leaving unchanged ones alone.
+    1. Shut down any configs that aren't a part of new active configs.
+    2. Start and newly-active configs.
     """
     with self.config_lock:
       try:
-        # Get new configs
-        new_configs = self.api.get_logger_configs()
+        # Get new configs in dict {logger:{'configs':[config_name,...]}}
+        new_logger_configs = self.api.get_logger_configs()
+        new_configs = set([new_logger_configs[logger].get('name', None)
+                           for logger in new_logger_configs])
       except (AttributeError, ValueError):
         return
 
       # If configs have changed, start new ones and stop old ones.
-      if new_configs == self.old_configs:
+      if new_configs == self.active_configs:
         return
 
-      new_config_names = {logger:new_configs[logger].get('name', None)
-                          for logger in new_configs}
-      old_config_names = {logger:self.old_configs[logger].get('name', None)
-                          for logger in self.old_configs}
+      configs_to_start = new_configs - self.active_configs
+      configs_to_stop = self.active_configs - new_configs
 
-      configs_to_start = set(new_config_names.values()) - set(old_config_names.values())
-      configs_to_stop = set(old_config_names.values()) - set(new_config_names.values())
+      if configs_to_stop:
+        logging.warning('Stopping configs: %s', configs_to_stop)
+        self.supervisor.stop_configs(configs_to_stop, group='logger')
+        logging.warning('We should read final output from these configs!')
 
-      logging.warning('Configs to start: %s', configs_to_start)
-
-      logging.warning('Stopping configs: %s', configs_to_stop)
-      self.supervisor.stop_configs(configs_to_stop, group='logger')
-      logging.warning('We should read final output from these configs!')
-
-      config_filepath = self.supervisor_config_filepath
-      logging.warning('Creating new configs in %s.', config_filepath)
-      self.supervisor.create_new_configs(configs=new_configs,
-                                         config_filepath=config_filepath,
-                                         group='logger')
-      logging.warning('Done creating new configs - reloading.')
-      self.supervisor.update_group('logger')
-
-      logging.warning('Starting new config group "logger"')
-      self.supervisor.start_group(group='logger')
+      if configs_to_start:
+        logging.warning('Starting new configs: %s', configs_to_start)
+        self.supervisor.start_configs(configs_to_start, group='logger')
 
       # Cache our new configs for the next time around
-      self.old_configs = new_configs
+      self.active_configs = new_configs
 
   ############################
   async def _publish_to_data_server(self, ws, data):
@@ -792,7 +818,14 @@ if __name__ == '__main__':
   # have completed, they call api.signal_update(). We're registering
   # update_configs() with the API so that it gets called when the api
   # signals that an update has occurred.
+
+  # When an active config changes in the database, update our configs here
   api.on_update(callback=logger_supervisor._update_configs)
+
+  # When new configs are loaded, update our file of config processes
+  api.on_load(callback=logger_supervisor._build_new_config_file)
+
+  # When told to quit, shut down gracefully
   api.on_quit(callback=logger_supervisor.quit)
 
   ############################
@@ -842,7 +875,7 @@ if __name__ == '__main__':
     else:
       # Create reader to read/process commands from stdin. Note: this
       # needs to be in main thread for Ctl-C termination to be properly
-      # caught and processed, otherwise interrupts go to the wrong places.
+     # caught and processed, otherwise interrupts go to the wrong places.
 
       # Set up command line interface to get commands. Start by
       # reading history file, if one exists, to get past commands.
