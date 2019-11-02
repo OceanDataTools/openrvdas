@@ -11,6 +11,7 @@ import pprint
 import queue
 import signal
 import socket  # to get hostname
+import subprocess
 import sys
 import threading
 import time
@@ -51,7 +52,9 @@ USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
 DEFAULT_SUPERVISOR_URL = 'http://localhost:8001'
-DEFAULT_SUPERVISOR_CONFIG_FILEPATH = '/opt/openrvdas/server/supervisord/supervisor.d/logger_supervisor.ini'
+DEFAULT_SUPERVISOR_CONFIG_FILE = '/opt/openrvdas/server/supervisord/supervisor.ini'
+DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE = '/opt/openrvdas/server/supervisord/supervisor.d/logger_configs.ini'
+DEFAULT_LOGGER_LOGFILE_PATH = '/var/log/openrvdas/'
 
 ############################
 def kill_handler(self, signum):
@@ -63,20 +66,26 @@ def kill_handler(self, signum):
 ################################################################################
 class SupervisorConnector:
   ############################
-  def __init__(self,  supervisor_url, config_filepath=None):
+  def __init__(self,  supervisor_url, supervisor_logger_config_file=None,
+               logger_logfile_path=None):
     """Connect to a supervisord process to manage processes.
     ```
     supervisor_url - URL at which to connect to the supervisord process,
           e.g. http://localhost:8001
 
-    config_filepath - location of config .ini file which should be
-          read/written by supervisord.
+    supervisor_logger_config_file - location of config file where supervisor
+          should read/write logger process configurations
+
+    logger_logfile_path - Path where logger stderr/stdout will be written.
+          "<logger_name>.stderr.log" will be appended to this string to 
+          create the full filename for each logger.    
     ```
     """
     # Open our XMLRPC connection to the supervisord process
     self.supervisor_url = supervisor_url
-    self.config_filepath = config_filepath
-
+    self.supervisor_logger_config_file = supervisor_logger_config_file
+    self.logger_logfile_path = logger_logfile_path
+    
     # Try to connect. If we fail, sleep a little and try again
     while True:
       self.supervisor_rpc = ServerProxy(supervisor_url + '/RPC2')
@@ -175,6 +184,7 @@ class SupervisorConnector:
 
   ############################
   def create_new_supervisor_file(self, configs, group=None,
+                                 logger_logfile_path=None,
                                  user=None, base_dir=None, max_tries=3):
     """Create a new configuration file for supervisord to read.
 
@@ -182,6 +192,13 @@ class SupervisorConnector:
 
     group - process group in which the configs will be defined; will be
         prepended to config names.
+
+    logger_logfile_path - path to which logger stderr/stdout should be
+        written. The logger name will be appended to this path, e.g. if it is
+        '/var/log/openrvdas/', then PCOD will be written to 
+        '/var/log/openrvdas/PCOD.err.log'; if it is 
+        '/var/log/openrvdas/my_log_', then PCOD will be written to 
+        '/var/log/openrvdas/my_log_PCOD.err.log'.
 
     user - user name under which processes should run. Will default to
         current user.
@@ -191,14 +208,15 @@ class SupervisorConnector:
     max_tries - number of times a process should be tried before
         giving it up as failed.
     """
-    logging.warning('Writing new configurations to "%s"', self.config_filepath)
+    logging.warning('Writing new configurations to "%s"',
+                    self.supervisor_logger_config_file)
 
     # Fill in some defaults if they weren't provided
     user = user or getpass.getuser()
     base_dir = base_dir or dirname(dirname(realpath(__file__)))
 
     # We'll build the string for the supervisord config file in 'config_str'
-    config_str = '\n'.join([
+    content_str = '\n'.join([
       '; DO NOT EDIT UNLESS YOU KNOW WHAT YOU\'RE DOING. This configuration ',
       '; file was produced automatically by the logger_supervisor.py script',
       '; and will be overwritten by it as well.',
@@ -220,32 +238,39 @@ class SupervisorConnector:
         autorestart = 'true' if autorestart_bool else 'false'
         
         # Use fancy new f-strings for formatting
-        config_str += '\n'.join([
+        config_components = [
           f'[program:{config_name}]',
           f'command=/usr/local/bin/python3 logger/listener/listen.py --config_string \'{config_json}\' -v',
           f'directory={base_dir}',
           f'autostart=false',
           f'autorestart={autorestart}',
           f'startretries={max_tries}',
-          f'stderr_logfile=/var/log/openrvdas/{logger}.err.log',
-          f'stdout_logfile=/var/log/openrvdas/{logger}.out.log',
           f'user={user}',
-          '', '',
-        ])
+        ]
+
+        # If we have a logfile path, set our loggers to write their
+        # stderr/stdout there.
+        if self.logger_logfile_path:
+          logfile_path = self.logger_logfile_path
+          config_components.extend([
+            f'stderr_logfile={logfile_path}{logger}.err.log',
+            f'stdout_logfile={logfile_path}{logger}.out.log',
+          ])
+        content_str += '\n'.join(config_components) + '\n\n'
 
     # If we've been given a group name, group all the logger configs
     # together under it so we can start them all at the same time with
     # a single call.
     if group:
-      config_str += '\n'.join([
+      content_str += '\n'.join([
         '[group:%s]' % group,
         'programs=%s' % ','.join(config_names),
         ''
       ])
 
     # Open and write the config file.
-    with open(self.config_filepath, 'w') as config_file:
-      config_file.write(config_str)
+    with open(self.supervisor_logger_config_file, 'w') as config_file:
+      config_file.write(content_str)
 
     # Get supervisord to reload the new file and refresh groups.
     self.supervisor_rpc.supervisor.reloadConfig()
@@ -263,8 +288,9 @@ class SupervisorConnector:
 ################################################################################
 class LoggerSupervisor:
   ############################
-  def __init__(self,  supervisor_url, supervisor_config_filepath,
+  def __init__(self,  supervisor_url, supervisor_logger_config_file,
                api=None, data_server_websocket=None,
+               logger_logfile_path=None,
                interval=0.5, max_tries=3, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
@@ -272,8 +298,8 @@ class LoggerSupervisor:
     supervisor_url - URL at which to connect to the supervisord process,
           e.g. http://localhost:8001
 
-    supervisor_config_filepath - Location of file where supervisord will
-          look for process definitions
+    supervisor_logger_config_file - Location of file where supervisord will
+          look for logger process definitions
 
     api - ServerAPI (or subclass) instance by which LoggerManager will get
           its data store updates
@@ -281,6 +307,10 @@ class LoggerSupervisor:
     data_server_websocket - websocket address to which we are going to send
           our status updates.
 
+    logger_logfile_path - Path where logger stderr/stdout will be written.
+          "<logger_name>.stderr.log" will be appended to this string to 
+          create the full filename for each logger.
+    
     interval - number of seconds to sleep between checking/updating loggers
 
     max_tries - number of times to try a failed server before giving up
@@ -297,13 +327,14 @@ class LoggerSupervisor:
       logging.warning('LoggerSupervisor not running in main thread; '
                       'shutting down with Ctl-C may not work.')
 
+    # Where we expect supervisord to look for config process file.
+    self.supervisor_logger_config_file = supervisor_logger_config_file
+
     # Set up XMLRPC connection to supervisord
     self.supervisor = SupervisorConnector(
       supervisor_url=supervisor_url,
-      config_filepath=supervisor_config_filepath)
-
-    # Where we expect supervisord to look for config process file.
-    self.supervisor_config_filepath = supervisor_config_filepath
+      supervisor_logger_config_file=supervisor_logger_config_file,
+      logger_logfile_path=logger_logfile_path)
 
     # api class must be subclass of ServerAPI
     if not issubclass(type(api), ServerAPI):
@@ -393,8 +424,10 @@ class LoggerSupervisor:
 
     # Now create a .ini file of those configs for supervisord to run.
     with self.config_lock:
-      self.supervisor.create_new_supervisor_file(configs=self.loggers,
-                                                 group='logger')
+      self.supervisor.create_new_supervisor_file(
+        configs=self.loggers,
+        logger_logfile_path=args.logger_logfile_path,
+        group='logger')
 
     # Finally, reset the currently active configurations
     self._update_configs()
@@ -687,6 +720,27 @@ def run_data_server(data_server_websocket,
   server.cleanup_loop()
 
 ################################################################################
+def run_supervisord(supervisor_config_file, log_level):
+  """Run a personal copy of supervisord, using the passed config file.
+  """  
+  cmd = ['/usr/bin/env',
+         'supervisord',
+         '-n',
+         '-c', supervisor_config_file]
+
+  stdout = None if log_level > logging.INFO else subprocess.DEVNULL
+    
+  # Run the command, waiting for it to complete. We do this, rather
+  # than using 'call', because we ourselves expect to be run as a
+  # daemon process and want to be able to catch/kill this when we're
+  # killed.
+  #subprocess.run(cmd, stdout=stdout, shell=True)
+  os.system(' '.join(cmd))
+
+def kill_supervisor():
+  logging.warning('Should KILL SUPERVISOR HERE!')
+  
+################################################################################
 if __name__ == '__main__':
   import argparse
   import atexit
@@ -710,12 +764,26 @@ if __name__ == '__main__':
                       help='Address at which to connect to supervisord '
                       'http server.')
 
-  parser.add_argument('--supervisor_config_filepath',
-                      dest='supervisor_config_filepath', action='store',
-                      default=DEFAULT_SUPERVISOR_CONFIG_FILEPATH,
-                      help='Location of file where supervisord will look '
-                      'for process definitions.')
+  parser.add_argument('--start_supervisor_config_file',
+                      dest='start_supervisor_config_file', action='store',
+                      default=DEFAULT_SUPERVISOR_CONFIG_FILE,
+                      help='Start local copy of supervisord, looking for '
+                      'its config file here.')
 
+  parser.add_argument('--supervisor_logger_config_file',
+                      dest='supervisor_logger_config_file', action='store',
+                      default=DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE,
+                      help='Location of file where supervisord will look '
+                      'for logger process definitions.')
+
+
+  parser.add_argument('--logger_logfile_path',
+                      dest='logger_logfile_path', action='store',
+                      default=DEFAULT_LOGGER_LOGFILE_PATH,
+                      help='Path where logger stderr/stdout will be written.'
+                      ' "<logger_name>.stderr.log" will be appended to this '
+                      'string to create the full filename for each logger.')
+  
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
                       action='store', default=None,
                       help='Address at which to connect to cached data server '
@@ -768,6 +836,31 @@ if __name__ == '__main__':
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
   ############################
+  # First off, start any servers we're supposed to be running
+  
+  # If we're supposed to be running our own CachedDataServer, start it
+  # here in its own daemon process (daemon so that it dies when we exit).
+  if args.start_data_server:
+    data_server_proc = multiprocessing.Process(
+      name='openrvdas_data_server',
+      target=run_data_server,
+      args=(args.data_server_websocket,
+            args.data_server_back_seconds, args.data_server_cleanup_interval,
+            args.data_server_interval),
+      daemon=True)
+    data_server_proc.start()
+
+  # If we're supposed to be running our own supervisord instance,
+  # start it here in its own process.
+  if args.start_supervisor_config_file:
+    supervisord_proc = multiprocessing.Process(
+      name='openrvdas_supervisord',
+      target=run_supervisord,
+      args=(args.start_supervisor_config_file, log_level),
+      daemon=True)
+    supervisord_proc.start()
+
+  ############################
   # Instantiate API - a Are we using an in-memory store or Django
   # database as our backing store? Do our imports conditionally, so
   # they don't actually have to have Django if they're not using it.
@@ -792,9 +885,10 @@ if __name__ == '__main__':
   # Create our LoggerSupervisor
   logger_supervisor = LoggerSupervisor(
     supervisor_url=args.supervisor_url,
-    supervisor_config_filepath=args.supervisor_config_filepath,
+    supervisor_logger_config_file=args.supervisor_logger_config_file,
     api=api,
     data_server_websocket=args.data_server_websocket,
+    logger_logfile_path=args.logger_logfile_path,
     interval=args.interval,
     max_tries=args.max_tries,
     logger_log_level=logger_log_level)
@@ -807,19 +901,7 @@ if __name__ == '__main__':
 
   # When told to quit, shut down gracefully
   api.on_quit(callback=logger_supervisor.quit)
-
-  ############################
-  # If we're supposed to be running our own CachedDataServer, start it
-  # here in its own process.
-  if args.start_data_server:
-    data_server_proc = multiprocessing.Process(
-      name='CachedDataServer',
-      target=run_data_server,
-      args=(args.data_server_websocket,
-            args.data_server_back_seconds, args.data_server_cleanup_interval,
-            args.data_server_interval),
-      daemon=True)
-    data_server_proc.start()
+  api.on_quit(callback=kill_supervisor)
 
   ############################
   # Start all the various LoggerManager threads running
