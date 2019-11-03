@@ -13,6 +13,7 @@ import signal
 import socket  # to get hostname
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import websockets
@@ -36,7 +37,6 @@ from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.composed_writer import ComposedWriter
 from logger.writers.cached_data_writer import CachedDataWriter
 from server.server_api import ServerAPI
-from server.logger_runner import LoggerRunner
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer
@@ -51,10 +51,10 @@ SOURCE_NAME = 'LoggerSupervisor'
 USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
-DEFAULT_SUPERVISOR_URL = 'http://localhost:8001'
-DEFAULT_SUPERVISOR_CONFIG_FILE = '/opt/openrvdas/server/supervisord/supervisor.ini'
+DEFAULT_SUPERVISOR_DIR = '/opt/openrvdas/server/supervisor/'
+DEFAULT_SUPERVISOR_PORT = 8001
+DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas/'
 DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE = '/opt/openrvdas/server/supervisord/supervisor.d/logger_configs.ini'
-DEFAULT_LOGGER_LOGFILE_PATH = '/var/log/openrvdas/'
 
 ############################
 def kill_handler(self, signum):
@@ -62,53 +62,156 @@ def kill_handler(self, signum):
   KeyboardInterrupt, which will signal the start() loop to exit nicely."""
   raise KeyboardInterrupt('Received external kill signal')
 
+############################
+# Templates used by SupervisorConnector to create config files
+
+SUPERVISORD_TEMPLATE = """
+; Auto-generated supervisord file - edits will be overwritten!
+
+[unix_http_server]
+file={supervisor_dir}/supervisor.sock   ; the path to the socket file
+chmod=0770                 ; socket file mode (default 0700)
+;chown={user}:{group}       ; socket file uid:gid owner
+;username={user}           ; default is no username (open server)
+;password={password}       ; default is no password (open server)
+
+[inet_http_server]         ; inet (TCP) server disabled by default
+port=localhost:8001        ; ip_address:port specifier, *:port for all iface
+;username={user}           ; default is no username (open server)
+;password={password}       ; default is no password (open server)
+
+[supervisord]
+logfile={logfile_dir}/supervisord.log ; main log file; default $CWD/supervisord.log
+logfile_maxbytes=50MB     ; max main logfile bytes b4 rotation; default 50MB
+logfile_backups=10        ; # of main logfile backups; 0 means none, default 10
+loglevel={log_level}      ; log level; default info; others: debug,warn,trace
+pidfile={supervisor_dir}/supervisord.pid ; supervisord pidfile; default supervisord.pid
+nodaemon=true      ; start in foreground if true; default false
+minfds=1024        ; min. avail startup file descriptors; default 1024
+minprocs=200       ; min. avail process descriptors;default 200
+umask=022          ; process file creation umask; default 022
+user={user}        ; setuid to this UNIX account at startup; recommended if root
+
+; The rpcinterface:supervisor section must remain in the config file for
+; RPC (supervisorctl/web interface) to work.  Additional interfaces may be
+; added by defining them in separate [rpcinterface:x] sections.
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+; The supervisorctl section configures how supervisorctl will connect to
+; supervisord.  configure it match the settings in either the unix_http_server
+; or inet_http_server section.
+
+[supervisorctl]
+serverurl=unix:///{supervisor_dir}/supervisor.sock ; use a unix:// URL  for a unix socket
+serverurl=http://localhost:{port} ; use an http:// url to specify an inet socket
+;username={user}              ; should be same as in [*_http_server] if set
+;password={password}          ; should be same as in [*_http_server] if set
+
+[include]
+files = {supervisor_dir}/supervisor.d/*.ini
+"""
+
+SUPERVISOR_LOGGER_TEMPLATE = """
+[program:{config_name}]
+command=/usr/local/bin/python3 logger/listener/listen.py --config_string '{config_json}' -v
+directory={base_dir}
+autostart=false
+autorestart={autorestart}
+startretries={max_tries}
+user={user}
+{comment_log}stderr_logfile={logfile_dir}/{logger}.err.log
+{comment_log}stdout_logfile={logfile_dir}/{logger}.out.log
+"""
+
 ################################################################################
 ################################################################################
 class SupervisorConnector:
   ############################
-  def __init__(self,  supervisor_url, supervisor_logger_config_file=None,
-               supervisor_config_file=None, logger_logfile_path=None,
-               max_tries=DEFAULT_MAX_TRIES, log_level=logging.WARNING):
-    """Connect to a supervisord process to manage processes.
+  def __init__(self,
+               start_supervisor=False,
+               supervisor_logger_config_file=\
+                 DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE,
+               supervisor_port=DEFAULT_SUPERVISOR_PORT,
+               supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+               max_tries=DEFAULT_MAX_TRIES,
+               log_level=logging.WARNING):
+    """Connect to a supervisord process, or start our own to manage
+    processes.  If starting our own, do so in a tempdir of our own
+    creation that will go away when connector is destroyed.
     ```
-    supervisor_url - URL at which to connect to the supervisord process,
-          e.g. http://localhost:8001
+    start_supervisor - Start local copy of supervisord, building its own
+          config file in a temporary file.
 
-    supervisor_logger_config_file - location of config file where supervisor
-          should read/write logger process configurations
+    supervisor_logger_config - Location of file where supervisord should look
+          for logger process definitions. Mutually exclusive with 
+          --start_supervisor flag.
 
-    supervisor_config_file - if given, start a local instance of supervisord
-          using this file.
+    supervisor_port - Localhost port at which supervisor should serve.
+
+    supervisor_logfile_dir - Directory where supevisord and logger
+          stderr/stdout will be written.
 
     max_tries = Number of times a failed logger should be retried if it
           fails on startup.
-
-    logger_logfile_path - Path where logger stderr/stdout will be written.
-          "<logger_name>.stderr.log" will be appended to this string to 
-          create the full filename for each logger.    
     ```
     """
-    # Open our XMLRPC connection to the supervisord process
-    self.supervisor_url = supervisor_url
-    self.supervisor_logger_config_file = supervisor_logger_config_file
-    self.logger_logfile_path = logger_logfile_path
+    self.supervisor_port = supervisor_port
+    self.supervisor_logfile_dir = supervisor_logfile_dir
     self.max_tries = max_tries
-    
-    # If we're supposed to be running our own supervisord instance,
-    # start it here in its own process.
-    if supervisor_config_file:
-      self.supervisord_proc = multiprocessing.Process(
-        name='openrvdas_supervisord',
-        target=self.run_supervisord,
-        args=(supervisor_config_file, log_level),
-        daemon=True)
-      self.supervisord_proc.start()
-    else:
-      self.supervisord_proc = None
+
+    # Define this right at start, because if we shut down prematurely
+    # during initialization, the destructor is going to look for it.
+    self.supervisord_proc = None 
+
+    # If we're starting our own local copy of supervisor, create the
+    # relevant config files in a temp directory.
+    if start_supervisor:
+      self.supervisor_dir = tempfile.TemporaryDirectory()
+      supervisor_dirname = self.supervisor_dir.name
+
+      supervisor_log_level = {logging.WARNING: 'warn',
+                              logging.INFO: 'info',
+                              logging.DEBUG: 'debug'}.get(log_level, 'warn')
+
+      # Create the supervisor config file
+      supervisor_config_filename = supervisor_dirname + '/supervisord.ini'
+      config_args = {
+        'supervisor_dir': supervisor_dirname,
+        'logfile_dir': supervisor_logfile_dir,
+        'port': supervisor_port,
+        'user': getpass.getuser(),
+        'group': getpass.getuser(),
+        'password': 'NOT_USED',
+        'log_level': supervisor_log_level,
+      }
+      supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
+      with open(supervisor_config_filename, 'w') as supervisor_config_file:
+        supervisor_config_file.write(supervisor_config_str)
+
+      # Create directory where logger.ini file will go
+      os.mkdir(supervisor_dirname + '/supervisor.d')
+      self.supervisor_logger_config_file = \
+         supervisor_dirname + '/supervisor.d/loggers.ini'
+
+      # And start the local supervisord
+      self.supervisord_proc = subprocess.Popen(
+        ['/usr/bin/env', 'supervisord', '-n', '-c', supervisor_config_filename])
       
-    # Try to connect. If we fail, sleep a little and try again
+    # If not starting our own supervisor, stash pointer to where we
+    # expect the existing supervisor to look for a logger config
+    # file. If we call
+    else:
+      self.supervisor_logger_config_file = supervisor_logger_config_file
+
+    # Now that the preliminaries are done, try to connect to the
+    # server. If we fail, sleep a little and try again.
     while True:
-      self.supervisor_rpc = ServerProxy(supervisor_url + '/RPC2')
+      supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
+      logging.warning('Connecting to supervisor at %s', supervisor_url)
+      
+      self.supervisor_rpc = ServerProxy(supervisor_url)
       try:
         supervisor_state = self.supervisor_rpc.supervisor.getState()
         if supervisor_state['statename'] == 'RUNNING':
@@ -117,31 +220,13 @@ class SupervisorConnector:
         logging.error('Supervisord is not running. State is "%s"',
                       supervisor_state['statename'])
       except ConnectionRefusedError:
-        logging.error('Unable to connect to supervisord at %s', supervisor_url)
+        logging.info('Unable to connect to supervisord at %s', supervisor_url)
       time.sleep(5)
       logging.warning('Retrying connection to %s', supervisor_url)
 
   ############################
   def __del__(self):
     self.shutdown()
-
-  ############################
-  def run_supervisord(self, supervisor_config_file, log_level):
-    """Run a personal copy of supervisord, using the passed config file.
-    """  
-    cmd = ['/usr/bin/env',
-           'supervisord',
-           '-n',
-           '-c', supervisor_config_file]
-
-    stdout = None if log_level > logging.INFO else subprocess.DEVNULL
-
-    # Run the command, waiting for it to complete. We do this, rather
-    # than using 'call', because we ourselves expect to be run as a
-    # daemon process and want to be able to catch/kill this when we're
-    # killed.
-    subprocess.run(cmd, stdout=stdout)
-    #os.system(' '.join(cmd))
 
   ############################
   def _clean_name(self, config_name):
@@ -218,7 +303,7 @@ class SupervisorConnector:
 
   ############################
   def create_new_supervisor_file(self, configs, group=None,
-                                 logger_logfile_path=None,
+                                 supervisor_logfile_dir=None,
                                  user=None, base_dir=None):
     """Create a new configuration file for supervisord to read.
 
@@ -227,12 +312,8 @@ class SupervisorConnector:
     group - process group in which the configs will be defined; will be
         prepended to config names.
 
-    logger_logfile_path - path to which logger stderr/stdout should be
-        written. The logger name will be appended to this path, e.g. if it is
-        '/var/log/openrvdas/', then PCOD will be written to 
-        '/var/log/openrvdas/PCOD.err.log'; if it is 
-        '/var/log/openrvdas/my_log_', then PCOD will be written to 
-        '/var/log/openrvdas/my_log_PCOD.err.log'.
+    supervisor_logfile_dir - path to which logger stderr/stdout should be
+        written.
 
     user - user name under which processes should run. Will default to
         current user.
@@ -251,7 +332,7 @@ class SupervisorConnector:
       '; DO NOT EDIT UNLESS YOU KNOW WHAT YOU\'RE DOING. This configuration ',
       '; file was produced automatically by the logger_supervisor.py script',
       '; and will be overwritten by it as well.',
-      '', ''
+      ''
       ])
 
     config_names = []
@@ -260,34 +341,24 @@ class SupervisorConnector:
         # Supervisord doesn't like '/' in program names
         config_name = self._clean_name(config_name)
         config_names.append(config_name)
-        config_json = json.dumps(config)
 
         # If a logger doesn't have readers or writers, e.g. if it's an
         # "off" config, then it'll terminate quietly after
         # starting. We don't want to restart it.
         autorestart_bool = 'readers' in config and 'writers' in config
-        autorestart = 'true' if autorestart_bool else 'false'
-        
-        # Use fancy new f-strings for formatting
-        config_components = [
-          f'[program:{config_name}]',
-          f'command=/usr/local/bin/python3 logger/listener/listen.py --config_string \'{config_json}\' -v',
-          f'directory={base_dir}',
-          f'autostart=false',
-          f'autorestart={autorestart}',
-          f'startretries={self.max_tries}',
-          f'user={user}',
-        ]
 
-        # If we have a logfile path, set our loggers to write their
-        # stderr/stdout there.
-        if self.logger_logfile_path:
-          logfile_path = self.logger_logfile_path
-          config_components.extend([
-            f'stderr_logfile={logfile_path}{logger}.err.log',
-            f'stdout_logfile={logfile_path}{logger}.out.log',
-          ])
-        content_str += '\n'.join(config_components) + '\n\n'
+        replacement_fields = {
+          'config_name': config_name,
+          'config_json': json.dumps(config),
+          'base_dir': base_dir,
+          'autorestart': 'true' if autorestart_bool else 'false',
+          'max_tries': self.max_tries,
+          'user': user,
+          'comment_log': '' if self.supervisor_logfile_dir else ';',
+          'logfile_dir': self.supervisor_logfile_dir,
+          'logger': logger
+          }
+        content_str += SUPERVISOR_LOGGER_TEMPLATE.format(**replacement_fields)
 
     # If we've been given a group name, group all the logger configs
     # together under it so we can start them all at the same time with
@@ -331,7 +402,7 @@ class LoggerSupervisor:
   ############################
   def __init__(self,
                api, supervisor, data_server_websocket=None,
-               logger_logfile_path=None,
+               supervisor_logfile_dir=None,
                interval=0.5, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
@@ -345,9 +416,8 @@ class LoggerSupervisor:
     data_server_websocket - websocket address to which we are going to send
           our status updates.
 
-    logger_logfile_path - Path where logger stderr/stdout will be written.
-          "<logger_name>.stderr.log" will be appended to this string to 
-          create the full filename for each logger.
+    supervisor_logfile_dir - Directory where logger stderr/stdout will
+          be written.
     
     interval - number of seconds to sleep between checking/updating loggers
 
@@ -456,7 +526,7 @@ class LoggerSupervisor:
     with self.config_lock:
       self.supervisor.create_new_supervisor_file(
         configs=self.loggers,
-        logger_logfile_path=args.logger_logfile_path,
+        supervisor_logfile_dir=args.supervisor_logfile_dir,
         group='logger')
 
     # Finally, reset the currently active configurations
@@ -768,36 +838,37 @@ if __name__ == '__main__':
                       default='memory', help='What backing store database '
                       'to use.')
 
-  parser.add_argument('--supervisor_url', dest='supervisor_url',
-                      action='store', default=DEFAULT_SUPERVISOR_URL,
-                      help='Address at which to connect to supervisord '
-                      'http server.')
-
-  parser.add_argument('--start_supervisor_config_file',
-                      dest='start_supervisor_config_file', action='store',
-                      default=DEFAULT_SUPERVISOR_CONFIG_FILE,
-                      help='Start local copy of supervisord, looking for '
-                      'its config file here.')
-
-  parser.add_argument('--supervisor_logger_config_file',
-                      dest='supervisor_logger_config_file', action='store',
-                      default=DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE,
-                      help='Location of file where supervisord will look '
-                      'for logger process definitions.')
-
-
-  parser.add_argument('--logger_logfile_path',
-                      dest='logger_logfile_path', action='store',
-                      default=DEFAULT_LOGGER_LOGFILE_PATH,
-                      help='Path where logger stderr/stdout will be written.'
-                      ' "<logger_name>.stderr.log" will be appended to this '
-                      'string to create the full filename for each logger.')
+  # Arguments for the SupervisorConnector
+  supervisor_group = parser.add_mutually_exclusive_group()
+  supervisor_group.add_argument('--supervisor_logger_config_file',
+                                dest='supervisor_logger_config_file',
+                                default=DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE,
+                                action='store', help='Location of file where '
+                                'supervisord should look for logger process '
+                                'definitions. Mutually exclusive with '
+                                '--start_supervisor.')
   
+  supervisor_group.add_argument('--start_supervisor',
+                                dest='start_supervisor', action='store_true',
+                                default=False, help='Start local copy of '
+                                'supervisord, building its own config file '
+                                'in a temporary file.')
+  
+  parser.add_argument('--supervisor_port', dest='supervisor_port',
+                      action='store', type=int, default=DEFAULT_SUPERVISOR_PORT,
+                      help='Localhost port at which supervisor should serve.')
+  
+  parser.add_argument('--supervisor_logfile_dir',
+                      dest='supervisor_logfile_dir', action='store',
+                      default=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+                      help='Directory where supervisor and logger '
+                      'stderr/stdout will be written.')
+
+  # Arguments for cached data server
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
                       action='store', default=None,
                       help='Address at which to connect to cached data server '
                       'to send status updates.')
-
   parser.add_argument('--start_data_server', dest='start_data_server',
                       action='store_true', default=False,
                       help='Whether to start our own cached data server.')
@@ -884,18 +955,19 @@ if __name__ == '__main__':
   # Create a connector to a supervisor, optionally starting up a local
   # one for our own use.
   supervisor = SupervisorConnector(
-      supervisor_url=args.supervisor_url,
-      supervisor_logger_config_file=args.supervisor_logger_config_file,
-      supervisor_config_file=args.start_supervisor_config_file,
-      logger_logfile_path=args.logger_logfile_path,
-      max_tries=args.max_tries)
+    start_supervisor=args.start_supervisor,
+    supervisor_logger_config_file=args.supervisor_logger_config_file,
+    supervisor_port=args.supervisor_port,
+    supervisor_logfile_dir=args.supervisor_logfile_dir,
+    max_tries=args.max_tries,
+    log_level=log_level)
 
   ############################
   # Create our LoggerSupervisor
   logger_supervisor = LoggerSupervisor(
     api=api, supervisor=supervisor,
     data_server_websocket=args.data_server_websocket,
-    logger_logfile_path=args.logger_logfile_path,
+    supervisor_logfile_dir=args.supervisor_logfile_dir,
     interval=args.interval,
     logger_log_level=logger_log_level)
 
