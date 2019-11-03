@@ -145,7 +145,7 @@ class SupervisorConnector:
           config file in a temporary file.
 
     supervisor_logger_config - Location of file where supervisord should look
-          for logger process definitions. Mutually exclusive with 
+          for logger process definitions. Mutually exclusive with
           --start_supervisor flag.
 
     supervisor_port - Localhost port at which supervisor should serve.
@@ -163,7 +163,7 @@ class SupervisorConnector:
 
     # Define this right at start, because if we shut down prematurely
     # during initialization, the destructor is going to look for it.
-    self.supervisord_proc = None 
+    self.supervisord_proc = None
 
     # If we're starting our own local copy of supervisor, create the
     # relevant config files in a temp directory.
@@ -198,7 +198,7 @@ class SupervisorConnector:
       # And start the local supervisord
       self.supervisord_proc = subprocess.Popen(
         ['/usr/bin/env', 'supervisord', '-n', '-c', supervisor_config_filename])
-      
+
     # If not starting our own supervisor, stash pointer to where we
     # expect the existing supervisor to look for a logger config
     # file. If we call
@@ -210,7 +210,7 @@ class SupervisorConnector:
     while True:
       supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
       logging.warning('Connecting to supervisor at %s', supervisor_url)
-      
+
       self.supervisor_rpc = ServerProxy(supervisor_url)
       try:
         supervisor_state = self.supervisor_rpc.supervisor.getState()
@@ -248,7 +248,7 @@ class SupervisorConnector:
     """
     configs = list(configs_to_start)  # so we can order results
     config_calls = []
-    
+
     for config in configs:
       config = self._clean_name(config)  # get rid of objectionable characters
       if group:
@@ -281,7 +281,7 @@ class SupervisorConnector:
     """
     configs = list(configs_to_stop)  # so we can order results
     config_calls = []
-    
+
     for config in configs:
       config = self._clean_name(config)  # get rid of objectionable characters
       if group:
@@ -418,7 +418,7 @@ class LoggerSupervisor:
 
     supervisor_logfile_dir - Directory where logger stderr/stdout will
           be written.
-    
+
     interval - number of seconds to sleep between checking/updating loggers
 
     logger_log_level - At what logging level our component loggers
@@ -506,7 +506,7 @@ class LoggerSupervisor:
     """Exit the loop and shut down all loggers."""
     self.quit_flag = True
     self.supervisor.shutdown()
-    
+
   ############################
   def _build_new_config_file(self):
     """Fetch latest dict of configs from API. Update self.loggers to
@@ -800,7 +800,7 @@ class LoggerSupervisor:
         self.data_server_queue.put(error_message)
 
 ################################################################################
-def run_data_server(data_server_websocket, 
+def run_data_server(data_server_websocket,
                     data_server_back_seconds, data_server_cleanup_interval,
                     data_server_interval):
   """Run a CachedDataServer (to be called as a separate process),
@@ -818,7 +818,7 @@ def run_data_server(data_server_websocket,
   # if we want it. Maybe we should have this also run automatically in
   # its own thread after initialization?
   server.cleanup_loop()
-  
+
 ################################################################################
 if __name__ == '__main__':
   import argparse
@@ -840,6 +840,17 @@ if __name__ == '__main__':
 
   # Arguments for the SupervisorConnector
   supervisor_group = parser.add_mutually_exclusive_group()
+  supervisor_group.add_argument('--start_supervisor',
+                                dest='start_supervisor', action='store_true',
+                                default=False, help='Start local copy of '
+                                'supervisord, building its own config file '
+                                'in a temporary file. Note that if we start '
+                                'our own supervisor, it and the loggers will '
+                                'exit when we do. If we use an external '
+                                'instance, the loggers will continue to in '
+                                'whatever state they were last in after we '
+                                'exit')
+
   supervisor_group.add_argument('--supervisor_logger_config_file',
                                 dest='supervisor_logger_config_file',
                                 default=DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE,
@@ -847,17 +858,11 @@ if __name__ == '__main__':
                                 'supervisord should look for logger process '
                                 'definitions. Mutually exclusive with '
                                 '--start_supervisor.')
-  
-  supervisor_group.add_argument('--start_supervisor',
-                                dest='start_supervisor', action='store_true',
-                                default=False, help='Start local copy of '
-                                'supervisord, building its own config file '
-                                'in a temporary file.')
-  
+
   parser.add_argument('--supervisor_port', dest='supervisor_port',
                       action='store', type=int, default=DEFAULT_SUPERVISOR_PORT,
                       help='Localhost port at which supervisor should serve.')
-  
+
   parser.add_argument('--supervisor_logfile_dir',
                       dest='supervisor_logfile_dir', action='store',
                       default=DEFAULT_SUPERVISOR_LOGFILE_DIR,
@@ -917,7 +922,7 @@ if __name__ == '__main__':
 
   ############################
   # First off, start any servers we're supposed to be running
-  
+
   # If we're supposed to be running our own CachedDataServer, start it
   # here in its own daemon process (daemon so that it dies when we exit).
   if args.start_data_server:
