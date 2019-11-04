@@ -22,10 +22,10 @@ import yaml
 # For communicating with supervisord server
 from xmlrpc.client import ServerProxy
 from xmlrpc.client import Fault as XmlRpcFault
+from xml.parsers.expat import ExpatError as XmlExpatError
+from http.client import ResponseNotReady as ResponseNotReady
+from http.client import CannotSendRequest as CannotSendRequest
 
-from collections import OrderedDict
-
-from urllib.parse import unquote
 from os.path import dirname, realpath
 
 # Add the openrvdas components onto sys.path
@@ -40,9 +40,9 @@ from server.server_api import ServerAPI
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer
-from logger.readers.udp_reader import UDPReader
 from logger.transforms.from_json_transform import FromJSONTransform
 
+from logger.utils.das_record import DASRecord
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
 
 DEFAULT_MAX_TRIES = 3
@@ -195,9 +195,17 @@ class SupervisorConnector:
       self.supervisor_logger_config_file = \
          supervisor_dirname + '/supervisor.d/loggers.ini'
 
+      # Make sure supervisord exists and is on path
+      SUPERVISORD = 'supervisord'
+      try:
+        subprocess.check_output(['which', SUPERVISORD])
+      except subprocess.CalledProcessError:
+        logging.fatal('Supervisor executable "%s" not found', SUPERVISORD)
+        sys.exit(1)
+
       # And start the local supervisord
       self.supervisord_proc = subprocess.Popen(
-        ['/usr/bin/env', 'supervisord', '-n', '-c', supervisor_config_filename])
+        ['/usr/bin/env', SUPERVISORD, '-n', '-c', supervisor_config_filename])
 
     # If not starting our own supervisor, stash pointer to where we
     # expect the existing supervisor to look for a logger config
@@ -205,15 +213,29 @@ class SupervisorConnector:
     else:
       self.supervisor_logger_config_file = supervisor_logger_config_file
 
-    # Now that the preliminaries are done, try to connect to the
-    # server. If we fail, sleep a little and try again.
+    # Now that the preliminaries are done, try to connect to server.
+    self.supervisor_rpc = self._create_supervisor_connection()
+    
+    # Create a second connection that we will use to read logger
+    # process stderr. We'll guard reads from this from stepping on
+    # each other by means of a thread lock.
+    self.read_stderr_rpc =  self._create_supervisor_connection()
+    self.config_lock = threading.Lock()
+    self.read_stderr_offset = {}  # how much of each stderr we've read
+
+    # Finally, keep track of the configs that are currently active
+    self.running_configs = set()
+
+  ############################
+  def _create_supervisor_connection(self):
+    """Connect to server. If we fail, sleep a little and try again."""
     while True:
       supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
       logging.warning('Connecting to supervisor at %s', supervisor_url)
 
-      self.supervisor_rpc = ServerProxy(supervisor_url)
+      supervisor_rpc = ServerProxy(supervisor_url)
       try:
-        supervisor_state = self.supervisor_rpc.supervisor.getState()
+        supervisor_state = supervisor_rpc.supervisor.getState()
         if supervisor_state['statename'] == 'RUNNING':
           break
 
@@ -223,6 +245,9 @@ class SupervisorConnector:
         logging.info('Unable to connect to supervisord at %s', supervisor_url)
       time.sleep(5)
       logging.warning('Retrying connection to %s', supervisor_url)
+
+    # Return with our connection
+    return supervisor_rpc
 
   ############################
   def __del__(self):
@@ -249,14 +274,18 @@ class SupervisorConnector:
     configs = list(configs_to_start)  # so we can order results
     config_calls = []
 
-    for config in configs:
-      config = self._clean_name(config)  # get rid of objectionable characters
-      if group:
-        config = group + ':' + config
-      config_calls.append({'methodName':'supervisor.startProcess',
-                           'params':[config, False]})
+    with self.config_lock:
+      for config in configs:
+        config = self._clean_name(config)  # get rid of objectionable characters
+        if group:
+          config = group + ':' + config
+        config_calls.append({'methodName':'supervisor.startProcess',
+                             'params':[config, False]})
 
-    results = self.supervisor_rpc.system.multicall(config_calls)
+      # Make calls in parallel and update set of currently-running configs
+      results = self.supervisor_rpc.system.multicall(config_calls)
+      self.running_configs |= configs_to_start
+      
     # Let's see what the results are
     for i in range(len(results)):
       result = results[i]
@@ -282,14 +311,18 @@ class SupervisorConnector:
     configs = list(configs_to_stop)  # so we can order results
     config_calls = []
 
-    for config in configs:
-      config = self._clean_name(config)  # get rid of objectionable characters
-      if group:
-        config = group + ':' + config
-      config_calls.append({'methodName':'supervisor.stopProcess',
-                           'params':[config, False]})
+    with self.config_lock:
+      for config in configs:
+        config = self._clean_name(config)  # get rid of objectionable characters
+        if group:
+          config = group + ':' + config
+        config_calls.append({'methodName':'supervisor.stopProcess',
+                             'params':[config, False]})
 
-    results = self.supervisor_rpc.system.multicall(config_calls)
+      # Make calls in parallel and update set of currently-running configs
+      results = self.supervisor_rpc.system.multicall(config_calls)
+      self.running_configs = self.running_configs - configs_to_stop
+    
     # Let's see what the results are
     for i in range(len(results)):
       result = results[i]
@@ -301,6 +334,69 @@ class SupervisorConnector:
           logging.warning('Stopping process %s: %s', config,
                           result['faultString'])
 
+  ############################
+  def running_configs(self):
+    """Return set of currently-running configs."""
+    return self.running_configs
+
+  ############################
+  def read_stderr(self, configs=None, group=None, maxchars=10000):
+    """Read the stderr from the named configs and return result in a dict of
+
+       {config_1: config_1_stderr,
+        config_2: config_2_stderr,
+        ...
+       }
+
+    configs - a list of config names whose stderr should be read. If omitted,
+        will read stderr of all active configs.
+
+    group - process group in which the configs were defined; will be
+        prepended to config names.
+
+    maxchars - maximum number of characters to read from each log
+    """
+    if configs is None:
+      configs = self.running_configs
+      
+    results = {}
+    with self.config_lock:
+      for config in configs:
+        # If we've got a group, need to prefix config name with it
+        normalized_config = self._clean_name(config)
+        if group:
+          normalized_config = group + ':' + normalized_config
+
+        # Initialize last read position of any configs we've not yet read
+        if not config in self.read_stderr_offset:
+          self.read_stderr_offset[config] = 0
+        offset = self.read_stderr_offset[config]
+        
+        # Read stderr from config, iterating until we've got
+        # everything from it.
+        try:
+          results[config] = ''
+          overflow = True
+          while overflow:
+            # Get a chunk of stderr, update offset, and see if there's more
+            getTail = self.read_stderr_rpc.supervisor.tailProcessStderrLog
+            result, offset, overflow = getTail(normalized_config,
+                                               offset, maxchars)
+            results[config] += result
+            self.read_stderr_offset[config] = offset
+
+        # If we've barfed on the read, give up on this config for now
+        except XmlExpatError as e:
+          logging.debug('XML parse error while reading stderr: %s', str(e))
+        except (ResponseNotReady, CannotSendRequest) as e:
+          logging.warning('Http error: %s', str(e))
+          #self.read_stderr_rpc = self._create_supervisor_connection()
+        except OSError as e:
+          logging.warning('read_stderr error: %s', str(e))
+          #self.read_stderr_rpc = self._create_supervisor_connection()
+
+    return results
+  
   ############################
   def create_new_supervisor_file(self, configs, group=None,
                                  supervisor_logfile_dir=None,
@@ -454,7 +550,7 @@ class LoggerSupervisor:
     # actually needed.
     self.update_configs_thread = None
     self.config_lock = threading.Lock()
-    self.loggers = {}                 # dict of all loggers and their configs
+
     self.active_configs = set()       # which of those configs are active now?
 
     # Fetch the complete set of loggers and configs from API; store
@@ -471,8 +567,18 @@ class LoggerSupervisor:
     self.data_server_lock = threading.Lock()
 
     # Data server to which we're going to send status updates
-    self.data_server_websocket = data_server_websocket
+    if data_server_websocket:
+      self.data_server_writer = CachedDataWriter(data_server_websocket)
+    else:
+      self.data_server_writer = None
 
+    # Stash a map of loggers->configs and configs->loggers
+    self.loggers = self.api.get_loggers()
+    self.config_to_logger = {}
+    for logger in self.loggers:
+      for config in self.loggers[logger].get('configs', []):
+        self.config_to_logger[config] = logger
+      
     # Grab event loop so everyone who wants can make sure they're
     # using the same one.
     self.event_loop = asyncio.get_event_loop()
@@ -494,11 +600,11 @@ class LoggerSupervisor:
       target=self._update_configs_loop, daemon=True)
     self.update_configs_thread.start()
 
-    # If we've got the address of a data server websocket, start a
-    # thread to send our status updates to it.
+    # Start a separate thread to read logger status and stderr. If we've
+    # got the address of a data server websocket, send our updates to it.
     self.read_logger_status_thread = threading.Thread(
-        name='read_logger_status_loop',
-        target=self._read_logger_status_loop, daemon=True)
+      name='read_logger_status_loop',
+      target=self._read_logger_status_loop, daemon=True)
     self.read_logger_status_thread.start()
 
   ############################
@@ -512,20 +618,27 @@ class LoggerSupervisor:
     """Fetch latest dict of configs from API. Update self.loggers to
     reflect them and build a .ini file to run them.
     """
-    # Inefficient: first fetch loggers, then one by one grab their
-    # configs.
-    loggers = self.api.get_loggers()
-    self.loggers = {}
-    for logger, configs in loggers.items():
+    # Stash an updated map of loggers->configs and configs->loggers.
+    # While we're doing that, also (inefficiently) grab definition
+    # string for each config one at a time from the API.
+    self.loggers = self.api.get_loggers()
+    self.config_to_logger = {}
+    logger_config_strings = {}
+    for logger, configs in self.loggers.items():
       config_names = configs.get('configs', [])
-      logger_configs = {config_name:api.get_logger_config(config_name)
-                        for config_name in config_names}
-      self.loggers[logger] = logger_configs
+      # Map config_name->logger
+      for config in self.loggers[logger].get('configs', []):
+        self.config_to_logger[config] = logger
+
+      # Map logger->{config_name:config_definition_str,...}
+      logger_config_strings[logger] = {
+          config_name:api.get_logger_config(config_name)
+          for config_name in config_names}
 
     # Now create a .ini file of those configs for supervisord to run.
     with self.config_lock:
       self.supervisor.create_new_supervisor_file(
-        configs=self.loggers,
+        configs=logger_config_strings,
         supervisor_logfile_dir=args.supervisor_logfile_dir,
         group='logger')
 
@@ -593,7 +706,7 @@ class LoggerSupervisor:
                       'to data server: %s', result)
 
   ############################
-  def _read_logger_status_loop(self):
+  def _read_logger_status_loop_websocket(self):
     """Iteratively grab messages to send to cached data server and send
     them off via websocket.
 
@@ -602,13 +715,9 @@ class LoggerSupervisor:
     """
 
     ############################
-    async def _async_send_to_data_server_loop(self):
+    async def _async_read_logger_status_loop(self):
       """Inner async function that actually implements the fetching and
       sending of status messages."""
-
-      logging.warning('!!!CHECK IF DATA_SERVER IS DEFINED!')
-      logging.warning('_async_send_to_data_server_loop sleeping a long time')
-      await asyncio.sleep(1000000)
 
       # We stash previous_configs so that we know not to send them if
       # they haven't changed since last check. We keep the raw
@@ -636,9 +745,20 @@ class LoggerSupervisor:
         try:
           logging.info('Connecting to websocket: "%s"', ws_name)
           async with websockets.connect('ws://' + ws_name) as ws:
-             logging.info('Connected to websocket: "%s"', ws_name)
-             while not self.quit_flag:
+            logging.info('Connected to websocket: "%s"', ws_name)
 
+            # We're connected to our websocket. Read the logger stderrs
+            while not self.quit_flag:
+              stderr_results = self.supervisor.read_stderr(group='logger')
+              for config in stderr_results:
+                logger = self.config_to_logger[config]
+                for line in stderr_results[config].split('\n'):
+                  if line:
+                    print(logger + ': ' + line)
+              await asyncio.sleep(1)
+
+              continue
+            
               # Work through the messages in the queue, sending the
               # ones we already have before doing anything else.
               next_message = None
@@ -757,47 +877,55 @@ class LoggerSupervisor:
     status_event_loop.run_until_complete(_async_send_to_data_server_loop(self))
     status_event_loop.close()
 
-  ##########################
-  def _process_logger_runner_message(self, message):
-    """Process a message received from a LoggerRunner. We expect
-    message to be a dict of
-    {
-      'status': {
-        logger_id: {errors: [], running,  failed},
-        logger_id: {...},
-        logger_id: {...}
-      },
-      'errors': {}   # if any errors to report
-    }
+  ############################
+  def _read_and_send_logger_status(self):
+    """Grab logger stderr messages and send them off to cached data server
+    via websocket.
     """
-    logging.debug('LoggerRunner sent fields: %s', ', '.join(message.keys()))
-    self.status = message.get('status', None)
-    self.errors = message.get('errors', None)
-    now = time.time()
-    if self.status:
-      self.api.update_status(self.status)
-      # For each logger, publish any errors to the stderr for that
-      # logger. Aggregate them into a single message of [(timestamp,
-      # error), ...] for efficiency, but we fudge the timestamp as
-      # "now" rather than parsing it off of the error message
-      # itself. We may need to fix that.
-      for logger in self.status:
-        logger_status = self.status.get(logger)
-        logger_errors = logger_status.get('errors', [])
-        if logger_errors:
-          error_tuples = [(now, error) for error in logger_errors]
-          error_message = {'fields':{'stderr:logger:'+logger: error_tuples}}
-          with self.data_server_lock:
-            self.data_server_queue.put(error_message)
+    stderr_results = self.supervisor.read_stderr(group='logger')
+    for config, stderr_lines in stderr_results.items():
+      logger = self.config_to_logger[config]
+      field_name = 'stderr:logger:' + logger
+      for line in stderr_lines.split('\n'):
+        if not line:
+          continue
 
-    # If there were any errors not associated with a specific logger,
-    # send those as general logger_manager errors.
-    if self.errors:
-      logging.error('Errors from LoggerRunner: %s', self.errors)
-      error_tuples = [(now, error) for error in self.errors]
-      error_message = {'fields':{'stderr:logger_manager': error_tuples}}
-      with self.data_server_lock:
-        self.data_server_queue.put(error_message)
+        if self.data_server_writer:
+          # Parse the logging line into a DASRecord
+          try:
+            components = line.split(' ', maxsplit=5)
+            (r_date, r_time, r_levelno, r_levelname,  r_filename_lineno,
+             r_message) = components
+            r_filename, r_lineno = r_filename_lineno.split(':')
+            record = {
+              'asctime': r_date + ' ' + r_time,
+              'levelno': r_levelno,
+              'levelname': r_levelname,
+              'filename': r_filename,
+              'lineno': r_lineno,
+              'message': r_message
+              }
+          except ValueError:
+            logging.debug('Failed to parse: "%s"', line)
+            record = {'message': line}
+
+          # Send the record off the the data server
+          das_record = DASRecord(fields={field_name: json.dumps(record)})
+          logging.debug('DASRecord: %s' % das_record)
+          self.data_server_writer.write(das_record)
+
+        else:
+          # If no data server, just print to stdout
+          print(logger + ': ' + line)
+
+  ############################
+  def _read_logger_status_loop(self):
+    """Iteratively grab messages to send to cached data server and send
+    them off via websocket.
+    """
+    while not self.quit_flag:
+      self._read_and_send_logger_status()
+      time.sleep(1)
 
 ################################################################################
 def run_data_server(data_server_websocket,
@@ -911,11 +1039,10 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   # Set up logging first of all
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-  logging.basicConfig(format=LOGGING_FORMAT)
+  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT)
 
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
@@ -1003,8 +1130,8 @@ if __name__ == '__main__':
     api.set_active_mode(args.mode)
     api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
                     log_level=api.INFO,
-                    message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
-
+                    message='initial mode (%s@%s): %s' % (USER, HOSTNAME,
+                                                          args.mode))
   try:
     # If no console, just wait for the configuration update thread to
     # end as a signal that we're done.

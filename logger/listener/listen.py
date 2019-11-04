@@ -121,7 +121,7 @@ class ListenerFromLoggerConfig(Listener):
 
     # Extract keyword args from config and instantiate.
     logging.debug('ListenerFromLoggerConfig instantiating logger '
-                  'config:\n%s', pprint.pformat(config))
+                  'config: %s', pprint.pformat(config))
     try:
       kwargs = self._kwargs_from_config(config)
     except ValueError as e:
@@ -219,7 +219,7 @@ class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
   def __init__(self, config_str, log_level=None):
     """Create a Listener from a JSON config string."""
     config = read_config.parse(config_str)
-    logging.info('Received config string:\n%s', pprint.pformat(config))
+    logging.info('Received config string: %s', pprint.pformat(config))
     super().__init__(config=config, log_level=log_level)
 
 ################################################################################
@@ -249,7 +249,7 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
         raise ValueError('Configuration name "%s" not found in file "%s"'
                          % (config_name, config_file))
 
-    logging.info('Loaded config file:\n%s', pprint.pformat(config))
+    logging.info('Loaded config file: %s', pprint.pformat(config))
     super().__init__(config=config, log_level=log_level)
 
 ################################################################################
