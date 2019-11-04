@@ -51,9 +51,9 @@ SOURCE_NAME = 'LoggerSupervisor'
 USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
-DEFAULT_SUPERVISOR_DIR = '/opt/openrvdas/server/supervisor/'
+DEFAULT_SUPERVISOR_DIR = '/opt/openrvdas/server/supervisor'
 DEFAULT_SUPERVISOR_PORT = 8001
-DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas/'
+DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas'
 DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE = '/opt/openrvdas/server/supervisord/supervisor.d/logger_configs.ini'
 
 ############################
@@ -121,6 +121,10 @@ autostart=false
 autorestart={autorestart}
 startretries={max_tries}
 user={user}
+stderr_logfile_maxbytes=50MB
+stderr_logfile_backups=10
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=10
 {comment_log}stderr_logfile={logfile_dir}/{logger}.err.log
 {comment_log}stdout_logfile={logfile_dir}/{logger}.out.log
 """
@@ -224,7 +228,7 @@ class SupervisorConnector:
     self.read_stderr_offset = {}  # how much of each stderr we've read
 
     # Finally, keep track of the configs that are currently active
-    self.running_configs = set()
+    self._running_configs = set()
 
   ############################
   def _create_supervisor_connection(self):
@@ -284,7 +288,7 @@ class SupervisorConnector:
 
       # Make calls in parallel and update set of currently-running configs
       results = self.supervisor_rpc.system.multicall(config_calls)
-      self.running_configs |= configs_to_start
+      self._running_configs |= configs_to_start
       
     # Let's see what the results are
     for i in range(len(results)):
@@ -321,7 +325,7 @@ class SupervisorConnector:
 
       # Make calls in parallel and update set of currently-running configs
       results = self.supervisor_rpc.system.multicall(config_calls)
-      self.running_configs = self.running_configs - configs_to_stop
+      self._running_configs = self._running_configs - configs_to_stop
     
     # Let's see what the results are
     for i in range(len(results)):
@@ -337,10 +341,10 @@ class SupervisorConnector:
   ############################
   def running_configs(self):
     """Return set of currently-running configs."""
-    return self.running_configs
+    return self._running_configs
 
   ############################
-  def read_stderr(self, configs=None, group=None, maxchars=10000):
+  def read_stderr(self, configs=None, group=None, maxchars=1000):
     """Read the stderr from the named configs and return result in a dict of
 
        {config_1: config_1_stderr,
@@ -357,7 +361,7 @@ class SupervisorConnector:
     maxchars - maximum number of characters to read from each log
     """
     if configs is None:
-      configs = self.running_configs
+      configs = self.running_configs()
       
     results = {}
     with self.config_lock:
@@ -390,9 +394,6 @@ class SupervisorConnector:
           logging.debug('XML parse error while reading stderr: %s', str(e))
         except (ResponseNotReady, CannotSendRequest) as e:
           logging.warning('Http error: %s', str(e))
-          #self.read_stderr_rpc = self._create_supervisor_connection()
-        except OSError as e:
-          logging.warning('read_stderr error: %s', str(e))
           #self.read_stderr_rpc = self._create_supervisor_connection()
 
     return results
@@ -680,7 +681,9 @@ class LoggerSupervisor:
       if configs_to_stop:
         logging.warning('Stopping configs: %s', configs_to_stop)
         self.supervisor.stop_configs(configs_to_stop, group='logger')
-        logging.warning('We should read final output from these configs!')
+
+        # Grab any last output from the configs we've stopped
+        self._read_and_send_logger_status(configs_to_stop)
 
       if configs_to_start:
         logging.warning('Starting new configs: %s', configs_to_start)
@@ -878,11 +881,14 @@ class LoggerSupervisor:
     status_event_loop.close()
 
   ############################
-  def _read_and_send_logger_status(self):
+  def _read_and_send_logger_status(self, configs=None):
     """Grab logger stderr messages and send them off to cached data server
     via websocket.
     """
-    stderr_results = self.supervisor.read_stderr(group='logger')
+    if configs is None:
+      configs = self.supervisor.running_configs()
+      
+    stderr_results = self.supervisor.read_stderr(configs, group='logger')
     for config, stderr_lines in stderr_results.items():
       logger = self.config_to_logger[config]
       field_name = 'stderr:logger:' + logger
