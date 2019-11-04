@@ -76,7 +76,7 @@ chmod=0770                 ; socket file mode (default 0700)
 ;password={password}       ; default is no password (open server)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
-port=localhost:8001        ; ip_address:port specifier, *:port for all iface
+port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
 ;username={user}           ; default is no username (open server)
 ;password={password}       ; default is no password (open server)
 
@@ -115,7 +115,7 @@ files = {supervisor_dir}/supervisor.d/*.ini
 
 SUPERVISOR_LOGGER_TEMPLATE = """
 [program:{config_name}]
-command=/usr/local/bin/python3 logger/listener/listen.py --config_string '{config_json}' -v
+command=logger/listener/listen.py --config_string '{config_json}' -v
 directory={base_dir}
 autostart=false
 autorestart={autorestart}
@@ -199,6 +199,12 @@ class SupervisorConnector:
       self.supervisor_logger_config_file = \
          supervisor_dirname + '/supervisor.d/loggers.ini'
 
+      # Create an empty logger.ini file to prevent supervisor from
+      # complaining that there are no matching .ini files when it
+      # starts up. Petty, I know, but the warning could cause folks to
+      # worry about the wrong thing if something else is amiss.
+      open(self.supervisor_logger_config_file, 'a').close()
+      
       # Make sure supervisord exists and is on path
       SUPERVISORD = 'supervisord'
       try:
@@ -235,7 +241,7 @@ class SupervisorConnector:
     """Connect to server. If we fail, sleep a little and try again."""
     while True:
       supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
-      logging.warning('Connecting to supervisor at %s', supervisor_url)
+      logging.info('Connecting to supervisor at %s', supervisor_url)
 
       supervisor_rpc = ServerProxy(supervisor_url)
       try:
@@ -248,7 +254,7 @@ class SupervisorConnector:
       except ConnectionRefusedError:
         logging.info('Unable to connect to supervisord at %s', supervisor_url)
       time.sleep(5)
-      logging.warning('Retrying connection to %s', supervisor_url)
+      logging.info('Retrying connection to %s', supervisor_url)
 
     # Return with our connection
     return supervisor_rpc
@@ -333,10 +339,9 @@ class SupervisorConnector:
       config = configs[i]
       if type(result) is dict:
         if result['faultCode'] == 60:
-          logging.warning('Stopping process %s, but already stopped', config)
+          logging.info('Stopping process %s, but already stopped', config)
         else:
-          logging.warning('Stopping process %s: %s', config,
-                          result['faultString'])
+          logging.info('Stopping process %s: %s', config, result['faultString'])
 
   ############################
   def running_configs(self):
