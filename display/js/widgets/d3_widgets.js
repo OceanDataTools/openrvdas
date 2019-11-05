@@ -6,6 +6,9 @@ This file defines and exports two basic widgets:
   - DialWidget
 ********************************************************************************/
 
+// https://standardjs.com/#i-use-a-library-that-pollutes-the-global-namespace-how-do-i-prevent-variable-is-not-defined-errors
+/* global d3 */
+
 /**********************
 // TimelineWidget definition
 
@@ -247,7 +250,9 @@ function DialWidget (
     endAngle: 360,
     tickInterval: 45,
     minorTickInterval: 5,
-    radius: 180
+    radius: 180,
+    showDescriptions: false,
+    showNumericValues: true
   }
   const thisWidgetOptions = { ...defaultWidgetOptions, ...widgetOptions }
 
@@ -300,15 +305,18 @@ function DialWidget (
       }))
       .attr('transform', `translate(${r}, ${r})`)
 
-    // add text fields for numeric display of data
-    svg.selectAll('text.numeric').data(colors).enter()
-      .append('text')
-      .attr('class', 'numeric')
-      .attr('fill', d => d)
-      .attr('text-anchor', 'middle')
-      .attr('x', r)
-      .attr('y', (d, i) => r + 50 + (i * 20))
+    if (thisWidgetOptions.showNumericValues || thisWidgetOptions.showDescriptions) {
+      // add text fields for descriptions and/or numeric values
+      svg.selectAll('text.numeric').data(colors).enter()
+        .append('text')
+        .attr('class', 'numeric')
+        .attr('fill', d => d)
+        .attr('text-anchor', 'middle')
+        .attr('x', r)
+        .attr('y', (d, i) => r + 50 + (i * 20))
+    }
 
+    /* eslint-disable key-spacing */
     const pointerPath = [
       { x: -5, y: -110 },
       { x:  0, y: -140 },
@@ -317,6 +325,7 @@ function DialWidget (
       { x: -5, y:   10 },
       { x: -5, y: -110 }
     ]
+    /* eslint-enable key-spacing */
 
     svg.selectAll('g').data(colors).enter()
       .append('g')
@@ -363,18 +372,20 @@ function DialWidget (
       .attr('x2', 0).attr('y2', -172)
       .attr('transform', d => `translate(${r}, ${r})rotate(${d})`)
 
-    // add tooltip for numeric display
-    const div = d3.select(container).append('div').attr('class', 'tooltip')
-    svg.selectAll('text.numeric')
-      .on('mouseover', (d, i) =>
-        div.style('opacity', 0.8)
-          .html(fieldNames[i])
-          .style('color', colors[i])
-          .style('border-color', colors[i])
-          .style('left', `${d3.event.pageX - 0.7 * r}px`)
-          .style('top', `${d3.event.pageY - 0.7 * r}px`)
-      )
-      .on('mouseout', (d, i) => div.style('opacity', 0))
+    if (thisWidgetOptions.showNumericValues && !thisWidgetOptions.showDescriptions) {
+      // add tooltip for numeric display
+      const div = d3.select(container).append('div').attr('class', 'tooltip')
+      svg.selectAll('text.numeric')
+        .on('mouseover', (d, i) =>
+          div.style('opacity', 0.8)
+            .html(fieldNames[i])
+            .style('color', colors[i])
+            .style('border-color', colors[i])
+            .style('left', `${d3.event.pageX - 0.7 * r}px`)
+            .style('top', `${d3.event.pageY - 0.7 * r}px`)
+        )
+        .on('mouseout', (d, i) => div.style('opacity', 0))
+    }
 
     // scale the whole widget to the specified radius
     svg.attr('transform', d => `scale(${thisWidgetOptions.radius / defaultWidgetOptions.radius})`)
@@ -420,10 +431,16 @@ function DialWidget (
         }
       })
 
-    // update numeric display
-    d3.select(container)
-      .selectAll('text.numeric').data(data)
-      .text(d => d)
+    if (thisWidgetOptions.showNumericValues || thisWidgetOptions.showDescriptions) {
+      // update descriptions and/or numeric values
+      d3.select(container)
+        .selectAll('text.numeric').data(data)
+        .text((d, i) =>
+          thisWidgetOptions.showDescriptions
+            ? `${fieldNames[i]}${thisWidgetOptions.showNumericValues ? ': ' + d : ''}`
+            : d
+        )
+    }
   }
 }
 
