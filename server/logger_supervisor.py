@@ -1,14 +1,12 @@
 #! /usr/bin/env python3
 """
 """
-import asyncio
 import getpass  # to get username
 import json
 import logging
 import multiprocessing
 import os
 import pprint
-import queue
 import signal
 import socket  # to get hostname
 import subprocess
@@ -17,7 +15,6 @@ import tempfile
 import threading
 import time
 import websockets
-import yaml
 
 # For communicating with supervisord server
 from xmlrpc.client import ServerProxy
@@ -32,15 +29,11 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
-from logger.transforms.to_das_record_transform import ToDASRecordTransform
-from logger.writers.text_file_writer import TextFileWriter
-from logger.writers.composed_writer import ComposedWriter
 from logger.writers.cached_data_writer import CachedDataWriter
 from server.server_api import ServerAPI
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer
-from logger.transforms.from_json_transform import FromJSONTransform
 
 from logger.utils.das_record import DASRecord
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
@@ -51,10 +44,8 @@ SOURCE_NAME = 'LoggerSupervisor'
 USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
-DEFAULT_SUPERVISOR_DIR = '/opt/openrvdas/server/supervisor'
-DEFAULT_SUPERVISOR_PORT = 8001
+DEFAULT_SUPERVISOR_PORT = 8002
 DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas'
-DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE = '/opt/openrvdas/server/supervisord/supervisor.d/logger_configs.ini'
 
 ############################
 def kill_handler(self, signum):
@@ -115,11 +106,12 @@ files = {supervisor_dir}/supervisor.d/*.ini
 
 SUPERVISOR_LOGGER_TEMPLATE = """
 [program:{config_name}]
-command=logger/listener/listen.py --config_string '{config_json}' -v
-directory={base_dir}
+command=logger/listener/listen.py --config_string '{config_json}' {log_v}
+directory={directory}
 autostart=false
 autorestart={autorestart}
-startretries={max_tries}
+startsecs={startsecs}
+startretries={startretries}
 user={user}
 stderr_logfile_maxbytes=50MB
 stderr_logfile_backups=10
@@ -135,8 +127,7 @@ class SupervisorConnector:
   ############################
   def __init__(self,
                start_supervisor=False,
-               supervisor_logger_config_file=\
-                 DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE,
+               supervisor_logger_config_file=None,
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
                max_tries=DEFAULT_MAX_TRIES,
@@ -349,6 +340,48 @@ class SupervisorConnector:
     return self._running_configs
 
   ############################
+  def read_status(self):
+    """Read the status of currently active configs
+
+    loggers - dict mapping logger names->list of configs:
+
+      {
+        logger_1: {
+          'configs': [
+            'logger_1->off',
+            'logger_1->net',
+            'logger_1->file'
+          ]
+        },
+        logger_2:...
+      }
+
+    Return a dict mapping the status of those configs:
+      {
+        logger_1: {
+          'configs': {
+            'logger_1->off':  status,
+            'logger_1->net':  status,
+            'logger_1->file': status'
+          }
+        },
+        logger_2:...
+      }
+
+    """
+    with self.config_lock:
+      status_list = self.read_stderr_rpc.supervisor.getAllProcessInfo()
+      status_map = {s.get('name', None):s for s in status_list}
+
+      status_result = {}
+      for config in self.running_configs():
+        cleaned_config_name = self._clean_name(config)        
+        config_status = status_map[cleaned_config_name].get('statename')
+        status_result[config] = config_status
+
+    return status_result
+  
+  ############################
   def read_stderr(self, configs=None, group=None, maxchars=1000):
     """Read the stderr from the named configs and return result in a dict of
 
@@ -402,7 +435,7 @@ class SupervisorConnector:
           #self.read_stderr_rpc = self._create_supervisor_connection()
 
     return results
-  
+
   ############################
   def create_new_supervisor_file(self, configs, group=None,
                                  supervisor_logfile_dir=None,
@@ -444,21 +477,24 @@ class SupervisorConnector:
         config_name = self._clean_name(config_name)
         config_names.append(config_name)
 
-        # If a logger doesn't have readers or writers, e.g. if it's an
-        # "off" config, then it'll terminate quietly after
-        # starting. We don't want to restart it.
-        autorestart_bool = 'readers' in config and 'writers' in config
+        # If a logger isn't "runnable" because it doesn't have readers
+        # or writers (e.g. if it's an "off" config), then it'll
+        # terminate quietly after starting. Don't want to complain
+        # (startsecs=0) or restart (autorestart=false) it.
+        runnable = 'readers' in config and 'writers' in config
 
         replacement_fields = {
           'config_name': config_name,
           'config_json': json.dumps(config),
-          'base_dir': base_dir,
-          'autorestart': 'true' if autorestart_bool else 'false',
-          'max_tries': self.max_tries,
+          'directory': base_dir,
+          'autorestart': 'true' if runnable else 'false',
+          'startsecs': '5' if runnable else '0',
+          'startretries': self.max_tries,
           'user': user,
           'comment_log': '' if self.supervisor_logfile_dir else ';',
           'logfile_dir': self.supervisor_logfile_dir,
-          'logger': logger
+          'logger': logger,
+          'log_v': ''  # set to '-v' or '-v -v' to increase log level
           }
         content_str += SUPERVISOR_LOGGER_TEMPLATE.format(**replacement_fields)
 
@@ -564,14 +600,6 @@ class LoggerSupervisor:
     # run them.
     self._build_new_config_file()
 
-    # If we have a cached data server (either one we've started, or
-    # one we're just connecting to, we'll use a separate thread to
-    # send it status updates. We'll pop updates into the
-    # data_server_queue to get them sent by the thread.
-    self.send_to_data_server_thread = None
-    self.data_server_queue = queue.Queue()
-    self.data_server_lock = threading.Lock()
-
     # Data server to which we're going to send status updates
     if data_server_websocket:
       self.data_server_writer = CachedDataWriter(data_server_websocket)
@@ -585,10 +613,6 @@ class LoggerSupervisor:
       for config in self.loggers[logger].get('configs', []):
         self.config_to_logger[config] = logger
       
-    # Grab event loop so everyone who wants can make sure they're
-    # using the same one.
-    self.event_loop = asyncio.get_event_loop()
-
   ############################
   def start(self):
     """Start the threads that make up the LoggerSupervisor operation:
@@ -688,7 +712,7 @@ class LoggerSupervisor:
         self.supervisor.stop_configs(configs_to_stop, group='logger')
 
         # Grab any last output from the configs we've stopped
-        self._read_and_send_logger_status(configs_to_stop)
+        self._read_and_send_logger_stderr(configs_to_stop)
 
       if configs_to_start:
         logging.warning('Starting new configs: %s', configs_to_start)
@@ -698,195 +722,43 @@ class LoggerSupervisor:
       self.active_configs = new_configs
 
   ############################
-  async def _publish_to_data_server(self, ws, data):
-    """Encode and publish a dict of values to the cached data server.
+  def _read_and_send_cruise_definition(self):
+    """Assemble and send a cruise definition to the cached data server.
     """
-    message = json.dumps({'type': 'publish', 'data': data})
-    await ws.send(message)
+    # Assemble information from DB about what loggers should
+    # exist and what states they *should* be in. We'll send
+    # this to the cached data server whenever it changes (or
+    # if it's been a while since we have).
+    #
+    # Looks like:
+    # {'active_mode': 'log',
+    #  'cruise_id': 'NBP1406',
+    #  'loggers': {'PCOD': {'active': 'PCOD->file/net',
+    #                       'configs': ['PCOD->off',
+    #                                   'PCOD->net',
+    #                                   'PCOD->file/net',
+    #                                   'PCOD->file/net/db']},
+    #               next_logger: next_configs,
+    #               ...
+    #             },
+    #  'modes': ['off', 'monitor', 'log', 'log+db']
+    # }
     try:
-      result = await ws.recv()
-      response = json.loads(result)
-      if type(response) is dict and response.get('status', None) == 200:
-        return
-      logging.warning('Got bad response from data server: %s', result)
-    except json.JSONDecodeError:
-      logging.warning('Got unparseable response to "publish" message '
-                      'to data server: %s', result)
+      cruise = api.get_configuration() # a Cruise object
+      cruise_def = {
+        'cruise_id': cruise.id,
+        'loggers': api.get_loggers(),
+        'modes': cruise.modes(),
+        'active_mode': cruise.current_mode.name
+      }
+      das_record = DASRecord(fields={'status:cruise_definition': cruise_def})
+      logging.debug('DASRecord: %s' % das_record)
+      self.data_server_writer.write(das_record)
+    except (AttributeError, ValueError):
+      logging.debug('No cruise definition found')
 
   ############################
-  def _read_logger_status_loop_websocket(self):
-    """Iteratively grab messages to send to cached data server and send
-    them off via websocket.
-
-    Websockets are async, so we need to use an inner function and a
-    new event loop to handle the whole async/await thing.
-    """
-
-    ############################
-    async def _async_read_logger_status_loop(self):
-      """Inner async function that actually implements the fetching and
-      sending of status messages."""
-
-      # We stash previous_configs so that we know not to send them if
-      # they haven't changed since last check. We keep the raw
-      # previous_status separately, because we have to do some
-      # processing to get it into a form that's useful for our clients,
-      # and we want do avoid doing that processing if we can.
-      previous_cruise_def = {}
-      previous_logger_status = {}
-
-      # If we only have a server port but not a name, use 'localhost'
-      ws_name = self.data_server_websocket
-      if not ':' in ws_name and int(ws_name) > 0:  # if gave us just port
-        ws_name = 'localhost:' + ws_name
-      if ws_name.find(':') == 0:  # if gave us :port
-        ws_name = 'localhost' + ws_name
-
-      # Even if things haven't changed, we want to send a full status
-      # update every N seconds.
-      SEND_CRUISE_EVERY_N_SECONDS = 10
-      SEND_STATUS_EVERY_N_SECONDS = 5
-      last_cruise_def_sent = 0
-      last_status_sent = 0
-
-      while not self.quit_flag:
-        try:
-          logging.info('Connecting to websocket: "%s"', ws_name)
-          async with websockets.connect('ws://' + ws_name) as ws:
-            logging.info('Connected to websocket: "%s"', ws_name)
-
-            # We're connected to our websocket. Read the logger stderrs
-            while not self.quit_flag:
-              stderr_results = self.supervisor.read_stderr(group='logger')
-              for config in stderr_results:
-                logger = self.config_to_logger[config]
-                for line in stderr_results[config].split('\n'):
-                  if line:
-                    print(logger + ': ' + line)
-              await asyncio.sleep(1)
-
-              continue
-            
-              # Work through the messages in the queue, sending the
-              # ones we already have before doing anything else.
-              next_message = None
-              with self.data_server_lock:
-                if not self.data_server_queue.empty():
-                  next_message = self.data_server_queue.get()
-
-              # If there's something to send, send it and immediately
-              # loop back to see if there's more to send
-              if next_message:
-                await self._publish_to_data_server(ws, next_message)
-                continue;
-
-              # If we're here, we've caught up on sending stuff that's
-              # in the send queue. Check if anything has changed
-              # behind our back in the database.
-
-              now = time.time()
-
-              # Assemble information from DB about what loggers should
-              # exist and what states they *should* be in. We'll send
-              # this to the cached data server whenever it changes (or
-              # if it's been a while since we have).
-              #
-              # Looks like:
-              # {'active_mode': 'log',
-              #  'cruise_id': 'NBP1406',
-              #  'loggers': {'PCOD': {'active': 'PCOD->file/net',
-              #                       'configs': ['PCOD->off',
-              #                                   'PCOD->net',
-              #                                   'PCOD->file/net',
-              #                                   'PCOD->file/net/db']},
-              #               next_logger: next_configs,
-              #               ...
-              #             },
-              #  'modes': ['off', 'monitor', 'log', 'log+db']
-              # }
-              try:
-                cruise = api.get_configuration() # a Cruise object
-                cruise_def = {
-                  'cruise_id': cruise.id,
-                  'loggers': api.get_loggers(),
-                  'modes': cruise.modes(),
-                  'active_mode': cruise.current_mode.name
-                }
-              except (AttributeError, ValueError):
-                logging.debug('No cruise definition found')
-                cruise_def = {}
-
-              # Has our cruise definition changed, or has it been a
-              # while since we've sent it? If so, send update.
-              if not cruise_def == previous_cruise_def or \
-                 now - last_cruise_def_sent > SEND_CRUISE_EVERY_N_SECONDS:
-                cruise_data = {
-                  'timestamp': time.time(),
-                  'fields': {'status:cruise_definition': cruise_def}
-                }
-                logging.debug('sending cruise update: %s', cruise_data)
-                await self._publish_to_data_server(ws, cruise_data)
-
-                previous_cruise_def = cruise_def
-                last_cruise_def_sent = now
-
-              # Check our previously-sent logger status against the
-              # most-recently received one from the LoggerRunner. Has
-              # it changed? If so, send an update. Also send update if
-              # it's been a while since we've sent one.
-              logger_status = self.status
-
-              # Has anything changed with logger statuses? If so, we'll
-              # send a full update. Otherwise we'll just send a heartbeat
-              status_changed = not logger_status == previous_logger_status
-
-              # If it's been too long since we last sent an update,
-              # pretend status has changed so we'll send a new one
-              # just to keep up.
-              if now - last_status_sent > SEND_STATUS_EVERY_N_SECONDS:
-                status_changed = True
-                logging.debug('sending full status; time diff: %s',
-                              now - last_status_sent)
-
-              if status_changed:
-                previous_logger_status = logger_status
-                last_status_sent = now
-                logging.debug('sending full status')
-              else:
-                logger_status = {}
-                logging.debug('sending heartbeat')
-
-              status_data = {
-                'timestamp': now,
-                'fields': {'status:logger_status': logger_status}
-              }
-              logging.debug('sending status update: %s', status_data)
-              await self._publish_to_data_server(ws, status_data)
-
-              # Send queue is (or was recently) empty, and we've sent
-              # a status update. Snooze a bit before looping to check
-              # again.
-              await asyncio.sleep(self.interval)
-
-        except BrokenPipeError:
-          pass
-        except websockets.exceptions.ConnectionClosed:
-          logging.warning('Lost websocket connection to data server; '
-                          'trying to reconnect.')
-          await asyncio.sleep(0.2)
-        except OSError as e:
-          logging.info('Unable to connect to data server. '
-                          'Sleeping to try again...')
-          logging.info('Connection error: %s', str(e))
-          await asyncio.sleep(5)
-
-    # Now call the async process in its own event loop
-    status_event_loop = asyncio.new_event_loop()
-    status_event_loop.run_until_complete(_async_send_to_data_server_loop(self))
-    status_event_loop.close()
-
-  ############################
-  def _read_and_send_logger_status(self, configs=None):
+  def _read_and_send_logger_stderr(self, configs=None):
     """Grab logger stderr messages and send them off to cached data server
     via websocket.
     """
@@ -930,12 +802,48 @@ class LoggerSupervisor:
           print(logger + ': ' + line)
 
   ############################
+  def _read_and_send_logger_status(self):
+    """Grab logger status message from supervisor and send to cached data
+    server via websocket.
+    """
+    status_result = self.supervisor.read_status()
+
+    # Map status to logger
+    status_map = {}
+    for config, status in status_result.items():
+      logger = self.config_to_logger[config]
+      status_map[logger] = {'config':config, 'status':status}
+
+    if self.data_server_writer:
+      # Send the record off the the data server
+      das_record = DASRecord(fields={'status:logger_status': status_map})
+      logging.debug('DASRecord: %s' % das_record)
+      self.data_server_writer.write(das_record)
+    else:  
+      logging.debug('Got logger status: %s', status_map)
+
+  ############################
   def _read_logger_status_loop(self):
     """Iteratively grab messages to send to cached data server and send
     them off via websocket.
     """
+    SEND_CRUISE_EVERY_N_SECONDS = 10
+    SEND_STATUS_EVERY_N_SECONDS = 3
+
+    last_cruise_definition = 0
+    last_status = 0    
     while not self.quit_flag:
-      self._read_and_send_logger_status()
+      now = time.time()
+
+      if now - last_cruise_definition > SEND_CRUISE_EVERY_N_SECONDS:
+        self._read_and_send_cruise_definition()
+        last_cruise_definition = now
+        
+      if now - last_status > SEND_STATUS_EVERY_N_SECONDS:
+        self._read_and_send_logger_status()
+        last_status = now
+
+      self._read_and_send_logger_stderr()
       time.sleep(1)
 
 ################################################################################
@@ -992,7 +900,7 @@ if __name__ == '__main__':
 
   supervisor_group.add_argument('--supervisor_logger_config_file',
                                 dest='supervisor_logger_config_file',
-                                default=DEFAULT_SUPERVISOR_LOGGER_CONFIG_FILE,
+                                default=None,
                                 action='store', help='Location of file where '
                                 'supervisord should look for logger process '
                                 'definitions. Mutually exclusive with '

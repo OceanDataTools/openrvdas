@@ -39,7 +39,7 @@ function initial_send_message() {
 ////////////////////////////
 function process_message(message_str) {
   reset_server_timeout(); // We've gotten a server update
-
+  
   // Just for debugging purposes
   var message = JSON.parse(message_str);
 
@@ -278,7 +278,6 @@ function process_data_message(data_dict) {
     //       null:  not running and not supposed to be
     //   }
     case 'status:logger_status':
-      //console.log('Status value: ' + JSON.stringify(value));
       reset_status_timeout(); // We've gotten a status update
       var [timestamp, status_array] = value[0];
       for (var logger_name in status_array) {
@@ -288,15 +287,18 @@ function process_data_message(data_dict) {
           continue;
         }
         button.innerHTML = logger_status.config;
-        if (logger_status.running == true) {
+        if (logger_status.status == 'RUNNING') {
           button.style.backgroundColor = "lightgreen";
-        } else if (logger_status.running == false) {
-          button.style.backgroundColor = "orange";
-        } else {
+        } else if (logger_status.status == 'EXITED') {
           button.style.backgroundColor = "lightgray";
-        }
-        if (logger_status.failed) {
+        } else if (logger_status.status == "STARTING") {
+          button.style.backgroundColor = "khaki";
+        } else if (logger_status.status == "BACKOFF") {
+          button.style.backgroundColor = "gold";
+        } else if (logger_status.status == 'FATAL') {
           button.style.backgroundColor = "red";
+        } else {
+          button.style.backgroundColor = "white";
         }
       }
       break;
@@ -332,29 +334,24 @@ function add_to_stderr(logger_name, new_messages) {
   //console.log('updating stderr for ' + logger_name + ': ' + new_messages);
   var stderr_messages = global_logger_stderr[logger_name] || [];
 
-  // In case it's not sorted yet
-  stderr_messages.sort();
-
   for (s_i = 0; s_i < new_messages.length; s_i++) {
-    var pair = new_messages[s_i];
-    var new_message = pair[1];
+    var [timestamp, message] = new_messages[s_i];
 
-    if (stderr_messages.length == 0) {
-      stderr_messages.push(new_message);
-      continue;
-    }
-
-    // Insert new message (if unique)
-    for (m_i = stderr_messages.length - 1; m_i >= 0; m_i--) {
-      if (new_message == stderr_messages[m_i]) {
-        break; // duplicate message - ignore it
-      }
-      else if (new_message > stderr_messages[m_i]) {
-        stderr_messages.splice(m_i+1, 0, new_message);
-        break;
-      }
+    try {
+      // If we have a structured JSON message
+      message = JSON.parse(message);
+      var prefix = '';
+      if (typeof message['asctime'] !== undefined) {
+        prefix += message['asctime'] + ' ' + message['levelname'] +
+          ' ' + message['filename'] + ':' + message['lineno'] + ' ';
+      } 
+      stderr_messages.push(prefix + message['message']);
+    } catch (e) {
+      // If not JSON, then just push raw message
+      stderr_messages.push(message);
     }
   }
+  
   // Fetch the element where we're going to put the messages
   var stderr_div = document.getElementById(logger_name + '_stderr');
   if (stderr_div == undefined) {
