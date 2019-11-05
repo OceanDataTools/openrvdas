@@ -99,17 +99,111 @@ TRUE_WIND_TEMPLATE = """
     - class: CachedDataWriter
       kwargs:
         data_server: %DATA_SERVER%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+"""
+SUBSAMPLE_TEMPLATE = """
+  # Derived data subsampling logger
+  subsample->off:
+    name: subsample->off
+
+  subsample->on:
+    name: subsample->on
+    readers:
+      class: CachedDataReader
       kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:true_wind'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: %DATA_SERVER%
+        data_server: %DATA_SERVER%
+        subscription:
+          fields:
+            MwxAirTemp:
+              seconds: 0
+            RTMPTemp:
+              seconds: 0
+            PortTrueWindDir:
+              seconds: 0
+            PortTrueWindSpeed:
+              seconds: 0
+            StbdTrueWindDir:
+              seconds: 0
+            StbdTrueWindSpeed:
+              seconds: 0
+            MwxBarometer:
+              seconds: 0
+            KnudDepthHF:
+              seconds: 0
+            KnudDepthLF:
+              seconds: 0
+            Grv1Value:
+              seconds: 0
+
+    transforms:
+    - class: SubsampleTransform
+      kwargs:
+        back_seconds: 3600
+        metadata_interval: 20  # send metadata every 20 seconds
+        field_spec:
+          MwxAirTemp:
+            output: AvgMwxAirTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          RTMPTemp:
+            output: AvgRTMPTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindDir:
+            output: AvgPortTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindSpeed:
+            output: AvgPortTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindDir:
+            output: AvgStbdTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindSpeed:
+            output: AvgStbdTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          MwxBarometer:
+            output: AvgMwxBarometer
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthHF:
+            output: AvgKnudDepthHF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthLF:
+            output: AvgKnudDepthLF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          Grv1Value:
+            output: AvgGrv1Value
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: %DATA_SERVER%        
 """
 
 OFF_TEMPLATE="""
@@ -140,18 +234,8 @@ NET_WRITER_TEMPLATE="""
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: %PARSE_DEFINITION_PATH%
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: %DATA_SERVER%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -191,18 +275,8 @@ FILE_NET_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: %PARSE_DEFINITION_PATH%
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: %DATA_SERVER%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -242,6 +316,7 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: %PARSE_DEFINITION_PATH%
         writers:
         - class: CachedDataWriter
@@ -255,20 +330,10 @@ FULL_WRITER_TEMPLATE="""
             prefix: %LOGGER%
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: %PARSE_DEFINITION_PATH%
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: %DATA_SERVER%
 """
 
 ####################
@@ -340,6 +405,11 @@ output += """  true_wind:
     - true_wind->off
     - true_wind->on
 """
+output += """  subsample:
+    configs:
+    - subsample->off
+    - subsample->on
+"""
 
 ################################################################################
 # Fill in mode definitions
@@ -351,6 +421,7 @@ modes:
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->off\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->off\n'
+output += '    subsample: subsample->off\n'
 
 #### monitor
 output += """
@@ -359,6 +430,7 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
+output += '    subsample: subsample->on\n'
 
 #### log
 output += """
@@ -367,6 +439,7 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->file/net\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
+output += '    subsample: subsample->on\n'
 
 #### log+db
 output += """
@@ -375,6 +448,7 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->file/net/db\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
+output += '    subsample: subsample->on\n'
 
 output += """
 ########################################
@@ -423,6 +497,7 @@ for logger in loggers:
 
 # Add in the true wind configurations
 output += fill_substitutions(TRUE_WIND_TEMPLATE, substitutions)
+output += fill_substitutions(SUBSAMPLE_TEMPLATE, substitutions)
 
 print(output)
 
