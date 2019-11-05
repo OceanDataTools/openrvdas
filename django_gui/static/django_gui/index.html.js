@@ -39,7 +39,7 @@ function initial_send_message() {
 ////////////////////////////
 function process_message(message_str) {
   reset_server_timeout(); // We've gotten a server update
-  
+
   // Just for debugging purposes
   var message = JSON.parse(message_str);
 
@@ -331,27 +331,55 @@ function process_data_message(data_dict) {
 // Add the array of new (timestamped) messages to the stderr display
 // for logger_name. Make sure messages are in order and unique.
 function add_to_stderr(logger_name, new_messages) {
-  //console.log('updating stderr for ' + logger_name + ': ' + new_messages);
-  var stderr_messages = global_logger_stderr[logger_name] || [];
 
-  for (s_i = 0; s_i < new_messages.length; s_i++) {
+  // Does the line in question look like a logging line? That is, does
+  // it begin with a date string?
+  function looks_like_log_line(line) {
+    return (typeof line == 'string' && Date.parse(line.split(' ')[0]) > 0);
+  }
+
+  // Grab any pre-existing messages, filtering those that don't look
+  // like log lines.
+  // NOTE: WE SHOULDN'T NEED THIS!!!!
+  var stderr_messages = [];
+  if (global_logger_stderr[logger_name]) {
+    var logger_stderr = global_logger_stderr[logger_name];
+    for (var s_i = 0; s_i < logger_stderr.length; s_i++) {
+      var line = logger_stderr[s_i];
+      if (looks_like_log_line(line)) {
+        stderr_messages.push(line)
+      }
+    }
+  }
+  // Now add in any new messages
+  for (var s_i = 0; s_i < new_messages.length; s_i++) {
     var [timestamp, message] = new_messages[s_i];
-
     try {
       // If we have a structured JSON message
       message = JSON.parse(message);
       var prefix = '';
-      if (typeof message['asctime'] !== undefined) {
-        prefix += message['asctime'] + ' ' + message['levelname'] +
-          ' ' + message['filename'] + ':' + message['lineno'] + ' ';
-      } 
+      if (message['asctime'] !== undefined) {
+        prefix += message['asctime'] + ' ';
+      }
+      if (message['levelname'] !== undefined) {
+        prefix += message['levelname'] + ' ';
+      }
+      if (message['filename'] !== undefined) {
+        prefix += message['filename'] + ':' + message['lineno'] + ' ';
+      }
       stderr_messages.push(prefix + message['message']);
     } catch (e) {
-      // If not JSON, then just push raw message
-      stderr_messages.push(message);
+      // If not JSON, but a string that looks like a log line go ahead
+      // and push it into the list.
+      if (looks_like_log_line(message)) {
+        stderr_messages.push(message);
+      } else {
+        console.log('Skipping unparseable log line: ' + message);
+      }
     }
   }
-  
+  stderr_messages.sort()
+
   // Fetch the element where we're going to put the messages
   var stderr_div = document.getElementById(logger_name + '_stderr');
   if (stderr_div == undefined) {
@@ -492,4 +520,3 @@ function open_load_definition(click_event) {
   ];
   window.open('../choose_file/', '_blank', window_args.join());
 }
-

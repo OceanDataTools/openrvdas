@@ -60,13 +60,10 @@ class SerialReader(Reader):
                                   write_timeout=write_timeout, dsrdtr=dsrdtr,
                                   inter_byte_timeout=inter_byte_timeout,
                                   exclusive=exclusive)
-    except serial.serialutil.SerialException as e:
-      logging.error(str(e))
-      raise e
-    except Exception as e:
-      logging.fatal('Failed to open serial port %s: %s', port, str(e))
-      raise e
-
+    except (serial.SerialException, serial.serialutil.SerialException) as e:
+      logging.fatal('Failed to open serial port %s: %s', port, e)
+      sys.exit(1)
+      
     self.max_bytes = max_bytes
 
     # 'eol' comes in as a (probably escaped) string. We need to

@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 """
 """
+import datetime
 import getpass  # to get username
 import json
 import logging
@@ -195,7 +196,7 @@ class SupervisorConnector:
       # starts up. Petty, I know, but the warning could cause folks to
       # worry about the wrong thing if something else is amiss.
       open(self.supervisor_logger_config_file, 'a').close()
-      
+
       # Make sure supervisord exists and is on path
       SUPERVISORD = 'supervisord'
       try:
@@ -216,7 +217,7 @@ class SupervisorConnector:
 
     # Now that the preliminaries are done, try to connect to server.
     self.supervisor_rpc = self._create_supervisor_connection()
-    
+
     # Create a second connection that we will use to read logger
     # process stderr. We'll guard reads from this from stepping on
     # each other by means of a thread lock.
@@ -286,7 +287,7 @@ class SupervisorConnector:
       # Make calls in parallel and update set of currently-running configs
       results = self.supervisor_rpc.system.multicall(config_calls)
       self._running_configs |= configs_to_start
-      
+
     # Let's see what the results are
     for i in range(len(results)):
       result = results[i]
@@ -323,7 +324,7 @@ class SupervisorConnector:
       # Make calls in parallel and update set of currently-running configs
       results = self.supervisor_rpc.system.multicall(config_calls)
       self._running_configs = self._running_configs - configs_to_stop
-    
+
     # Let's see what the results are
     for i in range(len(results)):
       result = results[i]
@@ -375,12 +376,12 @@ class SupervisorConnector:
 
       status_result = {}
       for config in self.running_configs():
-        cleaned_config_name = self._clean_name(config)        
+        cleaned_config_name = self._clean_name(config)
         config_status = status_map[cleaned_config_name].get('statename')
         status_result[config] = config_status
 
     return status_result
-  
+
   ############################
   def read_stderr(self, configs=None, group=None, maxchars=1000):
     """Read the stderr from the named configs and return result in a dict of
@@ -400,7 +401,7 @@ class SupervisorConnector:
     """
     if configs is None:
       configs = self.running_configs()
-      
+
     results = {}
     with self.config_lock:
       for config in configs:
@@ -413,7 +414,7 @@ class SupervisorConnector:
         if not config in self.read_stderr_offset:
           self.read_stderr_offset[config] = 0
         offset = self.read_stderr_offset[config]
-        
+
         # Read stderr from config, iterating until we've got
         # everything from it.
         try:
@@ -595,16 +596,16 @@ class LoggerSupervisor:
 
     self.active_configs = set()       # which of those configs are active now?
 
-    # Fetch the complete set of loggers and configs from API; store
-    # them in self.loggers and create a .ini file for supervisord to
-    # run them.
-    self._build_new_config_file()
-
     # Data server to which we're going to send status updates
     if data_server_websocket:
       self.data_server_writer = CachedDataWriter(data_server_websocket)
     else:
       self.data_server_writer = None
+
+    # Fetch the complete set of loggers and configs from API; store
+    # them in self.loggers and create a .ini file for supervisord to
+    # run them.
+    self._build_new_config_file()
 
     # Stash a map of loggers->configs and configs->loggers
     self.loggers = self.api.get_loggers()
@@ -612,7 +613,7 @@ class LoggerSupervisor:
     for logger in self.loggers:
       for config in self.loggers[logger].get('configs', []):
         self.config_to_logger[config] = logger
-      
+
   ############################
   def start(self):
     """Start the threads that make up the LoggerSupervisor operation:
@@ -711,6 +712,12 @@ class LoggerSupervisor:
         logging.warning('Stopping configs: %s', configs_to_stop)
         self.supervisor.stop_configs(configs_to_stop, group='logger')
 
+        # Alert the data server which configs we're stopping
+        for config in configs_to_stop:
+          logger = self.config_to_logger[config]
+          self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                                 'Stopping config ' + config)
+
         # Grab any last output from the configs we've stopped
         self._read_and_send_logger_stderr(configs_to_stop)
 
@@ -718,6 +725,11 @@ class LoggerSupervisor:
         logging.warning('Starting new configs: %s', configs_to_start)
         self.supervisor.start_configs(configs_to_start, group='logger')
 
+        # Alert the data server which configs we're starting
+        for config in configs_to_start:
+          logger = self.config_to_logger[config]
+          self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                                 'Starting config ' + config)
       # Cache our new configs for the next time around
       self.active_configs = new_configs
 
@@ -751,11 +763,31 @@ class LoggerSupervisor:
         'modes': cruise.modes(),
         'active_mode': cruise.current_mode.name
       }
-      das_record = DASRecord(fields={'status:cruise_definition': cruise_def})
-      logging.debug('DASRecord: %s' % das_record)
-      self.data_server_writer.write(das_record)
+      self._write_record_to_data_server('status:cruise_definition', cruise_def)
     except (AttributeError, ValueError):
       logging.debug('No cruise definition found')
+
+  ############################
+  def _write_log_message_to_data_server(self, field_name, message,
+                                        log_level=logging.WARNING):
+    """Send something that looks like a logging message to the cached data
+    server.
+    """
+    asctime = datetime.datetime.utcnow().isoformat()
+    asctime = asctime.replace('T',' ',1) + 'Z'
+    record = {'asctime': asctime, 'message': message}
+
+    logging.warning('sending log message %s: %s', field_name, record)
+    self._write_record_to_data_server(field_name, json.dumps(record))
+
+  ############################
+  def _write_record_to_data_server(self, field_name, record):
+    """Format and label a record and send it to the cached data server.
+    """
+    if self.data_server_writer:
+      das_record = DASRecord(fields={field_name: record})
+      logging.debug('DASRecord: %s' % das_record)
+      self.data_server_writer.write(das_record)
 
   ############################
   def _read_and_send_logger_stderr(self, configs=None):
@@ -764,7 +796,7 @@ class LoggerSupervisor:
     """
     if configs is None:
       configs = self.supervisor.running_configs()
-      
+
     stderr_results = self.supervisor.read_stderr(configs, group='logger')
     for config, stderr_lines in stderr_results.items():
       logger = self.config_to_logger[config]
@@ -793,9 +825,7 @@ class LoggerSupervisor:
             record = {'message': line}
 
           # Send the record off the the data server
-          das_record = DASRecord(fields={field_name: json.dumps(record)})
-          logging.debug('DASRecord: %s' % das_record)
-          self.data_server_writer.write(das_record)
+          self._write_record_to_data_server(field_name, json.dumps(record))
 
         else:
           # If no data server, just print to stdout
@@ -815,11 +845,8 @@ class LoggerSupervisor:
       status_map[logger] = {'config':config, 'status':status}
 
     if self.data_server_writer:
-      # Send the record off the the data server
-      das_record = DASRecord(fields={'status:logger_status': status_map})
-      logging.debug('DASRecord: %s' % das_record)
-      self.data_server_writer.write(das_record)
-    else:  
+      self._write_record_to_data_server('status:logger_status', status_map)
+    else:
       logging.debug('Got logger status: %s', status_map)
 
   ############################
@@ -831,14 +858,14 @@ class LoggerSupervisor:
     SEND_STATUS_EVERY_N_SECONDS = 3
 
     last_cruise_definition = 0
-    last_status = 0    
+    last_status = 0
     while not self.quit_flag:
       now = time.time()
 
       if now - last_cruise_definition > SEND_CRUISE_EVERY_N_SECONDS:
         self._read_and_send_cruise_definition()
         last_cruise_definition = now
-        
+
       if now - last_status > SEND_STATUS_EVERY_N_SECONDS:
         self._read_and_send_logger_status()
         last_status = now
@@ -851,8 +878,8 @@ def run_data_server(data_server_websocket,
                     data_server_back_seconds, data_server_cleanup_interval,
                     data_server_interval):
   """Run a CachedDataServer (to be called as a separate process),
-  accepting websocket connections and listening for UDP broadcasts
-  on the specified port to receive data to be cached and served.
+  accepting websocket connections to receive data to be cached and
+  served.
   """
   # First get the port that we're going to run the data server on. Because
   # we're running it locally, it should only have a port, not a hostname.

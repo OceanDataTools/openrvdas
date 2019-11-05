@@ -9,9 +9,9 @@ from os.path import dirname
 
 # Default base of logging path. See setUpStdErrLogging() for explanation.
 DEFAULT_STDERR_PATH = '/var/log/openrvdas/'
-DEFAULT_LOGGING_FORMAT = '%(asctime)-15s.%(msecs)03dZ %(filename)s:%(lineno)d: %(message)s'
 DEFAULT_LOGGING_FORMAT = ' '.join([
-  '%(asctime)-15s.%(msecs)03dZ',
+  #'%(asctime)-15s.%(msecs)03dZ',
+  '%(asctime)sZ',
   '%(levelno)s',
   '%(levelname)s',
   '%(filename)s:%(lineno)d',
