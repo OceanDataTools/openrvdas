@@ -61,7 +61,7 @@ import threading
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
-from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
+from logger.utils.stderr_logging import StdErrLoggingHandler
 from logger.writers.text_file_writer import TextFileWriter
 from logger.listener.listen import ListenerFromLoggerConfig
 
@@ -556,7 +556,6 @@ if __name__ == '__main__':
   # Set up logging first of all
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-  setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
     stderr_writers = [TextFileWriter(args.stderr_file)]
     logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))

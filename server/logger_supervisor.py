@@ -29,15 +29,22 @@ from os.path import dirname, realpath
 # Add the openrvdas components onto sys.path
 sys.path.append(dirname(dirname(realpath(__file__))))
 
-from logger.utils.read_config import read_config
-from logger.writers.cached_data_writer import CachedDataWriter
 from server.server_api import ServerAPI
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer
 
+# For sending stderr to CachedDataServer
+from logger.utils.read_config import read_config
+from logger.writers.cached_data_writer import CachedDataWriter
+from logger.writers.text_file_writer import TextFileWriter
+from logger.utils.stderr_logging import StdErrLoggingHandler
+
 from logger.utils.das_record import DASRecord
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
+from logger.transforms.to_das_record_transform import ToDASRecordTransform
+from logger.writers.composed_writer import ComposedWriter
+
 
 DEFAULT_MAX_TRIES = 3
 
@@ -296,8 +303,7 @@ class SupervisorConnector:
         if result['faultCode'] == 60:
           logging.warning('Starting process %s, but already started', config)
         else:
-          logging.warning('Starting process %s: %s', config,
-                          result['faultString'])
+          logging.info('Starting process %s: %s', config, result['faultString'])
 
   ############################
   def stop_configs(self, configs_to_stop, group=None):
@@ -331,9 +337,9 @@ class SupervisorConnector:
       config = configs[i]
       if type(result) is dict:
         if result['faultCode'] == 60:
-          logging.info('Stopping process %s, but already stopped', config)
+          logging.debug('Stopping process %s, but already stopped', config)
         else:
-          logging.info('Stopping process %s: %s', config, result['faultString'])
+          logging.debug('Stopping process %s: %s', config, result['faultString'])
 
   ############################
   def running_configs(self):
@@ -709,7 +715,7 @@ class LoggerSupervisor:
       configs_to_stop = self.active_configs - new_configs
 
       if configs_to_stop:
-        logging.warning('Stopping configs: %s', configs_to_stop)
+        logging.debug('Stopping configs: %s', configs_to_stop)
         self.supervisor.stop_configs(configs_to_stop, group='logger')
 
         # Alert the data server which configs we're stopping
@@ -722,7 +728,7 @@ class LoggerSupervisor:
         self._read_and_send_logger_stderr(configs_to_stop)
 
       if configs_to_start:
-        logging.warning('Starting new configs: %s', configs_to_start)
+        logging.info('Activating to new configs: %s', configs_to_start)
         self.supervisor.start_configs(configs_to_start, group='logger')
 
         # Alert the data server which configs we're starting
@@ -769,15 +775,13 @@ class LoggerSupervisor:
 
   ############################
   def _write_log_message_to_data_server(self, field_name, message,
-                                        log_level=logging.WARNING):
+                                        log_level=logging.INFO):
     """Send something that looks like a logging message to the cached data
     server.
     """
-    asctime = datetime.datetime.utcnow().isoformat()
-    asctime = asctime.replace('T',' ',1) + 'Z'
-    record = {'asctime': asctime, 'message': message}
-
-    logging.warning('sending log message %s: %s', field_name, record)
+    asctime = datetime.datetime.utcnow().isoformat() + 'Z'
+    record = {'asctime': asctime, 'levelno': log_level,
+              'levelname': logging.getLevelName(log_level), 'message': message}
     self._write_record_to_data_server(field_name, json.dumps(record))
 
   ############################
@@ -794,42 +798,73 @@ class LoggerSupervisor:
     """Grab logger stderr messages and send them off to cached data server
     via websocket.
     """
+
+    def parse_and_send_message(field_name, message):
+      """Inner function that parses a (possibly multi-line) stderr message
+      and sends it to the cached data server (or prints it out if we
+      don't have a cached data server).
+      """
+      if self.data_server_writer:
+        # Parse the logging line into a DASRecord
+        try:
+          components = line.split(' ', maxsplit=5)
+          (r_date, r_time, r_levelno, r_levelname,  r_filename_lineno,
+           r_message) = components
+          r_filename, r_lineno = r_filename_lineno.split(':')
+          record = {
+            'asctime': r_date + 'T' + r_time + 'Z',
+            'levelno': r_levelno,
+            'levelname': r_levelname,
+            'filename': r_filename,
+            'lineno': r_lineno,
+            'message': r_message
+            }
+        except ValueError:
+          logging.debug('Failed to parse: "%s"', line)
+          record = {'message': line}
+
+        # Send the record off the the data server
+        self._write_record_to_data_server(field_name, json.dumps(record))
+
+      else:
+        # If no data server, just print to stdout
+        print(logger + ': ' + line)
+
+    # Start of actual _read_and_send_logger_stderr() code.
     if configs is None:
       configs = self.supervisor.running_configs()
 
     stderr_results = self.supervisor.read_stderr(configs, group='logger')
+
     for config, stderr_lines in stderr_results.items():
       logger = self.config_to_logger[config]
       field_name = 'stderr:logger:' + logger
+
+      # Messages may be multiple lines. We're going to assume that
+      # each one starts with an ISO8601 time string. If a line doesn't
+      # begin with one, assume it's a continuation of the previous
+      # message. Aggregate in a list until we see the next time string
+      # or run out of input.
+      message = []
       for line in stderr_lines.split('\n'):
         if not line:
           continue
 
-        if self.data_server_writer:
-          # Parse the logging line into a DASRecord
-          try:
-            components = line.split(' ', maxsplit=5)
-            (r_date, r_time, r_levelno, r_levelname,  r_filename_lineno,
-             r_message) = components
-            r_filename, r_lineno = r_filename_lineno.split(':')
-            record = {
-              'asctime': r_date + ' ' + r_time,
-              'levelno': r_levelno,
-              'levelname': r_levelname,
-              'filename': r_filename,
-              'lineno': r_lineno,
-              'message': r_message
-              }
-          except ValueError:
-            logging.debug('Failed to parse: "%s"', line)
-            record = {'message': line}
+        # If line begins with a time string, assume, it's a new message
+        # and previous message is complete. Send off the old one.
+        try:
+          datetime.datetime.strptime(line.split('T')[0], '%Y-%m-%d')
+          has_timestamp = True
+        except ValueError:
+          has_timestamp = False
+        if has_timestamp:
+          parse_and_send_message(field_name, '\n'.join(message))
+          message = []
+        message.append(line)
 
-          # Send the record off the the data server
-          self._write_record_to_data_server(field_name, json.dumps(record))
-
-        else:
-          # If no data server, just print to stdout
-          print(logger + ': ' + line)
+      # Send the last straggler
+      if message:
+        parse_and_send_message(field_name, '\n'.join(message))
 
   ############################
   def _read_and_send_logger_status(self):
@@ -913,7 +948,7 @@ if __name__ == '__main__':
                       'to use.')
 
   # Arguments for the SupervisorConnector
-  supervisor_group = parser.add_mutually_exclusive_group()
+  supervisor_group = parser.add_mutually_exclusive_group(required=True)
   supervisor_group.add_argument('--start_supervisor',
                                 dest='start_supervisor', action='store_true',
                                 default=False, help='Start local copy of '
@@ -988,7 +1023,7 @@ if __name__ == '__main__':
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT)
+  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, level=log_level)
 
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
@@ -1007,6 +1042,16 @@ if __name__ == '__main__':
             args.data_server_interval),
       daemon=True)
     data_server_proc.start()
+
+  ############################
+  # If we do have a data server, add a handler that will echo all
+  # logger_manager stderr output to it
+  if args.data_server_websocket:
+    stderr_writer = ComposedWriter(
+      transforms=ToDASRecordTransform(field_name='stderr:logger_manager'),
+      writers=[CachedDataWriter(data_server=args.data_server_websocket)])
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer,
+                                                        parse_to_json=True))
 
   ############################
   # Instantiate API - a Are we using an in-memory store or Django

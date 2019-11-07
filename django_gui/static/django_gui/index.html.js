@@ -335,22 +335,12 @@ function add_to_stderr(logger_name, new_messages) {
   // Does the line in question look like a logging line? That is, does
   // it begin with a date string?
   function looks_like_log_line(line) {
-    return (typeof line == 'string' && Date.parse(line.split(' ')[0]) > 0);
+    return (typeof line == 'string' && Date.parse(line.split('T')[0]) > 0);
   }
 
-  // Grab any pre-existing messages, filtering those that don't look
-  // like log lines.
-  // NOTE: WE SHOULDN'T NEED THIS!!!!
-  var stderr_messages = [];
-  if (global_logger_stderr[logger_name]) {
-    var logger_stderr = global_logger_stderr[logger_name];
-    for (var s_i = 0; s_i < logger_stderr.length; s_i++) {
-      var line = logger_stderr[s_i];
-      if (looks_like_log_line(line)) {
-        stderr_messages.push(line)
-      }
-    }
-  }
+  // Grab any pre-existing messages.
+  var stderr_messages = global_logger_stderr[logger_name] || [];
+
   // Now add in any new messages
   for (var s_i = 0; s_i < new_messages.length; s_i++) {
     var [timestamp, message] = new_messages[s_i];

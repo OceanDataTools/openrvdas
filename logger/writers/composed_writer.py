@@ -126,9 +126,11 @@ class ComposedWriter(Writer):
       t.join()
 
     # Were there any exceptions? Arbitrarily raise the first one in list
-    for e in self.exceptions:
-      if e:
-        raise e
+    exceptions = [e for e in self.exceptions if e]
+    for e in exceptions:
+      logging.error(e)
+    if exceptions:
+      raise exceptions[0]
 
   ############################
   def _check_writer_formats(self):

@@ -90,7 +90,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.writers.text_file_writer import TextFileWriter
 from logger.utils.subsample import subsample
 from logger.utils.das_record import DASRecord
-from logger.utils.stderr_logging import setUpStdErrLogging
 from logger.utils.stderr_logging import StdErrLoggingHandler
 
 ############################
@@ -913,7 +912,6 @@ if __name__ == '__main__':
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   logging.basicConfig(format=LOGGING_FORMAT)
   logging.getLogger().setLevel(log_level)
-  setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
     stderr_writer = [TextFileWriter(filename=args.stderr_file,
                                     split_by_date=True)]

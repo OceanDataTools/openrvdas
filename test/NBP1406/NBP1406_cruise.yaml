@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Mon Aug 12 23:39:50 2019 UTC
+#   time:     Tue Nov  5 20:09:10 2019 UTC
 #   user:     pablo
 #
 ########################################
@@ -279,17 +279,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   PCOD->file/net:
     name: PCOD->file/net
@@ -325,17 +314,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -391,17 +369,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   cwnc->off:
     name: cwnc->off
@@ -430,17 +397,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -480,17 +436,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -546,17 +491,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   gp02->off:
     name: gp02->off
@@ -585,17 +519,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -635,17 +558,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -701,17 +613,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   gyr1->off:
     name: gyr1->off
@@ -740,17 +641,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -790,17 +680,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -856,17 +735,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   adcp->off:
     name: adcp->off
@@ -895,17 +763,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -945,17 +802,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1011,17 +857,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   eng1->off:
     name: eng1->off
@@ -1050,17 +885,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1100,17 +924,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1166,17 +979,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   svp1->off:
     name: svp1->off
@@ -1205,17 +1007,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1255,17 +1046,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1321,17 +1101,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   twnc->off:
     name: twnc->off
@@ -1360,17 +1129,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1410,17 +1168,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1476,17 +1223,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   mbdp->off:
     name: mbdp->off
@@ -1515,17 +1251,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1565,17 +1290,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1631,17 +1345,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   knud->off:
     name: knud->off
@@ -1670,17 +1373,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1720,17 +1412,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1786,17 +1467,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   grv1->off:
     name: grv1->off
@@ -1825,17 +1495,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1875,17 +1534,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1941,17 +1589,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   mwx1->off:
     name: mwx1->off
@@ -1980,17 +1617,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2030,17 +1656,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2096,17 +1711,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   pco2->off:
     name: pco2->off
@@ -2135,17 +1739,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2185,17 +1778,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2251,17 +1833,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   pguv->off:
     name: pguv->off
@@ -2290,17 +1861,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2340,17 +1900,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2406,17 +1955,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   s330->off:
     name: s330->off
@@ -2445,17 +1983,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2495,17 +2022,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2561,17 +2077,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   tsg1->off:
     name: tsg1->off
@@ -2600,17 +2105,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2650,17 +2144,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2716,17 +2199,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   rtmp->off:
     name: rtmp->off
@@ -2755,17 +2227,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2805,17 +2266,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2871,17 +2321,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   hdas->off:
     name: hdas->off
@@ -2910,17 +2349,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2960,17 +2388,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3026,17 +2443,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   tsg2->off:
     name: tsg2->off
@@ -3065,17 +2471,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3115,17 +2510,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3181,17 +2565,6 @@ configs:
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   seap->off:
     name: seap->off
@@ -3220,17 +2593,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3270,17 +2632,6 @@ configs:
           kwargs:
             metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3333,20 +2684,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_pathd: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   true_wind->off:
     name: true_wind->off
@@ -3380,7 +2720,7 @@ configs:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: PortApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -3393,7 +2733,7 @@ configs:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -3407,17 +2747,6 @@ configs:
     - class: CachedDataWriter
       kwargs:
         data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:true_wind'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   # Derived data subsampling logger
   subsample->off:
@@ -3522,15 +2851,4 @@ configs:
     - class: CachedDataWriter
       kwargs:
         data_server: localhost:8766        
-    stderr_writers:
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:subsample'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 

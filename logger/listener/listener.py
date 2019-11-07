@@ -13,8 +13,6 @@ from logger.readers.text_file_reader import TextFileReader
 from logger.writers.text_file_writer import TextFileWriter
 from logger.readers.composed_reader import ComposedReader
 from logger.writers.composed_writer import ComposedWriter
-from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
-
 
 ################################################################################
 class Listener:
@@ -69,11 +67,6 @@ class Listener:
     Calling listener.quit() from another thread will cause the run() loop
     to exit.
     """
-    # Set up logging first of all
-    setUpStdErrLogging(log_level=log_level)
-    if stderr_writers:
-      logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
-
     logging.info('Instantiating %s logger', name or 'unnamed')
 
     ###########

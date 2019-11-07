@@ -92,32 +92,23 @@ from logger.writers.record_screen_writer import RecordScreenWriter
 from logger.writers.cached_data_writer import CachedDataWriter
 from logger.writers.timeout_writer import TimeoutWriter
 
+from logger.utils.timestamp import TIME_FORMAT, LOGGING_TIME_FORMAT
 from logger.utils import read_config, timestamp, nmea_parser, record_parser
-from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
+from logger.utils.stderr_logging import StdErrLoggingHandler, STDERR_FORMATTER
+
 from logger.listener.listener import Listener
 
 ################################################################################
 class ListenerFromLoggerConfig(Listener):
   """Helper class for instantiating a Listener object from a Python dict."""
   ############################
-  def __init__(self, config, stderr_file=None, stderr_path=None,log_level=None):
+  def __init__(self, config, log_level=None):
     """Create a Listener from a Python config dict."""
 
     if not type(config) is dict:
       raise ValueError('ListenerFromLoggerConfig expects config of type '
                        '"dict" but received one of type "%s": %s'
                        % (type(config), str(config)))
-    # Set up stderr logging. We do this inside Listener(), too, but
-    # doing it here allows us to pick up diagnostic messages created
-    # before we actually create the Listener object. If we've been
-    # handed a file/path/log_level, use those; otherwise, look for
-    # them in the config.
-    stderr_file = stderr_file or config.get('stderr_file', None)
-    stderr_path = stderr_path or config.get('stderr_path', None)
-    log_level = log_level or config.get('log_level', None)
-    setUpStdErrLogging(stderr_file=stderr_file,
-                       stderr_path=stderr_path,
-                       log_level=log_level)
 
     # Extract keyword args from config and instantiate.
     logging.debug('ListenerFromLoggerConfig instantiating logger '
@@ -514,14 +505,6 @@ if __name__ == '__main__':
                       default=0, action='count',
                       help='Increase output verbosity')
 
-  parser.add_argument('--stderr_path', dest='stderr_path', default=None,
-                      help='Base path for file to which stderr messages '
-                      'should be written.')
-
-  parser.add_argument('--stderr_file', dest='stderr_file', default=None,
-                      help='File name to which stderr messages should be '
-                      'written.')
-
   parsed_args = parser.parse_args()
 
   ############################
@@ -530,7 +513,10 @@ if __name__ == '__main__':
 
   LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   log_level = LOG_LEVELS[min(parsed_args.verbosity, max(LOG_LEVELS))]
-  setUpStdErrLogging(log_level=log_level)
+
+  console_handler = logging.StreamHandler()
+  console_handler.setFormatter(STDERR_FORMATTER)
+  logging.root.handlers = [console_handler]
 
   ############################
   # If --config_file/--config_string present, create Listener from
@@ -552,12 +538,10 @@ if __name__ == '__main__':
       else:
         parser.error('When --config_file or --config_string are '
                      'specified, no other command line args except -v, '
-                     '--stderr_file and --stderr_path may be used: '
+                     'may be used: '
                      '{}'.format(sys.argv[i]))
 
-    # Read config file or JSON string and instantiate. Allow command
-    # line specification of stderr_path and/or stderr_file to override
-    # whatever is in the config.
+    # Read config file or JSON string and instantiate.
     if parsed_args.config_file:
       listener = ListenerFromLoggerConfigFile(parsed_args.config_file,
                                               log_level=log_level)
@@ -826,12 +810,6 @@ if __name__ == '__main__':
       if new_args.write_cached_data_server:
         data_server = new_args.write_cached_data_server
         writers.append(CachedDataWriter(data_server=data_server))
-
-      ##########################
-      # Stderr Writer
-      if new_args.stderr_file:
-        stderr_writers = [TextFileWriter(filename=new_args.stderr_file)]
-        #stderr_writer = LogfileWriter(filebase=new_args.stderr_file)
 
     ##########################
     # If we don't have any readers, read from stdin, if we don't have

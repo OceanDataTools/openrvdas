@@ -112,7 +112,6 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(
 
 from logger.utils.read_config import read_config
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
-from logger.utils.stderr_logging import setUpStdErrLogging
 from logger.utils.stderr_logging import StdErrLoggingHandler
 from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.writers.text_file_writer import TextFileWriter
@@ -674,7 +673,6 @@ if __name__ == '__main__':
 
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   logging.basicConfig(format=LOGGING_FORMAT)
-  setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
     stderr_writers = [TextFileWriter(args.stderr_file,
                                      split_by_date=True)]
