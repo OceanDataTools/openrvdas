@@ -36,6 +36,10 @@ function TimelineWidget (
 
   const defaultWidgetOptions = {
     height: 400,
+    min: null,
+    max: null,
+    minRange: null,
+    showLegend: true,
     maxPoints: 500
   }
   const thisWidgetOptions = { ...defaultWidgetOptions, ...widgetOptions }
@@ -95,8 +99,15 @@ function TimelineWidget (
 
 function realTimeLineChart (widgetParams) {
   const duration = 1000
-  const { height, yLabel, colors, fieldNames, fieldInfo } = widgetParams
+  const { yLabel, colors, fieldNames, fieldInfo, height, min, max, minRange, showLegend }
+    = widgetParams
   const margin = { top: 20, right: 10, bottom: 20, left: yLabel ? 50 : 30 }
+
+  // Find the maximum seconds specified for any field. If none found, default to 60.
+  const maxFieldSeconds = Object.values(fieldInfo)
+    .filter(v => 'seconds' in v)
+    .reduce((acc, v) => Math.max(acc, v.seconds), 0)
+  const maxSeconds = maxFieldSeconds || 60
 
   function chart (selection) {
     selection.each(function (nodeData) {
@@ -112,15 +123,24 @@ function realTimeLineChart (widgetParams) {
       const y = d3.scaleLinear().rangeRound([h, 0])
       const z = d3.scaleOrdinal(colors)
 
-      const xMin = d3.min(data, c => d3.min(c.values, d => d.time))
       const xMax = new Date(new Date(d3.max(data, c => d3.max(c.values, d => d.time)))
-        .getTime() - (duration * 2))
+        .getTime() - duration)
+      const xMin = xMax - maxSeconds * 1000
+
+
+      // use bounds if specified, else use max and min of data
+      let yMin = min !== null ? min : d3.min(data, c => d3.min(c.values, d => d.value))
+      let yMax = max !== null ? max : d3.max(data, c => d3.max(c.values, d => d.value))
+
+      // if the range is too small, symmetrically enlarge it
+      if (minRange !== null && yMax - yMin < minRange) {
+        const mid = (yMax + yMin) / 2
+        yMin = mid - minRange / 2
+        yMax = mid + minRange / 2
+      }
 
       x.domain([xMin, xMax])
-      y.domain([
-        d3.min(data, c => d3.min(c.values, d => d.value)),
-        d3.max(data, c => d3.max(c.values, d => d.value))
-      ])
+      y.domain([yMin, yMax])
       z.domain(data.map(c => c.fieldName))
 
       const line = d3.line()
@@ -141,15 +161,17 @@ function realTimeLineChart (widgetParams) {
         .selectAll('.data').data(data).enter()
         .append('path').attr('class', 'data')
 
-      const legendEnter = gEnter.append('g')
-        .attr('class', 'legend')
-        .attr('transform', 'translate(10,0)')
-      legendEnter.selectAll('text')
-        .data(data).enter()
-        .append('text')
-        .attr('y', (d, i) => (i * 20) + 5)
-        .attr('x', 5)
-        .attr('fill', d => z(d.fieldName))
+      if (showLegend) {
+        gEnter.append('g')
+          .attr('class', 'legend')
+          .attr('transform', 'translate(10,0)')
+          .selectAll('text')
+          .data(data).enter()
+          .append('text')
+          .attr('y', (d, i) => (i * 20) + 5)
+          .attr('x', 5)
+          .attr('fill', d => z(d.fieldName))
+      }
 
       svg = selection.select('svg')
       svg.attr('width', width).attr('height', height)
@@ -200,12 +222,15 @@ function realTimeLineChart (widgetParams) {
         .ease(d3.easeLinear)
         .on('start', tick)
 
-      g.selectAll('g .legend text')
-        .data(data)
-        .text(d => {
-          const legendName = fieldInfo[d.fieldName].name
-          return legendName + (d.values.length > 0 ? ': ' + d.values[d.values.length - 1].value : '')
-        })
+      if (showLegend) {
+        g.selectAll('g .legend text')
+          .data(data)
+          .text(d => {
+            const legendName = fieldInfo[d.fieldName].name
+            const n = d.values.length
+            return legendName + (n > 0 ? ': ' + d.values[n - 1].value : '')
+          })
+      }
 
       function tick () {
         d3.select(this)

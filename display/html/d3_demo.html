@@ -157,7 +157,7 @@
           name: 'Port Relative Wind Speed',
           seconds: 45,
           color: 'red',
-	  //transform: x => 10 * x
+          //transform: x => 10 * x
         },
         MwxStbdRelWindSpeed: {
           name: 'Stbd Relative Wind Speed',
@@ -168,8 +168,12 @@
       widget_list.push(new D3TimelineWidget(
         '#wind_speed_line', rel_wind_line_fields,
         'Knots', {
+          //height: 300,
+          //min: 0,
+          //max: 20,
+          //minRange: 5,
+          //showLegend: false,
           //maxPoints: 30,
-          //height: 300
         }
       ));
       var widget_server = new WidgetServer(widget_list,
