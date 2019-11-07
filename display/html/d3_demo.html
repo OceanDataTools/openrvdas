@@ -3,7 +3,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>D3 TimelineWidget Example</title>
+    <title>D3 DialWidget and TimelineWidget Example</title>
 
     <style type="text/css">
       .ship_table {
@@ -43,6 +43,49 @@
       }
       g.axis.y path.domain {
         stroke: none;
+      }
+      svg.gauge {
+        margin: 0 auto;
+        display: block;
+      }
+      svg.gauge circle.outer {
+        fill: #ccc;
+        stroke: #666;
+      }
+      svg.gauge circle.inner {
+        fill: #eee;
+        stroke: #aaa;
+      }
+      svg.gauge path.arc {
+        stroke: #666;
+        stroke-width: 2px;
+      }
+      svg.gauge path.wedge {
+        fill: #ccc;
+      }
+      svg.gauge circle.pin {
+        fill: #222;
+      }
+      svg.gauge path.pointer {
+        stroke: #222;
+      }
+      svg.gauge g.major line {
+        stroke: #333;
+        stroke-width: 2px;
+      }
+      svg.gauge g.major text {
+        font-size: 12px;
+      }
+      svg.gauge line.minor {
+        stroke: #333;
+        stroke-width: 1px;
+      }
+      div.tooltip {
+        position: absolute;
+        opacity: 0;
+        border: 1px solid;
+        padding: 2px 5px;
+        background: #fff;
       }
     </style>
   </head>
@@ -86,15 +129,21 @@
         MwxPortRelWindDir: {
           name: 'Port Relative Wind',
           color: 'red',
+          //transform: x => Math.random() * 360
         },
         MwxStbdRelWindDir: {
           name: 'Stbd Relative Wind',
           color: 'green',
         }
       };
-      widget_list.push(new D3DialWidget('#rel_wind_dial', rel_wind_dial_fields,
-                                    {title:{text:''}}
-                                    ));
+      widget_list.push(new D3DialWidget('#rel_wind_dial', rel_wind_dial_fields, {
+        //radius: 120,
+        //startAngle: -120,
+        //endAngle: 120,
+        tickInterval: 30,
+        //showNumericValues: false,
+        //showDescriptions: true,
+      }));
       widget_list.push(new TextWidget('rel_port_dir',
                                    { MwxPortRelWindDir: {name: 'Port Rel Wind Dir'}}));
       widget_list.push(new TextWidget('rel_stbd_dir',
@@ -119,9 +168,9 @@
       widget_list.push(new D3TimelineWidget(
         '#wind_speed_line', rel_wind_line_fields,
         'Knots', {
-	  //maxPoints: 30,
-	  //height: 300
-	}
+          //maxPoints: 30,
+          //height: 300
+        }
       ));
       var widget_server = new WidgetServer(widget_list,
                                            WEBSOCKET_DATA_SERVER);
