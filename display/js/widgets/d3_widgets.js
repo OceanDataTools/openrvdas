@@ -99,8 +99,8 @@ function TimelineWidget (
 
 function realTimeLineChart (widgetParams) {
   const duration = 1000
-  const { yLabel, colors, fieldNames, fieldInfo, height, min, max, minRange, showLegend }
-    = widgetParams
+  const { yLabel, colors, fieldNames, fieldInfo, height, min, max, minRange, showLegend } =
+    widgetParams
   const margin = { top: 20, right: 10, bottom: 20, left: yLabel ? 50 : 30 }
 
   // Find the maximum seconds specified for any field. If none found, default to 60.
@@ -126,7 +126,6 @@ function realTimeLineChart (widgetParams) {
       const xMax = new Date(new Date(d3.max(data, c => d3.max(c.values, d => d.time)))
         .getTime() - duration)
       const xMin = xMax - maxSeconds * 1000
-
 
       // use bounds if specified, else use max and min of data
       let yMin = min !== null ? min : d3.min(data, c => d3.min(c.values, d => d.value))
