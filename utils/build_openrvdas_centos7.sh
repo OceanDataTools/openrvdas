@@ -165,6 +165,7 @@ systemctl enable firewalld
 firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
 firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
 firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
+firewall-cmd -q --permanent --add-port=8002/tcp > /dev/null
 
 # Websocket ports
 firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
@@ -501,7 +502,7 @@ stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
+command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 --start_supervisor -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true

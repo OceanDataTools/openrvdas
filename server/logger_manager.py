@@ -1,136 +1,59 @@
-#!/usr/bin/env python3
-"""LoggerManagers get their desired state of the world via a ServerAPI
-instance and attempt to start/stop loggers with the desired configs
-by dispatching requests to a local LoggerRunner.
-
-To run the LoggerManager from the command line with (using the default
-of an InMemoryServerAPI):
-```
-  server/logger_manager.py
-```
-If an initial configuration is specified on the command line, as
-below:
-```
-  server/logger_manager.py --config test/configs/sample_cruise.yaml
-```
-the configuration will be loaded and set to its default mode. If a
---mode argument is included, it will be used in place of the default
-mode.
-
-By default, the LoggerManager will initialize a command line API that
-reads from stdin. If logger_manager.py is to be run in a context
-where stdin is not available (i.e. as part of a script), then it
-should be called with the --no-console flag.
-
-The -v flag may be specified on any of the above command lines to
-increase diagnostic verbosity to "INFO". Repeating the flag sets
-verbosity to "DEBUG".
-
-For the LoggerManager and LoggerRunner, the -V (capitalized) flag
-increases verbosity of the loggers being run.
-
-Typing "help" at the command prompt will list available commands.
-
-#######################################################
-To try out the scripts, open four(!) terminal windows.
-
-1. In the first terminal, start the LoggerManager.
-
-2. The sample configuration that we're going to load and run is
-   configured to read from simulated serial ports. To create those
-   simulated ports and start feeding data to them, use a third
-   terminal window to run:
-```
-   logger/utils/simulate_serial.py --config test/serial_sim.yaml -v
-```
-3. Finally, we'd like to be able to easily glimpse the data that the
-   loggers are producing. The sample configuration tells the loggers
-   to write to UDP port 6224 when running, so use the fourth terminal
-   to run a Listener that will monitor that port. The '-' filename
-   tells the Listener to write to stdout (see listen.py --help for all
-   Listener options):
-```
-   logger/listener/listen.py --network :6224 --write_file -
-```
-4. Whew! Now try a few commands in the terminal running the
-   LoggerManager (you can type 'help' for a full list):
-```
-   # Load a cruise configuration
-
-   command? load_configuration test/configs/sample_cruise.yaml
-
-   # Change cruise modes
-
-   command? get_modes
-     Modes for NBP1406: off, port, underway
-
-   command? set_active_mode port
-     (You should notice data appearing in the Listener window.)
-
-   command? set_active_mode underway
-     (You should notice more data appearing in the Listener window, and
-      the LoggerRunner in the second window should leap into action.)
-
-   command? set_active_mode off
-
-   # Manually change logger configurations
-
-   command? get_loggers
-     Loggers: knud, gyr1, mwx1, s330, eng1, rtmp
-
-   command? get_logger_configs s330
-     Configs for s330: s330->off, s330->net, s330->file/net/db
-
-   command? set_active_logger_config s330 s330->net
-
-   command? set_active_mode off
-
-   command? quit
-```
-   When setting the mode to port, you should notice data appearing in
-   the listener window, and should see diagnostic output in the
-   LoggerManager window.
+#! /usr/bin/env python3
 """
-import asyncio
+"""
+import datetime
 import getpass  # to get username
 import json
 import logging
 import multiprocessing
 import os
 import pprint
-import queue
 import signal
 import socket  # to get hostname
+import subprocess
 import sys
+import tempfile
 import threading
 import time
 import websockets
 
-from urllib.parse import unquote
+# For communicating with supervisord server
+from xmlrpc.client import ServerProxy
+from xmlrpc.client import Fault as XmlRpcFault
+from xml.parsers.expat import ExpatError as XmlExpatError
+from http.client import ResponseNotReady as ResponseNotReady
+from http.client import CannotSendRequest as CannotSendRequest
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
+from os.path import dirname, realpath
 
-from logger.utils.read_config import read_config
-from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
-from logger.utils.stderr_logging import StdErrLoggingHandler
-from logger.transforms.to_das_record_transform import ToDASRecordTransform
-from logger.writers.text_file_writer import TextFileWriter
-from logger.writers.composed_writer import ComposedWriter
-from logger.writers.cached_data_writer import CachedDataWriter
+# Add the openrvdas components onto sys.path
+sys.path.append(dirname(dirname(realpath(__file__))))
+
 from server.server_api import ServerAPI
-from server.logger_runner import LoggerRunner
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer
-from logger.readers.udp_reader import UDPReader
-from logger.transforms.from_json_transform import FromJSONTransform
 
-# Number of times we'll try a failing logger before giving up
+# For sending stderr to CachedDataServer
+from logger.utils.read_config import read_config
+from logger.writers.cached_data_writer import CachedDataWriter
+from logger.writers.text_file_writer import TextFileWriter
+from logger.utils.stderr_logging import StdErrLoggingHandler
+
+from logger.utils.das_record import DASRecord
+from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
+from logger.transforms.to_das_record_transform import ToDASRecordTransform
+from logger.writers.composed_writer import ComposedWriter
+
+
 DEFAULT_MAX_TRIES = 3
 
 SOURCE_NAME = 'LoggerManager'
 USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
+
+DEFAULT_SUPERVISOR_PORT = 8002
+DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas'
 
 ############################
 def kill_handler(self, signum):
@@ -139,58 +62,509 @@ def kill_handler(self, signum):
   raise KeyboardInterrupt('Received external kill signal')
 
 ############################
-# ! Also broadcast LoggingHandler messages to wherever?
-# ! Also send level of status message in broadcast?
-class WriteToAPILoggingHandler(logging.Handler):
-  """Allow us to save Python logging.* messages to API backing store."""
-  def __init__(self, api):
-    super().__init__()
+# Templates used by SupervisorConnector to create config files
 
-    API_LOGGING_FORMAT = '%(filename)s:%(lineno)d %(message)s'
-    self.api = api
-    self.formatter = logging.Formatter(API_LOGGING_FORMAT)
+SUPERVISORD_TEMPLATE = """
+; Auto-generated supervisord file - edits will be overwritten!
 
-  def emit(self, record):
-    self.api.message_log(source='Logger', user='(%s@%s)' % (USER, HOSTNAME),
-                         log_level=record.levelno,
-                         message=self.formatter.format(record))
+[unix_http_server]
+file={supervisor_dir}/supervisor.sock   ; the path to the socket file
+chmod=0770                 ; socket file mode (default 0700)
+;chown={user}:{group}       ; socket file uid:gid owner
+;username={user}           ; default is no username (open server)
+;password={password}       ; default is no password (open server)
 
-############################
-def parse_udp_spec(spec):
-  """Format should be [[interface:]destination:]port"""
-  destination = interface = ''
-  addr = spec.split(':')
-  try:
-    port = int(addr[-1])    # port is last arg
-  except ValueError:
-    raise ValueError('UDP spec "%s" has non-integer port: "%s"; should be '
-                     'format "[[interface:]destination:]port"', spec, port)
-  if len(addr) > 1:
-    destination = addr[-2]  # destination (multi/broadcast) is prev arg
-  if len(addr) > 2:
-    interface = addr[-3]    # interface is first arg
-  if len(addr) > 3:
-    raise ValueError('Improper UDP specification: "%s"; should be format '
-                     '"[[interface:]destination:]port"', spec)
-  return (interface, destination, port)
+[inet_http_server]         ; inet (TCP) server disabled by default
+port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
+;username={user}           ; default is no username (open server)
+;password={password}       ; default is no password (open server)
 
+[supervisord]
+logfile={logfile_dir}/supervisord.log ; main log file; default $CWD/supervisord.log
+logfile_maxbytes=50MB     ; max main logfile bytes b4 rotation; default 50MB
+logfile_backups=10        ; # of main logfile backups; 0 means none, default 10
+loglevel={log_level}      ; log level; default info; others: debug,warn,trace
+pidfile={supervisor_dir}/supervisord.pid ; supervisord pidfile; default supervisord.pid
+nodaemon=true      ; start in foreground if true; default false
+minfds=1024        ; min. avail startup file descriptors; default 1024
+minprocs=200       ; min. avail process descriptors;default 200
+umask=022          ; process file creation umask; default 022
+user={user}        ; setuid to this UNIX account at startup; recommended if root
+
+; The rpcinterface:supervisor section must remain in the config file for
+; RPC (supervisorctl/web interface) to work.  Additional interfaces may be
+; added by defining them in separate [rpcinterface:x] sections.
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+; The supervisorctl section configures how supervisorctl will connect to
+; supervisord.  configure it match the settings in either the unix_http_server
+; or inet_http_server section.
+
+[supervisorctl]
+serverurl=unix:///{supervisor_dir}/supervisor.sock ; use a unix:// URL  for a unix socket
+serverurl=http://localhost:{port} ; use an http:// url to specify an inet socket
+;username={user}              ; should be same as in [*_http_server] if set
+;password={password}          ; should be same as in [*_http_server] if set
+
+[include]
+files = {supervisor_dir}/supervisor.d/*.ini
+"""
+
+SUPERVISOR_LOGGER_TEMPLATE = """
+[program:{config_name}]
+command=logger/listener/listen.py --config_string '{config_json}' {log_v}
+directory={directory}
+autostart=false
+autorestart={autorestart}
+startsecs={startsecs}
+startretries={startretries}
+user={user}
+stderr_logfile_maxbytes=50MB
+stderr_logfile_backups=10
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=10
+{comment_log}stderr_logfile={logfile_dir}/{logger}.err.log
+{comment_log}stdout_logfile={logfile_dir}/{logger}.out.log
+"""
+
+################################################################################
+################################################################################
+class SupervisorConnector:
+  ############################
+  def __init__(self,
+               start_supervisor=False,
+               supervisor_logger_config_file=None,
+               supervisor_port=DEFAULT_SUPERVISOR_PORT,
+               supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+               max_tries=DEFAULT_MAX_TRIES,
+               log_level=logging.WARNING):
+    """Connect to a supervisord process, or start our own to manage
+    processes.  If starting our own, do so in a tempdir of our own
+    creation that will go away when connector is destroyed.
+    ```
+    start_supervisor - Start local copy of supervisord, building its own
+          config file in a temporary file.
+
+    supervisor_logger_config - Location of file where supervisord should look
+          for logger process definitions. Mutually exclusive with
+          --start_supervisor flag.
+
+    supervisor_port - Localhost port at which supervisor should serve.
+
+    supervisor_logfile_dir - Directory where supevisord and logger
+          stderr/stdout will be written.
+
+    max_tries = Number of times a failed logger should be retried if it
+          fails on startup.
+    ```
+    """
+    self.supervisor_port = supervisor_port
+    self.supervisor_logfile_dir = supervisor_logfile_dir
+    self.max_tries = max_tries
+
+    # Define this right at start, because if we shut down prematurely
+    # during initialization, the destructor is going to look for it.
+    self.supervisord_proc = None
+
+    # If we're starting our own local copy of supervisor, create the
+    # relevant config files in a temp directory.
+    if start_supervisor:
+      self.supervisor_dir = tempfile.TemporaryDirectory()
+      supervisor_dirname = self.supervisor_dir.name
+
+      supervisor_log_level = {logging.WARNING: 'warn',
+                              logging.INFO: 'info',
+                              logging.DEBUG: 'debug'}.get(log_level, 'warn')
+
+      # Create the supervisor config file
+      supervisor_config_filename = supervisor_dirname + '/supervisord.ini'
+      config_args = {
+        'supervisor_dir': supervisor_dirname,
+        'logfile_dir': supervisor_logfile_dir,
+        'port': supervisor_port,
+        'user': getpass.getuser(),
+        'group': getpass.getuser(),
+        'password': 'NOT_USED',
+        'log_level': supervisor_log_level,
+      }
+      supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
+      with open(supervisor_config_filename, 'w') as supervisor_config_file:
+        supervisor_config_file.write(supervisor_config_str)
+
+      # Create directory where logger.ini file will go
+      os.mkdir(supervisor_dirname + '/supervisor.d')
+      self.supervisor_logger_config_file = \
+         supervisor_dirname + '/supervisor.d/loggers.ini'
+
+      # Create an empty logger.ini file to prevent supervisor from
+      # complaining that there are no matching .ini files when it
+      # starts up. Petty, I know, but the warning could cause folks to
+      # worry about the wrong thing if something else is amiss.
+      open(self.supervisor_logger_config_file, 'a').close()
+
+      # Make sure supervisord exists and is on path
+      SUPERVISORD = 'supervisord'
+      try:
+        subprocess.check_output(['which', SUPERVISORD])
+      except subprocess.CalledProcessError:
+        logging.fatal('Supervisor executable "%s" not found', SUPERVISORD)
+        sys.exit(1)
+
+      # And start the local supervisord
+      self.supervisord_proc = subprocess.Popen(
+        ['/usr/bin/env', SUPERVISORD, '-n', '-c', supervisor_config_filename])
+
+    # If not starting our own supervisor, stash pointer to where we
+    # expect the existing supervisor to look for a logger config
+    # file. If we call
+    else:
+      self.supervisor_logger_config_file = supervisor_logger_config_file
+
+    # Now that the preliminaries are done, try to connect to server.
+    self.supervisor_rpc = self._create_supervisor_connection()
+
+    # Create a second connection that we will use to read logger
+    # process stderr. We'll guard reads from this from stepping on
+    # each other by means of a thread lock.
+    self.read_stderr_rpc =  self._create_supervisor_connection()
+    self.config_lock = threading.Lock()
+    self.read_stderr_offset = {}  # how much of each stderr we've read
+
+    # Finally, keep track of the configs that are currently active
+    self._running_configs = set()
+
+  ############################
+  def _create_supervisor_connection(self):
+    """Connect to server. If we fail, sleep a little and try again."""
+    while True:
+      supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
+      logging.info('Connecting to supervisor at %s', supervisor_url)
+
+      supervisor_rpc = ServerProxy(supervisor_url)
+      try:
+        supervisor_state = supervisor_rpc.supervisor.getState()
+        if supervisor_state['statename'] == 'RUNNING':
+          break
+
+        logging.error('Supervisord is not running. State is "%s"',
+                      supervisor_state['statename'])
+      except ConnectionRefusedError:
+        logging.info('Unable to connect to supervisord at %s', supervisor_url)
+      time.sleep(5)
+      logging.info('Retrying connection to %s', supervisor_url)
+
+    # Return with our connection
+    return supervisor_rpc
+
+  ############################
+  def __del__(self):
+    self.shutdown()
+
+  ############################
+  def _clean_name(self, config_name):
+    """Remove characters from a string that supervisord can't handle as
+    a process name.
+    """
+    return config_name.replace('/', '+')
+
+  ############################
+  def start_configs(self, configs_to_start, group=None):
+    """Ask supervisord to start the listed configs. Note that all logger
+    configs are part of group 'logger', so we need to prefix all names
+    with 'logger:' when talking to supervisord about them.
+
+    configs_to_start - a list of config names that should be started.
+
+    group - process group in which the configs were defined; will be
+        prepended to config names.
+    """
+    configs = list(configs_to_start)  # so we can order results
+    config_calls = []
+
+    with self.config_lock:
+      for config in configs:
+        config = self._clean_name(config)  # get rid of objectionable characters
+        if group:
+          config = group + ':' + config
+        config_calls.append({'methodName':'supervisor.startProcess',
+                             'params':[config, False]})
+
+      # Make calls in parallel and update set of currently-running configs
+      results = self.supervisor_rpc.system.multicall(config_calls)
+      self._running_configs |= configs_to_start
+
+    # Let's see what the results are
+    for i in range(len(results)):
+      result = results[i]
+      config = configs[i]
+      if type(result) is dict:
+        if result['faultCode'] == 60:
+          logging.warning('Starting process %s, but already started', config)
+        else:
+          logging.info('Starting process %s: %s', config, result['faultString'])
+
+  ############################
+  def stop_configs(self, configs_to_stop, group=None):
+    """Ask supervisord to stop the listed configs. Note that all logger
+    configs are part of group 'logger', so we need to prefix all names
+    with 'logger:' when talking to supervisord about them.
+
+    configs_to_stop - a list of config names that should be stopped.
+
+    group - process group in which the configs were defined; will be
+        prepended to config names.
+    """
+    configs = list(configs_to_stop)  # so we can order results
+    config_calls = []
+
+    with self.config_lock:
+      for config in configs:
+        config = self._clean_name(config)  # get rid of objectionable characters
+        if group:
+          config = group + ':' + config
+        config_calls.append({'methodName':'supervisor.stopProcess',
+                             'params':[config, False]})
+
+      # Make calls in parallel and update set of currently-running configs
+      results = self.supervisor_rpc.system.multicall(config_calls)
+      self._running_configs = self._running_configs - configs_to_stop
+
+    # Let's see what the results are
+    for i in range(len(results)):
+      result = results[i]
+      config = configs[i]
+      if type(result) is dict:
+        if result['faultCode'] == 60:
+          logging.debug('Stopping process %s, but already stopped', config)
+        else:
+          logging.debug('Stopping process %s: %s', config, result['faultString'])
+
+  ############################
+  def running_configs(self):
+    """Return set of currently-running configs."""
+    return self._running_configs
+
+  ############################
+  def read_status(self):
+    """Read the status of currently active configs
+
+    loggers - dict mapping logger names->list of configs:
+
+      {
+        logger_1: {
+          'configs': [
+            'logger_1->off',
+            'logger_1->net',
+            'logger_1->file'
+          ]
+        },
+        logger_2:...
+      }
+
+    Return a dict mapping the status of those configs:
+      {
+        logger_1: {
+          'configs': {
+            'logger_1->off':  status,
+            'logger_1->net':  status,
+            'logger_1->file': status'
+          }
+        },
+        logger_2:...
+      }
+
+    """
+    with self.config_lock:
+      status_list = self.read_stderr_rpc.supervisor.getAllProcessInfo()
+      status_map = {s.get('name', None):s for s in status_list}
+
+      status_result = {}
+      for config in self.running_configs():
+        cleaned_config_name = self._clean_name(config)
+        config_status = status_map[cleaned_config_name].get('statename')
+        status_result[config] = config_status
+
+    return status_result
+
+  ############################
+  def read_stderr(self, configs=None, group=None, maxchars=1000):
+    """Read the stderr from the named configs and return result in a dict of
+
+       {config_1: config_1_stderr,
+        config_2: config_2_stderr,
+        ...
+       }
+
+    configs - a list of config names whose stderr should be read. If omitted,
+        will read stderr of all active configs.
+
+    group - process group in which the configs were defined; will be
+        prepended to config names.
+
+    maxchars - maximum number of characters to read from each log
+    """
+    if configs is None:
+      configs = self.running_configs()
+
+    results = {}
+    with self.config_lock:
+      for config in configs:
+        # If we've got a group, need to prefix config name with it
+        normalized_config = self._clean_name(config)
+        if group:
+          normalized_config = group + ':' + normalized_config
+
+        # Initialize last read position of any configs we've not yet read
+        if not config in self.read_stderr_offset:
+          self.read_stderr_offset[config] = 0
+        offset = self.read_stderr_offset[config]
+
+        # Read stderr from config, iterating until we've got
+        # everything from it.
+        try:
+          results[config] = ''
+          overflow = True
+          while overflow:
+            # Get a chunk of stderr, update offset, and see if there's more
+            getTail = self.read_stderr_rpc.supervisor.tailProcessStderrLog
+            result, offset, overflow = getTail(normalized_config,
+                                               offset, maxchars)
+            results[config] += result
+            self.read_stderr_offset[config] = offset
+
+        # If we've barfed on the read, give up on this config for now
+        except XmlExpatError as e:
+          logging.debug('XML parse error while reading stderr: %s', str(e))
+        except (XmlRpcFault, ResponseNotReady, CannotSendRequest) as e:
+          logging.warning('Http error: %s', str(e))
+          #self.read_stderr_rpc = self._create_supervisor_connection()
+
+    return results
+
+  ############################
+  def create_new_supervisor_file(self, configs, group=None,
+                                 supervisor_logfile_dir=None,
+                                 user=None, base_dir=None):
+    """Create a new configuration file for supervisord to read.
+
+    configs - a dict of {logger_name:{config_name:config_spec}} entries.
+
+    group - process group in which the configs will be defined; will be
+        prepended to config names.
+
+    supervisor_logfile_dir - path to which logger stderr/stdout should be
+        written.
+
+    user - user name under which processes should run. Will default to
+        current user.
+
+    base_dir - directory from which executables should be called.
+    """
+    logging.warning('Writing new configurations to "%s"',
+                    self.supervisor_logger_config_file)
+
+    # Fill in some defaults if they weren't provided
+    user = user or getpass.getuser()
+    base_dir = base_dir or dirname(dirname(realpath(__file__)))
+
+    # We'll build the string for the supervisord config file in 'config_str'
+    content_str = '\n'.join([
+      '; DO NOT EDIT UNLESS YOU KNOW WHAT YOU\'RE DOING. This configuration ',
+      '; file was produced automatically by the logger_manager.py script',
+      '; and will be overwritten by it as well.',
+      ''
+      ])
+
+    config_names = []
+    for logger, logger_configs in configs.items():
+      for config_name, config in logger_configs.items():
+        # Supervisord doesn't like '/' in program names
+        config_name = self._clean_name(config_name)
+        config_names.append(config_name)
+
+        # If a logger isn't "runnable" because it doesn't have readers
+        # or writers (e.g. if it's an "off" config), then it'll
+        # terminate quietly after starting. Don't want to complain
+        # (startsecs=0) or restart (autorestart=false) it.
+        runnable = 'readers' in config and 'writers' in config
+
+        replacement_fields = {
+          'config_name': config_name,
+          'config_json': json.dumps(config),
+          'directory': base_dir,
+          'autorestart': 'true' if runnable else 'false',
+          'startsecs': '5' if runnable else '0',
+          'startretries': self.max_tries,
+          'user': user,
+          'comment_log': '' if self.supervisor_logfile_dir else ';',
+          'logfile_dir': self.supervisor_logfile_dir,
+          'logger': logger,
+          'log_v': ''  # set to '-v' or '-v -v' to increase log level
+          }
+        content_str += SUPERVISOR_LOGGER_TEMPLATE.format(**replacement_fields)
+
+    # If we've been given a group name, group all the logger configs
+    # together under it so we can start them all at the same time with
+    # a single call.
+    if group:
+      content_str += '\n'.join([
+        '[group:%s]' % group,
+        'programs=%s' % ','.join(config_names),
+        ''
+      ])
+
+    # Open and write the config file.
+    with open(self.supervisor_logger_config_file, 'w') as config_file:
+      config_file.write(content_str)
+
+    # Get supervisord to reload the new file and refresh groups.
+    self.supervisor_rpc.supervisor.reloadConfig()
+    if group:
+      try:
+        self.supervisor_rpc.supervisor.removeProcessGroup(group)
+      except XmlRpcFault:
+        pass
+      try:
+        self.supervisor_rpc.supervisor.addProcessGroup(group)
+      except XmlRpcFault:
+        pass
+
+  ############################
+  def shutdown(self):
+    """If we started the supervisord process, then tell it to shut down.
+    """
+    if self.supervisord_proc:
+      try:
+        self.supervisor_rpc.supervisor.shutdown()
+      except (XmlRpcFault, ConnectionRefusedError):
+        logging.debug('Caught shutdown fault')
+
+################################################################################
 ################################################################################
 class LoggerManager:
   ############################
-  def __init__(self, api=None, data_server_websocket=None,
-               interval=0.5, max_tries=3, logger_log_level=logging.WARNING):
+  def __init__(self,
+               api, supervisor, data_server_websocket=None,
+               supervisor_logfile_dir=None,
+               interval=0.5, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
     ```
     api - ServerAPI (or subclass) instance by which LoggerManager will get
           its data store updates
 
+    supervisor - a SupervisorConnector object to use to manage
+          logger processes.
+
     data_server_websocket - websocket address to which we are going to send
           our status updates.
 
-    interval - number of seconds to sleep between checking/updating loggers
+    supervisor_logfile_dir - Directory where logger stderr/stdout will
+          be written.
 
-    max_tries - number of times to try a failed server before giving up
+    interval - number of seconds to sleep between checking/updating loggers
 
     logger_log_level - At what logging level our component loggers
           should operate.
@@ -209,342 +583,338 @@ class LoggerManager:
       raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
     self.api = api
     self.interval = interval
-    self.max_tries = max_tries
     self.logger_log_level = logger_log_level
-
     self.quit_flag = False
 
-    # Where we store the latest status/error reports we've gotten from
-    # the LoggerRunner
+    # The XMLRPC connector to supervisord
+    self.supervisor = supervisor
+
+    # Where we store the latest status/error reports.
     self.status = {}
     self.errors = {}
-    
+
     # We'll loop to check the API for updates to our desired
     # configs. Do this in a separate thread. Also keep track of
-    # old/current configs so that we know when an update is actually
-    # needed.
+    # currently active configs so that we know when an update is
+    # actually needed.
     self.update_configs_thread = None
-    self.old_configs = {}
     self.config_lock = threading.Lock()
 
-    # If we have a cached data server (either one we've started, or
-    # one we're just connecting to, we'll use a separate thread to
-    # send it status updates. We'll pop updates into the
-    # data_server_queue to get them sent by the thread.
-    self.send_to_data_server_thread = None
-    self.data_server_queue = queue.Queue()
-    self.data_server_lock = threading.Lock()
+    self.active_configs = set()       # which of those configs are active now?
 
     # Data server to which we're going to send status updates
-    self.data_server_websocket = data_server_websocket
+    if data_server_websocket:
+      self.data_server_writer = CachedDataWriter(data_server_websocket)
+    else:
+      self.data_server_writer = None
 
+    # Fetch the complete set of loggers and configs from API; store
+    # them in self.loggers and create a .ini file for supervisord to
+    # run them.
+    self._build_new_config_file()
 
-    # Grab event loop so everyone who wants can make sure they're
-    # using the same one.
-    self.event_loop = asyncio.get_event_loop()
+    # Stash a map of loggers->configs and configs->loggers
+    self.loggers = self.api.get_loggers()
+    self.config_to_logger = {}
+    for logger in self.loggers:
+      for config in self.loggers[logger].get('configs', []):
+        self.config_to_logger[config] = logger
 
   ############################
   def start(self):
-    """Start the threads that make up the LoggerManager operation: a local
-    LoggerRunner, the configuration update loop and optionally a
-    thread to broadcast logger statuses. Start all threads as daemons
-    so that they'll automatically terminate if the main thread does.
-    """
-    # Start the local LoggerRunner in its own thread.
-    local_logger_thread = threading.Thread(
-      name='logger_runner', target=self.local_logger_runner, daemon=True)
-    local_logger_thread.start()
+    """Start the threads that make up the LoggerManager operation:
 
+    1. Configuration update loop
+    2. Loop to read logger stderr/status and either output it or
+       transmit it to a cached data server
+
+    Start threads as daemons so that they'll automatically terminate
+    if the main thread does.
+    """
     # Update configs in a separate thread.
     self.update_configs_thread = threading.Thread(
       name='update_configs_loop',
-      target=self.update_configs_loop, daemon=True)
+      target=self._update_configs_loop, daemon=True)
     self.update_configs_thread.start()
 
-    # If we've got the address of a data server websocket, start a
-    # thread to send our status updates to it.
-    if self.data_server_websocket:
-      self.send_to_data_server_thread = threading.Thread(
-        name='send_to_data_server_loop',
-        target=self._send_to_data_server_loop, daemon=True)
-      self.send_to_data_server_thread.start()
+    # Start a separate thread to read logger status and stderr. If we've
+    # got the address of a data server websocket, send our updates to it.
+    self.read_logger_status_thread = threading.Thread(
+      name='read_logger_status_loop',
+      target=self._read_logger_status_loop, daemon=True)
+    self.read_logger_status_thread.start()
 
   ############################
   def quit(self):
     """Exit the loop and shut down all loggers."""
     self.quit_flag = True
-    self.logger_runner.quit()
-
-  ##########################
-  def local_logger_runner(self):
-    """Create and run a local LoggerRunner."""
-    # Some of the loggers may require an event loop. We're running in
-    # a separate thread, so we need to explicitly set our event loop,
-    # using the one we stored during init().
-    self.logger_runner = LoggerRunner(max_tries=self.max_tries,
-                                      event_loop=self.event_loop,
-                                      logger_log_level=self.logger_log_level)
-    # Instead of calling the LoggerRunner.run(), we iterate ourselves,
-    # doing updates to retrieve status reports.
-    while not self.quit_flag:
-      status = self.logger_runner.check_loggers(manage=True)
-      message = {'status': status}
-      self._process_logger_runner_message(message)
-      time.sleep(self.interval)
+    self.supervisor.shutdown()
 
   ############################
-  def update_configs_loop(self):
+  def _build_new_config_file(self):
+    """Fetch latest dict of configs from API. Update self.loggers to
+    reflect them and build a .ini file to run them.
+    """
+    # Stash an updated map of loggers->configs and configs->loggers.
+    # While we're doing that, also (inefficiently) grab definition
+    # string for each config one at a time from the API.
+    self.loggers = self.api.get_loggers()
+    self.config_to_logger = {}
+    logger_config_strings = {}
+    for logger, configs in self.loggers.items():
+      config_names = configs.get('configs', [])
+      # Map config_name->logger
+      for config in self.loggers[logger].get('configs', []):
+        self.config_to_logger[config] = logger
+
+      # Map logger->{config_name:config_definition_str,...}
+      logger_config_strings[logger] = {
+          config_name:api.get_logger_config(config_name)
+          for config_name in config_names}
+
+    # Now create a .ini file of those configs for supervisord to run.
+    with self.config_lock:
+      self.supervisor.create_new_supervisor_file(
+        configs=logger_config_strings,
+        supervisor_logfile_dir=args.supervisor_logfile_dir,
+        group='logger')
+
+    # Finally, reset the currently active configurations
+    self._update_configs()
+
+  ############################
+  def _update_configs_loop(self):
     """Iteratively check the API for updated configs and send them to the
     appropriate LoggerRunners.
     """
     while not self.quit_flag:
-      self.update_configs()
+      self._update_configs()
       time.sleep(self.interval)
 
   ############################
-  def update_configs(self):
-    """Check the API for updated configs and send them to the LoggerRunner.
+  def _update_configs(self):
+    """Get list of new (latest) configs. If any have changed,
+
+    1. Shut down any configs that aren't a part of new active configs.
+    2. Start and newly-active configs.
     """
-    # Get latest configs. The call will throw a value error if no
-    # configuration is loaded.
     with self.config_lock:
       try:
-        new_configs = self.api.get_logger_configs()
+        # Get new configs in dict {logger:{'configs':[config_name,...]}}
+        new_logger_configs = self.api.get_logger_configs()
+        new_configs = set([new_logger_configs[logger].get('name', None)
+                           for logger in new_logger_configs])
       except (AttributeError, ValueError):
         return
 
-      # If configs have changed, send updated ones to the
-      # logger_runner and to the data_server.
-      if not new_configs == self.old_configs:
-        self.logger_runner.set_configs(new_configs)
-        #self._send_status()
-
-  ############################
-  async def _publish_to_data_server(self, ws, data):
-    """Encode and publish a dict of values to the cached data server.
-    """
-    message = json.dumps({'type': 'publish', 'data': data})
-    await ws.send(message)
-    try:
-      result = await ws.recv()
-      response = json.loads(result)
-      if type(response) is dict and response.get('status', None) == 200:
+      # If configs have changed, start new ones and stop old ones.
+      if new_configs == self.active_configs:
         return
-      logging.warning('Got bad response from data server: %s', result)
-    except json.JSONDecodeError:
-      logging.warning('Got unparseable response to "publish" message '
-                      'to data server: %s', result)
+
+      configs_to_start = new_configs - self.active_configs
+      configs_to_stop = self.active_configs - new_configs
+
+      if configs_to_stop:
+        logging.debug('Stopping configs: %s', configs_to_stop)
+        self.supervisor.stop_configs(configs_to_stop, group='logger')
+
+        # Alert the data server which configs we're stopping
+        for config in configs_to_stop:
+          logger = self.config_to_logger[config]
+          self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                                 'Stopping config ' + config)
+
+        # Grab any last output from the configs we've stopped
+        self._read_and_send_logger_stderr(configs_to_stop)
+
+      if configs_to_start:
+        logging.info('Activating to new configs: %s', configs_to_start)
+        self.supervisor.start_configs(configs_to_start, group='logger')
+
+        # Alert the data server which configs we're starting
+        for config in configs_to_start:
+          logger = self.config_to_logger[config]
+          self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                                 'Start config ' + config)
+      # Cache our new configs for the next time around
+      self.active_configs = new_configs
 
   ############################
-  def _send_to_data_server_loop(self):
+  def _read_and_send_cruise_definition(self):
+    """Assemble and send a cruise definition to the cached data server.
+    """
+    # Assemble information from DB about what loggers should
+    # exist and what states they *should* be in. We'll send
+    # this to the cached data server whenever it changes (or
+    # if it's been a while since we have).
+    #
+    # Looks like:
+    # {'active_mode': 'log',
+    #  'cruise_id': 'NBP1406',
+    #  'loggers': {'PCOD': {'active': 'PCOD->file/net',
+    #                       'configs': ['PCOD->off',
+    #                                   'PCOD->net',
+    #                                   'PCOD->file/net',
+    #                                   'PCOD->file/net/db']},
+    #               next_logger: next_configs,
+    #               ...
+    #             },
+    #  'modes': ['off', 'monitor', 'log', 'log+db']
+    # }
+    try:
+      cruise = api.get_configuration() # a Cruise object
+      cruise_def = {
+        'cruise_id': cruise.id,
+        'loggers': api.get_loggers(),
+        'modes': cruise.modes(),
+        'active_mode': cruise.current_mode.name
+      }
+      self._write_record_to_data_server('status:cruise_definition', cruise_def)
+    except (AttributeError, ValueError):
+      logging.debug('No cruise definition found')
+
+  ############################
+  def _write_log_message_to_data_server(self, field_name, message,
+                                        log_level=logging.INFO):
+    """Send something that looks like a logging message to the cached data
+    server.
+    """
+    asctime = datetime.datetime.utcnow().isoformat() + 'Z'
+    record = {'asctime': asctime, 'levelno': log_level,
+              'levelname': logging.getLevelName(log_level), 'message': message}
+    self._write_record_to_data_server(field_name, json.dumps(record))
+
+  ############################
+  def _write_record_to_data_server(self, field_name, record):
+    """Format and label a record and send it to the cached data server.
+    """
+    if self.data_server_writer:
+      das_record = DASRecord(fields={field_name: record})
+      logging.debug('DASRecord: %s' % das_record)
+      self.data_server_writer.write(das_record)
+
+  ############################
+  def _read_and_send_logger_stderr(self, configs=None):
+    """Grab logger stderr messages and send them off to cached data server
+    via websocket.
+    """
+
+    def parse_and_send_message(field_name, message):
+      """Inner function that parses a (possibly multi-line) stderr message
+      and sends it to the cached data server (or prints it out if we
+      don't have a cached data server).
+      """
+      if self.data_server_writer:
+        # Parse the logging line into a DASRecord
+        try:
+          components = line.split(' ', maxsplit=5)
+          (r_date, r_time, r_levelno, r_levelname,  r_filename_lineno,
+           r_message) = components
+          r_filename, r_lineno = r_filename_lineno.split(':')
+          record = {
+            'asctime': r_date + 'T' + r_time + 'Z',
+            'levelno': r_levelno,
+            'levelname': r_levelname,
+            'filename': r_filename,
+            'lineno': r_lineno,
+            'message': r_message
+            }
+        except ValueError:
+          logging.debug('Failed to parse: "%s"', line)
+          record = {'message': line}
+
+        # Send the record off the the data server
+        self._write_record_to_data_server(field_name, json.dumps(record))
+
+      else:
+        # If no data server, just print to stdout
+        print(logger + ': ' + line)
+
+    # Start of actual _read_and_send_logger_stderr() code.
+    if configs is None:
+      configs = self.supervisor.running_configs()
+
+    stderr_results = self.supervisor.read_stderr(configs, group='logger')
+
+    for config, stderr_lines in stderr_results.items():
+      logger = self.config_to_logger[config]
+      field_name = 'stderr:logger:' + logger
+
+      # Messages may be multiple lines. We're going to assume that
+      # each one starts with an ISO8601 time string. If a line doesn't
+      # begin with one, assume it's a continuation of the previous
+      # message. Aggregate in a list until we see the next time string
+      # or run out of input.
+      message = []
+      for line in stderr_lines.split('\n'):
+        if not line:
+          continue
+
+        # If line begins with a time string, assume, it's a new message
+        # and previous message is complete. Send off the old one.
+        try:
+          datetime.datetime.strptime(line.split('T')[0], '%Y-%m-%d')
+          has_timestamp = True
+        except ValueError:
+          has_timestamp = False
+        if has_timestamp:
+          parse_and_send_message(field_name, '\n'.join(message))
+          message = []
+        message.append(line)
+
+      # Send the last straggler
+      if message:
+        parse_and_send_message(field_name, '\n'.join(message))
+
+  ############################
+  def _read_and_send_logger_status(self):
+    """Grab logger status message from supervisor and send to cached data
+    server via websocket.
+    """
+    status_result = self.supervisor.read_status()
+
+    # Map status to logger
+    status_map = {}
+    for config, status in status_result.items():
+      logger = self.config_to_logger[config]
+      status_map[logger] = {'config':config, 'status':status}
+
+    if self.data_server_writer:
+      self._write_record_to_data_server('status:logger_status', status_map)
+    else:
+      logging.debug('Got logger status: %s', status_map)
+
+  ############################
+  def _read_logger_status_loop(self):
     """Iteratively grab messages to send to cached data server and send
     them off via websocket.
-
-    Websockets are async, so we need to use an inner function and a
-    new event loop to handle the whole async/await thing.
     """
+    SEND_CRUISE_EVERY_N_SECONDS = 10
+    SEND_STATUS_EVERY_N_SECONDS = 3
 
-    ############################
-    async def _async_send_to_data_server_loop(self):
-      """Inner async function that actually implements the fetching and
-      sending of status messages."""
+    last_cruise_definition = 0
+    last_status = 0
+    while not self.quit_flag:
+      now = time.time()
 
-      # We stash previous_configs so that we know not to send them if
-      # they haven't changed since last check. We keep the raw
-      # previous_status separately, because we have to do some
-      # processing to get it into a form that's useful for our clients,
-      # and we want do avoid doing that processing if we can.
-      previous_cruise_def = {}
-      previous_logger_status = {}
+      if now - last_cruise_definition > SEND_CRUISE_EVERY_N_SECONDS:
+        self._read_and_send_cruise_definition()
+        last_cruise_definition = now
 
-      # If we only have a server port but not a name, use 'localhost'
-      ws_name = self.data_server_websocket
-      if not ':' in ws_name and int(ws_name) > 0:  # if gave us just port
-        ws_name = 'localhost:' + ws_name
-      if ws_name.find(':') == 0:  # if gave us :port
-        ws_name = 'localhost' + ws_name
+      if now - last_status > SEND_STATUS_EVERY_N_SECONDS:
+        self._read_and_send_logger_status()
+        last_status = now
 
-      # Even if things haven't changed, we want to send a full status
-      # update every N seconds.
-      SEND_CRUISE_EVERY_N_SECONDS = 10
-      SEND_STATUS_EVERY_N_SECONDS = 5
-      last_cruise_def_sent = 0
-      last_status_sent = 0
-
-      while not self.quit_flag:
-        try:
-          logging.info('Connecting to websocket: "%s"', ws_name)
-          async with websockets.connect('ws://' + ws_name) as ws:
-             logging.info('Connected to websocket: "%s"', ws_name)
-             while not self.quit_flag:
-
-              # Work through the messages in the queue, sending the
-              # ones we already have before doing anything else.
-              next_message = None
-              with self.data_server_lock:
-                if not self.data_server_queue.empty():
-                  next_message = self.data_server_queue.get()
-
-              # If there's something to send, send it and immediately
-              # loop back to see if there's more to send
-              if next_message:
-                await self._publish_to_data_server(ws, next_message)
-                continue;
-
-              # If we're here, we've caught up on sending stuff that's
-              # in the send queue. Check if anything has changed
-              # behind our back in the database.
-
-              now = time.time()
-
-              # Assemble information from DB about what loggers should
-              # exist and what states they *should* be in. We'll send
-              # this to the cached data server whenever it changes (or
-              # if it's been a while since we have).
-              #
-              # Looks like:
-              # {'active_mode': 'log',
-              #  'cruise_id': 'NBP1406',
-              #  'loggers': {'PCOD': {'active': 'PCOD->file/net',
-              #                       'configs': ['PCOD->off',
-              #                                   'PCOD->net',
-              #                                   'PCOD->file/net',
-              #                                   'PCOD->file/net/db']},
-              #               next_logger: next_configs,
-              #               ...
-              #             },
-              #  'modes': ['off', 'monitor', 'log', 'log+db']
-              # }
-              try:
-                cruise = api.get_configuration() # a Cruise object
-                cruise_def = {
-                  'cruise_id': cruise.id,
-                  'loggers': api.get_loggers(),
-                  'modes': cruise.modes(),
-                  'active_mode': cruise.current_mode.name
-                }
-              except (AttributeError, ValueError):
-                logging.debug('No cruise definition found')
-                cruise_def = {}
-
-              # Has our cruise definition changed, or has it been a
-              # while since we've sent it? If so, send update.
-              if not cruise_def == previous_cruise_def or \
-                 now - last_cruise_def_sent > SEND_CRUISE_EVERY_N_SECONDS:
-                cruise_data = {
-                  'timestamp': time.time(),
-                  'fields': {'status:cruise_definition': cruise_def}
-                }
-                logging.debug('sending cruise update: %s', cruise_data)
-                await self._publish_to_data_server(ws, cruise_data)
-                
-                previous_cruise_def = cruise_def
-                last_cruise_def_sent = now
-
-              # Check our previously-sent logger status against the
-              # most-recently received one from the LoggerRunner. Has
-              # it changed? If so, send an update. Also send update if
-              # it's been a while since we've sent one.
-              logger_status = self.status
-
-              # Has anything changed with logger statuses? If so, we'll
-              # send a full update. Otherwise we'll just send a heartbeat
-              status_changed = not logger_status == previous_logger_status
-
-              # If it's been too long since we last sent an update,
-              # pretend status has changed so we'll send a new one
-              # just to keep up.
-              if now - last_status_sent > SEND_STATUS_EVERY_N_SECONDS:
-                status_changed = True
-                logging.debug('sending full status; time diff: %s',
-                              now - last_status_sent)
-                
-              if status_changed:
-                previous_logger_status = logger_status
-                last_status_sent = now
-                logging.debug('sending full status')
-              else:
-                logger_status = {}
-                logging.debug('sending heartbeat')
-                
-              status_data = {
-                'timestamp': now,
-                'fields': {'status:logger_status': logger_status}
-              }
-              logging.debug('sending status update: %s', status_data)
-              await self._publish_to_data_server(ws, status_data)
-
-              # Send queue is (or was recently) empty, and we've sent
-              # a status update. Snooze a bit before looping to check
-              # again.
-              await asyncio.sleep(self.interval)
-
-        except BrokenPipeError:
-          pass
-        except websockets.exceptions.ConnectionClosed:
-          logging.warning('Lost websocket connection to data server; '
-                          'trying to reconnect.')
-          await asyncio.sleep(0.2)
-        except OSError as e:
-          logging.info('Unable to connect to data server. '
-                          'Sleeping to try again...')
-          logging.info('Connection error: %s', str(e))
-          await asyncio.sleep(5)
-
-    # Now call the async process in its own event loop
-    status_event_loop = asyncio.new_event_loop()
-    status_event_loop.run_until_complete(_async_send_to_data_server_loop(self))
-    status_event_loop.close()
-
-  ##########################
-  def _process_logger_runner_message(self, message):
-    """Process a message received from a LoggerRunner. We expect
-    message to be a dict of
-    {
-      'status': {
-        logger_id: {errors: [], running,  failed},
-        logger_id: {...},
-        logger_id: {...}
-      },
-      'errors': {}   # if any errors to report
-    }
-    """
-    logging.debug('LoggerRunner sent fields: %s', ', '.join(message.keys()))
-    self.status = message.get('status', None)
-    self.errors = message.get('errors', None)
-    now = time.time()
-    if self.status:
-      self.api.update_status(self.status)
-      # For each logger, publish any errors to the stderr for that
-      # logger. Aggregate them into a single message of [(timestamp,
-      # error), ...] for efficiency, but we fudge the timestamp as
-      # "now" rather than parsing it off of the error message
-      # itself. We may need to fix that.
-      for logger in self.status:
-        logger_status = self.status.get(logger)
-        logger_errors = logger_status.get('errors', [])
-        if logger_errors:
-          error_tuples = [(now, error) for error in logger_errors]
-          error_message = {'fields':{'stderr:logger:'+logger: error_tuples}}
-          with self.data_server_lock:
-            self.data_server_queue.put(error_message)
-
-    # If there were any errors not associated with a specific logger,
-    # send those as general logger_manager errors.
-    if self.errors:
-      logging.error('Errors from LoggerRunner: %s', self.errors)
-      error_tuples = [(now, error) for error in self.errors]
-      error_message = {'fields':{'stderr:logger_manager': error_tuples}}
-      with self.data_server_lock:
-        self.data_server_queue.put(error_message)
+      self._read_and_send_logger_stderr()
+      time.sleep(1)
 
 ################################################################################
-def run_data_server(data_server_websocket, data_server_udp,
+def run_data_server(data_server_websocket,
                     data_server_back_seconds, data_server_cleanup_interval,
                     data_server_interval):
   """Run a CachedDataServer (to be called as a separate process),
-  accepting websocket connections and listening for UDP broadcasts
-  on the specified port to receive data to be cached and served.
+  accepting websocket connections to receive data to be cached and
+  served.
   """
   # First get the port that we're going to run the data server on. Because
   # we're running it locally, it should only have a port, not a hostname.
@@ -552,52 +922,13 @@ def run_data_server(data_server_websocket, data_server_udp,
   websocket_port = int(data_server_websocket.split(':')[-1])
   server = CachedDataServer(port=websocket_port, interval=data_server_interval)
 
-  # If we have a data_server_udp specified, start up a reader that
-  # will listen on that UDP port and cache what it receives.
-  if data_server_udp:
-    group_port = data_server_udp.split(':')
-    port = int(group_port[-1])
-    multicast_group = group_port[-2] if len(group_port) == 2 else ''
-    reader = UDPReader(port=port, source=multicast_group)
-    transform = FromJSONTransform()
-
-  # Every N seconds, we're going to detour to clean old data out of cache
-  next_cleanup_time = time.time() + data_server_cleanup_interval
-
-  # Loop, reading data and writing it to the cache
-  try:
-    while True:
-      # If we have a reader, try reading from it
-      if data_server_udp:
-        try:
-          record = reader.read()
-          if record:
-            server.cache_record(transform.transform(record))
-        except ValueError as e:
-          logging.warning(
-            'Data Server UDP port received non-JSON message: %s', str(e))
-          continue
-
-      # If no reader, sleep until it's time to do another cleanup
-      else:
-        time.sleep(data_server_cleanup_interval)
-
-      # Is it time for next cleanup?
-      now = time.time()
-      if now > next_cleanup_time:
-        server.cleanup(oldest=now - data_server_back_seconds)
-        next_cleanup_time = now + data_server_cleanup_interval
-  except KeyboardInterrupt:
-    logging.warning('Received KeyboardInterrupt - shutting down')
-    server.quit()
+  # The server will start serving in its own thread after
+  # initialization, but we need to manually fire up the cleanup loop
+  # if we want it. Maybe we should have this also run automatically in
+  # its own thread after initialization?
+  server.cleanup_loop()
 
 ################################################################################
-################################################################################
-
-#python3 -m cProfile [-o output_file] [-s sort_order] (-m module | myscript.py)
-
-#sys.argv = ['server/logger_manager.py', '--database', 'django', '--start_data_server', '--config', 'test/NBP1406/NBP1406_cruise.yaml', '--mode', 'log']
-
 if __name__ == '__main__':
   import argparse
   import atexit
@@ -616,21 +947,45 @@ if __name__ == '__main__':
                       default='memory', help='What backing store database '
                       'to use.')
 
+  # Arguments for the SupervisorConnector
+  supervisor_group = parser.add_mutually_exclusive_group(required=True)
+  supervisor_group.add_argument('--start_supervisor',
+                                dest='start_supervisor', action='store_true',
+                                default=False, help='Start local copy of '
+                                'supervisord, building its own config file '
+                                'in a temporary file. Note that if we start '
+                                'our own supervisor, it and the loggers will '
+                                'exit when we do. If we use an external '
+                                'instance, the loggers will continue to in '
+                                'whatever state they were last in after we '
+                                'exit')
+
+  supervisor_group.add_argument('--supervisor_logger_config_file',
+                                dest='supervisor_logger_config_file',
+                                default=None,
+                                action='store', help='Location of file where '
+                                'supervisord should look for logger process '
+                                'definitions. Mutually exclusive with '
+                                '--start_supervisor.')
+
+  parser.add_argument('--supervisor_port', dest='supervisor_port',
+                      action='store', type=int, default=DEFAULT_SUPERVISOR_PORT,
+                      help='Localhost port at which supervisor should serve.')
+
+  parser.add_argument('--supervisor_logfile_dir',
+                      dest='supervisor_logfile_dir', action='store',
+                      default=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+                      help='Directory where supervisor and logger '
+                      'stderr/stdout will be written.')
+
+  # Arguments for cached data server
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
                       action='store', default=None,
                       help='Address at which to connect to cached data server '
                       'to send status updates.')
-
   parser.add_argument('--start_data_server', dest='start_data_server',
                       action='store_true', default=False,
                       help='Whether to start our own cached data server.')
-  parser.add_argument('--data_server_udp', dest='data_server_udp',
-                      action='store', default='6225',
-                      help='If we are starting our own cached data server, on '
-                      'what comma-separated network port(s) it should listen '
-                      'for UDP broadcasts, e.g. 6225,6227. For multicast, '
-                      'prefix with colon-separated group, e.g. '
-                      '224.1.1.1:6225')
   parser.add_argument('--data_server_back_seconds',
                       dest='data_server_back_seconds', action='store',
                       type=float, default=480,
@@ -656,9 +1011,6 @@ if __name__ == '__main__':
                       action='store_true', help='Run without a console '
                       'that reads commands from stdin.')
 
-  parser.add_argument('--stderr_file', dest='stderr_file', default=None,
-                      help='Optional file to which stderr messages should '
-                      'be written.')
   parser.add_argument('-v', '--verbosity', dest='verbosity',
                       default=0, action='count',
                       help='Increase output verbosity')
@@ -668,31 +1020,38 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   # Set up logging first of all
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
 
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-  logging.basicConfig(format=LOGGING_FORMAT)
-  if args.stderr_file:
-    stderr_writers = [TextFileWriter(args.stderr_file,
-                                     split_by_date=True)]
-    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
-
-  # If we have (or are going to have) a cached data server, set up
-  # logging of stderr to it. Use a special format that prepends the
-  # log level to the message, to aid in filtering.
-  if args.data_server_websocket:
-    # Format should be [[interface:]destination:]port
-    (interface, destination, port) = parse_udp_spec(args.data_server_udp)
-    stderr_network_writer = ComposedWriter(
-      transforms=ToDASRecordTransform(field_name='stderr:logger_manager'),
-      writers=CachedDataWriter(data_server=args.data_server_websocket))
-    stderr_format = '%(levelno)d\t%(levelname)s\t' + DEFAULT_LOGGING_FORMAT
-    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_network_writer,
-                                                        stderr_format))
+  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, level=log_level)
 
   # What level do we want our component loggers to write?
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
+
+  ############################
+  # First off, start any servers we're supposed to be running
+
+  # If we're supposed to be running our own CachedDataServer, start it
+  # here in its own daemon process (daemon so that it dies when we exit).
+  if args.start_data_server:
+    data_server_proc = multiprocessing.Process(
+      name='openrvdas_data_server',
+      target=run_data_server,
+      args=(args.data_server_websocket,
+            args.data_server_back_seconds, args.data_server_cleanup_interval,
+            args.data_server_interval),
+      daemon=True)
+    data_server_proc.start()
+
+  ############################
+  # If we do have a data server, add a handler that will echo all
+  # logger_manager stderr output to it
+  if args.data_server_websocket:
+    stderr_writer = ComposedWriter(
+      transforms=ToDASRecordTransform(field_name='stderr:logger_manager'),
+      writers=[CachedDataWriter(data_server=args.data_server_websocket)])
+    logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer,
+                                                        parse_to_json=True))
 
   ############################
   # Instantiate API - a Are we using an in-memory store or Django
@@ -716,32 +1075,33 @@ if __name__ == '__main__':
   #logging.getLogger().addHandler(WriteToAPILoggingHandler(api))
 
   ############################
-  # Create our LoggerManager
-  logger_manager = LoggerManager(
-    api=api,
-    data_server_websocket=args.data_server_websocket,
-    interval=args.interval,
+  # Create a connector to a supervisor, optionally starting up a local
+  # one for our own use.
+  supervisor = SupervisorConnector(
+    start_supervisor=args.start_supervisor,
+    supervisor_logger_config_file=args.supervisor_logger_config_file,
+    supervisor_port=args.supervisor_port,
+    supervisor_logfile_dir=args.supervisor_logfile_dir,
     max_tries=args.max_tries,
-    logger_log_level=logger_log_level)
-
-  # Register a callback: when api.set_active_mode() or api.set_config()
-  # have completed, they call api.signal_update(). We're registering
-  # update_configs() with the API so that it gets called when the api
-  # signals that an update has occurred.
-  api.on_update(callback=logger_manager.update_configs)
-  api.on_quit(callback=logger_manager.quit)
+    log_level=log_level)
 
   ############################
-  # If we're supposed to be running our own CachedDataServer, start it
-  # here in its own process.
-  if args.start_data_server:
-    data_server_proc = multiprocessing.Process(
-      target=run_data_server,
-      args=(args.data_server_websocket, args.data_server_udp,
-            args.data_server_back_seconds, args.data_server_cleanup_interval,
-            args.data_server_interval),
-      daemon=True)
-    data_server_proc.start()
+  # Create our LoggerManager
+  logger_manager = LoggerManager(
+    api=api, supervisor=supervisor,
+    data_server_websocket=args.data_server_websocket,
+    supervisor_logfile_dir=args.supervisor_logfile_dir,
+    interval=args.interval,
+    logger_log_level=logger_log_level)
+
+  # When an active config changes in the database, update our configs here
+  api.on_update(callback=logger_manager._update_configs)
+
+  # When new configs are loaded, update our file of config processes
+  api.on_load(callback=logger_manager._build_new_config_file)
+
+  # When told to quit, shut down gracefully
+  api.on_quit(callback=logger_manager.quit)
 
   ############################
   # Start all the various LoggerManager threads running
@@ -761,8 +1121,8 @@ if __name__ == '__main__':
     api.set_active_mode(args.mode)
     api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
                     log_level=api.INFO,
-                    message='initial mode (%s@%s): %s' % (USER, HOSTNAME, args.mode))
-
+                    message='initial mode (%s@%s): %s' % (USER, HOSTNAME,
+                                                          args.mode))
   try:
     # If no console, just wait for the configuration update thread to
     # end as a signal that we're done.
@@ -778,7 +1138,7 @@ if __name__ == '__main__':
     else:
       # Create reader to read/process commands from stdin. Note: this
       # needs to be in main thread for Ctl-C termination to be properly
-      # caught and processed, otherwise interrupts go to the wrong places.
+     # caught and processed, otherwise interrupts go to the wrong places.
 
       # Set up command line interface to get commands. Start by
       # reading history file, if one exists, to get past commands.
