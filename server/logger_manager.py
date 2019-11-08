@@ -520,7 +520,11 @@ class SupervisorConnector:
       config_file.write(content_str)
 
     # Get supervisord to reload the new file and refresh groups.
-    self.supervisor_rpc.supervisor.reloadConfig()
+    try:
+      self.supervisor_rpc.supervisor.reloadConfig()
+    except XmlRpcFault as e:
+      logging.warning('Supervisord error when reloading config: %s', e)
+
     if group:
       try:
         self.supervisor_rpc.supervisor.removeProcessGroup(group)
@@ -614,12 +618,17 @@ class LoggerManager:
     self._build_new_config_file()
 
     # Stash a map of loggers->configs and configs->loggers
-    self.loggers = self.api.get_loggers()
-    self.config_to_logger = {}
-    for logger in self.loggers:
-      for config in self.loggers[logger].get('configs', []):
-        self.config_to_logger[config] = logger
-
+    try:
+      self.loggers = self.api.get_loggers()
+      self.config_to_logger = {}
+      for logger in self.loggers:
+        for config in self.loggers[logger].get('configs', []):
+          self.config_to_logger[config] = logger
+    except ValueError:
+      logging.warning('No cruise defined yet.')
+      self.loggers = {}
+      self.config_to_logger = {}
+      
   ############################
   def start(self):
     """Start the threads that make up the LoggerManager operation:
@@ -658,19 +667,26 @@ class LoggerManager:
     # Stash an updated map of loggers->configs and configs->loggers.
     # While we're doing that, also (inefficiently) grab definition
     # string for each config one at a time from the API.
-    self.loggers = self.api.get_loggers()
-    self.config_to_logger = {}
-    logger_config_strings = {}
-    for logger, configs in self.loggers.items():
-      config_names = configs.get('configs', [])
-      # Map config_name->logger
-      for config in self.loggers[logger].get('configs', []):
-        self.config_to_logger[config] = logger
+    try:
+      self.loggers = self.api.get_loggers()
 
-      # Map logger->{config_name:config_definition_str,...}
-      logger_config_strings[logger] = {
-          config_name:api.get_logger_config(config_name)
-          for config_name in config_names}
+      self.config_to_logger = {}
+      logger_config_strings = {}
+      for logger, configs in self.loggers.items():
+        config_names = configs.get('configs', [])
+        # Map config_name->logger
+        for config in self.loggers[logger].get('configs', []):
+          self.config_to_logger[config] = logger
+
+        # Map logger->{config_name:config_definition_str,...}
+        logger_config_strings[logger] = {
+            config_name:api.get_logger_config(config_name)
+            for config_name in config_names}
+
+    # If no cruise loaded, create an empty config file
+    except ValueError:
+      logging.warning('No cruise defined yet - creating empty supervisor file')
+      logger_config_strings = {}
 
     # Now create a .ini file of those configs for supervisord to run.
     with self.config_lock:
@@ -1094,14 +1110,14 @@ if __name__ == '__main__':
     interval=args.interval,
     logger_log_level=logger_log_level)
 
+  # When told to quit, shut down gracefully
+  api.on_quit(callback=logger_manager.quit)
+
   # When an active config changes in the database, update our configs here
   api.on_update(callback=logger_manager._update_configs)
 
   # When new configs are loaded, update our file of config processes
   api.on_load(callback=logger_manager._build_new_config_file)
-
-  # When told to quit, shut down gracefully
-  api.on_quit(callback=logger_manager.quit)
 
   ############################
   # Start all the various LoggerManager threads running

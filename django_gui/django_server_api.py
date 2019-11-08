@@ -250,7 +250,6 @@ class DjangoServerAPI(ServerAPI):
   def get_loggers(self):
     """Get a dict of {logger_id:logger_spec,...} defined for the
     current cruise."""
-    #logging.info('get_loggers')
     while True:
       try:
         loggers = Logger.objects.all()
