@@ -548,7 +548,7 @@ class LoggerManager:
   def __init__(self,
                api, supervisor, data_server_websocket=None,
                supervisor_logfile_dir=None,
-               interval=0.5, logger_log_level=logging.WARNING):
+               interval=0.25, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
     ```
@@ -889,8 +889,8 @@ class LoggerManager:
     """Iteratively grab messages to send to cached data server and send
     them off via websocket.
     """
-    SEND_CRUISE_EVERY_N_SECONDS = 10
-    SEND_STATUS_EVERY_N_SECONDS = 3
+    SEND_CRUISE_EVERY_N_SECONDS = 5
+    SEND_STATUS_EVERY_N_SECONDS = 1
 
     last_cruise_definition = 0
     last_status = 0
@@ -906,7 +906,7 @@ class LoggerManager:
         last_status = now
 
       self._read_and_send_logger_stderr()
-      time.sleep(1)
+      time.sleep(0.5)
 
 ################################################################################
 def run_data_server(data_server_websocket,
@@ -1001,7 +1001,7 @@ if __name__ == '__main__':
                       'sends of data to clients.')
 
   parser.add_argument('--interval', dest='interval', action='store',
-                      type=float, default=1,
+                      type=float, default=0.5,
                       help='How many seconds to sleep between logger checks.')
   parser.add_argument('--max_tries', dest='max_tries', action='store', type=int,
                       default=DEFAULT_MAX_TRIES,
