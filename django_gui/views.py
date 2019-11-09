@@ -135,17 +135,24 @@ def edit_config(request, logger_id):
   ############################
   # If we've gotten a POST request, they've selected a new config
   if request.method == 'POST':
-    # First things first: log the request
-    log_request(request, '%s edit_config' % logger_id)
 
-    # Now figure out what they selected
-    new_config = request.POST['select_config']
-    logging.warning('selected config: %s', new_config)
-    api.set_active_logger_config(logger_id, new_config)
+    # If they've hit the "Save" button
+    if 'save' in request.POST:
+      # First things first: log the request
+      log_request(request, '%s edit_config' % logger_id)
 
+      # Now figure out what they selected
+      new_config = request.POST['select_config']
+      logging.warning('selected config: %s', new_config)
+      api.set_active_logger_config(logger_id, new_config)
+
+    else:
+      logging.debug('User canceled request')
+      
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 
+  # If not a POST, render the selector page: 
   # What's our current mode? What's the default config for this logger
   # in this mode?
   current_mode = api.get_active_mode()
