@@ -593,9 +593,11 @@ class LoggerManager:
     # The XMLRPC connector to supervisord
     self.supervisor = supervisor
 
-    # Where we store the latest status/error reports.
-    self.status = {}
-    self.errors = {}
+    # Where we store the latest cruise definition and status reports.
+    self.definition = {}
+    self.definition_time = 0
+    self.status_map = {}
+    self.status_time = 0
 
     # We'll loop to check the API for updates to our desired
     # configs. Do this in a separate thread. Also keep track of
@@ -628,7 +630,7 @@ class LoggerManager:
       logging.warning('No cruise defined yet.')
       self.loggers = {}
       self.config_to_logger = {}
-      
+
   ############################
   def start(self):
     """Start the threads that make up the LoggerManager operation:
@@ -756,7 +758,7 @@ class LoggerManager:
       self.active_configs = new_configs
 
   ############################
-  def _read_and_send_cruise_definition(self):
+  def _read_and_send_cruise_definition(self, send_every_n_seconds=10):
     """Assemble and send a cruise definition to the cached data server.
     """
     # Assemble information from DB about what loggers should
@@ -785,6 +787,15 @@ class LoggerManager:
         'modes': cruise.modes(),
         'active_mode': cruise.current_mode.name
       }
+
+      # Only send definition every N seconds unless it's changed
+      now = time.time()
+      if (cruise_def == self.definition and
+          now < self.definition_time + send_every_n_seconds):
+        return
+
+      self.definition = cruise_def
+      self.definition_time = now
       self._write_record_to_data_server('status:cruise_definition', cruise_def)
     except (AttributeError, ValueError):
       logging.debug('No cruise definition found')
@@ -808,6 +819,8 @@ class LoggerManager:
       das_record = DASRecord(fields={field_name: record})
       logging.debug('DASRecord: %s' % das_record)
       self.data_server_writer.write(das_record)
+    else:
+      logging.info('Update: %s: %s', field_name, record)
 
   ############################
   def _read_and_send_logger_stderr(self, configs=None):
@@ -883,7 +896,7 @@ class LoggerManager:
         parse_and_send_message(field_name, '\n'.join(message))
 
   ############################
-  def _read_and_send_logger_status(self):
+  def _read_and_send_logger_status(self, send_every_n_seconds=1):
     """Grab logger status message from supervisor and send to cached data
     server via websocket.
     """
@@ -895,10 +908,14 @@ class LoggerManager:
       logger = self.config_to_logger[config]
       status_map[logger] = {'config':config, 'status':status}
 
-    if self.data_server_writer:
-      self._write_record_to_data_server('status:logger_status', status_map)
-    else:
-      logging.debug('Got logger status: %s', status_map)
+    now = time.time()
+    if (status_map == self.status_map and
+        now < self.status_time + send_every_n_seconds):
+      return
+
+    self.status_map = status_map
+    self.status_time = now
+    self._write_record_to_data_server('status:logger_status', status_map)
 
   ############################
   def _read_logger_status_loop(self):
@@ -906,23 +923,14 @@ class LoggerManager:
     them off via websocket.
     """
     SEND_CRUISE_EVERY_N_SECONDS = 5
-    SEND_STATUS_EVERY_N_SECONDS = 1
+    SEND_STATUS_EVERY_N_SECONDS = 2
 
-    last_cruise_definition = 0
-    last_status = 0
     while not self.quit_flag:
-      now = time.time()
-
-      if now - last_cruise_definition > SEND_CRUISE_EVERY_N_SECONDS:
-        self._read_and_send_cruise_definition()
-        last_cruise_definition = now
-
-      if now - last_status > SEND_STATUS_EVERY_N_SECONDS:
-        self._read_and_send_logger_status()
-        last_status = now
+      self._read_and_send_cruise_definition(SEND_CRUISE_EVERY_N_SECONDS)
+      self._read_and_send_logger_status(SEND_STATUS_EVERY_N_SECONDS)
 
       self._read_and_send_logger_stderr()
-      time.sleep(0.5)
+      time.sleep(self.interval)
 
 ################################################################################
 def run_data_server(data_server_websocket,

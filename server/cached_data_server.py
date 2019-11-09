@@ -893,7 +893,7 @@ if __name__ == '__main__':
                       help='How often to clean old data out of the cache.')
 
   parser.add_argument('--interval', dest='interval', action='store',
-                      type=float, default=1,
+                      type=float, default=0.5,
                       help='How many seconds to sleep between successive '
                       'sends of data to clients.')
 

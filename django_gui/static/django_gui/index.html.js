@@ -109,7 +109,8 @@ function process_data_message(data_dict) {
       if (cruise_timestamp <= global_last_cruise_timestamp) {
         // We've already seen this cruise definition or a more recent
         // one. Ignore it.
-        break;
+        console.log('Got stale cruise definition - skipping...');
+        continue;
       }
       global_last_cruise_timestamp = cruise_timestamp;
       var cruise_definition = value[value.length-1][1];
@@ -280,6 +281,15 @@ function process_data_message(data_dict) {
     case 'status:logger_status':
       reset_status_timeout(); // We've gotten a status update
       var [timestamp, status_array] = value[0];
+      var logger_status_timestamp = value[value.length-1][0];
+      if (logger_status_timestamp <= global_last_logger_status_timestamp) {
+        // We've already seen this logger status or a more recent
+        // one. Ignore it.
+        console.log('Got stale logger status - skipping...');
+        continue;
+      }
+      global_last_logger_status_timestamp = logger_status_timestamp;
+
       for (var logger_name in status_array) {
         var logger_status = status_array[logger_name];
         var button = document.getElementById(logger_name + '_config_button');
@@ -345,6 +355,9 @@ function add_to_stderr(logger_name, new_messages) {
   for (var s_i = 0; s_i < new_messages.length; s_i++) {
     var [timestamp, message] = new_messages[s_i];
     try {
+      if (message.length == 0) {
+        continue;
+      }
       // If we have a structured JSON message
       message = JSON.parse(message);
       var prefix = '';
