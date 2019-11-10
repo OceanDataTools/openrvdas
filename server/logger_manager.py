@@ -521,11 +521,16 @@ class SupervisorConnector:
     with open(self.supervisor_logger_config_file, 'w') as config_file:
       config_file.write(content_str)
 
+    # Re-open the connections to make a clean slate of things
+    self.supervisor_rpc = self._create_supervisor_connection()
+    self.read_stderr_rpc =  self._create_supervisor_connection()
+
     # Get supervisord to reload the new file and refresh groups.
     try:
       self.supervisor_rpc.supervisor.reloadConfig()
     except XmlRpcFault as e:
-      logging.warning('Supervisord error when reloading config: %s', e)
+      logging.fatal('Supervisord error when reloading config: %s', e)
+      sys.exit(1)
 
     if group:
       try:
