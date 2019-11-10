@@ -492,7 +492,7 @@ password=${RVDAS_USER}
 
 ; The scripts we're going to run
 [program:cached_data_server]
-command=${INSTALL_ROOT}/openrvdas/server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -502,7 +502,7 @@ stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=${INSTALL_ROOT}/openrvdas/server/logger_manager.py --database django --no-console --data_server_websocket :8766 --start_supervisor -v
+command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 --start_supervisor -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -512,7 +512,7 @@ stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 
 [program:simulate_nbp_serial]
-command=${INSTALL_ROOT}/openrvdas/logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
+command=/usr/bin/python3 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
@@ -522,7 +522,7 @@ stdout_logfile=/var/log/openrvdas/simulate_nbp_serial.out.log
 user=$RVDAS_USER
 
 [program:simulate_skq_network]
-command=${INSTALL_ROOT}/openrvdas/logger/utils/simulate_network.py --config test/SKQ201822S/network_sim_SKQ201822S.yaml --loop
+command=/usr/bin/python3 logger/utils/simulate_network.py --config test/SKQ201822S/network_sim_SKQ201822S.yaml --loop
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true

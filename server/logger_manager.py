@@ -180,6 +180,8 @@ class SupervisorConnector:
 
       # Create the supervisor config file
       supervisor_config_filename = supervisor_dirname + '/supervisord.ini'
+      logging.warning('Creating new supervisord file in %s',
+                      supervisor_config_filename)
       config_args = {
         'supervisor_dir': supervisor_dirname,
         'logfile_dir': supervisor_logfile_dir,
