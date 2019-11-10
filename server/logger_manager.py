@@ -383,7 +383,7 @@ class SupervisorConnector:
       status_result = {}
       for config in self.running_configs():
         cleaned_config_name = self._clean_name(config)
-        config_status = status_map[cleaned_config_name].get('statename')
+        config_status = status_map.get(cleaned_config_name,{}).get('statename', None)
         status_result[config] = config_status
 
     return status_result
@@ -508,7 +508,7 @@ class SupervisorConnector:
     # If we've been given a group name, group all the logger configs
     # together under it so we can start them all at the same time with
     # a single call.
-    if group:
+    if group and config_names:
       content_str += '\n'.join([
         '[group:%s]' % group,
         'programs=%s' % ','.join(config_names),
