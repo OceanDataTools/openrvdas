@@ -78,7 +78,7 @@ if id -u $RVDAS_USER > /dev/null; then
   echo User exists, skipping
 else
   echo Creating $RVDAS_USER
-  adduser $RVDAS_USER
+  adduser --gecos "" $RVDAS_USER
   #passwd $RVDAS_USER
   usermod -a -G tty $RVDAS_USER
 fi
