@@ -223,7 +223,7 @@ export PATH=/usr/bin:/usr/local/bin:$PATH
 #/usr/bin/pip3 install --upgrade pip &> /dev/null || echo Upgrading old pip if it's there
 #/usr/bin/env pip install --upgrade pip || echo Upgrading new pip if it\'s there
 
-/usr/bin/pip3 install Django==2.2 pyserial uwsgi \
+/usr/bin/pip3 install Django==2.2 pyserial uwsgi psutil \
              websockets PyYAML parse mysqlclient mysql-connector diskcache
 # uWSGI configuration
 #Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/

@@ -8,6 +8,7 @@ import logging
 import multiprocessing
 import os
 import pprint
+import psutil
 import signal
 import socket  # to get hostname
 import subprocess
@@ -214,13 +215,30 @@ class SupervisorConnector:
         logging.fatal('Supervisor executable "%s" not found', SUPERVISORD)
         sys.exit(1)
 
+      # Make sure there are no other copies of us running.
+      SUPERVISORD_NAME = 'logger_manager_supervisor'
+      for process in psutil.process_iter():
+        cmdline = process.cmdline()
+        if (len(cmdline) == 7 and SUPERVISORD in cmdline[1] and
+            cmdline[2] == '-i' and cmdline[3] == SUPERVISORD_NAME):
+          logging.warning('Killing existing supervisor process %d', process.pid)
+          process.kill()
+          break
+
       # And start the local supervisord
-      self.supervisord_proc = subprocess.Popen(
-        ['/usr/bin/env', SUPERVISORD, '-n', '-c', supervisor_config_filename])
+      supervisord_cmd = ['/usr/bin/env', SUPERVISORD,
+                         '-i', SUPERVISORD_NAME,
+                         '-n', '-c', supervisor_config_filename]
+
+      self.supervisord_proc = subprocess.Popen(supervisord_cmd)
+      time.sleep(0.1)
+      if self.supervisord_proc.poll() is not None:
+        logging.fatal('Unable to start process %s; quitting.',
+                      ' '.join(supervisord_cmd))
+        sys.exit(1)
 
     # If not starting our own supervisor, stash pointer to where we
-    # expect the existing supervisor to look for a logger config
-    # file. If we call
+    # expect existing supervisor to look for a logger config file.
     else:
       self.supervisor_logger_config_file = supervisor_logger_config_file
 
@@ -547,10 +565,8 @@ class SupervisorConnector:
     """If we started the supervisord process, then tell it to shut down.
     """
     if self.supervisord_proc:
-      try:
-        self.supervisor_rpc.supervisor.shutdown()
-      except (XmlRpcFault, ConnectionRefusedError):
-        logging.debug('Caught shutdown fault')
+      self.supervisord_proc.kill()
+      self.supervisord_proc.wait()
 
 ################################################################################
 ################################################################################
@@ -649,6 +665,8 @@ class LoggerManager:
     Start threads as daemons so that they'll automatically terminate
     if the main thread does.
     """
+    logging.info('Starting LoggerManager')
+
     # Update configs in a separate thread.
     self.update_configs_thread = threading.Thread(
       name='update_configs_loop',
@@ -729,38 +747,39 @@ class LoggerManager:
         new_logger_configs = self.api.get_logger_configs()
         new_configs = set([new_logger_configs[logger].get('name', None)
                            for logger in new_logger_configs])
-      except (AttributeError, ValueError):
+
+        # If configs have changed, start new ones and stop old ones.
+        if new_configs == self.active_configs:
+          return
+
+        configs_to_start = new_configs - self.active_configs
+        configs_to_stop = self.active_configs - new_configs
+
+        if configs_to_stop:
+          logging.debug('Stopping configs: %s', configs_to_stop)
+          self.supervisor.stop_configs(configs_to_stop, group='logger')
+
+          # Alert the data server which configs we're stopping
+          for config in configs_to_stop:
+            logger = self.config_to_logger[config]
+            self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                                   'Stopping config ' + config)
+
+          # Grab any last output from the configs we've stopped
+          self._read_and_send_logger_stderr(configs_to_stop)
+
+        if configs_to_start:
+          logging.info('Activating to new configs: %s', configs_to_start)
+          self.supervisor.start_configs(configs_to_start, group='logger')
+
+          # Alert the data server which configs we're starting
+          for config in configs_to_start:
+            logger = self.config_to_logger[config]
+            self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                                   'Start config ' + config)
+      except (AttributeError, ValueError, KeyError):
         return
 
-      # If configs have changed, start new ones and stop old ones.
-      if new_configs == self.active_configs:
-        return
-
-      configs_to_start = new_configs - self.active_configs
-      configs_to_stop = self.active_configs - new_configs
-
-      if configs_to_stop:
-        logging.debug('Stopping configs: %s', configs_to_stop)
-        self.supervisor.stop_configs(configs_to_stop, group='logger')
-
-        # Alert the data server which configs we're stopping
-        for config in configs_to_stop:
-          logger = self.config_to_logger[config]
-          self._write_log_message_to_data_server('stderr:logger:' + logger,
-                                                 'Stopping config ' + config)
-
-        # Grab any last output from the configs we've stopped
-        self._read_and_send_logger_stderr(configs_to_stop)
-
-      if configs_to_start:
-        logging.info('Activating to new configs: %s', configs_to_start)
-        self.supervisor.start_configs(configs_to_start, group='logger')
-
-        # Alert the data server which configs we're starting
-        for config in configs_to_start:
-          logger = self.config_to_logger[config]
-          self._write_log_message_to_data_server('stderr:logger:' + logger,
-                                                 'Start config ' + config)
       # Cache our new configs for the next time around
       self.active_configs = new_configs
 
@@ -1061,6 +1080,7 @@ if __name__ == '__main__':
 
   ############################
   # First off, start any servers we're supposed to be running
+  logging.info('Preparing to start LoggerManager.')
 
   # If we're supposed to be running our own CachedDataServer, start it
   # here in its own daemon process (daemon so that it dies when we exit).
