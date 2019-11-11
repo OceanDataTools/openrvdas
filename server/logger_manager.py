@@ -769,7 +769,7 @@ class LoggerManager:
           self._read_and_send_logger_stderr(configs_to_stop)
 
         if configs_to_start:
-          logging.info('Activating to new configs: %s', configs_to_start)
+          logging.info('Activating new configs: %s', configs_to_start)
           self.supervisor.start_configs(configs_to_start, group='logger')
 
           # Alert the data server which configs we're starting
@@ -814,10 +814,15 @@ class LoggerManager:
         'active_mode': cruise.current_mode.name
       }
 
-      # Only send definition every N seconds unless it's changed
       now = time.time()
-      if (cruise_def == self.definition and
-          now < self.definition_time + send_every_n_seconds):
+
+      # If loggers/modes/etc have changed, we need to build a new
+      # config file to reflect that fact.
+      if cruise_def != self.definition:
+        self._build_new_config_file()
+        
+      # If things haven't changed, only send definition every N seconds
+      elif now < self.definition_time + send_every_n_seconds:
         return
 
       self.definition = cruise_def
