@@ -46,6 +46,14 @@ from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
 from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.writers.composed_writer import ComposedWriter
 
+# Name of the supervisord executable
+SUPERVISORD = 'supervisord'
+
+# When we kill any leftover supervisord process, we want to make sure
+# to only kill the one(s) associated with the logger manager. To do
+# that, we flag our instance with a name under which we can look the
+# process up.
+SUPERVISORD_NAME = 'logger_manager_supervisor'
 
 DEFAULT_MAX_TRIES = 3
 
@@ -53,6 +61,7 @@ SOURCE_NAME = 'LoggerManager'
 USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
+DEFAULT_SUPERVISOR_DIR = '/var/tmp/openrvdas/supervisor'
 DEFAULT_SUPERVISOR_PORT = 8002
 DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas'
 
@@ -135,8 +144,8 @@ stdout_logfile_backups=10
 class SupervisorConnector:
   ############################
   def __init__(self,
-               start_supervisor=False,
-               supervisor_logger_config_file=None,
+               start_supervisor_in=None,
+               supervisor_logger_config=None,
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
                max_tries=DEFAULT_MAX_TRIES,
@@ -145,12 +154,13 @@ class SupervisorConnector:
     processes.  If starting our own, do so in a tempdir of our own
     creation that will go away when connector is destroyed.
     ```
-    start_supervisor - Start local copy of supervisord, building its own
-          config file in a temporary file.
+    start_supervisor_in - Start local copy of supervisord and set up
+          socket, pid and conf.d in this directory. Mutually exclusive
+          with supervisor_logger_config being non-None.
 
     supervisor_logger_config - Location of file where supervisord should look
           for logger process definitions. Mutually exclusive with
-          --start_supervisor flag.
+          --start_supervisor_in flag.
 
     supervisor_port - Localhost port at which supervisor should serve.
 
@@ -161,86 +171,27 @@ class SupervisorConnector:
           fails on startup.
     ```
     """
+    self.supervisor_dir = start_supervisor_in
+    self.supervisor_logger_config = supervisor_logger_config
     self.supervisor_port = supervisor_port
     self.supervisor_logfile_dir = supervisor_logfile_dir
     self.max_tries = max_tries
 
-    # Define this right at start, because if we shut down prematurely
-    # during initialization, the destructor is going to look for it.
+    # Define these right at start, because if we shut down prematurely
+    # during initialization, the destructor is going to look for them.
+    self.supervisor_rpc = None
     self.supervisord_proc = None
+
+    if bool(start_supervisor_in) == bool(supervisor_logger_config):
+      logging.fatal('SupervisorConnector must have either '
+                    '"start_supervisor_in" or "supervisor_logger_config" '
+                    'as non-empty, but not both.')
+      sys.exit(1)
 
     # If we're starting our own local copy of supervisor, create the
     # relevant config files in a temp directory.
-    if start_supervisor:
-      self.supervisor_dir = tempfile.TemporaryDirectory()
-      supervisor_dirname = self.supervisor_dir.name
-
-      supervisor_log_level = {logging.WARNING: 'warn',
-                              logging.INFO: 'info',
-                              logging.DEBUG: 'debug'}.get(log_level, 'warn')
-
-      # Create the supervisor config file
-      supervisor_config_filename = supervisor_dirname + '/supervisord.ini'
-      logging.warning('Creating new supervisord file in %s',
-                      supervisor_config_filename)
-      config_args = {
-        'supervisor_dir': supervisor_dirname,
-        'logfile_dir': supervisor_logfile_dir,
-        'port': supervisor_port,
-        'user': getpass.getuser(),
-        'group': getpass.getuser(),
-        'password': 'NOT_USED',
-        'log_level': supervisor_log_level,
-      }
-      supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
-      with open(supervisor_config_filename, 'w') as supervisor_config_file:
-        supervisor_config_file.write(supervisor_config_str)
-
-      # Create directory where logger.ini file will go
-      os.mkdir(supervisor_dirname + '/supervisor.d')
-      self.supervisor_logger_config_file = \
-         supervisor_dirname + '/supervisor.d/loggers.ini'
-
-      # Create an empty logger.ini file to prevent supervisor from
-      # complaining that there are no matching .ini files when it
-      # starts up. Petty, I know, but the warning could cause folks to
-      # worry about the wrong thing if something else is amiss.
-      open(self.supervisor_logger_config_file, 'a').close()
-
-      # Make sure supervisord exists and is on path
-      SUPERVISORD = 'supervisord'
-      try:
-        subprocess.check_output(['which', SUPERVISORD])
-      except subprocess.CalledProcessError:
-        logging.fatal('Supervisor executable "%s" not found', SUPERVISORD)
-        sys.exit(1)
-
-      # Make sure there are no other copies of us running.
-      SUPERVISORD_NAME = 'logger_manager_supervisor'
-      for process in psutil.process_iter():
-        cmdline = process.cmdline()
-        if (len(cmdline) == 7 and SUPERVISORD in cmdline[1] and
-            cmdline[2] == '-i' and cmdline[3] == SUPERVISORD_NAME):
-          logging.warning('Killing existing supervisor process %d', process.pid)
-          process.kill()
-          break
-
-      # And start the local supervisord
-      supervisord_cmd = ['/usr/bin/env', SUPERVISORD,
-                         '-i', SUPERVISORD_NAME,
-                         '-n', '-c', supervisor_config_filename]
-
-      self.supervisord_proc = subprocess.Popen(supervisord_cmd)
-      time.sleep(0.1)
-      if self.supervisord_proc.poll() is not None:
-        logging.fatal('Unable to start process %s; quitting.',
-                      ' '.join(supervisord_cmd))
-        sys.exit(1)
-
-    # If not starting our own supervisor, stash pointer to where we
-    # expect existing supervisor to look for a logger config file.
-    else:
-      self.supervisor_logger_config_file = supervisor_logger_config_file
+    if start_supervisor_in:
+      self.supervisord_proc = self._start_supervisor()
 
     # Now that the preliminaries are done, try to connect to server.
     self.supervisor_rpc = self._create_supervisor_connection()
@@ -254,6 +205,67 @@ class SupervisorConnector:
 
     # Finally, keep track of the configs that are currently active
     self._running_configs = set()
+
+  ############################
+  def _start_supervisor(self):
+    logging.warning('Starting standalone supervisord instance in %s',
+                    self.supervisor_dir)
+    # Make the working directory that supervisord will run in if it
+    # doesn't exist and, while we're at it, make the supervisor.d/
+    # subdirectory of that where we'll put our logger config .ini file.
+    if not os.path.exists(self.supervisor_dir):
+      os.makedirs(self.supervisor_dir + '/supervisor.d')
+
+    # Create the supervisor config file
+    supervisor_config_filename = self.supervisor_dir + '/supervisord.ini'
+    logging.warning('Creating new supervisord file in %s',
+                    supervisor_config_filename)
+    supervisor_log_level = {logging.WARNING: 'warn',
+                            logging.INFO: 'info',
+                            logging.DEBUG: 'debug'}.get(log_level, 'warn')
+    config_args = {
+      'supervisor_dir': self.supervisor_dir,
+      'logfile_dir': self.supervisor_logfile_dir,
+      'port': self.supervisor_port,
+      'user': getpass.getuser(),
+      'group': getpass.getuser(),
+      'password': 'NOT_USED',
+      'log_level': supervisor_log_level,
+    }
+    supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
+    with open(supervisor_config_filename, 'w') as supervisor_config_file:
+      supervisor_config_file.write(supervisor_config_str)
+
+    # Create an empty logger.ini file to prevent supervisor from
+    # complaining that there are no matching .ini files when it
+    # starts up. Petty, I know, but the warning could cause folks to
+    # worry about the wrong thing if something else is amiss.
+    self.supervisor_logger_config = \
+          self.supervisor_dir + '/supervisor.d/loggers.ini'
+    open(self.supervisor_logger_config, 'a').close()
+
+    # Make sure supervisord exists and is on path
+    try:
+      subprocess.check_output(['which', SUPERVISORD])
+    except subprocess.CalledProcessError:
+      logging.fatal('Supervisor executable "%s" not found', SUPERVISORD)
+      sys.exit(1)
+
+    # Make sure tlhere are no other copies of us running.
+    self._kill_supervisor()
+
+    # And start the local supervisord
+    supervisord_cmd = ['/usr/bin/env', SUPERVISORD,
+                       '-i', SUPERVISORD_NAME,
+                       '-n', '-c', supervisor_config_filename]
+
+    self.supervisord_proc = subprocess.Popen(supervisord_cmd)
+    time.sleep(0.1)
+    if self.supervisord_proc.poll() is not None:
+      logging.fatal('Unable to start process %s; quitting.',
+                    ' '.join(supervisord_cmd))
+      sys.exit(1)
+    return self.supervisord_proc
 
   ############################
   def _create_supervisor_connection(self):
@@ -271,12 +283,52 @@ class SupervisorConnector:
         logging.error('Supervisord is not running. State is "%s"',
                       supervisor_state['statename'])
       except ConnectionRefusedError:
-        logging.info('Unable to connect to supervisord at %s', supervisor_url)
+        logging.warning('Unable to connect to supervisord at %s; trying again.',
+                        supervisor_url)
       time.sleep(5)
       logging.info('Retrying connection to %s', supervisor_url)
 
     # Return with our connection
     return supervisor_rpc
+
+  ############################
+  def _kill_supervisor(self):
+    # Shut down any processes
+    if self.supervisor_rpc:
+      try:
+        self.supervisor_rpc.supervisor.stopAllProcesses()
+      except ConnectionRefusedError:
+        pass
+
+    # If we were running our own supervisor process, shut it down
+    # (first ask it to shut down, then kill it dead, dead, dead).
+    if self.supervisord_proc and self.supervisor_rpc:
+      try:
+        self.supervisor_rpc.supervisor.shutdown()
+      except ConnectionRefusedError:
+        pass
+      self.supervisord_proc.kill()
+      self.supervisord_proc.wait()
+
+    # Make sure there are no other copies of us running.
+    for process in psutil.process_iter():
+      try:
+        cmdline = process.cmdline()
+        if (len(cmdline) == 7 and SUPERVISORD in cmdline[1] and
+            cmdline[2] == '-i' and cmdline[3] == SUPERVISORD_NAME):
+          process.kill()
+          logging.warning('Killed existing supervisor process %d', process.pid)
+          break
+      except (psutil.AccessDenied, psutil.ZombieProcess) as e:
+        logging.debug('Got psutil error for %s: %s', process, e)
+
+  ############################
+  def shutdown(self):
+    """Shut down our own supervisor instance if we've spawned one. Also
+    check if there are any old, conflicting logger_manager-started
+    supervisor processes running and kill them with prejudice.
+    """
+    self._kill_supervisor()
 
   ############################
   def __del__(self):
@@ -321,7 +373,10 @@ class SupervisorConnector:
       config = configs[i]
       if type(result) is dict:
         if result['faultCode'] == 60:
-          logging.warning('Starting process %s, but already started', config)
+          # We may get this when a new config is loaded and
+          # _update_config is called manually, which may step on the
+          # already-running _update_config_loop. It's not a problem.
+          logging.info('Starting process %s, but already started', config)
         else:
           logging.info('Starting process %s: %s', config, result['faultString'])
 
@@ -367,44 +422,33 @@ class SupervisorConnector:
     return self._running_configs
 
   ############################
-  def read_status(self):
-    """Read the status of currently active configs
-
-    loggers - dict mapping logger names->list of configs:
+  def check_status(self):
+    """Read the RUNNING/STOPPED/FATAL/EXITED status of (nominally)
+    currently-active configs:
 
       {
-        logger_1: {
-          'configs': [
-            'logger_1->off',
-            'logger_1->net',
-            'logger_1->file'
-          ]
-        },
-        logger_2:...
-      }
-
-    Return a dict mapping the status of those configs:
-      {
-        logger_1: {
-          'configs': {
-            'logger_1->off':  status,
-            'logger_1->net':  status,
-            'logger_1->file': status'
-          }
-        },
-        logger_2:...
+       'logger_1->file: 'RUNNING',
+       'logger_2->file: 'RUNNING',
+       'logger_3->file: 'FATAL',
+       'logger_4->file: 'RUNNING',
+       ...,
       }
 
     """
     with self.config_lock:
-      status_list = self.read_stderr_rpc.supervisor.getAllProcessInfo()
+      try:
+        status_list = self.read_stderr_rpc.supervisor.getAllProcessInfo()
+      except XmlExpatError as e:
+        logging.error('Error reading supervisor process status: %s', e)
+        return {}
+
       status_map = {s.get('name', None):s for s in status_list}
 
       status_result = {}
       for config in self.running_configs():
         cleaned_config_name = self._clean_name(config)
-        config_status = status_map.get(cleaned_config_name,{}).get('statename', None)
-        status_result[config] = config_status
+        state = status_map.get(cleaned_config_name,{})
+        status_result[config] = state.get('statename', None)
 
     return status_result
 
@@ -432,9 +476,9 @@ class SupervisorConnector:
     with self.config_lock:
       for config in configs:
         # If we've got a group, need to prefix config name with it
-        normalized_config = self._clean_name(config)
+        cleaned_config = self._clean_name(config)
         if group:
-          normalized_config = group + ':' + normalized_config
+          cleaned_config = group + ':' + cleaned_config
 
         # Initialize last read position of any configs we've not yet read
         if not config in self.read_stderr_offset:
@@ -443,23 +487,26 @@ class SupervisorConnector:
 
         # Read stderr from config, iterating until we've got
         # everything from it.
-        try:
-          results[config] = ''
-          overflow = True
-          while overflow:
-            # Get a chunk of stderr, update offset, and see if there's more
-            getTail = self.read_stderr_rpc.supervisor.tailProcessStderrLog
-            result, offset, overflow = getTail(normalized_config,
-                                               offset, maxchars)
+        results[config] = ''
+        overflow = True
+
+        # Create alias for function call to prettify the loop below
+        getTail = self.read_stderr_rpc.supervisor.tailProcessStderrLog
+
+        while overflow:
+          # Get a chunk of stderr, update offset, and see if there's more
+          try:
+            result, offset, overflow = getTail(cleaned_config, offset, maxchars)
             results[config] += result
             self.read_stderr_offset[config] = offset
-
-        # If we've barfed on the read, give up on this config for now
-        except XmlExpatError as e:
-          logging.debug('XML parse error while reading stderr: %s', str(e))
-        except (XmlRpcFault, ResponseNotReady, CannotSendRequest) as e:
-          logging.warning('Http error: %s', str(e))
-          #self.read_stderr_rpc = self._create_supervisor_connection()
+          # If we've barfed on the read, give up on this config for now
+          except XmlExpatError as e:
+            logging.debug('XML parse error while reading stderr: %s', str(e))
+            overflow = False
+          except (XmlRpcFault, ResponseNotReady,
+                  CannotSendRequest, ConnectionRefused) as e:
+            logging.info('Http error: %s', str(e))
+            overflow = False
 
     return results
 
@@ -483,7 +530,7 @@ class SupervisorConnector:
     base_dir - directory from which executables should be called.
     """
     logging.warning('Writing new configurations to "%s"',
-                    self.supervisor_logger_config_file)
+                    self.supervisor_logger_config)
 
     # Fill in some defaults if they weren't provided
     user = user or getpass.getuser()
@@ -510,9 +557,11 @@ class SupervisorConnector:
         # (startsecs=0) or restart (autorestart=false) it.
         runnable = 'readers' in config and 'writers' in config
 
+        # NOTE: supervisord has trouble with '%' in a string, so we
+        # escape it by converting it to '%%'
         replacement_fields = {
           'config_name': config_name,
-          'config_json': json.dumps(config),
+          'config_json': json.dumps(config).replace('%', '%%'),
           'directory': base_dir,
           'autorestart': 'true' if runnable else 'false',
           'startsecs': '5' if runnable else '0',
@@ -536,7 +585,7 @@ class SupervisorConnector:
       ])
 
     # Open and write the config file.
-    with open(self.supervisor_logger_config_file, 'w') as config_file:
+    with open(self.supervisor_logger_config, 'w') as config_file:
       config_file.write(content_str)
 
     # Re-open the connections to make a clean slate of things
@@ -544,29 +593,16 @@ class SupervisorConnector:
     self.read_stderr_rpc =  self._create_supervisor_connection()
 
     # Get supervisord to reload the new file and refresh groups.
+    if group:
+      self.supervisor_rpc.supervisor.stopProcessGroup(group)
+
     try:
       self.supervisor_rpc.supervisor.reloadConfig()
+      if group:
+        self.supervisor_rpc.supervisor.removeProcessGroup(group)
+        self.supervisor_rpc.supervisor.addProcessGroup(group)
     except XmlRpcFault as e:
       logging.fatal('Supervisord error when reloading config: %s', e)
-      sys.exit(1)
-
-    if group:
-      try:
-        self.supervisor_rpc.supervisor.removeProcessGroup(group)
-      except XmlRpcFault:
-        pass
-      try:
-        self.supervisor_rpc.supervisor.addProcessGroup(group)
-      except XmlRpcFault:
-        pass
-
-  ############################
-  def shutdown(self):
-    """If we started the supervisord process, then tell it to shut down.
-    """
-    if self.supervisord_proc:
-      self.supervisord_proc.kill()
-      self.supervisord_proc.wait()
 
 ################################################################################
 ################################################################################
@@ -619,7 +655,7 @@ class LoggerManager:
     # Where we store the latest cruise definition and status reports.
     self.definition = {}
     self.definition_time = 0
-    self.status_map = {}
+    self.config_status = {}
     self.status_time = 0
 
     # We'll loop to check the API for updates to our desired
@@ -684,7 +720,6 @@ class LoggerManager:
   def quit(self):
     """Exit the loop and shut down all loggers."""
     self.quit_flag = True
-    self.supervisor.shutdown()
 
   ############################
   def _build_new_config_file(self):
@@ -696,17 +731,17 @@ class LoggerManager:
     # string for each config one at a time from the API.
     try:
       self.loggers = self.api.get_loggers()
+      with self.config_lock:
+        self.config_to_logger = {}
+        logger_config_strings = {}
+        for logger, configs in self.loggers.items():
+          config_names = configs.get('configs', [])
+          # Map config_name->logger
+          for config in self.loggers[logger].get('configs', []):
+            self.config_to_logger[config] = logger
 
-      self.config_to_logger = {}
-      logger_config_strings = {}
-      for logger, configs in self.loggers.items():
-        config_names = configs.get('configs', [])
-        # Map config_name->logger
-        for config in self.loggers[logger].get('configs', []):
-          self.config_to_logger[config] = logger
-
-        # Map logger->{config_name:config_definition_str,...}
-        logger_config_strings[logger] = {
+          # Map logger->{config_name:config_definition_str,...}
+          logger_config_strings[logger] = {
             config_name:api.get_logger_config(config_name)
             for config_name in config_names}
 
@@ -723,7 +758,8 @@ class LoggerManager:
         group='logger')
 
     # Finally, reset the currently active configurations
-    self._update_configs()
+    # No, we'll just wait for the _update_configs loop to pick it up.
+    #self._update_configs()
 
   ############################
   def _update_configs_loop(self):
@@ -741,70 +777,117 @@ class LoggerManager:
     1. Shut down any configs that aren't a part of new active configs.
     2. Start and newly-active configs.
     """
+
+    # First, see if we have any status report on the configs
+    # yet. Status updates run in a separate thread, but may not have
+    # kicked in yet. If not, get status now.
+    if not self.config_status:
+      logging.warning('No config status found yet. Fetching one...')
+      config_status = self.supervisor.check_status()
+      if not config_status:
+        logging.warning('Retrieved empty config status.')
+      with self.config_lock:
+        self.config_status = config_status
+        self.status_time = time.time()
+
     with self.config_lock:
-      try:
-        # Get new configs in dict {logger:{'configs':[config_name,...]}}
-        new_logger_configs = self.api.get_logger_configs()
-        new_configs = set([new_logger_configs[logger].get('name', None)
-                           for logger in new_logger_configs])
+      # First, see if the configs we *think* are running really
+      # are. If status is not found, it means that config has just
+      # been loaded, and hasn't gotten a proper status eval yet. Let
+      # it pass on this iteration. Note also that in our case,
+      # 'EXITED' counts as running. It means that the logger ran and
+      # terminated normally, as we would expect for an 'off' logger
+      # config.
+      non_running_configs = {}
+      for config in self.active_configs:
+        status = self.config_status.get(config, None)
+        if status and not status in ['STARTING', 'STOPPING', 'RUNNING',
+                                     'EXITED', 'BACKOFF']:
+          non_running_configs[config] = status
 
-        # If configs have changed, start new ones and stop old ones.
-        if new_configs == self.active_configs:
-          return
+      if non_running_configs:
+        wrong_states = {}
+        for config, state in non_running_configs.items():
+          if not state in wrong_states:
+            wrong_states[state] = []
+          wrong_states[state].append(config)
+        logging.warning('Active configs not in expected states: %s',
+                        wrong_states)
 
-        configs_to_start = new_configs - self.active_configs
-        configs_to_stop = self.active_configs - new_configs
+      # Get new configs in dict {logger:{'configs':[config_name,...]}}
+      new_logger_configs = self.api.get_logger_configs()
+      new_configs = set([new_logger_configs[logger].get('name', None)
+                         for logger in new_logger_configs])
 
-        if configs_to_stop:
-          logging.debug('Stopping configs: %s', configs_to_stop)
-          self.supervisor.stop_configs(configs_to_stop, group='logger')
+      # The configs we need to start are the new ones, plus any
+      # non-running configs that we think *should* be running.
+      configs_to_start = new_configs - self.active_configs
+      configs_to_start |= set(non_running_configs)
 
-          # Alert the data server which configs we're stopping
-          for config in configs_to_stop:
-            logger = self.config_to_logger[config]
+      configs_to_stop = self.active_configs - new_configs
+
+      logging.debug('Active configs:\n%s', self.active_configs)
+
+      # If configs have changed, start new ones and stop old ones.
+      if configs_to_stop:
+        logging.info('Stopping configs: %s', configs_to_stop)
+        self.supervisor.stop_configs(configs_to_stop, group='logger')
+
+        # Alert the data server which configs we're stopping. Note: if
+        # we've loaded a new file, logger and config may have
+        # disappeared, in which case we punt.
+        for config in configs_to_stop:
+          logger = self.config_to_logger.get(config, None)
+          if logger:
             self._write_log_message_to_data_server('stderr:logger:' + logger,
                                                    'Stopping config ' + config)
 
-          # Grab any last output from the configs we've stopped
-          self._read_and_send_logger_stderr(configs_to_stop)
+        # Grab any last output from the configs we've stopped
+        self._read_and_send_logger_stderr(configs_to_stop)
 
-        if configs_to_start:
-          logging.info('Activating new configs: %s', configs_to_start)
-          self.supervisor.start_configs(configs_to_start, group='logger')
+      if configs_to_start:
+        logging.info('Activating new configs: %s', configs_to_start)
+        self.supervisor.start_configs(configs_to_start, group='logger')
 
-          # Alert the data server which configs we're starting
-          for config in configs_to_start:
-            logger = self.config_to_logger[config]
-            self._write_log_message_to_data_server('stderr:logger:' + logger,
-                                                   'Start config ' + config)
-      except (AttributeError, ValueError, KeyError):
-        return
+        # Alert the data server which configs we're starting.  Note:
+        # if we've loaded a new file, logger and config may have
+        # disappeared, in which case we punt.
+        for config in configs_to_start:
+          logger = self.config_to_logger.get(config, None)
+          if not logger:
+            continue
+          self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                                 'Start config ' + config)
 
       # Cache our new configs for the next time around
       self.active_configs = new_configs
 
   ############################
   def _read_and_send_cruise_definition(self, send_every_n_seconds=10):
-    """Assemble and send a cruise definition to the cached data server.
+    """Assemble information from DB about what loggers should
+    exist and what states they *should* be in. We'll send
+    this to the cached data server whenever it changes (or
+    if it's been a while since we have).
+
+    Also, if the logger or config names have changed, signal that we
+    need to create a new config file for the supervisord process to
+    use.
+
+    Looks like:
+      {'active_mode': 'log',
+       'cruise_id': 'NBP1406',
+       'loggers': {'PCOD': {'active': 'PCOD->file/net',
+                            'configs': ['PCOD->off',
+                                        'PCOD->net',
+                                        'PCOD->file/net',
+                                        'PCOD->file/net/db']},
+                    next_logger: next_configs,
+                    ...
+                  },
+       'modes': ['off', 'monitor', 'log', 'log+db']
+      }
+
     """
-    # Assemble information from DB about what loggers should
-    # exist and what states they *should* be in. We'll send
-    # this to the cached data server whenever it changes (or
-    # if it's been a while since we have).
-    #
-    # Looks like:
-    # {'active_mode': 'log',
-    #  'cruise_id': 'NBP1406',
-    #  'loggers': {'PCOD': {'active': 'PCOD->file/net',
-    #                       'configs': ['PCOD->off',
-    #                                   'PCOD->net',
-    #                                   'PCOD->file/net',
-    #                                   'PCOD->file/net/db']},
-    #               next_logger: next_configs,
-    #               ...
-    #             },
-    #  'modes': ['off', 'monitor', 'log', 'log+db']
-    # }
     try:
       cruise = api.get_configuration() # a Cruise object
       cruise_def = {
@@ -814,13 +897,31 @@ class LoggerManager:
         'active_mode': cruise.current_mode.name
       }
 
-      now = time.time()
+      # If loggers or modes have changed, we need to build a new
+      # config file to reflect that fact. We *don't* build a new
+      # config file if it's merely a change in the active mode or
+      # which logger configs are active.
+      cruise_def_changed = False
+      old_loggers = self.definition.get('loggers', {})
+      new_loggers = cruise_def.get('loggers', {})
+      old_modes = self.definition.get('modes', {})
+      new_modes = cruise_def.get('modes', {})
+      if not set(old_loggers) == set(new_loggers):
+        cruise_def_changed = True
+      elif not old_modes == new_modes:
+        cruise_def_changed = True
+      else:
+        for logger in old_loggers:
+          old_configs = old_loggers.get('configs', [])
+          new_configs = new_loggers.get('configs', [])
+          if not old_configs == new_configs:
+            cruise_def_changed = True
 
-      # If loggers/modes/etc have changed, we need to build a new
-      # config file to reflect that fact.
-      if cruise_def != self.definition:
+      now = time.time()
+      if self.definition and cruise_def_changed:
+        logging.warning('Cruise has changed - building new configuration file')
         self._build_new_config_file()
-        
+
       # If things haven't changed, only send definition every N seconds
       elif now < self.definition_time + send_every_n_seconds:
         return
@@ -897,7 +998,13 @@ class LoggerManager:
     stderr_results = self.supervisor.read_stderr(configs, group='logger')
 
     for config, stderr_lines in stderr_results.items():
-      logger = self.config_to_logger[config]
+      # Alert the data server of our latest status. Note: if we've
+      # loaded a new file, logger and config may have disappeared, in
+      # which case we punt.
+      logger = self.config_to_logger.get(config, None)
+      if not logger:
+        continue
+
       field_name = 'stderr:logger:' + logger
 
       # Messages may be multiple lines. We're going to assume that
@@ -931,21 +1038,27 @@ class LoggerManager:
     """Grab logger status message from supervisor and send to cached data
     server via websocket.
     """
-    status_result = self.supervisor.read_status()
-
-    # Map status to logger
-    status_map = {}
-    for config, status in status_result.items():
-      logger = self.config_to_logger[config]
-      status_map[logger] = {'config':config, 'status':status}
-
+    config_status = self.supervisor.check_status()
     now = time.time()
-    if (status_map == self.status_map and
-        now < self.status_time + send_every_n_seconds):
-      return
 
-    self.status_map = status_map
-    self.status_time = now
+    with self.config_lock:
+      # If nothing's changed, and it hasn't been very long, do nothing.
+      if (config_status == self.config_status and
+          now < self.status_time + send_every_n_seconds):
+        return
+
+      # Otherwise, stash status, note time and send update
+      self.config_status = config_status
+      self.status_time = now
+
+      # Map status to logger
+      status_map = {}
+      for config, status in config_status.items():
+        logger = self.config_to_logger.get(config, None)
+        if logger:
+          status_map[logger] = {'config':config, 'status':status}
+
+    # Send to data server
     self._write_record_to_data_server('status:logger_status', status_map)
 
   ############################
@@ -1004,24 +1117,25 @@ if __name__ == '__main__':
 
   # Arguments for the SupervisorConnector
   supervisor_group = parser.add_mutually_exclusive_group(required=True)
-  supervisor_group.add_argument('--start_supervisor',
-                                dest='start_supervisor', action='store_true',
-                                default=False, help='Start local copy of '
+  supervisor_group.add_argument('--start_supervisor_in',
+                                dest='start_supervisor_in', action='store',
+                                default=None,
+                                help='Start local copy of '
                                 'supervisord, building its own config file '
                                 'in a temporary file. Note that if we start '
                                 'our own supervisor, it and the loggers will '
                                 'exit when we do. If we use an external '
                                 'instance, the loggers will continue to in '
                                 'whatever state they were last in after we '
-                                'exit')
+                                'exit.')
 
-  supervisor_group.add_argument('--supervisor_logger_config_file',
-                                dest='supervisor_logger_config_file',
-                                default=None,
-                                action='store', help='Location of file where '
-                                'supervisord should look for logger process '
-                                'definitions. Mutually exclusive with '
-                                '--start_supervisor.')
+  supervisor_group.add_argument('--supervisor_logger_config',
+                                dest='supervisor_logger_config',
+                                default=None, action='store',
+                                help='Location of file where an existing '
+                                'supervisord process should look for logger '
+                                'process definitions. Mutually exclusive with '
+                                '--start_supervisor_in.')
 
   parser.add_argument('--supervisor_port', dest='supervisor_port',
                       action='store', type=int, default=DEFAULT_SUPERVISOR_PORT,
@@ -1134,8 +1248,8 @@ if __name__ == '__main__':
   # Create a connector to a supervisor, optionally starting up a local
   # one for our own use.
   supervisor = SupervisorConnector(
-    start_supervisor=args.start_supervisor,
-    supervisor_logger_config_file=args.supervisor_logger_config_file,
+    start_supervisor_in=args.start_supervisor_in,
+    supervisor_logger_config=args.supervisor_logger_config,
     supervisor_port=args.supervisor_port,
     supervisor_logfile_dir=args.supervisor_logfile_dir,
     max_tries=args.max_tries,
@@ -1194,7 +1308,7 @@ if __name__ == '__main__':
     else:
       # Create reader to read/process commands from stdin. Note: this
       # needs to be in main thread for Ctl-C termination to be properly
-     # caught and processed, otherwise interrupts go to the wrong places.
+      # caught and processed, otherwise interrupts go to the wrong places.
 
       # Set up command line interface to get commands. Start by
       # reading history file, if one exists, to get past commands.
@@ -1214,3 +1328,9 @@ if __name__ == '__main__':
   except KeyboardInterrupt:
     pass
   logging.debug('Done with logger_manager.py - exiting')
+
+  # If we asked the SupervisorConnector to start a supervisor,
+  # explicitly tell it to shut it down.
+  if supervisor and args.start_supervisor_in:
+    logging.warning('Shutting down local supervisord instance.')
+    supervisor.shutdown()
