@@ -838,7 +838,7 @@ class LoggerManager:
       for config in self.active_configs:
         status = self.config_status.get(config, None)
         if status and status == 'STOPPED':
-          non_running_configs += config
+          non_running_configs.add(config)
 
       if non_running_configs:
         logging.warning('Active configs found stopped: %s', non_running_configs)
