@@ -249,8 +249,7 @@ echo Done setting up database
 echo "############################################################################"
 
 echo Installing Django, uWSGI and other Python-dependent packages
-export PATH=/usr/local/bin:/usr/bin:$PATH
-#/usr/local/bin/pip3 install --upgrade pip
+#export PATH=/usr/local/bin:/usr/bin:$PATH
 /usr/bin/pip3 install Django==2.2 pyserial uwsgi psutil \
                    websockets PyYAML parse mysqlclient mysql-connector diskcache
 # uWSGI configuration

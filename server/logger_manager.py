@@ -579,7 +579,7 @@ class SupervisorConnector:
           'config_json': json.dumps(config).replace('%', '%%'),
           'directory': base_dir,
           'autorestart': 'true' if runnable else 'false',
-          'startsecs': '5' if runnable else '0',
+          'startsecs': '2' if runnable else '0',
           'startretries': self.max_tries,
           'user': user,
           'comment_log': '' if self.supervisor_logfile_dir else ';',
@@ -925,41 +925,42 @@ class LoggerManager:
         'modes': cruise.modes(),
         'active_mode': cruise.current_mode.name
       }
+    except (AttributeError, ValueError) as e:
+      logging.warning('No cruise definition found: %s', e)
+      return
 
-      # If loggers or modes have changed, we need to build a new
-      # config file to reflect that fact. We *don't* build a new
-      # config file if it's merely a change in the active mode or
-      # which logger configs are active.
-      cruise_def_changed = False
-      old_loggers = self.definition.get('loggers', {})
-      new_loggers = cruise_def.get('loggers', {})
-      old_modes = self.definition.get('modes', {})
-      new_modes = cruise_def.get('modes', {})
-      if not set(old_loggers) == set(new_loggers):
-        cruise_def_changed = True
-      elif not old_modes == new_modes:
-        cruise_def_changed = True
-      else:
-        for logger in old_loggers:
-          old_configs = old_loggers.get('configs', [])
-          new_configs = new_loggers.get('configs', [])
-          if not old_configs == new_configs:
-            cruise_def_changed = True
+    # If loggers or modes have changed, we need to build a new
+    # config file to reflect that fact. We *don't* build a new
+    # config file if it's merely a change in the active mode or
+    # which logger configs are active.
+    cruise_def_changed = False
+    old_loggers = self.definition.get('loggers', {})
+    new_loggers = cruise_def.get('loggers', {})
+    old_modes = self.definition.get('modes', {})
+    new_modes = cruise_def.get('modes', {})
+    if not set(old_loggers) == set(new_loggers):
+      cruise_def_changed = True
+    elif not old_modes == new_modes:
+      cruise_def_changed = True
+    else:
+      for logger in old_loggers:
+        old_configs = old_loggers.get('configs', [])
+        new_configs = new_loggers.get('configs', [])
+        if not old_configs == new_configs:
+          cruise_def_changed = True
 
-      now = time.time()
-      if self.definition and cruise_def_changed:
-        logging.warning('Cruise has changed - building new configuration file')
-        self._build_new_config_file()
+    now = time.time()
+    if self.definition and cruise_def_changed:
+      logging.warning('Cruise has changed - building new configuration file')
+      self._build_new_config_file()
 
-      # If things haven't changed, only send definition every N seconds
-      elif now < self.definition_time + send_every_n_seconds:
-        return
+    # If things haven't changed, only send definition every N seconds
+    elif now < self.definition_time + send_every_n_seconds:
+      return
 
-      self.definition = cruise_def
-      self.definition_time = now
-      self._write_record_to_data_server('status:cruise_definition', cruise_def)
-    except (AttributeError, ValueError):
-      logging.debug('No cruise definition found')
+    self.definition = cruise_def
+    self.definition_time = now
+    self._write_record_to_data_server('status:cruise_definition', cruise_def)
 
   ############################
   def _write_log_message_to_data_server(self, field_name, message,
