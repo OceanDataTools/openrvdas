@@ -365,8 +365,14 @@ class SupervisorConnector:
         config_calls.append({'methodName':'supervisor.startProcess',
                              'params':[config, False]})
 
-      # Make calls in parallel and update set of currently-running configs
-      results = self.supervisor_rpc.system.multicall(config_calls)
+      # Make calls in parallel and update set of currently-running
+      # configs. If we fail, simply return and count on trying again
+      # when the next update is called.
+      try:
+        results = self.supervisor_rpc.system.multicall(config_calls)
+      except ConnectionRefusedError:
+        return
+
       self._running_configs |= configs_to_start
 
     # Let's see what the results are
@@ -402,8 +408,14 @@ class SupervisorConnector:
         config_calls.append({'methodName':'supervisor.stopProcess',
                              'params':[config, False]})
 
-      # Make calls in parallel and update set of currently-running configs
-      results = self.supervisor_rpc.system.multicall(config_calls)
+      # Make calls in parallel and update set of currently-running
+      # configs. If we fail, simply return and count on trying again
+      # when the next update is called.
+      try:
+        results = self.supervisor_rpc.system.multicall(config_calls)
+      except ConnectionRefusedError:
+        return
+
       self._running_configs = self._running_configs - configs_to_stop
 
     # Let's see what the results are
@@ -602,6 +614,12 @@ class SupervisorConnector:
   def reload_config_file(self):
     """Tell our supervisor instance to reload config file and any groups."""
     logging.warning('Reloading config file')
+    #try:
+    #  self.supervisor_rpc.supervisor.restart()
+    #except XmlRpcFault as e:
+    #  logging.warning('Supervisord error when restarting supervisord process')
+    #return
+
     if self.group:
       try:
         self.supervisor_rpc.supervisor.stopProcessGroup(self.group)
@@ -816,21 +834,14 @@ class LoggerManager:
       # 'EXITED' counts as running. It means that the logger ran and
       # terminated normally, as we would expect for an 'off' logger
       # config.
-      non_running_configs = {}
+      non_running_configs = set()
       for config in self.active_configs:
         status = self.config_status.get(config, None)
-        if status and not status in ['STARTING', 'STOPPING', 'RUNNING',
-                                     'EXITED', 'BACKOFF']:
-          non_running_configs[config] = status
+        if status and status == 'STOPPED':
+          non_running_configs += config
 
       if non_running_configs:
-        wrong_states = {}
-        for config, state in non_running_configs.items():
-          if not state in wrong_states:
-            wrong_states[state] = []
-          wrong_states[state].append(config)
-        logging.warning('Active configs not in expected states: %s',
-                        wrong_states)
+        logging.warning('Active configs found stopped: %s', non_running_configs)
 
       # Get new configs in dict {logger:{'configs':[config_name,...]}}
       new_logger_configs = self.api.get_logger_configs()
@@ -840,7 +851,7 @@ class LoggerManager:
       # The configs we need to start are the new ones, plus any
       # non-running configs that we think *should* be running.
       configs_to_start = new_configs - self.active_configs
-      configs_to_start |= set(non_running_configs)
+      configs_to_start |= non_running_configs
 
       configs_to_stop = self.active_configs - new_configs
 
