@@ -297,7 +297,7 @@ class SupervisorConnector:
     if self.supervisor_rpc:
       try:
         self.supervisor_rpc.supervisor.stopAllProcesses()
-      except ConnectionRefusedError:
+      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault):
         pass
 
     # If we were running our own supervisor process, shut it down
@@ -305,7 +305,7 @@ class SupervisorConnector:
     if self.supervisord_proc and self.supervisor_rpc:
       try:
         self.supervisor_rpc.supervisor.shutdown()
-      except ConnectionRefusedError:
+      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault):
         pass
       self.supervisord_proc.kill()
       self.supervisord_proc.wait()
@@ -601,11 +601,18 @@ class SupervisorConnector:
 
     try:
       self.supervisor_rpc.supervisor.reloadConfig()
-      if group:
-        self.supervisor_rpc.supervisor.removeProcessGroup(group)
-        self.supervisor_rpc.supervisor.addProcessGroup(group)
     except XmlRpcFault as e:
       logging.warning('Supervisord error when reloading config: %s', e)
+
+    if group:
+      try:
+        self.supervisor_rpc.supervisor.removeProcessGroup(group)
+      except XmlRpcFault as e:
+        logging.warning('Supervisord error removing old process group: %s', e)
+      try:
+        self.supervisor_rpc.supervisor.addProcessGroup(group)
+      except XmlRpcFault as e:
+        logging.warning('Supervisord error adding new process group: %s', e)
 
 ################################################################################
 ################################################################################
