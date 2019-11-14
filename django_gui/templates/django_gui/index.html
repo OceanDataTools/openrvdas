@@ -20,104 +20,123 @@
 <title>Cruise Management</title>
 <h1><span id='cruise_id'></span> Cruise Management</h1>
 
-{# ######################################################################## #}
-{# Show server status up top.                                               #}
-<table>
-  <tr id='time_row'>
-    <td style='background-color:white'>
-      Now:
-    </td>
-    <td style='background-color:white'>
-      <span id='time_td'></span>
-    </td>
-  </tr>
-  <tr>
-    <td style='background-color:white'>
-      Server:
-    </td>
-    <td style='background-color:white'>
-      <span id='server_time_td'>--no updates--</span>
-    </td>
-    <td style='background-color:white'>
-      Status:
-    </td>
-    <td style='background-color:white'>
-      <span id='status_time_td'>--no updates--</span>
-    </td>
-  </tr>
-  
-  <tr>
-    <td colspan=4>
-    {# ###################################################################### #}
-    {# If user is authenticated, allow to switch modes. Else just show mode   #}
-    <form method='post' style='display:inline;'
-          enctype='multipart/form-data'>
-      {% csrf_token %}
-      Mode:
-      <select name='select_mode' id='select_mode'
-              onchange='highlight_select_mode()'
-              {% if not user.is_authenticated %} disabled {% endif %} >
-        
-        {% for mode_option in modes %}
-        <option id="mode_{{ mode_option }}"
-                {% if mode_option == active_mode %}
-                selected
-                {% endif %}>
-          {{ mode_option }}
-        </option>
-        {% endfor %}
-      </select>
-      {% if user.is_authenticated %}
-      <button type='submit'>Change mode</button>
-      {% endif %}
-    </form>
-    <button id="server_messages" type="submit"
-            onclick="window.open('../server_messages/30', '_blank', 'location=yes,height=200,scrollbars=yes,status=yes');">
-      server messages
-    </button>
-    <button id="display_window" type="submit"
-            onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
-      display pages
-    </button>
-  </td>
-  </tr>
-</table>
+<div id='empty_loggers'
+  {% if loggers %}
+    style='display:none;'
+  {% else %}
+    style='display:block;'
+  {% endif %}
+>
+<h3>No cruise definition loaded</h3>
+</div>
+<div id='status_and_loggers'
+  {% if loggers %}
+    style='display:block;'
+  {% else %}
+    style='display:none;'
+  {% endif %}
+>
+  {# ######################################################################## #}
+  {# Show server status up top.                                               #}
+  <table>
+    <tr>
+      <td>
+        {# ################################################################## #}
+        {# If user authenticated, allow to switch modes. Else just show mode  #}
+        <form method='post' style='display:inline;'
+              enctype='multipart/form-data'>
+          {% csrf_token %}
+          Mode:
+          <select name='select_mode' id='select_mode'
+                  onchange='highlight_select_mode()'
+                  {% if not user.is_authenticated %} disabled {% endif %} >
 
-{# ######################################################################## #}
-{# Draw the loggers and their current configurations.                       #}
-<hr>
-<div id='config_loaded'>
-  <table id='logger_table'>
-    <tbody id='logger_table_body'>
-    <tr><th>logger</th><th colspan=3>configuration</th></tr>
-    {% for logger_name, logger_config in loggers.items %}
-    <tr id="{{ logger_name }}_row">
-      <td id="{{ logger_name }}_td">{{ logger_name }}</td>
-      <td id="{{ logger_name }}_config_td">
-        <button id="{{ logger_name }}_config_button" type="submit"
-                onclick="open_edit_config(event, '{{logger_name }}');"
-                {% if not user.is_authenticated %}
-                  disabled
-                {% endif %}
-                >
-          {{ logger_config.active }}
+            {% for mode_option in modes %}
+            <option id="mode_{{ mode_option }}"
+                    {% if mode_option == active_mode %}
+                    selected
+                    {% endif %}>
+              {{ mode_option }}
+            </option>
+            {% endfor %}
+          </select>
+          {% if user.is_authenticated %}
+          <button type='submit'>Change mode</button>
+          {% endif %}
+        </form>
+      </td>
+      <td style='background-color:white'>
+        Now:
+      </td>
+      <td style='background-color:white'>
+        <span id='time_td'></span>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <button id="server_messages" type="submit"
+                onclick="window.open('../server_messages/30', '_blank', 'location=yes,height=200,scrollbars=yes,status=yes');">
+          Show server messages
         </button>
       </td>
-      <td><div style="height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto" id="{{ logger_name }}_stderr"></div></td>
+      <td style='background-color:white'>
+        Server:
+      </td>
+      <td style='background-color:white'>
+        <span id='server_time_td'>--no updates--</span>
+      </td>
     </tr>
-    {% endfor %}
-    </tbody>
+    <tr>
+      <td>
+        <button id="display_window" type="submit"
+                onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
+          Show display pages
+        </button>
+      </td>
+      <td style='background-color:white'>
+        Status:
+      </td>
+      <td style='background-color:white'>
+        <span id='status_time_td'>--no updates--</span>
+      </td>
+    </tr>
   </table>
-</div>
 
+  {# ######################################################################## #}
+  {# Draw the loggers and their current configurations.                       #}
+  <hr>
+  <div id='config_loaded'>
+    <table id='logger_table'>
+      <tbody id='logger_table_body'>
+        <tr><th>logger</th><th colspan=3>configuration</th></tr>
+        {% for logger_name, logger_config in loggers.items %}
+        <tr id="{{ logger_name }}_row">
+          <td id="{{ logger_name }}_td">{{ logger_name }}</td>
+          <td id="{{ logger_name }}_config_td">
+            <button id="{{ logger_name }}_config_button" type="submit"
+                    onclick="open_edit_config(event, '{{logger_name }}');"
+                    {% if not user.is_authenticated %}
+                    disabled
+                    {% endif %}
+                    >
+              {{ logger_config.active }}
+            </button>
+          </td>
+          <td><div style="height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto" id="{{ logger_name }}_stderr"></div></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {# ######################################################################## #}
 {# Load new definition                                                      #}
 {% if user.is_authenticated %}
-  <hr>
-  <button id="server_messages" type="submit"
-     onclick="open_load_definition(event);">
-    Load new definition file
-  </button>
+<hr>
+<button id="server_messages" type="submit"
+        onclick="open_load_definition(event);">
+  Load new definition file
+</button>
 {% endif %}
 <hr>
 <p>

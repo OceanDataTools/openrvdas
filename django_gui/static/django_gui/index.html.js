@@ -264,7 +264,12 @@ function process_data_message(data_dict) {
     //   }
     case 'status:logger_status':
       reset_status_timeout(); // We've gotten a status update
-      
+
+      // Display logger section, if it's not already showing
+      // TODO: optimize this so we don't do it every time.
+      document.getElementById('empty_loggers').style.display = 'none';
+      document.getElementById('status_and_loggers').style.display = 'block';
+
       var [timestamp, status_array] = value[0];
       var logger_status_timestamp = value[value.length-1][0];
       if (logger_status_timestamp <= global_last_logger_status_timestamp) {
