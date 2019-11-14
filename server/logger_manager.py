@@ -219,8 +219,9 @@ class SupervisorConnector:
     # Make the working directory that supervisord will run in if it
     # doesn't exist and, while we're at it, make the supervisor.d/
     # subdirectory of that where we'll put our logger config .ini file.
-    if not os.path.exists(self.supervisor_dir):
-      os.makedirs(self.supervisor_dir + '/supervisor.d')
+    subdir = self.supervisor_dir + '/supervisor.d'
+    if not os.path.exists(subdir):
+      os.makedirs(subdir)
 
     # Create the supervisor config file
     supervisor_config_filename = self.supervisor_dir + '/supervisord.ini'
