@@ -517,7 +517,7 @@ class SupervisorConnector:
                   ConnectionRefusedError) as e:
             logging.info('HTTP error: %s', str(e))
             overflow = False
-            
+
           # We can get these faults if our config has been updated on
           # disc but not reloaded.
           except XmlRpcFault as e:
@@ -609,7 +609,7 @@ class SupervisorConnector:
 
     # And reload the config file
     self.reload_config_file()
-    
+
   ############################
   def reload_config_file(self):
     """Tell our supervisor instance to reload config file and any groups."""
@@ -925,8 +925,8 @@ class LoggerManager:
         'modes': cruise.modes(),
         'active_mode': cruise.current_mode.name
       }
-    except (AttributeError, ValueError) as e:
-      logging.warning('No cruise definition found: %s', e)
+    except (AttributeError, ValueError):
+      logging.warning('No cruise definition found')
       return
 
     # If loggers or modes have changed, we need to build a new
@@ -950,7 +950,9 @@ class LoggerManager:
           cruise_def_changed = True
 
     now = time.time()
-    if self.definition and cruise_def_changed:
+    if cruise_def_changed:
+      self.definition = cruise_def
+      self.definition_time = now
       logging.warning('Cruise has changed - building new configuration file')
       self._build_new_config_file()
 
@@ -958,8 +960,6 @@ class LoggerManager:
     elif now < self.definition_time + send_every_n_seconds:
       return
 
-    self.definition = cruise_def
-    self.definition_time = now
     self._write_record_to_data_server('status:cruise_definition', cruise_def)
 
   ############################
