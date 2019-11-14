@@ -28,6 +28,8 @@ var global_last_logger_status_timestamp = 0;
 
 ////////////////////////////
 function initial_send_message() {
+  // Subscribing with seconds:-1 means we'll always start by getting
+  // the most recent value, then all subsequent ones.
   return {'type':'subscribe',
           'fields': {
             'status:cruise_definition':{'seconds':-1},
@@ -262,6 +264,7 @@ function process_data_message(data_dict) {
     //   }
     case 'status:logger_status':
       reset_status_timeout(); // We've gotten a status update
+      
       var [timestamp, status_array] = value[0];
       var logger_status_timestamp = value[value.length-1][0];
       if (logger_status_timestamp <= global_last_logger_status_timestamp) {
@@ -429,12 +432,12 @@ function reset_status_timeout() {
 // from the data server. If no update in 5 seconds, change background
 // color to yellow
 function flag_server_timeout() {
-  document.getElementById('status_time_td').style.backgroundColor ='yellow';
+  document.getElementById('server_time_td').style.backgroundColor ='yellow';
 }
 function reset_server_timeout() {
   var now = date_str();
   document.getElementById('time_td').innerHTML = now;
-  var status_time_td = document.getElementById('status_time_td');
+  var status_time_td = document.getElementById('server_time_td');
   status_time_td.innerHTML = now;
   status_time_td.style.backgroundColor = 'white';
   clearInterval(server_timeout_timer);

@@ -30,45 +30,57 @@
     <td style='background-color:white'>
       <span id='time_td'></span>
     </td>
-    <td>
-      <button id="server_messages" type="submit"
-              onclick="window.open('../server_messages/30', '_blank', 'location=yes,height=200,scrollbars=yes,status=yes');">
-        server messages
-      </button>
-    </td>
   </tr>
   <tr>
     <td style='background-color:white'>
-      Updated:
+      Server:
+    </td>
+    <td style='background-color:white'>
+      <span id='server_time_td'>--no updates--</span>
+    </td>
+    <td style='background-color:white'>
+      Status:
     </td>
     <td style='background-color:white'>
       <span id='status_time_td'>--no updates--</span>
     </td>
-    <td>
-      <button id="display_window" type="submit"
-              onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
-        display pages
-      </button>
-    </td>
   </tr>
-  {% comment %}
-  <tr id='server_time_row'>
-    <td colspan=2>
-      <span id='server_time_td'>no connection - is status server running?</span>
-    </td>
+  
+  <tr>
+    <td colspan=4>
+    {# ###################################################################### #}
+    {# If user is authenticated, allow to switch modes. Else just show mode   #}
+    <form method='post' style='display:inline;'
+          enctype='multipart/form-data'>
+      {% csrf_token %}
+      Mode:
+      <select name='select_mode' id='select_mode'
+              onchange='highlight_select_mode()'
+              {% if not user.is_authenticated %} disabled {% endif %} >
+        
+        {% for mode_option in modes %}
+        <option id="mode_{{ mode_option }}"
+                {% if mode_option == active_mode %}
+                selected
+                {% endif %}>
+          {{ mode_option }}
+        </option>
+        {% endfor %}
+      </select>
+      {% if user.is_authenticated %}
+      <button type='submit'>Change mode</button>
+      {% endif %}
+    </form>
+    <button id="server_messages" type="submit"
+            onclick="window.open('../server_messages/30', '_blank', 'location=yes,height=200,scrollbars=yes,status=yes');">
+      server messages
+    </button>
+    <button id="display_window" type="submit"
+            onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
+      display pages
+    </button>
+  </td>
   </tr>
-  <tr id='status_time_row'>
-    <td colspan=2>
-      <span id='status_time_td'>no connection - is logger manager running?</span>
-    </td>
-  </tr>
-  <tr id='server_row'>
-    <td>
-      <a href='#' onclick='message_window();return false;'>
-        server log</a>
-    </td>
-  </tr>
-  {% endcomment %}
 </table>
 
 {# ######################################################################## #}
@@ -94,34 +106,8 @@
       <td><div style="height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto" id="{{ logger_name }}_stderr"></div></td>
     </tr>
     {% endfor %}
-
     </tbody>
   </table>
-
-{# ######################################################################## #}
-{# If user is authenticated, allow to switch modes. Else just show mode     #}
-  <hr>
-  <form method='post' enctype='multipart/form-data'>
-  {% csrf_token %}
-  <p>Mode:
-    <select name='select_mode' id='select_mode'
-            onchange='highlight_select_mode()'
-            {% if not user.is_authenticated %} disabled {% endif %} >
-
-      {% for mode_option in modes %}
-      <option id="mode_{{ mode_option }}"
-         {% if mode_option == active_mode %}
-         selected
-         {% endif %}>
-          {{ mode_option }}
-      </option>
-      {% endfor %}
-
-    </select>
-    {% if user.is_authenticated %}
-      <button type='submit'>Change mode</button></p>
-    {% endif %}
-  </form>
 </div>
 
 {# ######################################################################## #}
