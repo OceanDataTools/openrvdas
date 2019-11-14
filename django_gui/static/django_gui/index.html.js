@@ -141,53 +141,35 @@ function process_data_message(data_dict) {
       var mode_selector = document.getElementById('select_mode');
       mode_selector.setAttribute('onchange', 'highlight_select_mode()');
 
-      // Check whether we have a manually-selected mode, and if so,
-      // whether it's in our list of new modes. If so, we'll keep it
-      // selected when we rebuild.
-      var manual_mode_is_in_new_modes = false;
-      for (m_i = 0; m_i < modes.length; m_i++) {
-        if (manually_selected_mode == modes[m_i]) {
-          manual_mode_is_in_new_modes = true;
-          break;
+      // Check whether modes have changed
+      var modes_changed = (mode_selector.length !== modes.length);
+      if (!modes_changed) {
+        for (var m_i = 0; m_i < mode_selector.length; m_i++) {
+          if (mode_selector[m_i].value !== modes[m_i]) {
+            modes_changed = true;
+            break;
+          }
         }
       }
-      // Remove all old mode options
-      while (mode_selector.length) {
-        mode_selector.remove(0);
-      }
-      // Add new ones
-      for (m_i = 0; m_i < modes.length; m_i++) {
-        var mode_name = modes[m_i];
-        var opt = document.createElement('option');
-        opt.setAttribute('id', 'mode_' + mode_name);
-        opt.innerHTML = mode_name;
 
-        if (manual_mode_is_in_new_modes) {
-          // If our manually-selected mode is still available, use
-          // that as our selected mode. If it doesn't match the
-          // officially active mode, set it yellow to indicate.
-          if (mode_name == manually_selected_mode) {
-            opt.setAttribute('selected', true);
-            if (mode_name != global_active_mode) {
-              mode_selector.style.backgroundColor = 'yellow'
-            } else {
-              mode_selector.style.backgroundColor = 'white'
-            }
-          }
-        } else {
-          // If our manually-selected mode is no longer available,
-          // set active mode to whatever 'official' active mode is.
+      // If modes have changed, delete old and redraw new
+      if (modes_changed) {
+        mode_selector.style.backgroundColor = 'white'
+        // Remove all old mode options
+        while (mode_selector.length) {
+          mode_selector.remove(0);
+        }
+        for (m_i = 0; m_i < modes.length; m_i++) {
+          var mode_name = modes[m_i];
+          var opt = document.createElement('option');
+          opt.setAttribute('id', 'mode_' + mode_name);
+          opt.innerHTML = mode_name;
+
           if (mode_name == global_active_mode) {
             opt.setAttribute('selected', true);
-            mode_selector.style.backgroundColor = 'white'
           }
+          mode_selector.appendChild(opt);
         }
-        mode_selector.appendChild(opt);
-      }
-      // If our manually-selected mode isn't available anymore, bid
-      // it goodbye.
-      if (!manual_mode_is_in_new_modes) {
-        manually_selected_mode = null;
       }
 
       ////////////////////////////////
