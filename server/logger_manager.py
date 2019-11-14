@@ -504,7 +504,7 @@ class SupervisorConnector:
             logging.debug('XML parse error while reading stderr: %s', str(e))
             overflow = False
           except (XmlRpcFault, ResponseNotReady,
-                  CannotSendRequest, ConnectionRefused) as e:
+                  CannotSendRequest, ConnectionRefusedError) as e:
             logging.info('Http error: %s', str(e))
             overflow = False
 
@@ -594,7 +594,10 @@ class SupervisorConnector:
 
     # Get supervisord to reload the new file and refresh groups.
     if group:
-      self.supervisor_rpc.supervisor.stopProcessGroup(group)
+      try:
+        self.supervisor_rpc.supervisor.stopProcessGroup(group)
+      except XmlRpcFault as e:
+        logging.warning('Supervisord error when stopping Process group: %s', e)
 
     try:
       self.supervisor_rpc.supervisor.reloadConfig()
@@ -602,7 +605,7 @@ class SupervisorConnector:
         self.supervisor_rpc.supervisor.removeProcessGroup(group)
         self.supervisor_rpc.supervisor.addProcessGroup(group)
     except XmlRpcFault as e:
-      logging.fatal('Supervisord error when reloading config: %s', e)
+      logging.warning('Supervisord error when reloading config: %s', e)
 
 ################################################################################
 ################################################################################

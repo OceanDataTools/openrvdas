@@ -320,7 +320,7 @@ sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
 
 python3 manage.py makemigrations django_gui
 python3 manage.py migrate
-python3 manage.py collectstatic --no-input --clear --link
+python3 manage.py collectstatic --no-input --clear --link -v 0
 chmod -R og+rX static
 
 # A temporary hack to allow the display/ pages to be accessed by Django
@@ -473,7 +473,7 @@ stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor -v
+command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor_in /var/tmp/openrvdas/supervisor -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
