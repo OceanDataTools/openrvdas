@@ -55,6 +55,7 @@ SUPERVISORD = 'supervisord'
 # process up.
 SUPERVISORD_NAME = 'logger_manager_supervisor'
 
+DEFAULT_GROUP = 'logger'
 DEFAULT_MAX_TRIES = 3
 
 SOURCE_NAME = 'LoggerManager'
@@ -148,6 +149,7 @@ class SupervisorConnector:
                supervisor_logger_config=None,
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+               group=DEFAULT_GROUP,
                max_tries=DEFAULT_MAX_TRIES,
                log_level=logging.WARNING):
     """Connect to a supervisord process, or start our own to manage
@@ -167,6 +169,9 @@ class SupervisorConnector:
     supervisor_logfile_dir - Directory where supevisord and logger
           stderr/stdout will be written.
 
+    group - process group in which the configs will be defined; will be
+        prepended to config names.
+
     max_tries = Number of times a failed logger should be retried if it
           fails on startup.
     ```
@@ -175,6 +180,7 @@ class SupervisorConnector:
     self.supervisor_logger_config = supervisor_logger_config
     self.supervisor_port = supervisor_port
     self.supervisor_logfile_dir = supervisor_logfile_dir
+    self.group = group
     self.max_tries = max_tries
 
     # Define these right at start, because if we shut down prematurely
@@ -342,15 +348,10 @@ class SupervisorConnector:
     return config_name.replace('/', '+')
 
   ############################
-  def start_configs(self, configs_to_start, group=None):
-    """Ask supervisord to start the listed configs. Note that all logger
-    configs are part of group 'logger', so we need to prefix all names
-    with 'logger:' when talking to supervisord about them.
+  def start_configs(self, configs_to_start):
+    """Ask supervisord to start the listed configs.
 
     configs_to_start - a list of config names that should be started.
-
-    group - process group in which the configs were defined; will be
-        prepended to config names.
     """
     configs = list(configs_to_start)  # so we can order results
     config_calls = []
@@ -358,8 +359,8 @@ class SupervisorConnector:
     with self.config_lock:
       for config in configs:
         config = self._clean_name(config)  # get rid of objectionable characters
-        if group:
-          config = group + ':' + config
+        if self.group:
+          config = self.group + ':' + config
         config_calls.append({'methodName':'supervisor.startProcess',
                              'params':[config, False]})
 
@@ -368,6 +369,7 @@ class SupervisorConnector:
       self._running_configs |= configs_to_start
 
     # Let's see what the results are
+    bad_loggers = False
     for i in range(len(results)):
       result = results[i]
       config = configs[i]
@@ -381,15 +383,12 @@ class SupervisorConnector:
           logging.info('Starting process %s: %s', config, result['faultString'])
 
   ############################
-  def stop_configs(self, configs_to_stop, group=None):
+  def stop_configs(self, configs_to_stop):
     """Ask supervisord to stop the listed configs. Note that all logger
     configs are part of group 'logger', so we need to prefix all names
     with 'logger:' when talking to supervisord about them.
 
     configs_to_stop - a list of config names that should be stopped.
-
-    group - process group in which the configs were defined; will be
-        prepended to config names.
     """
     configs = list(configs_to_stop)  # so we can order results
     config_calls = []
@@ -397,8 +396,8 @@ class SupervisorConnector:
     with self.config_lock:
       for config in configs:
         config = self._clean_name(config)  # get rid of objectionable characters
-        if group:
-          config = group + ':' + config
+        if self.group:
+          config = self.group + ':' + config
         config_calls.append({'methodName':'supervisor.stopProcess',
                              'params':[config, False]})
 
@@ -453,7 +452,7 @@ class SupervisorConnector:
     return status_result
 
   ############################
-  def read_stderr(self, configs=None, group=None, maxchars=1000):
+  def read_stderr(self, configs=None, maxchars=1000):
     """Read the stderr from the named configs and return result in a dict of
 
        {config_1: config_1_stderr,
@@ -464,21 +463,19 @@ class SupervisorConnector:
     configs - a list of config names whose stderr should be read. If omitted,
         will read stderr of all active configs.
 
-    group - process group in which the configs were defined; will be
-        prepended to config names.
-
     maxchars - maximum number of characters to read from each log
     """
     if configs is None:
       configs = self.running_configs()
 
     results = {}
+    read_fault = False
     with self.config_lock:
       for config in configs:
         # If we've got a group, need to prefix config name with it
         cleaned_config = self._clean_name(config)
-        if group:
-          cleaned_config = group + ':' + cleaned_config
+        if self.group:
+          cleaned_config = self.group + ':' + cleaned_config
 
         # Initialize last read position of any configs we've not yet read
         if not config in self.read_stderr_offset:
@@ -503,23 +500,28 @@ class SupervisorConnector:
           except XmlExpatError as e:
             logging.debug('XML parse error while reading stderr: %s', str(e))
             overflow = False
-          except (XmlRpcFault, ResponseNotReady,
-                  CannotSendRequest, ConnectionRefusedError) as e:
-            logging.info('Http error: %s', str(e))
+          except (ResponseNotReady, CannotSendRequest,
+                  ConnectionRefusedError) as e:
+            logging.info('HTTP error: %s', str(e))
             overflow = False
+            
+          # We can get these faults if our config has been updated on
+          # disc but not reloaded.
+          except XmlRpcFault as e:
+            logging.info('XmlRpcFault %d: %s', e.faultCode, e.faultString)
+            overflow = False
+            read_fault = True
 
+    if read_fault:
+      self.reload_config_file()
     return results
 
   ############################
-  def create_new_supervisor_file(self, configs, group=None,
-                                 supervisor_logfile_dir=None,
+  def create_new_supervisor_file(self, configs, supervisor_logfile_dir=None,
                                  user=None, base_dir=None):
     """Create a new configuration file for supervisord to read.
 
     configs - a dict of {logger_name:{config_name:config_spec}} entries.
-
-    group - process group in which the configs will be defined; will be
-        prepended to config names.
 
     supervisor_logfile_dir - path to which logger stderr/stdout should be
         written.
@@ -577,9 +579,9 @@ class SupervisorConnector:
     # If we've been given a group name, group all the logger configs
     # together under it so we can start them all at the same time with
     # a single call.
-    if group and config_names:
+    if self.group and config_names:
       content_str += '\n'.join([
-        '[group:%s]' % group,
+        '[group:%s]' % self.group,
         'programs=%s' % ','.join(config_names),
         ''
       ])
@@ -592,10 +594,16 @@ class SupervisorConnector:
     self.supervisor_rpc = self._create_supervisor_connection()
     self.read_stderr_rpc =  self._create_supervisor_connection()
 
-    # Get supervisord to reload the new file and refresh groups.
-    if group:
+    # And reload the config file
+    self.reload_config_file()
+    
+  ############################
+  def reload_config_file(self):
+    """Tell our supervisor instance to reload config file and any groups."""
+    logging.warning('Reloading config file')
+    if self.group:
       try:
-        self.supervisor_rpc.supervisor.stopProcessGroup(group)
+        self.supervisor_rpc.supervisor.stopProcessGroup(self.group)
       except XmlRpcFault as e:
         logging.warning('Supervisord error when stopping Process group: %s', e)
 
@@ -604,13 +612,13 @@ class SupervisorConnector:
     except XmlRpcFault as e:
       logging.warning('Supervisord error when reloading config: %s', e)
 
-    if group:
+    if self.group:
       try:
-        self.supervisor_rpc.supervisor.removeProcessGroup(group)
+        self.supervisor_rpc.supervisor.removeProcessGroup(self.group)
       except XmlRpcFault as e:
         logging.warning('Supervisord error removing old process group: %s', e)
       try:
-        self.supervisor_rpc.supervisor.addProcessGroup(group)
+        self.supervisor_rpc.supervisor.addProcessGroup(self.group)
       except XmlRpcFault as e:
         logging.warning('Supervisord error adding new process group: %s', e)
 
@@ -764,8 +772,7 @@ class LoggerManager:
     with self.config_lock:
       self.supervisor.create_new_supervisor_file(
         configs=logger_config_strings,
-        supervisor_logfile_dir=args.supervisor_logfile_dir,
-        group='logger')
+        supervisor_logfile_dir=args.supervisor_logfile_dir)
 
     # Finally, reset the currently active configurations
     # No, we'll just wait for the _update_configs loop to pick it up.
@@ -841,7 +848,7 @@ class LoggerManager:
       # If configs have changed, start new ones and stop old ones.
       if configs_to_stop:
         logging.info('Stopping configs: %s', configs_to_stop)
-        self.supervisor.stop_configs(configs_to_stop, group='logger')
+        self.supervisor.stop_configs(configs_to_stop)
 
         # Alert the data server which configs we're stopping. Note: if
         # we've loaded a new file, logger and config may have
@@ -857,7 +864,7 @@ class LoggerManager:
 
       if configs_to_start:
         logging.info('Activating new configs: %s', configs_to_start)
-        self.supervisor.start_configs(configs_to_start, group='logger')
+        self.supervisor.start_configs(configs_to_start)
 
         # Alert the data server which configs we're starting.  Note:
         # if we've loaded a new file, logger and config may have
@@ -1005,7 +1012,7 @@ class LoggerManager:
     if configs is None:
       configs = self.supervisor.running_configs()
 
-    stderr_results = self.supervisor.read_stderr(configs, group='logger')
+    stderr_results = self.supervisor.read_stderr(configs)
 
     for config, stderr_lines in stderr_results.items():
       # Alert the data server of our latest status. Note: if we've
@@ -1262,6 +1269,7 @@ if __name__ == '__main__':
     supervisor_logger_config=args.supervisor_logger_config,
     supervisor_port=args.supervisor_port,
     supervisor_logfile_dir=args.supervisor_logfile_dir,
+    group='logger',
     max_tries=args.max_tries,
     log_level=log_level)
 
