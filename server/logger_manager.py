@@ -365,14 +365,15 @@ class SupervisorConnector:
         config_calls.append({'methodName':'supervisor.startProcess',
                              'params':[config, False]})
 
-      # Make calls in parallel and update set of currently-running
-      # configs. If we fail, simply return and count on trying again
-      # when the next update is called.
-      try:
-        results = self.supervisor_rpc.system.multicall(config_calls)
-      except ConnectionRefusedError:
-        return
+    # Make calls in parallel and update set of currently-running
+    # configs. If we fail, simply return and count on trying again
+    # when the next update is called.
+    try:
+      results = self.supervisor_rpc.system.multicall(config_calls)
+    except ConnectionRefusedError:
+      return
 
+    with self.config_lock:
       self._running_configs |= configs_to_start
 
     # Let's see what the results are
@@ -408,14 +409,15 @@ class SupervisorConnector:
         config_calls.append({'methodName':'supervisor.stopProcess',
                              'params':[config, False]})
 
-      # Make calls in parallel and update set of currently-running
-      # configs. If we fail, simply return and count on trying again
-      # when the next update is called.
-      try:
-        results = self.supervisor_rpc.system.multicall(config_calls)
-      except ConnectionRefusedError:
-        return
+    # Make calls in parallel and update set of currently-running
+    # configs. If we fail, simply return and count on trying again
+    # when the next update is called.
+    try:
+      results = self.supervisor_rpc.system.multicall(config_calls)
+    except ConnectionRefusedError:
+      return
 
+    with self.config_lock:
       self._running_configs = self._running_configs - configs_to_stop
 
     # Let's see what the results are
@@ -702,7 +704,7 @@ class LoggerManager:
     self.update_configs_thread = None
     self.config_lock = threading.Lock()
 
-    self.active_configs = set()       # which of those configs are active now?
+    self.active_configs = set()  # which configs are active now?
 
     # Data server to which we're going to send status updates
     if data_server_websocket:
@@ -793,10 +795,6 @@ class LoggerManager:
         configs=logger_config_strings,
         supervisor_logfile_dir=args.supervisor_logfile_dir)
 
-    # Finally, reset the currently active configurations
-    # No, we'll just wait for the _update_configs loop to pick it up.
-    #self._update_configs()
-
   ############################
   def _update_configs_loop(self):
     """Iteratively check the API for updated configs and send them to the
@@ -855,40 +853,39 @@ class LoggerManager:
 
       configs_to_stop = self.active_configs - new_configs
 
-      logging.debug('Active configs:\n%s', self.active_configs)
+    # We've now assembled our list of configs to start and stop. Do it.
+    if configs_to_stop:
+      logging.info('Stopping configs: %s', configs_to_stop)
+      self.supervisor.stop_configs(configs_to_stop)
 
-      # If configs have changed, start new ones and stop old ones.
-      if configs_to_stop:
-        logging.info('Stopping configs: %s', configs_to_stop)
-        self.supervisor.stop_configs(configs_to_stop)
-
-        # Alert the data server which configs we're stopping. Note: if
-        # we've loaded a new file, logger and config may have
-        # disappeared, in which case we punt.
-        for config in configs_to_stop:
-          logger = self.config_to_logger.get(config, None)
-          if logger:
-            self._write_log_message_to_data_server('stderr:logger:' + logger,
-                                                   'Stopping config ' + config)
-
-        # Grab any last output from the configs we've stopped
-        self._read_and_send_logger_stderr(configs_to_stop)
-
-      if configs_to_start:
-        logging.info('Activating new configs: %s', configs_to_start)
-        self.supervisor.start_configs(configs_to_start)
-
-        # Alert the data server which configs we're starting.  Note:
-        # if we've loaded a new file, logger and config may have
-        # disappeared, in which case we punt.
-        for config in configs_to_start:
-          logger = self.config_to_logger.get(config, None)
-          if not logger:
-            continue
+      # Alert the data server which configs we're stopping. Note: if
+      # we've loaded a new file, logger and config may have
+      # disappeared, in which case we punt.
+      for config in configs_to_stop:
+        logger = self.config_to_logger.get(config, None)
+        if logger:
           self._write_log_message_to_data_server('stderr:logger:' + logger,
-                                                 'Start config ' + config)
+                                                 'Stopping config ' + config)
 
-      # Cache our new configs for the next time around
+      # Grab any last output from the configs we've stopped
+      self._read_and_send_logger_stderr(configs_to_stop)
+
+    if configs_to_start:
+      logging.info('Activating new configs: %s', configs_to_start)
+      self.supervisor.start_configs(configs_to_start)
+
+      # Alert the data server which configs we're starting.  Note:
+      # if we've loaded a new file, logger and config may have
+      # disappeared, in which case we punt.
+      for config in configs_to_start:
+        logger = self.config_to_logger.get(config, None)
+        if not logger:
+          continue
+        self._write_log_message_to_data_server('stderr:logger:' + logger,
+                                               'Start config ' + config)
+
+    # Cache our new configs for the next time around
+    with self.config_lock:
       self.active_configs = new_configs
 
   ############################
