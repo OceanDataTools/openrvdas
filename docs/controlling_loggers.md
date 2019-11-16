@@ -201,9 +201,33 @@ The logger manager doesn't directly run logger processes. Instead, it acts as a 
 
 If the ``--supervisor_logger_config`` argument is provided, the logger manager will assume that a supervisord instance is running. It will write logger configurations to the file location specified and will direct supervisord to run them by connecting to the instance at the port specified by ``--supervisor_port`` (default 8002).
 
+```
+# Connect to an already-running supervisord instance at port 8002. Expect that instance
+# to pick up configurations written to /opt/openrvdas/server/supervisord/supervisor.d/loggers.ini
+server/logger_manager.py \
+     --supervisor_logger_config /opt/openrvdas/server/supervisor/supervisor.d/loggers.ini \
+     --supervisor_port 8994
+```
+
 If the ``--start_supervisor_in`` argument (default ``/var/tmp/openrvdas/supervisor``) is specified, it will tell the logger manager to start its own supervisord instance in that directory and connect to it via the port specified by ``--supervisor_port`` (still default 8002). This is the default behavior.
 
+```
+# Start our own instance of supervisord. Create the directory /var/tmp/openrvdas/supervisor
+# if it doesn't exist, and write our configurations there. Use default port 8002.
+server/logger_manager.py \
+     --start_supervisor_in /var/tmp/openrvdas/supervisor
+```
+
 ![Logger Manager Diagram](images/logger_manager_diagram.png)
+
+By default, the supervisor process and all its loggers will write their stderr and stdout to appropriately-named files in ``/var/log/openrvdas``. This location may be changed by specifying the ``--supervisor_logfile_dir`` flag:
+
+```
+# Store stderr, stdout logs somewhere transient and out of the way
+server/logger_manager.py --supervisor_logfile_dir /var/tmp/log/openrvdas 
+```
+
+If all is working as intended, the 'captive' supervisord instance under the logger manager's hood should be effectively invisible. In the discussion and diagrams below, we omit displaying/discussing it explicitly and assume that it is simply a part of the logger manager.
 
 ### Running logger\_manager.py from the command line
 
