@@ -11,8 +11,8 @@ import warnings
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
 
-from logger.readers.network_reader import NetworkReader
-from server.logger_manager import LoggerManager
+from logger.readers.text_file_reader import TextFileReader
+from server.logger_manager import LoggerManager, SupervisorConnector
 
 from server.in_memory_server_api import InMemoryServerAPI
 from server.server_api_command_line import ServerAPICommandLine
@@ -35,7 +35,7 @@ sample_cruise = {
   },
   "loggers": {
     "sample": {
-      "configs": ["off", "sample->net"]
+      "configs": ["off", "sample->file"]
     },
   },
   "modes": {
@@ -43,34 +43,19 @@ sample_cruise = {
       "sample": "off",
     },
     "port": {
-      "sample": "sample->net"
+      "sample": "sample->file"
     }
   },
+
   "default_mode": "off",
+  
   "configs": {
     "off": {},
-    "sample->net": {
-      "name": "sample->net",
-      "readers": {
-        "class": "TextFileReader",
-        "kwargs": {"interval": 0.2,
-                   "file_spec": "fill this in" }
-      },
-      "transforms": {
-        "class": "PrefixTransform",
-        "kwargs": {"prefix": "TestLoggerManager"}
-      },
-      "writers": {
-        "class": "NetworkWriter",
-        "kwargs": {"network": ":8002"}
-      }
-    },
     "sample->file": {
       "name": "sample->file",
       "readers": {
         "class": "TextFileReader",
-        "kwargs": {"interval": 0.2,
-                   "file_spec": "fill this in" }
+        "kwargs": {"file_spec": "fill this in" }
       },
       "transforms": {
         "class": "PrefixTransform",
@@ -80,9 +65,8 @@ sample_cruise = {
         "class": "TextFileWriter",
         "kwargs": {"filename": "fill this in"}
       }
-    }
+    },
   },
-  "default_mode": "off"
 }
 
 
@@ -100,9 +84,9 @@ class TestLoggerManagerAPI(unittest.TestCase):
     self.output_filename = self.tmpdirname + '/output.txt'
     self.cruise_filename = self.tmpdirname + '/cruise.yaml'
 
-    sample_cruise['configs']['sample->net']['readers']['kwargs']['file_spec'] \
+    sample_cruise['configs']['sample->file']['readers']['kwargs']['file_spec'] \
       = self.input_filename
-    sample_cruise['configs']['sample->file']['readers']['kwargs']['filename'] \
+    sample_cruise['configs']['sample->file']['writers']['kwargs']['filename'] \
       = self.output_filename
 
     logging.info('Creating temp input file %s', self.input_filename)
@@ -113,18 +97,22 @@ class TestLoggerManagerAPI(unittest.TestCase):
     logging.info('Creating temp cruise file %s', self.cruise_filename)
     with open(self.cruise_filename, 'w') as f:
       f.write(json.dumps(sample_cruise, indent=4))
-
+    
   ############################
   def test_basic(self):
 
     ###############################
     # Create LoggerManager and test it
     api = InMemoryServerAPI()
-    logger_manager = LoggerManager(api=api)
+    supervisor = SupervisorConnector(
+      start_supervisor_in=self.tmpdirname + '/supervisor',
+      max_tries=1,
+      log_level=logging.CRITICAL)
+    logger_manager = LoggerManager(api=api, supervisor=supervisor,
+                                   logger_log_level=logging.CRITICAL)
 
     ############################
     def run_commands(logger_manager):
-      reader = NetworkReader(network=':8002')
       api = logger_manager.api
       time.sleep(1)
 
@@ -132,9 +120,16 @@ class TestLoggerManagerAPI(unittest.TestCase):
 
       runner.process_command('load_configuration %s' % self.cruise_filename)
       runner.process_command('set_active_mode port')
+
+      # Give it time to run
+      time.sleep(2)
+
+      reader = TextFileReader(self.output_filename)
+
       for i in range(4):
-        self.assertEqual(reader.read(), 'TestLoggerManager ' + sample_data[i])
-      logging.info('NetworkReader done')
+        result = reader.read()
+        self.assertEqual(result, 'TestLoggerManager ' + sample_data[i])
+      logging.info('TextFileReader done')
       logger_manager.quit()
 
     cmd_thread = threading.Thread(name='run_commands',
@@ -154,10 +149,12 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-  LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
+  LOG_LEVELS = {0:logging.CRITICAL, 1:logging.WARNING,
+                2:logging.INFO, 3:logging.DEBUG}
   logging.basicConfig(format=LOGGING_FORMAT)
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
   #logging.getLogger().setLevel(logging.DEBUG)
   unittest.main(warnings='ignore')
+  time.sleep(4444)
