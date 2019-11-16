@@ -354,7 +354,7 @@ console HTML and Javascript, the loaded Javascript will look for a
 CachedDataServer from which to draw information about what loggers are
 and should be running.
 
-In the default installation, the Linux ``supervisord`` daemon is configured to be able to run and monitor both the logger manager and CachedDataServer on demand. Note that this is a different instance from the captive instance that the logger manager runs when invoked, and is run as root. Its configuration file is in ``/etc/supervisor/conf.d/openrvdas`` on Ubuntu and ``/etc/supervisord/openrvdas.ini`` on CentOS/RedHat:
+In the default installation, the Linux ``supervisord`` daemon is configured to be able to run and monitor both the logger manager and CachedDataServer on demand. **Note that this is a different instance from the captive instance that the logger manager runs when invoked, and is run as root.** Its configuration file is in ``/etc/supervisor/conf.d/openrvdas`` on Ubuntu and ``/etc/supervisord/openrvdas.ini`` on CentOS/RedHat:
 
 ```
 [program:cached_data_server]
