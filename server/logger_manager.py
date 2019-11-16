@@ -22,8 +22,8 @@ import websockets
 from xmlrpc.client import ServerProxy
 from xmlrpc.client import Fault as XmlRpcFault
 from xml.parsers.expat import ExpatError as XmlExpatError
-from http.client import ResponseNotReady as ResponseNotReady
 from http.client import CannotSendRequest as CannotSendRequest
+from http.client import ResponseNotReady as ResponseNotReady
 
 from os.path import dirname, realpath
 
@@ -158,7 +158,8 @@ class SupervisorConnector:
     ```
     start_supervisor_in - Start local copy of supervisord and set up
           socket, pid and conf.d in this directory. Mutually exclusive
-          with supervisor_logger_config being non-None.
+          with supervisor_logger_config being specified. If neither are
+          specified, will default to DEFAULT_SUPERVISOR_DIR.
 
     supervisor_logger_config - Location of file where supervisord should look
           for logger process definitions. Mutually exclusive with
@@ -176,6 +177,11 @@ class SupervisorConnector:
           fails on startup.
     ```
     """
+    # If no guidance on starting supervisor, start our own copy in
+    # default location.
+    if not start_supervisor_in and not supervisor_logger_config:
+      start_supervisor_in = DEFAULT_SUPERVISOR_DIR
+
     self.supervisor_dir = start_supervisor_in
     self.supervisor_logger_config = supervisor_logger_config
     self.supervisor_port = supervisor_port
@@ -225,8 +231,7 @@ class SupervisorConnector:
 
     # Create the supervisor config file
     supervisor_config_filename = self.supervisor_dir + '/supervisord.ini'
-    logging.warning('Creating new supervisord file in %s',
-                    supervisor_config_filename)
+    logging.info('Creating supervisord file in %s', supervisor_config_filename)
     supervisor_log_level = {logging.WARNING: 'warn',
                             logging.INFO: 'info',
                             logging.DEBUG: 'debug'}.get(log_level, 'warn')
@@ -266,7 +271,9 @@ class SupervisorConnector:
                        '-i', SUPERVISORD_NAME,
                        '-n', '-c', supervisor_config_filename]
 
-    self.supervisord_proc = subprocess.Popen(supervisord_cmd)
+    self.supervisord_proc = subprocess.Popen(args=supervisord_cmd,
+                                             stdout=subprocess.DEVNULL,
+                                             stderr=subprocess.DEVNULL)
     time.sleep(0.1)
     if self.supervisord_proc.poll() is not None:
       logging.fatal('Unable to start process %s; quitting.',
@@ -304,7 +311,7 @@ class SupervisorConnector:
     if self.supervisor_rpc:
       try:
         self.supervisor_rpc.supervisor.stopAllProcesses()
-      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault):
+      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault) as e:
         pass
 
     # If we were running our own supervisor process, shut it down
@@ -335,7 +342,8 @@ class SupervisorConnector:
     check if there are any old, conflicting logger_manager-started
     supervisor processes running and kill them with prejudice.
     """
-    self._kill_supervisor()
+    if self.supervisord_proc:
+      self._kill_supervisor()
 
   ############################
   def __del__(self):
@@ -370,7 +378,7 @@ class SupervisorConnector:
     # when the next update is called.
     try:
       results = self.supervisor_rpc.system.multicall(config_calls)
-    except ConnectionRefusedError:
+    except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
       return
 
     with self.config_lock:
@@ -414,7 +422,7 @@ class SupervisorConnector:
     # when the next update is called.
     try:
       results = self.supervisor_rpc.system.multicall(config_calls)
-    except ConnectionRefusedError:
+    except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
       return
 
     with self.config_lock:
@@ -546,8 +554,8 @@ class SupervisorConnector:
 
     base_dir - directory from which executables should be called.
     """
-    logging.warning('Writing new configurations to "%s"',
-                    self.supervisor_logger_config)
+    logging.info('Writing new configurations to "%s"',
+                 self.supervisor_logger_config)
 
     # Fill in some defaults if they weren't provided
     user = user or getpass.getuser()
@@ -616,32 +624,26 @@ class SupervisorConnector:
   def reload_config_file(self):
     """Tell our supervisor instance to reload config file and any groups."""
     logging.warning('Reloading config file')
-    #try:
-    #  self.supervisor_rpc.supervisor.restart()
-    #except XmlRpcFault as e:
-    #  logging.warning('Supervisord error when restarting supervisord process')
-    #return
-
     if self.group:
       try:
         self.supervisor_rpc.supervisor.stopProcessGroup(self.group)
       except XmlRpcFault as e:
-        logging.warning('Supervisord error when stopping Process group: %s', e)
+        logging.info('Supervisord error when stopping Process group: %s', e)
 
     try:
       self.supervisor_rpc.supervisor.reloadConfig()
     except XmlRpcFault as e:
-      logging.warning('Supervisord error when reloading config: %s', e)
+      logging.info('Supervisord error when reloading config: %s', e)
 
     if self.group:
       try:
         self.supervisor_rpc.supervisor.removeProcessGroup(self.group)
       except XmlRpcFault as e:
-        logging.warning('Supervisord error removing old process group: %s', e)
+        logging.info('Supervisord error removing old process group: %s', e)
       try:
         self.supervisor_rpc.supervisor.addProcessGroup(self.group)
       except XmlRpcFault as e:
-        logging.warning('Supervisord error adding new process group: %s', e)
+        logging.info('Supervisord error adding new process group: %s', e)
 
 ################################################################################
 ################################################################################
@@ -725,7 +727,7 @@ class LoggerManager:
         for config in self.loggers[logger].get('configs', []):
           self.config_to_logger[config] = logger
     except ValueError:
-      logging.warning('No cruise defined yet.')
+      logging.info('No cruise defined yet.')
       self.loggers = {}
       self.config_to_logger = {}
 
@@ -786,7 +788,7 @@ class LoggerManager:
 
     # If no cruise loaded, create an empty config file
     except ValueError:
-      logging.warning('No cruise defined yet - creating empty supervisor file')
+      logging.info('No cruise defined yet - creating empty supervisor file')
       logger_config_strings = {}
 
     # Now create a .ini file of those configs for supervisord to run.
@@ -816,10 +818,10 @@ class LoggerManager:
     # yet. Status updates run in a separate thread, but may not have
     # kicked in yet. If not, get status now.
     if not self.config_status:
-      logging.warning('No config status found yet. Fetching one...')
+      logging.info('No config status found yet. Fetching one...')
       config_status = self.supervisor.check_status()
       if not config_status:
-        logging.warning('Retrieved empty config status.')
+        logging.info('Retrieved empty config status.')
       with self.config_lock:
         self.config_status = config_status
         self.status_time = time.time()
@@ -842,7 +844,12 @@ class LoggerManager:
         logging.warning('Active configs found stopped: %s', non_running_configs)
 
       # Get new configs in dict {logger:{'configs':[config_name,...]}}
-      new_logger_configs = self.api.get_logger_configs()
+      try:
+        new_logger_configs = self.api.get_logger_configs()
+      except ValueError:
+        logging.debug('No loggers found.')
+        return
+
       new_configs = set([new_logger_configs[logger].get('name', None)
                          for logger in new_logger_configs])
 
@@ -923,7 +930,7 @@ class LoggerManager:
         'active_mode': cruise.current_mode.name
       }
     except (AttributeError, ValueError):
-      logging.warning('No cruise definition found')
+      logging.info('No cruise definition found')
       return
 
     # If loggers or modes have changed, we need to build a new
@@ -1143,7 +1150,7 @@ if __name__ == '__main__':
                       'to use.')
 
   # Arguments for the SupervisorConnector
-  supervisor_group = parser.add_mutually_exclusive_group(required=True)
+  supervisor_group = parser.add_mutually_exclusive_group()
   supervisor_group.add_argument('--start_supervisor_in',
                                 dest='start_supervisor_in', action='store',
                                 default=None,
@@ -1357,8 +1364,6 @@ if __name__ == '__main__':
     pass
   logging.debug('Done with logger_manager.py - exiting')
 
-  # If we asked the SupervisorConnector to start a supervisor,
-  # explicitly tell it to shut it down.
-  if supervisor and args.start_supervisor_in:
-    logging.warning('Shutting down local supervisord instance.')
+  # Ask our SupervisorConnector to shutdown.
+  if supervisor:
     supervisor.shutdown()

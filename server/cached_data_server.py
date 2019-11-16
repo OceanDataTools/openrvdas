@@ -309,11 +309,11 @@ class RecordCache:
     """
     logging.info('Loading from disk at %s', disk_cache)
     if not disk_cache:
-      logging.warning('load_from_disk called, but no disk_cache defined')
+      logging.info('load_from_disk called, but no disk_cache defined')
       return
 
     if not os.path.exists(disk_cache):
-      logging.warning('load_from_disk: no cache found at "%s"', disk_cache)
+      logging.info('load_from_disk: no cache found at "%s"', disk_cache)
       return
 
     field_files = [f for f in os.listdir(disk_cache)
