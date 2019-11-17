@@ -82,15 +82,15 @@ SUPERVISORD_TEMPLATE = """
 
 [unix_http_server]
 file={supervisor_dir}/supervisor.sock   ; the path to the socket file
-chmod=0770                 ; socket file mode (default 0700)
+chmod=0770                  ; socket file mode (default 0700)
 ;chown={user}:{group}       ; socket file uid:gid owner
-;username={user}           ; default is no username (open server)
-;password={password}       ; default is no password (open server)
+{no_auth}username={auth_user}     ; default is no username (open server)
+{no_auth}password={auth_password} ; default is no password (open server)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
 port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
-;username={user}           ; default is no username (open server)
-;password={password}       ; default is no password (open server)
+{no_auth}username={auth_user}     ; default is no username (open server)
+{no_auth}password={auth_password} ; default is no password (open server)
 
 [supervisord]
 logfile={logfile_dir}/supervisord.log ; main log file; default $CWD/supervisord.log
@@ -118,8 +118,8 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [supervisorctl]
 serverurl=unix:///{supervisor_dir}/supervisor.sock ; use a unix:// URL  for a unix socket
 serverurl=http://localhost:{port} ; use an http:// url to specify an inet socket
-;username={user}              ; should be same as in [*_http_server] if set
-;password={password}          ; should be same as in [*_http_server] if set
+{no_auth}username={auth_user}     ; should be same as in [*_http_server] if set
+{no_auth}password={auth_password} ; should be same as in [*_http_server] if set
 
 [include]
 files = {supervisor_dir}/supervisor.d/*.ini
@@ -151,6 +151,7 @@ class SupervisorConnector:
                supervisor_logger_config=None,
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+               supervisor_auth=None,
                group=DEFAULT_GROUP,
                max_tries=DEFAULT_MAX_TRIES,
                log_level=logging.WARNING):
@@ -172,8 +173,12 @@ class SupervisorConnector:
     supervisor_logfile_dir - Directory where supevisord and logger
           stderr/stdout will be written.
 
+    supervisor_auth - If provided, a username:password string to be used
+          to authenticate to the supervisor instance. If omitted, no auth
+          will be assumed.
+
     group - process group in which the configs will be defined; will be
-        prepended to config names.
+          prepended to config names.
 
     max_tries = Number of times a failed logger should be retried if it
           fails on startup.
@@ -188,13 +193,14 @@ class SupervisorConnector:
     self.supervisor_logger_config = supervisor_logger_config
     self.supervisor_port = supervisor_port
     self.supervisor_logfile_dir = supervisor_logfile_dir
+    self.supervisor_auth = supervisor_auth
     self.group = group
     self.max_tries = max_tries
     self.log_level = log_level
 
     # Define these right at start, because if we shut down prematurely
     # during initialization, the destructor is going to look for them.
-    self.supervisor_rpc = None    
+    self.supervisor_rpc = None
     self.supervisor_rpc_lock = threading.Lock()
     self.supervisord_proc = None
 
@@ -244,13 +250,22 @@ class SupervisorConnector:
     supervisor_log_level = {logging.WARNING: 'warn',
                             logging.INFO: 'info',
                             logging.DEBUG: 'debug'}.get(self.log_level, 'warn')
+    if self.supervisor_auth:
+      auth_user, auth_password = self.supervisor_auth.split(':')
+      no_auth = ''
+    else:
+      auth_user, auth_password = ('NOT_USED', 'NOT_USED')
+      no_auth = ';'
+      
     config_args = {
       'supervisor_dir': self.supervisor_dir,
       'logfile_dir': self.supervisor_logfile_dir,
       'port': self.supervisor_port,
       'user': getpass.getuser(),
       'group': getpass.getuser(),
-      'password': 'NOT_USED',
+      'no_auth': no_auth,
+      'auth_user': auth_user,
+      'auth_password': auth_password,
       'log_level': supervisor_log_level,
     }
     supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
@@ -294,7 +309,10 @@ class SupervisorConnector:
   def _create_supervisor_connection(self):
     """Connect to server. If we fail, sleep a little and try again."""
     while True:
-      supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
+      auth = self.supervisor_auth + '@' if self.supervisor_auth else ''
+      host = 'localhost'
+      port = self.supervisor_port
+      supervisor_url = 'http://%s%s:%d/RPC2' % (auth, host, port)
       logging.info('Connecting to supervisor at %s', supervisor_url)
 
       supervisor_rpc = ServerProxy(supervisor_url)
@@ -636,7 +654,7 @@ class SupervisorConnector:
 
     # And reload the config file
     self.reload_config_file()
-          
+
   ############################
   def reload_config_file(self):
     """Tell our supervisor instance to reload config file and any groups."""
@@ -651,7 +669,7 @@ class SupervisorConnector:
       except xmlrpclib.Fault as e:
           self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
           if e.faultCode == xmlrpc.Faults.SHUTDOWN_STATE:
-              self.ctl.output('ERROR: already shutting down')
+              logging.info('ERROR: already shutting down')
               return
           else:
               raise
@@ -671,82 +689,38 @@ class SupervisorConnector:
 
           for gname in valid_gnames:
               if gname not in groups:
-                  self.ctl.output('ERROR: no such group: %s' % gname)
-                  self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+                  logging.info('ERROR: no such group: %s' % gname)
 
       for gname in removed:
           if valid_gnames and gname not in valid_gnames:
               continue
           results = supervisor.stopProcessGroup(gname)
-          logging.info("stopped %s", gname)
+          logging.info('stopped %s', gname)
 
           fails = [res for res in results
                    if res['status'] == xmlrpc.Faults.FAILED]
           if fails:
-              self.ctl.output("%s: %s" % (gname, "has problems; not removing"))
-              self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+              logging.warning('%s has problems; not removing', gname)
               continue
           supervisor.removeProcessGroup(gname)
-          logging.info("removed process group %s", gname)
+          logging.info('removed process group %s', gname)
 
       for gname in changed:
           if valid_gnames and gname not in valid_gnames:
               continue
           supervisor.stopProcessGroup(gname)
-          logging.info("stopped %s", gname)
+          logging.info('stopped %s', gname)
 
           supervisor.removeProcessGroup(gname)
           supervisor.addProcessGroup(gname)
-          logging.info("updated process group %s", gname)
+          logging.info('updated process group %s', gname)
 
       for gname in added:
           if valid_gnames and gname not in valid_gnames:
               continue
           supervisor.addProcessGroup(gname)
-          logging.info("added process group %s", gname)
+          logging.info('added process group %s', gname)
 
-    """
-    logging.warning('RESTARTING!')
-    with self.supervisor_rpc_lock:
-      with self.read_stderr_rpc_lock:
-        self.supervisor_rpc.supervisor.restart()
-        while True:
-          try:
-            status = self.supervisor_rpc.supervisor.getState()
-            if status['statename'] == 'RUNNING':
-              break
-            else:
-              logging.warning('restarting state: %s', status['statename'])
-          except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault) as e:
-            logging.warning('restart waiting: %s', e)
-          time.sleep(0.2)
-          
-    logging.warning('DONE RESTARTING!')
-    return
-  
-    with self.supervisor_rpc_lock:
-      if self.group:
-        try:
-          self.supervisor_rpc.supervisor.stopProcessGroup(self.group)
-        except XmlRpcFault as e:
-          logging.info('Supervisord error when stopping Process group: %s', e)
-
-      try:
-        self.supervisor_rpc.supervisor.reloadConfig()
-      except XmlRpcFault as e:
-        logging.info('Supervisord error when reloading config: %s', e)
-
-      if self.group:
-        try:
-          self.supervisor_rpc.supervisor.removeProcessGroup(self.group)
-        except XmlRpcFault as e:
-          logging.info('Supervisord error removing old process group: %s', e)
-        try:
-          self.supervisor_rpc.supervisor.addProcessGroup(self.group)
-        except XmlRpcFault as e:
-          logging.info('Supervisord error adding new process group: %s', e)
-   """
-    
 ################################################################################
 ################################################################################
 class LoggerManager:
@@ -1284,16 +1258,19 @@ if __name__ == '__main__':
                                 'supervisord process should look for logger '
                                 'process definitions. Mutually exclusive with '
                                 '--start_supervisor_in.')
-
   parser.add_argument('--supervisor_port', dest='supervisor_port',
                       action='store', type=int, default=DEFAULT_SUPERVISOR_PORT,
                       help='Localhost port at which supervisor should serve.')
-
   parser.add_argument('--supervisor_logfile_dir',
                       dest='supervisor_logfile_dir', action='store',
                       default=DEFAULT_SUPERVISOR_LOGFILE_DIR,
                       help='Directory where supervisor and logger '
                       'stderr/stdout will be written.')
+  parser.add_argument('--supervisor_auth',
+                      dest='supervisor_auth', action='store', default=None,
+                      help='If provided, a username:password string to be '
+                      'used to authenticate to the supervisor instance. If '
+                      'omitted, no auth will be assumed.')
 
   # Arguments for cached data server
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
@@ -1395,11 +1372,16 @@ if __name__ == '__main__':
   ############################
   # Create a connector to a supervisor, optionally starting up a local
   # one for our own use.
+
+  if args.supervisor_auth and not ':' in args.supervisor_auth:
+    logging.fatal('Arg --supervisor_auth must be of form "username:password"')
+    sys.exit(1)
   supervisor = SupervisorConnector(
     start_supervisor_in=args.start_supervisor_in,
     supervisor_logger_config=args.supervisor_logger_config,
     supervisor_port=args.supervisor_port,
     supervisor_logfile_dir=args.supervisor_logfile_dir,
+    supervisor_auth=args.supervisor_auth,
     group='logger',
     max_tries=args.max_tries,
     log_level=log_level)
