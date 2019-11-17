@@ -972,6 +972,7 @@ table {
     <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
       
   <ul>
+    <li class="mono"><a href="#logger_manager.DEFAULT_DATA_SERVER_WEBSOCKET">DEFAULT_DATA_SERVER_WEBSOCKET</a></li>
     <li class="mono"><a href="#logger_manager.DEFAULT_GROUP">DEFAULT_GROUP</a></li>
     <li class="mono"><a href="#logger_manager.DEFAULT_LOGGING_FORMAT">DEFAULT_LOGGING_FORMAT</a></li>
     <li class="mono"><a href="#logger_manager.DEFAULT_MAX_TRIES">DEFAULT_MAX_TRIES</a></li>
@@ -1111,6 +1112,8 @@ SOURCE_NAME = 'LoggerManager'
 USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
+DEFAULT_DATA_SERVER_WEBSOCKET = 'localhost:8766'
+
 DEFAULT_SUPERVISOR_DIR = '/var/tmp/openrvdas/supervisor'
 DEFAULT_SUPERVISOR_PORT = 8002
 DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas'
@@ -1129,15 +1132,15 @@ SUPERVISORD_TEMPLATE = """
 
 [unix_http_server]
 file={supervisor_dir}/supervisor.sock   ; the path to the socket file
-chmod=0770                 ; socket file mode (default 0700)
+chmod=0770                  ; socket file mode (default 0700)
 ;chown={user}:{group}       ; socket file uid:gid owner
-;username={user}           ; default is no username (open server)
-;password={password}       ; default is no password (open server)
+{no_auth}username={auth_user}     ; default is no username (open server)
+{no_auth}password={auth_password} ; default is no password (open server)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
 port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
-;username={user}           ; default is no username (open server)
-;password={password}       ; default is no password (open server)
+{no_auth}username={auth_user}     ; default is no username (open server)
+{no_auth}password={auth_password} ; default is no password (open server)
 
 [supervisord]
 logfile={logfile_dir}/supervisord.log ; main log file; default $CWD/supervisord.log
@@ -1165,8 +1168,8 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [supervisorctl]
 serverurl=unix:///{supervisor_dir}/supervisor.sock ; use a unix:// URL  for a unix socket
 serverurl=http://localhost:{port} ; use an http:// url to specify an inet socket
-;username={user}              ; should be same as in [*_http_server] if set
-;password={password}          ; should be same as in [*_http_server] if set
+{no_auth}username={auth_user}     ; should be same as in [*_http_server] if set
+{no_auth}password={auth_password} ; should be same as in [*_http_server] if set
 
 [include]
 files = {supervisor_dir}/supervisor.d/*.ini
@@ -1198,6 +1201,7 @@ class SupervisorConnector:
                supervisor_logger_config=None,
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+               supervisor_auth=None,
                group=DEFAULT_GROUP,
                max_tries=DEFAULT_MAX_TRIES,
                log_level=logging.WARNING):
@@ -1219,8 +1223,12 @@ class SupervisorConnector:
     supervisor_logfile_dir - Directory where supevisord and logger
           stderr/stdout will be written.
 
+    supervisor_auth - If provided, a username:password string to be used
+          to authenticate to the supervisor instance. If omitted, no auth
+          will be assumed.
+
     group - process group in which the configs will be defined; will be
-        prepended to config names.
+          prepended to config names.
 
     max_tries = Number of times a failed logger should be retried if it
           fails on startup.
@@ -1235,12 +1243,15 @@ class SupervisorConnector:
     self.supervisor_logger_config = supervisor_logger_config
     self.supervisor_port = supervisor_port
     self.supervisor_logfile_dir = supervisor_logfile_dir
+    self.supervisor_auth = supervisor_auth
     self.group = group
     self.max_tries = max_tries
+    self.log_level = log_level
 
     # Define these right at start, because if we shut down prematurely
     # during initialization, the destructor is going to look for them.
     self.supervisor_rpc = None
+    self.supervisor_rpc_lock = threading.Lock()
     self.supervisord_proc = None
 
     if bool(start_supervisor_in) == bool(supervisor_logger_config):
@@ -1255,12 +1266,17 @@ class SupervisorConnector:
       self.supervisord_proc = self._start_supervisor()
 
     # Now that the preliminaries are done, try to connect to server.
-    self.supervisor_rpc = self._create_supervisor_connection()
+    with self.supervisor_rpc_lock:
+      self.supervisor_rpc = self._create_supervisor_connection()
 
     # Create a second connection that we will use to read logger
     # process stderr. We'll guard reads from this from stepping on
     # each other by means of a thread lock.
-    self.read_stderr_rpc =  self._create_supervisor_connection()
+    self.read_stderr_rpc_lock = threading.Lock()
+    with self.read_stderr_rpc_lock:
+      self.read_stderr_rpc =  self._create_supervisor_connection()
+
+    # A lock for information we maintain about current configurations
     self.config_lock = threading.Lock()
     self.read_stderr_offset = {}  # how much of each stderr we've read
 
@@ -1269,8 +1285,8 @@ class SupervisorConnector:
 
   ############################
   def _start_supervisor(self):
-    logging.warning('Starting standalone supervisord instance in %s',
-                    self.supervisor_dir)
+    logging.info('Starting standalone supervisord instance in %s',
+                 self.supervisor_dir)
     # Make the working directory that supervisord will run in if it
     # doesn't exist and, while we're at it, make the supervisor.d/
     # subdirectory of that where we'll put our logger config .ini file.
@@ -1283,14 +1299,23 @@ class SupervisorConnector:
     logging.info('Creating supervisord file in %s', supervisor_config_filename)
     supervisor_log_level = {logging.WARNING: 'warn',
                             logging.INFO: 'info',
-                            logging.DEBUG: 'debug'}.get(log_level, 'warn')
+                            logging.DEBUG: 'debug'}.get(self.log_level, 'warn')
+    if self.supervisor_auth:
+      auth_user, auth_password = self.supervisor_auth.split(':')
+      no_auth = ''
+    else:
+      auth_user, auth_password = ('NOT_USED', 'NOT_USED')
+      no_auth = ';'
+      
     config_args = {
       'supervisor_dir': self.supervisor_dir,
       'logfile_dir': self.supervisor_logfile_dir,
       'port': self.supervisor_port,
       'user': getpass.getuser(),
       'group': getpass.getuser(),
-      'password': 'NOT_USED',
+      'no_auth': no_auth,
+      'auth_user': auth_user,
+      'auth_password': auth_password,
       'log_level': supervisor_log_level,
     }
     supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
@@ -1334,7 +1359,10 @@ class SupervisorConnector:
   def _create_supervisor_connection(self):
     """Connect to server. If we fail, sleep a little and try again."""
     while True:
-      supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
+      auth = self.supervisor_auth + '@' if self.supervisor_auth else ''
+      host = 'localhost'
+      port = self.supervisor_port
+      supervisor_url = 'http://%s%s:%d/RPC2' % (auth, host, port)
       logging.info('Connecting to supervisor at %s', supervisor_url)
 
       supervisor_rpc = ServerProxy(supervisor_url)
@@ -1346,8 +1374,8 @@ class SupervisorConnector:
         logging.error('Supervisord is not running. State is "%s"',
                       supervisor_state['statename'])
       except ConnectionRefusedError:
-        logging.warning('Unable to connect to supervisord at %s; trying again.',
-                        supervisor_url)
+        logging.info('Unable to connect to supervisord at %s; trying again.',
+                     supervisor_url)
       time.sleep(5)
       logging.info('Retrying connection to %s', supervisor_url)
 
@@ -1357,21 +1385,22 @@ class SupervisorConnector:
   ############################
   def _kill_supervisor(self):
     # Shut down any processes
-    if self.supervisor_rpc:
-      try:
-        self.supervisor_rpc.supervisor.stopAllProcesses()
-      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault) as e:
-        pass
+    with self.supervisor_rpc_lock:
+      if self.supervisor_rpc:
+        try:
+          self.supervisor_rpc.supervisor.stopAllProcesses()
+        except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault) as e:
+          pass
 
-    # If we were running our own supervisor process, shut it down
-    # (first ask it to shut down, then kill it dead, dead, dead).
-    if self.supervisord_proc and self.supervisor_rpc:
-      try:
-        self.supervisor_rpc.supervisor.shutdown()
-      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault):
-        pass
-      self.supervisord_proc.kill()
-      self.supervisord_proc.wait()
+      # If we were running our own supervisor process, shut it down
+      # (first ask it to shut down, then kill it dead, dead, dead).
+      if self.supervisord_proc and self.supervisor_rpc:
+        try:
+          self.supervisor_rpc.supervisor.shutdown()
+        except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault):
+          pass
+        self.supervisord_proc.kill()
+        self.supervisord_proc.wait()
 
     # Make sure there are no other copies of us running.
     for process in psutil.process_iter():
@@ -1426,7 +1455,8 @@ class SupervisorConnector:
     # configs. If we fail, simply return and count on trying again
     # when the next update is called.
     try:
-      results = self.supervisor_rpc.system.multicall(config_calls)
+      with self.supervisor_rpc_lock:
+        results = self.supervisor_rpc.system.multicall(config_calls)
     except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
       return
 
@@ -1470,7 +1500,8 @@ class SupervisorConnector:
     # configs. If we fail, simply return and count on trying again
     # when the next update is called.
     try:
-      results = self.supervisor_rpc.system.multicall(config_calls)
+      with self.supervisor_rpc_lock:
+        results = self.supervisor_rpc.system.multicall(config_calls)
     except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
       return
 
@@ -1505,16 +1536,17 @@ class SupervisorConnector:
        ...,
       }
     """
-    with self.config_lock:
+    with self.read_stderr_rpc_lock:
       try:
         status_list = self.read_stderr_rpc.supervisor.getAllProcessInfo()
-      except XmlExpatError as e:
+      except (ConnectionRefusedError, XmlExpatError, XmlRpcFault) as e:
         logging.error('Error reading supervisor process status: %s', e)
         return {}
 
-      status_map = {s.get('name', None):s for s in status_list}
+    status_map = {s.get('name', None):s for s in status_list}
+    status_result = {}
 
-      status_result = {}
+    with self.config_lock:
       for config in self.running_configs():
         cleaned_config_name = self._clean_name(config)
         state = status_map.get(cleaned_config_name,{})
@@ -1564,7 +1596,9 @@ class SupervisorConnector:
         while overflow:
           # Get a chunk of stderr, update offset, and see if there's more
           try:
-            result, offset, overflow = getTail(cleaned_config, offset, maxchars)
+            with self.read_stderr_rpc_lock:
+              result, offset, overflow = getTail(cleaned_config,
+                                                 offset, maxchars)
             results[config] += result
             self.read_stderr_offset[config] = offset
           # If we've barfed on the read, give up on this config for now
@@ -1584,7 +1618,8 @@ class SupervisorConnector:
             read_fault = True
 
     if read_fault:
-      self.reload_config_file()
+      pass
+      #self.reload_config_file()
     return results
 
   ############################
@@ -1662,8 +1697,10 @@ class SupervisorConnector:
       config_file.write(content_str)
 
     # Re-open the connections to make a clean slate of things
-    self.supervisor_rpc = self._create_supervisor_connection()
-    self.read_stderr_rpc =  self._create_supervisor_connection()
+    with self.supervisor_rpc_lock:
+      self.supervisor_rpc = self._create_supervisor_connection()
+    with self.read_stderr_rpc_lock:
+      self.read_stderr_rpc =  self._create_supervisor_connection()
 
     # And reload the config file
     self.reload_config_file()
@@ -1671,27 +1708,68 @@ class SupervisorConnector:
   ############################
   def reload_config_file(self):
     """Tell our supervisor instance to reload config file and any groups."""
-    logging.warning('Reloading config file')
-    if self.group:
-      try:
-        self.supervisor_rpc.supervisor.stopProcessGroup(self.group)
-      except XmlRpcFault as e:
-        logging.info('Supervisord error when stopping Process group: %s', e)
+    logging.info('Reloading config file')
 
-    try:
-      self.supervisor_rpc.supervisor.reloadConfig()
-    except XmlRpcFault as e:
-      logging.info('Supervisord error when reloading config: %s', e)
+    # Included code from supervisorctl:
+    # https://github.com/Supervisor/supervisorctl.py#L1158-L1224
+    with self.supervisor_rpc_lock:
+      supervisor = self.supervisor_rpc.supervisor
+      try:
+          result = supervisor.reloadConfig()
+      except xmlrpclib.Fault as e:
+          self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+          if e.faultCode == xmlrpc.Faults.SHUTDOWN_STATE:
+              logging.info('ERROR: already shutting down')
+              return
+          else:
+              raise
 
-    if self.group:
-      try:
-        self.supervisor_rpc.supervisor.removeProcessGroup(self.group)
-      except XmlRpcFault as e:
-        logging.info('Supervisord error removing old process group: %s', e)
-      try:
-        self.supervisor_rpc.supervisor.addProcessGroup(self.group)
-      except XmlRpcFault as e:
-        logging.info('Supervisord error adding new process group: %s', e)
+      added, changed, removed = result[0]
+      valid_gnames = set()
+
+      # If any gnames are specified we need to verify that they are
+      # valid in order to print a useful error message.
+      if valid_gnames:
+          groups = set()
+          for info in supervisor.getAllProcessInfo():
+              groups.add(info['group'])
+          # New gnames would not currently exist in this set so
+          # add those as well.
+          groups.update(added)
+
+          for gname in valid_gnames:
+              if gname not in groups:
+                  logging.info('ERROR: no such group: %s' % gname)
+
+      for gname in removed:
+          if valid_gnames and gname not in valid_gnames:
+              continue
+          results = supervisor.stopProcessGroup(gname)
+          logging.info('stopped %s', gname)
+
+          fails = [res for res in results
+                   if res['status'] == xmlrpc.Faults.FAILED]
+          if fails:
+              logging.warning('%s has problems; not removing', gname)
+              continue
+          supervisor.removeProcessGroup(gname)
+          logging.info('removed process group %s', gname)
+
+      for gname in changed:
+          if valid_gnames and gname not in valid_gnames:
+              continue
+          supervisor.stopProcessGroup(gname)
+          logging.info('stopped %s', gname)
+
+          supervisor.removeProcessGroup(gname)
+          supervisor.addProcessGroup(gname)
+          logging.info('updated process group %s', gname)
+
+      for gname in added:
+          if valid_gnames and gname not in valid_gnames:
+              continue
+          supervisor.addProcessGroup(gname)
+          logging.info('added process group %s', gname)
 
 ################################################################################
 ################################################################################
@@ -1734,6 +1812,7 @@ class LoggerManager:
     if not issubclass(type(api), ServerAPI):
       raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
     self.api = api
+    self.supervisor_logfile_dir = supervisor_logfile_dir
     self.interval = interval
     self.logger_log_level = logger_log_level
     self.quit_flag = False
@@ -1831,7 +1910,7 @@ class LoggerManager:
 
           # Map logger->{config_name:config_definition_str,...}
           logger_config_strings[logger] = {
-            config_name:api.get_logger_config(config_name)
+            config_name: self.api.get_logger_config(config_name)
             for config_name in config_names}
 
     # If no cruise loaded, create an empty config file
@@ -1843,7 +1922,7 @@ class LoggerManager:
     with self.config_lock:
       self.supervisor.create_new_supervisor_file(
         configs=logger_config_strings,
-        supervisor_logfile_dir=args.supervisor_logfile_dir)
+        supervisor_logfile_dir=self.supervisor_logfile_dir)
 
   ############################
   def _update_configs_loop(self):
@@ -1970,15 +2049,25 @@ class LoggerManager:
 
     """
     try:
-      cruise = api.get_configuration() # a Cruise object
-      cruise_def = {
-        'cruise_id': cruise.id,
-        'loggers': api.get_loggers(),
-        'modes': cruise.modes(),
-        'active_mode': cruise.active_mode.name
-      }
-    except (AttributeError, ValueError):
-      logging.info('No cruise definition found')
+      cruise = self.api.get_configuration() # a Cruise object
+      # An ugly hack here: the Django API gives us a Cruise object,
+      # while the in-memory API gives us a dict. UGH!
+      if type(cruise) is dict:
+        cruise_def = {
+          'cruise_id': cruise.get('cruise', {}).get('id', ''),
+          'loggers': self.api.get_loggers(),
+          'modes': cruise.get('modes', {}),
+          'active_mode': cruise.get('active_mode','')
+          }
+      else:
+        cruise_def = {
+          'cruise_id': cruise.id,
+          'loggers': self.api.get_loggers(),
+          'modes': cruise.modes(),
+          'active_mode': cruise.active_mode.name
+        }
+    except (AttributeError, ValueError) as e:
+      logging.info('No cruise definition found: %s', e)
       return
 
     # If loggers or modes have changed, we need to build a new
@@ -2071,7 +2160,7 @@ class LoggerManager:
 
       else:
         # If no data server, just print to stdout
-        print(logger + ': ' + line)
+        logging.info(logger + ': ' + line)
 
     # Start of actual _read_and_send_logger_stderr() code.
     if configs is None:
@@ -2169,6 +2258,7 @@ def run_data_server(data_server_websocket,
   # First get the port that we're going to run the data server on. Because
   # we're running it locally, it should only have a port, not a hostname.
   # We should try to handle it if they prefix with a ':', though.
+  data_server_websocket = data_server_websocket or DEFAULT_DATA_SERVER_WEBSOCKET
   websocket_port = int(data_server_websocket.split(':')[-1])
   server = CachedDataServer(port=websocket_port, interval=data_server_interval)
 
@@ -2218,16 +2308,19 @@ if __name__ == '__main__':
                                 'supervisord process should look for logger '
                                 'process definitions. Mutually exclusive with '
                                 '--start_supervisor_in.')
-
   parser.add_argument('--supervisor_port', dest='supervisor_port',
                       action='store', type=int, default=DEFAULT_SUPERVISOR_PORT,
                       help='Localhost port at which supervisor should serve.')
-
   parser.add_argument('--supervisor_logfile_dir',
                       dest='supervisor_logfile_dir', action='store',
                       default=DEFAULT_SUPERVISOR_LOGFILE_DIR,
                       help='Directory where supervisor and logger '
                       'stderr/stdout will be written.')
+  parser.add_argument('--supervisor_auth',
+                      dest='supervisor_auth', action='store', default=None,
+                      help='If provided, a username:password string to be '
+                      'used to authenticate to the supervisor instance. If '
+                      'omitted, no auth will be assumed.')
 
   # Arguments for cached data server
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
@@ -2329,11 +2422,16 @@ if __name__ == '__main__':
   ############################
   # Create a connector to a supervisor, optionally starting up a local
   # one for our own use.
+
+  if args.supervisor_auth and not ':' in args.supervisor_auth:
+    logging.fatal('Arg --supervisor_auth must be of form "username:password"')
+    sys.exit(1)
   supervisor = SupervisorConnector(
     start_supervisor_in=args.start_supervisor_in,
     supervisor_logger_config=args.supervisor_logger_config,
     supervisor_port=args.supervisor_port,
     supervisor_logfile_dir=args.supervisor_logfile_dir,
+    supervisor_auth=args.supervisor_auth,
     group='logger',
     max_tries=args.max_tries,
     log_level=log_level)
@@ -2421,6 +2519,14 @@ if __name__ == '__main__':
 
   <section id="section-items">
     <h2 class="section-title" id="header-variables">Module variables</h2>
+      <div class="item">
+      <p id="logger_manager.DEFAULT_DATA_SERVER_WEBSOCKET" class="name">var <span class="ident">DEFAULT_DATA_SERVER_WEBSOCKET</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
       <div class="item">
       <p id="logger_manager.DEFAULT_GROUP" class="name">var <span class="ident">DEFAULT_GROUP</span></p>
       
@@ -2576,6 +2682,7 @@ served.</p></div>
   # First get the port that we're going to run the data server on. Because
   # we're running it locally, it should only have a port, not a hostname.
   # We should try to handle it if they prefix with a ':', though.
+  data_server_websocket = data_server_websocket or DEFAULT_DATA_SERVER_WEBSOCKET
   websocket_port = int(data_server_websocket.split(':')[-1])
   server = CachedDataServer(port=websocket_port, interval=data_server_interval)
 
@@ -2639,6 +2746,7 @@ served.</p></div>
     if not issubclass(type(api), ServerAPI):
       raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
     self.api = api
+    self.supervisor_logfile_dir = supervisor_logfile_dir
     self.interval = interval
     self.logger_log_level = logger_log_level
     self.quit_flag = False
@@ -2736,7 +2844,7 @@ served.</p></div>
 
           # Map logger->{config_name:config_definition_str,...}
           logger_config_strings[logger] = {
-            config_name:api.get_logger_config(config_name)
+            config_name: self.api.get_logger_config(config_name)
             for config_name in config_names}
 
     # If no cruise loaded, create an empty config file
@@ -2748,7 +2856,7 @@ served.</p></div>
     with self.config_lock:
       self.supervisor.create_new_supervisor_file(
         configs=logger_config_strings,
-        supervisor_logfile_dir=args.supervisor_logfile_dir)
+        supervisor_logfile_dir=self.supervisor_logfile_dir)
 
   ############################
   def _update_configs_loop(self):
@@ -2875,15 +2983,25 @@ served.</p></div>
 
     """
     try:
-      cruise = api.get_configuration() # a Cruise object
-      cruise_def = {
-        'cruise_id': cruise.id,
-        'loggers': api.get_loggers(),
-        'modes': cruise.modes(),
-        'active_mode': cruise.active_mode.name
-      }
-    except (AttributeError, ValueError):
-      logging.info('No cruise definition found')
+      cruise = self.api.get_configuration() # a Cruise object
+      # An ugly hack here: the Django API gives us a Cruise object,
+      # while the in-memory API gives us a dict. UGH!
+      if type(cruise) is dict:
+        cruise_def = {
+          'cruise_id': cruise.get('cruise', {}).get('id', ''),
+          'loggers': self.api.get_loggers(),
+          'modes': cruise.get('modes', {}),
+          'active_mode': cruise.get('active_mode','')
+          }
+      else:
+        cruise_def = {
+          'cruise_id': cruise.id,
+          'loggers': self.api.get_loggers(),
+          'modes': cruise.modes(),
+          'active_mode': cruise.active_mode.name
+        }
+    except (AttributeError, ValueError) as e:
+      logging.info('No cruise definition found: %s', e)
       return
 
     # If loggers or modes have changed, we need to build a new
@@ -2910,7 +3028,7 @@ served.</p></div>
     if cruise_def_changed:
       self.definition = cruise_def
       self.definition_time = now
-      logging.warning('Cruise has changed - building new configuration file')
+      logging.info('Cruise has changed - building new configuration file')
       self._build_new_config_file()
 
     # If things haven't changed, only send definition every N seconds
@@ -2976,7 +3094,7 @@ served.</p></div>
 
       else:
         # If no data server, just print to stdout
-        print(logger + ': ' + line)
+        logging.info(logger + ': ' + line)
 
     # Start of actual _read_and_send_logger_stderr() code.
     if configs is None:
@@ -3132,6 +3250,7 @@ api - ServerAPI (or subclass) instance by which LoggerManager will get
   if not issubclass(type(api), ServerAPI):
     raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
   self.api = api
+  self.supervisor_logfile_dir = supervisor_logfile_dir
   self.interval = interval
   self.logger_log_level = logger_log_level
   self.quit_flag = False
@@ -3355,6 +3474,16 @@ if the main thread does.</p></div>
 
             </div>
             <div class="item">
+            <p id="logger_manager.LoggerManager.supervisor_logfile_dir" class="name">var <span class="ident">supervisor_logfile_dir</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
             <p id="logger_manager.LoggerManager.update_configs_thread" class="name">var <span class="ident">update_configs_thread</span></p>
             
 
@@ -3381,6 +3510,7 @@ if the main thread does.</p></div>
                supervisor_logger_config=None,
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+               supervisor_auth=None,
                group=DEFAULT_GROUP,
                max_tries=DEFAULT_MAX_TRIES,
                log_level=logging.WARNING):
@@ -3402,8 +3532,12 @@ if the main thread does.</p></div>
     supervisor_logfile_dir - Directory where supevisord and logger
           stderr/stdout will be written.
 
+    supervisor_auth - If provided, a username:password string to be used
+          to authenticate to the supervisor instance. If omitted, no auth
+          will be assumed.
+
     group - process group in which the configs will be defined; will be
-        prepended to config names.
+          prepended to config names.
 
     max_tries = Number of times a failed logger should be retried if it
           fails on startup.
@@ -3418,12 +3552,15 @@ if the main thread does.</p></div>
     self.supervisor_logger_config = supervisor_logger_config
     self.supervisor_port = supervisor_port
     self.supervisor_logfile_dir = supervisor_logfile_dir
+    self.supervisor_auth = supervisor_auth
     self.group = group
     self.max_tries = max_tries
+    self.log_level = log_level
 
     # Define these right at start, because if we shut down prematurely
     # during initialization, the destructor is going to look for them.
     self.supervisor_rpc = None
+    self.supervisor_rpc_lock = threading.Lock()
     self.supervisord_proc = None
 
     if bool(start_supervisor_in) == bool(supervisor_logger_config):
@@ -3438,12 +3575,17 @@ if the main thread does.</p></div>
       self.supervisord_proc = self._start_supervisor()
 
     # Now that the preliminaries are done, try to connect to server.
-    self.supervisor_rpc = self._create_supervisor_connection()
+    with self.supervisor_rpc_lock:
+      self.supervisor_rpc = self._create_supervisor_connection()
 
     # Create a second connection that we will use to read logger
     # process stderr. We'll guard reads from this from stepping on
     # each other by means of a thread lock.
-    self.read_stderr_rpc =  self._create_supervisor_connection()
+    self.read_stderr_rpc_lock = threading.Lock()
+    with self.read_stderr_rpc_lock:
+      self.read_stderr_rpc =  self._create_supervisor_connection()
+
+    # A lock for information we maintain about current configurations
     self.config_lock = threading.Lock()
     self.read_stderr_offset = {}  # how much of each stderr we've read
 
@@ -3452,8 +3594,8 @@ if the main thread does.</p></div>
 
   ############################
   def _start_supervisor(self):
-    logging.warning('Starting standalone supervisord instance in %s',
-                    self.supervisor_dir)
+    logging.info('Starting standalone supervisord instance in %s',
+                 self.supervisor_dir)
     # Make the working directory that supervisord will run in if it
     # doesn't exist and, while we're at it, make the supervisor.d/
     # subdirectory of that where we'll put our logger config .ini file.
@@ -3466,14 +3608,23 @@ if the main thread does.</p></div>
     logging.info('Creating supervisord file in %s', supervisor_config_filename)
     supervisor_log_level = {logging.WARNING: 'warn',
                             logging.INFO: 'info',
-                            logging.DEBUG: 'debug'}.get(log_level, 'warn')
+                            logging.DEBUG: 'debug'}.get(self.log_level, 'warn')
+    if self.supervisor_auth:
+      auth_user, auth_password = self.supervisor_auth.split(':')
+      no_auth = ''
+    else:
+      auth_user, auth_password = ('NOT_USED', 'NOT_USED')
+      no_auth = ';'
+      
     config_args = {
       'supervisor_dir': self.supervisor_dir,
       'logfile_dir': self.supervisor_logfile_dir,
       'port': self.supervisor_port,
       'user': getpass.getuser(),
       'group': getpass.getuser(),
-      'password': 'NOT_USED',
+      'no_auth': no_auth,
+      'auth_user': auth_user,
+      'auth_password': auth_password,
       'log_level': supervisor_log_level,
     }
     supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
@@ -3517,7 +3668,10 @@ if the main thread does.</p></div>
   def _create_supervisor_connection(self):
     """Connect to server. If we fail, sleep a little and try again."""
     while True:
-      supervisor_url = 'http://localhost:%d/RPC2' % self.supervisor_port
+      auth = self.supervisor_auth + '@' if self.supervisor_auth else ''
+      host = 'localhost'
+      port = self.supervisor_port
+      supervisor_url = 'http://%s%s:%d/RPC2' % (auth, host, port)
       logging.info('Connecting to supervisor at %s', supervisor_url)
 
       supervisor_rpc = ServerProxy(supervisor_url)
@@ -3540,21 +3694,22 @@ if the main thread does.</p></div>
   ############################
   def _kill_supervisor(self):
     # Shut down any processes
-    if self.supervisor_rpc:
-      try:
-        self.supervisor_rpc.supervisor.stopAllProcesses()
-      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault) as e:
-        pass
+    with self.supervisor_rpc_lock:
+      if self.supervisor_rpc:
+        try:
+          self.supervisor_rpc.supervisor.stopAllProcesses()
+        except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault) as e:
+          pass
 
-    # If we were running our own supervisor process, shut it down
-    # (first ask it to shut down, then kill it dead, dead, dead).
-    if self.supervisord_proc and self.supervisor_rpc:
-      try:
-        self.supervisor_rpc.supervisor.shutdown()
-      except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault):
-        pass
-      self.supervisord_proc.kill()
-      self.supervisord_proc.wait()
+      # If we were running our own supervisor process, shut it down
+      # (first ask it to shut down, then kill it dead, dead, dead).
+      if self.supervisord_proc and self.supervisor_rpc:
+        try:
+          self.supervisor_rpc.supervisor.shutdown()
+        except (ConnectionRefusedError, CannotSendRequest, XmlRpcFault):
+          pass
+        self.supervisord_proc.kill()
+        self.supervisord_proc.wait()
 
     # Make sure there are no other copies of us running.
     for process in psutil.process_iter():
@@ -3563,7 +3718,7 @@ if the main thread does.</p></div>
         if (len(cmdline) == 7 and SUPERVISORD in cmdline[1] and
             cmdline[2] == '-i' and cmdline[3] == SUPERVISORD_NAME):
           process.kill()
-          logging.warning('Killed existing supervisor process %d', process.pid)
+          logging.info('Killed existing supervisor process %d', process.pid)
           break
       except (psutil.AccessDenied, psutil.ZombieProcess) as e:
         logging.debug('Got psutil error for %s: %s', process, e)
@@ -3609,7 +3764,8 @@ if the main thread does.</p></div>
     # configs. If we fail, simply return and count on trying again
     # when the next update is called.
     try:
-      results = self.supervisor_rpc.system.multicall(config_calls)
+      with self.supervisor_rpc_lock:
+        results = self.supervisor_rpc.system.multicall(config_calls)
     except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
       return
 
@@ -3653,7 +3809,8 @@ if the main thread does.</p></div>
     # configs. If we fail, simply return and count on trying again
     # when the next update is called.
     try:
-      results = self.supervisor_rpc.system.multicall(config_calls)
+      with self.supervisor_rpc_lock:
+        results = self.supervisor_rpc.system.multicall(config_calls)
     except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
       return
 
@@ -3688,16 +3845,17 @@ if the main thread does.</p></div>
        ...,
       }
     """
-    with self.config_lock:
+    with self.read_stderr_rpc_lock:
       try:
         status_list = self.read_stderr_rpc.supervisor.getAllProcessInfo()
-      except XmlExpatError as e:
+      except (ConnectionRefusedError, XmlExpatError, XmlRpcFault) as e:
         logging.error('Error reading supervisor process status: %s', e)
         return {}
 
-      status_map = {s.get('name', None):s for s in status_list}
+    status_map = {s.get('name', None):s for s in status_list}
+    status_result = {}
 
-      status_result = {}
+    with self.config_lock:
       for config in self.running_configs():
         cleaned_config_name = self._clean_name(config)
         state = status_map.get(cleaned_config_name,{})
@@ -3747,7 +3905,9 @@ if the main thread does.</p></div>
         while overflow:
           # Get a chunk of stderr, update offset, and see if there's more
           try:
-            result, offset, overflow = getTail(cleaned_config, offset, maxchars)
+            with self.read_stderr_rpc_lock:
+              result, offset, overflow = getTail(cleaned_config,
+                                                 offset, maxchars)
             results[config] += result
             self.read_stderr_offset[config] = offset
           # If we've barfed on the read, give up on this config for now
@@ -3767,7 +3927,8 @@ if the main thread does.</p></div>
             read_fault = True
 
     if read_fault:
-      self.reload_config_file()
+      pass
+      #self.reload_config_file()
     return results
 
   ############################
@@ -3845,8 +4006,10 @@ if the main thread does.</p></div>
       config_file.write(content_str)
 
     # Re-open the connections to make a clean slate of things
-    self.supervisor_rpc = self._create_supervisor_connection()
-    self.read_stderr_rpc =  self._create_supervisor_connection()
+    with self.supervisor_rpc_lock:
+      self.supervisor_rpc = self._create_supervisor_connection()
+    with self.read_stderr_rpc_lock:
+      self.read_stderr_rpc =  self._create_supervisor_connection()
 
     # And reload the config file
     self.reload_config_file()
@@ -3855,26 +4018,67 @@ if the main thread does.</p></div>
   def reload_config_file(self):
     """Tell our supervisor instance to reload config file and any groups."""
     logging.info('Reloading config file')
-    if self.group:
-      try:
-        self.supervisor_rpc.supervisor.stopProcessGroup(self.group)
-      except XmlRpcFault as e:
-        logging.info('Supervisord error when stopping Process group: %s', e)
 
-    try:
-      self.supervisor_rpc.supervisor.reloadConfig()
-    except XmlRpcFault as e:
-      logging.info('Supervisord error when reloading config: %s', e)
+    # Included code from supervisorctl:
+    # https://github.com/Supervisor/supervisorctl.py#L1158-L1224
+    with self.supervisor_rpc_lock:
+      supervisor = self.supervisor_rpc.supervisor
+      try:
+          result = supervisor.reloadConfig()
+      except xmlrpclib.Fault as e:
+          self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+          if e.faultCode == xmlrpc.Faults.SHUTDOWN_STATE:
+              logging.info('ERROR: already shutting down')
+              return
+          else:
+              raise
 
-    if self.group:
-      try:
-        self.supervisor_rpc.supervisor.removeProcessGroup(self.group)
-      except XmlRpcFault as e:
-        logging.info('Supervisord error removing old process group: %s', e)
-      try:
-        self.supervisor_rpc.supervisor.addProcessGroup(self.group)
-      except XmlRpcFault as e:
-        logging.info('Supervisord error adding new process group: %s', e)
+      added, changed, removed = result[0]
+      valid_gnames = set()
+
+      # If any gnames are specified we need to verify that they are
+      # valid in order to print a useful error message.
+      if valid_gnames:
+          groups = set()
+          for info in supervisor.getAllProcessInfo():
+              groups.add(info['group'])
+          # New gnames would not currently exist in this set so
+          # add those as well.
+          groups.update(added)
+
+          for gname in valid_gnames:
+              if gname not in groups:
+                  logging.info('ERROR: no such group: %s' % gname)
+
+      for gname in removed:
+          if valid_gnames and gname not in valid_gnames:
+              continue
+          results = supervisor.stopProcessGroup(gname)
+          logging.info('stopped %s', gname)
+
+          fails = [res for res in results
+                   if res['status'] == xmlrpc.Faults.FAILED]
+          if fails:
+              logging.warning('%s has problems; not removing', gname)
+              continue
+          supervisor.removeProcessGroup(gname)
+          logging.info('removed process group %s', gname)
+
+      for gname in changed:
+          if valid_gnames and gname not in valid_gnames:
+              continue
+          supervisor.stopProcessGroup(gname)
+          logging.info('stopped %s', gname)
+
+          supervisor.removeProcessGroup(gname)
+          supervisor.addProcessGroup(gname)
+          logging.info('updated process group %s', gname)
+
+      for gname in added:
+          if valid_gnames and gname not in valid_gnames:
+              continue
+          supervisor.addProcessGroup(gname)
+          logging.info('added process group %s', gname)
 </code></pre>
   </div>
 </div>
@@ -3890,7 +4094,7 @@ if the main thread does.</p></div>
             
   <div class="item">
     <div class="name def" id="logger_manager.SupervisorConnector.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, start_supervisor_in=None, supervisor_logger_config=None, supervisor_port=8002, supervisor_logfile_dir=&#39;/var/log/openrvdas&#39;, group=&#39;logger&#39;, max_tries=3, log_level=30)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, start_supervisor_in=None, supervisor_logger_config=None, supervisor_port=8002, supervisor_logfile_dir=&#39;/var/log/openrvdas&#39;, supervisor_auth=None, group=&#39;logger&#39;, max_tries=3, log_level=30)</p>
     </div>
     
 
@@ -3910,8 +4114,11 @@ start_supervisor_in - Start local copy of supervisord and set up
 <p>supervisor_port - Localhost port at which supervisor should serve.</p>
 <p>supervisor_logfile_dir - Directory where supevisord and logger
       stderr/stdout will be written.</p>
+<p>supervisor_auth - If provided, a username:password string to be used
+      to authenticate to the supervisor instance. If omitted, no auth
+      will be assumed.</p>
 <p>group - process group in which the configs will be defined; will be
-    prepended to config names.</p>
+      prepended to config names.</p>
 <p>max_tries = Number of times a failed logger should be retried if it
       fails on startup.
 ```</p></div>
@@ -3923,6 +4130,7 @@ start_supervisor_in - Start local copy of supervisord and set up
              supervisor_logger_config=None,
              supervisor_port=DEFAULT_SUPERVISOR_PORT,
              supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
+             supervisor_auth=None,
              group=DEFAULT_GROUP,
              max_tries=DEFAULT_MAX_TRIES,
              log_level=logging.WARNING):
@@ -3940,8 +4148,11 @@ start_supervisor_in - Start local copy of supervisord and set up
   supervisor_port - Localhost port at which supervisor should serve.
   supervisor_logfile_dir - Directory where supevisord and logger
         stderr/stdout will be written.
+  supervisor_auth - If provided, a username:password string to be used
+        to authenticate to the supervisor instance. If omitted, no auth
+        will be assumed.
   group - process group in which the configs will be defined; will be
-      prepended to config names.
+        prepended to config names.
   max_tries = Number of times a failed logger should be retried if it
         fails on startup.
   ```
@@ -3954,11 +4165,14 @@ start_supervisor_in - Start local copy of supervisord and set up
   self.supervisor_logger_config = supervisor_logger_config
   self.supervisor_port = supervisor_port
   self.supervisor_logfile_dir = supervisor_logfile_dir
+  self.supervisor_auth = supervisor_auth
   self.group = group
   self.max_tries = max_tries
+  self.log_level = log_level
   # Define these right at start, because if we shut down prematurely
   # during initialization, the destructor is going to look for them.
   self.supervisor_rpc = None
+  self.supervisor_rpc_lock = threading.Lock()
   self.supervisord_proc = None
   if bool(start_supervisor_in) == bool(supervisor_logger_config):
     logging.fatal('SupervisorConnector must have either '
@@ -3970,11 +4184,15 @@ start_supervisor_in - Start local copy of supervisord and set up
   if start_supervisor_in:
     self.supervisord_proc = self._start_supervisor()
   # Now that the preliminaries are done, try to connect to server.
-  self.supervisor_rpc = self._create_supervisor_connection()
+  with self.supervisor_rpc_lock:
+    self.supervisor_rpc = self._create_supervisor_connection()
   # Create a second connection that we will use to read logger
   # process stderr. We'll guard reads from this from stepping on
   # each other by means of a thread lock.
-  self.read_stderr_rpc =  self._create_supervisor_connection()
+  self.read_stderr_rpc_lock = threading.Lock()
+  with self.read_stderr_rpc_lock:
+    self.read_stderr_rpc =  self._create_supervisor_connection()
+  # A lock for information we maintain about current configurations
   self.config_lock = threading.Lock()
   self.read_stderr_offset = {}  # how much of each stderr we've read
   # Finally, keep track of the configs that are currently active
@@ -4017,14 +4235,15 @@ currently-active configs:</p>
      ...,
     }
   """
-  with self.config_lock:
+  with self.read_stderr_rpc_lock:
     try:
       status_list = self.read_stderr_rpc.supervisor.getAllProcessInfo()
-    except XmlExpatError as e:
+    except (ConnectionRefusedError, XmlExpatError, XmlRpcFault) as e:
       logging.error('Error reading supervisor process status: %s', e)
       return {}
-    status_map = {s.get('name', None):s for s in status_list}
-    status_result = {}
+  status_map = {s.get('name', None):s for s in status_list}
+  status_result = {}
+  with self.config_lock:
     for config in self.running_configs():
       cleaned_config_name = self._clean_name(config)
       state = status_map.get(cleaned_config_name,{})
@@ -4117,8 +4336,10 @@ currently-active configs:</p>
   with open(self.supervisor_logger_config, 'w') as config_file:
     config_file.write(content_str)
   # Re-open the connections to make a clean slate of things
-  self.supervisor_rpc = self._create_supervisor_connection()
-  self.read_stderr_rpc =  self._create_supervisor_connection()
+  with self.supervisor_rpc_lock:
+    self.supervisor_rpc = self._create_supervisor_connection()
+  with self.read_stderr_rpc_lock:
+    self.read_stderr_rpc =  self._create_supervisor_connection()
   # And reload the config file
   self.reload_config_file()
 </code></pre>
@@ -4180,7 +4401,9 @@ currently-active configs:</p>
       while overflow:
         # Get a chunk of stderr, update offset, and see if there's more
         try:
-          result, offset, overflow = getTail(cleaned_config, offset, maxchars)
+          with self.read_stderr_rpc_lock:
+            result, offset, overflow = getTail(cleaned_config,
+                                               offset, maxchars)
           results[config] += result
           self.read_stderr_offset[config] = offset
         # If we've barfed on the read, give up on this config for now
@@ -4198,7 +4421,8 @@ currently-active configs:</p>
           overflow = False
           read_fault = True
   if read_fault:
-    self.reload_config_file()
+    pass
+    #self.reload_config_file()
   return results
 </code></pre>
   </div>
@@ -4221,25 +4445,59 @@ currently-active configs:</p>
   <div id="source-logger_manager.SupervisorConnector.reload_config_file" class="source">
     <pre><code>def reload_config_file(self):
   """Tell our supervisor instance to reload config file and any groups."""
-  logging.warning('Reloading config file')
-  if self.group:
+  logging.info('Reloading config file')
+  # Included code from supervisorctl:
+  # https://github.com/Supervisor/supervisorctl.py#L1158-L1224
+  with self.supervisor_rpc_lock:
+    supervisor = self.supervisor_rpc.supervisor
     try:
-      self.supervisor_rpc.supervisor.stopProcessGroup(self.group)
-    except XmlRpcFault as e:
-      logging.info('Supervisord error when stopping Process group: %s', e)
-  try:
-    self.supervisor_rpc.supervisor.reloadConfig()
-  except XmlRpcFault as e:
-    logging.info('Supervisord error when reloading config: %s', e)
-  if self.group:
-    try:
-      self.supervisor_rpc.supervisor.removeProcessGroup(self.group)
-    except XmlRpcFault as e:
-      logging.info('Supervisord error removing old process group: %s', e)
-    try:
-      self.supervisor_rpc.supervisor.addProcessGroup(self.group)
-    except XmlRpcFault as e:
-      logging.info('Supervisord error adding new process group: %s', e)
+        result = supervisor.reloadConfig()
+    except xmlrpclib.Fault as e:
+        self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+        if e.faultCode == xmlrpc.Faults.SHUTDOWN_STATE:
+            logging.info('ERROR: already shutting down')
+            return
+        else:
+            raise
+    added, changed, removed = result[0]
+    valid_gnames = set()
+    # If any gnames are specified we need to verify that they are
+    # valid in order to print a useful error message.
+    if valid_gnames:
+        groups = set()
+        for info in supervisor.getAllProcessInfo():
+            groups.add(info['group'])
+        # New gnames would not currently exist in this set so
+        # add those as well.
+        groups.update(added)
+        for gname in valid_gnames:
+            if gname not in groups:
+                logging.info('ERROR: no such group: %s' % gname)
+    for gname in removed:
+        if valid_gnames and gname not in valid_gnames:
+            continue
+        results = supervisor.stopProcessGroup(gname)
+        logging.info('stopped %s', gname)
+        fails = [res for res in results
+                 if res['status'] == xmlrpc.Faults.FAILED]
+        if fails:
+            logging.warning('%s has problems; not removing', gname)
+            continue
+        supervisor.removeProcessGroup(gname)
+        logging.info('removed process group %s', gname)
+    for gname in changed:
+        if valid_gnames and gname not in valid_gnames:
+            continue
+        supervisor.stopProcessGroup(gname)
+        logging.info('stopped %s', gname)
+        supervisor.removeProcessGroup(gname)
+        supervisor.addProcessGroup(gname)
+        logging.info('updated process group %s', gname)
+    for gname in added:
+        if valid_gnames and gname not in valid_gnames:
+            continue
+        supervisor.addProcessGroup(gname)
+        logging.info('added process group %s', gname)
 </code></pre>
   </div>
 </div>
@@ -4327,7 +4585,8 @@ supervisor processes running and kill them with prejudice.</p></div>
   # configs. If we fail, simply return and count on trying again
   # when the next update is called.
   try:
-    results = self.supervisor_rpc.system.multicall(config_calls)
+    with self.supervisor_rpc_lock:
+      results = self.supervisor_rpc.system.multicall(config_calls)
   except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
     return
   with self.config_lock:
@@ -4386,7 +4645,8 @@ with 'logger:' when talking to supervisord about them.</p>
   # configs. If we fail, simply return and count on trying again
   # when the next update is called.
   try:
-    results = self.supervisor_rpc.system.multicall(config_calls)
+    with self.supervisor_rpc_lock:
+      results = self.supervisor_rpc.system.multicall(config_calls)
   except (ConnectionRefusedError, ResponseNotReady, CannotSendRequest):
     return
   with self.config_lock:
@@ -4428,6 +4688,16 @@ with 'logger:' when talking to supervisord about them.</p>
 
             </div>
             <div class="item">
+            <p id="logger_manager.SupervisorConnector.log_level" class="name">var <span class="ident">log_level</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
             <p id="logger_manager.SupervisorConnector.max_tries" class="name">var <span class="ident">max_tries</span></p>
             
 
@@ -4448,7 +4718,17 @@ with 'logger:' when talking to supervisord about them.</p>
 
             </div>
             <div class="item">
-            <p id="logger_manager.SupervisorConnector.read_stderr_rpc" class="name">var <span class="ident">read_stderr_rpc</span></p>
+            <p id="logger_manager.SupervisorConnector.read_stderr_rpc_lock" class="name">var <span class="ident">read_stderr_rpc_lock</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="logger_manager.SupervisorConnector.supervisor_auth" class="name">var <span class="ident">supervisor_auth</span></p>
             
 
             
@@ -4499,6 +4779,16 @@ with 'logger:' when talking to supervisord about them.</p>
             </div>
             <div class="item">
             <p id="logger_manager.SupervisorConnector.supervisor_rpc" class="name">var <span class="ident">supervisor_rpc</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="logger_manager.SupervisorConnector.supervisor_rpc_lock" class="name">var <span class="ident">supervisor_rpc_lock</span></p>
             
 
             
