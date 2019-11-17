@@ -84,13 +84,13 @@ SUPERVISORD_TEMPLATE = """
 file={supervisor_dir}/supervisor.sock   ; the path to the socket file
 chmod=0770                  ; socket file mode (default 0700)
 ;chown={user}:{group}       ; socket file uid:gid owner
-{no_auth}username={auth_user}     ; default is no username (open server)
-{no_auth}password={auth_password} ; default is no password (open server)
+{username_auth}             ; default is no username (open server)
+{password_auth}             ; default is no password (open server)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
 port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
-{no_auth}username={auth_user}     ; default is no username (open server)
-{no_auth}password={auth_password} ; default is no password (open server)
+{username_auth}            ; default is no username (open server)
+{password_auth}            ; default is no password (open server)
 
 [supervisord]
 logfile={logfile_dir}/supervisord.log ; main log file; default $CWD/supervisord.log
@@ -118,8 +118,8 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [supervisorctl]
 serverurl=unix:///{supervisor_dir}/supervisor.sock ; use a unix:// URL  for a unix socket
 serverurl=http://localhost:{port} ; use an http:// url to specify an inet socket
-{no_auth}username={auth_user}     ; should be same as in [*_http_server] if set
-{no_auth}password={auth_password} ; should be same as in [*_http_server] if set
+{username_auth}            ; should be same as in [*_http_server] if set
+{password_auth}            ; should be same as in [*_http_server] if set
 
 [include]
 files = {supervisor_dir}/supervisor.d/*.ini
@@ -252,10 +252,11 @@ class SupervisorConnector:
                             logging.DEBUG: 'debug'}.get(self.log_level, 'warn')
     if self.supervisor_auth:
       auth_user, auth_password = self.supervisor_auth.split(':')
-      no_auth = ''
+      username_auth = 'username=%s' % auth_user
+      password_auth = 'password=%s' % auth_password
     else:
-      auth_user, auth_password = ('NOT_USED', 'NOT_USED')
-      no_auth = ';'
+      username_auth = ';'
+      password_auth = ';'
       
     config_args = {
       'supervisor_dir': self.supervisor_dir,
@@ -263,9 +264,8 @@ class SupervisorConnector:
       'port': self.supervisor_port,
       'user': getpass.getuser(),
       'group': getpass.getuser(),
-      'no_auth': no_auth,
-      'auth_user': auth_user,
-      'auth_password': auth_password,
+      'username_auth': username_auth,
+      'password_auth': password_auth,
       'log_level': supervisor_log_level,
     }
     supervisor_config_str = SUPERVISORD_TEMPLATE.format(**config_args)
