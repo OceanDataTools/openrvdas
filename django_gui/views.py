@@ -155,9 +155,9 @@ def edit_config(request, logger_id):
   # If not a POST, render the selector page: 
   # What's our current mode? What's the default config for this logger
   # in this mode?
-  current_mode = api.get_active_mode()
+  active_mode = api.get_active_mode()
   config_options = api.get_logger_config_names(logger_id)
-  default_config = api.get_logger_config_name(logger_id, current_mode)
+  default_config = api.get_logger_config_name(logger_id, active_mode)
   current_config = api.get_logger_config_name(logger_id)
 
   # dict of config_name: config_json

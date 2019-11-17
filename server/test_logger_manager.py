@@ -107,9 +107,9 @@ class TestLoggerManagerAPI(unittest.TestCase):
     supervisor = SupervisorConnector(
       start_supervisor_in=self.tmpdirname + '/supervisor',
       max_tries=1,
-      log_level=logging.CRITICAL)
+      log_level=logging.WARNING)
     logger_manager = LoggerManager(api=api, supervisor=supervisor,
-                                   logger_log_level=logging.CRITICAL)
+                                   logger_log_level=logging.WARNING)
 
     ############################
     def run_commands(logger_manager):
@@ -149,8 +149,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-  LOG_LEVELS = {0:logging.CRITICAL, 1:logging.WARNING,
-                2:logging.INFO, 3:logging.DEBUG}
+  LOG_LEVELS = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   logging.basicConfig(format=LOGGING_FORMAT)
   args.verbosity = min(args.verbosity, max(LOG_LEVELS))
   logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])

@@ -56,7 +56,7 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   def get_active_mode(self):
     """Return cruise config for specified cruise id."""
-    return self.config.get('current_mode', None)
+    return self.config.get('active_mode', None)
 
   ############################
   def get_default_mode(self):
@@ -163,7 +163,7 @@ class InMemoryServerAPI(ServerAPI):
     if not mode in modes:
       raise ValueError('Config has no mode "%s"' % (mode))
 
-    self.config['current_mode'] = mode
+    self.config['active_mode'] = mode
 
     # Update the stored {logger:config_name} dict to match new mode
     # Here's a quick one-liner that doesn't do any checking:

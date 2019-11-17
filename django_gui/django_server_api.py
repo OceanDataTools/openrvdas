@@ -217,8 +217,8 @@ class DjangoServerAPI(ServerAPI):
       return self.active_mode
     
     cruise = self._get_cruise_object()
-    if cruise.current_mode:
-      self.active_mode = cruise.current_mode.name
+    if cruise.active_mode:
+      self.active_mode = cruise.active_mode.name
       self.active_mode_time = time.time()
       return self.active_mode
     return None
@@ -360,11 +360,11 @@ class DjangoServerAPI(ServerAPI):
           mode_obj = Mode.objects.get(name=mode)
         except Mode.DoesNotExist:
           raise ValueError('Cruise has no mode %s' % mode)
-        cruise.current_mode = mode_obj
+        cruise.active_mode = mode_obj
         cruise.save()
 
         # Store the fact that our mode has been changed.
-        #CruiseState(cruise=cruise, current_mode=mode_obj).save()
+        #CruiseState(cruise=cruise, active_mode=mode_obj).save()
 
         for logger in Logger.objects.filter(cruise=cruise):
           logger_id = logger.name

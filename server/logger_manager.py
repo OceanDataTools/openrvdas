@@ -229,8 +229,8 @@ class SupervisorConnector:
 
   ############################
   def _start_supervisor(self):
-    logging.warning('Starting standalone supervisord instance in %s',
-                    self.supervisor_dir)
+    logging.info('Starting standalone supervisord instance in %s',
+                 self.supervisor_dir)
     # Make the working directory that supervisord will run in if it
     # doesn't exist and, while we're at it, make the supervisor.d/
     # subdirectory of that where we'll put our logger config .ini file.
@@ -306,8 +306,8 @@ class SupervisorConnector:
         logging.error('Supervisord is not running. State is "%s"',
                       supervisor_state['statename'])
       except ConnectionRefusedError:
-        logging.warning('Unable to connect to supervisord at %s; trying again.',
-                        supervisor_url)
+        logging.info('Unable to connect to supervisord at %s; trying again.',
+                     supervisor_url)
       time.sleep(5)
       logging.info('Retrying connection to %s', supervisor_url)
 
@@ -341,7 +341,7 @@ class SupervisorConnector:
         if (len(cmdline) == 7 and SUPERVISORD in cmdline[1] and
             cmdline[2] == '-i' and cmdline[3] == SUPERVISORD_NAME):
           process.kill()
-          logging.warning('Killed existing supervisor process %d', process.pid)
+          logging.info('Killed existing supervisor process %d', process.pid)
           break
       except (psutil.AccessDenied, psutil.ZombieProcess) as e:
         logging.debug('Got psutil error for %s: %s', process, e)
@@ -640,7 +640,7 @@ class SupervisorConnector:
   ############################
   def reload_config_file(self):
     """Tell our supervisor instance to reload config file and any groups."""
-    logging.warning('Reloading config file - restarting supervisord')
+    logging.info('Reloading config file')
 
     # Included code from supervisorctl:
     # https://github.com/Supervisor/supervisorctl.py#L1158-L1224
@@ -1033,14 +1033,14 @@ class LoggerManager:
           'cruise_id': cruise.get('cruise', {}).get('id', ''),
           'loggers': self.api.get_loggers(),
           'modes': cruise.get('modes', {}),
-          'active_mode': cruise.get('current_mode','')
+          'active_mode': cruise.get('active_mode','')
           }
       else:
         cruise_def = {
           'cruise_id': cruise.id,
           'loggers': self.api.get_loggers(),
           'modes': cruise.modes(),
-          'active_mode': cruise.current_mode.name
+          'active_mode': cruise.active_mode.name
         }
     except (AttributeError, ValueError) as e:
       logging.info('No cruise definition found: %s', e)
@@ -1070,7 +1070,7 @@ class LoggerManager:
     if cruise_def_changed:
       self.definition = cruise_def
       self.definition_time = now
-      logging.warning('Cruise has changed - building new configuration file')
+      logging.info('Cruise has changed - building new configuration file')
       self._build_new_config_file()
 
     # If things haven't changed, only send definition every N seconds

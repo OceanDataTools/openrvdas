@@ -78,9 +78,9 @@ class Cruise(models.Model):
   config_text = models.TextField(blank=True, null=True)
   loaded_time = models.DateTimeField(auto_now_add=True, null=True)
 
-  current_mode = models.ForeignKey('Mode', on_delete=models.SET_NULL,
+  active_mode = models.ForeignKey('Mode', on_delete=models.SET_NULL,
                                    blank=True, null=True,
-                                   related_name='cruise_current_mode')
+                                   related_name='cruise_active_mode')
   default_mode = models.ForeignKey('Mode', on_delete=models.SET_NULL,
                                    blank=True, null=True,
                                    related_name='cruise_default_mode')
@@ -112,11 +112,11 @@ class LogMessage(models.Model):
 # What mode is cruise in? Since when?
 #class CruiseState(models.Model):
 #  cruise = models.ForeignKey('Cruise', on_delete=models.CASCADE)
-#  current_mode = models.ForeignKey('Mode', on_delete=models.CASCADE)
+#  active_mode = models.ForeignKey('Mode', on_delete=models.CASCADE)
 #  started = models.DateTimeField(auto_now_add=True)
 #
 #  def __str__(self):
-#    return '%s: %s' % (self.cruise, self.current_mode)
+#    return '%s: %s' % (self.cruise, self.active_mode)
 
 ##############################
 # Which is our current cruise? Since when?
