@@ -144,7 +144,7 @@ apt-get update
 
 apt install -y socat git nginx python3-dev python3-pip libreadline-dev \
     mysql-server mysql-common mysql-client libmysqlclient-dev libsqlite3-dev \
-    openssh-server supervisor
+    openssh-server supervisor libssl-dev
 
 # Install database stuff and set up as service.
 echo "#########################################################################"
