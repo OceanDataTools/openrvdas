@@ -67,10 +67,10 @@ class CruiseAdmin(admin.ModelAdmin):
     return Mode.objects.filter(cruise=obj)
 
   list_display = ('id', 'end', 'start',
-                  'current_mode', 'default_mode',
+                  'active_mode', 'default_mode',
                   'config_filename', 'loaded_time', 'modes')
   fieldsets = [
-    (None,    {'fields':['id', 'current_mode']}),
+    (None,    {'fields':['id', 'active_mode']}),
     ('Dates', {'classes': ['collapse'],
                'fields': ['start', 'end']}),
     ('Source', {'classes': ['collapse'],
@@ -93,7 +93,7 @@ class LogMessageAdmin(admin.ModelAdmin):
 #  list_display = ('cruise', 'as_of')
 
 #class CruiseStateAdmin(admin.ModelAdmin):
-#  list_display = ('cruise', 'current_mode', 'started')
+#  list_display = ('cruise', 'active_mode', 'started')
 #  list_filter = ('cruise',)
 
 #############################################

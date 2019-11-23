@@ -3,8 +3,11 @@ D3 based widgets (http://d3js.com)
 
 This file defines and exports two basic widgets:
   - TimelineWidget
-  - DialWidget (not implemented yet)
+  - DialWidget
 ********************************************************************************/
+
+// https://standardjs.com/#i-use-a-library-that-pollutes-the-global-namespace-how-do-i-prevent-variable-is-not-defined-errors
+/* global d3 */
 
 /**********************
 // TimelineWidget definition
@@ -33,6 +36,10 @@ function TimelineWidget (
 
   const defaultWidgetOptions = {
     height: 400,
+    min: null,
+    max: null,
+    minRange: null,
+    showLegend: true,
     maxPoints: 500
   }
   const thisWidgetOptions = { ...defaultWidgetOptions, ...widgetOptions }
@@ -92,8 +99,15 @@ function TimelineWidget (
 
 function realTimeLineChart (widgetParams) {
   const duration = 1000
-  const { height, yLabel, colors, fieldNames, fieldInfo } = widgetParams
+  const { yLabel, colors, fieldNames, fieldInfo, height, min, max, minRange, showLegend } =
+    widgetParams
   const margin = { top: 20, right: 10, bottom: 20, left: yLabel ? 50 : 30 }
+
+  // Find the maximum seconds specified for any field. If none found, default to 60.
+  const maxFieldSeconds = Object.values(fieldInfo)
+    .filter(v => 'seconds' in v)
+    .reduce((acc, v) => Math.max(acc, v.seconds), 0)
+  const maxSeconds = maxFieldSeconds || 60
 
   function chart (selection) {
     selection.each(function (nodeData) {
@@ -109,15 +123,23 @@ function realTimeLineChart (widgetParams) {
       const y = d3.scaleLinear().rangeRound([h, 0])
       const z = d3.scaleOrdinal(colors)
 
-      const xMin = d3.min(data, c => d3.min(c.values, d => d.time))
       const xMax = new Date(new Date(d3.max(data, c => d3.max(c.values, d => d.time)))
-        .getTime() - (duration * 2))
+        .getTime() - duration)
+      const xMin = xMax - maxSeconds * 1000
+
+      // use bounds if specified, else use max and min of data
+      let yMin = min !== null ? min : d3.min(data, c => d3.min(c.values, d => d.value))
+      let yMax = max !== null ? max : d3.max(data, c => d3.max(c.values, d => d.value))
+
+      // if the range is too small, symmetrically enlarge it
+      if (minRange !== null && yMax - yMin < minRange) {
+        const mid = (yMax + yMin) / 2
+        yMin = mid - minRange / 2
+        yMax = mid + minRange / 2
+      }
 
       x.domain([xMin, xMax])
-      y.domain([
-        d3.min(data, c => d3.min(c.values, d => d.value)),
-        d3.max(data, c => d3.max(c.values, d => d.value))
-      ])
+      y.domain([yMin, yMax])
       z.domain(data.map(c => c.fieldName))
 
       const line = d3.line()
@@ -138,15 +160,17 @@ function realTimeLineChart (widgetParams) {
         .selectAll('.data').data(data).enter()
         .append('path').attr('class', 'data')
 
-      const legendEnter = gEnter.append('g')
-        .attr('class', 'legend')
-        .attr('transform', 'translate(10,0)')
-      legendEnter.selectAll('text')
-        .data(data).enter()
-        .append('text')
-        .attr('y', (d, i) => (i * 20) + 5)
-        .attr('x', 5)
-        .attr('fill', d => z(d.fieldName))
+      if (showLegend) {
+        gEnter.append('g')
+          .attr('class', 'legend')
+          .attr('transform', 'translate(10,0)')
+          .selectAll('text')
+          .data(data).enter()
+          .append('text')
+          .attr('y', (d, i) => (i * 20) + 5)
+          .attr('x', 5)
+          .attr('fill', d => z(d.fieldName))
+      }
 
       svg = selection.select('svg')
       svg.attr('width', width).attr('height', height)
@@ -197,12 +221,15 @@ function realTimeLineChart (widgetParams) {
         .ease(d3.easeLinear)
         .on('start', tick)
 
-      g.selectAll('g .legend text')
-        .data(data)
-        .text(d => {
-          const legendName = fieldInfo[d.fieldName].name
-          return legendName + (d.values.length > 0 ? ': ' + d.values[d.values.length - 1].value : '')
-        })
+      if (showLegend) {
+        g.selectAll('g .legend text')
+          .data(data)
+          .text(d => {
+            const legendName = fieldInfo[d.fieldName].name
+            const n = d.values.length
+            return legendName + (n > 0 ? ': ' + d.values[n - 1].value : '')
+          })
+      }
 
       function tick () {
         d3.select(this)
@@ -219,11 +246,226 @@ function realTimeLineChart (widgetParams) {
   return chart
 }
 
-function DialWidget (container) {
-  this.process_message = function (message) {
+/**********************
+// DialWidget definition
+
+Create a D3 based dial displaying one or more variables
+
+  container - name of div on page to use for displaying widget
+
+  fields - associative array of field_name:{options} for widget
+
+  widget_options - an optional associative array of options to use in
+      place of the DialWidget's default options. Will overwrite the default
+      options on a one-by-one basis.
+      See defaultWidgetOptions for currently supported options.
+**********************/
+function DialWidget (
+  container,
+  fields,
+  widgetOptions = {}
+) {
+  this.fields = fields // used by WidgetServer
+
+  const defaultWidgetOptions = {
+    min: 0,
+    max: 360,
+    startAngle: 0,
+    endAngle: 360,
+    tickInterval: 45,
+    minorTickInterval: 5,
+    radius: 180,
+    showDescriptions: false,
+    showNumericValues: true
+  }
+  const thisWidgetOptions = { ...defaultWidgetOptions, ...widgetOptions }
+
+  const colors = []
+  const fieldNames = []
+  let i = 0
+  for (const id in fields) {
+    colors.push(fields[id].color || d3.schemeCategory10[i++ % 10])
+    fieldNames.push(fields[id].name)
   }
 
-  d3.select(container).append('text').text('Dial Widget coming soon')
+  const vMin = thisWidgetOptions.min
+  const vMax = thisWidgetOptions.max
+  const aMin = thisWidgetOptions.startAngle
+  const delta = thisWidgetOptions.endAngle - thisWidgetOptions.startAngle
+  // force aMax to be > aMin and <= aMin + 360, by adding a multiple of 360 to endAngle
+  const aMax = thisWidgetOptions.endAngle + 360 * Math.floor((360 - delta) / 360)
+  const vScale = (aMax - aMin) / (vMax - vMin)
+
+  document.addEventListener('DOMContentLoaded', () => {
+    this.initialize()
+  })
+
+  this.initialize = function () {
+    const r = defaultWidgetOptions.radius
+    const svg = d3.select(container)
+      .append('svg')
+      .attr('class', 'gauge')
+      .attr('width', r * 2)
+      .attr('height', r * 2)
+
+    svg.append('circle').attr('cx', r).attr('cy', r).attr('r', r - 1).attr('class', 'outer')
+    svg.append('circle').attr('cx', r).attr('cy', r).attr('r', r - 8).attr('class', 'inner')
+    svg.append('path')
+      .attr('class', 'arc')
+      .attr('d', d3.arc()({
+        startAngle: aMin * Math.PI / 180,
+        endAngle: aMax * Math.PI / 180,
+        innerRadius: r - 8,
+        outerRadius: r - 8
+      }))
+      .attr('transform', `translate(${r}, ${r})`)
+    svg.append('path')
+      .attr('class', 'wedge')
+      .attr('d', d3.arc()({
+        startAngle: aMax * Math.PI / 180,
+        endAngle: 2 * Math.PI + aMin * Math.PI / 180,
+        innerRadius: 0,
+        outerRadius: r - 1
+      }))
+      .attr('transform', `translate(${r}, ${r})`)
+
+    if (thisWidgetOptions.showNumericValues || thisWidgetOptions.showDescriptions) {
+      // add text fields for descriptions and/or numeric values
+      svg.selectAll('text.numeric').data(colors).enter()
+        .append('text')
+        .attr('class', 'numeric')
+        .attr('fill', d => d)
+        .attr('text-anchor', 'middle')
+        .attr('x', r)
+        .attr('y', (d, i) => r + 50 + (i * 20))
+    }
+
+    /* eslint-disable key-spacing */
+    const pointerPath = [
+      { x: -5, y: -110 },
+      { x:  0, y: -140 },
+      { x:  5, y: -110 },
+      { x:  5, y:   10 },
+      { x: -5, y:   10 },
+      { x: -5, y: -110 }
+    ]
+    /* eslint-enable key-spacing */
+
+    svg.selectAll('g').data(colors).enter()
+      .append('g')
+      .style('fill', d => d)
+      .selectAll('path')
+      .data([pointerPath])
+      .enter()
+      .append('path')
+      .attr('class', 'pointer')
+      .attr('d', d3.line().x(d => d.x).y(d => d.y))
+      .attr('transform', `translate(${r}, ${r})`)
+
+    svg.append('circle').attr('cx', r).attr('cy', r).attr('r', 5).attr('class', 'pin')
+
+    const tickAngles = []
+    const minorTickAngles = []
+    const delta = thisWidgetOptions.tickInterval * vScale
+    const delta2 = thisWidgetOptions.minorTickInterval * vScale
+    for (let a = aMin; a <= aMax; a += delta) {
+      tickAngles.push(a)
+      for (let a2 = a + delta2; a2 < a + delta && a2 < aMax; a2 += delta2) {
+        minorTickAngles.push(a2)
+      }
+    }
+    if (aMax - aMin === 360) { tickAngles.shift() } // avoid overlapping labels
+
+    // each major tick consists of a group with a line and a label, moved as a unit
+    const tickGroups = svg.selectAll('line').data(tickAngles).enter().append('g')
+      .attr('class', 'major')
+    tickGroups.append('line')
+      .attr('x1', 0).attr('y1', -162)
+      .attr('x2', 0).attr('y2', -172)
+    tickGroups.append('text')
+      .text(d => vMin + (d - aMin) / vScale)
+      .attr('y', -150)
+      .attr('text-anchor', 'middle')
+    tickGroups.attr('transform', d => `translate(${r}, ${r})rotate(${d})`)
+
+    // create and position the minor ticks
+    svg.selectAll('line.minor').data(minorTickAngles).enter()
+      .append('line')
+      .attr('class', 'minor')
+      .attr('x1', 0).attr('y1', -167)
+      .attr('x2', 0).attr('y2', -172)
+      .attr('transform', d => `translate(${r}, ${r})rotate(${d})`)
+
+    if (thisWidgetOptions.showNumericValues && !thisWidgetOptions.showDescriptions) {
+      // add tooltip for numeric display
+      const div = d3.select(container).append('div').attr('class', 'tooltip')
+      svg.selectAll('text.numeric')
+        .on('mouseover', (d, i) =>
+          div.style('opacity', 0.8)
+            .html(fieldNames[i])
+            .style('color', colors[i])
+            .style('border-color', colors[i])
+            .style('left', `${d3.event.pageX - 0.7 * r}px`)
+            .style('top', `${d3.event.pageY - 0.7 * r}px`)
+        )
+        .on('mouseout', (d, i) => div.style('opacity', 0))
+    }
+
+    // scale the whole widget to the specified radius
+    svg.attr('transform', d => `scale(${thisWidgetOptions.radius / defaultWidgetOptions.radius})`)
+  }
+
+  this.process_message = function (message) {
+    const data = []
+    for (const fieldName in fields) {
+      const arr = message[fieldName]
+      if (!arr || arr.length === 0) {
+        continue
+      }
+
+      // Take the last value, and apply a transform, if defined.
+      const v = arr[arr.length - 1][1]
+      data.push(fields[fieldName].transform ? fields[fieldName].transform(v) : v)
+    }
+
+    // The default radius is used here because the svg element has a transform attribute
+    // that scales to the specified radius.
+    const r = defaultWidgetOptions.radius
+
+    // transition pointers to new positions
+    d3.select(container)
+      .selectAll('path.pointer').data(data)
+      .transition()
+      .duration(250)
+      // using 'function' instead of arrow so that 'this' will refer to the current DOM element
+      .attrTween('transform', function (d) {
+        let targetRotation = aMin + (d - vMin) * vScale
+        const currentRotation = this.previousRotation || targetRotation
+        this.previousRotation = targetRotation
+
+        if (aMax - aMin === 360) {
+          // minimize movement needed to reach target
+          if (targetRotation - currentRotation > 180) { targetRotation -= 360 }
+          if (targetRotation - currentRotation < -180) { targetRotation += 360 }
+        }
+
+        return t => {
+          const intermediateRotation = currentRotation + (targetRotation - currentRotation) * t
+          return `translate(${r}, ${r})rotate(${intermediateRotation})`
+        }
+      })
+
+    if (thisWidgetOptions.showNumericValues || thisWidgetOptions.showDescriptions) {
+      // update descriptions and/or numeric values
+      d3.select(container)
+        .selectAll('text.numeric').data(data)
+        .text((d, i) =>
+          thisWidgetOptions.showDescriptions
+            ? `${fieldNames[i]}${thisWidgetOptions.showNumericValues ? ': ' + d : ''}`
+            : d
+        )
+    }
+  }
 }
 
 export { TimelineWidget, DialWidget }

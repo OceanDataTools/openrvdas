@@ -39,9 +39,7 @@ DEFAULT_MAX_TRIES = 3
 class DjangoServerAPI(ServerAPI):
   ############################
   def __init__(self):
-    super().__init__()
-    self.update_callbacks = []
-
+    super().__init__()    
     # We're going to try to minimize the number of expensive queries we
     # make to the API by caching the last time any configurations were
     # updated. When we make a change to the DB, we'll update the most
@@ -219,8 +217,8 @@ class DjangoServerAPI(ServerAPI):
       return self.active_mode
     
     cruise = self._get_cruise_object()
-    if cruise.current_mode:
-      self.active_mode = cruise.current_mode.name
+    if cruise.active_mode:
+      self.active_mode = cruise.active_mode.name
       self.active_mode_time = time.time()
       return self.active_mode
     return None
@@ -246,13 +244,12 @@ class DjangoServerAPI(ServerAPI):
   def get_logger(self, logger):
     """Retrieve the logger spec for the specified logger id."""
     #logging.info('get_logger')
-    return self.get_logger_object(logger_id)
+    return self._get_logger_object(logger)
 
   ############################
   def get_loggers(self):
     """Get a dict of {logger_id:logger_spec,...} defined for the
     current cruise."""
-    #logging.info('get_loggers')
     while True:
       try:
         loggers = Logger.objects.all()
@@ -363,11 +360,11 @@ class DjangoServerAPI(ServerAPI):
           mode_obj = Mode.objects.get(name=mode)
         except Mode.DoesNotExist:
           raise ValueError('Cruise has no mode %s' % mode)
-        cruise.current_mode = mode_obj
+        cruise.active_mode = mode_obj
         cruise.save()
 
         # Store the fact that our mode has been changed.
-        #CruiseState(cruise=cruise, current_mode=mode_obj).save()
+        #CruiseState(cruise=cruise, active_mode=mode_obj).save()
 
         for logger in Logger.objects.filter(cruise=cruise):
           logger_id = logger.name
@@ -444,24 +441,6 @@ class DjangoServerAPI(ServerAPI):
                         'Got DjangoOperationalError. Trying again: %s', e)
         connection.close()
         time.sleep(0.1)
-
-  #############################
-  # API method to register a callback. When the data store changes,
-  # methods that are registered via on_update() will be called so they
-  # can fetch updated results.
-  #############################
-  def on_update(self, callback, kwargs=None):
-    """Register a method to be called when datastore changes."""
-    if kwargs is None:
-      kwargs = {}
-    self.update_callbacks.append((callback, kwargs))
-
-  #############################
-  def signal_update(self):
-    """Call the registered methods when an update has been signalled."""
-    for (callback, kwargs) in self.update_callbacks:
-      logging.debug('Executing update callback: %s', callback)
-      callback(**kwargs)
 
   ############################
   # Methods for feeding data from LoggerManager back into the API
@@ -767,6 +746,9 @@ class DjangoServerAPI(ServerAPI):
     logging.info('Cruise loaded - setting to default mode %s', default_mode)
     self.set_active_mode(default_mode)
 
+    # Let anyone who's interested know that we've got new configurations.
+    self.signal_load()
+    
   ############################
   def delete_configuration(self):
     """Remove the current cruise from the data store."""

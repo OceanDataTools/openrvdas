@@ -46,29 +46,23 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   def get_configuration(self):
     """Return cruise config for specified cruise id."""
-    config = self.config
-    return config
+    return self.config
 
   ############################
   def get_modes(self):
     """Return list of modes defined for given cruise."""
-    config = self.get_configuration()
-    try:
-      return list(config.get('modes', None))
-    except:
-      return []
+    return list(self.config.get('modes', []))
 
   ############################
   def get_active_mode(self):
     """Return cruise config for specified cruise id."""
-    return self.mode
+    return self.config.get('active_mode', None)
 
   ############################
   def get_default_mode(self):
     """Get the name of the default mode for the specified cruise
     from the data store."""
-    config = self.get_configuration()
-    return config.get('default_mode', None)
+    return self.config.get('default_mode', None)
 
   ############################
   def get_logger(self, logger):
@@ -131,13 +125,12 @@ class InMemoryServerAPI(ServerAPI):
     in the specified mode. If mode is omitted, retrieve name of logger's
     current config."""
 
-    # If mode is not specified, get logger's current config name
-    if mode is None:
-      mode = self.mode
-
     if not self.config:
       raise ValueError('No configuration loaded')
 
+    # If mode is not specified, get logger's current config name
+    if mode is None:
+      mode = self.get_active_mode()
     modes = self.config.get('modes')
     mode_configs = modes.get(mode, None)
     if mode_configs is None:
@@ -164,15 +157,13 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   def set_active_mode(self, mode):
     """Set the current mode of the specified cruise in the data store."""
-    _config = self.get_configuration()
-    modes = _config.get('modes', None)
+    modes = self.config.get('modes', None)
     if not modes:
       raise ValueError('Config has no modes??')
     if not mode in modes:
       raise ValueError('Config has no mode "%s"' % (mode))
 
-    # Set new current mode in data store
-    self.mode = mode
+    self.config['active_mode'] = mode
 
     # Update the stored {logger:config_name} dict to match new mode
     # Here's a quick one-liner that doesn't do any checking:
@@ -200,35 +191,6 @@ class InMemoryServerAPI(ServerAPI):
 
     logging.info('Signaling update')
     self.signal_update()
-
-  #############################
-  # API method to register a callback. When the data store changes,
-  # methods that are registered via on_update() will be called so they
-  # can fetch updated results. If cruise_id==None, make callback when
-  # any cruise_id update is registered.
-  #############################
-  def on_update(self, callback, kwargs=None):
-    """Register a method to be called when datastore changes."""
-    # if not cruise_id in self.callbacks:
-    #   self.callbacks[cruise_id] = []
-    if kwargs is None:
-      kwargs = {}
-    self.callbacks.append((callback, kwargs))
-
-  #############################
-  def signal_update(self):
-    """Call the registered methods when an update has been signalled."""
-
-    for (callback, kwargs) in self.callbacks:
-      logging.debug('Executing update callback: %s',
-                    callback)
-      callback(**kwargs)
-
-    # If cruise_id is *not* None, then we've now done the callbacks
-    # for that specified cruise. But we may also have callbacks (filed
-    # under None) that are supposed to be executed when *any* cruise
-    # is updated. Do those now.
-    # self.signal_update()
 
   ############################
   # Methods for feeding data from LoggerServer back into the API
@@ -344,21 +306,16 @@ class InMemoryServerAPI(ServerAPI):
   def load_configuration(self, config):
     """Add a complete cruise configuration (id, modes, configs, 
     default) to the data store."""
-    # if 'cruise' in cruise_config and 'id' in cruise_config['cruise']:
-    #   cruise_id = cruise_config['cruise']['id']
-    # else:
-    #   cruise_id = 'cruise_%d' % len(cruise_configs.keys())
-
-    # if ID_SEPARATOR in cruise_id:
-    #   raise ValueError('Illegal character "%s" in cruise id: "%s"' %
-    #                    ID_SEPARATOR, cruise_id)
-
     self.config = config
 
     # Set cruise into default mode, if one is defined
     if 'default_mode' in config:
-      self.set_active_mode(config['default_mode'])
+      active_mode = config['default_mode']
+      self.set_active_mode(active_mode)
 
+    # Let anyone who's interested know that we've got new configurations.
+    self.signal_load()
+    
   ############################
   def delete_configuration(self):
     """Remove the specified cruise from the data store."""

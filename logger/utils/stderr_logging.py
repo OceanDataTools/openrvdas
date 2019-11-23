@@ -1,59 +1,27 @@
 #!/usr/bin/env python3
 
+import json
 import logging
-import logging.handlers
 import time
+import sys
 
-from os import makedirs
-from os.path import dirname
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-# Default base of logging path. See setUpStdErrLogging() for explanation.
-DEFAULT_STDERR_PATH = '/var/log/openrvdas/'
-DEFAULT_LOGGING_FORMAT = '%(asctime)-15s.%(msecs)03dZ %(filename)s:%(lineno)d: %(message)s'
-DEFAULT_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'  # ISO8601
+from logger.utils.timestamp import TIME_FORMAT, LOGGING_TIME_FORMAT
 
-################################################################################
-# Set up logging first of all
-def setUpStdErrLogging(stderr_file=None, stderr_path=None,
-                       logging_format=DEFAULT_LOGGING_FORMAT, log_level=None):
-  """Set up default logging module handler to send stderr to console but
-  also, if specified, to a stderr_file. If the string stderr_file is a
-  fully-qualified path (i.e. starts with '/'), use that; if not append
-  it to the string stderr_path.
-  """
-  #logging.debug('setUpStdErrLogging file %s, path %s, level %s',
-  #              stderr_file, stderr_path, log_level)
-  
-  logging.basicConfig(format=logging_format)
-  if log_level:
-    logging.root.setLevel(log_level)
+DEFAULT_LOGGING_FORMAT = ' '.join([
+  '%(asctime)-15s.%(msecs)03dZ',
+  #'%(asctime)s',
+  '%(levelno)s',
+  '%(levelname)s',
+  '%(filename)s:%(lineno)d',
+  '%(message)s',
+  ])
 
-  # If they've not given us a file to log to, nothing else to do
-  if not stderr_file:
-    return
-  
-  # Send output to stderr
-  formatter = logging.Formatter(fmt=logging_format,
-                                datefmt=DEFAULT_DATE_FORMAT)
-  console_handler = logging.StreamHandler()
-  console_handler.setFormatter(formatter)
-  handlers = [console_handler]
-
-  # If not a full path, use default base path
-  if not stderr_file.find('/') == 0:
-    stderr_path = stderr_path or DEFAULT_STDERR_PATH
-    stderr_file = stderr_path + stderr_file
-
-  # Try to make enclosing dir if it doesn't exist
-  makedirs(dirname(stderr_file), exist_ok=True)
-
-  # Attach a filehandler that will write to the specified file
-  file_handler = logging.handlers.WatchedFileHandler(stderr_file)
-  file_handler.setFormatter(formatter)
-
-  logging.root.handlers = [console_handler, file_handler]
-  if log_level:
-    logging.root.setLevel(log_level)
+STDERR_FORMATTER = logging.Formatter(fmt=DEFAULT_LOGGING_FORMAT,
+                                     datefmt=LOGGING_TIME_FORMAT)
+STDERR_FORMATTER.converter = time.gmtime
 
 ############################
 class StdErrLoggingHandler(logging.Handler):
@@ -62,13 +30,17 @@ class StdErrLoggingHandler(logging.Handler):
 
     logging.getLogger().addHandler(StdErrLoggingHandler(my_writer))
   """
-  def __init__(self, writers, logging_format=DEFAULT_LOGGING_FORMAT):
+  def __init__(self, writers, parse_to_json=False):
+    """
+    writers - either a Writer object or a list of Writer objects
+
+    parse_to_json - if true, expect to receive output as
+        a string in DEFAULT_LOGGING_FORMAT, and parse it into a dict of
+        the respective values.
+    """
     super().__init__()
     self.writers = writers
-
-    self.formatter = logging.Formatter(fmt=logging_format,
-                                       datefmt=DEFAULT_DATE_FORMAT)
-    self.formatter.converter = time.gmtime
+    self.parse_to_json = parse_to_json
 
   def emit(self, record):
     # Temporarily push the logging level up as high as it can go to
@@ -77,8 +49,20 @@ class StdErrLoggingHandler(logging.Handler):
     log_level = logging.root.getEffectiveLevel()
     logging.root.setLevel(logging.CRITICAL)
 
-    message = self.formatter.format(record)
-      
+    message = STDERR_FORMATTER.format(record)
+
+    # If we're supposed to parse string into a dict
+    if self.parse_to_json:
+      try:
+        (asctime, levelno, levelname, mesg) = message.split(' ', maxsplit=3)
+        levelno = int(levelno)
+        fields = {'asctime':asctime, 'levelno':levelno,
+                   'levelname':levelname, 'message':mesg}
+      except ValueError:
+        fields = {'message':message}
+      message = json.dumps(fields)
+
+    # Write message out to each writer
     if type(self.writers) is list:
       [writer.write(message) for writer in self.writers if writer]
     else:

@@ -9,11 +9,11 @@ import traceback
 from os import makedirs
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
+from logger.readers.text_file_reader import TextFileReader
+from logger.writers.text_file_writer import TextFileWriter
 from logger.readers.composed_reader import ComposedReader
 from logger.writers.composed_writer import ComposedWriter
-from logger.utils.stderr_logging import setUpStdErrLogging, StdErrLoggingHandler
 
-    
 ################################################################################
 class Listener:
   """Listener is a simple, yet relatively self-contained class that
@@ -25,7 +25,7 @@ class Listener:
 
   """
   ############################
-  def __init__(self, readers, transforms=[], writers=[], stderr_writers=[],
+  def __init__(self, readers=[], transforms=[], writers=[], stderr_writers=[],
                host_id='', interval=0, name=None, check_format=False,
                log_level=None):
     """listener = Listener(readers, transforms=[], writers=[],
@@ -67,13 +67,8 @@ class Listener:
     Calling listener.quit() from another thread will cause the run() loop
     to exit.
     """
-    # Set up logging first of all
-    setUpStdErrLogging(log_level=log_level)
-    if stderr_writers:
-      logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
-
     logging.info('Instantiating %s logger', name or 'unnamed')
-    
+
     ###########
     # Create readers, writers, etc.
     self.reader = ComposedReader(readers=readers, check_format=check_format)
@@ -101,6 +96,11 @@ class Listener:
     component readers have returned EOF.
     """
     logging.info('Running %s', self.name)
+
+    if not self.reader and not self.writer:
+      logging.info('No readers or writers defined - exiting.')
+      return
+
     record = ''
     try:
       while not self.quit_signalled and record is not None:

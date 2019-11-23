@@ -69,23 +69,34 @@ function process_message(message_str) {
                   + field_name);
       for (var vl_i = 0; vl_i < value_list.length; vl_i++) {
         var element = value_list[vl_i];
-        var value = element[1];
-        var [log_level, level_name, timestamped_message] = value.split('\t', 3);
-        var parts = timestamped_message.split(' ');
-        var timestamp = parts[0];
-        var message = parts.slice(1).join(' ');
-
+        var timestamp = element[0];
+        console.log('PARSING: ' + element[1]);
+        try {
+          var value = JSON.parse(element[1]);
+          var asctime = value['asctime'];
+          var levelno = value['levelno'];
+          var levelname = value['levelname'];
+          var message = value['message'];
+        } catch (e) {
+          // If it's not JSON, maybe it's a simple string
+          console.log('Failed to parse log message as JSON. Now trying split');
+          var parts = element[1].split(' ');
+          var asctime = parts[0];
+          var levelno = parts[1];
+          var levelname = parts[2];
+          var message = parts.slice(3).join(' ');
+        }
         // If log level is greater than the level of this message, skip it
-        if (LOG_LEVEL > log_level) {
+        
+        if (LOG_LEVEL > levelno) {
           continue;
         }
-
         var tr = document.createElement("tr");
         var td = document.createElement("td");
-        td.appendChild(document.createTextNode(timestamp));
+        td.appendChild(document.createTextNode(asctime));
         tr.appendChild(td);
         var td = document.createElement("td");
-        td.appendChild(document.createTextNode(level_name));
+        td.appendChild(document.createTextNode(levelname));
         tr.appendChild(td);
         var td = document.createElement("td");
         td.appendChild(document.createTextNode(message));
@@ -94,7 +105,7 @@ function process_message(message_str) {
         // Set message color if it's a warning or error
         for (var level in LOG_LEVEL_COLORS) {
           var level_color = LOG_LEVEL_COLORS[level];
-          if (log_level == level) {
+          if (levelno == level) {
             tr.style.backgroundColor = level_color;
           }
         }

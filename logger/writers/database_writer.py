@@ -100,7 +100,7 @@ class DatabaseWriter(Writer):
         fields = record['fields']
         record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
       except KeyError:
-        logging.error('Unable to create DASRecord from dict:\n%s',
+        logging.error('Unable to create DASRecord from dict: %s',
                       pprint.pformat(record))
     self.db.write_record(record)
 

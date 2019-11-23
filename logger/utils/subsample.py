@@ -14,8 +14,6 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(
 
 from logger.writers.text_file_writer import TextFileWriter
 from logger.utils.das_record import DASRecord
-from logger.utils.stderr_logging import setUpStdErrLogging
-from logger.utils.stderr_logging import StdErrLoggingHandler
 
 ############################
 def subsample(algorithm, values, latest_timestamp, now):

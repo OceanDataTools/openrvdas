@@ -26,6 +26,8 @@ TODO: read date/time format from some central settings file.
 from datetime import datetime, timezone
 
 TIME_FORMAT ='%Y-%m-%dT%H:%M:%S.%fZ'  # ISO 8601
+LOGGING_TIME_FORMAT ='%Y-%m-%dT%H:%M:%S'  # ISO 8601
+
 DATE_FORMAT = '%Y-%m-%d'              # ISO 8601
 
 # As used on the NBP

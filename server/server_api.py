@@ -67,6 +67,13 @@ class ServerAPI:
 
   ############################
   def __init__(self):
+    # Called when we update which configs are active.
+    self.update_callbacks = []
+
+    # Called when the set of configs changes.
+    self.load_callbacks = []
+
+    # Called, obviously, when 'quit' is signalled.
     self.quit_callbacks = []
 
   #############################
@@ -189,6 +196,7 @@ class ServerAPI:
     raise NotImplementedError(
       'set_active_logger_config must be implemented by subclass')
 
+
   #############################
   def quit(self):
     """Execute any callbacks that were registered to run on quit."""
@@ -201,32 +209,47 @@ class ServerAPI:
   # methods that are registered via on_update() will be called so they
   # can fetch updated results.
   #############################
+  def on_update(self, callback, kwargs=None):
+    """Register a method to be called when current configs change."""
+    if kwargs is None:
+      kwargs = {}
+    self.update_callbacks.append((callback, kwargs))
+
+  #############################
+  def signal_update(self):
+    """Call the registered methods when current configs change."""
+    for (callback, kwargs) in self.update_callbacks:
+      logging.debug('Executing update callback: %s', callback)
+      callback(**kwargs)
+
+  #############################
+  # API method to register a callback. When the data store changes,
+  # methods that are registered via on_update() will be called so they
+  # can fetch updated results.
+  #############################
+  def on_load(self, callback, kwargs=None):
+    """Register a method to be called when new configs have been loaded."""
+    if kwargs is None:
+      kwargs = {}
+    self.load_callbacks.append((callback, kwargs))
+
+  #############################
+  def signal_load(self):
+    """Call the registered methods when new configs have been loaded."""
+    for (callback, kwargs) in self.load_callbacks:
+      logging.debug('Executing load callback: %s', callback)
+      callback(**kwargs)
+
+  #############################
+  # API method to register a callback. When the data store changes,
+  # methods that are registered via on_update() will be called so they
+  # can fetch updated results.
+  #############################
   def on_quit(self, callback, kwargs=None):
     """Register a method to be called when quit is signaled changes."""
     if kwargs is None:
       kwargs = {}
     self.quit_callbacks.append((callback, kwargs))
-
-  #############################
-  def on_update(self, callback, kwargs=None):
-    """Register a method to be called when datastore changes."""
-    raise NotImplementedError('on_update() must be implemented by subclass '
-                              '(though this really should be implemented '
-                              'at top level')
-
-  #############################
-  def signal_update(self):
-    """Call the registered methods when an update has been signalled."""
-    raise NotImplementedError('signal_update must be implemented by subclass '
-                              '(though this really should be implemented '
-                              'at top level')
-
-  ############################
-  # Methods for feeding data from LoggerManager back into the API
-  ############################
-  def update_status(self, status):
-    """Save/register the loggers' retrieved status report with the API."""
-    raise NotImplementedError('update_status must be implemented by subclass')
 
   ############################
   # Methods for getting logger status data from API

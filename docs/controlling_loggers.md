@@ -14,6 +14,7 @@ This document describes two scripts that allow running, controlling and monitori
 * [The logger_manager.py script](#logger_managerpy)
    * [Cruises, modes and configurations](#cruises-modes-and-configurations)
    * [What the logger manager does](#what-the-logger-manager-does)
+   * [logger\_manager.py and supervisord](#logger_managerpy-and-supervisord)
    * [Running logger_manager.py from the command line](#running-logger_managerpy-from-the-command-line)
    * [Driving widget-based data display with the logger_manager.py](#driving-widget-based-data-display-with-the-logger_managerpy)
    * [Web-based control of the logger_manager.py](#web-based-control-of-the-logger_managerpy)
@@ -21,31 +22,24 @@ This document describes two scripts that allow running, controlling and monitori
 
 ## The High-Order Bits
 
-The ``listen.py`` script will run a single logger defined either from command line parameters, or by loading a logger configuration file. The ``logger_runner.py`` script will run a set of loggers loaded from a configuration file whose format is a YAML/JSON map:
+  * The ``listen.py`` script will run a single logger defined either from command line parameters, or by loading a logger configuration file. 
+  * The ``logger_runner.py`` script will run a set of loggers loaded from a configuration file whose format is a YAML/JSON map:
 
-```
-  logger1_name:
-    logger1_configuration
-  logger2_name:
-    logger2_configuration
-  ...
+  ```
+    logger1_name:
+      logger1_configuration
+    logger2_name:
+      logger2_configuration
+    ...
   
-```
+  ```
 
-If a logger dies, the logger runner will restart it a specified number
-of times.
+  If a logger dies, the logger runner will restart it a specified number
+  of times.
 
-The ``logger_manager.py`` script take a more complicated file (called
-a "cruise definition file") that consists not only of a list of named
-configurations, but also of "modes" such as "off", "in port" and
-"underway", specifying which configurations should be running in which
-mode. In addition to using a logger runner to run the loggers for the
-current mode, it supports and API that lets one control and monitor it
-from the command line or via a web interface.
+ * The ``logger_manager.py`` script take a more complicated file (called a "cruise definition file") that consists not only of a list of named configurations, but also of "modes" such as "off", "in port" and "underway", specifying which configurations should be running in which mode. In addition to using a logger runner to run the loggers for the current mode, it supports and API that lets one control and monitor it from the command line or via a web interface.
 
-In the default installation, a logger manager and its companion, the
-cached data server, are run by the system's ``supervisor``
-daemon.
+  In the default installation, a logger manager and its companion, the cached data server, are run by the system's ``supervisor`` daemon.
 
 Below, we go into greater detail on these points.
 
@@ -170,10 +164,6 @@ Perusing a complete cruise configuration file such as [test/NBP1406/NBP1406_crui
 
 ### What the logger manager does
 
-In short, a bunch of stuff.
-
-![Logger Manager Diagram](images/logger_manager_diagram.png)
-
 * It spawns a command line console interface to a database/backing
   store where it will store/retrieve information on which logger
   configurations should be running and which are. By default, this
@@ -204,6 +194,40 @@ In short, a bunch of stuff.
   logger states in the database. Once started, it monitors the health
   of theses processes, recording failures in the database and
   restarting processes as necessary.
+
+### logger\_manager.py and supervisord
+
+The logger manager doesn't directly run logger processes. Instead, it acts as a sort of puppetmaster for the [supervisord](http://supervisord.org/) package, which was developed specifically for running and monitoring processes. Depending on how it is invoked, the logger manager will either start its own local instance of supervisord or will try to use an existing instance by writing supervisord config files to the appropriate location and connecting on the appropriate port.
+
+If the ``--supervisor_logger_config`` argument is provided, the logger manager will assume that a supervisord instance is running. It will write logger configurations to the file location specified and will direct supervisord to run them by connecting to the instance at the port specified by ``--supervisor_port`` (default 8002).
+
+```
+# Connect to an already-running supervisord instance at port 8002. Expect that instance
+# to pick up configurations written to /opt/openrvdas/server/supervisord/supervisor.d/loggers.ini
+server/logger_manager.py \
+     --supervisor_logger_config /opt/openrvdas/server/supervisor/supervisor.d/loggers.ini \
+     --supervisor_port 8994
+```
+
+If the ``--start_supervisor_in`` argument (default ``/var/tmp/openrvdas/supervisor``) is specified, it will tell the logger manager to start its own supervisord instance in that directory and connect to it via the port specified by ``--supervisor_port`` (still default 8002). This is the default behavior.
+
+```
+# Start our own instance of supervisord. Create the directory /var/tmp/openrvdas/supervisor
+# if it doesn't exist, and write our configurations there. Use default port 8002.
+server/logger_manager.py \
+     --start_supervisor_in /var/tmp/openrvdas/supervisor
+```
+
+![Logger Manager Diagram](images/logger_manager_diagram.png)
+
+By default, the supervisor process and all its loggers will write their stderr and stdout to appropriately-named files in ``/var/log/openrvdas``. This location may be changed by specifying the ``--supervisor_logfile_dir`` flag:
+
+```
+# Store stderr, stdout logs somewhere transient and out of the way
+server/logger_manager.py --supervisor_logfile_dir /var/tmp/log/openrvdas 
+```
+
+If all is working as intended, the 'captive' supervisord instance under the logger manager's hood should be effectively invisible. In the discussion and diagrams below, we omit displaying/discussing it explicitly and assume that it is simply a part of the logger manager.
 
 ### Running logger\_manager.py from the command line
 
@@ -330,7 +354,7 @@ console HTML and Javascript, the loaded Javascript will look for a
 CachedDataServer from which to draw information about what loggers are
 and should be running.
 
-In the default installation, the Linux ``supervisor`` daemon is configured to be able to run and monitor both the logger manager and CachedDataServer on demand. The configuration file for this is in ``/etc/supervisor/conf.d/openrvdas`` on Ubuntu and ``/etc/supervisord/openrvdas.ini`` on CentOS/RedHat:
+In the default installation, the Linux ``supervisord`` daemon is configured to be able to run and monitor both the logger manager and CachedDataServer on demand. **Note that this is a different instance from the captive instance that the logger manager runs when invoked, and is run as root.** Its configuration file is in ``/etc/supervisor/conf.d/openrvdas`` on Ubuntu and ``/etc/supervisord/openrvdas.ini`` on CentOS/RedHat:
 
 ```
 [program:cached_data_server]

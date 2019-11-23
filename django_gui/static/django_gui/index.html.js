@@ -28,6 +28,8 @@ var global_last_logger_status_timestamp = 0;
 
 ////////////////////////////
 function initial_send_message() {
+  // Subscribing with seconds:-1 means we'll always start by getting
+  // the most recent value, then all subsequent ones.
   return {'type':'subscribe',
           'fields': {
             'status:cruise_definition':{'seconds':-1},
@@ -109,7 +111,8 @@ function process_data_message(data_dict) {
       if (cruise_timestamp <= global_last_cruise_timestamp) {
         // We've already seen this cruise definition or a more recent
         // one. Ignore it.
-        break;
+        console.log('Got stale cruise definition - skipping...');
+        continue;
       }
       global_last_cruise_timestamp = cruise_timestamp;
       var cruise_definition = value[value.length-1][1];
@@ -140,53 +143,35 @@ function process_data_message(data_dict) {
       var mode_selector = document.getElementById('select_mode');
       mode_selector.setAttribute('onchange', 'highlight_select_mode()');
 
-      // Check whether we have a manually-selected mode, and if so,
-      // whether it's in our list of new modes. If so, we'll keep it
-      // selected when we rebuild.
-      var manual_mode_is_in_new_modes = false;
-      for (m_i = 0; m_i < modes.length; m_i++) {
-        if (manually_selected_mode == modes[m_i]) {
-          manual_mode_is_in_new_modes = true;
-          break;
+      // Check whether modes have changed
+      var modes_changed = (mode_selector.length !== modes.length);
+      if (!modes_changed) {
+        for (var m_i = 0; m_i < mode_selector.length; m_i++) {
+          if (mode_selector[m_i].value !== modes[m_i]) {
+            modes_changed = true;
+            break;
+          }
         }
       }
-      // Remove all old mode options
-      while (mode_selector.length) {
-        mode_selector.remove(0);
-      }
-      // Add new ones
-      for (m_i = 0; m_i < modes.length; m_i++) {
-        var mode_name = modes[m_i];
-        var opt = document.createElement('option');
-        opt.setAttribute('id', 'mode_' + mode_name);
-        opt.innerHTML = mode_name;
 
-        if (manual_mode_is_in_new_modes) {
-          // If our manually-selected mode is still available, use
-          // that as our selected mode. If it doesn't match the
-          // officially active mode, set it yellow to indicate.
-          if (mode_name == manually_selected_mode) {
-            opt.setAttribute('selected', true);
-            if (mode_name != global_active_mode) {
-              mode_selector.style.backgroundColor = 'yellow'
-            } else {
-              mode_selector.style.backgroundColor = 'white'
-            }
-          }
-        } else {
-          // If our manually-selected mode is no longer available,
-          // set active mode to whatever 'official' active mode is.
+      // If modes have changed, delete old and redraw new
+      if (modes_changed) {
+        mode_selector.style.backgroundColor = 'white'
+        // Remove all old mode options
+        while (mode_selector.length) {
+          mode_selector.remove(0);
+        }
+        for (m_i = 0; m_i < modes.length; m_i++) {
+          var mode_name = modes[m_i];
+          var opt = document.createElement('option');
+          opt.setAttribute('id', 'mode_' + mode_name);
+          opt.innerHTML = mode_name;
+
           if (mode_name == global_active_mode) {
             opt.setAttribute('selected', true);
-            mode_selector.style.backgroundColor = 'white'
           }
+          mode_selector.appendChild(opt);
         }
-        mode_selector.appendChild(opt);
-      }
-      // If our manually-selected mode isn't available anymore, bid
-      // it goodbye.
-      if (!manual_mode_is_in_new_modes) {
-        manually_selected_mode = null;
       }
 
       ////////////////////////////////
@@ -278,9 +263,23 @@ function process_data_message(data_dict) {
     //       null:  not running and not supposed to be
     //   }
     case 'status:logger_status':
-      //console.log('Status value: ' + JSON.stringify(value));
       reset_status_timeout(); // We've gotten a status update
+
+      // Display logger section, if it's not already showing
+      // TODO: optimize this so we don't do it every time.
+      document.getElementById('empty_loggers').style.display = 'none';
+      document.getElementById('status_and_loggers').style.display = 'block';
+
       var [timestamp, status_array] = value[0];
+      var logger_status_timestamp = value[value.length-1][0];
+      if (logger_status_timestamp <= global_last_logger_status_timestamp) {
+        // We've already seen this logger status or a more recent
+        // one. Ignore it.
+        console.log('Got stale logger status - skipping...');
+        continue;
+      }
+      global_last_logger_status_timestamp = logger_status_timestamp;
+
       for (var logger_name in status_array) {
         var logger_status = status_array[logger_name];
         var button = document.getElementById(logger_name + '_config_button');
@@ -288,15 +287,18 @@ function process_data_message(data_dict) {
           continue;
         }
         button.innerHTML = logger_status.config;
-        if (logger_status.running == true) {
+        if (logger_status.status == 'RUNNING') {
           button.style.backgroundColor = "lightgreen";
-        } else if (logger_status.running == false) {
-          button.style.backgroundColor = "orange";
-        } else {
+        } else if (logger_status.status == 'EXITED') {
           button.style.backgroundColor = "lightgray";
-        }
-        if (logger_status.failed) {
+        } else if (logger_status.status == "STARTING") {
+          button.style.backgroundColor = "khaki";
+        } else if (logger_status.status == "BACKOFF") {
+          button.style.backgroundColor = "gold";
+        } else if (logger_status.status == 'FATAL') {
           button.style.backgroundColor = "red";
+        } else {
+          button.style.backgroundColor = "white";
         }
       }
       break;
@@ -329,32 +331,48 @@ function process_data_message(data_dict) {
 // Add the array of new (timestamped) messages to the stderr display
 // for logger_name. Make sure messages are in order and unique.
 function add_to_stderr(logger_name, new_messages) {
-  //console.log('updating stderr for ' + logger_name + ': ' + new_messages);
+
+  // Does the line in question look like a logging line? That is, does
+  // it begin with a date string?
+  function looks_like_log_line(line) {
+    return (typeof line == 'string' && Date.parse(line.split('T')[0]) > 0);
+  }
+
+  // Grab any pre-existing messages.
   var stderr_messages = global_logger_stderr[logger_name] || [];
 
-  // In case it's not sorted yet
-  stderr_messages.sort();
-
-  for (s_i = 0; s_i < new_messages.length; s_i++) {
-    var pair = new_messages[s_i];
-    var new_message = pair[1];
-
-    if (stderr_messages.length == 0) {
-      stderr_messages.push(new_message);
-      continue;
-    }
-
-    // Insert new message (if unique)
-    for (m_i = stderr_messages.length - 1; m_i >= 0; m_i--) {
-      if (new_message == stderr_messages[m_i]) {
-        break; // duplicate message - ignore it
+  // Now add in any new messages
+  for (var s_i = 0; s_i < new_messages.length; s_i++) {
+    var [timestamp, message] = new_messages[s_i];
+    try {
+      if (message.length == 0) {
+        continue;
       }
-      else if (new_message > stderr_messages[m_i]) {
-        stderr_messages.splice(m_i+1, 0, new_message);
-        break;
+      // If we have a structured JSON message
+      message = JSON.parse(message);
+      var prefix = '';
+      if (message['asctime'] !== undefined) {
+        prefix += message['asctime'] + ' ';
+      }
+      if (message['levelname'] !== undefined) {
+        prefix += message['levelname'] + ' ';
+      }
+      if (message['filename'] !== undefined) {
+        prefix += message['filename'] + ':' + message['lineno'] + ' ';
+      }
+      stderr_messages.push(prefix + message['message']);
+    } catch (e) {
+      // If not JSON, but a string that looks like a log line go ahead
+      // and push it into the list.
+      if (looks_like_log_line(message)) {
+        stderr_messages.push(message);
+      } else {
+        console.log('Skipping unparseable log line: ' + message);
       }
     }
   }
+  stderr_messages.sort()
+
   // Fetch the element where we're going to put the messages
   var stderr_div = document.getElementById(logger_name + '_stderr');
   if (stderr_div == undefined) {
@@ -419,12 +437,12 @@ function reset_status_timeout() {
 // from the data server. If no update in 5 seconds, change background
 // color to yellow
 function flag_server_timeout() {
-  document.getElementById('status_time_td').style.backgroundColor ='yellow';
+  document.getElementById('server_time_td').style.backgroundColor ='yellow';
 }
 function reset_server_timeout() {
   var now = date_str();
   document.getElementById('time_td').innerHTML = now;
-  var status_time_td = document.getElementById('status_time_td');
+  var status_time_td = document.getElementById('server_time_td');
   status_time_td.innerHTML = now;
   status_time_td.style.backgroundColor = 'white';
   clearInterval(server_timeout_timer);
@@ -495,4 +513,3 @@ function open_load_definition(click_event) {
   ];
   window.open('../choose_file/', '_blank', window_args.join());
 }
-

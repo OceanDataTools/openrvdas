@@ -90,7 +90,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.writers.text_file_writer import TextFileWriter
 from logger.utils.subsample import subsample
 from logger.utils.das_record import DASRecord
-from logger.utils.stderr_logging import setUpStdErrLogging
 from logger.utils.stderr_logging import StdErrLoggingHandler
 
 ############################
@@ -310,11 +309,11 @@ class RecordCache:
     """
     logging.info('Loading from disk at %s', disk_cache)
     if not disk_cache:
-      logging.warning('load_from_disk called, but no disk_cache defined')
+      logging.info('load_from_disk called, but no disk_cache defined')
       return
 
     if not os.path.exists(disk_cache):
-      logging.warning('load_from_disk: no cache found at "%s"', disk_cache)
+      logging.info('load_from_disk: no cache found at "%s"', disk_cache)
       return
 
     field_files = [f for f in os.listdir(disk_cache)
@@ -894,7 +893,7 @@ if __name__ == '__main__':
                       help='How often to clean old data out of the cache.')
 
   parser.add_argument('--interval', dest='interval', action='store',
-                      type=float, default=1,
+                      type=float, default=0.5,
                       help='How many seconds to sleep between successive '
                       'sends of data to clients.')
 
@@ -913,7 +912,6 @@ if __name__ == '__main__':
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   logging.basicConfig(format=LOGGING_FORMAT)
   logging.getLogger().setLevel(log_level)
-  setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
     stderr_writer = [TextFileWriter(filename=args.stderr_file,
                                     split_by_date=True)]
