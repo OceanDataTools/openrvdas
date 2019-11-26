@@ -301,16 +301,29 @@ function DialWidget (
   })
 
   this.initialize = function () {
-    const r = defaultWidgetOptions.radius
-    const svg = d3.select(container)
+    // Create a div 'inner' with class 'flex_center' between the container
+    // and the svg element, which causes inner to occupy the same space
+    // as the container and to center the svg element inside itself.
+    const inner = document.createElement('div')
+    const id = container.substr(1) // remove initial '#'
+    document.getElementById(id).appendChild(inner)
+    inner.id = `${id}_inner`
+    inner.className = "flex_center"
+
+    const svg = d3.select(`#${inner.id}`)
       .append('svg')
       .attr('class', 'gauge')
-      .attr('width', r * 2)
-      .attr('height', r * 2)
+      .attr('width', thisWidgetOptions.radius * 2)
+      .attr('height', thisWidgetOptions.radius * 2)
 
-    svg.append('circle').attr('cx', r).attr('cy', r).attr('r', r - 1).attr('class', 'outer')
-    svg.append('circle').attr('cx', r).attr('cy', r).attr('r', r - 8).attr('class', 'inner')
-    svg.append('path')
+    // Create a top level group 'svgg' that will contain everything. Build the widget in it,
+    // as if the radius is the default radius.
+    // Later, svgg will be scaled to match the actual radius.
+    const svgg = svg.append('g')
+    const r = defaultWidgetOptions.radius
+    svgg.append('circle').attr('cx', r).attr('cy', r).attr('r', r - 1).attr('class', 'outer')
+    svgg.append('circle').attr('cx', r).attr('cy', r).attr('r', r - 8).attr('class', 'inner')
+    svgg.append('path')
       .attr('class', 'arc')
       .attr('d', d3.arc()({
         startAngle: aMin * Math.PI / 180,
@@ -319,7 +332,7 @@ function DialWidget (
         outerRadius: r - 8
       }))
       .attr('transform', `translate(${r}, ${r})`)
-    svg.append('path')
+    svgg.append('path')
       .attr('class', 'wedge')
       .attr('d', d3.arc()({
         startAngle: aMax * Math.PI / 180,
@@ -331,7 +344,7 @@ function DialWidget (
 
     if (thisWidgetOptions.showNumericValues || thisWidgetOptions.showDescriptions) {
       // add text fields for descriptions and/or numeric values
-      svg.selectAll('text.numeric').data(colors).enter()
+      svgg.selectAll('text.numeric').data(colors).enter()
         .append('text')
         .attr('class', 'numeric')
         .attr('fill', d => d)
@@ -351,7 +364,7 @@ function DialWidget (
     ]
     /* eslint-enable key-spacing */
 
-    svg.selectAll('g').data(colors).enter()
+    svgg.selectAll('g').data(colors).enter()
       .append('g')
       .style('fill', d => d)
       .selectAll('path')
@@ -362,7 +375,7 @@ function DialWidget (
       .attr('d', d3.line().x(d => d.x).y(d => d.y))
       .attr('transform', `translate(${r}, ${r})`)
 
-    svg.append('circle').attr('cx', r).attr('cy', r).attr('r', 5).attr('class', 'pin')
+    svgg.append('circle').attr('cx', r).attr('cy', r).attr('r', 5).attr('class', 'pin')
 
     const tickAngles = []
     const minorTickAngles = []
@@ -377,7 +390,7 @@ function DialWidget (
     if (aMax - aMin === 360) { tickAngles.shift() } // avoid overlapping labels
 
     // each major tick consists of a group with a line and a label, moved as a unit
-    const tickGroups = svg.selectAll('line').data(tickAngles).enter().append('g')
+    const tickGroups = svgg.selectAll('line').data(tickAngles).enter().append('g')
       .attr('class', 'major')
     tickGroups.append('line')
       .attr('x1', 0).attr('y1', -162)
@@ -389,7 +402,7 @@ function DialWidget (
     tickGroups.attr('transform', d => `translate(${r}, ${r})rotate(${d})`)
 
     // create and position the minor ticks
-    svg.selectAll('line.minor').data(minorTickAngles).enter()
+    svgg.selectAll('line.minor').data(minorTickAngles).enter()
       .append('line')
       .attr('class', 'minor')
       .attr('x1', 0).attr('y1', -167)
@@ -412,7 +425,7 @@ function DialWidget (
     }
 
     // scale the whole widget to the specified radius
-    svg.attr('transform', d => `scale(${thisWidgetOptions.radius / defaultWidgetOptions.radius})`)
+    svgg.attr('transform', d => `scale(${thisWidgetOptions.radius / defaultWidgetOptions.radius})`)
   }
 
   this.process_message = function (message) {
@@ -428,7 +441,7 @@ function DialWidget (
       data.push(fields[fieldName].transform ? fields[fieldName].transform(v) : v)
     }
 
-    // The default radius is used here because the svg element has a transform attribute
+    // The default radius is used here because svgg has a transform attribute
     // that scales to the specified radius.
     const r = defaultWidgetOptions.radius
 
