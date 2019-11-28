@@ -85,13 +85,12 @@ logger/listener/listen.py \
     --serial port=/dev/ttyr15 \
     --write_file my_file
 ```
-If your machine doesn't have any serial ports sending actual data, you can create virtual serial ports, as described in [Simulating Serial Input](simulating_serial_input.md), by running
+If your machine doesn't have any serial ports sending actual data, you can create virtual serial ports, as described in [Simulating Live Data](simulating_live_data.md), by running
 
 ```
-logger/utils/simulate_serial.py \
+logger/utils/simulate_data.py \
     --port /tmp/tty_gyr1 \
-    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
-    --loop
+    --filebase test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01
 ```
 in a separate terminal, in which case your listener command line would be
 

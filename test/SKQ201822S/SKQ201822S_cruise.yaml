@@ -569,18 +569,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:met_ptu307'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rain_rmy50202->net:
     name: rain_rmy50202->net
@@ -602,18 +590,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rain_rmy50202'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -639,18 +615,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_qsr2150a'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rad_psp-pir->net:
     name: rad_psp-pir->net
@@ -672,18 +636,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_psp-pir'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -709,18 +661,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_pyrometer-ct15'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   fluoro_turner-c6->net:
     name: fluoro_turner-c6->net
@@ -742,18 +682,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:fluoro_turner-c6'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -779,18 +707,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grav_bgm3_222'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   pco2_ldeo_merge->net:
     name: pco2_ldeo_merge->net
@@ -812,18 +728,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2_ldeo_merge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -849,18 +753,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   thermo_sbe38_fwd->net:
     name: thermo_sbe38_fwd->net
@@ -882,18 +774,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -919,18 +799,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_incubator'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_sbe45_fwd_2->net:
     name: tsg_sbe45_fwd_2->net
@@ -952,18 +820,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -989,18 +845,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_pco2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   ssv_aml->net:
     name: ssv_aml->net
@@ -1022,18 +866,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ssv_aml'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1059,18 +891,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ins_seapath_position'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gnss_cnav->net:
     name: gnss_cnav->net
@@ -1092,18 +912,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gnss_cnav'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1129,18 +937,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gyro_2->net:
     name: gyro_2->net
@@ -1162,18 +958,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1199,18 +983,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_gill_fwdmast_true->net:
     name: wind_gill_fwdmast_true->net
@@ -1232,18 +1004,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1269,18 +1029,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   sb_echosounder_1->net:
     name: sb_echosounder_1->net
@@ -1302,18 +1050,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1339,18 +1075,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   winch_rapp->net:
     name: winch_rapp->net
@@ -1372,18 +1096,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:winch_rapp'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1409,18 +1121,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_port->net:
     name: wind_mast_port->net
@@ -1442,18 +1142,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1479,18 +1167,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_stbd->net:
     name: wind_mast_stbd->net
@@ -1512,18 +1188,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1549,18 +1213,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   oxygen_sbe43_fwd->net:
     name: oxygen_sbe43_fwd->net
@@ -1582,18 +1234,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1619,18 +1259,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd_calc'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mbari_isus_fwd->net:
     name: mbari_isus_fwd->net
@@ -1652,18 +1280,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbari_isus_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1689,18 +1305,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ais_r4-navigator_bridge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   adcp_speedlog->net:
     name: adcp_speedlog->net
@@ -1722,18 +1326,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp_speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1759,18 +1351,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cruiseid'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_emssv->net:
     name: tsg_emssv->net
@@ -1794,18 +1374,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_emssv'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mb_em302_centerbeam->net:
     name: mb_em302_centerbeam->net
@@ -1827,18 +1395,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mb_em302_centerbeam'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1876,18 +1432,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:met_ptu307'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rain_rmy50202->file:
     name: rain_rmy50202->file
@@ -1920,18 +1464,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rain_rmy50202'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -1968,18 +1500,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_qsr2150a'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rad_psp-pir->file:
     name: rad_psp-pir->file
@@ -2012,18 +1532,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_psp-pir'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2060,18 +1568,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_pyrometer-ct15'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   fluoro_turner-c6->file:
     name: fluoro_turner-c6->file
@@ -2104,18 +1600,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:fluoro_turner-c6'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2152,18 +1636,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grav_bgm3_222'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   pco2_ldeo_merge->file:
     name: pco2_ldeo_merge->file
@@ -2196,18 +1668,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2_ldeo_merge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2244,18 +1704,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   thermo_sbe38_fwd->file:
     name: thermo_sbe38_fwd->file
@@ -2288,18 +1736,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2336,18 +1772,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_incubator'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_sbe45_fwd_2->file:
     name: tsg_sbe45_fwd_2->file
@@ -2380,18 +1804,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2428,18 +1840,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_pco2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   ssv_aml->file:
     name: ssv_aml->file
@@ -2472,18 +1872,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ssv_aml'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2520,18 +1908,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ins_seapath_position'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gnss_cnav->file:
     name: gnss_cnav->file
@@ -2564,18 +1940,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gnss_cnav'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2612,18 +1976,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gyro_2->file:
     name: gyro_2->file
@@ -2656,18 +2008,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2704,18 +2044,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_gill_fwdmast_true->file:
     name: wind_gill_fwdmast_true->file
@@ -2748,18 +2076,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2796,18 +2112,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   sb_echosounder_1->file:
     name: sb_echosounder_1->file
@@ -2840,18 +2144,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2888,18 +2180,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   winch_rapp->file:
     name: winch_rapp->file
@@ -2932,18 +2212,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:winch_rapp'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -2980,18 +2248,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_port->file:
     name: wind_mast_port->file
@@ -3024,18 +2280,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3072,18 +2316,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_stbd->file:
     name: wind_mast_stbd->file
@@ -3116,18 +2348,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3164,18 +2384,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   oxygen_sbe43_fwd->file:
     name: oxygen_sbe43_fwd->file
@@ -3208,18 +2416,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3256,18 +2452,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd_calc'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mbari_isus_fwd->file:
     name: mbari_isus_fwd->file
@@ -3300,18 +2484,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbari_isus_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3348,18 +2520,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ais_r4-navigator_bridge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   adcp_speedlog->file:
     name: adcp_speedlog->file
@@ -3392,18 +2552,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp_speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3440,18 +2588,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cruiseid'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_emssv->file:
     name: tsg_emssv->file
@@ -3484,18 +2620,6 @@ configs:
         #  kwargs:
         #    port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_emssv'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3532,18 +2656,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mb_em302_centerbeam'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   # db
   met_ptu307->db:
@@ -3568,18 +2680,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:met_ptu307'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3607,18 +2707,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rain_rmy50202'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rad_qsr2150a->db:
     name: rad_qsr2150a->db
@@ -3642,18 +2730,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_qsr2150a'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3681,18 +2757,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_psp-pir'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   thermo_pyrometer-ct15->db:
     name: thermo_pyrometer-ct15->db
@@ -3716,18 +2780,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_pyrometer-ct15'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3755,18 +2807,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:fluoro_turner-c6'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   grav_bgm3_222->db:
     name: grav_bgm3_222->db
@@ -3790,18 +2830,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grav_bgm3_222'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3829,18 +2857,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2_ldeo_merge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_sbe45_fwd->db:
     name: tsg_sbe45_fwd->db
@@ -3864,18 +2880,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3903,18 +2907,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   thermo_sbe38_incubator->db:
     name: thermo_sbe38_incubator->db
@@ -3938,18 +2930,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_incubator'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -3977,18 +2957,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   flow_krohne_pco2->db:
     name: flow_krohne_pco2->db
@@ -4012,18 +2980,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_pco2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4051,18 +3007,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ssv_aml'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   ins_seapath_position->db:
     name: ins_seapath_position->db
@@ -4086,18 +3030,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ins_seapath_position'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4125,18 +3057,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gnss_cnav'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gyro_1->db:
     name: gyro_1->db
@@ -4160,18 +3080,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4199,18 +3107,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_gill_fwdmast->db:
     name: wind_gill_fwdmast->db
@@ -4234,18 +3130,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4273,18 +3157,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   speedlog->db:
     name: speedlog->db
@@ -4308,18 +3180,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4347,18 +3207,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   sb_echosounder_2->db:
     name: sb_echosounder_2->db
@@ -4382,18 +3230,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4421,18 +3257,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:winch_rapp'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   flow_krohne_fwd->db:
     name: flow_krohne_fwd->db
@@ -4456,18 +3280,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4495,18 +3307,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_port_true->db:
     name: wind_mast_port_true->db
@@ -4530,18 +3330,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4569,18 +3357,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_stbd_true->db:
     name: wind_mast_stbd_true->db
@@ -4604,18 +3380,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4643,18 +3407,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   oxygen_sbe43_fwd_calc->db:
     name: oxygen_sbe43_fwd_calc->db
@@ -4678,18 +3430,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd_calc'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4717,18 +3457,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbari_isus_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   ais_r4-navigator_bridge->db:
     name: ais_r4-navigator_bridge->db
@@ -4752,18 +3480,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ais_r4-navigator_bridge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4791,18 +3507,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp_speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   cruiseid->db:
     name: cruiseid->db
@@ -4826,18 +3530,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cruiseid'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4865,18 +3557,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_emssv'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mb_em302_centerbeam->db:
     name: mb_em302_centerbeam->db
@@ -4900,18 +3580,6 @@ configs:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mb_em302_centerbeam'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
@@ -4950,18 +3618,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/met_ptu307/raw/SKQ201822S_met_ptu307
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:met_ptu307'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rain_rmy50202->file/db:
     name: rain_rmy50202->file/db
@@ -4997,18 +3653,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/rain_rmy50202/raw/SKQ201822S_rain_rmy50202
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rain_rmy50202'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rad_qsr2150a->file/db:
     name: rad_qsr2150a->file/db
@@ -5044,18 +3688,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/rad_qsr2150a/raw/SKQ201822S_rad_qsr2150a
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_qsr2150a'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rad_psp-pir->file/db:
     name: rad_psp-pir->file/db
@@ -5091,18 +3723,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/rad_psp-pir/raw/SKQ201822S_rad_psp-pir
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rad_psp-pir'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   thermo_pyrometer-ct15->file/db:
     name: thermo_pyrometer-ct15->file/db
@@ -5138,18 +3758,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/thermo_pyrometer-ct15/raw/SKQ201822S_thermo_pyrometer-ct15
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_pyrometer-ct15'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   fluoro_turner-c6->file/db:
     name: fluoro_turner-c6->file/db
@@ -5185,18 +3793,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/fluoro_turner-c6/raw/SKQ201822S_fluoro_turner-c6
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:fluoro_turner-c6'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   grav_bgm3_222->file/db:
     name: grav_bgm3_222->file/db
@@ -5232,18 +3828,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/grav_bgm3_222/raw/SKQ201822S_grav_bgm3_222
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grav_bgm3_222'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   pco2_ldeo_merge->file/db:
     name: pco2_ldeo_merge->file/db
@@ -5279,18 +3863,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/pco2_ldeo_merge/raw/SKQ201822S_pco2_ldeo_merge
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2_ldeo_merge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_sbe45_fwd->file/db:
     name: tsg_sbe45_fwd->file/db
@@ -5326,18 +3898,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/tsg_sbe45_fwd/raw/SKQ201822S_tsg_sbe45_fwd
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   thermo_sbe38_fwd->file/db:
     name: thermo_sbe38_fwd->file/db
@@ -5373,18 +3933,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/thermo_sbe38_fwd/raw/SKQ201822S_thermo_sbe38_fwd
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   thermo_sbe38_incubator->file/db:
     name: thermo_sbe38_incubator->file/db
@@ -5420,18 +3968,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/thermo_sbe38_incubator/raw/SKQ201822S_thermo_sbe38_incubator
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:thermo_sbe38_incubator'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_sbe45_fwd_2->file/db:
     name: tsg_sbe45_fwd_2->file/db
@@ -5467,18 +4003,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/tsg_sbe45_fwd_2/raw/SKQ201822S_tsg_sbe45_fwd_2
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_sbe45_fwd_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   flow_krohne_pco2->file/db:
     name: flow_krohne_pco2->file/db
@@ -5514,18 +4038,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/flow_krohne_pco2/raw/SKQ201822S_flow_krohne_pco2
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_pco2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   ssv_aml->file/db:
     name: ssv_aml->file/db
@@ -5561,18 +4073,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/ssv_aml/raw/SKQ201822S_ssv_aml
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ssv_aml'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   ins_seapath_position->file/db:
     name: ins_seapath_position->file/db
@@ -5608,18 +4108,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/ins_seapath_position/raw/SKQ201822S_ins_seapath_position
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ins_seapath_position'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gnss_cnav->file/db:
     name: gnss_cnav->file/db
@@ -5655,18 +4143,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/gnss_cnav/raw/SKQ201822S_gnss_cnav
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gnss_cnav'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gyro_1->file/db:
     name: gyro_1->file/db
@@ -5702,18 +4178,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/gyro_1/raw/SKQ201822S_gyro_1
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gyro_2->file/db:
     name: gyro_2->file/db
@@ -5749,18 +4213,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/gyro_2/raw/SKQ201822S_gyro_2
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyro_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_gill_fwdmast->file/db:
     name: wind_gill_fwdmast->file/db
@@ -5796,18 +4248,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/wind_gill_fwdmast/raw/SKQ201822S_wind_gill_fwdmast
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_gill_fwdmast_true->file/db:
     name: wind_gill_fwdmast_true->file/db
@@ -5843,18 +4283,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/wind_gill_fwdmast_true/raw/SKQ201822S_wind_gill_fwdmast_true
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_gill_fwdmast_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   speedlog->file/db:
     name: speedlog->file/db
@@ -5890,18 +4318,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/speedlog/raw/SKQ201822S_speedlog
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   sb_echosounder_1->file/db:
     name: sb_echosounder_1->file/db
@@ -5937,18 +4353,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/sb_echosounder_1/raw/SKQ201822S_sb_echosounder_1
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_1'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   sb_echosounder_2->file/db:
     name: sb_echosounder_2->file/db
@@ -5984,18 +4388,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/sb_echosounder_2/raw/SKQ201822S_sb_echosounder_2
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:sb_echosounder_2'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   winch_rapp->file/db:
     name: winch_rapp->file/db
@@ -6031,18 +4423,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/winch_rapp/raw/SKQ201822S_winch_rapp
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:winch_rapp'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   flow_krohne_fwd->file/db:
     name: flow_krohne_fwd->file/db
@@ -6078,18 +4458,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/flow_krohne_fwd/raw/SKQ201822S_flow_krohne_fwd
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:flow_krohne_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_port->file/db:
     name: wind_mast_port->file/db
@@ -6125,18 +4493,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/wind_mast_port/raw/SKQ201822S_wind_mast_port
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_port_true->file/db:
     name: wind_mast_port_true->file/db
@@ -6172,18 +4528,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/wind_mast_port_true/raw/SKQ201822S_wind_mast_port_true
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_port_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_stbd->file/db:
     name: wind_mast_stbd->file/db
@@ -6219,18 +4563,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/wind_mast_stbd/raw/SKQ201822S_wind_mast_stbd
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   wind_mast_stbd_true->file/db:
     name: wind_mast_stbd_true->file/db
@@ -6266,18 +4598,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/wind_mast_stbd_true/raw/SKQ201822S_wind_mast_stbd_true
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:wind_mast_stbd_true'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   oxygen_sbe43_fwd->file/db:
     name: oxygen_sbe43_fwd->file/db
@@ -6313,18 +4633,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/oxygen_sbe43_fwd/raw/SKQ201822S_oxygen_sbe43_fwd
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   oxygen_sbe43_fwd_calc->file/db:
     name: oxygen_sbe43_fwd_calc->file/db
@@ -6360,18 +4668,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/oxygen_sbe43_fwd_calc/raw/SKQ201822S_oxygen_sbe43_fwd_calc
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:oxygen_sbe43_fwd_calc'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mbari_isus_fwd->file/db:
     name: mbari_isus_fwd->file/db
@@ -6407,18 +4703,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/mbari_isus_fwd/raw/SKQ201822S_mbari_isus_fwd
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbari_isus_fwd'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   ais_r4-navigator_bridge->file/db:
     name: ais_r4-navigator_bridge->file/db
@@ -6454,18 +4738,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/ais_r4-navigator_bridge/raw/SKQ201822S_ais_r4-navigator_bridge
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:ais_r4-navigator_bridge'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   adcp_speedlog->file/db:
     name: adcp_speedlog->file/db
@@ -6501,18 +4773,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/adcp_speedlog/raw/SKQ201822S_adcp_speedlog
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp_speedlog'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   cruiseid->file/db:
     name: cruiseid->file/db
@@ -6548,18 +4808,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/cruiseid/raw/SKQ201822S_cruiseid
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cruiseid'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg_emssv->file/db:
     name: tsg_emssv->file/db
@@ -6595,18 +4843,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/tsg_emssv/raw/SKQ201822S_tsg_emssv
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg_emssv'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mb_em302_centerbeam->file/db:
     name: mb_em302_centerbeam->file/db
@@ -6642,18 +4878,6 @@ configs:
           kwargs:
             filebase: /var/tmp/log/SKQ201822S/mb_em302_centerbeam/raw/SKQ201822S_mb_em302_centerbeam
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mb_em302_centerbeam'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   # Derived data subsampling logger
   subsample->off:
@@ -6791,15 +5015,4 @@ configs:
     - class: CachedDataWriter
       kwargs:
         data_server: localhost:8766
-    stderr_writers:
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:subsample'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 

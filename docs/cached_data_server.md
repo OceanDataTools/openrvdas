@@ -95,7 +95,7 @@ is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 root@openrvdas:~# supervisorctl
 cached_data_server               RUNNING   pid 5641, uptime 1:35:54
 logger_manager                   RUNNING   pid 5646, uptime 1:35:53
-simulate_nbp_serial              RUNNING   pid 5817, uptime 1:23:46
+simulate_nbp                     RUNNING   pid 5817, uptime 1:23:46
 
 supervisor> stop cached_data_server
 cached_data_server: stopped
@@ -103,7 +103,7 @@ cached_data_server: stopped
 supervisor> status
 cached_data_server               STOPPED   Oct 05 04:58 AM
 logger_manager                   RUNNING   pid 5646, uptime 1:36:02
-simulate_nbp_serial              RUNNING   pid 5817, uptime 1:23:55
+simulate_nbp                     RUNNING   pid 5817, uptime 1:23:55
 
 supervisor> start cached_data_server
 cached_data_server: started
@@ -111,7 +111,7 @@ cached_data_server: started
 supervisor> status
 cached_data_server               RUNNING   pid 15187, uptime 0:00:03
 logger_manager                   RUNNING   pid 5646, uptime 1:36:09
-simulate_nbp_serial              RUNNING   pid 5817, uptime 1:24:02
+simulate_nbp                     RUNNING   pid 5817, uptime 1:24:02
 
 supervisor> exit
 ```

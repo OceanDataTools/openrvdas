@@ -7,19 +7,19 @@ To run, first use this script to generate the config file:
 
    test/SKQ201822S/CREATE_SKQ_CRUISE/create_skq_sim.py \
      < test/SKQ201822S/CREATE_SKQ_CRUISE/skq_ports.txt \
-     > test/SKQ201822S/network_sim_SKQ201822S.yaml
+     > test/SKQ201822S/simulate_SKQ201822S.yaml
 
 Then hand the resulting file to logger/utils/simulate_network.py:
 
-  logger/utils/simulate_network.py \
-    --config test/SKQ201822S/network_sim_SKQ201822S.yaml \
+  logger/utils/simulate_data.py \
+    --config test/SKQ201822S/simulate_SKQ201822S.yaml \
     --loop
 
 This will begin feeding stored data from sensors to the appropriate
 UDP port so that it can be read by the logger_manager.py script.
 
    server/logger_manager.py \
-       --config test/SKQ201822S/skq_cruise.yaml \
+       --config test/SKQ201822S/SKQ201822S_cruise.yaml \
        --mode file -v
 
    (The above command starts loggers running in the config's "file/db"
@@ -47,12 +47,27 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 cruise = 'SKQ201822S'
 date = '2018-12-06'
 
+HEADER_STR = """# Created by create_skq_sim.py via a command like
+#
+#  test/SKQ201822S/CREATE_SKQ_CRUISE/create_skq_sim.py \\
+#      < test/SKQ201822S/CREATE_SKQ_CRUISE/skq_ports.txt
+#
+# To be run using
+#
+#  logger/utils/simulate_data.py \\
+#      --config test/SKQ201822S/simulate_SKQ201822S.yaml
+#"""
+
+print(HEADER_STR)
+
 for line in sys.stdin.readlines():
   line = line.strip()
   (inst, port) = line.split('\t', maxsplit=2)
 
   config_str = """%s:
+  class: UDP
   port: %s
-  filebase: test/%s/%s/raw/%s_%s-%s""" % (inst, port, cruise, inst, cruise, inst, date)
+  filebase: test/%s/%s/raw/%s_%s-%s
+""" % (inst, port, cruise, inst, cruise, inst, date)
   print(config_str)
 
