@@ -31,10 +31,13 @@ sets up multiple feeds at once.
 To invoke a single data feed:
 
 ```
-   simulate_data.py --udp 5501 --filebase /data/2019-05-11/raw/GYRO
+   simulate_data.py --udp 6224 \
+     --filebase test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01
 ```
-will read timestamped lines from files matching /data/2019-05-11/raw/GYRO*
-and broadcast them via UDP port 5501:
+
+will read timestamped lines from files matching
+`test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01` and broadcast them via
+UDP port 6224:
 
 ```
 $HEHDT,087.1,T*21
@@ -44,13 +47,13 @@ $HEHDT,087.1,T*21
 ```
 
 If the flag `--timestamp` is specified, the records will have a
-timestamp prepended to them; if `--prefix gyro` is specified, they will
+timestamp prepended to them; if `--prefix gyr1` is specified, they will
 have 'gyro' prepended:
 
 ```
-gyro 2019-11-28T01:01:38.762221Z $HEHDT,087.1,T*21
-gyro 2019-11-28T01:01:38.837441Z $HEHDT,087.1,T*21
-gyro 2019-11-28T01:01:38.953182Z $HEHDT,087.1,T*21
+gyr1 2019-11-28T01:01:38.762221Z $HEHDT,087.1,T*21
+gyr1 2019-11-28T01:01:38.837441Z $HEHDT,087.1,T*21
+gyr1 2019-11-28T01:01:38.953182Z $HEHDT,087.1,T*21
 ```
 
 Unless `--no-loop` is specified on the command line, the system will
@@ -61,13 +64,14 @@ Instead of `--udp`, you may also specify `--serial` (and optionally
 `--baudrate`) to simulate a serial port:
 
 ```
-   simulate_data.py --serial /tmp/ttyr05 --filebase /data/2019-05-11/raw/GYRO
+   simulate_data.py --serial /tmp/ttyr05 \
+     --filebase test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01
 ```
 
 If `--config` is specified
 
 ```
-   simulate_data.py --config data/2019-05-11/simulate_config.yaml
+   simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 ```
 
 the script will expect a YAML file keyed by instrument names, where
@@ -98,15 +102,15 @@ Note that if class is 'Serial', it may also include the full range of
 serial port options:
 
 ```
-    baudrate: 9600
-    bytesize: 8
-    parity: N
-    stopbits: 1
-    timeout: false
-    xonxoff: false
-    rtscts: false,
-    write_timeout: false
-    dsrdtr: false
-    inter_byte_timeout: false
-    exclusive: false
+  baudrate: 9600
+  bytesize: 8
+  parity: N
+  stopbits: 1
+  timeout: false
+  xonxoff: false
+  rtscts: false,
+  write_timeout: false
+  dsrdtr: false
+  inter_byte_timeout: false
+  exclusive: false
 ```

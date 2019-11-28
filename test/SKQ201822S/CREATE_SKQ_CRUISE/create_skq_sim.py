@@ -67,7 +67,9 @@ for line in sys.stdin.readlines():
   config_str = """%s:
   class: UDP
   port: %s
+  timestamp: true
+  prefix: %s
   filebase: test/%s/%s/raw/%s_%s-%s
-""" % (inst, port, cruise, inst, cruise, inst, date)
+""" % (inst, port, inst, cruise, inst, cruise, inst, date)
   print(config_str)
 
