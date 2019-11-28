@@ -44,7 +44,7 @@ Once you have logged back on, open two terminal windows.
 ```
   su rvdas
   cd /opt/openrvdas
-  logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
+  logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 ```
 
 2. In the other window, run a logger to verify that the serial ports are functioning as expected:
@@ -142,7 +142,7 @@ Please see the [Milestones](https://github.com/oceandatatools/openrvdas/mileston
 In addition to the documents referenced above, some other relevant documents are:
 
 -   [OpenRVDAS Components](components.md)
--   [Simulating Serial Input](simulating_serial_input.md)
+-   [Simulating Live Data](simulating_live_data.md)
 -   [Running OpenRVDAS Loggers (web - deprecated)](https://docs.google.com/document/d/1w_wkdprtA31Fx4yTHLL6WoTtFrPmE3jskTeV6YSuOJI/edit)
 -   [Parsing](parsing.md)
 -   [Security assumptions][security.md]

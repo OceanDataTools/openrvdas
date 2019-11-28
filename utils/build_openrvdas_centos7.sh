@@ -509,26 +509,27 @@ stderr_logfile=/var/log/openrvdas/logger_manager.err.log
 stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 
-[program:simulate_nbp_serial]
-command=/usr/bin/python3 logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
+[program:simulate_nbp]
+command=/usr/bin/python3 logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_nbp_serial.err.log
-stdout_logfile=/var/log/openrvdas/simulate_nbp_serial.out.log
+stderr_logfile=/var/log/openrvdas/simulate_nbp.err.log
+stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
 user=$RVDAS_USER
 
-[program:simulate_skq_network]
-command=/usr/bin/python3 logger/utils/simulate_network.py --config test/SKQ201822S/network_sim_SKQ201822S.yaml --loop
+[program:simulate_skq]
+command=/usr/bin/python3 logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_skq_network.err.log
-stdout_logfile=/var/log/openrvdas/simulate_skq_network.out.log
+stderr_logfile=/var/log/openrvdas/simulate_skq.err.log
+stdout_logfile=/var/log/openrvdas/simulate_skq.out.log
 user=$RVDAS_USER
 EOF
+
 mkdir -p /var/run/supervisor/
 chgrp $RVDAS_USER /var/run/supervisor
 

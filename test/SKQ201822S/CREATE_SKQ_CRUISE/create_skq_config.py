@@ -82,18 +82,6 @@ file_db_config = """    readers:
           kwargs:
             filebase: /var/tmp/log/%CRUISE%/%LOGGER%/raw/%CRUISE%_%LOGGER%
             time_format: "%Y-%m-%dT%H:%M:%S.%fZ"
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:%DATASERVER_PORT%
 """
 
 file_config = """    readers:
@@ -127,18 +115,6 @@ file_config = """    readers:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:%DATASERVER_PORT%
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
-          kwargs:
-            data_server: localhost:%DATASERVER_PORT%
 """
 net_config = """    readers:
       class: UDPReader
@@ -158,18 +134,6 @@ net_config = """    readers:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:%DATASERVER_PORT%
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:%DATASERVER_PORT%
 """
@@ -194,18 +158,6 @@ db_config = """    readers:
           kwargs:
             port: 6225
         - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:%DATASERVER_PORT%
-    stderr_writers:          # Turn stderr into DASRecord, send to CDS
-    - class: ComposedWriter  # via websocket.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
-        - class: ToJSONTransform
-        writers:
-          class: CachedDataWriter
           kwargs:
             data_server: localhost:%DATASERVER_PORT%
 """
@@ -346,17 +298,6 @@ subsample_config = """  # Derived data subsampling logger
     - class: CachedDataWriter
       kwargs:
         data_server: localhost:%DATASERVER_PORT%
-    stderr_writers:
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:subsample'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:%DATASERVER_PORT%
 """
 
 lines = [line.strip() for line in sys.stdin.readlines()]

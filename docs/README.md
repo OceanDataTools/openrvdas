@@ -15,7 +15,7 @@ Other relevant documents are:
 * [The Listener Script - listen.py](listen_py.md) - how to use OpenRVDAS's core utility script
 * [Configuration Files](configuration_files.md) - how to define configuration files to simplify running loggers with listen.py
 * [OpenRVDAS Components](components.md) - what components exist and what they do
-* [Simulating Serial Input](simulating_serial_input.md) - using the simulate_serial.py script to create virtual serial ports for development and testing
+* [Simulating Live Data](simulating_live_data.md) - using the simulate_data.py script to simulate a live system using stored data for development and testing
 * [OpenRVDAS Django Web User Interface](django_interface.md) - an introduction to the web-based GUI
 * [Data Display Widgets](display_widgets.md) - an introduction to widgets for data display
 * [Parsing](parsing.md) - how to work with the included RecordParser to turn raw text records into structured data fields

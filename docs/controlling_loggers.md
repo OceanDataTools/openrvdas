@@ -85,7 +85,7 @@ create those ports and begin feeding them with data, you'll need to
 run
 
 ```
-logger/utils/simulate_serial.py --config test/serial_sim.yaml --loop
+logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 ```
 in a separate terminal. To observe the data being logged by the above sample configs, you can start a Listener in yet another terminal:
 
@@ -281,9 +281,8 @@ command? quit
 As with sample script for logger\_runner.py, the sample cruise configuration file [test/NBP1406/NBP1406\_cruise.yaml](../test/NBP1406/NBP1406\_cruise.yaml) attempts to read from virtual serial ports, so you'll need to create those simulated serial ports by having the command
 
 ```
-  logger/utils/simulate_serial.py \
-      --config test/NBP1406/serial_sim_NBP1406.yaml \
-      --loop
+  logger/utils/simulate_data.py \
+    --config test/NBP1406/simulate_NBP1406.yaml
 ```
 
 running in another terminal for the logger manager to load and run it without complaining.
@@ -384,7 +383,7 @@ The servers may be started/stopped either via the local webserver at [http://ope
   root@openrvdas:~# supervisorctl
   cached_data_server               STOPPED   Oct 05 03:22 AM
   logger_manager                   STOPPED   Oct 05 03:22 AM
-  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
+  simulate_nbp                     STOPPED   Oct 05 03:22 AM
 
   supervisor> start cached_data_server logger_manager
   cached_data_server: started
@@ -393,7 +392,7 @@ The servers may be started/stopped either via the local webserver at [http://ope
   supervisor> status
   cached_data_server               RUNNING   pid 5641, uptime 0:00:04
   logger_manager                   RUNNING   pid 5646, uptime 0:00:03
-  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
+  simulate_nbp                     STOPPED   Oct 05 03:22 AM
 
   supervisor> exit
 ```
@@ -413,15 +412,15 @@ supervisorctl:
   root@openrvdas:~# supervisorctl
   cached_data_server               RUNNING   pid 5641, uptime 0:12:00
   logger_manager                   RUNNING   pid 5646, uptime 0:11:59
-  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
+  simulate_nbp                     STOPPED   Oct 05 03:22 AM
 
-  supervisor> start simulate_nbp_serial
-  simulate_nbp_serial: started
+  supervisor> start simulate_nbp
+  simulate_nbp: started
 
   supervisor> status
   cached_data_server               RUNNING   pid 5641, uptime 0:12:13
   logger_manager                   RUNNING   pid 5646, uptime 0:12:12
-  simulate_nbp_serial              RUNNING   pid 5817, uptime 0:00:05
+  simulate_nbp                     RUNNING   pid 5817, uptime 0:00:05
 
   supervisor> exit
 ```

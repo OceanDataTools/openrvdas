@@ -102,7 +102,7 @@ You can do this two ways, either via the local webserver at [http://openrvdas:80
   rvdas@openrvdas:~> supervisorctl
   cached_data_server               STOPPED   Oct 05 03:22 AM
   logger_manager                   STOPPED   Oct 05 03:22 AM
-  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
+  simulate_nbp                     STOPPED   Oct 05 03:22 AM
 
   supervisor> start cached_data_server logger_manager
   cached_data_server: started
@@ -111,7 +111,7 @@ You can do this two ways, either via the local webserver at [http://openrvdas:80
   supervisor> status
   cached_data_server               RUNNING   pid 5641, uptime 0:00:04
   logger_manager                   RUNNING   pid 5646, uptime 0:00:03
-  simulate_nbp_serial              STOPPED   Oct 05 03:22 AM
+  simulate_nbp                     STOPPED   Oct 05 03:22 AM
 
   supervisor> exit
 ```
@@ -119,7 +119,7 @@ You can do this two ways, either via the local webserver at [http://openrvdas:80
 If you are planning to run the test cruise definition in ``test/NBP1406/NBP1406_cruise.yaml`` then you should also start the process that creates the simulated serial ports that it's configured for:
 
 ```
-    supervisor> start simulate_nbp_serial
+    supervisor> start simulate_nbp
 ```
 
 You may also use broader acting commands with supervisorctl, such as
@@ -280,7 +280,7 @@ In one terminal, start a simulated serial port feed as user **rvdas**:
 ```
 su rvdas
 cd /opt/openrvdas
-logger/utils/simulate_serial.py --config test/NBP1406/serial_sim_NBP1406.yaml --loop
+logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 ```
 In another terminal, try reading from one of the simulated serial ports as user **rvdas**:
 
