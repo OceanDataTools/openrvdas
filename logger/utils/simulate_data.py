@@ -352,7 +352,7 @@ if __name__ == '__main__':
   parser.add_argument('--baud', dest='baud', type=int,
                       help='Optional baud rate for serial port.')
 
-  parser.add_argument('--udp', dest='udp',
+  parser.add_argument('--udp', dest='udp', type=int,
                       help='UDP port to broadcast on')
 
   parser.add_argument('--prefix', dest='prefix',
@@ -366,8 +366,10 @@ if __name__ == '__main__':
   parser.add_argument('--time_format', dest='time_format', default=TIME_FORMAT,
                       help='Format string for parsing timestamp')
 
-  parser.add_argument('--logfile', dest='logfile',
-                      help='Log file to read from.')
+  parser.add_argument('--filebase', dest='filebase',
+                      help='Basename of logfiles to read from. A "*" will be '
+                      'appended to this string and all matching files will '
+                      'be read in order.')
 
   parser.add_argument('--loop', dest='loop', action='store_true', default=True,
                       help='If True, loop when reaching end of sample data')
@@ -433,8 +435,8 @@ if __name__ == '__main__':
   # If no config file, just a simple, single source, create and run a
   # single simulator.
   else:
-    if not args.logfile:
-      parser.error('Either --config or --logfile must be specified')
+    if not args.filebase:
+      parser.error('Either --config or --filebase must be specified')
 
     # Is it a serial port?
     if args.serial:
@@ -442,15 +444,15 @@ if __name__ == '__main__':
                             timestamp=args.timestamp,
                             time_format=args.time_format,
                             baudrate=args.baud,
-                            filebase=args.logfile)
+                            filebase=args.filebase)
     # Is it a UDP port?
     elif args.udp:
       simulator = SimUDP(port=args.udp, prefix=args.prefix,
                          timestamp=args.timestamp,
                          time_format=args.time_format,
-                         filebase=args.logfile)
+                         filebase=args.filebase)
     else:
-      parser.error('If --logfile specified, must also specify either --serial '
+      parser.error('If --filebase specified, must also specify either --serial '
                    'or --udp.')
 
     # Run it

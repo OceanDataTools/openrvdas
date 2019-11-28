@@ -1,28 +1,15 @@
-# Simulating Serial Input  
-© 2018 David Pablo Cohn
+# Simulating Live Data
+© 2019 David Pablo Cohn
 
 
 See [OpenRVDAS Introduction to Loggers](intro_to_loggers.md) for system
 overview.
 
-It can be very useful, during development or testing, to run using saved
-log files as synthetic input, and some sample synthetic data are
-included in the test/ subdirectory for that purpose. For systems that
-expect their data to arrive via UDP, simulation can be set up using the
-listen.py script to connect a LogfileReader to a UDPWriter, e.g.
-
-```
-logger/listener/listen.py \
-    --logfile test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
-    --transform_timestamp \
-    --transform_prefix gyr1 \
-    --write_udp 6224
-```
-
-Simulating a system that uses serial ports for its input is more
-involved. We provide a rudimentary simulation of data from UDP and
-serial port sources with the utility script
-`logger/utils/simulate_data.py`.
+It can be very useful, during development or testing, to run using
+saved log files as synthetic input, and some sample synthetic data are
+included in the test/ subdirectory for that purpose. We provide a
+rudimentary simulation of data from UDP and serial port sources with
+the utility script `logger/utils/simulate_data.py`.
 
 The script may either be invoked for a single data feed with command
 line options, or by specifying a YAML-format configuration file that
@@ -48,7 +35,7 @@ $HEHDT,087.1,T*21
 
 If the flag `--timestamp` is specified, the records will have a
 timestamp prepended to them; if `--prefix gyr1` is specified, they will
-have 'gyro' prepended:
+have 'gyr1' prepended:
 
 ```
 gyr1 2019-11-28T01:01:38.762221Z $HEHDT,087.1,T*21
