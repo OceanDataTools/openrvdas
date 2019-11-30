@@ -2,10 +2,6 @@
 """Compute true winds by processing and aggregating vessel
 course/speed/heading and relative wind dir/speed records.
 
-NOTE that this transform is a DerivedDataTransform, so it takes a
-different form of input than a generic Transform. See the definition
-of DerivedDataTransform for more information.
-
 There are plenty of challenges with computing a universally-accepted
 true wind value. Even with the correct algorithm (not a given), unless
 the vessel nav and anemometer values have identical timestamps,
@@ -25,9 +21,13 @@ readings?).
 
 import logging
 import sys
+import time
+
+from pprint import pformat
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
+from logger.utils.das_record import DASRecord, to_das_record_list
 from logger.utils.timestamp import time_str
 from logger.utils.truewinds.truew import truew
 from logger.transforms.derived_data_transform import DerivedDataTransform
@@ -43,10 +43,11 @@ class TrueWindsTransform(DerivedDataTransform):
                true_dir_name,
                true_speed_name,
                apparent_dir_name,
-               update_on_fields=None,
+               update_on_fields=[],
                zero_line_reference=0,
                convert_wind_factor=1,
-               convert_speed_factor=1):
+               convert_speed_factor=1,
+               metadata_interval=None):
     """
     ```
     course_field
@@ -80,10 +81,11 @@ class TrueWindsTransform(DerivedDataTransform):
              Typically, only one of these will be not equal to 1; e.g. to
              output true winds as meters/sec, we'll leave convert_wind_factor
              as 1 and specify convert_speed_factor=0.5144
+
+    metadata_interval - how many seconds between when we attach field metadata
+                 to a record we send out.
     ```
     """
-    super().__init__()
-
     self.course_field = course_field
     self.speed_field = speed_field
     self.heading_field = heading_field
@@ -100,6 +102,9 @@ class TrueWindsTransform(DerivedDataTransform):
 
     self.convert_wind_factor = convert_wind_factor
     self.convert_speed_factor = convert_speed_factor
+
+    self.metadata_interval = metadata_interval
+    self.last_metadata_send = 0
 
     # TODO: It may make sense for us to cache most recent values so
     # that, for example, we can take single DASRecords in the
@@ -124,101 +129,151 @@ class TrueWindsTransform(DerivedDataTransform):
             self.wind_dir_field, self.wind_speed_field]
 
   ############################
-  def transform(self, value_dict, timestamp_dict=None):
+  def _metadata(self):
+    """Return a dict of metadata for our derived fields."""
+
+    metadata_fields = {
+      self.true_dir_name:{
+        'description': 'Derived true wind direction from %s, %s, %s, %s, %s'
+          % (self.course_field, self.speed_field, self.heading_field,
+             self.wind_dir_field, self.wind_speed_field),
+        'units': 'degrees',
+        'device': 'TrueWindTransform',
+        'device_type': 'DerivedTrueWindTransform',
+        'device_type_field': self.true_dir_name
+      },
+      self.true_speed_name:{
+        'description': 'Derived true wind speed from %s, %s, %s, %s, %s'
+          % (self.course_field, self.speed_field, self.heading_field,
+             self.wind_dir_field, self.wind_speed_field),
+        'units': 'depends on conversion used for %s (%g) and %s (%g)'
+          % (self.speed_field, self.convert_speed_factor,
+             self.wind_speed_field, self.convert_wind_factor),
+        'device': 'TrueWindTransform',
+        'device_type': 'DerivedTrueWindTransform',
+        'device_type_field': self.true_speed_name
+      },
+      self.apparent_dir_name:{
+        'description': 'Derived apparent wind speed from %s, %s, %s, %s, %s'
+          % (self.course_field, self.speed_field, self.heading_field,
+             self.wind_dir_field, self.wind_speed_field),
+        'units': 'degrees',
+        'device': 'TrueWindTransform',
+        'device_type': 'DerivedTrueWindTransform',
+        'device_type_field': self.apparent_dir_name
+      }
+    }
+    return metadata_fields
+
+  ############################
+  def transform(self, record):
     """Incorporate any useable fields in this record, and if it gives
     us a new true wind value, return the results."""
 
-    if not value_dict or type(value_dict) is not dict:
-      logging.warning('Improper type for value dict: %s', type(value_dict))
-      return None
-    if timestamp_dict and type(timestamp_dict) is not dict:
-      logging.warning('Improper type for timestamp dict: %s',
-                      type(timestamp_dict))
-      return None
+    results = []
+    for das_record in to_das_record_list(record):
+      # If they haven't specified specific fields we should wait for
+      # before updates, plan to emit an update after every new record
+      # we process. Otherwise, assume we're not going to update unless
+      # we see one of the named fields.
+      if not self.update_on_fields:
+        update = True
+      else:
+        update = False
 
-    update = False
+      timestamp = das_record.timestamp
+      if not timestamp:
+        logging.info('DASRecord is missing timestamp - skipping')
+        continue
 
-    course_val = value_dict.get(self.course_field,  None)
-    speed_val = value_dict.get(self.speed_field, None)
-    heading_val = value_dict.get(self.heading_field, None)
-    wind_dir_val = value_dict.get(self.wind_dir_field, None)
-    wind_speed_val = value_dict.get(self.wind_speed_field, None)
+      # Get latest values for any of our fields
+      fields = das_record.fields
+      if self.course_field in fields:
+        if timestamp >= self.course_val_time:
+          self.course_val = fields.get(self.course_field)
+          self.course_val_time = timestamp
+          if self.course_field in self.update_on_fields:
+            update = True
 
-    if None in (course_val, speed_val, heading_val,
-                wind_dir_val, wind_speed_val):
-      logging.debug('Not all required values for true winds are present: '
-                    '%s: %s, %s: %s, %s: %s, %s: %s, %s: %s',
-                    self.course_field, course_val,
-                    self.speed_field, speed_val,
-                    self.heading_field, heading_val,
-                    self.wind_dir_field, wind_dir_val,
-                    self.wind_speed_field, wind_speed_val)
-      return None
+      if self.speed_field in fields:
+        if timestamp >= self.speed_val_time:
+          self.speed_val = fields.get(self.speed_field)
+          self.speed_val *= self.convert_speed_factor
+          self.speed_val_time = timestamp
+          if self.speed_field in self.update_on_fields:
+            update = True
 
-    # If we have timestamps, check our most recent timestamps against
-    # what's passed in the dictionary.
-    if not timestamp_dict:
-      update = True
-    else:
-      new_course_val_time = timestamp_dict.get(self.course_field, 0)
-      if new_course_val_time > self.course_val_time:
-        self.course_val_time = new_course_val_time
-        if not self.update_on_fields or \
-           self.course_field in self.update_on_fields:
-          update = True
+      if self.heading_field in fields:
+        if timestamp >= self.heading_val_time:
+          self.heading_val = fields.get(self.heading_field)
+          self.heading_val_time = timestamp
+          if self.heading_field in self.update_on_fields:
+            update = True
 
-      new_speed_val_time = timestamp_dict.get(self.speed_field, 0)
-      if new_speed_val_time > self.speed_val_time:
-        self.speed_val_time = new_speed_val_time
-        if not self.update_on_fields or \
-           self.speed_field in self.update_on_fields:
-          update = True
+      if self.wind_dir_field in fields:
+        if timestamp >= self.wind_dir_val_time:
+          self.wind_dir_val = fields.get(self.wind_dir_field)
+          self.wind_dir_val_time = timestamp
+          if self.wind_dir_field in self.update_on_fields:
+            update = True
 
-      new_heading_val_time = timestamp_dict.get(self.heading_field, 0)
-      if new_heading_val_time > self.heading_val_time:
-        self.heading_val_time = new_heading_val_time
-        if not self.update_on_fields or \
-           self.heading_field in self.update_on_fields:
-          update = True
+      if self.wind_speed_field in fields:
+        if timestamp >= self.wind_speed_val_time:
+          self.wind_speed_val = fields.get(self.wind_speed_field)
+          self.wind_speed_val *= self.convert_wind_factor
+          self.wind_speed_val_time = timestamp
+          if self.wind_speed_field in self.update_on_fields:
+            update = True
 
-      new_wind_dir_val_time = timestamp_dict.get(self.wind_dir_field, 0)
-      if new_wind_dir_val_time > self.wind_dir_val_time:
-        self.wind_dir_val_time = new_wind_dir_val_time
-        if not self.update_on_fields or \
-           self.wind_dir_field in self.update_on_fields:
-          update = True
+      if None in (self.course_val, self.speed_val, self.heading_val,
+                  self.wind_dir_val, self.wind_speed_val):
+        logging.debug('Not all required values for true winds are present: '
+                      'time: %s: %s: %s, %s: %s, %s: %s, %s: %s, %s: %s',
+                      timestamp,
+                      self.course_field, self.course_val,
+                      self.speed_field, self.speed_val,
+                      self.heading_field, self.heading_val,
+                      self.wind_dir_field, self.wind_dir_val,
+                      self.wind_speed_field, self.wind_speed_val)
+        continue
 
-      new_wind_speed_val_time = timestamp_dict.get(self.wind_speed_field, 0)
-      if new_wind_speed_val_time > self.wind_speed_val_time:
-        self.wind_speed_val_time = new_wind_speed_val_time
-        if not self.update_on_fields or \
-           self.wind_speed_field in self.update_on_fields:
-          update = True
+      # If we've not seen anything that updates fields that would
+      # trigger a new true winds value, skip rest of computation.
+      if not update:
+        logging.debug('No update needed')
+        continue
 
-    # If we've not seen anything that updates fields that would
-    # trigger a new true winds value, return None.
-    if not update:
-      return None
+      logging.debug('Computing new true winds')
+      (true_dir, true_speed, apparent_dir) = truew(crse=self.course_val,
+                                                   cspd=self.speed_val,
+                                                   hd=self.heading_val,
+                                                   wdir=self.wind_dir_val,
+                                                   zlr=self.zero_line_reference,
+                                                   wspd=self.wind_speed_val)
 
-    speed_val *= self.convert_speed_factor
-    wind_speed_val *= self.convert_wind_factor
+      logging.debug('Got true winds: dir: %s, speed: %s, apparent_dir: %s',
+                   true_dir, true_speed, apparent_dir)
+      if None in (true_dir, true_speed, apparent_dir):
+        logging.info('Got invalid true winds')
+        continue
 
-    logging.debug('Computing new true winds')
-    (true_dir, true_speed, apparent_dir) = truew(crse=course_val,
-                                                 cspd=speed_val,
-                                                 hd=heading_val,
-                                                 wdir=wind_dir_val,
-                                                 zlr=self.zero_line_reference,
-                                                 wspd=wind_speed_val)
+      # If here, we've got a valid new true wind result
+      true_wind_fields = {self.true_dir_name: true_dir,
+                          self.true_speed_name: true_speed,
+                          self.apparent_dir_name: apparent_dir}
 
-    logging.debug('Got true winds: dir: %s, speed: %s, apparent_dir: %s',
-                 true_dir, true_speed, apparent_dir)
-    if None in (true_dir, true_speed, apparent_dir):
-      logging.info('Got invalid true winds')
-      return None
+      # Add in metadata if so specified and it's been long enough since
+      # we last sent it.
+      now = time.time()
+      if self.metadata_interval and \
+         now - self.metadata_interval > self.last_metadata_send:
+        metadata = {'fields': self._metadata()}
+        self.last_metadata_send = now
+        logging.debug('Emitting metadata: %s', pformat(metadata))
+      else:
+        metadata = None
 
-    # If here, we've got a valid new true wind result
-    result = {self.true_dir_name: true_dir,
-              self.true_speed_name: true_speed,
-              self.apparent_dir_name: apparent_dir}
-    return result
+      results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
+                               metadata=metadata))
+
+    return results

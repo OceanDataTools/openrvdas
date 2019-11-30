@@ -108,6 +108,13 @@ class TextFileWriter(Writer):
     if record is None:
       return
 
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if type(record) is list:
+      for single_record in record:
+        self.write(single_record)
+      return
+
     # If we're splitting by date, make sure that we're still writing
     # to the right file.
     if self.split_by_date:
