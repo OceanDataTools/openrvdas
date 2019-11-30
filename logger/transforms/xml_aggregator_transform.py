@@ -43,6 +43,15 @@ class XMLAggregatorTransform(Transform):
     if record is None:
       return None
 
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling transform() on each of the list elements in order and
+    # return the resulting list.
+    if type(record) is list:
+      results = []
+      for single_record in record:
+       results.append(self.transform(single_record))
+      return results
+
     with self.buffer_lock:
       # Feed record to the incremental parser
       self.buffer += record + '\n'

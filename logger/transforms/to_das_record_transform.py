@@ -30,6 +30,15 @@ class ToDASRecordTransform(Transform):
     if not record:
       return None
 
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling transform() on each of the list elements in order and
+    # return the resulting list.
+    if type(record) is list:
+      results = []
+      for single_record in record:
+       results.append(self.transform(single_record))
+      return results
+
     if self.field_name:
       if type(record) is str:
         return DASRecord(data_id=self.data_id, fields={self.field_name:record})

@@ -21,9 +21,9 @@ class TestToDASRecordTransform(unittest.TestCase):
     self.assertEqual(das_record.data_id, 'my_data_id')
     self.assertDictEqual(das_record.fields, {'my_field_name':'my_value'})
 
-    with self.assertLogs(level='WARNING') as cm:
-      das_record = t.transform(['this should log a warning'])
-    self.assertEqual(das_record, None)
+    das_record = t.transform(['this should show up as a field value'])
+    self.assertEqual(das_record[0].fields.get('my_field_name', None),
+                     'this should show up as a field value')
 
   ############################
   def test_no_field_name(self):
@@ -39,7 +39,7 @@ class TestToDASRecordTransform(unittest.TestCase):
 
     with self.assertLogs(level='WARNING') as cm:
       das_record = t.transform(['this should log a warning'])
-    self.assertEqual(das_record, None)
+    self.assertEqual(das_record, [None])
     
 ################################################################################
 if __name__ == '__main__':
