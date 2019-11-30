@@ -65,8 +65,8 @@ TRUE_WIND_TEMPLATE = """
               seconds: 0
             MwxStbdRelWindSpeed:
               seconds: 0
-    transforms:
-    - class: ComposedDerivedDataTransform
+    writers:
+    - class: ComposedWriter
       kwargs:
         transforms:
         - class: TrueWindsTransform
@@ -82,6 +82,14 @@ TRUE_WIND_TEMPLATE = """
             - MwxPortRelWindDir
             wind_dir_field: MwxPortRelWindDir
             wind_speed_field: MwxPortRelWindSpeed
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
+    - class: ComposedWriter
+      kwargs:
+        transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
@@ -95,10 +103,11 @@ TRUE_WIND_TEMPLATE = """
             - MwxStbdRelWindDir
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: %DATA_SERVER%
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
 """
 SUBSAMPLE_TEMPLATE = """
   # Derived data subsampling logger

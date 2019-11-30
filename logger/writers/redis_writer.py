@@ -64,6 +64,13 @@ class RedisWriter(Writer):
     if not record:
       return
 
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if type(record) is list:
+      for single_record in record:
+        self.write(single_record)
+      return
+
     ## If record is not a string, try converting to JSON. If we don't know
     ## how, throw a hail Mary and force it into str format
     #if not type(record) is str:

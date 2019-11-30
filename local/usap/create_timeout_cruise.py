@@ -65,14 +65,14 @@ TRUE_WIND_TEMPLATE = """
               seconds: 0
             MwxStbdRelWindSpeed:
               seconds: 0
-    transforms:
-    - class: ComposedDerivedDataTransform
+    writers:
+    - class: ComposedWriter
       kwargs:
         transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: PortApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -82,10 +82,18 @@ TRUE_WIND_TEMPLATE = """
             - MwxPortRelWindDir
             wind_dir_field: MwxPortRelWindDir
             wind_speed_field: MwxPortRelWindSpeed
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
+    - class: ComposedWriter
+      kwargs:
+        transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -95,17 +103,7 @@ TRUE_WIND_TEMPLATE = """
             - MwxStbdRelWindDir
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: %DATA_SERVER%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:true_wind'
+            metadata_interval: 10
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -146,17 +144,6 @@ NET_WRITER_TEMPLATE="""
         - class: CachedDataWriter
           kwargs:
             data_server: %DATA_SERVER%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: %DATA_SERVER%
 """
 
 FILE_NET_WRITER_TEMPLATE="""
@@ -193,17 +180,6 @@ FILE_NET_WRITER_TEMPLATE="""
         - class: ParseTransform
           kwargs:
             definition_path: %PARSE_DEFINITION_PATH%
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: %DATA_SERVER%
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -259,17 +235,6 @@ FULL_WRITER_TEMPLATE="""
             definition_path: %PARSE_DEFINITION_PATH%
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:%LOGGER%'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: %DATA_SERVER%
 """
 
 NET_TIMEOUT_TEMPLATE = """
@@ -282,8 +247,6 @@ NET_TIMEOUT_TEMPLATE = """
     - class: UDPReader
       kwargs:
         port: %RAW_UDP_PORT%
-    stderr_writers:
-    - class: TextFileWriter
     writers:""" # Append list of actual timeout writers to this stub
 
 ###############################

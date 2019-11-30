@@ -45,8 +45,6 @@ class SubsampleTransform(DerivedDataTransform):
                  to a record we send out.
     ```
     """
-    super().__init__()
-
     self.field_spec = field_spec
     self.back_seconds = back_seconds
     self.field_list = list(field_spec.keys())

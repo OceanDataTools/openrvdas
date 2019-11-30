@@ -109,12 +109,14 @@ class CachedDataWriter(Writer):
 
   ############################
   def write(self, record):
-    """Write out record. Expects passed records to be in one of two
+    """Write out record. Expects passed records to be in one of three
     formats:
 
     1) DASRecord
 
-    2) a dict encoding optionally a source data_id and timestamp and a
+    2) a list of DASRecords
+
+    3) a dict encoding optionally a source data_id and timestamp and a
        mandatory 'fields' key of field_name: value pairs. This is the format
        emitted by default by ParseTransform:
 
@@ -128,10 +130,11 @@ class CachedDataWriter(Writer):
          }
        }
 
-    A twist on format (2) is that the values may either be a singleton
-    (int, float, string, etc) or a list. If the value is a singleton,
-    it is taken at face value. If it is a list, it is assumed to be a
-    list of (value, timestamp) tuples, in which case the top-level
+    A twist on format (3) THAT WE'RE PROBABLY GOING TO PHASE OUT IN
+    FAVOR OF (2) is that the values may either be a singleton (int,
+    float, string, etc) or a list. If the value is a singleton, it is
+    taken at face value. If it is a list, it is assumed to be a list
+    of (value, timestamp) tuples, in which case the top-level
     timestamp, if any, is ignored.
 
        {
@@ -146,6 +149,13 @@ class CachedDataWriter(Writer):
 
     """
     if not record:
+      return
+
+    # If we've got a list, (hope) it's a list of DASRecords. Recurse,
+    # calling write() on each of the list elements in order.
+    if type(record) is list:
+      for single_record in record:
+        self.write(single_record)
       return
 
     # Convert to a dict - inefficient, I know...
