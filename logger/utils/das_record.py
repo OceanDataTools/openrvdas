@@ -2,6 +2,7 @@
 
 import json
 import pprint
+import logging
 
 from logger.utils.timestamp import timestamp as timestamp_method
 from logger.utils.read_config import parse
@@ -77,3 +78,67 @@ class DASRecord:
             self.timestamp == other.timestamp and
             self.fields == other.fields and
             self.metadata == other.metadata)
+
+############################
+def to_das_record_list(record):
+  """Utility function to normalize different types of records into a
+  list of DASRecords.
+
+  Take input in one of these three formats:
+     - DASRecord
+     - a single record dict with keys 'timestamp' and 'fields'
+     - a field dict of format
+       ``` {field_name: [(timestamp, value), (timestamp, value),...],
+            field_name: [(timestamp, value), (timestamp, value),...],
+           }
+       ```
+  and convert it into a list of zero or more DASRecords.
+  """
+  # What type of record is this?
+  if not record:
+    return []
+
+  # If it's a list, assume it's already a list of DASRecords
+  if type(record) is list:
+    return record
+
+  # If it's a single DASRecord, it's easy
+  if type(record) is DASRecord:
+    return [record]
+
+  # At this point, if it's not a dict, we don't know *what* it is
+  if not type(record) is dict:
+    logging.error('Unknown type of input passed to to_das_record_list: %s: %s',
+                  type(record), record)
+    return []
+
+  # If it's a single timestamp dict, it's easy
+  elif 'timestamp' in record and 'fields' in record:
+    return [DASRecord(timestamp=record['timestamp'],
+                      fields=record['fields'],
+                      metadata=record.get('metadata', None))]
+
+  # If here, we believe we've received a field dict, in which each
+  # field may have multiple [timestamp, value] pairs. First thing we
+  # do is reformat the data into a map of
+  #        {timestamp: {field:value, field:value},...}}
+  try:
+    by_timestamp = {}
+    for field, ts_value_list in record.items():
+      if not type(ts_value_list) is list:
+        logging.warning('Expected field_name: [(timestamp, value),...] pairs, '
+                        'found %s: %s', field, ts_value_list)
+        continue
+      for (timestamp, value) in ts_value_list:
+        if not timestamp in by_timestamp:
+          by_timestamp[timestamp] = {}
+        by_timestamp[timestamp][field] = value
+
+    # Now copy the entries into an ordered-by-timestamp list.
+    results = [DASRecord(timestamp=ts, fields=by_timestamp[ts])
+               for ts in sorted(by_timestamp)]
+    return results
+  except ValueError:
+    logging.error('Badly-structured field dictionary: %s: %s',
+                  field, pprint.pformat(ts_value_list))
+    return []

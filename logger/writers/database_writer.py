@@ -117,6 +117,13 @@ class DatabaseWriter(Writer):
     if not record:
       return
 
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if type(record) is list:
+      for single_record in record:
+        self.write(single_record)
+      return
+
     # If we've been passed a DASRecord, things are easy: write it and return.
     if type(record) is DASRecord:
       self._write_record(record)
