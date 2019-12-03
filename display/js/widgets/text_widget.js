@@ -148,14 +148,16 @@ function TextWidget(container, fields) {
       if (!message[field_name]) {
         continue;
       }
-      var value_list = message[field_name],
-          value_str = '';
+      var value_list = message[field_name];
+      var value_str = '';
       
       // If they've instructed us to append new values (and
       // if new value is non-empty), append it. If they've
       // specified a separator, use it; otherwise use
       // semicolon.
       if (this.fields[field_name].append) {
+        var value_str = container_div.innerHTML; // what's already there
+        
         // Values are [timestamp, value] pairs. Add sequentially.
         for (var list_i = 0; list_i < value_list.length; list_i++) {
           var value = value_list[list_i][1];

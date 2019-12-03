@@ -239,6 +239,12 @@ function TimelineWidget(container, fields, y_label='',
                         max_points=500) {
   this.fields = fields;
 
+  // Create array where we'll store data for each series.
+  this.field_data = {};
+  for (var field_name in this.fields) {
+    this.field_data[field_name] = [];
+  }
+
   // Create one series for each field
   var series = [];
   var title_list = [];
@@ -282,47 +288,49 @@ function TimelineWidget(container, fields, y_label='',
       this_widget_options[option] = widget_options[option];
   }
   this.chart = Highcharts.chart(container, this_widget_options);
-
   document.addEventListener('DOMContentLoaded', this.chart);
 
+  //////////////////
   // When passed a websocket server /data report, sifts through
   // fields and updates any series with matching field names.
   this.process_message = function(message) {
     // Iterate over fields we're looking for, seeing if message contains
     // updates for any of them.
     for (var field_name in this.fields) {
-      if (!message[field_name]) {
+      var new_field_data = message[field_name];
+      if (!new_field_data) {
         continue;
       }
-      var field_series = this.chart.get(field_name);
-      if (field_series === undefined) {
-        continue;
+
+      // Copy (timestamp, value) points over, multiplying timestamps
+      // by 1000 to fit JS's use of milliseconds.
+      var field_data = this.field_data[field_name];
+      for (var list_i=0; list_i < new_field_data.length; list_i++) {
+        var new_point = new_field_data[list_i]
+        field_data.push([1000*new_point[0], new_point[1]]);
       }
-      var value_list = message[field_name];
+
+      // Now trim off excess points, and anything that is too old
+      var len = field_data.length;
+      if (len > this.max_points) {
+        field_data = field_data.slice(len-this.max_points, len);
+      }
+
       var msecs_to_keep = 1000 * this.fields[field_name].seconds;
-
-      // Add points sequentially, inefficiently, bumping off old points.
-
-      for (var list_i = 0; list_i < value_list.length; list_i++) {
-        // JS uses msec, so need to multiply timestamp by 1000
-        var new_point = value_list[list_i];
-        new_point[0] *= 1000;
-        if (this.fields[field_name].transform) {
-          new_point[1] = this.fields[field_name].transform(new_point[1]);
-        }
-
-        // Inefficient (and slightly buggy) way of figuring out whether
-        // we should shift old points off. Buggy because we can only ever
-        // shift one point off. If we start out with more than one point
-        // that is too old, we'll never catch up.
-        var shift =
-             (shift = field_series.points.length &&
-              field_series.points[0].x < new_point[0] - msecs_to_keep)
-             || field_series.data.length > this.max_points;
-
-        field_series.addPoint(new_point, false, shift);
+      var most_recent_ts = field_data[field_data.length-1][0];
+      var oldest_to_keep = most_recent_ts - msecs_to_keep;
+      while (field_data.length && field_data[0][0] < oldest_to_keep) {
+        field_data.shift()
       }
-      this.chart.redraw();
+    
+      // Copy back into our "keeper" array
+      this.field_data[field_name] = field_data.slice();
+      // Assign new data back into field
+      this.chart.get(field_name).setData(data=this.field_data[field_name],
+                                         redraw=false, animation=true, update=true);
     }
+    // Finally finally, redraw the chart once everything has been
+    // updated.
+    this.chart.redraw();
   }
 }

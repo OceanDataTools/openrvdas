@@ -94,230 +94,63 @@ function array_keys_match(array_1, array_2) {
 ////////////////////////////
 // We've got data fields - process and put them where they belong in
 // the HTML...
-function process_data_message(data_dict) {
-  var data_str = JSON.stringify(data_dict);
+function process_data_message(message) {
+  //console.log('Got new data message: ' + JSON.stringify(message));
+
+  // We expect to receive a field dict, format:
+  // {
+  //   'data_id': ...,  # optional
+  //   'fields': {
+  //      field_name: [(timestamp, value), (timestamp, value),...],
+  //      field_name: [(timestamp, value), (timestamp, value),...],
+  //      ...
+  //   }
+  // }
   var new_fields = {};
 
-  //console.log('Got new data message: ' + data_str);
-  for (var field_name in data_dict) {
-    var value = data_dict[field_name];
+  for (var field_name in message) {
+    var value_list = message[field_name];
     switch (field_name) {
-    ////////////////////////////////////////////////////
+    //////////////////
     // If we've got a cruise definition update
     case 'status:cruise_definition':
-      // We will have been handed a list of [timestamp, cruise_definition]
-      // pairs. Fetch the last cruise definition in the list.
-      var cruise_timestamp = value[value.length-1][0];
-      if (cruise_timestamp <= global_last_cruise_timestamp) {
-        // We've already seen this cruise definition or a more recent
-        // one. Ignore it.
-        console.log('Got stale cruise definition - skipping...');
-        continue;
+      // Get the (timestamp, value) pair at end of list - that should
+      // be the most recent.
+      var [timestamp, cruise_definition] = value_list[value_list.length-1];
+
+      if (timestamp > global_last_cruise_timestamp) {
+        global_last_cruise_timestamp = timestamp;
+        new_fields = update_cruise_definition(timestamp, cruise_definition);
       }
-      global_last_cruise_timestamp = cruise_timestamp;
-      var cruise_definition = value[value.length-1][1];
-
-      // Make sure this definition has all the parts we need
-      if (!cruise_definition.modes) {
-        console.log('Cruise definition has no modes - ignoring.');
-        break;
-      }
-      if (!cruise_definition.active_mode) {
-        console.log('Cruise definition has no active mode - ignoring.');
-        break;
-      }
-      if (!cruise_definition.loggers) {
-        console.log('Cruise definition has no loggers - ignoring.');
-        break;
-      }
-
-      ////////////////////////////////
-      // Update the cruise id
-      document.getElementById('cruise_id').innerHTML = cruise_definition['cruise_id'];
-
-      ////////////////////////////////
-      // Now update the cruise modes
-      var modes = cruise_definition.modes;
-      global_active_mode = cruise_definition.active_mode;
-
-      var mode_selector = document.getElementById('select_mode');
-      mode_selector.setAttribute('onchange', 'highlight_select_mode()');
-
-      // Check whether modes have changed
-      var modes_changed = (mode_selector.length !== modes.length);
-      if (!modes_changed) {
-        for (var m_i = 0; m_i < mode_selector.length; m_i++) {
-          if (mode_selector[m_i].value !== modes[m_i]) {
-            modes_changed = true;
-            break;
-          }
-        }
-      }
-
-      // If modes have changed, delete old and redraw new
-      if (modes_changed) {
-        mode_selector.style.backgroundColor = 'white'
-        // Remove all old mode options
-        while (mode_selector.length) {
-          mode_selector.remove(0);
-        }
-        for (m_i = 0; m_i < modes.length; m_i++) {
-          var mode_name = modes[m_i];
-          var opt = document.createElement('option');
-          opt.setAttribute('id', 'mode_' + mode_name);
-          opt.innerHTML = mode_name;
-
-          if (mode_name == global_active_mode) {
-            opt.setAttribute('selected', true);
-          }
-          mode_selector.appendChild(opt);
-        }
-      }
-
-      ////////////////////////////////
-      // Now update loggers
-      var loggers = cruise_definition.loggers;
-
-      // Has the actual list of loggers changed? If not, only update
-      // what has changed.
-      if (array_keys_match(global_loggers, loggers)) {
-        for (var logger_name in loggers) {
-          var button = document.getElementById(logger_name + '_config_button');
-          button.innerHTML = loggers[logger_name].active;
-        }
-        break;
-      }
-
-      ////////////////////////////////
-      // If the list of loggers has changed, we need to rebuild the
-      // list. Begin by emptying out table rows except for header row.
-      var table = document.getElementById('logger_table_body');
-      var row_count = table.rows.length;
-      var keep_first_num_rows = 1;
-      for (var i = keep_first_num_rows; i < row_count; i++) {
-        table.deleteRow(keep_first_num_rows);
-      }
-
-      // Stash our new logger list in the globals, then update the
-      // loggers, creating one new row for each.
-      global_loggers = loggers;
-      for (var logger_name in loggers) {
-        //console.log('setting up logger ' + logger_name);
-        var logger = loggers[logger_name];
-
-        // table row creation
-        var tr = document.createElement('tr');
-        tr.setAttribute('id', logger_name + '_row');
-
-        var name_td = document.createElement('td');
-        name_td.setAttribute('id', logger_name + '_td');
-        tr.appendChild(name_td);
-        name_td.innerHTML = logger_name;
-
-        var config_td = document.createElement('td');
-        config_td.setAttribute('id', logger_name + '_config_td');
-
-        var button = document.createElement('button');
-        button.setAttribute('id', logger_name + '_config_button');
-        button.setAttribute('type', 'submit');
-        button.innerHTML = logger.active;
-
-        // Disable if user is not authenticated
-        //if (! USER_AUTHENTICATED) {
-        //  button.setAttribute('disabled', true);
-        //}
-        button.setAttribute('onclick',
-                            'open_edit_config(event, \'' + logger_name + '\')');
-        config_td.appendChild(button);
-        tr.appendChild(config_td);
-
-        var stderr_td = document.createElement('td');
-        var stderr_div = document.createElement('div');
-
-        stderr_div.setAttribute('id', logger_name + '_stderr');
-        stderr_div.setAttribute('style', 'height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto;');
-        stderr_div.style.fontSize = 'small';
-        stderr_td.appendChild(stderr_div);
-        tr.appendChild(stderr_td);
-        table.appendChild(tr);
-
-        // Also, since we now have a new logger, we'll want to subscribe
-        // to stderr updates for it.
-        new_fields['stderr:logger:' + logger_name] = {'seconds':88000};
-      }
-
       break;
 
-    ////////////////////////////////////////////////////
-    // If we've got a logger status update.
-    // value will be [[ timestamp, {status_dict} ]], where status_dict will
-    // be a dict of logger_name:status pairs. 'status' will be an array of:
-    //   logger_name: {
-    //     config:  config_name_string,
-    //     errors:  [list of error strings],
-    //     failed:  bool
-    //     pid:     number or null if not running
-    //     running: ternary value:
-    //       true:  we're running and is supposed to be
-    //       false: not running and is supposed to be
-    //       null:  not running and not supposed to be
-    //   }
+    //////////////////
+    // If we've got a logger status update.  Again, look for (only)
+    // the most recent.
     case 'status:logger_status':
-      reset_status_timeout(); // We've gotten a status update
+      var [timestamp, logger_status] = value_list[value_list.length-1];
 
-      // Display logger section, if it's not already showing
-      // TODO: optimize this so we don't do it every time.
-      document.getElementById('empty_loggers').style.display = 'none';
-      document.getElementById('status_and_loggers').style.display = 'block';
-
-      var [timestamp, status_array] = value[0];
-      var logger_status_timestamp = value[value.length-1][0];
-      if (logger_status_timestamp <= global_last_logger_status_timestamp) {
-        // We've already seen this logger status or a more recent
-        // one. Ignore it.
-        console.log('Got stale logger status - skipping...');
-        continue;
-      }
-      global_last_logger_status_timestamp = logger_status_timestamp;
-
-      for (var logger_name in status_array) {
-        var logger_status = status_array[logger_name];
-        var button = document.getElementById(logger_name + '_config_button');
-        if (button == undefined) {
-          continue;
-        }
-        button.innerHTML = logger_status.config;
-        if (logger_status.status == 'RUNNING') {
-          button.style.backgroundColor = "lightgreen";
-        } else if (logger_status.status == 'EXITED') {
-          button.style.backgroundColor = "lightgray";
-        } else if (logger_status.status == "STARTING") {
-          button.style.backgroundColor = "khaki";
-        } else if (logger_status.status == "BACKOFF") {
-          button.style.backgroundColor = "gold";
-        } else if (logger_status.status == 'FATAL') {
-          button.style.backgroundColor = "red";
-        } else {
-          button.style.backgroundColor = "white";
-        }
+      if (timestamp > global_last_logger_status_timestamp) {
+        global_last_logger_status_timestamp = timestamp;
+        update_logger_status(timestamp, logger_status);
       }
       break;
 
     ////////////////////////////////////////////////////
     // If something else, see if it's a logger status update
     default:
-      var logger_stderr_prefix = 'stderr:logger:';
-
-      if (field_name.indexOf(logger_stderr_prefix) == 0) {
-        var logger_name = field_name.substr(logger_stderr_prefix.length);
-        add_to_stderr(logger_name, value);
-        continue;
+      var LOGGER_STDERR_PREFIX = 'stderr:logger:';
+      if (field_name.indexOf(LOGGER_STDERR_PREFIX) == 0) {
+        var logger_name = field_name.substr(LOGGER_STDERR_PREFIX.length);
+        add_to_stderr(logger_name, value_list);
       }
     }
   }
-  // Do we have new field subscriptions? Create the subscription request.
-  // But make sure we keep listening for future logger_list, mode_list
-  // mode updates.
+
+  //////////////////
+  // Finally: Do we have new field subscriptions? Create the
+  // subscription request.  But make sure we keep listening for future
+  // logger_list, mode_list mode updates.
   if (Object.keys(new_fields).length) {
     new_fields['status:cruise_definition'] = {'seconds':-1};
     new_fields['status:logger_status'] = {'seconds':-1};
@@ -328,22 +161,219 @@ function process_data_message(data_dict) {
 }
 
 ////////////////////////////
-// Add the array of new (timestamped) messages to the stderr display
-// for logger_name. Make sure messages are in order and unique.
-function add_to_stderr(logger_name, new_messages) {
-
-  // Does the line in question look like a logging line? That is, does
-  // it begin with a date string?
-  function looks_like_log_line(line) {
-    return (typeof line == 'string' && Date.parse(line.split('T')[0]) > 0);
+// Process an cruise_definition update
+function update_cruise_definition(timestamp, cruise_definition) {
+  // Make sure this definition has all the parts we need
+  if (!cruise_definition.modes) {
+    console.log('Cruise definition has no modes - ignoring.');
+    return {};
+  }
+  if (!cruise_definition.active_mode) {
+    console.log('Cruise definition has no active mode - ignoring.');
+    return {};
+  }
+  if (!cruise_definition.loggers) {
+    console.log('Cruise definition has no loggers - ignoring.');
+    return {};
   }
 
-  // Grab any pre-existing messages.
-  var stderr_messages = global_logger_stderr[logger_name] || [];
+  ////////////////////////////////
+  // Update the cruise id
+  document.getElementById('cruise_id').innerHTML = cruise_definition.cruise_id;
 
-  // Now add in any new messages
-  for (var s_i = 0; s_i < new_messages.length; s_i++) {
-    var [timestamp, message] = new_messages[s_i];
+  ////////////////////////////////
+  // Now update the cruise modes
+  var modes = cruise_definition.modes;
+  global_active_mode = cruise_definition.active_mode;
+
+  var mode_selector = document.getElementById('select_mode');
+  mode_selector.setAttribute('onchange', 'highlight_select_mode()');
+
+  // Check whether modes have changed
+  var modes_changed = (mode_selector.length !== modes.length);
+  if (!modes_changed) {
+    for (var m_i = 0; m_i < mode_selector.length; m_i++) {
+      if (mode_selector[m_i].value !== modes[m_i]) {
+        modes_changed = true;
+        break;
+      }
+    }
+  }
+
+  // If modes have changed, delete old and redraw new
+  if (modes_changed) {
+    mode_selector.style.backgroundColor = 'white'
+    // Remove all old mode options
+    while (mode_selector.length) {
+      mode_selector.remove(0);
+    }
+    for (m_i = 0; m_i < modes.length; m_i++) {
+      var mode_name = modes[m_i];
+      var opt = document.createElement('option');
+      opt.setAttribute('id', 'mode_' + mode_name);
+      opt.innerHTML = mode_name;
+
+      if (mode_name == global_active_mode) {
+        opt.setAttribute('selected', true);
+      }
+      mode_selector.appendChild(opt);
+    }
+  }
+
+  ////////////////////////////////
+  // Now update loggers
+  var loggers = cruise_definition.loggers;
+
+  // Has the actual list of loggers changed? If not, only update
+  // what has changed.
+  if (array_keys_match(global_loggers, loggers)) {
+    for (var logger_name in loggers) {
+      var button = document.getElementById(logger_name + '_config_button');
+      button.innerHTML = loggers[logger_name].active;
+    }
+    return {};
+  }
+
+  ////////////////////////////////
+  // If the list of loggers has changed, we need to rebuild the
+  // list. Begin by emptying out table rows except for header row.
+  var table = document.getElementById('logger_table_body');
+  var row_count = table.rows.length;
+  var keep_first_num_rows = 1;
+  for (var i = keep_first_num_rows; i < row_count; i++) {
+    table.deleteRow(keep_first_num_rows);
+  }
+
+  // Stash our new logger list in the globals, then update the
+  // loggers, creating one new row for each.
+  global_loggers = loggers;
+  global_logger_stderr = {};
+  var new_fields = {};
+  for (var logger_name in loggers) {
+    //console.log('setting up logger ' + logger_name);
+    var logger = loggers[logger_name];
+    global_logger_stderr[logger_name] = {};
+
+    // table row creation
+    var tr = document.createElement('tr');
+    tr.setAttribute('id', logger_name + '_row');
+
+    var name_td = document.createElement('td');
+    name_td.setAttribute('id', logger_name + '_td');
+    tr.appendChild(name_td);
+    name_td.innerHTML = logger_name;
+
+    var config_td = document.createElement('td');
+    config_td.setAttribute('id', logger_name + '_config_td');
+
+    var button = document.createElement('button');
+    button.setAttribute('id', logger_name + '_config_button');
+    button.setAttribute('type', 'submit');
+    button.innerHTML = logger.active;
+
+    // Disable if user is not authenticated
+    //if (! USER_AUTHENTICATED) {
+    //  button.setAttribute('disabled', true);
+    //}
+    button.setAttribute('onclick',
+                        'open_edit_config(event, \'' + logger_name + '\')');
+    config_td.appendChild(button);
+    tr.appendChild(config_td);
+
+    var stderr_td = document.createElement('td');
+    var stderr_div = document.createElement('div');
+
+    stderr_div.setAttribute('id', logger_name + '_stderr');
+    stderr_div.setAttribute('style', 'height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto;');
+    stderr_div.style.fontSize = 'small';
+    stderr_td.appendChild(stderr_div);
+    tr.appendChild(stderr_td);
+    table.appendChild(tr);
+
+    // Also, since we now have a new logger, we'll want to subscribe
+    // to stderr updates for it.
+    new_fields['stderr:logger:' + logger_name] = {'seconds':88000};
+  }
+  console.log('Loaded new cruise.');
+  //console.log('New fields are: ' + JSON.stringify(new_fields));
+  return new_fields;
+}
+
+////////////////////////////////////////////////////
+// If we've got a logger status update. Status will be a dict of
+// logger_name:status pairs. 'status' will be an array of:
+//
+//   logger_name: {
+//     config:  config_name_string,
+//     errors:  [list of error strings],
+//     failed:  bool
+//     pid:     number or null if not running
+//     running: ternary value:
+//       true:  we're running and is supposed to be
+//       false: not running and is supposed to be
+//       null:  not running and not supposed to be
+//   }
+function update_logger_status(timestamp, logger_status) {
+  reset_status_timeout(); // We've gotten a status update
+
+  // Display logger section, if it's not already showing
+  // TODO: optimize this so we don't do it every time.
+  document.getElementById('empty_loggers').style.display = 'none';
+  document.getElementById('status_and_loggers').style.display = 'block';
+
+  if (timestamp < global_last_logger_status_timestamp) {
+    // We've already seen this logger status or a more recent
+    // one. Ignore it.
+    console.log('Got stale logger status - skipping...');
+    return;
+  }
+  global_last_logger_status_timestamp = timestamp;
+
+  for (var logger_name in logger_status) {
+    var status = logger_status[logger_name];
+    var button = document.getElementById(logger_name + '_config_button');
+    if (button == undefined) {
+      continue;
+    }
+    button.innerHTML = status.config;
+    if (status.status == 'RUNNING') {
+      button.style.backgroundColor = "lightgreen";
+    } else if (status.status == 'EXITED') {
+      button.style.backgroundColor = "lightgray";
+    } else if (status.status == "STARTING") {
+      button.style.backgroundColor = "khaki";
+    } else if (status.status == "BACKOFF") {
+      button.style.backgroundColor = "gold";
+    } else if (status.status == 'FATAL') {
+      button.style.backgroundColor = "red";
+    } else {
+      button.style.backgroundColor = "white";
+    }
+  }
+}
+
+////////////////////////////
+// Helper function: Does the line in question look like a logging
+// line? That is, does it begin with a date string?
+function looks_like_log_line(line) {
+  return (typeof line == 'string' && Date.parse(line.split('T')[0]) > 0);
+}
+
+////////////////////////////
+// Add a list of (timestamp, message) pairs to the stderr display for
+// logger_name. Make sure messages are in order and unique. Return true
+// if we actually add anything.
+function add_to_stderr(logger_name, value_list) {
+  // Fetch the div where we're going to put these messages.
+  var stderr_div = document.getElementById(logger_name + '_stderr');
+  if (stderr_div == undefined) {
+    console.log('Found no stderr div for logger ' + logger_name);
+    return;
+  }
+
+  // Process each of the messages in the list.
+  for (var list_i = 0; list_i < value_list.length; list_i++) {
+    var [timestamp, message] = value_list[value_list.length-1];
     try {
       if (message.length == 0) {
         continue;
@@ -360,28 +390,33 @@ function add_to_stderr(logger_name, new_messages) {
       if (message['filename'] !== undefined) {
         prefix += message['filename'] + ':' + message['lineno'] + ' ';
       }
-      stderr_messages.push(prefix + message['message']);
+      global_logger_stderr[logger_name][prefix + message['message']] = true;
     } catch (e) {
       // If not JSON, but a string that looks like a log line go ahead
       // and push it into the list.
       if (looks_like_log_line(message)) {
-        stderr_messages.push(message);
+        global_logger_stderr[logger_name][message] = true;
       } else {
         console.log('Skipping unparseable log line: ' + message);
       }
     }
   }
-  stderr_messages.sort()
-
+  // Once all messages have been added, sort, then put in place in
+  // proper divs
   // Fetch the element where we're going to put the messages
-  var stderr_div = document.getElementById(logger_name + '_stderr');
-  if (stderr_div == undefined) {
-    console.log('Found no stderr div for logger ' + logger_name);
-    return;
-  }
+  var stderr_messages = logger_stderr(logger_name);
   stderr_div.innerHTML = stderr_messages.join('<br>\n');
   stderr_div.scrollTop = stderr_div.scrollHeight;  // scroll to bottom
-  global_logger_stderr[logger_name] = stderr_messages;
+}
+
+////////////////////////////
+// Return a list of the named logger's stderr messages.
+function logger_stderr(logger_name) {
+  var this_logger_stderr = global_logger_stderr[logger_name];
+  if (this_logger_stderr == undefined) {
+    return [];
+  }
+  return Object.keys(this_logger_stderr).sort()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
