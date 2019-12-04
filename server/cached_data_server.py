@@ -538,12 +538,6 @@ class WebSocketConnection:
             continue
 
           ##########
-          # Shall we output our data as a list of records or as a
-          # field dict? For now, hard-coded to field dict.
-          output_format = 'field_dict'
-          #output_format = 'record_list'
-          
-          ##########
           results = {}
           if requested_format == 'field_dict':
             for field_name, field_spec in requested_fields.items():
