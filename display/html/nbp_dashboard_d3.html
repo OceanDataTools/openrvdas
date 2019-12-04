@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NB Palmer Dashboard</title>
+
+    <style type="text/css">
+      .ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+      }
+      .ship_table td, .ship_table th {
+        border: 1px solid #ddd;
+      }
+      g.axis.y path.domain {
+        stroke: none;
+      }
+      svg.gauge {
+        margin: 0 auto;
+        display: block;
+      }
+      svg.gauge circle.outer {
+        fill: #ccc;
+        stroke: #666;
+      }
+      svg.gauge circle.inner {
+        fill: #eee;
+        stroke: #aaa;
+      }
+      svg.gauge path.arc {
+        stroke: #666;
+        stroke-width: 2px;
+      }
+      svg.gauge path.wedge {
+        fill: #ccc;
+      }
+      svg.gauge circle.pin {
+        fill: #222;
+      }
+      svg.gauge path.pointer {
+        stroke: #222;
+      }
+      svg.gauge g.major line {
+        stroke: #333;
+        stroke-width: 2px;
+      }
+      svg.gauge g.major text {
+        font-size: 12px;
+      }
+      svg.gauge line.minor {
+        stroke: #333;
+        stroke-width: 1px;
+      }
+      div.tooltip {
+        position: absolute;
+        opacity: 0;
+        border: 1px solid;
+        padding: 2px 5px;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- This is where we define location of data server. -->
+    <script src="../js/widgets/settings.js"></script>
+
+    <script src="../js/d3/d3.min.js"></script>
+    <script src="../js/widgets/d3_widgets.js"></script> 
+    
+    <script src="../js/jquery/jquery-3.1.1.min.js"></script>
+   
+    <script src="../js/widgets/text_widget.js"></script>
+    <script src="../js/widgets/widget_server.js"></script>
+
+    <table class="ship_table">
+      <tr>
+        <td class="val_td_50" colspan=2>
+          Relative Wind:
+          <div id="rel_wind_dir" style="height: 200px; width: 200px"></div>
+        </td>
+        <td class="val_td_50" colspan=2>
+          True Wind:
+          <div id="true_wind_dir"
+               style="height: 200px; width: 200px"></div>
+        </td>
+      </tr>
+    </table>
+
+  <script>
+  import {TimelineWidget as D3TimelineWidget} from '../js/widgets/d3_widgets.js'
+  import {DialWidget as D3DialWidget} from '../js/widgets/d3_widgets.js'
+
+  var widget_list = [];
+
+  //////////////////
+  // Relative winds
+  var rel_wind_fields = {
+    MwxPortRelWindDir: {
+      name: 'Port Relative Wind',
+      color: 'red',
+      transform: function(val) { return Math.round(val); }
+    },
+    MwxStbdRelWindDir: {
+      name: 'Stbd. Relative Wind',
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
+    }
+  };
+  widget_list.push(new D3DialWidget('#rel_wind_dir', rel_wind_fields,
+                                    {tickInterval: 30,
+                                     radius: 50}));
+
+  //////////////////
+  // True winds
+  var true_wind_fields = {
+    PortTrueWindDir: {
+      name: 'Port True Wind',
+      color: 'red',
+      transform: function(val) { return Math.round(val); }
+    },
+    StbdTrueWindDir: {
+      name: 'Stbd True Wind',
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
+    }
+  };
+  widget_list.push(new D3DialWidget('#true_wind_dir', true_wind_fields,
+                                    {tickInterval: 30,
+                                     radius: 100}));
+
+  var widget_server = new WidgetServer(widget_list,
+                                       WEBSOCKET_DATA_SERVER);
+  widget_server.serve();
+</script>
+</body>
+</html>
