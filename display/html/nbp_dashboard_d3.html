@@ -452,7 +452,18 @@
   widget_list.push(new D3TimelineWidget('#air_temp_line',
                                         air_temp_line_fields,
                                         'Air Temp C',
-                                        {height:120, showLegend:false}));
+                                        {
+                                          height: 120,
+                                          showLegend: false,
+                                          backgroundColor: 'white',
+                                          xTickFontSize: 8,
+                                          //xTickFormat: '%H:%M:%S',
+                                          //numXTicks: 5,
+                                          yTickFontSize: 8,
+                                          //yTickFormat: '.2e',
+                                          numYTicks: 5,
+                                          yUnitsFontSize: 8
+                                        }));
   /*
   widget_list.push(new TimelineWidget(
     'air_temp_line', air_temp_line_fields, 'Air Temp C',
