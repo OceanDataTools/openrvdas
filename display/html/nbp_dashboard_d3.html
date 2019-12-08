@@ -16,7 +16,7 @@
         border: 1px solid #ddd;
         padding: 8px;
       }
-      .td_50 {
+     .td_50 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
         text-align: left;
         width: 270px;
@@ -26,6 +26,13 @@
         text-align: left;
         font-weight: bold;
         width: 540px;
+      }
+      .ship_table .chart_td_100, .chart_div {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+	height: 125px;
+        width: 540px;
+        padding: 1px;
       }
       .name_td_50 {
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -146,16 +153,16 @@
         <td class="val_td_50" colspan=2>
           Relative Wind: <span id="rel_wind_speed" style="color:red">---</span> kt
           <div id="rel_wind_dir"
-               style="height: 200px; width: 200px"></div>
+               style="height: 180px; width: 200px"></div>
         </td>
         <td class="val_td_50" colspan=2>
           True Wind: <span id="true_wind_speed" style="color:green">---</span> kt
           <div id="true_wind_dir"
-               style="height: 200px; width: 200px"></div>
+               style="height: 180px; width: 200px"></div>
         </td>
-	<td class="name_td_100" colspan=4 rowspan=3>
-          <div id="true_wind_speed_line" style="min-width: 100px;  height: 150px;"></div><br>
-          <div id="barometer_line" style="min-width: 100px;  height: 150px;"></div>
+	<td class="chart_td_100" colspan=4 rowspan=3>
+          <div class="chart_div" id="true_wind_speed_line"></div><br>
+          <div class="chart_div" id="barometer_line"></div>
 	</td>
       </tr>
       <tr>
@@ -167,19 +174,19 @@
         <td class="val_td_50" colspan=2>Barometer: <span id="barometer">-</span> mB</td>
       </tr>
       <tr>
-	<td class="val_td_100" colspan=4>
-          <div id="air_temp_line" style="min-width: 100px;  height: 125px;"></div>
+	<td class="chart_td_100" colspan=4>
+          <div class="chart_div" id="air_temp_line"></div>
 	</td>
-	<td class="name_td_100" colspan=4>
-          <div id="knudsen_line" style="min-width: 100px;  height: 125px;"></div>
+	<td class="chart_td_100" colspan=4>
+          <div class="chart_div" id="knudsen_line"></div>
 	</td>
       </tr>
       <tr>
-	<td class="val_td_100" colspan=4>
-          <div id="sea_temp_line" style="min-width: 100px;  height: 125px;"></div>
+	<td class="chart_td_100" colspan=4>
+          <div class="chart_div" id="sea_temp_line"></div>
 	</td>
-	<td class="name_td_100" colspan=4>
-          <div id="gravity_line" style="min-width: 100px;  height: 125px;"></div>
+	<td class="chart_td_100" colspan=4>
+          <div class="chart_div" id="gravity_line"></div>
 	</td>
       </tr>
     </table>
@@ -309,7 +316,7 @@
     }
   };
   widget_list.push(new D3DialWidget('#rel_wind_dir', rel_wind_fields,
-                                    {radius:100}));
+                                    {radius:90}));
 
   /*
   widget_list.push(new DialWidget('rel_wind_dir', rel_wind_fields,
@@ -339,7 +346,7 @@
     }
   };
   widget_list.push(new D3DialWidget('#true_wind_dir', true_wind_fields,
-                                    {radius:100}));
+                                    {radius:90}));
   /*
   widget_list.push(new DialWidget('true_wind_dir', true_wind_fields,
                                   {title:{text:''},
@@ -453,16 +460,16 @@
                                         air_temp_line_fields,
                                         'Air Temp C',
                                         {
-                                          height: 120,
+                                          height: 125,
                                           showLegend: false,
                                           backgroundColor: 'white',
-                                          xTickFontSize: 8,
+                                          xTickFontSize: 10,
                                           //xTickFormat: '%H:%M:%S',
                                           //numXTicks: 5,
-                                          yTickFontSize: 8,
+                                          yTickFontSize: 10,
                                           //yTickFormat: '.2e',
                                           numYTicks: 5,
-                                          yUnitsFontSize: 8
+                                          yUnitsFontSize:12 
                                         }));
   /*
   widget_list.push(new TimelineWidget(
@@ -482,7 +489,18 @@
   widget_list.push(new D3TimelineWidget('#sea_temp_line',
                                         sea_temp_line_fields,
                                         'Sea Temp C',
-                                        {height:120, showLegend:false}));
+                                        {
+                                          height: 125,
+                                          showLegend: false,
+                                          backgroundColor: 'white',
+                                          xTickFontSize: 10,
+                                          //xTickFormat: '%H:%M:%S',
+                                          //numXTicks: 5,
+                                          yTickFontSize: 10,
+                                          //yTickFormat: '.2e',
+                                          numYTicks: 5,
+                                          yUnitsFontSize: 12 
+  }));
   /*
   widget_list.push(new TimelineWidget(
     'sea_temp_line', sea_temp_line_fields, 'Sea Temp C',
@@ -506,7 +524,18 @@
   widget_list.push(new D3TimelineWidget('#true_wind_speed_line',
                                         true_wind_speed_line_fields,
                                         'Knots',
-                                        {height:120, showLegend:false}));
+					{
+                                          height: 125,
+                                          showLegend: false,
+                                          backgroundColor: 'white',
+                                          xTickFontSize: 10,
+                                          //xTickFormat: '%H:%M:%S',
+                                          //numXTicks: 5,
+                                          yTickFontSize: 10,
+                                          //yTickFormat: '.2e',
+                                          numYTicks: 5,
+                                          yUnitsFontSize: 12 
+                                        }));
   /*
   widget_list.push(new TimelineWidget(
     'true_wind_speed_line', true_wind_speed_line_fields, 'True Wind Speed, kts',
@@ -524,9 +553,20 @@
   };
   widget_list.push(new D3TimelineWidget('#barometer_line',
                                         barometer_line_fields,
-                                        'Atmospheric Pressure, mB',
-                                        {height:120, showLegend:false}));
-  /*
+					'Atmospheric Pressure, mB',
+					{
+                                          height: 125,
+                                          showLegend: false,
+                                          backgroundColor: 'white',
+                                          xTickFontSize: 10,
+                                          //xTickFormat: '%H:%M:%S',
+                                          //numXTicks: 5,
+                                          yTickFontSize: 10,
+                                          //yTickFormat: '.2e',
+                                          numYTicks: 5,
+                                          yUnitsFontSize: 12 
+                                        }));
+/*
   widget_list.push(new TimelineWidget(
     'barometer_line', barometer_line_fields, 'Atmospheric Pressure, mB',
     {title:{text:''},
@@ -553,7 +593,17 @@
   widget_list.push(new D3TimelineWidget('#knudsen_line',
                                         knudsen_line_fields,
                                         'Knudsen depth, meters',
-                                        {height:120, showLegend:false}));
+					{ height: 125,
+                                          showLegend: false,
+                                          backgroundColor: 'white',
+                                          xTickFontSize: 10,
+                                          //xTickFormat: '%H:%M:%S',
+                                          //numXTicks: 5,
+                                          yTickFontSize: 10,
+                                          //yTickFormat: '.2e',
+                                          numYTicks: 5,
+                                          yUnitsFontSize: 12 
+                                        }));
 
   /*
   widget_list.push(new TimelineWidget(
@@ -575,8 +625,18 @@
   widget_list.push(new D3TimelineWidget('#gravity_line',
                                         gravity_line_fields,
                                         'Gravity Flit Count',
-                                        {height:120, showLegend:false}));
-
+					{
+                                          height: 125,
+                                          showLegend: false,
+                                          backgroundColor: 'white',
+                                          xTickFontSize: 10,
+                                          //xTickFormat: '%H:%M:%S',
+                                          //numXTicks: 5,
+                                          yTickFontSize: 10,
+                                          //yTickFormat: '.2e',
+                                          numYTicks: 5,
+                                          yUnitsFontSize: 12 
+                                        }));
   /*
   widget_list.push(new TimelineWidget(
     'gravity_line', gravity_line_fields, 'Gravity Flit Count',
