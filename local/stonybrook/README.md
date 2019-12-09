@@ -1,4 +1,5 @@
 # Seawolf HowTo 2019-12-09
+David Pablo Cohn
 
 ## Installation
 
