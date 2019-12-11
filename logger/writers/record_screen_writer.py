@@ -30,6 +30,14 @@ class RecordScreenWriter(Writer):
   def write(self, record):
     if not record:
       return
+
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if type(record) is list:
+      for single_record in record:
+        self.write(single_record)
+      return
+
     if not type(record) is DASRecord:
       logging.error('ScreenWriter got non-DASRecord: %s', str(type(record)))
       return

@@ -45,8 +45,6 @@ class SubsampleTransform(DerivedDataTransform):
                  to a record we send out.
     ```
     """
-    super().__init__()
-
     self.field_spec = field_spec
     self.back_seconds = back_seconds
     self.field_list = list(field_spec.keys())
@@ -131,10 +129,20 @@ class SubsampleTransform(DerivedDataTransform):
           break
 
   ############################
-  def transform(self, record, timestamp_dict=None):
+  def transform(self, record):
     """Incorporate any useable fields in this record, and if it gives
     us any new subsampled values, aggregate and return them.
     """
+
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling transform() on each of the list elements in order and
+    # return the resulting list.
+    if type(record) is list:
+      results = []
+      for single_record in record:
+       results.append(self.transform(single_record))
+      return results
+    
     # Clean out old data
     self._add_record(record)
 

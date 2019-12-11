@@ -10,6 +10,7 @@ from logger.transforms.timestamp_transform import TimestampTransform
 
 class TestTimestampTransform(unittest.TestCase):
 
+  ############################
   def test_default(self):
     transform = TimestampTransform()
 
@@ -23,6 +24,26 @@ class TestTimestampTransform(unittest.TestCase):
     self.assertAlmostEqual(then, now, places=1)
     self.assertEqual(result.split()[1], 'blah')
 
+  ############################
+  def test_list(self):
+    transform = TimestampTransform()
+
+    self.assertIsNone(transform.transform(None))
+
+    record = ['foo', 'bar', 'baz']
+    result = transform.transform(record)
+    timestamps = [r.split()[0] for r in result]
+    self.assertEqual(timestamps[0], timestamps[1])
+    self.assertEqual(timestamps[1], timestamps[2])
+
+    then = timestamp.timestamp(time_str=timestamps[0])
+    now = timestamp.timestamp()
+    self.assertAlmostEqual(then, now, places=1)
+
+    sources = [r.split()[1] for r in result]
+    self.assertEqual(sources, record)
+
+  ############################
   # Try handing a custom timestamp format (in this case, a date).  It
   # bears mentioning that this test will fail if run exactly at
   # midnight...

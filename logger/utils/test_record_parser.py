@@ -338,6 +338,8 @@ seap 2017-11-04T07:00:38.270328Z $GPZDA,002709.69,07,08,2014,,*6D
 seap 2017-11-04T07:00:40.058070Z $GPZDA,002710.69,07,08,2014,,*65
 seap 2017-11-04T07:00:41.845780Z $GPZDA,002711.69,07,08,2014,,*64""".split('\n')
 
+BAD_RECORD = "seap 2017-11-04T07:00:39.291859Z $PSXN,20,1,0,0XXX,0*3A"
+
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
   time.sleep(pre_sleep_interval)
   logging.info('creating file "%s"', filename)
@@ -405,6 +407,20 @@ class TestRecordParser(unittest.TestCase):
                                        'Seap200Heave': -0.38,
                                        'Seap200HeadingTrue': 235.77,
                                        'Seap200Pitch': 0.01}})
+
+  ############################
+  def test_parse_bad_record(self):
+
+    # Should log a warning on a bad record...
+    p = RecordParser(definition_path=self.device_filename)
+    with self.assertLogs(logging.getLogger(), logging.WARNING):
+      r = p.parse_record(BAD_RECORD)
+
+    # But shouldn't log anything if we're in quiet mode
+    p = RecordParser(definition_path=self.device_filename, quiet=True)
+    with self.assertRaises(AssertionError):
+      with self.assertLogs(logging.getLogger(), logging.WARNING):
+        r = p.parse_record(BAD_RECORD)
 
   ############################
   def test_parse_records_json(self):

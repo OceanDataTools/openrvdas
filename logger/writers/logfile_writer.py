@@ -47,6 +47,18 @@ class LogfileWriter(Writer):
     if record is None:
       return
 
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if type(record) is list:
+      for single_record in record:
+        self.write(single_record)
+      return
+
+    if not type(record) is str:
+      logging.error('LogfileWriter.write() - record is not timestamped string: '
+                    '%s', record)
+      return
+
     # First things first: get the date string from the record
     try:
       time_str = record.split()[0]

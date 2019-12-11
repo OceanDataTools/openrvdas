@@ -17,8 +17,21 @@ class TimestampTransform(Transform):
     self.sep = sep
 
   ############################
-  def transform(self, record):
+  def transform(self, record, ts=None):
     """Prepend a timestamp"""
     if record is None:
       return None
-    return timestamp.time_str(time_format=self.time_format) + self.sep + record
+
+    # First off, grab a current timestamp
+    ts = ts or timestamp.time_str(time_format=self.time_format)
+    
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling transform() on each of the list elements in order and
+    # return the resulting list. Give each element the same timestamp.
+    if type(record) is list:
+      results = []
+      for single_record in record:
+       results.append(self.transform(single_record, ts=ts))
+      return results
+
+    return ts + self.sep + record

@@ -3,14 +3,14 @@
 # YAML cruise definition file for OpenRVDAS.
 #
 # Created by:
-#   command:  local/usap/create_timeout_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Fri Aug 16 01:46:54 2019 UTC
+#   command:  local/usap/create_cruise.py local/usap/nbp/nbp_port_defs.yaml
+#   time:     Sat Nov 30 21:56:00 2019 UTC
 #   user:     pablo
 #
 ########################################
 cruise:
-  id: NBP1406
-  start: '2019-07-01'
+  id: NBP
+  start: '2019-01-01'
   end: '2019-12-31'
 
 ########################################
@@ -139,10 +139,10 @@ loggers:
     configs:
     - true_wind->off
     - true_wind->on
-  timeout_check:
+  subsample:
     configs:
-    - timeout_check->off
-    - timeout_check->on
+    - subsample->off
+    - subsample->on
 
 ########################################
 modes:
@@ -168,7 +168,7 @@ modes:
     tsg2: tsg2->off
     seap: seap->off
     true_wind: true_wind->off
-    timeout_check: timeout_check->off
+    subsample: subsample->off
 
   monitor:
     PCOD: PCOD->net
@@ -192,7 +192,7 @@ modes:
     tsg2: tsg2->net
     seap: seap->net
     true_wind: true_wind->on
-    timeout_check: timeout_check->on
+    subsample: subsample->on
 
   log:
     PCOD: PCOD->file/net
@@ -216,7 +216,7 @@ modes:
     tsg2: tsg2->file/net
     seap: seap->file/net
     true_wind: true_wind->on
-    timeout_check: timeout_check->on
+    subsample: subsample->on
 
   'log+db':
     PCOD: PCOD->file/net/db
@@ -240,7 +240,7 @@ modes:
     tsg2: tsg2->file/net/db
     seap: seap->file/net/db
     true_wind: true_wind->on
-    timeout_check: timeout_check->on
+    subsample: subsample->on
 
 ########################################
 default_mode: 'off'
@@ -257,7 +257,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -267,24 +267,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -296,13 +286,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
+        filebase: /data/logger/PCOD/raw/NBP_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -313,7 +303,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -322,18 +312,8 @@ configs:
             prefix: PCOD
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -345,13 +325,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
+        filebase: /data/logger/PCOD/raw/NBP_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -362,7 +342,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -371,6 +351,7 @@ configs:
             prefix: PCOD
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -384,20 +365,10 @@ configs:
             prefix: PCOD
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   cwnc->off:
     name: cwnc->off
@@ -408,7 +379,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -418,24 +389,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -447,13 +408,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
+        filebase: /data/logger/cwnc/raw/NBP_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -464,7 +425,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -473,18 +434,8 @@ configs:
             prefix: cwnc
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -496,13 +447,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
+        filebase: /data/logger/cwnc/raw/NBP_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -513,7 +464,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -522,6 +473,7 @@ configs:
             prefix: cwnc
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -535,20 +487,10 @@ configs:
             prefix: cwnc
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   gp02->off:
     name: gp02->off
@@ -559,7 +501,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -569,24 +511,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -598,13 +530,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
+        filebase: /data/logger/gp02/raw/NBP_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -615,7 +547,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -624,18 +556,8 @@ configs:
             prefix: gp02
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -647,13 +569,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
+        filebase: /data/logger/gp02/raw/NBP_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -664,7 +586,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -673,6 +595,7 @@ configs:
             prefix: gp02
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -686,20 +609,10 @@ configs:
             prefix: gp02
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   gyr1->off:
     name: gyr1->off
@@ -710,7 +623,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -720,24 +633,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -749,13 +652,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
+        filebase: /data/logger/gyr1/raw/NBP_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -766,7 +669,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -775,18 +678,8 @@ configs:
             prefix: gyr1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -798,13 +691,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
+        filebase: /data/logger/gyr1/raw/NBP_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -815,7 +708,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -824,6 +717,7 @@ configs:
             prefix: gyr1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -837,20 +731,10 @@ configs:
             prefix: gyr1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   adcp->off:
     name: adcp->off
@@ -861,7 +745,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -871,24 +755,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -900,13 +774,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
+        filebase: /data/logger/adcp/raw/NBP_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -917,7 +791,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -926,18 +800,8 @@ configs:
             prefix: adcp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -949,13 +813,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
+        filebase: /data/logger/adcp/raw/NBP_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -966,7 +830,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -975,6 +839,7 @@ configs:
             prefix: adcp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -988,20 +853,10 @@ configs:
             prefix: adcp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   eng1->off:
     name: eng1->off
@@ -1012,7 +867,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1022,24 +877,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1051,13 +896,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
+        filebase: /data/logger/eng1/raw/NBP_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1068,7 +913,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1077,18 +922,8 @@ configs:
             prefix: eng1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1100,13 +935,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
+        filebase: /data/logger/eng1/raw/NBP_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1117,7 +952,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1126,6 +961,7 @@ configs:
             prefix: eng1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -1139,20 +975,10 @@ configs:
             prefix: eng1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   svp1->off:
     name: svp1->off
@@ -1163,7 +989,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1173,24 +999,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1202,13 +1018,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
+        filebase: /data/logger/svp1/raw/NBP_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1219,7 +1035,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1228,18 +1044,8 @@ configs:
             prefix: svp1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1251,13 +1057,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
+        filebase: /data/logger/svp1/raw/NBP_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1268,7 +1074,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1277,6 +1083,7 @@ configs:
             prefix: svp1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -1290,20 +1097,10 @@ configs:
             prefix: svp1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   twnc->off:
     name: twnc->off
@@ -1314,7 +1111,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1324,24 +1121,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1353,13 +1140,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
+        filebase: /data/logger/twnc/raw/NBP_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1370,7 +1157,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1379,18 +1166,8 @@ configs:
             prefix: twnc
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1402,13 +1179,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
+        filebase: /data/logger/twnc/raw/NBP_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1419,7 +1196,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1428,6 +1205,7 @@ configs:
             prefix: twnc
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -1441,20 +1219,10 @@ configs:
             prefix: twnc
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   mbdp->off:
     name: mbdp->off
@@ -1465,7 +1233,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1475,24 +1243,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1504,13 +1262,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
+        filebase: /data/logger/mbdp/raw/NBP_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1521,7 +1279,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1530,18 +1288,8 @@ configs:
             prefix: mbdp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1553,13 +1301,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
+        filebase: /data/logger/mbdp/raw/NBP_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1570,7 +1318,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1579,6 +1327,7 @@ configs:
             prefix: mbdp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -1592,20 +1341,10 @@ configs:
             prefix: mbdp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   knud->off:
     name: knud->off
@@ -1616,7 +1355,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1626,24 +1365,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1655,13 +1384,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/knud/raw/NBP1406_knud
+        filebase: /data/logger/knud/raw/NBP_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1672,7 +1401,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1681,18 +1410,8 @@ configs:
             prefix: knud
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1704,13 +1423,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/knud/raw/NBP1406_knud
+        filebase: /data/logger/knud/raw/NBP_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1721,7 +1440,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1730,6 +1449,7 @@ configs:
             prefix: knud
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -1743,20 +1463,10 @@ configs:
             prefix: knud
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   grv1->off:
     name: grv1->off
@@ -1767,7 +1477,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1777,24 +1487,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1806,13 +1506,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
+        filebase: /data/logger/grv1/raw/NBP_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1823,7 +1523,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1832,18 +1532,8 @@ configs:
             prefix: grv1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1855,13 +1545,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
+        filebase: /data/logger/grv1/raw/NBP_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1872,7 +1562,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1881,6 +1571,7 @@ configs:
             prefix: grv1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -1894,20 +1585,10 @@ configs:
             prefix: grv1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   mwx1->off:
     name: mwx1->off
@@ -1918,7 +1599,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1928,24 +1609,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1957,13 +1628,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
+        filebase: /data/logger/mwx1/raw/NBP_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1974,7 +1645,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1983,18 +1654,8 @@ configs:
             prefix: mwx1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2006,13 +1667,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
+        filebase: /data/logger/mwx1/raw/NBP_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2023,7 +1684,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2032,6 +1693,7 @@ configs:
             prefix: mwx1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -2045,20 +1707,10 @@ configs:
             prefix: mwx1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   pco2->off:
     name: pco2->off
@@ -2069,7 +1721,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2079,24 +1731,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2108,13 +1750,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
+        filebase: /data/logger/pco2/raw/NBP_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2125,7 +1767,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2134,18 +1776,8 @@ configs:
             prefix: pco2
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2157,13 +1789,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
+        filebase: /data/logger/pco2/raw/NBP_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2174,7 +1806,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2183,6 +1815,7 @@ configs:
             prefix: pco2
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -2196,20 +1829,10 @@ configs:
             prefix: pco2
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   pguv->off:
     name: pguv->off
@@ -2220,7 +1843,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2230,24 +1853,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2259,13 +1872,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
+        filebase: /data/logger/pguv/raw/NBP_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2276,7 +1889,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2285,18 +1898,8 @@ configs:
             prefix: pguv
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2308,13 +1911,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
+        filebase: /data/logger/pguv/raw/NBP_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2325,7 +1928,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2334,6 +1937,7 @@ configs:
             prefix: pguv
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -2347,20 +1951,10 @@ configs:
             prefix: pguv
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   s330->off:
     name: s330->off
@@ -2371,7 +1965,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2381,24 +1975,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2410,13 +1994,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/s330/raw/NBP1406_s330
+        filebase: /data/logger/s330/raw/NBP_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2427,7 +2011,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2436,18 +2020,8 @@ configs:
             prefix: s330
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2459,13 +2033,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/s330/raw/NBP1406_s330
+        filebase: /data/logger/s330/raw/NBP_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2476,7 +2050,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2485,6 +2059,7 @@ configs:
             prefix: s330
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -2498,20 +2073,10 @@ configs:
             prefix: s330
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   tsg1->off:
     name: tsg1->off
@@ -2522,7 +2087,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2532,24 +2097,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2561,13 +2116,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
+        filebase: /data/logger/tsg1/raw/NBP_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2578,7 +2133,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2587,18 +2142,8 @@ configs:
             prefix: tsg1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2610,13 +2155,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
+        filebase: /data/logger/tsg1/raw/NBP_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2627,7 +2172,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2636,6 +2181,7 @@ configs:
             prefix: tsg1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -2649,20 +2195,10 @@ configs:
             prefix: tsg1
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   rtmp->off:
     name: rtmp->off
@@ -2673,7 +2209,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2683,24 +2219,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2712,13 +2238,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
+        filebase: /data/logger/rtmp/raw/NBP_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2729,7 +2255,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2738,18 +2264,8 @@ configs:
             prefix: rtmp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2761,13 +2277,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
+        filebase: /data/logger/rtmp/raw/NBP_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2778,7 +2294,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2787,6 +2303,7 @@ configs:
             prefix: rtmp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -2800,20 +2317,10 @@ configs:
             prefix: rtmp
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   hdas->off:
     name: hdas->off
@@ -2824,7 +2331,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2834,24 +2341,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2863,13 +2360,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
+        filebase: /data/logger/hdas/raw/NBP_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2880,7 +2377,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2889,18 +2386,8 @@ configs:
             prefix: hdas
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2912,13 +2399,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
+        filebase: /data/logger/hdas/raw/NBP_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2929,7 +2416,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2938,6 +2425,7 @@ configs:
             prefix: hdas
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -2951,20 +2439,10 @@ configs:
             prefix: hdas
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   tsg2->off:
     name: tsg2->off
@@ -2975,7 +2453,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2985,24 +2463,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3014,13 +2482,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
+        filebase: /data/logger/tsg2/raw/NBP_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3031,7 +2499,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3040,18 +2508,8 @@ configs:
             prefix: tsg2
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3063,13 +2521,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
+        filebase: /data/logger/tsg2/raw/NBP_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3080,7 +2538,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3089,6 +2547,7 @@ configs:
             prefix: tsg2
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -3102,20 +2561,10 @@ configs:
             prefix: tsg2
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   seap->off:
     name: seap->off
@@ -3126,7 +2575,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -3136,24 +2585,14 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3165,13 +2604,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/seap/raw/NBP1406_seap
+        filebase: /data/logger/seap/raw/NBP_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3182,7 +2621,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3191,18 +2630,8 @@ configs:
             prefix: seap
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3214,13 +2643,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/seap/raw/NBP1406_seap
+        filebase: /data/logger/seap/raw/NBP_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -3231,7 +2660,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3240,6 +2669,7 @@ configs:
             prefix: seap
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: CachedDataWriter
@@ -3253,20 +2683,10 @@ configs:
             prefix: seap
         - class: ParseTransform
           kwargs:
+            metadata_interval: 10
             definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   true_wind->off:
     name: true_wind->off
@@ -3293,14 +2713,14 @@ configs:
               seconds: 0
             MwxStbdRelWindSpeed:
               seconds: 0
-    transforms:
-    - class: ComposedDerivedDataTransform
+    writers:
+    - class: ComposedWriter
       kwargs:
         transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: PortApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -3310,10 +2730,18 @@ configs:
             - MwxPortRelWindDir
             wind_dir_field: MwxPortRelWindDir
             wind_speed_field: MwxPortRelWindSpeed
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter
+      kwargs:
+        transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -3323,511 +2751,113 @@ configs:
             - MwxStbdRelWindDir
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:true_wind'
+            metadata_interval: 10
         writers:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
-  timeout_check->off:
-    name: timeout_check->off
+  # Derived data subsampling logger
+  subsample->off:
+    name: subsample->off
 
-  timeout_check->on:
-    name: timeout_check->on
-    readers:                   # Read from raw UDP
-    - class: UDPReader
+  subsample->on:
+    name: subsample->on
+    readers:
+      class: CachedDataReader
       kwargs:
-        port: 6224
-    stderr_writers:
-    - class: TextFileWriter
+        data_server: localhost:8766
+        subscription:
+          fields:
+            MwxAirTemp:
+              seconds: 0
+            RTMPTemp:
+              seconds: 0
+            PortTrueWindDir:
+              seconds: 0
+            PortTrueWindSpeed:
+              seconds: 0
+            StbdTrueWindDir:
+              seconds: 0
+            StbdTrueWindSpeed:
+              seconds: 0
+            MwxBarometer:
+              seconds: 0
+            KnudDepthHF:
+              seconds: 0
+            KnudDepthLF:
+              seconds: 0
+            Grv1Value:
+              seconds: 0
+
+    transforms:
+    - class: SubsampleTransform
+      kwargs:
+        back_seconds: 3600
+        metadata_interval: 20  # send metadata every 20 seconds
+        field_spec:
+          MwxAirTemp:
+            output: AvgMwxAirTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          RTMPTemp:
+            output: AvgRTMPTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindDir:
+            output: AvgPortTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindSpeed:
+            output: AvgPortTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindDir:
+            output: AvgStbdTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindSpeed:
+            output: AvgStbdTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          MwxBarometer:
+            output: AvgMwxBarometer
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthHF:
+            output: AvgKnudDepthHF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthLF:
+            output: AvgKnudDepthLF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          Grv1Value:
+            output: AvgGrv1Value
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
     writers:
-    - class: ComposedWriter
+    - class: CachedDataWriter
       kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^PCOD"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: PCOD logged no data on port 6224 in 3.0 seconds
-            resume_message: PCOD logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:PCOD
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^cwnc"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 0.15
-            message: cwnc logged no data on port 6224 in 0.15 seconds
-            resume_message: cwnc logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:cwnc
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^gp02"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: gp02 logged no data on port 6224 in 3.0 seconds
-            resume_message: gp02 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:gp02
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^gyr1"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: gyr1 logged no data on port 6224 in 3.0 seconds
-            resume_message: gyr1 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:gyr1
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^adcp"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: adcp logged no data on port 6224 in 3.0 seconds
-            resume_message: adcp logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:adcp
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^eng1"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: eng1 logged no data on port 6224 in 3.0 seconds
-            resume_message: eng1 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:eng1
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^svp1"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: svp1 logged no data on port 6224 in 3.0 seconds
-            resume_message: svp1 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:svp1
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^twnc"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 0.15
-            message: twnc logged no data on port 6224 in 0.15 seconds
-            resume_message: twnc logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:twnc
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^mbdp"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 15.0
-            message: mbdp logged no data on port 6224 in 15.0 seconds
-            resume_message: mbdp logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:mbdp
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^knud"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 15.0
-            message: knud logged no data on port 6224 in 15.0 seconds
-            resume_message: knud logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:knud
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^grv1"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: grv1 logged no data on port 6224 in 3.0 seconds
-            resume_message: grv1 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:grv1
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^mwx1"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: mwx1 logged no data on port 6224 in 3.0 seconds
-            resume_message: mwx1 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:mwx1
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^pco2"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: pco2 logged no data on port 6224 in 3.0 seconds
-            resume_message: pco2 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:pco2
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^pguv"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: pguv logged no data on port 6224 in 3.0 seconds
-            resume_message: pguv logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:pguv
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^s330"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: s330 logged no data on port 6224 in 3.0 seconds
-            resume_message: s330 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:s330
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^tsg1"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: tsg1 logged no data on port 6224 in 3.0 seconds
-            resume_message: tsg1 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:tsg1
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^rtmp"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: rtmp logged no data on port 6224 in 3.0 seconds
-            resume_message: rtmp logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:rtmp
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^hdas"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: hdas logged no data on port 6224 in 3.0 seconds
-            resume_message: hdas logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:hdas
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^tsg2"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: tsg2 logged no data on port 6224 in 3.0 seconds
-            resume_message: tsg2 logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:tsg2
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: RegexFilterTransform
-          kwargs:
-            pattern: "^seap"
-        writers:
-        - class: TimeoutWriter
-          kwargs:
-            timeout: 3.0
-            message: seap logged no data on port 6224 in 3.0 seconds
-            resume_message: seap logged new data on port 6224
-            writer:
-              class: ComposedWriter
-              kwargs:
-                transforms:
-                - class: TimestampTransform
-                - class: ToDASRecordTransform
-                  kwargs:
-                    field_name: stderr:logger:seap
-                writers:
-                - class: CachedDataWriter
-                  kwargs:
-                    data_server: localhost:8766
+        data_server: localhost:8766        
+
