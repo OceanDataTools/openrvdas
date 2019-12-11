@@ -97,7 +97,7 @@ class RecordParser:
   def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
                definition_path=DEFAULT_DEFINITION_PATH,
                return_das_record=False, return_json=False,
-               metadata_interval=None):
+               metadata_interval=None, quiet=False):
     """Create a parser that will parse field values out of a text record
     and return either a Python dict of data_id, timestamp and fields,
     a JSON encoding of that dict, or a binary DASRecord.
@@ -117,7 +117,10 @@ class RecordParser:
         and other metadata pertaining to each field in the returned
         record if those data haven't been returned in the last
         metadata_interval seconds.
+
+    quiet - if not False, don't complain when unable to parse a record.
     """
+    self.quiet = quiet
     self.record_format = record_format
     self.compiled_record_format = parse.compile(format=record_format,
                                                 extra_types=parser_dict)
@@ -220,8 +223,9 @@ class RecordParser:
     try:
       parsed_record = self.compiled_record_format.parse(record).named
     except (ValueError, AttributeError):
-      logging.warning('Unable to parse record into "%s"', self.record_format)
-      logging.warning('Record: %s', record)
+      if not self.quiet:
+        logging.warning('Unable to parse record into "%s"', self.record_format)
+        logging.warning('Record: %s', record)
       return None
 
     # Convert timestamp to numeric, if it's there
@@ -233,25 +237,29 @@ class RecordParser:
     # Figure out what kind of message we're expecting, based on data_id
     data_id = parsed_record.get('data_id', None)
     if data_id is None:
-      logging.warning('No data id found in record: %s', record)
+      if not self.quiet:
+        logging.warning('No data id found in record: %s', record)
       return None
 
     # Get device and device_type definitions for data_id
     device = self.devices.get(data_id, None)
     if not device:
-      logging.warning('Unrecognized data id "%s" in record: %s', data_id,record)
-      logging.warning('Devices are: %s', ', '.join(self.devices.keys()))
+      if not self.quiet:
+        logging.warning('Unrecognized data id "%s", record: %s', data_id,record)
+        logging.warning('Devices are: %s', ', '.join(self.devices.keys()))
       return None
 
     device_type = device.get('device_type', None)
     if not device_type:
-      logging.error('Internal error: No "device_type" for device %s!', device)
+      if not self.quiet:
+        logging.error('Internal error: No "device_type" for device %s!', device)
       return None
 
     # Extract the message we're going to parse; remove trailing whitespace
     message = parsed_record.get('message', '').rstrip()
     if not message:
-      logging.warning('No message found in record: %s', record)
+      if not self.quiet:
+        logging.warning('No message found in record: %s', record)
       return None
     del parsed_record['message']
 
@@ -267,7 +275,8 @@ class RecordParser:
     # Finally, convert field values to variable names specific to device
     device_fields = device.get('fields', None)
     if not device_fields:
-      logging.error('No "fields" definition found for device %s', data_id)
+      if not self.quiet:
+        logging.error('No "fields" definition found for device %s', data_id)
       return None
 
     # Assign field values to the appropriate named variable.
@@ -351,8 +360,9 @@ class RecordParser:
         return fields.named
 
     # Nothing matched, go home empty-handed
-    logging.warning('No formats for %s matched message "%s"',
-                    device_type, message)
+    if not self.quiet:
+      logging.warning('No formats for %s matched message "%s"',
+                      device_type, message)
     return {}
 
   ############################
