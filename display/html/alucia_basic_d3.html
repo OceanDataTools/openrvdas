@@ -210,7 +210,7 @@
 
   /////////////////////////
   // Start of widgets
-  
+
   // Lat/Lon text widgets
   widget_list.push(new TextWidget('gps_lat',
                                   {CNAVLatitude:
@@ -372,7 +372,7 @@
   var air_temp_line_fields = {
     AirTemp: {
       name: 'Air Temp',
-      seconds: 3600,
+      seconds: 7200,
       color: 'green',
       transform: function(val) {
         return parseFloat(val)}
@@ -389,7 +389,8 @@
                                           yTickFontSize: 10,
                                           minRange:3.0,
                                           numYTicks: 5,
-                                          yUnitsFontSize:12 
+                                          yUnitsFontSize:12,
+                                          maxPoints: 7200
                                         }));
   /*
   widget_list.push(new TimelineWidget(
@@ -402,7 +403,7 @@
   var sea_temp_line_fields = {
     SBE48Temp: {
       name: 'Sea Temp',
-      seconds: 3600,
+      seconds: 7200,
       color: 'blue',
     }
   };
@@ -417,7 +418,8 @@
                                           yTickFontSize: 10,
                                           minRange:3.0,
                                           numYTicks: 5,
-                                          yUnitsFontSize:12 
+                                          yUnitsFontSize:12,
+                                          maxPoints: 7200
                                         }));
 
 
@@ -428,11 +430,11 @@
      legend:{enabled: false},
      credits:{enabled: false}}
   ));
-  */			       
+  */
   var true_wind_speed_line_fields = {
     TrueWindSpeed: {
       name: 'True Wind Speed',
-      seconds: 3600,
+      seconds: 7200,
       color: 'green'
     }
   };
@@ -447,7 +449,8 @@
                                           yTickFontSize: 10,
                                           minRange:10.0,
                                           numYTicks: 5,
-                                          yUnitsFontSize:12 
+                                          yUnitsFontSize:12,
+                                          maxPoints: 7200
                                         }));
   /*
   widget_list.push(new TimelineWidget(
@@ -460,7 +463,7 @@
   var barometer_line_fields = {
     Pressure: {
       name: 'Atmospheric Pressure, mB',
-      seconds: 3600,
+      seconds: 7200,
       color: 'slategray'
     }
   };
@@ -475,7 +478,8 @@
                                           yTickFontSize: 10,
                                           minRange:1.0,
                                           numYTicks: 5,
-                                          yUnitsFontSize:12 
+                                          yUnitsFontSize:12,
+                                          maxPoints: 7200
                                         }));
   /*
   widget_list.push(new TimelineWidget(
@@ -488,7 +492,7 @@
   var flowmeter_line_fields = {
     UnderwayFlowRate: {
       name: 'Flow Rate',
-      seconds: 3600,
+      seconds: 7200,
       color: 'brown',
       transform: function(val) {
         return parseFloat(val)}
@@ -505,7 +509,8 @@
                                           yTickFontSize: 10,
                                           minRange:8.0,
                                           numYTicks: 5,
-                                          yUnitsFontSize:12 
+                                          yUnitsFontSize:12,
+                                          maxPoints: 7200
                                         }));
   /*
   widget_list.push(new TimelineWidget(
@@ -518,7 +523,7 @@
   var fluorometer_line_fields = {
     FluorometerSignalCounts: {
       name: 'Fluorometer Counts',
-      seconds: 3600,
+      seconds: 7200,
       color: 'green',
       transform: function(val) {
         return parseFloat(val)}
@@ -535,7 +540,8 @@
                                           yTickFontSize: 10,
                                           minRange:10.0,
                                           numYTicks: 5,
-                                          yUnitsFontSize:12 
+                                          yUnitsFontSize:12,
+                                          maxPoints: 7200
                                         }));
   /*
   widget_list.push(new TimelineWidget(
