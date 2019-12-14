@@ -168,9 +168,10 @@ class RecordParser:
           # e.g. GPSTime: {'units':..., 'description':...}
           field_desc = device_type_fields.get(device_type_field, None)
           if not field_desc:
-            raise ValueError('Device type "%s" has no field corresponding to '
-                             'device field "%s"' % (device_type_name,
-                                                    device_type_field))
+            logging.warning('Device type "%s" has no field corresponding to '
+                            'device field "%s"' % (device_type_name,
+                                                   device_type_field))
+            continue
           self.field_metadata_last_sent[device_field] = 0
           self.field_metadata[device_field] = {
             'device': device,
