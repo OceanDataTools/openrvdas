@@ -3,209 +3,214 @@
 #
 # See README.md in this directory
 
-######################################
-flow:
-  category: "device"
-  device_type: "AtlasFlowmeter"
-  serial_number: "unknown"
-  description: "Atlas Scientific 1/4 inch flowmeter"
+includes:
+  - local/alucia/devices/atlasflowmeter.yaml
+  - local/alucia/devices/cnav.yaml
+  - local/alucia/devices/misc_device_types.yaml
+  - local/devices/*.yaml
 
-  # Map from device_type field names to names specific for this
-  # specific device.
-  fields:
-    TotalFlowVolume: "UnderwayFlowVolume"
-    FlowRate: "UnderwayFlowRate"
+devices:
+  ######################################
+  flow:
+    category: "device"
+    device_type: "AtlasFlowmeter"
+    serial_number: "unknown"
+    description: "Atlas Scientific 1/4 inch flowmeter"
 
-######################################
-gyro:
-  category: "device"
-  device_type: "Gyrocompass"
-  serial_number: "unknown"
-  description: "Teledyne (Meridian) MK2 Standard"
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      TotalFlowVolume: "UnderwayFlowVolume"
+      FlowRate: "UnderwayFlowRate"
 
-  fields:
-    HeadingTrue: "GyroHeadingTrue"
-    RateOfTurn: "GyroRateOfTurn"
+  ######################################
+  gyro:
+    category: "device"
+    device_type: "Gyrocompass"
+    serial_number: "unknown"
+    description: "Teledyne (Meridian) MK2 Standard"
 
-######################################
-sbe48:
-  category: "device"
-  device_type: "SBE48"
-  description: "SBE48 Hull temperature sensor"
+    fields:
+      HeadingTrue: "GyroHeadingTrue"
+      RateOfTurn: "GyroRateOfTurn"
 
-  fields:
-    Temp: "SBE48Temp"
-    #Date: "SBE48Date"
-    #Time: "SBE48Time"
+  ######################################
+  sbe48:
+    category: "device"
+    device_type: "SBE48"
+    description: "SBE48 Hull temperature sensor"
 
-######################################
+    fields:
+      Temp: "SBE48Temp"
+      #Date: "SBE48Date"
+      #Time: "SBE48Time"
 
-sbe45:
-  category: "device"
-  device_type: "TSG_SBE45"
-  description: "SBE45 Thermosalinograph"
+  ######################################
 
-  fields:
-    Temp: "FlowthroughTemp"
-    Conductivity: "Conductivity"
-    Salinity: "Salinity"
-    SoundVelocity: "SoundVelocity"
-    
-    
+  sbe45:
+    category: "device"
+    device_type: "TSG_SBE45"
+    description: "SBE45 Thermosalinograph"
 
-######################################
-met:
-  category: "device"
-  device_type: "Vaisala"
-  description: "Vaisala Weather Sensor"
+    fields:
+      Temp: "FlowthroughTemp"
+      Conductivity: "Conductivity"
+      Salinity: "Salinity"
+      SoundVelocity: "SoundVelocity"
 
-  fields:
-    AvgWindDirection: "AvgWindDir"
-    AvgWindSpeed: "AvgWindSpeed"
-    MaxWindSpeed: "MaxWindSpeed"
-    AirTemp: "AirTemp"
-    RelativeHumidity: "RH"
-    Barometer: "Pressure"
-    RainAccumulation: "RainAccumulation"
-    RainIntensity: "RainIntensity"
+  ######################################
+  met:
+    category: "device"
+    device_type: "Vaisala"
+    description: "Vaisala Weather Sensor"
 
-######################################
-cnav:
-  category: "device"
-  device_type: "CNAV3050"
-  serial_number: "unknown"
-  description: "CNAV 3050 GPS"
+    fields:
+      AvgWindDirection: "AvgWindDir"
+      AvgWindSpeed: "AvgWindSpeed"
+      MaxWindSpeed: "MaxWindSpeed"
+      AirTemp: "AirTemp"
+      RelativeHumidity: "RH"
+      Barometer: "Pressure"
+      RainAccumulation: "RainAccumulation"
+      RainIntensity: "RainIntensity"
 
-  # Map from device_type field names to names specific for this
-  # specific device.
-  fields:
-    GPSTime: "CNAVGPSTime"
-    FixQuality: "CNAVFixQuality"
-    NumSats: "CNAVNumSats"
-    HDOP: "CNAVHDOP"
-    AntennaHeight: "CNAVAntennaHeight"
-    GeoidHeight: "CNAVGeoidHeight"
-    LastDGPSUpdate: "CNAVLastDGPSUpdate"
-    DGPSStationID: "CNAVDGPSStationID"
-    CourseTrue: "CNAVCourseTrue"
-    CourseMag: "CNAVCourseMag"
-    SpeedKt: "CNAVSpeedKt"
-    SpeedKm: "CNAVSpeedKm"
-    Mode: "CNAVMode"
-    GPSTime: "CNAVGPSTime"
-    GPSDay: "CNAVGPSDay"
-    GPSMonth: "CNAVGPSMonth"
-    GPSYear: "CNAVGPSYear"
-    LocalHours: "CNAVLocalHours"
-    LocalZone: "CNAVLocalZone"
-    HorizQual: "CNAVHorizQual"
-    HeightQual: "CNAVHeightQual"
-    HeadingQual: "CNAVHeadingQual"
-    RollPitchQual: "CNAVRollPitchQual"
-    GyroCal: "CNAVGyroCal"
-    GyroOffset: "CNAVGyroOffset"
-    Roll: "CNAVRoll"
-    Pitch: "CNAVPitch"
-    HeadingTrue: "CNAVHeadingTrue"
-    Heave: "CNAVHeave"
-    Latitude: "CNAVLatitude"
-    NorS: "CNAVNorS"
-    Longitude: "CNAVLongitude"
-    EorW: "CNAVEorW"
-    
-######################################
-posmv:
-  category: "device"
-  device_type: "POSMVOceanMasterII"
-  serial_number: "unknown"
-  description: "POSMV OceanMaster II MRU"
+  ######################################
+  cnav:
+    category: "device"
+    device_type: "CNAV3050"
+    serial_number: "unknown"
+    description: "CNAV 3050 GPS"
 
-  # Map from device_type field names to names specific for this
-  # specific device.
-  fields:
-    GPSTime: "POSMVGPSTime"
-    FixQuality: "POSMVFixQuality"
-    NumSats: "POSMVNumSats"
-    HDOP: "POSMVHDOP"
-    AntennaHeight: "POSMVAntennaHeight"
-    GeoidHeight: "POSMVGeoidHeight"
-    LastDGPSUpdate: "POSMVLastDGPSUpdate"
-    DGPSStationID: "POSMVDGPSStationID"
-    CourseTrue: "POSMVCourseTrue"
-    CourseMag: "POSMVCourseMag"
-    SpeedKt: "POSMVSpeedKt"
-    SpeedKm: "POSMVSpeedKm"
-    Mode: "POSMVMode"
-    GPSTime: "POSMVGPSTime"
-    GPSDay: "POSMVGPSDay"
-    GPSMonth: "POSMVGPSMonth"
-    GPSYear: "POSMVGPSYear"
-    GPSYear: "POSMVGPSYear2"
-    LocalHours: "POSMVLocalHours"
-    LocalZone: "POSMVLocalZone"
-    HorizQual: "POSMVHorizQual"
-    HeightQual: "POSMVHeightQual"
-    HeadingQual: "POSMVHeadingQual"
-    RollPitchQual: "POSMVRollPitchQual"
-    GyroCal: "POSMVGyroCal"
-    GyroOffset: "POSMVGyroOffset"
-    Roll: "POSMVRoll"
-    Pitch: "POSMVPitch"
-    HeadingTrue: "POSMVHeadingTrue"
-    Heave: "POSMVHeave"
-    Latitude: "POSMVLatitude"
-    NorS: "POSMVNorS"
-    Longitude: "POSMVLongitude"
-    EorW: "POSMVEorW"
-    
-######################################
-######################################
-cstar:
-  category: "device"
-  device_type: "CSTAR_Transmissometer"
-  serial_number: "CST-1862DR"
-  description: "CStar Transmissometer"
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      GPSTime: "CNAVGPSTime"
+      FixQuality: "CNAVFixQuality"
+      NumSats: "CNAVNumSats"
+      HDOP: "CNAVHDOP"
+      AntennaHeight: "CNAVAntennaHeight"
+      GeoidHeight: "CNAVGeoidHeight"
+      LastDGPSUpdate: "CNAVLastDGPSUpdate"
+      DGPSStationID: "CNAVDGPSStationID"
+      CourseTrue: "CNAVCourseTrue"
+      CourseMag: "CNAVCourseMag"
+      SpeedKt: "CNAVSpeedKt"
+      SpeedKm: "CNAVSpeedKm"
+      Mode: "CNAVMode"
+      GPSTime: "CNAVGPSTime"
+      GPSDay: "CNAVGPSDay"
+      GPSMonth: "CNAVGPSMonth"
+      GPSYear: "CNAVGPSYear"
+      LocalHours: "CNAVLocalHours"
+      LocalZone: "CNAVLocalZone"
+      HorizQual: "CNAVHorizQual"
+      HeightQual: "CNAVHeightQual"
+      HeadingQual: "CNAVHeadingQual"
+      RollPitchQual: "CNAVRollPitchQual"
+      GyroCal: "CNAVGyroCal"
+      GyroOffset: "CNAVGyroOffset"
+      Roll: "CNAVRoll"
+      Pitch: "CNAVPitch"
+      HeadingTrue: "CNAVHeadingTrue"
+      Heave: "CNAVHeave"
+      Latitude: "CNAVLatitude"
+      NorS: "CNAVNorS"
+      Longitude: "CNAVLongitude"
+      EorW: "CNAVEorW"
 
-  # Map from device_type field names to names specific for this
-  # specific device.
-  fields:
-    ID: "SerialNumber"
-    RefCounts: "ReferenceCounts"
-    SignalCounts: "SignalCounts"
-    CorrectedRawCounts: "CorrectedRawCounts"
-    BeamC: "BeamC"
-    ThermCounts: "ThermisterCounts"
+  ######################################
+  posmv:
+    category: "device"
+    device_type: "POSMVOceanMasterII"
+    serial_number: "unknown"
+    description: "POSMV OceanMaster II MRU"
 
-######################################
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      GPSTime: "POSMVGPSTime"
+      FixQuality: "POSMVFixQuality"
+      NumSats: "POSMVNumSats"
+      HDOP: "POSMVHDOP"
+      AntennaHeight: "POSMVAntennaHeight"
+      GeoidHeight: "POSMVGeoidHeight"
+      LastDGPSUpdate: "POSMVLastDGPSUpdate"
+      DGPSStationID: "POSMVDGPSStationID"
+      CourseTrue: "POSMVCourseTrue"
+      CourseMag: "POSMVCourseMag"
+      SpeedKt: "POSMVSpeedKt"
+      SpeedKm: "POSMVSpeedKm"
+      Mode: "POSMVMode"
+      GPSTime: "POSMVGPSTime"
+      GPSDay: "POSMVGPSDay"
+      GPSMonth: "POSMVGPSMonth"
+      GPSYear: "POSMVGPSYear"
+      GPSYear: "POSMVGPSYear2"
+      LocalHours: "POSMVLocalHours"
+      LocalZone: "POSMVLocalZone"
+      HorizQual: "POSMVHorizQual"
+      HeightQual: "POSMVHeightQual"
+      HeadingQual: "POSMVHeadingQual"
+      RollPitchQual: "POSMVRollPitchQual"
+      GyroCal: "POSMVGyroCal"
+      GyroOffset: "POSMVGyroOffset"
+      Roll: "POSMVRoll"
+      Pitch: "POSMVPitch"
+      HeadingTrue: "POSMVHeadingTrue"
+      Heave: "POSMVHeave"
+      Latitude: "POSMVLatitude"
+      NorS: "POSMVNorS"
+      Longitude: "POSMVLongitude"
+      EorW: "POSMVEorW"
 
-######################################
-fluorometer:
-  category: "device"
-  device_type: "Fluorometer"
-  serial_number: "WSCHL-1485"
-  description: "Chlorophyll WETStar Fluorometer"
-  # Map from device_type field names to names specific for this specific device.
-  fields:
-    SignalCounts: "FluorometerSignalCounts"
-    
-######################################
+  ######################################
+  ######################################
+  cstar:
+    category: "device"
+    device_type: "CSTAR_Transmissometer"
+    serial_number: "CST-1862DR"
+    description: "CStar Transmissometer"
 
-######################################
-knudsen:
-  category: "device"
-  device_type: "Knudsen3260"
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      ID: "SerialNumber"
+      RefCounts: "ReferenceCounts"
+      SignalCounts: "SignalCounts"
+      CorrectedRawCounts: "CorrectedRawCounts"
+      BeamC: "BeamC"
+      ThermCounts: "ThermisterCounts"
 
-  # Map from device_type field names to names specific for this
-  # specific device.
-  fields:
-    LF: "KnudLF"
-    LFDepth: "KnudDepthLF"
-    LFValid: "KnudValidLF"
-    HF: "KnudHF"
-    HFDepth: "KnudDepthHF"
-    HFValid: "KnudValidHF"
-    SoundSpeed: "KnudSoundSpeed"
-    Latitude: "KnudLatitude"
-    Longitude: "KnudLongitude"
-    
-######################################
+  ######################################
+
+  ######################################
+  fluorometer:
+    category: "device"
+    device_type: "Fluorometer"
+    serial_number: "WSCHL-1485"
+    description: "Chlorophyll WETStar Fluorometer"
+    # Map from device_type field names to names specific for this specific device.
+    fields:
+      SignalCounts: "FluorometerSignalCounts"
+
+  ######################################
+
+  ######################################
+  knudsen:
+    category: "device"
+    device_type: "Knudsen3260"
+
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      LF: "KnudLF"
+      LFDepth: "KnudDepthLF"
+      LFValid: "KnudValidLF"
+      HF: "KnudHF"
+      HFDepth: "KnudDepthHF"
+      HFValid: "KnudValidHF"
+      SoundSpeed: "KnudSoundSpeed"
+      Latitude: "KnudLatitude"
+      Longitude: "KnudLongitude"
+
+  ######################################
