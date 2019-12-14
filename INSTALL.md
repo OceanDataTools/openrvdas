@@ -298,7 +298,9 @@ Try reading from the simulated serial port and writing to the database:
 logger/listener/listen.py --serial port=/tmp/tty_s330 \
   --transform_timestamp \
   --transform_prefix s330 \
-  --transform_parse --write_file - \
+  --parse_definition_path local/usap/nbp/devices/nbp_devices.yaml \
+  --transform_parse \
+  --write_file - \
   --database_password <your database password> \
   --write_database rvdas@localhost:data
 ```

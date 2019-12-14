@@ -40,6 +40,14 @@ function TimelineWidget (
     max: null,
     minRange: null,
     showLegend: true,
+    backgroundColor: null,
+    xTickFontSize: null,
+    xTickFormat: null, // See https://github.com/d3/d3-time-format#locale_format
+    numXTicks: null,
+    yTickFontSize: null,
+    yTickFormat: null, // See https://github.com/d3/d3-format#locale_format
+    numYTicks: null,
+    yUnitsFontSize: null,
     maxPoints: 500
   }
   const thisWidgetOptions = { ...defaultWidgetOptions, ...widgetOptions }
@@ -99,8 +107,11 @@ function TimelineWidget (
 
 function realTimeLineChart (widgetParams) {
   const duration = 1000
-  const { yLabel, colors, fieldNames, fieldInfo, height, min, max, minRange, showLegend } =
-    widgetParams
+  const {
+    yLabel, colors, fieldNames, fieldInfo, height, min, max, minRange, showLegend, backgroundColor,
+    xTickFontSize, xTickFormat, numXTicks, yTickFontSize, yTickFormat, numYTicks, yUnitsFontSize
+  } = widgetParams
+  const xTickUtcFormat = xTickFormat ? d3.utcFormat(xTickFormat) : null
   const margin = { top: 20, right: 10, bottom: 20, left: yLabel ? 50 : 30 }
 
   // Find the maximum seconds specified for any field. If none found, default to 60.
@@ -174,13 +185,19 @@ function realTimeLineChart (widgetParams) {
 
       svg = selection.select('svg')
       svg.attr('width', width).attr('height', height)
+      if (backgroundColor) {
+        svg.attr('style', `background-color: ${backgroundColor}`)
+      }
       const g = svg.select('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
       g.select('g.axis.x')
         .attr('transform', 'translate(0,' + (height - margin.bottom - margin.top) + ')')
         .transition(t)
-        .call(d3.axisBottom(x).ticks(d3.timeSecond.every(15)).tickFormat(d3.utcFormat('%H:%M:%S')))
+        .call(d3.axisBottom(x).ticks(numXTicks).tickFormat(xTickUtcFormat))
+        .call(g => g.selectAll('.tick text')
+          .attr('font-size', xTickFontSize)
+        )
 
       g.select('g.axis.y')
         .attr('transform', 'translate(' + w + ',0)')
@@ -189,12 +206,15 @@ function realTimeLineChart (widgetParams) {
         .call(d3.axisLeft(y)
           // Make tick marks span the whole chart, to function as grid lines.
           .tickSize(w)
+          .ticks(numYTicks)
+          .tickFormat(yTickFormat ? d3.format(yTickFormat) : null)
         )
         .call(g => g.selectAll('.tick line')
           .attr('stroke-opacity', 0.2)
         )
         .call(g => g.selectAll('.tick text')
           .attr('dx', -10)
+          .attr('font-size', yTickFontSize)
         )
 
       if (yLabel) {
@@ -204,6 +224,7 @@ function realTimeLineChart (widgetParams) {
           .text(yLabel)
           .attr('text-anchor', 'middle')
           .attr('transform', 'rotate(-90)')
+          .attr('font-size', yUnitsFontSize)
       }
 
       g.select('defs clipPath rect')
@@ -308,7 +329,7 @@ function DialWidget (
     const id = container.substr(1) // remove initial '#'
     document.getElementById(id).appendChild(inner)
     inner.id = `${id}_inner`
-    inner.className = "flex_center"
+    inner.className = 'flex_center'
 
     const svg = d3.select(`#${inner.id}`)
       .append('svg')

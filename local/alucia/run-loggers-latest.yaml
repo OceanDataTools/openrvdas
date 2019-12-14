@@ -1,6 +1,6 @@
 # Cruise definition file for Alucia
 
-# Hand coded - 2019-09-13
+# Hand coded - 2019-12-13
 
 #################################
 loggers:
@@ -190,7 +190,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter # write parsed data to logfile
           kwargs:
@@ -239,7 +239,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter  # write parsed to logfile
           kwargs:
@@ -288,7 +288,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter  # write parsed to logfile
           kwargs:
@@ -328,7 +328,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:
@@ -376,7 +376,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:
@@ -417,7 +417,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:
@@ -468,7 +468,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:
@@ -508,7 +508,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:
@@ -548,7 +548,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:
@@ -588,7 +588,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:
@@ -627,7 +627,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/alucia/devices/*.yaml
+            definition_path: local/alucia/devices/alucia_devices.yaml
         writers:
         - class: TextFileWriter
           kwargs:

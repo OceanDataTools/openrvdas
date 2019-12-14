@@ -25,6 +25,15 @@ class ExtractFieldTransform(Transform):
     if not record:
       return None
 
+    # If we've got a list, hope it's a list of records. Recurse,
+    # calling transform() on each of the list elements in order and
+    # return the resulting list.
+    if type(record) is list:
+      results = []
+      for single_record in record:
+       results.append(self.transform(single_record))
+      return results
+
     if type(record) is DASRecord:
       return record.fields.get(self.field_name, None)
     elif type(record) is dict:

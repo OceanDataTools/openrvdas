@@ -164,36 +164,53 @@ by websocket clients:
   {"type":"subscribe",
     "fields":{"field_1":{"seconds":50},
               "field_2":{"seconds":0},
-              "field_3":{"seconds":-1}}
+              "field_3":{"seconds":-1}},
    "interval": 15
   }
   ```
 
-  Each field name may also have a 'subsample' specification
-  that will cause the CachedDataServer to preprocess its data
-  via the subsample() function in logger/utils/subsample.py:
+  The subscription message may also have an optional 'format' field,
+  which may have the value 'field\_dict' (the default) or
+  'record\_list':
 
   ```
+  {"type":"subscribe",
+    "fields":{"field_1":{"seconds":50},
+              "field_2":{"seconds":0},
+              "field_3":{"seconds":-1}},
+   "format": "record_list"
+  }
+  ```
+
+  If 'record\_list' is specified, results will be collated into a list
+  of DASRecord-like dicts:
+
+  ```
+  [
     {
-      "field_1":{
-        "seconds":600,
-        "subsample":{
-          "type":"boxcar_average", "window": 30, "interval": 30
-        }
-      },
-      "field_1":{
-        "seconds":600,
-        "subsample":{
-          "type":"boxcar_average", "window": 15, "interval": 5
-        }
-      }
-    }
+      'timestamp': timestamp,
+      'fields': {field_name: value, field_name: value, ...}
+    },
+    {
+      'timestamp': timestamp,
+      'fields': {field_name: value, field_name: value, ...}
+    },
+    ...  
+  ]
   ```
 
-  Note that subsampling can be a computation-intensive process and may
-  put a heavy load on the CachedDataServer process. When practical, we
-  recommend subsampling via a separate logger performing
-  aDerivedDataTransform.
+  If 'field\_dict' is specified (or if 'format' is left unspecified),
+  results will be provided as a field dict:
+
+  ```
+  {
+    'fields': {
+      field_name: [(timestamp, value), (timestamp, value),...],
+      field_name: [(timestamp, value), (timestamp, value),...],
+      ...
+    }
+  }
+  ```
 
 ### {"type":"ready"}
   ```

@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NBP UNOLS Widget Example</title>
+
+    <style type="text/css">
+      .ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      .ship_table td, .ship_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      .td_70 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 70%;
+      }
+      .td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 50%;
+      }
+      .td_30 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .name_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 20%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- This is where we define location of data server. -->
+    <script src="../js/widgets/settings.js"></script>
+
+    <script src="../js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="../js/highcharts/code/highcharts.js"></script>
+    <script src="../js/highcharts/code/highcharts-more.js"></script>
+    <script src="../js/highcharts/code/modules/data.js"></script>
+    <script src="../js/highcharts/code/modules/exporting.js"></script>
+    <script src="../js/highcharts/code/modules/export-data.js"></script>
+
+    <script src="../js/widgets/highcharts_widget.js"></script>
+    <script src="../js/widgets/text_widget.js"></script>
+    <script src="../js/widgets/widget_server.js"></script>
+
+    <table class="ship_table">
+      <tr>
+        <td colspan=2 class="td_50">
+          <div id="true_wind_dial" style="min-width: 100px"></div>
+        </td>
+        <td colspan=2 class="td_50">
+          <div id="wind_speed_line" style="min-width: 100px"></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="name_td">Wind Dir</td>
+        <td class="val_td"><span id="true_wind_dir">--</span>°</td>
+        <td class="name_td">Speed</td>
+        <td class="val_td"><span id="wind_speed_kt">--</span> kt</td>
+      </tr>
+    
+      <tr>
+        <td class="name_td">Lat</td>
+        <td class="val_td">
+          <span id="gps_lat"></span>°
+          <span id="gps_n_or_s"></span>
+        </td>
+        <td class="name_td">Lon</td>
+        <td class="val_td">
+          <span id="gps_lon"></span>°
+          <span id="gps_e_or_w"></span>
+        </td>
+      </tr>
+      <tr>
+        <td class="name_td">Heading</td>
+        <td class="val_td"><span id="heading_true"></span>° T</td>
+        <td class="name_td">SOG</td>
+        <td class="val_td"><span id="gps_sog"></span> kt</td>
+      </tr>
+      <tr>
+        <td class="name_td">Pitch</td>
+        <td class="val_td"><span id="pitch"></span>°</td>
+        <td class="name_td">Roll</td>
+        <td class="val_td"><span id="roll"></span>°</td>
+      </tr>
+      <tr>
+        <td class="name_td">RTemp</td>
+        <td class="val_td"><span id="remote_temp"></span>° C</td>
+        <td class="name_td">Air Temp</td>
+        <td class="val_td"><span id="air_temp"></span>° C</td>
+      </tr>
+
+
+
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+
+  <script type="text/javascript">
+  var WEBSOCKET_DATA_SERVER = 'localhost:8766'
+  var widget_list = [];
+
+  //////////////////
+  // A dial
+  var true_wind_dial_fields = {
+    Met1WindDirTrue: {
+      name: 'True Wind',
+      color: 'red',
+    },
+  };
+  widget_list.push(new DialWidget('true_wind_dial', true_wind_dial_fields,
+                                {title:{text:''}}
+                                ));
+
+  widget_list.push(new TextWidget('true_wind_dir',
+                               { Met1WindDirTrue: {
+							          name: 'Wind Dir True',
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }}}));
+  widget_list.push(new TextWidget('wind_speed_kt',
+                               { Met1WindSpeedKt: {
+							          name: 'Wind Speed, kt',
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }}}));
+ 
+  var wind_speed_line_fields = {
+    Met1WindSpeedKt: {
+      name: 'Wind Speed, kt',
+      seconds: 3600,
+      color: 'red',
+    }
+  };
+  widget_list.push(new TimelineWidget('wind_speed_line', wind_speed_line_fields,
+                                    'Knots', {title:{text:''}}
+                                   ));
+
+
+  // Lat/Lon text widgets
+  widget_list.push(new TextWidget('gps_lat',
+                                  {S330Latitude:
+                                    {
+                                      name: "Latitude",
+                                      transform: function(val) {
+                                        return Math.round(val*100)/10000;
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_n_or_s', {S330NorS: {name: "N/S"}}));
+
+  widget_list.push(new TextWidget('gps_lon',
+                                  {S330Longitude:
+                                    {
+                                      name: "Longitude",
+                                      transform: function(val) {
+                                        return Math.round(val*100)/10000;
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_e_or_w', {S330EorW: {name: "E/W"}}));
+
+  widget_list.push(new TextWidget('heading_true',
+                               { S330HeadingTrue: {name: 'Heading (True)'}}));
+  widget_list.push(new TextWidget('gps_sog',
+                               { S330SpeedKt: {name: 'Speed over Ground'}}));
+
+  widget_list.push(new TextWidget('pitch', { S330Pitch: {name: 'Pitch'}}));
+  widget_list.push(new TextWidget('roll', { S330Roll: {name: 'Roll'}}));
+
+  widget_list.push(new TextWidget('remote_temp',
+                               { RTMPTemp: {name: 'Remote Temp'}}));
+  widget_list.push(new TextWidget('air_temp',
+                               { MwxAirTemp: {name: 'Air Temp'}}));
+
+  var widget_server = new WidgetServer(widget_list,
+                                       WEBSOCKET_DATA_SERVER);
+  widget_server.serve();
+</script>
+</body>
+</html>

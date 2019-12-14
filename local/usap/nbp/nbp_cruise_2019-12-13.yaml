@@ -3,14 +3,14 @@
 # YAML cruise definition file for OpenRVDAS.
 #
 # Created by:
-#   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Sat Nov 30 20:15:30 2019 UTC
+#   command:  local/usap/create_cruise.py local/usap/nbp/nbp_port_defs.yaml
+#   time:     Sat Dec 14 03:07:03 2019 UTC
 #   user:     pablo
 #
 ########################################
 cruise:
-  id: NBP1406
-  start: '2019-07-01'
+  id: NBP
+  start: '2019-01-01'
   end: '2019-12-31'
 
 ########################################
@@ -257,7 +257,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -267,7 +267,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -286,13 +286,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
+        filebase: /data/logger/PCOD/raw/NBP_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -303,7 +303,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -325,13 +325,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
+        filebase: /data/logger/PCOD/raw/NBP_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -342,7 +342,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -379,7 +379,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -389,7 +389,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -408,13 +408,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
+        filebase: /data/logger/cwnc/raw/NBP_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -425,7 +425,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -447,13 +447,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
+        filebase: /data/logger/cwnc/raw/NBP_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -464,7 +464,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -501,7 +501,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -511,7 +511,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -530,13 +530,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
+        filebase: /data/logger/gp02/raw/NBP_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -547,7 +547,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -569,13 +569,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
+        filebase: /data/logger/gp02/raw/NBP_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -586,7 +586,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -623,7 +623,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -633,7 +633,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -652,13 +652,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
+        filebase: /data/logger/gyr1/raw/NBP_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -669,7 +669,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -691,13 +691,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
+        filebase: /data/logger/gyr1/raw/NBP_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -708,7 +708,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -745,7 +745,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -755,7 +755,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -774,13 +774,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
+        filebase: /data/logger/adcp/raw/NBP_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -791,7 +791,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -813,13 +813,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
+        filebase: /data/logger/adcp/raw/NBP_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -830,7 +830,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -867,7 +867,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -877,7 +877,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -896,13 +896,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
+        filebase: /data/logger/eng1/raw/NBP_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -913,7 +913,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -935,13 +935,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
+        filebase: /data/logger/eng1/raw/NBP_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -952,7 +952,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -989,7 +989,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -999,7 +999,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1018,13 +1018,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
+        filebase: /data/logger/svp1/raw/NBP_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1035,7 +1035,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1057,13 +1057,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
+        filebase: /data/logger/svp1/raw/NBP_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1074,7 +1074,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1111,7 +1111,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1121,7 +1121,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1140,13 +1140,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
+        filebase: /data/logger/twnc/raw/NBP_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1157,7 +1157,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1179,13 +1179,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
+        filebase: /data/logger/twnc/raw/NBP_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1196,7 +1196,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1233,7 +1233,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1243,7 +1243,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1262,13 +1262,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
+        filebase: /data/logger/mbdp/raw/NBP_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1279,7 +1279,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1301,13 +1301,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
+        filebase: /data/logger/mbdp/raw/NBP_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1318,7 +1318,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1355,7 +1355,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1365,7 +1365,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1384,13 +1384,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/knud/raw/NBP1406_knud
+        filebase: /data/logger/knud/raw/NBP_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1401,7 +1401,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1423,13 +1423,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/knud/raw/NBP1406_knud
+        filebase: /data/logger/knud/raw/NBP_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1440,7 +1440,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1477,7 +1477,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1487,7 +1487,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1506,13 +1506,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
+        filebase: /data/logger/grv1/raw/NBP_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1523,7 +1523,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1545,13 +1545,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
+        filebase: /data/logger/grv1/raw/NBP_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1562,7 +1562,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1599,7 +1599,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1609,7 +1609,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1628,13 +1628,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
+        filebase: /data/logger/mwx1/raw/NBP_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1645,7 +1645,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1667,13 +1667,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
+        filebase: /data/logger/mwx1/raw/NBP_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1684,7 +1684,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1721,7 +1721,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1731,7 +1731,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1750,13 +1750,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
+        filebase: /data/logger/pco2/raw/NBP_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1767,7 +1767,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1789,13 +1789,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
+        filebase: /data/logger/pco2/raw/NBP_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1806,7 +1806,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1843,7 +1843,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1853,7 +1853,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1872,13 +1872,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
+        filebase: /data/logger/pguv/raw/NBP_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1889,7 +1889,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1911,13 +1911,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
+        filebase: /data/logger/pguv/raw/NBP_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1928,7 +1928,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1965,7 +1965,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1975,7 +1975,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1994,13 +1994,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/s330/raw/NBP1406_s330
+        filebase: /data/logger/s330/raw/NBP_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2011,7 +2011,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2033,13 +2033,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/s330/raw/NBP1406_s330
+        filebase: /data/logger/s330/raw/NBP_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2050,7 +2050,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2087,7 +2087,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2097,7 +2097,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2116,13 +2116,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
+        filebase: /data/logger/tsg1/raw/NBP_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2133,7 +2133,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2155,13 +2155,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
+        filebase: /data/logger/tsg1/raw/NBP_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2172,7 +2172,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2209,7 +2209,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2219,7 +2219,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2238,13 +2238,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
+        filebase: /data/logger/rtmp/raw/NBP_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2255,7 +2255,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2277,13 +2277,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
+        filebase: /data/logger/rtmp/raw/NBP_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2294,7 +2294,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2331,7 +2331,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2341,7 +2341,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2360,13 +2360,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
+        filebase: /data/logger/hdas/raw/NBP_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2377,7 +2377,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2399,13 +2399,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
+        filebase: /data/logger/hdas/raw/NBP_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2416,7 +2416,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2453,7 +2453,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2463,7 +2463,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2482,13 +2482,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
+        filebase: /data/logger/tsg2/raw/NBP_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2499,7 +2499,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2521,13 +2521,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
+        filebase: /data/logger/tsg2/raw/NBP_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2538,7 +2538,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2575,7 +2575,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2585,7 +2585,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2604,13 +2604,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/seap/raw/NBP1406_seap
+        filebase: /data/logger/seap/raw/NBP_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2621,7 +2621,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2643,13 +2643,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/seap/raw/NBP1406_seap
+        filebase: /data/logger/seap/raw/NBP_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2660,7 +2660,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            interface: 157.132.129.255 
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2859,4 +2859,5 @@ configs:
     writers:
     - class: CachedDataWriter
       kwargs:
-        data_server: localhost:8766
+        data_server: localhost:8766        
+
