@@ -73,7 +73,8 @@ class DASRecord:
 
   ############################
   def __eq__(self, other):
-    return (self.data_id == other.data_id and
+    return (other and
+            self.data_id == other.data_id and
             self.message_type == other.message_type and
             self.timestamp == other.timestamp and
             self.fields == other.fields and

@@ -10,7 +10,7 @@ cruise:
 file_root: /data/logger
 
 # The path any RecordParsers should use.
-parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+parse_definition_path: local/usap/lmg/devices/lmg_devices.yaml
 
 # Filesystem root for where loggers should write
 file_root: /data/logger

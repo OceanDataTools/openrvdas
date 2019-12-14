@@ -292,6 +292,126 @@ Seapath200:
       description: "E if Longitude value is east, W otherwise"
 """
 
+# "New" style of device/device_type definitions, where files are YAML
+# dicts with top-level devices/device_types/includes keys.
+NEW_DEFINITIONS = """
+######################################
+includes:
+  - %INCLUDED_DEFINITIONS%
+
+devices:
+  grv1:
+    category: "device"
+    device_type: "Gravimeter"
+
+   # Map from device type field names to names specific for this
+    # specific device. Device type fields that are not mapped are
+    # ignored.
+    fields:
+      GravityValue: "Grv1Value"
+      GravityError: "Grv1Error"
+  knud:
+    category: "device"
+    device_type: "Knudsen"
+
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      LFDepth: "KnudDepthLF"
+      LFValid: "KnudValidLF"
+      HFDepth: "KnudDepthHF"
+      HFValid: "KnudValidHF"
+      SoundSpeed: "KnudSoundSpeed"
+      Latitude: "KnudLatitude"
+      Longitude: "KnudLongitude"
+
+device_types:
+  Gravimeter:
+    category: "device_type"
+    format: "{CounterUnits:d}:{GravityValue:d} {GravityError:d}"
+  Knudsen:
+    category: "device_type"
+    description: "Hobnotz Model 3047"
+
+    # If device type can output multiple formats, include them as a
+    # list. Parser will use the first one that matches the whole line.
+    # 2014-08-01T00:02:35.805000Z 3.5kHz,473.25,0,,,,1500,-75.938191,176.672195
+    format:
+      - "3.5kHz,{LFDepth:f},{LFValid:d},12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+      - ",,,12.0kHz,{HFDepth:f},{HFValid:d},{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+      - "3.5kHz,{LFDepth:f},{LFValid:d},,,,{SoundSpeed:d},{Latitude:f},{Longitude:f}"
+
+"""
+
+INCLUDED_DEFINITIONS = """
+devices:
+  seap:
+    category: "device"
+    device_type: "Seapath200"
+    serial_number: "unknown"
+    description: "Just another device description."
+
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      GPSTime: "Seap200GPSTime"
+      FixQuality: "Seap200FixQuality"
+      NumSats: "Seap200NumSats"
+      HDOP: "Seap200HDOP"
+      AntennaHeight: "Seap200AntennaHeight"
+      GeoidHeight: "Seap200GeoidHeight"
+      LastDGPSUpdate: "Seap200LastDGPSUpdate"
+      DGPSStationID: "Seap200DGPSStationID"
+      CourseTrue: "Seap200CourseTrue"
+      CourseMag: "Seap200CourseMag"
+      SpeedKt: "Seap200SpeedKt"
+      SpeedKm: "Seap200SpeedKm"
+      Mode: "Seap200Mode"
+      GPSTime: "Seap200GPSTime"
+      GPSDay: "Seap200GPSDay"
+      GPSMonth: "Seap200GPSMonth"
+      GPSYear: "Seap200GPSYear"
+      LocalHours: "Seap200LocalHours"
+      LocalZone: "Seap200LocalZone"
+      HorizQual: "Seap200HorizQual"
+      HeightQual: "Seap200HeightQual"
+      HeadingQual: "Seap200HeadingQual"
+      RollPitchQual: "Seap200RollPitchQual"
+      GyroCal: "Seap200GyroCal"
+      GyroOffset: "Seap200GyroOffset"
+      Roll: "Seap200Roll"
+      Pitch: "Seap200Pitch"
+      HeadingTrue: "Seap200HeadingTrue"
+      Heave: "Seap200Heave"
+      Latitude: "Seap200Latitude"
+      NorS: "Seap200NorS"
+      Longitude: "Seap200Longitude"
+      EorW: "Seap200EorW"
+
+device_types:
+  Seapath200:
+    category: "device_type"
+
+    # If device type can output multiple formats, include them as a
+    # list. Parser will use the first one that matches the whole line.
+    format:
+      - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+      - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+      - "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+      - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
+      - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+      - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+      - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+
+      # Additional Formats with missing fields to pick up slack for
+      # devices that don't emit all fields. TODO: tweak parser to allow
+      # for missing values.
+      - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
+      - "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
+      - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
+
+"""
+
 GRV1_RECORDS = """grv1 2017-11-10T01:00:06.572Z 01:024557 00
 grv1 2017-11-10T01:00:07.569Z 01:024106 00
 grv1 2017-11-10T01:00:08.572Z 01:024303 00
@@ -338,6 +458,8 @@ seap 2017-11-04T07:00:38.270328Z $GPZDA,002709.69,07,08,2014,,*6D
 seap 2017-11-04T07:00:40.058070Z $GPZDA,002710.69,07,08,2014,,*65
 seap 2017-11-04T07:00:41.845780Z $GPZDA,002711.69,07,08,2014,,*64""".split('\n')
 
+BAD_RECORD = "seap 2017-11-04T07:00:39.291859Z $PSXN,20,1,0,0XXX,0*3A"
+
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
   time.sleep(pre_sleep_interval)
   logging.info('creating file "%s"', filename)
@@ -363,6 +485,17 @@ class TestRecordParser(unittest.TestCase):
     self.device_filename = self.tmpdir_name + '/devices.yaml'
     with open(self.device_filename, 'w') as f:
       f.write(DEFINITIONS)
+
+    self.included_filename = self.tmpdir_name + '/included.yaml'
+    with open(self.included_filename, 'w') as f:
+      f.write(INCLUDED_DEFINITIONS)
+
+    new_definitions = NEW_DEFINITIONS
+    new_definitions = new_definitions.replace('%INCLUDED_DEFINITIONS%',
+                                              self.included_filename)
+    self.new_device_filename = self.tmpdir_name + '/new_devices.yaml'
+    with open(self.new_device_filename, 'w') as f:
+      f.write(new_definitions)
 
   ############################
   def test_default_parser(self):
@@ -405,6 +538,49 @@ class TestRecordParser(unittest.TestCase):
                                        'Seap200Heave': -0.38,
                                        'Seap200HeadingTrue': 235.77,
                                        'Seap200Pitch': 0.01}})
+
+  ############################
+  def test_new_parse_records(self):
+    """Test the "new" style of device/device_type definitions, where files
+    are YAML dicts with top-level devices/device_types/includes keys.
+    """
+    p = RecordParser(definition_path=self.new_device_filename)
+
+    r = p.parse_record(GRV1_RECORDS[0])
+    self.assertDictEqual(r, {'data_id': 'grv1', 'timestamp': 1510275606.572,
+                             'fields':{'Grv1Error': 0, 'Grv1Value': 24557}})
+    r = p.parse_record(SEAP_RECORDS[0])
+    self.assertDictEqual(r, {'data_id': 'seap',
+                             'timestamp': 1509778839.291859,
+                             'fields':{'Seap200HeightQual': 0,
+                                       'Seap200RollPitchQual': 0,
+                                       'Seap200HorizQual': 1,
+                                       'Seap200HeadingQual': 0}})
+    r = p.parse_record(SEAP_RECORDS[1])
+    self.assertDictEqual(r, {'data_id': 'seap',
+                             'timestamp': 1509778839.547251,
+                             'fields':{'Seap200GyroOffset': 0.74,
+                                       'Seap200GyroCal': 0.44}})
+
+    r = p.parse_record(SEAP_RECORDS[2])
+    self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
+                             'fields':{'Seap200Roll': -1.47,
+                                       'Seap200Heave': -0.38,
+                                       'Seap200HeadingTrue': 235.77,
+                                       'Seap200Pitch': 0.01}})
+  ############################
+  def test_parse_bad_record(self):
+
+    # Should log a warning on a bad record...
+    p = RecordParser(definition_path=self.device_filename)
+    with self.assertLogs(logging.getLogger(), logging.WARNING):
+      r = p.parse_record(BAD_RECORD)
+
+    # But shouldn't log anything if we're in quiet mode
+    p = RecordParser(definition_path=self.device_filename, quiet=True)
+    with self.assertRaises(AssertionError):
+      with self.assertLogs(logging.getLogger(), logging.WARNING):
+        r = p.parse_record(BAD_RECORD)
 
   ############################
   def test_parse_records_json(self):

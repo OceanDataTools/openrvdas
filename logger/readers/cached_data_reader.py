@@ -85,6 +85,17 @@ class CachedDataReader(Reader):
     if not data:
       logging.debug('No data found in data server response?: %s', response)
       return
+
+    # If we've gotten a list, assume/hope it's a list of
+    # DASRecord-like dicts; that means it's already collated for us by
+    # timestamp.
+    if type(data) is list:
+      for entry in data:
+        self.queue.put(entry)
+      return
+
+    # Otherwise we expect it to be a field dict, and need to collate
+    # by timestamp manually.
     if not type(data) is dict:
       logging.warning('Data from data server not a dict?!?: %s', response)
       return

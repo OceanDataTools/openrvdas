@@ -5,6 +5,8 @@
 TODO: text to describe device and device_type formats
 """
 
+import pprint
+
 import datetime
 import glob
 import json
@@ -97,7 +99,7 @@ class RecordParser:
   def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
                definition_path=DEFAULT_DEFINITION_PATH,
                return_das_record=False, return_json=False,
-               metadata_interval=None):
+               metadata_interval=None, quiet=False):
     """Create a parser that will parse field values out of a text record
     and return either a Python dict of data_id, timestamp and fields,
     a JSON encoding of that dict, or a binary DASRecord.
@@ -117,7 +119,10 @@ class RecordParser:
         and other metadata pertaining to each field in the returned
         record if those data haven't been returned in the last
         metadata_interval seconds.
+
+    quiet - if not False, don't complain when unable to parse a record.
     """
+    self.quiet = quiet
     self.record_format = record_format
     self.compiled_record_format = parse.compile(format=record_format,
                                                 extra_types=parser_dict)
@@ -128,13 +133,9 @@ class RecordParser:
                        'may be true.')
 
     # Fill in the devices and device_types
-    definitions = self._read_definitions(definition_path)
-    self.devices = {name:definition
-                    for name, definition in definitions.items()
-                    if definition.get('category', None) == 'device'}
-    self.device_types = {name:definition
-                         for name, definition in definitions.items()
-                         if definition.get('category', None) == 'device_type'}
+    definitions = self._new_read_definitions(definition_path)
+    self.devices = definitions.get('devices', {})
+    self.device_types = definitions.get('device_types', {})
 
     # If we're to be sending field metadata on occasion, compile it
     # now. It's a map from variable name to the device and device type
@@ -167,9 +168,10 @@ class RecordParser:
           # e.g. GPSTime: {'units':..., 'description':...}
           field_desc = device_type_fields.get(device_type_field, None)
           if not field_desc:
-            raise ValueError('Device type "%s" has no field corresponding to '
-                             'device field "%s"' % (device_type_name,
-                                                    device_type_field))
+            logging.warning('Device type "%s" has no field corresponding to '
+                            'device field "%s"' % (device_type_name,
+                                                   device_type_field))
+            continue
           self.field_metadata_last_sent[device_field] = 0
           self.field_metadata[device_field] = {
             'device': device,
@@ -220,8 +222,9 @@ class RecordParser:
     try:
       parsed_record = self.compiled_record_format.parse(record).named
     except (ValueError, AttributeError):
-      logging.warning('Unable to parse record into "%s"', self.record_format)
-      logging.warning('Record: %s', record)
+      if not self.quiet:
+        logging.warning('Unable to parse record into "%s"', self.record_format)
+        logging.warning('Record: %s', record)
       return None
 
     # Convert timestamp to numeric, if it's there
@@ -233,25 +236,29 @@ class RecordParser:
     # Figure out what kind of message we're expecting, based on data_id
     data_id = parsed_record.get('data_id', None)
     if data_id is None:
-      logging.warning('No data id found in record: %s', record)
+      if not self.quiet:
+        logging.warning('No data id found in record: %s', record)
       return None
 
     # Get device and device_type definitions for data_id
     device = self.devices.get(data_id, None)
     if not device:
-      logging.warning('Unrecognized data id "%s" in record: %s', data_id,record)
-      logging.warning('Devices are: %s', ', '.join(self.devices.keys()))
+      if not self.quiet:
+        logging.warning('Unrecognized data id "%s", record: %s', data_id,record)
+        logging.warning('Devices are: %s', ', '.join(self.devices.keys()))
       return None
 
     device_type = device.get('device_type', None)
     if not device_type:
-      logging.error('Internal error: No "device_type" for device %s!', device)
+      if not self.quiet:
+        logging.error('Internal error: No "device_type" for device %s!', device)
       return None
 
     # Extract the message we're going to parse; remove trailing whitespace
     message = parsed_record.get('message', '').rstrip()
     if not message:
-      logging.warning('No message found in record: %s', record)
+      if not self.quiet:
+        logging.warning('No message found in record: %s', record)
       return None
     del parsed_record['message']
 
@@ -267,7 +274,8 @@ class RecordParser:
     # Finally, convert field values to variable names specific to device
     device_fields = device.get('fields', None)
     if not device_fields:
-      logging.error('No "fields" definition found for device %s', data_id)
+      if not self.quiet:
+        logging.error('No "fields" definition found for device %s', data_id)
       return None
 
     # Assign field values to the appropriate named variable.
@@ -351,8 +359,9 @@ class RecordParser:
         return fields.named
 
     # Nothing matched, go home empty-handed
-    logging.warning('No formats for %s matched message "%s"',
-                    device_type, message)
+    if not self.quiet:
+      logging.warning('No formats for %s matched message "%s"',
+                      device_type, message)
     return {}
 
   ############################
@@ -374,4 +383,94 @@ class RecordParser:
             logging.warning('Duplicate definition for "%s" found in %s',
                             new_def_name, filename)
           definitions[new_def_name] = new_def
+    return definitions
+
+  ############################
+  def _new_read_definitions(self, filespec_paths, definitions=None):
+    """Read the files on the filespec_paths and return dictinary of
+    accumulated definitions.
+
+    filespec_paths - a list of possibly-globbed filespecs to be read
+
+    definitions - optional dict of pre-existing definitions that will
+                  be added to. Typically this will be omitted on a base call,
+                  but may be added to when recursing. Passing it in allows
+                  flagging when items are defined more than once.
+    """
+    # If nothing was passed in, start with base case.
+    definitions = definitions or {'devices': {}, 'device_types': {}}
+
+    for filespec in filespec_paths.split(','):
+      filenames = glob.glob(filespec)
+      if not filenames:
+        logging.warning('No files match definition file spec "%s"', filespec)
+
+      for filename in filenames:
+        file_definitions = read_config.read_config(filename)
+
+        for key, val in file_definitions.items():
+          # If we have a dict of device definitions, copy them into the
+          # 'devices' key of our definitions.
+          if key == 'devices':
+            if not type(val) is dict:
+              logging.error('"devices" values in file %s must be dict. '
+                            'Found type "%s"', filename, type(val))
+              return None
+          
+            for device_name, device_def in val.items():
+              if device_name in definitions['devices']:
+                logging.warning('Duplicate definition for "%s" found in %s',
+                                device_name, filename)
+              definitions['devices'][device_name] = device_def
+          
+          # If we have a dict of device_type definitions, copy them into the
+          # 'device_types' key of our definitions.
+          elif key == 'device_types':
+            if not type(val) is dict:
+              logging.error('"device_typess" values in file %s must be dict. '
+                            'Found type "%s"', filename, type(val))
+              return None
+          
+            for device_type_name, device_type_def in val.items():
+              if device_type_name in definitions['device_types']:
+                logging.warning('Duplicate definition for "%s" found in %s',
+                                device_type_name, filename)
+              definitions['device_types'][device_type_name] = device_type_def
+
+          # If we're including other files, recurse inelegantly
+          elif key == 'includes':
+            if not type(val) in [str, list]:
+              logging.error('"includes" values in file %s must be either '
+                            'a list or a simple string. Found type "%s"',
+                            filename, type(val))
+              return None
+
+            if type(val) is str: val = [val]
+            for filespec in val:
+              new_defs = self._new_read_definitions(filespec, definitions)
+              definitions['devices'].update(new_defs.get('devices', {}))
+              definitions['device_types'].update(new_defs.get('device_types', {}))
+          
+          # If it's not an includes/devices/device_types def, assume
+          # it's a (deprecated) top-level device or device_type
+          # definition. Try adding it to the right place.
+          else:
+            category = val.get('category', None)
+            if not category in ['device', 'device_type']:
+              logging.warning('Top-level definition "%s" in file %s is not '
+                              'category "device" or "device_type". '
+                              'Category is "%s" - ignoring', category)
+              continue
+            if category == 'device':
+              if key in definitions['devices']:
+                logging.warning('Duplicate definition for "%s" found in %s',
+                                key, filename)
+              definitions['devices'][key] = val
+            else:
+              if key in definitions['device_types']:
+                logging.warning('Duplicate definition for "%s" found in %s',
+                                key, filename)
+              definitions['device_types'][key] = val
+
+    # Finally, return the accumulated definitions
     return definitions

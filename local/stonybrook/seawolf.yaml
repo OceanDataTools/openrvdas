@@ -1,0 +1,96 @@
+# To run configurations in this file:
+#
+#   python logger\listener\listen.py --config_file local\stonybrook\seawolf.yaml:met1_on
+#
+# To run with cached data server:
+#
+# In one terminal:
+#   python logger\listener\listen.py --config_file local\stonybrook\seawolf.yaml:met1_cache
+#
+# In another:
+#   python server\cached_data_server --port 8766
+#
+# Should then be able to see live met data from cached data server via:
+#   python logger\listener\listen.py --cached_data Met1WindDirTrue,Met1WindSpeedKt@localhost:8766
+#
+# Or view the data in a demo HTML page by opening the page at
+#   display\html\seawolf_demo.html
+
+configs:
+  gps1_on:
+    readers:
+    - class: SerialReader
+      kwargs:
+        port: com11
+        baudrate: 4800
+    transforms:
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: gps1
+    - class: ParseTransform
+      kwargs:
+        definition_path: local\stonybrook\devices\*.yaml
+        quiet: true
+    writers:
+    - class: TextFileWriter
+
+  gps1_cache:
+    readers:
+    - class: SerialReader
+      kwargs:
+        port: com11
+        baudrate: 4800
+    transforms:
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: gps1
+    - class: ParseTransform
+      kwargs:
+        definition_path: local\stonybrook\devices\*.yaml
+        quiet: true
+    writers:
+    - class: TextFileWriter
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
+
+  met1_on:
+    readers:
+    - class: SerialReader
+      kwargs:
+        port: com6
+        baudrate: 4800
+    transforms:
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: met1
+    - class: ParseTransform
+      kwargs:
+        definition_path: local\stonybrook\devices\*.yaml
+        quiet: true
+    writers:
+    - class: TextFileWriter
+
+  met1_cache:
+    readers:
+    - class: SerialReader
+      kwargs:
+        port: com6
+        baudrate: 4800
+    transforms:
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: met1
+    - class: ParseTransform
+      kwargs:
+        definition_path: local\stonybrook\devices\*.yaml
+        quiet: true
+    writers:
+    - class: TextFileWriter
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
