@@ -16,56 +16,56 @@ devices:
     device_type: "AtlasFlowmeter"
     serial_number: "unknown"
     description: "Atlas Scientific 1/4 inch flowmeter"
-  
+
     # Map from device_type field names to names specific for this
     # specific device.
     fields:
       TotalFlowVolume: "UnderwayFlowVolume"
       FlowRate: "UnderwayFlowRate"
-  
+
   ######################################
   gyro:
     category: "device"
     device_type: "Gyrocompass"
     serial_number: "unknown"
     description: "Teledyne (Meridian) MK2 Standard"
-  
+
     fields:
       HeadingTrue: "GyroHeadingTrue"
       RateOfTurn: "GyroRateOfTurn"
-  
+
   ######################################
   sbe48:
     category: "device"
     device_type: "SBE48"
     description: "SBE48 Hull temperature sensor"
-  
+
     fields:
       Temp: "SBE48Temp"
       #Date: "SBE48Date"
       #Time: "SBE48Time"
-  
+
   ######################################
-  
+
   sbe45:
     category: "device"
     device_type: "TSG_SBE45"
     description: "SBE45 Thermosalinograph"
-  
+
     fields:
       Temp: "FlowthroughTemp"
       Conductivity: "Conductivity"
       Salinity: "Salinity"
       SoundVelocity: "SoundVelocity"
-      
-      
-  
+
+
+
   ######################################
   met:
     category: "device"
     device_type: "Vaisala"
     description: "Vaisala Weather Sensor"
-  
+
     fields:
       AvgWindDirection: "AvgWindDir"
       AvgWindSpeed: "AvgWindSpeed"
@@ -75,14 +75,14 @@ devices:
       Barometer: "Pressure"
       RainAccumulation: "RainAccumulation"
       RainIntensity: "RainIntensity"
-  
+
   ######################################
   cnav:
     category: "device"
     device_type: "CNAV3050"
     serial_number: "unknown"
     description: "CNAV 3050 GPS"
-  
+
     # Map from device_type field names to names specific for this
     # specific device.
     fields:
@@ -119,14 +119,14 @@ devices:
       NorS: "CNAVNorS"
       Longitude: "CNAVLongitude"
       EorW: "CNAVEorW"
-      
+
   ######################################
   posmv:
     category: "device"
     device_type: "POSMVOceanMasterII"
     serial_number: "unknown"
     description: "POSMV OceanMaster II MRU"
-  
+
     # Map from device_type field names to names specific for this
     # specific device.
     fields:
@@ -164,7 +164,7 @@ devices:
       NorS: "POSMVNorS"
       Longitude: "POSMVLongitude"
       EorW: "POSMVEorW"
-      
+
   ######################################
   ######################################
   cstar:
@@ -172,7 +172,7 @@ devices:
     device_type: "CSTAR_Transmissometer"
     serial_number: "CST-1862DR"
     description: "CStar Transmissometer"
-  
+
     # Map from device_type field names to names specific for this
     # specific device.
     fields:
@@ -182,9 +182,9 @@ devices:
       CorrectedRawCounts: "CorrectedRawCounts"
       BeamC: "BeamC"
       ThermCounts: "TermisterCounts"
-  
+
   ######################################
-  
+
   ######################################
   fluorometer:
     category: "device"
@@ -194,14 +194,14 @@ devices:
     # Map from device_type field names to names specific for this specific device.
     fields:
       SignalCounts: "FluorometerSignalCounts"
-      
+
   ######################################
-  
+
   ######################################
   knudsen:
     category: "device"
     device_type: "Knudsen3260"
-  
+
     # Map from device_type field names to names specific for this
     # specific device.
     fields:
@@ -214,6 +214,5 @@ devices:
       SoundSpeed: "KnudSoundSpeed"
       Latitude: "KnudLatitude"
       Longitude: "KnudLongitude"
-      
+
   ######################################
-  
