@@ -10,7 +10,7 @@ cruise:
 file_root: /data/logger
 
 # The path any RecordParsers should use.
-parse_definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+parse_definition_path: local/usap/nbp/devices/nbp_devices.yaml
   
 # Definitions for what network and ports the cruise is supposed to use
 network:

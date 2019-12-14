@@ -1,6 +1,6 @@
 # Record Parsing
 © David Pablo Cohn - (david.cohn@gmail)  
-DRAFT 2019-07-20
+DRAFT 2019-12-13
 
 Perhaps the second most crucial task that a data acquisition system
 must accomplish (after reliably storing incoming data records) is to
@@ -61,6 +61,7 @@ Output:
 * [Devices and device types](#devices-and-device-types)
    * [Device type definitions](#device-type-definitions)
    * [Device definitions](#device-definitions)
+   * [Device and device type definition files](#device-and-device-type-definition-files)
 * [Parser output format](#parser-output-format)
 * [Parser format strings](#parser-format-strings)
    * [Additional parser formats](#additional-parser-formats)
@@ -160,11 +161,8 @@ format represent (in YAML, below):
 
 ```
 Gravimeter_BGM3:
-  category: "device_type"
   description: "Bell Aerospace BGM-3"
-
   format: "{CounterUnits:d}:{GravityValue:d} {GravityError:d}"
-
   fields:
     CounterUnits:
       description: "apparently a constant 01"
@@ -180,8 +178,6 @@ of messages, we provide a list of formats instead of a single string:
 
 ```
 Seapath330:
-  category: "device_type"
-
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
@@ -205,7 +201,6 @@ for a device with id 's330' on the N.B. Palmer:
 
 ```
 s330:
-  category: "device"
   device_type: "Seapath330"
   serial_number: "unknown"
   description: "Just another device description."
@@ -222,20 +217,87 @@ s330:
     LastDGPSUpdate: "S330LastDGPSUpdate"
 ```
 
-The definition tells us that this is a device (rather than device
-type) definition, tells us what its device type is, and gives us a
+The definition tells us what this device's device type is and gives us a
 mapping from the device type's generic field names ('SpeedKt') to the
 field name we will want this datum to have in our system
 ('S330SpeedKt').
 
-The location of device and device type definitions a RecordParser is to use may be specified when it is instantiated, using a string containing a comma-separated list of paths:
+The location of device and device type definitions a RecordParser is
+to use may be specified when it is instantiated, using a string
+containing a comma-separated list of paths:
+
+### Device and device type definition files
+
+Definitions should be encoded in a YAML file:
 
 ```
+################################################################################
+# Device definitions for the Nathaniel B. Palmer
+#
+# See README.md in this directory
+
+includes:
+  - local/usap/nbp/devices/HydroDasNBP.yaml
+  - local/usap/devices/MastWx.yaml
+  - local/devices/*.yaml
+
+######################################
+devices:
+  s330:
+    device_type: "Seapath330"
+    ...
+  grv1:
+    device_type: "Gravimeter_BGM3"
+    ...
+  ...
+
+######################################
+device_types:
+  Seapath330:
+    ...
+  Gravimeter_BGM3:
+    ...
+```
+
+A top-level "devices" key contains a dictionary of device
+definitions. A top-level "device\_types" key contains a dictionary of
+device type definitions. An optional "includes" key may contain a list
+of other files from which device and device type definitions should be
+loaded.
+
+Note that an older, now deprecated (but still accepted) file format
+did not require segregating device and device\_type definitions by
+keys, and allowed listing them all together at the top level. To
+distinguish device definitions from device\_type definitions, each
+definition was required to contain a "category" key specifying its
+type:
+
+```
+grv1:
+  category: "device"
+  device_type: "Gravimeter_BGM3"
+  ...
+Gravimeter_BGM3:
+  category: "device_type"
+  ...
+
+```
+
+To load one or more definition files, use the ``definition_path`` argument when instantiating a RecordParser:
+
+```
+# nbp_devices.yaml includes other, generic definition files
+parser = RecordParser(definition_path='local/usap/nbp/devices/nbp_devices.yaml')
+```
+
+```
+# Manually including an assortment of definition files
 parser = RecordParser(definition_path='local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml')
 ```
 
-By default, it will look for definitions in
-```DEFAULT_DEFINITION_PATH```, defined as ```local/devices/*.yaml```.
+If no ``definition_path`` is specified, the RecordParser will look for
+definitions in ```DEFAULT_DEFINITION_PATH```, defined as
+```local/devices/*.yaml```.
 
 ## Parser output format
 
