@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_cruise.py test/LMG1903/LMG1903_port_defs.yaml
-#   time:     Fri Aug  9 13:00:38 2019 UTC
+#   time:     Sat Dec 14 13:57:18 2019 UTC
 #   user:     pablo
 #
 ########################################
@@ -97,6 +97,10 @@ loggers:
     configs:
     - true_wind->off
     - true_wind->on
+  subsample:
+    configs:
+    - subsample->off
+    - subsample->on
 
 ########################################
 modes:
@@ -115,6 +119,7 @@ modes:
     lais: lais->off
     lmwx: lmwx->off
     true_wind: true_wind->off
+    subsample: subsample->off
 
   monitor:
     lgar: lgar->net
@@ -131,6 +136,7 @@ modes:
     lais: lais->net
     lmwx: lmwx->net
     true_wind: true_wind->on
+    subsample: subsample->on
 
   log:
     lgar: lgar->file/net
@@ -147,6 +153,7 @@ modes:
     lais: lais->file/net
     lmwx: lmwx->file/net
     true_wind: true_wind->on
+    subsample: subsample->on
 
   'log+db':
     lgar: lgar->file/net/db
@@ -163,6 +170,7 @@ modes:
     lais: lais->file/net/db
     lmwx: lmwx->file/net/db
     true_wind: true_wind->on
+    subsample: subsample->on
 
 ########################################
 default_mode: 'off'
@@ -195,18 +203,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lgar'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -224,7 +222,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lgar/raw/LMG1903_lgar
+        filebase: /var/tmp/log/lgar/raw/LMG_test_lgar
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -244,18 +242,8 @@ configs:
             prefix: lgar
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lgar'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -273,7 +261,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lgar/raw/LMG1903_lgar
+        filebase: /var/tmp/log/lgar/raw/LMG_test_lgar
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -293,7 +281,8 @@ configs:
             prefix: lgar
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -306,20 +295,10 @@ configs:
             prefix: lgar
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lgar'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lgyr->off:
     name: lgyr->off
@@ -346,18 +325,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lgyr'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -375,7 +344,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lgyr/raw/LMG1903_lgyr
+        filebase: /var/tmp/log/lgyr/raw/LMG_test_lgyr
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -395,18 +364,8 @@ configs:
             prefix: lgyr
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lgyr'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -424,7 +383,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lgyr/raw/LMG1903_lgyr
+        filebase: /var/tmp/log/lgyr/raw/LMG_test_lgyr
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -444,7 +403,8 @@ configs:
             prefix: lgyr
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -457,20 +417,10 @@ configs:
             prefix: lgyr
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lgyr'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   tsg2->off:
     name: tsg2->off
@@ -497,18 +447,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -526,7 +466,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/tsg2/raw/LMG1903_tsg2
+        filebase: /var/tmp/log/tsg2/raw/LMG_test_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -546,18 +486,8 @@ configs:
             prefix: tsg2
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -575,7 +505,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/tsg2/raw/LMG1903_tsg2
+        filebase: /var/tmp/log/tsg2/raw/LMG_test_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -595,7 +525,8 @@ configs:
             prefix: tsg2
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -608,20 +539,10 @@ configs:
             prefix: tsg2
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lknu->off:
     name: lknu->off
@@ -648,18 +569,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lknu'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -677,7 +588,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lknu/raw/LMG1903_lknu
+        filebase: /var/tmp/log/lknu/raw/LMG_test_lknu
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -697,18 +608,8 @@ configs:
             prefix: lknu
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lknu'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -726,7 +627,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lknu/raw/LMG1903_lknu
+        filebase: /var/tmp/log/lknu/raw/LMG_test_lknu
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -746,7 +647,8 @@ configs:
             prefix: lknu
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -759,20 +661,10 @@ configs:
             prefix: lknu
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lknu'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lrtm->off:
     name: lrtm->off
@@ -799,18 +691,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lrtm'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -828,7 +710,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lrtm/raw/LMG1903_lrtm
+        filebase: /var/tmp/log/lrtm/raw/LMG_test_lrtm
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -848,18 +730,8 @@ configs:
             prefix: lrtm
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lrtm'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -877,7 +749,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lrtm/raw/LMG1903_lrtm
+        filebase: /var/tmp/log/lrtm/raw/LMG_test_lrtm
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -897,7 +769,8 @@ configs:
             prefix: lrtm
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -910,20 +783,10 @@ configs:
             prefix: lrtm
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lrtm'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lsea->off:
     name: lsea->off
@@ -950,18 +813,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsea'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -979,7 +832,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lsea/raw/LMG1903_lsea
+        filebase: /var/tmp/log/lsea/raw/LMG_test_lsea
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -999,18 +852,8 @@ configs:
             prefix: lsea
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsea'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1028,7 +871,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lsea/raw/LMG1903_lsea
+        filebase: /var/tmp/log/lsea/raw/LMG_test_lsea
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1048,7 +891,8 @@ configs:
             prefix: lsea
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1061,20 +905,10 @@ configs:
             prefix: lsea
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsea'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lpco->off:
     name: lpco->off
@@ -1101,18 +935,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lpco'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1130,7 +954,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lpco/raw/LMG1903_lpco
+        filebase: /var/tmp/log/lpco/raw/LMG_test_lpco
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1150,18 +974,8 @@ configs:
             prefix: lpco
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lpco'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1179,7 +993,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lpco/raw/LMG1903_lpco
+        filebase: /var/tmp/log/lpco/raw/LMG_test_lpco
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1199,7 +1013,8 @@ configs:
             prefix: lpco
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1212,20 +1027,10 @@ configs:
             prefix: lpco
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lpco'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   loxy->off:
     name: loxy->off
@@ -1252,18 +1057,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:loxy'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1281,7 +1076,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/loxy/raw/LMG1903_loxy
+        filebase: /var/tmp/log/loxy/raw/LMG_test_loxy
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1301,18 +1096,8 @@ configs:
             prefix: loxy
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:loxy'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1330,7 +1115,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/loxy/raw/LMG1903_loxy
+        filebase: /var/tmp/log/loxy/raw/LMG_test_loxy
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1350,7 +1135,8 @@ configs:
             prefix: loxy
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1363,20 +1149,10 @@ configs:
             prefix: loxy
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:loxy'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lsep->off:
     name: lsep->off
@@ -1403,18 +1179,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsep'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1432,7 +1198,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lsep/raw/LMG1903_lsep
+        filebase: /var/tmp/log/lsep/raw/LMG_test_lsep
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1452,18 +1218,8 @@ configs:
             prefix: lsep
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsep'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1481,7 +1237,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lsep/raw/LMG1903_lsep
+        filebase: /var/tmp/log/lsep/raw/LMG_test_lsep
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1501,7 +1257,8 @@ configs:
             prefix: lsep
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1514,20 +1271,10 @@ configs:
             prefix: lsep
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsep'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lsvp->off:
     name: lsvp->off
@@ -1554,18 +1301,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsvp'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1583,7 +1320,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lsvp/raw/LMG1903_lsvp
+        filebase: /var/tmp/log/lsvp/raw/LMG_test_lsvp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1603,18 +1340,8 @@ configs:
             prefix: lsvp
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsvp'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1632,7 +1359,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lsvp/raw/LMG1903_lsvp
+        filebase: /var/tmp/log/lsvp/raw/LMG_test_lsvp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1652,7 +1379,8 @@ configs:
             prefix: lsvp
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1665,20 +1393,10 @@ configs:
             prefix: lsvp
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lsvp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lguv->off:
     name: lguv->off
@@ -1705,18 +1423,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lguv'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1734,7 +1442,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lguv/raw/LMG1903_lguv
+        filebase: /var/tmp/log/lguv/raw/LMG_test_lguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1754,18 +1462,8 @@ configs:
             prefix: lguv
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lguv'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1783,7 +1481,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lguv/raw/LMG1903_lguv
+        filebase: /var/tmp/log/lguv/raw/LMG_test_lguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1803,7 +1501,8 @@ configs:
             prefix: lguv
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1816,20 +1515,10 @@ configs:
             prefix: lguv
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lguv'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lais->off:
     name: lais->off
@@ -1856,18 +1545,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lais'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1885,7 +1564,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lais/raw/LMG1903_lais
+        filebase: /var/tmp/log/lais/raw/LMG_test_lais
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1905,18 +1584,8 @@ configs:
             prefix: lais
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lais'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1934,7 +1603,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lais/raw/LMG1903_lais
+        filebase: /var/tmp/log/lais/raw/LMG_test_lais
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1954,7 +1623,8 @@ configs:
             prefix: lais
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1967,20 +1637,10 @@ configs:
             prefix: lais
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lais'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   lmwx->off:
     name: lmwx->off
@@ -2007,18 +1667,8 @@ configs:
         transforms:
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lmwx'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2036,7 +1686,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lmwx/raw/LMG1903_lmwx
+        filebase: /var/tmp/log/lmwx/raw/LMG_test_lmwx
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2056,18 +1706,8 @@ configs:
             prefix: lmwx
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lmwx'
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2085,7 +1725,7 @@ configs:
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /data/logger/lmwx/raw/LMG1903_lmwx
+        filebase: /var/tmp/log/lmwx/raw/LMG_test_lmwx
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2105,7 +1745,8 @@ configs:
             prefix: lmwx
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2118,20 +1759,10 @@ configs:
             prefix: lmwx
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/lmg/devices/*.yaml
+            metadata_interval: 10
+            definition_path: local/usap/lmg/devices/lmg_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:lmwx'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   true_wind->off:
     name: true_wind->off
@@ -2158,8 +1789,8 @@ configs:
               seconds: 0
             MwxStbdRelWindSpeed:
               seconds: 0
-    transforms:
-    - class: ComposedDerivedDataTransform
+    writers:
+    - class: ComposedWriter
       kwargs:
         transforms:
         - class: TrueWindsTransform
@@ -2175,6 +1806,14 @@ configs:
             - MwxPortRelWindDir
             wind_dir_field: MwxPortRelWindDir
             wind_speed_field: MwxPortRelWindSpeed
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter
+      kwargs:
+        transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
@@ -2188,19 +1827,113 @@ configs:
             - MwxStbdRelWindDir
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:true_wind'
+            metadata_interval: 10
         writers:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+
+  # Derived data subsampling logger
+  subsample->off:
+    name: subsample->off
+
+  subsample->on:
+    name: subsample->on
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            MwxAirTemp:
+              seconds: 0
+            RTMPTemp:
+              seconds: 0
+            PortTrueWindDir:
+              seconds: 0
+            PortTrueWindSpeed:
+              seconds: 0
+            StbdTrueWindDir:
+              seconds: 0
+            StbdTrueWindSpeed:
+              seconds: 0
+            MwxBarometer:
+              seconds: 0
+            KnudDepthHF:
+              seconds: 0
+            KnudDepthLF:
+              seconds: 0
+            Grv1Value:
+              seconds: 0
+
+    transforms:
+    - class: SubsampleTransform
+      kwargs:
+        back_seconds: 3600
+        metadata_interval: 20  # send metadata every 20 seconds
+        field_spec:
+          MwxAirTemp:
+            output: AvgMwxAirTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          RTMPTemp:
+            output: AvgRTMPTemp
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindDir:
+            output: AvgPortTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          PortTrueWindSpeed:
+            output: AvgPortTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindDir:
+            output: AvgStbdTrueWindDir
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          StbdTrueWindSpeed:
+            output: AvgStbdTrueWindSpeed
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          MwxBarometer:
+            output: AvgMwxBarometer
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthHF:
+            output: AvgKnudDepthHF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          KnudDepthLF:
+            output: AvgKnudDepthLF
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+          Grv1Value:
+            output: AvgGrv1Value
+            subsample:
+              type: boxcar_average
+              window: 10
+              interval: 10
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766        
 

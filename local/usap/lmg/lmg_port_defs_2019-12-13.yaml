@@ -2,20 +2,27 @@
 # needed to create a cruise definition for a specific ship/cruise.
 
 cruise:
-  id: LMG_test
-  start: '2019-07-01'  # Enclose in quotes so they're strings
+  id: LMG
+  start: '2019-01-01'  # Enclose in quotes so they're strings
   end: '2019-12-31'
+
+# Base path where logger logfiles should be written
+file_root: /data/logger
 
 # The path any RecordParsers should use.
 parse_definition_path: local/usap/lmg/devices/lmg_devices.yaml
-  
+
+# Filesystem root for where loggers should write
+file_root: /data/logger
+
 # Definitions for what network and ports the cruise is supposed to use
 network:
   # The 'interface' key is used by UDPWriters. Specify the broadcast
   # address of the interface to use that interface, use 0.0.0.0 to
   # specify local network only, or use '<broadcast>' to use any
   # available interface.
-  interface: 0.0.0.0           #157.132.129.255
+  interface: 157.132.133.103   # lmg openrvdas
+  #interface: 157.132.133.194   # lmg-dast-s1-t
   
   raw_udp_port: 6224           # port for broadcasting raw records
   parsed_udp_port: 6225        # port for broadcasting parsed records
@@ -91,48 +98,48 @@ network:
 ports:
   # Moxa Box 10.1.1.50
   lgar:
-    port_tab: Garmin_GPS  /tmp/tty_lgar  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: Garmin_GPS  /dev/ttyr00  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
   # Trimble_GPS  /dev/ttyr01  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
   lgyr:
-    port_tab: GYRO  /tmp/tty_lgyr  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: GYRO  /dev/ttyr02  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
   tsg2:
-    port_tab: uTSG2  /tmp/tty_tsg2  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: uTSG2  /dev/ttyr03  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
   # empty      /dev/ttyr04  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
   lknu:
-    port_tab: Sonar_Depth  /tmp/tty_lknu  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: Sonar_Depth  /dev/ttyr05  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
-  #utsg:
-  #  port_tab: uTSG  /tmp/tty_06  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-  #  rate: 1  # Hz
+  utsg:
+    port_tab: uTSG  /dev/ttyr06  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1  # Hz
   lrtm:
-    port_tab: Remote_Temp  /tmp/tty_lrtm  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: Remote_Temp  /dev/ttyr07  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
   lsea:
-    port_tab: SeaWall  /tmp/tty_lsea  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: SeaWall  /dev/ttyr08  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
   lpco:
-    port_tab: PCO2  /tmp/tty_lpco  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: PCO2  /dev/ttyr09  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
   loxy:
-    port_tab: OXYG  /tmp/tty_loxy  9600  8  1  0  0  1  0  1  0  1  1  0  0  0  0
+    port_tab: OXYG  /dev/ttyr0a  9600  8  1  0  0  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
-  #ldfl:
-  #  port_tab: Digital_Flr  /tmp/tty_ldfl  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-  #  rate: 1  # Hz
+  ldfl:
+    port_tab: Digital_Flr  /dev/ttyr0b  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1  # Hz
   lsep:
-    port_tab: SeaPath  /tmp/tty_lsep  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: SeaPath  /dev/ttyr0c  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
-  #ladc:
-  #  port_tab: ADCP  /tmp/tty_ladc  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-  #  rate: 1  # Hz
+  ladc:
+    port_tab: ADCP  /dev/ttyr0d  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1  # Hz
   lsvp:
-    port_tab: SV_PROBE  /tmp/tty_lsvp  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: SV_PROBE  /dev/ttyr0e  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
   lguv:
-    port_tab: PUV_GUV  /tmp/tty_lguv  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: PUV_GUV  /dev/ttyr0f  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
     
   # Moxa Box 10.1.1.51
@@ -141,13 +148,14 @@ ports:
   # NetDepth  /dev/ttyr12  9600  7  1  0  1  1  0  1  0  1  1  0  0  0  0
   # Oxygen  /dev/ttyr13  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
   lais:
-    port_tab: AIS  /tmp/tty_lais  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: AIS  /dev/ttyr14  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 5  # Hz
   lmwx:
-    port_tab: MastWx  /tmp/tty_lmwx  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    port_tab: MastWx  /dev/ttyr15  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
     rate: 1  # Hz
-  #lwn1:
-  #  port_tab: Winch  /tmp/tty_lwn1  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0
-  #  rate: 20  # Hz
+  lwn1:
+    port_tab: Winch  /dev/ttyr16  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 20  # Hz
+    rate: 1  # Hz
   # ttyr19 is reserved for VOSimet output
   # VOSimet  /dev/ttyr19  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0

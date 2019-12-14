@@ -1,0 +1,213 @@
+# This file is intended to capture all the ship-specific information
+# needed to create a cruise definition for a specific ship/cruise.
+
+cruise:
+  id: NBP
+  start: '2019-01-01'  # Enclose in quotes so they're strings
+  end: '2019-12-31'
+
+# Base path where logger logfiles should be written
+file_root: /data/logger
+
+# The path any RecordParsers should use.
+parse_definition_path: local/usap/nbp/devices/nbp_devices.yaml
+  
+# Definitions for what network and ports the cruise is supposed to use
+network:
+  # The 'interface' key is used by UDPWriters. Specify the broadcast
+  # address of the interface to use that interface, use 0.0.0.0 to
+  # specify local network only, or use '<broadcast>' to use any
+  # available interface.
+  interface: 157.132.129.255   # 0.0.0.0
+  
+  raw_udp_port: 6224           # port for broadcasting raw records
+  parsed_udp_port: 6225        # port for broadcasting parsed records
+  
+  data_server: localhost:8766  # host:port on which to find cached data server
+
+# The definitions below are version of the old port.tab file, expanded to
+# key by the instrument's data id and including the expected data
+# update rate. Introductory text is included for reference:
+#
+##########################################################################
+#
+#   NOTE:  IT IS EASY FOR THIS FILE TO GET OUT OF DATE AND CONFUSING.
+#     PLEASE TAKE THE TIME TO KEEP IT NEAT AND UP TO DATE.  THE NEXT
+#     PERSON WON'T KNOW WHERE THE MYSTERY CABLE YOU INSTALLED GOES TO
+#     UNLESS YOU KEEP IT DOCUMENTED HERE.
+#
+#########################################################################
+#
+#	Serial Port Table - RVDAS
+#
+#	$Id: port.tab,v 1.862 2019/07/21 13:30:58 rvdas Exp $
+#	@(#) port.tab 1.6 2/14/94 R/V Ewing Logging System
+#
+#
+#	baud rate: 0, 150, 300, 1200, 2400, 4800, 9600, 19200, 38400
+#	data bits: 5, 6, 7, 8.
+#	stop bits: 1 or 2.
+#	parity:	   1 = odd, 2 = even, 0 = none
+#	igncr:	   1 = ignore CR
+#	icrnl:	   1 = map CR to NL on input, 0 = do not map (depends upon
+#                      igncr setting)
+#	eol:	   additional EOL char
+#	onlcr:	   1 = map NL to CRNL on output, 0 = do not map
+#	ocrnl:	   1 = map CR to NL on output, 0 = do not map
+#	icanon:	   1 = canonical, 0 = non-canonical mode
+#	vmin:	   # of chars to read (non-canonical mode)
+#	vtime:	   # time (non-canonical mode)
+#	vintr	   0 = disable INTR special input char, 1 = enable
+#	vquit	   0 = disable QUIT special input char, 1 = enable
+#	opost	   0 = disable output post-processing; 1 = enable
+#
+#
+# instrument	serial port	baud  datab stopb parity igncr icrnl eol onlcr ocrnl icanon vmin vtime vintr vquit opost
+# ----------    -----------     ----- ----- ----- ------ ----- ----- --- ----- ----- ------ ---- ----- ----- ----- -----
+# SAMPLE  	/dev/ttyy00 	9600  8	    1     0      1     0     0   1     0     1      1    0     0     0     0
+#
+#	TRAX1	  = Trax Systems GPS time of day clock
+#	TRUETIME2 = TrueTime GOES clock
+#	ADU	  = ADU GPS receiver
+#	GPS2      = GPS Receiver #2
+#	GPS3      = GPS Receiver #3
+#	GPS4      = GPS Receiver #4
+#	TRANSIT1  = Magnavox 1107 Transit Satellite Receiver (lab)
+#	TRANSIT2  = Magnavox 1107 Transit Satellite Receiver (bridge)
+#	INTERNAV  = INTERNAV LORAN C Receiver
+#	NORTHSTAR = NorthStar LORAN C Receiver
+#	FURUNO    = Furuno /CI-30 doppller water speed log
+#	MAG       = Magnetics
+#	BGM       = Bell Aerospace BGM-3 Gravity Meter
+#	KSS       = Boedensework KSS-30 Gravity Meter
+#	DSS240    = DSS-240 console
+#	DSSNAV    = DSS-240 "nav" data io
+#	SHOTTIME  = seismic shot time tagger
+#	GUNDEPTH  = seismic gun depths
+#	PCO2	  = CO2 data
+#	CTEMP	  = seawater temperature
+#	JOES_DATA = selected data output by program "collect"
+#                       to a PC (for display)
+#	ADCP_OUT  = GPS data output to ADCP by progam "l_4200"
+#	WIRE	  = core/ctd winch wire out and rate
+#	PITCH-ROLL= pitch and roll
+#	WX_IN	  = meteorological station data
+#	SeaPath   = Center of gravity location from seapath 1
+#	SeaPath2A = Center of gravity location from seapath 2
+#	SeaPath2B = moon pool location from seapath 2
+#
+#
+#    *** NOTE: ALL FIELDS SHOULD HAVE ENTRIES ***
+#
+# History
+
+# Revision 1.1  1995/05/16  20:42:27  brockda
+# Initial revision
+#
+#
+# data_id  instrument	serial port	baud  datab stopb parity igncr icrnl eol onlcr ocrnl icanon vmin vtime vintr vquit opost
+#          ----------    -----------     ----- ----- ----- ------ ----- ----- --- ----- ----- ------ ---- ----- ----- ----- -----
+# inst     SAMPLE  	/dev/ttyy00 	9600  8     1     0      1     0     0   1     0     1      1    0     0     0     0
+
+ports:
+  # Moxa box 1     10.1.1.50
+  PCOD:
+    port_tab: PcodeGPS  /dev/ttyr00  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  cwnc:
+    port_tab: WatFallWinch  /dev/ttyr01  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 20   # Hz
+  # OXYG  /dev/ttyr02  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  gp02:
+    port_tab: FurunoGPS  /dev/ttyr03  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  gyr1:
+    port_tab: Gyroscope  /dev/ttyr04  4800  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  adcp:
+    port_tab: ADCP  /dev/ttyr05  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  eng1:
+    port_tab: EngDAS  /dev/ttyr06  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  svp1:
+    port_tab: SVPadcp  /dev/ttyr07  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  # PortTrawlW  /dev/ttyr08  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # StbdTrawlW  /dev/ttyr09  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #bwnc:
+  #  port_tab: BalticWinch  /dev/ttyr0a  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 20   # Hz
+  twnc:
+    port_tab: TrawlWinch  /dev/ttyr0b  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 20   # Hz
+  # MBTSG  /dev/ttyr0c  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # AIS  /dev/ttyr0d  38400  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # # not working 2/5/2015 kag  /dev/ttyr0e  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  mbdp:
+    port_tab: MBdepth  /dev/ttyr0f  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 0.2   # Hz
+  
+  # Moxa box 2     10.1.1.51
+  # #  /dev/ttyr10  9600  8  2  0  1  1  0  1  0  1  1  0  0  0  0
+  # SimEK500  /dev/ttyr11  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  knud:
+    port_tab: Knudsen  /dev/ttyr12  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 0.2   # Hz
+  # Magnetics  /dev/ttyr13  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  grv1:
+    port_tab: Gravity  /dev/ttyr14  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  # #  /dev/ttyr15  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  mwx1:
+    port_tab: MastWx  /dev/ttyr16  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  #ndfl:
+  #  port_tab: Fluorometer  /dev/ttyr_ndfl  19200  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 1   # Hz
+  pco2:
+    port_tab: PCO2  /dev/ttyr18  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  # OYO  /dev/ttyr19  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # Bird  /dev/ttyr1a  9600  8  1  0  0  1  0  1  0  1  1  0  0  0  0
+  # rawS330  /dev/ttyr1b  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # SeisTimeC  /dev/ttyr1c  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # #  /dev/ttyr1d  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  pguv:
+    port_tab: PUVGUV  /dev/ttyr1e  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  # #  /dev/ttyr1f  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  
+  # Moxa box 3     10.1.1.52
+  # StarFix1  /dev/ttyr20  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # StarFix2  /dev/ttyr21  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  s330:
+    port_tab: SeaPath330  /dev/ttyr22  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  #sp1b:
+  #  port_tab: SeaPath1B  /dev/ttyr23  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 1   # Hz
+  #ctdd:
+  #  port_tab: CTDdepth  /dev/ttyr24  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  #  rate: 1   # Hz
+  tsg1:
+    port_tab: TSG1  /dev/ttyr25  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  rtmp:
+    port_tab: RmtTemp  /dev/ttyr26  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  hdas:
+    port_tab: HydroDAS  /dev/ttyr27  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  # #  /dev/ttyr28  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  tsg2:
+    port_tab: TSG2  /dev/ttyr29  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  seap:
+    port_tab: SeaPath200  /dev/ttyr2a  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+    rate: 1   # Hz
+  # GEN2  /dev/ttyr2b  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # GEN3  /dev/ttyr2c  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # GEN4  /dev/ttyr2d  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # VOSIMET  /dev/ttyr2e  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
+  # CTDpar  /dev/ttyr2f  9600  8  1  0  1  1  0  1  0  1  1  0  0  0  0
