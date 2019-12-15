@@ -274,37 +274,37 @@ logger/listener/listen.py --config_file gyr_logger.yaml
 where gyr_logger.yaml consists of the YAML definition
 
 ```
-  readers:  
-    class: SerialReader 
-    kwargs:  
-      port: /dev/ttyr15 
-      baudrate: 9600 
+  readers:
+    class: SerialReader
+    kwargs:
+      port: /dev/ttyr15
+      baudrate: 9600
   transforms:
-  - class: TimestampTransform  # NOTE: no keyword args 
-  = class: PrefixTransform 
-    kwargs:  
-        prefix: gyr1 
+  - class: TimestampTransform  # NOTE: no keyword args
+  = class: PrefixTransform
+    kwargs:
+        prefix: gyr1
    writers:
-   - class: LogfileWriter 
-     kwargs:  
-       filebase: /log/current/gyr1 
-   - class: UDPWriter 
-     kwargs:  
-       port: 6224 
+   - class: LogfileWriter
+     kwargs:
+       filebase: /log/current/gyr1
+   - class: UDPWriter
+     kwargs:
+       port: 6224
 ```
 The basic format of a logger configuration file is a YAML or JSON definition:
 
 ```
   readers: [... ]
   transforms: [...]
-  writers: [...] 
+  writers: [...]
 ```
 where the reader/transform/writer definition is a list of dictionaries, each defining one component via two elements: a "class" key defining the type of component, and a "kwargs" key defining its keyword arguments:
 
 ```
-  class: LogfileWriter, 
+  class: LogfileWriter,
   kwargs:
-    filebase: /log/current/gyr1 
+    filebase: /log/current/gyr1
 ```
 If there is only one component defined for readers/transforms/writers, it doesn't need to be enclosed in a list, as with the "readers" example above.
 
@@ -315,7 +315,7 @@ You may also load a single configuration from a complete cruise definition file 
 ```
   listen.py --config_file test/NBP1406/NBP1406_cruise.yaml:'gyr1->net' -v
 ```
-This functionality has proven useful for debugging a logger that is dying mysteriously. 
+This functionality has proven useful for debugging a logger that is dying mysteriously.
 
 Please see [OpenRVDAS Configuration Files](configuration_files.md) for
 a more complete description of the configuration file model, and
@@ -324,4 +324,4 @@ a more complete description of the configuration file model, and
 [parallel_logger.py](../test/configs/parallel_logger.yaml) in the
 project's [test/configs](../test/configs) directory for examples.
 
-[^1]: YAML is a strict superset of JSON, modulo the restriction that it may not use tabs as whitespace. 
+[^1]: YAML is a strict superset of JSON, modulo the restriction that it may not use tabs as whitespace.

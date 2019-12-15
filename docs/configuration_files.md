@@ -8,7 +8,7 @@
 * [Logger Configurations](#logger-configurations)
   * [Redirecting Standard Error](#redirecting-standard-error)
   * [Reader, Transform and Writer Documentation](#reader-transform-and-writer-documentation)
-
+  * [Including Your Own Components](#including-your-own-components)
 * [Cruise Definitions](#cruise-definitions)
   * [Modes](#modes)
 
@@ -97,7 +97,7 @@ writers = [
   UDPWriter(port=6224)
 ]
 ```
-Arguments for which the class provides default values may be omitted if 
+Arguments for which the class provides default values may be omitted if
 desired.
 
 ### Redirecting Standard Error
@@ -113,6 +113,26 @@ Machine-extracted documentation on which Reader, Transform and Writer components
 are available, along with their arguments, is available in HTML format in the
 [doc/html](html) directory of this project. The [README.md](html/README.md) file
 in that directory explains how the documentation is generated.
+
+### Including Your Own Components
+
+The 'imports' section of ``listen.py`` includes most of the commonly-used Readers, Transforms and Writers, but it is straightforward to include your own without modifying the core listener code by specifying the module path in your configuration file:
+
+```
+readers:
+  class: TextFileReader
+  kwargs:  # initialization kwargs
+    file_spec: LICENSE
+
+transforms:
+- class: MySpecialTransform
+  module: local.path.to.module.file
+  kwargs:
+    module_param: "my special transform parameter"
+
+writers:
+  class: TextFileWriter
+```
 
 ## Cruise Definitions
 

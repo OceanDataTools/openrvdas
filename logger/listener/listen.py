@@ -7,19 +7,19 @@ for details.
 
 Examples:
   ```
-  logger/listener/listen.py \ 
-    --logfile test/NBP1700/s330/raw/NBP1700_s330 \ 
-    --interval 0.25 \ 
-    --transform_slice 1: \ 
-    --transform_timestamp \ 
-    --transform_prefix s330 \ 
+  logger/listener/listen.py \
+    --logfile test/NBP1700/s330/raw/NBP1700_s330 \
+    --interval 0.25 \
+    --transform_slice 1: \
+    --transform_timestamp \
+    --transform_prefix s330 \
     --write_file -
   ```
 (Reads lines from the Seapath300 sample logfiles every 0.25 seconds,
 strips the old timestamps off, prepends a new one, then the prefix
 's330', then writes the result to stdout.)
   ```
-  logger/listener/listen.py \ 
+  logger/listener/listen.py \
     --config_file test/configs/simple_logger.yaml
   ```
 (Instantiates logger from config file that says to read from the
@@ -38,6 +38,7 @@ own output:
 ```
 """
 import argparse
+import importlib
 import logging
 import pprint
 import re
@@ -179,10 +180,22 @@ class ListenerFromLoggerConfig(Listener):
     class_name = class_json.get('class', None)
     if class_name is None:
       raise ValueError('missing "class" definition in "{}"'.format(class_json))
-    class_const = globals().get(class_name, None)
-    if not class_const:
-      raise ValueError('No component class "{}" found: "{}"'.format(
-        class_name, class_json))
+
+    # Are they telling us where the class definition is? If so import it
+    class_module_name = class_json.get('module', None)
+    if class_module_name is not None:
+      module = importlib.import_module(class_module_name)
+      class_const = getattr(module, class_name, None)
+      if not class_const:
+        raise ValueError('No component class "{}" found in module "{}"'.format(
+          class_name, class_module_name))
+    else:
+      # If they haven't given us a 'module' declaration, assume class
+      # is something that's already defined.
+      class_const = globals().get(class_name, None)
+      if not class_const:
+        raise ValueError('No component class "{}" found: "{}"'.format(
+          class_name, class_json))
 
     # Get the keyword args for the component
     kwarg_dict = class_json.get('kwargs', {})
