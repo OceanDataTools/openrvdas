@@ -58,8 +58,6 @@ devices:
       Salinity: "Salinity"
       SoundVelocity: "SoundVelocity"
 
-
-
   ######################################
   met:
     category: "device"
@@ -181,7 +179,7 @@ devices:
       SignalCounts: "SignalCounts"
       CorrectedRawCounts: "CorrectedRawCounts"
       BeamC: "BeamC"
-      ThermCounts: "TermisterCounts"
+      ThermCounts: "ThermisterCounts"
 
   ######################################
 
