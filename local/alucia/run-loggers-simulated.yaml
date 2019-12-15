@@ -184,14 +184,14 @@ configs:
     readers:
       class: SerialReader
       kwargs:
-        port: /dev/ttyr02
+        port: /tmp/ttyr02
         baudrate: 19200
     transforms:
       class: TimestampTransform
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/MET
+        filebase: /var/data/openrvdas/raw/MET
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -205,7 +205,7 @@ configs:
         writers:
         - class: TextFileWriter # write parsed data to logfile
           kwargs:
-            filename: /data/openrvdas/proc/MET_PARSED
+            filename: /var/data/openrvdas/proc/MET_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -239,7 +239,7 @@ configs:
         writers:
           class: LogfileWriter
           kwargs:
-            filebase: /data/openrvdas/raw/CNAV
+            filebase: /var/data/openrvdas/raw/CNAV
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -254,7 +254,7 @@ configs:
         writers:
         - class: TextFileWriter  # write parsed to logfile
           kwargs:
-            filename: /data/openrvdas/proc/CNAV_PARSED
+            filename: /var/data/openrvdas/proc/CNAV_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -273,7 +273,7 @@ configs:
     readers:
       class: SerialReader
       kwargs:
-        port: /dev/ttyr18
+        port: /tmp/ttyr18
         baudrate: 19200
     writers:
     - class: UDPWriter
@@ -288,7 +288,7 @@ configs:
         writers:
           class: LogfileWriter
           kwargs:
-            filebase: /data/openrvdas/raw/POSMV
+            filebase: /var/data/openrvdas/raw/POSMV
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -303,7 +303,7 @@ configs:
         writers:
         - class: TextFileWriter  # write parsed to logfile
           kwargs:
-            filename: /data/openrvdas/proc/POSMV_PARSED
+            filename: /var/data/openrvdas/proc/POSMV_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -322,14 +322,14 @@ configs:
     readers:
       class: SerialReader
       kwargs:
-        port: /dev/ttyr03
+        port: /tmp/ttyr03
         baudrate: 9600
     transforms:
       class: TimestampTransform
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/SBE45
+        filebase: /var/data/openrvdas/raw/SBE45
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -343,7 +343,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/SBE45_PARSED
+            filename: /var/data/openrvdas/proc/SBE45_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -370,14 +370,14 @@ configs:
         - StartNow\r\n
         stop_cmd:
         - Stop\r\n
-        port: /dev/ttyr00
+        port: /tmp/ttyr00
         baudrate: 9600
     transforms:
       class: TimestampTransform
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/SBE48
+        filebase: /var/data/openrvdas/raw/SBE48
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -391,7 +391,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/SBE48_PARSED
+            filename: /var/data/openrvdas/proc/SBE48_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -410,7 +410,7 @@ configs:
     readers:
       class: SerialReader
       kwargs:
-        port: /dev/ttyr06
+        port: /tmp/ttyr06
         baudrate: 9600
         eol: \r
     transforms:
@@ -418,7 +418,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/FLOW
+        filebase: /var/data/openrvdas/raw/FLOW
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -432,7 +432,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/FLOW_PARSED
+            filename: /var/data/openrvdas/proc/FLOW_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -460,7 +460,7 @@ configs:
         writers:
         - class: LogfileWriter
           kwargs:
-            filebase: /data/openrvdas/raw/GYRO
+            filebase: /var/data/openrvdas/raw/GYRO
     - class: UDPWriter
       kwargs:
         port: 55001  # The everything-goes-to-it port
@@ -483,7 +483,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/GYRO_PARSED
+            filename: /var/data/openrvdas/proc/GYRO_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -502,14 +502,14 @@ configs:
     readers:
       class: SerialReader
       kwargs:
-        port: /dev/ttyr04
+        port: /tmp/ttyr04
         baudrate: 9600
     transforms:
       class: TimestampTransform
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/FLUOROMETER
+        filebase: /var/data/openrvdas/raw/FLUOROMETER
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -523,7 +523,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/FLUOROMETER_PARSED
+            filename: /var/data/openrvdas/proc/FLUOROMETER_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -542,14 +542,14 @@ configs:
     readers:
       class: SerialReader
       kwargs:
-        port: /dev/ttyr05
+        port: /tmp/ttyr05
         baudrate: 19200
     transforms:
       class: TimestampTransform
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/CSTAR
+        filebase: /var/data/openrvdas/raw/CSTAR
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -563,7 +563,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/CSTAR_PARSED
+            filename: /var/data/openrvdas/proc/CSTAR_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -582,14 +582,14 @@ configs:
     readers:
       class: SerialReader
       kwargs:
-        port: /dev/ttyr11
+        port: /tmp/ttyr11
         baudrate: 9600
     transforms:
       class: TimestampTransform
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/SONARDYNE
+        filebase: /var/data/openrvdas/raw/SONARDYNE
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -603,7 +603,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/SONARDYNE_PARSED
+            filename: /var/data/openrvdas/proc/SONARDYNE_PARSED
             split_by_date: True
         - class: CachedDataWriter
           kwargs:
@@ -628,7 +628,7 @@ configs:
     writers:
     - class: LogfileWriter
       kwargs:
-        filebase: /data/openrvdas/raw/KNUDSEN
+        filebase: /var/data/openrvdas/raw/KNUDSEN
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -642,7 +642,7 @@ configs:
         writers:
         - class: TextFileWriter
           kwargs:
-            filename: /data/openrvdas/proc/KNUDSEN
+            filename: /var/data/openrvdas/proc/KNUDSEN
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766

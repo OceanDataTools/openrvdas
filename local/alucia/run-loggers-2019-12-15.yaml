@@ -1,6 +1,6 @@
 # Cruise definition file for Alucia
 
-# Hand coded - 2019-09-13
+# Hand coded - 2019-12-13
 
 #################################
 loggers:
@@ -48,6 +48,10 @@ loggers:
     configs:
     - knudsen->off
     - knudsen->file
+  seawater_gravity:
+    configs:
+    - seawater_gravity->off
+    - seawater_gravity->on
   true_wind:
     configs:
     - true_wind->off
@@ -71,6 +75,7 @@ modes:
     cstar: cstar->off
     sonardyne: sonardyne->off
     knudsen: knudsen->off
+    seawater_gravity: seawater_gravity->off
     true_wind: true_wind->off
     nmea_writer: nmea_writer->off
 
@@ -86,6 +91,7 @@ modes:
     cstar: cstar->off
     sonardyne: sonardyne->off
     knudsen: knudsen->off
+    seawater_gravity: seawater_gravity->on
     true_wind: true_wind->on
     nmea_writer: nmea_writer->on
 
@@ -101,6 +107,7 @@ modes:
     cstar: cstar->file
     sonardyne: sonardyne->off
     knudsen: knudsen->file
+    seawater_gravity: seawater_gravity->on
     true_wind: true_wind->on
     nmea_writer: nmea_writer->on
 
@@ -116,6 +123,7 @@ modes:
     cstar: cstar->file
     sonardyne: sonardyne->file
     knudsen: knudsen->file
+    seawater_gravity: seawater_gravity->on
     true_wind: true_wind->on
     nmea_writer: nmea_writer->on
 
@@ -158,6 +166,9 @@ configs:
 
   knudsen->off:
     name: knudsen->off
+
+  seawater_gravity->off:
+    name: seawater_gravity->off
 
   true_wind->off:
     name: true_wind->off
@@ -642,6 +653,36 @@ configs:
         #    user: rvdas
         #    password: rvdas
   ######### End Knudsen ############
+
+  ######### Seawater Specific Gravity ############
+  seawater_gravity->on:
+    name: seawater_gravity->on
+    readers:
+      class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            FlowthroughTemp:
+              seconds: 0
+            Salinity:
+              seconds: 0
+    transforms:
+    - class: SeawaterSpecificGravityTransform
+      module: local.alucia.modules.seawater_specific_gravity_transform
+      kwargs:
+        # Inputs
+        temp_field: FlowthroughTemp
+        salinity_field: Salinity
+        # not passing in a pressure, so assume surface, i.e. p=1
+        # Outputs
+        specific_gravity_name: SeawaterSpecGravity
+        metadata_interval: 10  # How often should we emit metadata?
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
+  ######### End Seawater Specific Gravity ############
 
   ######### True Wind ############
   true_wind->on:
