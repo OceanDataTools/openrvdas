@@ -257,7 +257,7 @@ class SupervisorConnector:
     else:
       username_auth = ';'
       password_auth = ';'
-      
+
     config_args = {
       'supervisor_dir': self.supervisor_dir,
       'logfile_dir': self.supervisor_logfile_dir,
@@ -791,11 +791,6 @@ class LoggerManager:
     else:
       self.data_server_writer = None
 
-    # Fetch the complete set of loggers and configs from API; store
-    # them in self.loggers and create a .ini file for supervisord to
-    # run them.
-    self._build_new_config_file()
-
     # Stash a map of loggers->configs and configs->loggers
     try:
       self.loggers = self.api.get_loggers()
@@ -827,12 +822,22 @@ class LoggerManager:
       target=self._update_configs_loop, daemon=True)
     self.update_configs_thread.start()
 
-    # Start a separate thread to read logger status and stderr. If we've
+    # Start a separate threads to read logger status and stderr. If we've
     # got the address of a data server websocket, send our updates to it.
-    self.read_logger_status_thread = threading.Thread(
-      name='read_logger_status_loop',
-      target=self._read_logger_status_loop, daemon=True)
-    self.read_logger_status_thread.start()
+    self.send_cruise_definition_loop_thread = threading.Thread(
+      name='send_cruise_definition_loop',
+      target=self._send_cruise_definition_loop, daemon=True)
+    self.send_cruise_definition_loop_thread.start()
+
+    self.send_logger_status_loop_thread = threading.Thread(
+      name='send_logger_status_loop',
+      target=self._send_logger_status_loop, daemon=True)
+    self.send_logger_status_loop_thread.start()
+
+    self.send_logger_stderr_loop_thread = threading.Thread(
+      name='send_logger_stderr_loop',
+      target=self._send_logger_stderr_loop, daemon=True)
+    self.send_logger_stderr_loop_thread.start()
 
   ############################
   def quit(self):
@@ -847,6 +852,8 @@ class LoggerManager:
     # Stash an updated map of loggers->configs and configs->loggers.
     # While we're doing that, also (inefficiently) grab definition
     # string for each config one at a time from the API.
+    logging.info('New cruise definition detected - rebuilding supervisord '
+                 'config file')
     try:
       self.loggers = self.api.get_loggers()
       with self.config_lock:
@@ -973,11 +980,11 @@ class LoggerManager:
       self.active_configs = new_configs
 
   ############################
-  def _read_and_send_cruise_definition(self, send_every_n_seconds=10):
-    """Assemble information from DB about what loggers should
-    exist and what states they *should* be in. We'll send
-    this to the cached data server whenever it changes (or
-    if it's been a while since we have).
+  def _send_cruise_definition_loop(self):
+    """Iteratively assemble information from DB about what loggers should
+    exist and what states they *should* be in. We'll send this to the
+    cached data server whenever it changes (or if it's been a while
+    since we have).
 
     Also, if the logger or config names have changed, signal that we
     need to create a new config file for the supervisord process to
@@ -998,60 +1005,84 @@ class LoggerManager:
       }
 
     """
-    try:
-      cruise = self.api.get_configuration() # a Cruise object
-      # An ugly hack here: the Django API gives us a Cruise object,
-      # while the in-memory API gives us a dict. UGH!
-      if type(cruise) is dict:
-        cruise_def = {
-          'cruise_id': cruise.get('cruise', {}).get('id', ''),
-          'loggers': self.api.get_loggers(),
-          'modes': cruise.get('modes', {}),
-          'active_mode': cruise.get('active_mode','')
-          }
-      else:
-        cruise_def = {
-          'cruise_id': cruise.id,
-          'loggers': self.api.get_loggers(),
-          'modes': cruise.modes(),
-          'active_mode': cruise.active_mode.name
-        }
-    except (AttributeError, ValueError) as e:
-      logging.info('No cruise definition found: %s', e)
-      return
+    last_config_timestamp = 0
 
-    # If loggers or modes have changed, we need to build a new
-    # config file to reflect that fact. We *don't* build a new
-    # config file if it's merely a change in the active mode or
-    # which logger configs are active.
-    cruise_def_changed = False
-    old_loggers = self.definition.get('loggers', {})
-    new_loggers = cruise_def.get('loggers', {})
-    old_modes = self.definition.get('modes', {})
-    new_modes = cruise_def.get('modes', {})
-    if not set(old_loggers) == set(new_loggers):
-      cruise_def_changed = True
-    elif not old_modes == new_modes:
-      cruise_def_changed = True
-    else:
-      for logger in old_loggers:
-        old_configs = old_loggers.get('configs', [])
-        new_configs = new_loggers.get('configs', [])
-        if not old_configs == new_configs:
-          cruise_def_changed = True
+    while not self.quit_flag:
+      try:
+        # An ugly hack here: the Django API gives us a Cruise object,
+        # while the in-memory API gives us a dict. UGH!
+        cruise = self.api.get_configuration() # a Cruise object
+        if type(cruise) is dict:
+          loaded_time = cruise.get('loaded_time')
+        else:
+          loaded_time = cruise.loaded_time
+        config_timestamp = datetime.datetime.timestamp(loaded_time)
+      except (AttributeError, ValueError, TypeError):
+        config_timestamp = 0
 
-    now = time.time()
-    if cruise_def_changed:
-      self.definition = cruise_def
-      self.definition_time = now
-      logging.info('Cruise has changed - building new configuration file')
-      self._build_new_config_file()
+      # Have we got a config with a newer timestamp? If so, update the
+      # supervisor config file and send the update to the console.
+      if config_timestamp > last_config_timestamp:
+        last_config_timestamp = config_timestamp
+        self._build_new_config_file()
+        try:
+          if type(cruise) is dict:
+            cruise_def = {
+              'cruise_id': cruise.get('cruise', {}).get('id', ''),
+              'config_timestamp': config_timestamp,
+              'loggers': self.api.get_loggers(),
+              'modes': cruise.get('modes', {}),
+              'active_mode': cruise.get('active_mode','')
+            }
+          else:
+            cruise_def = {
+              'cruise_id': cruise.id,
+              'config_timestamp': config_timestamp,
+              'loggers': self.api.get_loggers(),
+              'modes': cruise.modes(),
+              'active_mode': cruise.active_mode.name
+            }
+          self._write_record_to_data_server(
+            'status:cruise_definition', cruise_def)
+        except (AttributeError, ValueError) as e:
+          logging.info('No cruise definition found: %s', e)
 
-    # If things haven't changed, only send definition every N seconds
-    elif now < self.definition_time + send_every_n_seconds:
-      return
+      # Whether or not we've sent an update, sleep
+      time.sleep(self.interval * 2)
 
-    self._write_record_to_data_server('status:cruise_definition', cruise_def)
+  ############################
+  def _send_logger_status_loop(self):
+    """Grab logger status message from supervisor and send to cached data
+    server via websocket.
+    """
+    while not self.quit_flag:
+      config_status = self.supervisor.check_status()
+      now = time.time()
+
+      with self.config_lock:
+        # Stash status, note time and send update
+        self.config_status = config_status
+        self.status_time = now
+
+        # Map status to logger
+        status_map = {}
+        for config, status in config_status.items():
+          logger = self.config_to_logger.get(config, None)
+          if logger:
+            status_map[logger] = {'config':config, 'status':status}
+
+      # Send to data server
+      self._write_record_to_data_server('status:logger_status', status_map)
+      time.sleep(self.interval)
+
+  ############################
+  def _send_logger_stderr_loop(self):
+    """Iteratively grab messages to send to cached data server and send
+    them off via websocket.
+    """
+    while not self.quit_flag:
+      self._read_and_send_logger_stderr()
+      time.sleep(self.interval)
 
   ############################
   def _write_log_message_to_data_server(self, field_name, message,
@@ -1153,49 +1184,6 @@ class LoggerManager:
       # Send the last straggler
       if message:
         parse_and_send_message(field_name, '\n'.join(message))
-
-  ############################
-  def _read_and_send_logger_status(self, send_every_n_seconds=1):
-    """Grab logger status message from supervisor and send to cached data
-    server via websocket.
-    """
-    config_status = self.supervisor.check_status()
-    now = time.time()
-
-    with self.config_lock:
-      # If nothing's changed, and it hasn't been very long, do nothing.
-      if (config_status == self.config_status and
-          now < self.status_time + send_every_n_seconds):
-        return
-
-      # Otherwise, stash status, note time and send update
-      self.config_status = config_status
-      self.status_time = now
-
-      # Map status to logger
-      status_map = {}
-      for config, status in config_status.items():
-        logger = self.config_to_logger.get(config, None)
-        if logger:
-          status_map[logger] = {'config':config, 'status':status}
-
-    # Send to data server
-    self._write_record_to_data_server('status:logger_status', status_map)
-
-  ############################
-  def _read_logger_status_loop(self):
-    """Iteratively grab messages to send to cached data server and send
-    them off via websocket.
-    """
-    SEND_CRUISE_EVERY_N_SECONDS = 5
-    SEND_STATUS_EVERY_N_SECONDS = 2
-
-    while not self.quit_flag:
-      self._read_and_send_cruise_definition(SEND_CRUISE_EVERY_N_SECONDS)
-      self._read_and_send_logger_status(SEND_STATUS_EVERY_N_SECONDS)
-
-      self._read_and_send_logger_stderr()
-      time.sleep(self.interval)
 
 ################################################################################
 def run_data_server(data_server_websocket,

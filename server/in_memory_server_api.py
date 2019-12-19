@@ -7,6 +7,7 @@ documentation on the ServerAPI.
 """
 
 import argparse
+import datetime
 import logging
 import json
 import os
@@ -307,6 +308,7 @@ class InMemoryServerAPI(ServerAPI):
     """Add a complete cruise configuration (id, modes, configs, 
     default) to the data store."""
     self.config = config
+    self.config['loaded_time'] = datetime.datetime.utcnow()
 
     # Set cruise into default mode, if one is defined
     if 'default_mode' in config:
