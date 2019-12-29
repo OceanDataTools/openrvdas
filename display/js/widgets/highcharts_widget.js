@@ -306,8 +306,13 @@ function TimelineWidget(container, fields, y_label='',
       // by 1000 to fit JS's use of milliseconds.
       var field_data = this.field_data[field_name];
       for (var list_i=0; list_i < new_field_data.length; list_i++) {
-        var new_point = new_field_data[list_i]
-        field_data.push([1000*new_point[0], new_point[1]]);
+        var new_point = new_field_data[list_i];
+        if (typeof(new_point[1]) !== 'number') {
+          console.log(field_name + ' got non-number "' + new_point[1]
+                      + '", type ' + typeof(new_point[1]))
+        } else {
+          field_data.push([1000*new_point[0], new_point[1]]);
+        }
       }
 
       // Now trim off excess points, and anything that is too old
