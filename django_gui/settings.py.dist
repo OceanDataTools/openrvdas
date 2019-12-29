@@ -47,7 +47,11 @@ HOSTNAME = socket.gethostname()
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
 # Try to get (at least one) machine IP address to add to ALLOWED_HOSTS
-HOST_IP = socket.gethostbyname(HOSTNAME)
+try:
+  HOST_IP = socket.gethostbyname(HOSTNAME)
+except socket.gaierror:
+  HOST_IP = socket.gethostbyname('localhost')
+
 if HOST_IP.find('127.0') != 0:
   ALLOWED_HOSTS.append(HOST_IP)
 else: # if we got 127.0.1.1, try an expensive way of getting HOST_IP
