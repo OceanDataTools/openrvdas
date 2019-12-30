@@ -109,13 +109,13 @@ TRUE_WIND_TEMPLATE = """
           kwargs:
             data_server: %DATA_SERVER%
 """
-SUBSAMPLE_TEMPLATE = """
+SNAPSHOT_TEMPLATE = """
   # Derived data subsampling logger
-  subsample->off:
-    name: subsample->off
+  snapshot->off:
+    name: snapshot->off
 
-  subsample->on:
-    name: subsample->on
+  snapshot->on:
+    name: snapshot->on
     readers:
       class: CachedDataReader
       kwargs:
@@ -144,75 +144,67 @@ SUBSAMPLE_TEMPLATE = """
               seconds: 0
 
     transforms:
-    - class: SubsampleTransform
+    - class: InterpolationTransform
+      module: logger.transforms.interpolation_transform
       kwargs:
-        back_seconds: 3600
-        metadata_interval: 20  # send metadata every 20 seconds
+        interval: 30
+        window: 30
+        metadata_interval: 60  # send metadata every 60 seconds
         field_spec:
-          MwxAirTemp:
-            output: AvgMwxAirTemp
-            subsample:
+          AvgMwxAirTemp:
+            source: MwxAirTemp
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          RTMPTemp:
-            output: AvgRTMPTemp
-            subsample:
+              window: 30
+          AvgRTMPTemp:
+            source: RTMPTemp
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          PortTrueWindDir:
-            output: AvgPortTrueWindDir
-            subsample:
+              window: 30
+          AvgPortTrueWindDir:
+            source: PortTrueWindDir
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          PortTrueWindSpeed:
-            output: AvgPortTrueWindSpeed
-            subsample:
+              window: 30
+          AvgPortTrueWindSpeed:
+            source: PortTrueWindSpeed
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          StbdTrueWindDir:
-            output: AvgStbdTrueWindDir
-            subsample:
+              window: 30
+          AvgStbdTrueWindDir:
+            source: StbdTrueWindDir
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          StbdTrueWindSpeed:
-            output: AvgStbdTrueWindSpeed
-            subsample:
+              window: 30
+          AvgStbdTrueWindSpeed:
+            source: StbdTrueWindSpeed
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          MwxBarometer:
-            output: AvgMwxBarometer
-            subsample:
+              window: 30
+          AvgMwxBarometer:
+            source: MwxBarometer
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          KnudDepthHF:
-            output: AvgKnudDepthHF
-            subsample:
+              window: 30
+          AvgKnudDepthHF:
+            source: KnudDepthHF
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          KnudDepthLF:
-            output: AvgKnudDepthLF
-            subsample:
+              window: 30
+          AvgKnudDepthLF:
+            source: KnudDepthLF
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          Grv1Value:
-            output: AvgGrv1Value
-            subsample:
+              window: 30
+          AvgGrv1Value:
+            source: Grv1Value
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
+              window: 30
     writers:
     - class: CachedDataWriter
       kwargs:
-        data_server: %DATA_SERVER%        
+        data_server: %DATA_SERVER%
 """
 
 OFF_TEMPLATE="""
@@ -316,7 +308,7 @@ FULL_WRITER_TEMPLATE="""
         - class: UDPWriter
           kwargs:
             port: %RAW_UDP_PORT%
-            interface: %INTERFACE% 
+            interface: %INTERFACE%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -381,11 +373,11 @@ substitutions = {
   '%FILE_ROOT%': port_def.get('file_root', '/var/tmp/log'),
 
   '%PARSE_DEFINITION_PATH%':  port_def.get('parse_definition_path', ''),
-  
+
   '%COMMAND_LINE%': ' '.join(sys.argv),
   '%DATE_TIME%': time.asctime(time.gmtime()),
   '%USER%': getpass.getuser(),
-}  
+}
 
 loggers =  port_def.get('ports').keys()
 
@@ -414,10 +406,10 @@ output += """  true_wind:
     - true_wind->off
     - true_wind->on
 """
-output += """  subsample:
+output += """  snapshot:
     configs:
-    - subsample->off
-    - subsample->on
+    - snapshot->off
+    - snapshot->on
 """
 
 ################################################################################
@@ -430,7 +422,7 @@ modes:
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->off\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->off\n'
-output += '    subsample: subsample->off\n'
+output += '    snapshot: snapshot->off\n'
 
 #### monitor
 output += """
@@ -439,7 +431,7 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
-output += '    subsample: subsample->on\n'
+output += '    snapshot: snapshot->on\n'
 
 #### log
 output += """
@@ -448,7 +440,7 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->file/net\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
-output += '    subsample: subsample->on\n'
+output += '    snapshot: snapshot->on\n'
 
 #### log+db
 output += """
@@ -457,7 +449,7 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->file/net/db\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
-output += '    subsample: subsample->on\n'
+output += '    snapshot: snapshot->on\n'
 
 output += """
 ########################################
@@ -483,7 +475,7 @@ for logger in loggers:
   logger_port_def = port_def.get('ports').get(logger).get('port_tab')
   if not logger_port_def:
     logging.warning('No port def for %s', logger)
-    
+
   (inst, tty, baud, datab, stopb, parity, igncr, icrnl, eol, onlcr,
    ocrnl, icanon, vmin, vtime, vintr, vquit, opost) = logger_port_def.split()
   net_writer = fill_substitutions(NET_WRITER_TEMPLATE, substitutions)
@@ -506,8 +498,6 @@ for logger in loggers:
 
 # Add in the true wind configurations
 output += fill_substitutions(TRUE_WIND_TEMPLATE, substitutions)
-output += fill_substitutions(SUBSAMPLE_TEMPLATE, substitutions)
+output += fill_substitutions(SNAPSHOT_TEMPLATE, substitutions)
 
 print(output)
-
-

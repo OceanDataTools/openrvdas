@@ -11,7 +11,7 @@ Vaisala:
   # For full details on the Vaisala message protocol, see page 70 of the Vaisala Manual
   # Typical Message: SR0,Dm=352D,Sn=0.9M,Sm=2.4M,Sx=3.4M,Ta=29.5C,Ua=46.8P,Pa=1017.1H,Rc=0.00M,Ri=0.0M
   format:
-    - "SR0,Dm={AvgWindDirection:g}D,Sn={MinWindSpeed:f}M,Sm={AvgWindSpeed:f}M,Sx={MaxWindSpeed:f}M,Ta={AirTemp}C,Ua={RelativeHumidity:f}P,Pa={Barometer:f}H,Rc={RainAccumulation:f}M,Ri={RainIntensity:g}M"
+    - "SR0,Dm={AvgWindDirection:g}D,Sn={MinWindSpeed:f}M,Sm={AvgWindSpeed:f}M,Sx={MaxWindSpeed:f}M,Ta={AirTemp:g}C,Ua={RelativeHumidity:f}P,Pa={Barometer:f}H,Rc={RainAccumulation:f}M,Ri={RainIntensity:g}M"
     
   fields:
     AvgWindDirection:
