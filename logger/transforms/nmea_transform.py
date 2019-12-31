@@ -50,20 +50,35 @@ class NMEATransform:
   def transform(self, record):
     """Expect a record dict (with 'timestamp' and 'fields' keys."""
     results = []
-    for t in self.transforms:
-      result = t.transform(record)
-      logging.debug('transform %s: %s', t, result)
-      if result:
-        results.extend(result)
+
+    # Do we have more than one record here? Normalize so that
+    # following code assumes a list of records.
+    if not type(record) is list:
+      record = [record]
+
+    for single_record in record:
+      for t in self.transforms:
+        result = t.transform(single_record)
+        logging.debug('transform %s: %s', t, result)
+
+        # Transforms may return zero, one or more results
+        if not result:
+          continue
+        elif type(result) is list:
+          results.extend(result)
+        else:
+          results.append(result)
 
     # Just keep the results that are non-empty
     pruned_results = [r for r in results if r]
 
-    # Concatenate them with a \r\n in-between
-    if pruned_results:
-      return '\r\n'.join(pruned_results) + '\r\n'
-    else:
+    # Return None, a single result or a list of results
+    if len(pruned_results) == 0:
       return None
+    elif len(pruned_results) == 1:
+      return pruned_results[0]
+    else:
+      return pruned_results
 
 ################################################################################
 """MWD - Wind Direction & Speed
@@ -122,6 +137,8 @@ class MWDTransform:
     """Incorporate any useable fields in this record. If it gives us a
     new MWD record, return it.
     """
+    # Check that we've got the right record type - it should be a
+    # single record.
     if not record or type(record) is not dict:
       logging.warning('Improper type for record: %s', type(record))
       return None
@@ -175,7 +192,7 @@ class MWDTransform:
                  (self.mwd_talker_id, self.true_wind_dir, mag_winds,
                    self.true_wind_speed_kt, self.true_wind_speed_ms)
     checksum = reduce(xor, (ord(c) for c in result_str))
-    return ['$%s*%02X' % (result_str, checksum)]
+    return '$%s*%02X' % (result_str, checksum)
 
 #################################################################################
 """Take in records and emit a NMEA XDR string, as per format:
@@ -250,6 +267,8 @@ class XDRTransform:
     """Incorporate any useable fields in this record, and if it gives us a
     new true wind value, return the results.
     """
+    # Assume we have a single record; check that we've got the right
+    # record type.
     if not record or type(record) is not dict:
       logging.warning('Improper type for value dict: %s', type(record))
       return None
@@ -258,8 +277,8 @@ class XDRTransform:
       logging.debug('XDRTransform got record with no fields: %s', record)
       return None
 
-    results = []
     # Grab any relevant values
+    results = []
     if self.barometer_field in fields:
       barometer = fields.get(self.barometer_field)
       barometer_data = '%s,P,%s,B,%s' % (self.xdr_talker_id, barometer,
