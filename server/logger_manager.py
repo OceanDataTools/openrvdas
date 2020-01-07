@@ -1053,8 +1053,8 @@ class LoggerManager:
   ############################
   def _send_logger_status_loop(self):
     """Grab logger status message from supervisor and send to cached data
-    server via websocket.
-    """
+    server via websocket. Also send cruise mode as separate message.
+    """    
     while not self.quit_flag:
       config_status = self.supervisor.check_status()
       now = time.time()
@@ -1070,9 +1070,12 @@ class LoggerManager:
           logger = self.config_to_logger.get(config, None)
           if logger:
             status_map[logger] = {'config':config, 'status':status}
-
-      # Send to data server
       self._write_record_to_data_server('status:logger_status', status_map)
+
+      # Now get and send cruise mode
+      mode_map = { 'active_mode': self.api.get_active_mode() }
+      self._write_record_to_data_server('status:cruise_mode', mode_map)
+
       time.sleep(self.interval)
 
   ############################

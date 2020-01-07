@@ -24,6 +24,7 @@ var global_loggers = {};
 var global_active_mode = 'off';
 var global_logger_stderr = {};
 var global_last_cruise_timestamp = 0;
+var global_last_cruise_mode_timestamp = 0;
 var global_last_logger_status_timestamp = 0;
 
 ////////////////////////////
@@ -33,6 +34,7 @@ function initial_send_message() {
   return {'type':'subscribe',
           'fields': {
             'status:cruise_definition':{'seconds':-1},
+            'status:cruise_mode':{'seconds':-1},
             'status:logger_status':{'seconds':-1}
           }
          }
@@ -118,9 +120,23 @@ function process_data_message(message) {
       // be the most recent.
       var [timestamp, cruise_definition] = value_list[value_list.length-1];
 
+      //console.log('cruise_definition: ' + JSON.stringify(cruise_definition));
       if (timestamp > global_last_cruise_timestamp) {
         global_last_cruise_timestamp = timestamp;
         new_fields = update_cruise_definition(timestamp, cruise_definition);
+      }
+      break;
+
+    //////////////////
+    // If we've got a cruise mode update.  Again, look for (only)
+    // the most recent.
+    case 'status:cruise_mode':
+      var [timestamp, cruise_mode] = value_list[value_list.length-1];
+
+      //console.log('cruise_mode: ' + JSON.stringify(cruise_mode));
+      if (timestamp > global_last_cruise_mode_timestamp) {
+        global_last_cruise_mode_timestamp = timestamp;
+        update_cruise_mode(timestamp, cruise_mode);
       }
       break;
 
@@ -130,6 +146,7 @@ function process_data_message(message) {
     case 'status:logger_status':
       var [timestamp, logger_status] = value_list[value_list.length-1];
 
+      //console.log('logger_status: ' + JSON.stringify(logger_status));
       if (timestamp > global_last_logger_status_timestamp) {
         global_last_logger_status_timestamp = timestamp;
         update_logger_status(timestamp, logger_status);
@@ -153,6 +170,7 @@ function process_data_message(message) {
   // logger_list, mode_list mode updates.
   if (Object.keys(new_fields).length) {
     new_fields['status:cruise_definition'] = {'seconds':-1};
+    new_fields['status:cruise_mode'] = {'seconds':-1};
     new_fields['status:logger_status'] = {'seconds':-1};
 
     var subscribe_message = {'type':'subscribe', 'fields':new_fields};
@@ -161,7 +179,7 @@ function process_data_message(message) {
 }
 
 ////////////////////////////
-// Process an cruise_definition update
+// Process a cruise_definition update
 function update_cruise_definition(timestamp, cruise_definition) {
   // Make sure this definition has all the parts we need
   if (!cruise_definition.modes) {
@@ -297,6 +315,31 @@ function update_cruise_definition(timestamp, cruise_definition) {
   console.log('Loaded new cruise.');
   //console.log('New fields are: ' + JSON.stringify(new_fields));
   return new_fields;
+}
+
+////////////////////////////
+// Process a cruise_mode update
+function update_cruise_mode(timestamp, cruise_mode) {
+
+  ////////////////////////////////
+  // If active mode hasn't changed, nothing to do.
+  var new_mode = cruise_mode.active_mode;
+  if (new_mode == global_active_mode) {
+    return;
+  }
+
+  // If it has, update on page
+  global_active_mode = new_mode;
+
+  var selector = document.getElementById('select_mode');
+  for (var m_i = 0; m_i < selector.length; m_i++) {
+    var mode_name = selector.options[m_i].value;
+    if (mode_name == new_mode) {
+      selector.selectedIndex = m_i;
+      return;
+    }
+  }
+  console.log('Got unrecognized cruise mode: "' + new_mode + '"');
 }
 
 ////////////////////////////////////////////////////
