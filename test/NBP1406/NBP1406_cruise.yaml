@@ -304,6 +304,7 @@ configs:
     - class: LogfileWriter      # Write to logfile
       kwargs:
         filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
+        rollover_hourly: True
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
