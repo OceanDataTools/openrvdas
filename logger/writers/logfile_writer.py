@@ -14,7 +14,8 @@ class LogfileWriter(Writer):
   """Write to the specified file. If filename is empty, write to stdout."""
   def __init__(self, filebase=None, flush=True,
                time_format=timestamp.TIME_FORMAT,
-               date_format=timestamp.DATE_FORMAT):
+               date_format=timestamp.DATE_FORMAT,
+               suffix=''):
     """
     Write timestamped text records to file. Base filename will have
     date appended, in keeping with R2R format recommendations
@@ -36,6 +37,7 @@ class LogfileWriter(Writer):
     self.flush = flush
     self.time_format = time_format
     self.date_format = date_format
+    self.suffix = suffix
 
     self.current_date = None
     self.current_filename = None
@@ -59,7 +61,7 @@ class LogfileWriter(Writer):
 
     # Is it time to create a new file to write to?
     if not self.writer or date_str != self.current_date:
-      self.current_filename = self.filebase + '-' + date_str
+      self.current_filename = self.filebase + '-' + date_str + self.suffix
       self.current_date = date_str
       logging.info('LogfileWriter opening new file: %s', self.current_filename)
       self.writer = TextFileWriter(self.current_filename, self.flush)
