@@ -32,6 +32,8 @@ class LogfileWriter(Writer):
                     defaults to whatever's defined in
                     utils.timestamps.DATE_FORMAT.
 
+    suffix          string to apply to the end of the log filename
+
     rollover_hourly Set files to truncate by hour.  By default files will
                     truncate by day
     ```
@@ -42,6 +44,7 @@ class LogfileWriter(Writer):
     self.flush = flush
     self.time_format = time_format
     self.date_format = date_format
+    self.suffix = suffix
     self.rollover_hourly = rollover_hourly
 
     self.current_date = None
@@ -68,7 +71,7 @@ class LogfileWriter(Writer):
 
     # Is it time to create a new file to write to?
     if not self.writer or date_str != self.current_date or hr_str != self.current_hour:
-      self.current_filename = self.filebase + '-' + date_str + hr_str
+      self.current_filename = self.filebase + '-' + date_str + hr_str + self.suffix
       self.current_date = date_str
       self.current_hour = self.rollover_hourly and hr_str or ""
       logging.info('LogfileWriter opening new file: %s', self.current_filename)
