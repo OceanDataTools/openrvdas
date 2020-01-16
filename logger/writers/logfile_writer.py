@@ -15,6 +15,7 @@ class LogfileWriter(Writer):
   def __init__(self, filebase=None, flush=True,
                time_format=timestamp.TIME_FORMAT,
                date_format=timestamp.DATE_FORMAT,
+               suffix='',
                rollover_hourly=False):
     """
     Write timestamped text records to file. Base filename will have
