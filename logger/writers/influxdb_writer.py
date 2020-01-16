@@ -25,12 +25,10 @@ class InfluxDBWriter(Writer):
   """Write to the specified file. If filename is empty, write to stdout."""
   def __init__(self, bucket_name):
     """
-    Write timestamped text records to file. Base filename will have
-    date appended, in keeping with R2R format recommendations
-    (http://www.rvdata.us/operators/directory). When timestamped date on
-    records rolls over to next day, create new file with new date suffix.
+    Write data records to the InfluxDB.
     ```
-    bucket_name  the name of the bucket in InfluxDB
+    bucket_name  the name of the bucket in InfluxDB.  If the bucket does
+    not exists then this writer will try to create it.
     ```
     """
     super().__init__(input_format=Text)
@@ -81,9 +79,13 @@ class InfluxDBWriter(Writer):
     if record is None:
       return
 
-    logging.debug('InfluxDBWriter writing record: %s', record)
+    logging.info('InfluxDBWriter writing record: %s', record)
 
-    influxDB_record = {"measurement": record['data_id'], "tags": {"sensor": record['data_id'] }, "fields": record['fields'], "time": int(time.time())*1000000000 }
+    if type(record) is list:
+      influxDB_record = map(lambda single_record: {"measurement": single_record['data_id'], "tags": {"sensor": single_record['data_id'] }, "fields": single_record['fields'], "time": int(single_record['timestamp']*1000000000) }, record)
+    else:
+      influxDB_record = {"measurement": record['data_id'], "tags": {"sensor": record['data_id'] }, "fields": record['fields'], "time": int(record['timestamp']*1000000000) }
+
     self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
 
 
