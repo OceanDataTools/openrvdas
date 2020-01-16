@@ -87,6 +87,7 @@ from logger.writers.udp_writer import UDPWriter
 from logger.writers.redis_writer import RedisWriter
 from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.logfile_writer import LogfileWriter
+from logger.writers.influxdb_writer import InfluxDBWriter
 from logger.writers.database_writer import DatabaseWriter
 from logger.writers.record_screen_writer import RecordScreenWriter
 from logger.writers.cached_data_writer import CachedDataWriter

@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+
+import logging
+import sys
+import json
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+
+from logger.utils import timestamp
+from logger.utils.formats import Text
+from logger.writers.writer import Writer
+
+try:
+  from logger.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
+  INFLUXDB_SETTINGS_FOUND = True
+except ModuleNotFoundError:
+  INFLUXDB_SETTINGS_FOUND = False
+  INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
+
+from influxdb_client import InfluxDBClient
+from influxdb_client.client.write_api import ASYNCHRONOUS
+import time
+
+################################################################################
+class InfluxDBWriter(Writer):
+  """Write to the specified file. If filename is empty, write to stdout."""
+  def __init__(self, bucket_name):
+    """
+    Write timestamped text records to file. Base filename will have
+    date appended, in keeping with R2R format recommendations
+    (http://www.rvdata.us/operators/directory). When timestamped date on
+    records rolls over to next day, create new file with new date suffix.
+    ```
+    bucket_name  the name of the bucket in InfluxDB
+    ```
+    """
+    super().__init__(input_format=Text)
+
+    if not INFLUXDB_SETTINGS_FOUND:
+      raise RuntimeError('File logger/settings.py not found. InfluxDB '
+                         'functionality is not available. Have you copied '
+                         'over logger/settings.py.dist to settings.py?')
+
+    self.client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_AUTH_TOKEN, org=INFLUXDB_ORG)
+
+    # get the orgID from the name:
+    try:
+      self.organizations_api = self.client.organizations_api()
+      orgs = self.organizations_api.find_organizations()
+    except:
+      raise RuntimeError('Error connecting to the InfluxDB API. '
+                         'Please confirm that InfluxDB is running and '
+                         'that the authentication token is correct.')
+
+    our_org = next((org for org in orgs if org.name == INFLUXDB_ORG), None)
+
+    if not our_org:
+      raise RuntimeError('Can not find the organization "' + INFLUXDB_ORG + '" in InfluxDB')
+
+    self.org_id = our_org.id
+
+    # get the bucketID from the name:
+    self.bucket_api = self.client.buckets_api()
+    bucket = self.bucket_api.find_bucket_by_name(bucket_name)
+
+    # if the bucket does not exist then try to create it
+    if not bucket:
+      try:
+        new_bucket = self.bucket_api.create_bucket(bucket_name=bucket_name, org_id=self.org_id)
+        logging.info('Creating new bucket for: %s', bucket_name)
+        self.bucket_id = new_bucket.id
+      except:
+        raise RuntimeError('Can not create bucket in InfluxDB for ' + bucket_name)
+    else:
+      self.bucket_id = bucket.id
+
+    self.write_api = self.client.write_api(write_options=ASYNCHRONOUS)
+
+  ############################
+  def write(self, record):
+    """Note: Assume record begins with a timestamp string."""
+    if record is None:
+      return
+
+    logging.debug('InfluxDBWriter writing record: %s', record)
+
+    influxDB_record = {"measurement": record['data_id'], "tags": {"sensor": record['data_id'] }, "fields": record['fields'], "time": int(time.time())*1000000000 }
+    self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
+
+
+
+
+
