@@ -75,20 +75,28 @@ class InfluxDBWriter(Writer):
 
   ############################
   def write(self, record):
-    """Note: Assume record begins with a timestamp string."""
+    """
+    Note: Assume record is a dict or list of dict. Each dict contains a list
+    of "fields" and float "timestamp" (UTC epoch seconds)
+    """
     if record is None:
       return
 
     logging.info('InfluxDBWriter writing record: %s', record)
 
-    if type(record) is list:
-      influxDB_record = map(lambda single_record: {"measurement": single_record['data_id'], "tags": {"sensor": single_record['data_id'] }, "fields": single_record['fields'], "time": int(single_record['timestamp']*1000000000) }, record)
-    else:
-      influxDB_record = {"measurement": record['data_id'], "tags": {"sensor": record['data_id'] }, "fields": record['fields'], "time": int(record['timestamp']*1000000000) }
+    if type(record) is not dict and type(record) is not list:
+      logging.warning('InfluxDBWriter could not ingest record '
+                      'type %s: %s', type(record), str(record))
 
-    self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
+    try:
+      if type(record) is list:
+        influxDB_record = map(lambda single_record: {"measurement": single_record['data_id'], "tags": {"sensor": single_record['data_id'] }, "fields": single_record['fields'], "time": int(single_record['timestamp']*1000000000) }, record)
+      else:
+        influxDB_record = {"measurement": record['data_id'], "tags": {"sensor": record['data_id'] }, "fields": record['fields'], "time": int(record['timestamp']*1000000000) }
 
+      self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
+      return
 
-
-
-
+    except:
+      logging.warning('InfluxDBWriter could not ingest record '
+                      'type %s: %s', type(record), str(record))
