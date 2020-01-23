@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Mon Aug 12 23:39:50 2019 UTC
+#   time:     Sun Dec 29 23:36:35 2019 UTC
 #   user:     pablo
 #
 ########################################
@@ -139,10 +139,10 @@ loggers:
     configs:
     - true_wind->off
     - true_wind->on
-  subsample:
+  snapshot:
     configs:
-    - subsample->off
-    - subsample->on
+    - snapshot->off
+    - snapshot->on
 
 ########################################
 modes:
@@ -168,7 +168,7 @@ modes:
     tsg2: tsg2->off
     seap: seap->off
     true_wind: true_wind->off
-    subsample: subsample->off
+    snapshot: snapshot->off
 
   monitor:
     PCOD: PCOD->net
@@ -192,7 +192,7 @@ modes:
     tsg2: tsg2->net
     seap: seap->net
     true_wind: true_wind->on
-    subsample: subsample->on
+    snapshot: snapshot->on
 
   log:
     PCOD: PCOD->file/net
@@ -216,7 +216,7 @@ modes:
     tsg2: tsg2->file/net
     seap: seap->file/net
     true_wind: true_wind->on
-    subsample: subsample->on
+    snapshot: snapshot->on
 
   'log+db':
     PCOD: PCOD->file/net/db
@@ -240,7 +240,7 @@ modes:
     tsg2: tsg2->file/net/db
     seap: seap->file/net/db
     true_wind: true_wind->on
-    subsample: subsample->on
+    snapshot: snapshot->on
 
 ########################################
 default_mode: 'off'
@@ -274,7 +274,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -282,20 +282,52 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: PCOD
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
+
+  PCOD->file/net:
+    name: PCOD->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
       kwargs:
+        baudrate: 4800
+        port: /tmp/tty_PCOD
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
+        rollover_hourly: True
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
         transforms:
-        - class: ToDASRecordTransform
+        - class: PrefixTransform
           kwargs:
-            field_name: 'stderr:logger:PCOD'
+            prefix: PCOD
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            interface: 0.0.0.0
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: PCOD
+        - class: ParseTransform
+          kwargs:
+            metadata_interval: 10
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: PCOD
 
-  PCOD->file/net:
-    name: PCOD->file/net
+  PCOD->file/net/db:
+    name: PCOD->file/net/db
     readers:                    # Read from simulated serial port
       class: SerialReader
       kwargs:
@@ -327,7 +359,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -335,59 +367,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: PCOD
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
-  PCOD->file/net/db:
-    name: PCOD->file/net/db
-    readers:                    # Read from simulated serial port
-      class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /tmp/tty_PCOD
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
-    - class: ComposedWriter     # Also prefix with logger name and broadcast
-      kwargs:                   # raw NMEA on UDP
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: PCOD
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            interface: 0.0.0.0 
-    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
-      kwargs:                   # port for CachedDataServer to pick up
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: PCOD
-        - class: ParseTransform
-          kwargs:
-            metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: PCOD
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -397,20 +377,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:PCOD'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   cwnc->off:
     name: cwnc->off
@@ -438,7 +407,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -446,17 +415,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: cwnc
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   cwnc->file/net:
     name: cwnc->file/net
@@ -491,7 +449,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -499,17 +457,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: cwnc
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   cwnc->file/net/db:
     name: cwnc->file/net/db
@@ -534,7 +481,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -544,7 +491,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -552,6 +499,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: cwnc
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -561,20 +509,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:cwnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
   ########
   gp02->off:
     name: gp02->off
@@ -602,7 +539,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -610,17 +547,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: gp02
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gp02->file/net:
     name: gp02->file/net
@@ -655,7 +581,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -663,17 +589,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: gp02
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gp02->file/net/db:
     name: gp02->file/net/db
@@ -698,7 +613,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -708,7 +623,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -716,6 +631,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: gp02
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -725,21 +641,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gp02'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   gyr1->off:
     name: gyr1->off
@@ -767,7 +671,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -775,17 +679,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: gyr1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gyr1->file/net:
     name: gyr1->file/net
@@ -820,7 +713,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -828,17 +721,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: gyr1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   gyr1->file/net/db:
     name: gyr1->file/net/db
@@ -863,7 +745,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -873,7 +755,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -881,6 +763,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: gyr1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -890,21 +773,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:gyr1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   adcp->off:
     name: adcp->off
@@ -932,7 +803,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -940,17 +811,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: adcp
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   adcp->file/net:
     name: adcp->file/net
@@ -985,7 +845,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -993,17 +853,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: adcp
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   adcp->file/net/db:
     name: adcp->file/net/db
@@ -1028,7 +877,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1038,7 +887,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1046,6 +895,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: adcp
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1055,21 +905,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:adcp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   eng1->off:
     name: eng1->off
@@ -1097,7 +935,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1105,17 +943,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: eng1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   eng1->file/net:
     name: eng1->file/net
@@ -1150,7 +977,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1158,17 +985,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: eng1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   eng1->file/net/db:
     name: eng1->file/net/db
@@ -1193,7 +1009,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1203,7 +1019,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1211,6 +1027,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: eng1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1220,21 +1037,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:eng1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   svp1->off:
     name: svp1->off
@@ -1262,7 +1067,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1270,17 +1075,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: svp1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   svp1->file/net:
     name: svp1->file/net
@@ -1315,7 +1109,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1323,17 +1117,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: svp1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   svp1->file/net/db:
     name: svp1->file/net/db
@@ -1358,7 +1141,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1368,7 +1151,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1376,6 +1159,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: svp1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1385,21 +1169,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:svp1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   twnc->off:
     name: twnc->off
@@ -1427,7 +1199,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1435,17 +1207,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: twnc
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   twnc->file/net:
     name: twnc->file/net
@@ -1480,7 +1241,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1488,17 +1249,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: twnc
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   twnc->file/net/db:
     name: twnc->file/net/db
@@ -1523,7 +1273,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1533,7 +1283,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1541,6 +1291,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: twnc
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1550,21 +1301,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:twnc'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   mbdp->off:
     name: mbdp->off
@@ -1592,7 +1331,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1600,17 +1339,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: mbdp
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mbdp->file/net:
     name: mbdp->file/net
@@ -1645,7 +1373,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1653,17 +1381,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: mbdp
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mbdp->file/net/db:
     name: mbdp->file/net/db
@@ -1688,7 +1405,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1698,7 +1415,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1706,6 +1423,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: mbdp
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1715,21 +1433,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mbdp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   knud->off:
     name: knud->off
@@ -1757,7 +1463,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1765,17 +1471,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: knud
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   knud->file/net:
     name: knud->file/net
@@ -1810,7 +1505,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1818,17 +1513,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: knud
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   knud->file/net/db:
     name: knud->file/net/db
@@ -1853,7 +1537,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1863,7 +1547,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1871,6 +1555,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: knud
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1880,21 +1565,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:knud'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   grv1->off:
     name: grv1->off
@@ -1922,7 +1595,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1930,17 +1603,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: grv1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   grv1->file/net:
     name: grv1->file/net
@@ -1975,7 +1637,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1983,17 +1645,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: grv1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   grv1->file/net/db:
     name: grv1->file/net/db
@@ -2018,7 +1669,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2028,7 +1679,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2036,6 +1687,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: grv1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2045,21 +1697,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:grv1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   mwx1->off:
     name: mwx1->off
@@ -2087,7 +1727,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2095,17 +1735,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: mwx1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mwx1->file/net:
     name: mwx1->file/net
@@ -2140,7 +1769,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2148,17 +1777,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: mwx1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   mwx1->file/net/db:
     name: mwx1->file/net/db
@@ -2183,7 +1801,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2193,7 +1811,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2201,6 +1819,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: mwx1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2210,21 +1829,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:mwx1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   pco2->off:
     name: pco2->off
@@ -2252,7 +1859,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2260,17 +1867,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: pco2
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   pco2->file/net:
     name: pco2->file/net
@@ -2305,7 +1901,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2313,17 +1909,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: pco2
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   pco2->file/net/db:
     name: pco2->file/net/db
@@ -2348,7 +1933,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2358,7 +1943,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2366,6 +1951,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: pco2
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2375,21 +1961,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pco2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   pguv->off:
     name: pguv->off
@@ -2417,7 +1991,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2425,17 +1999,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: pguv
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   pguv->file/net:
     name: pguv->file/net
@@ -2470,7 +2033,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2478,17 +2041,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: pguv
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   pguv->file/net/db:
     name: pguv->file/net/db
@@ -2513,7 +2065,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2523,7 +2075,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2531,6 +2083,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: pguv
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2540,21 +2093,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:pguv'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   s330->off:
     name: s330->off
@@ -2582,7 +2123,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2590,17 +2131,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: s330
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   s330->file/net:
     name: s330->file/net
@@ -2635,7 +2165,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2643,17 +2173,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: s330
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   s330->file/net/db:
     name: s330->file/net/db
@@ -2678,7 +2197,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2688,7 +2207,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2696,6 +2215,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: s330
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2705,21 +2225,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:s330'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   tsg1->off:
     name: tsg1->off
@@ -2747,7 +2255,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2755,17 +2263,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: tsg1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg1->file/net:
     name: tsg1->file/net
@@ -2800,7 +2297,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2808,17 +2305,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: tsg1
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg1->file/net/db:
     name: tsg1->file/net/db
@@ -2843,7 +2329,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2853,7 +2339,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2861,6 +2347,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: tsg1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2870,21 +2357,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg1'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   rtmp->off:
     name: rtmp->off
@@ -2912,7 +2387,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2920,17 +2395,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: rtmp
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rtmp->file/net:
     name: rtmp->file/net
@@ -2965,7 +2429,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2973,17 +2437,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: rtmp
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   rtmp->file/net/db:
     name: rtmp->file/net/db
@@ -3008,7 +2461,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3018,7 +2471,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3026,6 +2479,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: rtmp
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -3035,21 +2489,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:rtmp'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   hdas->off:
     name: hdas->off
@@ -3077,7 +2519,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3085,17 +2527,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: hdas
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   hdas->file/net:
     name: hdas->file/net
@@ -3130,7 +2561,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3138,17 +2569,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: hdas
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   hdas->file/net/db:
     name: hdas->file/net/db
@@ -3173,7 +2593,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3183,7 +2603,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3191,6 +2611,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: hdas
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -3200,21 +2621,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:hdas'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   tsg2->off:
     name: tsg2->off
@@ -3242,25 +2651,14 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
-            bucket_name: tsg2
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
+            bucket_name: hdas
 
   tsg2->file/net:
     name: tsg2->file/net
@@ -3295,7 +2693,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3303,17 +2701,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: tsg2
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   tsg2->file/net/db:
     name: tsg2->file/net/db
@@ -3338,7 +2725,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3348,7 +2735,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3356,6 +2743,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: tsg2
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -3365,21 +2753,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:tsg2'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
   ########
   seap->off:
     name: seap->off
@@ -3407,7 +2783,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3415,17 +2791,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: seap
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   seap->file/net:
     name: seap->file/net
@@ -3460,7 +2825,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3468,17 +2833,6 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: seap
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   seap->file/net/db:
     name: seap->file/net/db
@@ -3503,7 +2857,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0 
+            interface: 0.0.0.0
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -3513,7 +2867,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -3521,6 +2875,7 @@ configs:
         - class: InfluxDBWriter     # Write to InfluxDB
           kwargs:
             bucket_name: seap
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -3530,20 +2885,9 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_pathd: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:seap'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
 
   true_wind->off:
     name: true_wind->off
@@ -3570,14 +2914,14 @@ configs:
               seconds: 0
             MwxStbdRelWindSpeed:
               seconds: 0
-    transforms:
-    - class: ComposedDerivedDataTransform
+    writers:
+    - class: ComposedWriter
       kwargs:
         transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: PortApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -3587,10 +2931,18 @@ configs:
             - MwxPortRelWindDir
             wind_dir_field: MwxPortRelWindDir
             wind_speed_field: MwxPortRelWindSpeed
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+    - class: ComposedWriter
+      kwargs:
+        transforms:
         - class: TrueWindsTransform
           kwargs:
             apparent_dir_name: StbdApparentWindDir
-            convert_wind_factor: 1.94384
+            convert_speed_factor: 0.5144
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
@@ -3600,28 +2952,18 @@ configs:
             - MwxStbdRelWindDir
             wind_dir_field: MwxStbdRelWindDir
             wind_speed_field: MwxStbdRelWindSpeed
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: localhost:8766
-    stderr_writers:          # Turn stderr into DASRecord, broadcast to cache
-    - class: ComposedWriter  # UDP port for CachedDataServer to pick up.
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:true_wind'
+            metadata_interval: 10
         writers:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
 
   # Derived data subsampling logger
-  subsample->off:
-    name: subsample->off
+  snapshot->off:
+    name: snapshot->off
 
-  subsample->on:
-    name: subsample->on
+  snapshot->on:
+    name: snapshot->on
     readers:
       class: CachedDataReader
       kwargs:
@@ -3650,83 +2992,64 @@ configs:
               seconds: 0
 
     transforms:
-    - class: SubsampleTransform
+    - class: InterpolationTransform
+      module: logger.transforms.interpolation_transform
       kwargs:
-        back_seconds: 3600
-        metadata_interval: 20  # send metadata every 20 seconds
+        interval: 30
+        window: 30
+        metadata_interval: 60  # send metadata every 60 seconds
         field_spec:
-          MwxAirTemp:
-            output: AvgMwxAirTemp
-            subsample:
+          AvgMwxAirTemp:
+            source: MwxAirTemp
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          RTMPTemp:
-            output: AvgRTMPTemp
-            subsample:
+              window: 30
+          AvgRTMPTemp:
+            source: RTMPTemp
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          PortTrueWindDir:
-            output: AvgPortTrueWindDir
-            subsample:
+              window: 30
+          AvgPortTrueWindDir:
+            source: PortTrueWindDir
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          PortTrueWindSpeed:
-            output: AvgPortTrueWindSpeed
-            subsample:
+              window: 30
+          AvgPortTrueWindSpeed:
+            source: PortTrueWindSpeed
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          StbdTrueWindDir:
-            output: AvgStbdTrueWindDir
-            subsample:
+              window: 30
+          AvgStbdTrueWindDir:
+            source: StbdTrueWindDir
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          StbdTrueWindSpeed:
-            output: AvgStbdTrueWindSpeed
-            subsample:
+              window: 30
+          AvgStbdTrueWindSpeed:
+            source: StbdTrueWindSpeed
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          MwxBarometer:
-            output: AvgMwxBarometer
-            subsample:
+              window: 30
+          AvgMwxBarometer:
+            source: MwxBarometer
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          KnudDepthHF:
-            output: AvgKnudDepthHF
-            subsample:
+              window: 30
+          AvgKnudDepthHF:
+            source: KnudDepthHF
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          KnudDepthLF:
-            output: AvgKnudDepthLF
-            subsample:
+              window: 30
+          AvgKnudDepthLF:
+            source: KnudDepthLF
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          Grv1Value:
-            output: AvgGrv1Value
-            subsample:
+              window: 30
+          AvgGrv1Value:
+            source: Grv1Value
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
+              window: 30
     writers:
     - class: CachedDataWriter
       kwargs:
-        data_server: localhost:8766        
-    stderr_writers:
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            field_name: 'stderr:logger:subsample'
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
+        data_server: localhost:8766
