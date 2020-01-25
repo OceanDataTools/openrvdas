@@ -11,13 +11,13 @@ from logger.writers.writer import Writer
 
 try:
   from logger.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
+  from influxdb_client import InfluxDBClient
+  from influxdb_client.client.write_api import ASYNCHRONOUS
   INFLUXDB_SETTINGS_FOUND = True
 except ModuleNotFoundError:
   INFLUXDB_SETTINGS_FOUND = False
   INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 
-from influxdb_client import InfluxDBClient
-from influxdb_client.client.write_api import ASYNCHRONOUS
 import time
 
 ################################################################################
