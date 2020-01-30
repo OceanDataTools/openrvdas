@@ -254,8 +254,15 @@ echo Done setting up database
 # Fetch OpenRVDAS code and set up directory
 echo "############################################################################"
 echo Fetching OpenRVDAS code...
-cd $INSTALL_ROOT
 
+if [ ! -d $INSTALL_ROOT ]; then
+  echo Making install directory "$INSTALL_ROOT"
+  echo Please enter sudo password if prompted...
+  sudo mkdir -p $INSTALL_ROOT
+  sudo chown ${RVDAS_USER} $INSTALL_ROOT
+fi    
+
+cd $INSTALL_ROOT
 if [ ! -e openrvdas ]; then
   echo Making openrvdas directory.
   echo Please enter sudo password if prompted...
