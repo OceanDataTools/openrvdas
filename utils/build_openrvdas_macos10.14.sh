@@ -172,10 +172,10 @@ echo Installing python and supporting packages
 [ -e /usr/local/bin/ssh ]    || brew install openssh
 [ -e /usr/local/bin/mysql ]  || brew install mysql
 [ -e /usr/local/bin/nginx ]  || brew install nginx
-[ -e /usr/local/bin/uwsgi ]  || brew install uwsgi
+# [ -e /usr/local/bin/uwsgi ]  || brew install uwsgi # install under venv
 [ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
-brew upgrade python socat openssh mysql nginx uwsgi supervisor || echo Upgraded packages
+brew upgrade python socat openssh mysql nginx supervisor || echo Upgraded packages
 brew link --overwrite python || echo Linking Python
 
 echo Starting services mysql and supervisor
@@ -242,30 +242,66 @@ create database if not exists test character set utf8;
 GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
 GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost';
 
-create database if not exists test_$RVDAS_USER character set utf8;
-GRANT ALL PRIVILEGES ON test_$RVDAS_USER.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test_$RVDAS_USER.* TO 'test'@'localhost';
+create database if not exists test_${RVDAS_USER} character set utf8;
+GRANT ALL PRIVILEGES ON test_${RVDAS_USER}.* TO '$RVDAS_USER'@'localhost';
+GRANT ALL PRIVILEGES ON test_${RVDAS_USER}.* TO 'test'@'localhost';
 
 flush privileges;
 \q
 EOF
 echo Done setting up database
 
-# Django and uWSGI
+# Fetch OpenRVDAS code and set up directory
+echo "############################################################################"
+echo Fetching OpenRVDAS code...
+cd $INSTALL_ROOT
+
+if [ ! -e openrvdas ]; then
+  echo Making openrvdas directory.
+  echo Please enter sudo password if prompted...
+  sudo mkdir openrvdas
+  sudo chown ${RVDAS_USER} openrvdas
+fi    
+
+if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+  cd openrvdas
+  git checkout $OPENRVDAS_BRANCH
+  git pull
+else                              # If we don't already have an installation
+  sudo rm -rf openrvdas           # in case there's a non-git dir there
+  sudo mkdir openrvdas
+  sudo chown ${RVDAS_USER} openrvdas
+  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+  cd openrvdas
+fi
+
+# Set up virtual env and python-dependent code (Django and uWSGI, etc)
 echo "############################################################################"
 
-echo Installing Django, uWSGI and other Python-dependent packages.
+echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
 echo Please enter sudo password if prompted...
-export PATH=/usr/bin:/usr/local/bin:$PATH
-/usr/local/bin/pip3 install --upgrade pip &> /dev/null || echo Upgrading old pip if it\'s there
+#export PATH=/usr/bin:/usr/local/bin:$PATH
+#/usr/local/bin/pip3 install --upgrade pip &> /dev/null || echo Upgrading old pip if it\'s there
 
-sudo /usr/local/bin/pip3 install Django==2.2 pyserial uwsgi websockets PyYAML \
-       parse mysqlclient mysql-connector diskcache psutil
+# Set up virtual environment
+pip3 install virtualenv
+VENV_PATH=$INSTALL_ROOT/openrvdas/venv
+python3 -m venv $VENV_PATH
+source $VENV_PATH/bin/activate  # activate virtual environment
 
-# uWSGI configuration
-#Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
-echo "#########################################################################"
-echo Configuring uWSGI as service
+# Inside the venv, python *is* the right version, right?
+python3 -m pip install --upgrade pip
+pip3 install \
+  Django~=2.2.4 \
+  pyserial \
+  uwsgi \
+  websockets \
+  PyYAML \
+  parse \
+  mysqlclient \
+  mysql-connector \
+  psutil
+  # diskcache
 
 # Set up nginx
 echo "############################################################################"
@@ -291,32 +327,12 @@ EOF
   echo Done setting up NGINX
 fi
 
-# Set up openrvdas
-echo "############################################################################"
-echo Fetching and setting up OpenRVDAS code...
-cd $INSTALL_ROOT
-
-if [ ! -e openrvdas ]; then
-  echo Making openrvdas directory.
-  echo Please enter sudo password if prompted...
-  sudo mkdir openrvdas
-  sudo chown ${RVDAS_USER} openrvdas
-fi    
-
-if [ -e openrvdas/.git ] ; then   # If we've already got an installation
-  cd openrvdas
-  git checkout $OPENRVDAS_BRANCH
-  git pull
-else                              # If we don't already have and installation
-  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
-  cd openrvdas
-fi
-
 #cat > /etc/profile.d/openrvdas.sh <<EOF
 #export PYTHONPATH=$PYTHONPATH:${INSTALL_ROOT}/openrvdas
 #export PATH=$PATH:${INSTALL_ROOT}/openrvdas/logger/listener
 #EOF
 
+echo "############################################################################"
 echo Initializing OpenRVDAS database...
 cd ${INSTALL_ROOT}/openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
@@ -331,9 +347,11 @@ cp display/js/widgets/settings.js.dist \
    display/js/widgets/settings.js
 sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
 
-python3 manage.py makemigrations django_gui
-python3 manage.py migrate
-python3 manage.py collectstatic --no-input --clear --link
+# NOTE: we're still inside virtualenv, so we're getting the python
+# that was installed under it.
+python manage.py makemigrations django_gui
+python manage.py migrate
+python manage.py collectstatic --no-input --clear --link
 chmod -R og+rX static
 
 # A temporary hack to allow the display/ pages to be accessed by Django
@@ -415,8 +433,8 @@ chdir           = ${INSTALL_ROOT}/openrvdas
 # Django's wsgi file
 module          = django_gui.wsgi
 # the base directory from which bin/python is available
-# Do an ln -s bin/python3 bin/python in this dir!!!
-home            = /usr/local
+## NOTE: 'home' not needed because we'll invoke uwsgi from venv path.
+# home            = /usr/local
 
 # process-related settings
 # master
@@ -442,11 +460,13 @@ chmod 755 ${INSTALL_ROOT}/openrvdas
 chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
 chgrp -R `id -n -g ${RVDAS_USER}` ${INSTALL_ROOT}/openrvdas
 
-# Make uWSGI run on boot
-brew services restart uwsgi
+## Make uWSGI run on boot
+# NOTE: No, we're running uwsgi from supervisord
+#brew services restart uwsgi
 
 # Make nginx run on boot:
-brew services restart nginx
+# NOTE: No, we're running nginx from supervisord
+#brew services restart nginx
 
 echo "############################################################################"
 echo Setting up openrvdas service with supervisord
@@ -459,6 +479,8 @@ else
     SUPERVISOR_AUTOSTART=true
 fi
 
+VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
+
 echo Copying supervisor file openrvdas.ini into place.
 cat > /tmp/openrvdas.ini <<EOF
 [inet_http_server]
@@ -466,8 +488,28 @@ port=*:8001
 username=${RVDAS_USER}
 password=${RVDAS_USER}
 
+[program:nginx]
+command=/usr/local/bin/nginx -g 'daemon off;'
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/nginx.err.log
+stdout_logfile=/var/log/openrvdas/nginx.out.log
+user=$RVDAS_USER
+
+[program:uwsgi]
+command=${VENV_BIN}/uwsgi /opt/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/uwsgi.err.log
+stdout_logfile=/var/log/openrvdas/uwsgi.out.log
+user=$RVDAS_USER
+
 [program:cached_data_server]
-command=/usr/local/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -477,7 +519,8 @@ stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=/usr/local/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
+command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
+environment=PATH="/opt/openrvdas/venv/bin:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -487,7 +530,7 @@ stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 
 [program:simulate_nbp]
-command=/usr/local/bin/python3 logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
+command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
@@ -497,7 +540,7 @@ stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
 user=$RVDAS_USER
 
 [program:simulate_skq]
-command=/usr/local/bin/python3 logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
+command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
@@ -505,10 +548,14 @@ startretries=3
 stderr_logfile=/var/log/openrvdas/simulate_skq.err.log
 stdout_logfile=/var/log/openrvdas/simulate_skq.out.log
 user=$RVDAS_USER
+
+[group:web]
+programs=nginx,uwsgi
+
+[group:openrvdas]
+programs=logger_manager,cached_data_server
 EOF
 echo Please enter sudo password if prompted...
-sudo mkdir -p /usr/local/etc/supervisor.d
-sudo chown $RVDAS_USER /usr/local/etc/supervisor.d
 sudo cp /tmp/openrvdas.ini /usr/local/etc/supervisor.d/openrvdas.ini
 
 #echo "############################################################################"
@@ -539,8 +586,13 @@ sudo cp /tmp/openrvdas.ini /usr/local/etc/supervisor.d/openrvdas.ini
 #done
 
 echo "#########################################################################"
-echo Restarting services: nginx, uwsgi, supervisor.
-brew services restart nginx uwsgi supervisor
+echo Restarting supervisor service
+brew services restart supervisor
+
+# Deactivate the virtual environment - we'll be calling all relevant
+# binaries using their venv paths, so don't need it.
+deactivate
+
 echo "#########################################################################"
 echo Installation complete - happy logging!
 echo
