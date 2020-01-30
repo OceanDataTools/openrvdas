@@ -563,6 +563,7 @@ programs=nginx,uwsgi
 programs=logger_manager,cached_data_server
 EOF
 echo Please enter sudo password if prompted...
+sudo mkdir -p /usr/local/etc/supervisor.d/
 sudo cp /tmp/openrvdas.ini /usr/local/etc/supervisor.d/openrvdas.ini
 
 #echo "############################################################################"
