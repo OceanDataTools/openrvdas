@@ -491,9 +491,12 @@ VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
 echo Copying supervisor file openrvdas.ini into place.
 cat > /tmp/openrvdas.ini <<EOF
 [inet_http_server]
-port=*:8001
+port=127.0.0.1:8001
 username=${RVDAS_USER}
 password=${RVDAS_USER}
+
+[supervisorctl]
+serverurl=http://127.0.0.1:8001 ; use an http:// url to specify an inet socket
 
 [program:nginx]
 command=/usr/local/bin/nginx -g 'daemon off;'
