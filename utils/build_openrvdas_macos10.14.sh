@@ -358,6 +358,7 @@ sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
 # that was installed under it.
 python manage.py makemigrations django_gui
 python manage.py migrate
+rm -rf static
 python manage.py collectstatic --no-input --clear --link
 chmod -R og+rX static
 
