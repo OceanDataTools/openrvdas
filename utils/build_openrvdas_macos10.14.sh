@@ -183,6 +183,63 @@ brew tap homebrew/services
 brew services restart mysql
 brew services restart supervisor
 
+# Fetch OpenRVDAS code and set up directory
+echo "############################################################################"
+echo Fetching OpenRVDAS code...
+
+if [ ! -d $INSTALL_ROOT ]; then
+  echo Making install directory "$INSTALL_ROOT"
+  echo Please enter sudo password if prompted...
+  sudo mkdir -p $INSTALL_ROOT
+  sudo chown ${RVDAS_USER} $INSTALL_ROOT
+fi
+
+cd $INSTALL_ROOT
+if [ ! -e openrvdas ]; then
+  echo Making openrvdas directory.
+  echo Please enter sudo password if prompted...
+  sudo mkdir openrvdas
+  sudo chown ${RVDAS_USER} openrvdas
+fi
+
+if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+  cd openrvdas
+  git checkout $OPENRVDAS_BRANCH
+  git pull
+else                              # If we don't already have an installation
+  sudo rm -rf openrvdas           # in case there's a non-git dir there
+  sudo mkdir openrvdas
+  sudo chown ${RVDAS_USER} openrvdas
+  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+  cd openrvdas
+fi
+
+# Set up virtual env and python-dependent code (Django and uWSGI, etc)
+echo "############################################################################"
+
+echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
+echo Please enter sudo password if prompted...
+
+# Set up virtual environment
+pip3 install virtualenv
+VENV_PATH=$INSTALL_ROOT/openrvdas/venv
+python3 -m venv $VENV_PATH
+source $VENV_PATH/bin/activate  # activate virtual environment
+
+# Inside the venv, python *is* the right version, right?
+python3 -m pip install --upgrade pip
+pip3 install \
+  Django~=2.2.4 \
+  pyserial \
+  uwsgi \
+  websockets \
+  PyYAML \
+  parse \
+  mysqlclient \
+  mysql-connector \
+  psutil
+  # diskcache
+
 # Install database stuff and set up as service.
 echo "#########################################################################"
 echo Setting up MySQL database tables and permissions
@@ -251,65 +308,6 @@ flush privileges;
 EOF
 echo Done setting up database
 
-# Fetch OpenRVDAS code and set up directory
-echo "############################################################################"
-echo Fetching OpenRVDAS code...
-
-if [ ! -d $INSTALL_ROOT ]; then
-  echo Making install directory "$INSTALL_ROOT"
-  echo Please enter sudo password if prompted...
-  sudo mkdir -p $INSTALL_ROOT
-  sudo chown ${RVDAS_USER} $INSTALL_ROOT
-fi    
-
-cd $INSTALL_ROOT
-if [ ! -e openrvdas ]; then
-  echo Making openrvdas directory.
-  echo Please enter sudo password if prompted...
-  sudo mkdir openrvdas
-  sudo chown ${RVDAS_USER} openrvdas
-fi    
-
-if [ -e openrvdas/.git ] ; then   # If we've already got an installation
-  cd openrvdas
-  git checkout $OPENRVDAS_BRANCH
-  git pull
-else                              # If we don't already have an installation
-  sudo rm -rf openrvdas           # in case there's a non-git dir there
-  sudo mkdir openrvdas
-  sudo chown ${RVDAS_USER} openrvdas
-  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
-  cd openrvdas
-fi
-
-# Set up virtual env and python-dependent code (Django and uWSGI, etc)
-echo "############################################################################"
-
-echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
-echo Please enter sudo password if prompted...
-#export PATH=/usr/bin:/usr/local/bin:$PATH
-#/usr/local/bin/pip3 install --upgrade pip &> /dev/null || echo Upgrading old pip if it\'s there
-
-# Set up virtual environment
-pip3 install virtualenv
-VENV_PATH=$INSTALL_ROOT/openrvdas/venv
-python3 -m venv $VENV_PATH
-source $VENV_PATH/bin/activate  # activate virtual environment
-
-# Inside the venv, python *is* the right version, right?
-python3 -m pip install --upgrade pip
-pip3 install \
-  Django~=2.2.4 \
-  pyserial \
-  uwsgi \
-  websockets \
-  PyYAML \
-  parse \
-  mysqlclient \
-  mysql-connector \
-  psutil
-  # diskcache
-
 # Set up nginx
 echo "############################################################################"
 echo Setting up NGINX
@@ -322,7 +320,7 @@ echo Setting up NGINX
 if grep -q "/usr/local/etc/nginx/sites-enabled/" /usr/local/etc/nginx/nginx.conf; then
   echo NGINX sites-available already registered. Skipping...
 else
-  NGINX_CONF_LEN=`wc -l /usr/local/etc/nginx/nginx.conf | cut   -c1-8` 
+  NGINX_CONF_LEN=`wc -l /usr/local/etc/nginx/nginx.conf | cut   -c1-8`
 
   head -n $(($NGINX_CONF_LEN-1)) /usr/local/etc/nginx/nginx.conf > /tmp/nginx.conf
   cat >> /tmp/nginx.conf <<EOF
@@ -359,7 +357,7 @@ sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
 python manage.py makemigrations django_gui
 python manage.py migrate
 rm -rf static
-python manage.py collectstatic --no-input --clear --link
+python manage.py collectstatic --no-input --clear --link -v 0
 chmod -R og+rX static
 
 # A temporary hack to allow the display/ pages to be accessed by Django
@@ -404,10 +402,10 @@ server {
         autoindex on;
     }
     location /js {
-        alias /opt/openrvdas/display/js; # display pages
+        alias /${INSTALL_ROOT}/openrvdas/display/js; # display pages
     }
     location /css {
-        alias /opt/openrvdas/display/css; # display pages
+        alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
     }
 
     location /static {
@@ -510,7 +508,7 @@ stdout_logfile=/var/log/openrvdas/nginx.out.log
 user=$RVDAS_USER
 
 [program:uwsgi]
-command=${VENV_BIN}/uwsgi /opt/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+command=${VENV_BIN}/uwsgi /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -531,7 +529,7 @@ user=$RVDAS_USER
 
 [program:logger_manager]
 command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
-environment=PATH="/opt/openrvdas/venv/bin:/usr/bin:/usr/local/bin"
+environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -565,6 +563,9 @@ programs=nginx,uwsgi
 
 [group:openrvdas]
 programs=logger_manager,cached_data_server
+
+[group:simulate]
+programs=simulate_nbp,simulate_skq
 EOF
 echo Please enter sudo password if prompted...
 sudo mkdir -p /usr/local/etc/supervisor.d/
