@@ -88,7 +88,8 @@ chmod=0770                  ; socket file mode (default 0700)
 {password_auth}             ; default is no password (open server)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
-port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
+;port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
+port=*:{port}      ; ip_address:port specifier, *:port for all iface
 {username_auth}            ; default is no username (open server)
 {password_auth}            ; default is no password (open server)
 
@@ -665,61 +666,65 @@ class SupervisorConnector:
     with self.supervisor_rpc_lock:
       supervisor = self.supervisor_rpc.supervisor
       try:
-          result = supervisor.reloadConfig()
+        result = supervisor.reloadConfig()
       except xmlrpclib.Fault as e:
-          self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
-          if e.faultCode == xmlrpc.Faults.SHUTDOWN_STATE:
-              logging.info('ERROR: already shutting down')
-              return
-          else:
-              raise
+        self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+        if e.faultCode == xmlrpc.Faults.SHUTDOWN_STATE:
+          logging.info('ERROR: already shutting down')
+          return
+        else:
+          raise
 
       added, changed, removed = result[0]
+      #valid_gnames = set([self.group])
       valid_gnames = set()
+
+      # NOTE: with valid_gnames defined as empty, as above, is the
+      # below block even necessary?
 
       # If any gnames are specified we need to verify that they are
       # valid in order to print a useful error message.
       if valid_gnames:
-          groups = set()
-          for info in supervisor.getAllProcessInfo():
-              groups.add(info['group'])
-          # New gnames would not currently exist in this set so
-          # add those as well.
-          groups.update(added)
+        groups = set()
+        for info in supervisor.getAllProcessInfo():
+          groups.add(info['group'])
+        # New gnames would not currently exist in this set so
+        # add those as well.
+        groups.update(added)
 
-          for gname in valid_gnames:
-              if gname not in groups:
-                  logging.info('ERROR: no such group: %s' % gname)
+        for gname in valid_gnames:
+          if gname not in groups:
+            logging.info('ERROR: no such group: %s' % gname)
 
-      for gname in removed:
-          if valid_gnames and gname not in valid_gnames:
-              continue
-          results = supervisor.stopProcessGroup(gname)
-          logging.info('stopped %s', gname)
+    for gname in removed:
+      if valid_gnames and gname not in valid_gnames:
+        continue
+      results = supervisor.stopProcessGroup(gname)
+      logging.info('stopped %s', gname)
 
-          fails = [res for res in results
-                   if res['status'] == xmlrpc.Faults.FAILED]
-          if fails:
-              logging.warning('%s has problems; not removing', gname)
-              continue
-          supervisor.removeProcessGroup(gname)
-          logging.info('removed process group %s', gname)
+      fails = [res for res in results
+               if res['status'] == xmlrpc.Faults.FAILED]
+      if fails:
+        logging.warning('%s has problems; not removing', gname)
+        continue
+      supervisor.removeProcessGroup(gname)
+      logging.info('removed process group %s', gname)
 
-      for gname in changed:
-          if valid_gnames and gname not in valid_gnames:
-              continue
-          supervisor.stopProcessGroup(gname)
-          logging.info('stopped %s', gname)
+    for gname in changed:
+      if valid_gnames and gname not in valid_gnames:
+        continue
+      supervisor.stopProcessGroup(gname)
+      logging.info('stopped %s', gname)
 
-          supervisor.removeProcessGroup(gname)
-          supervisor.addProcessGroup(gname)
-          logging.info('updated process group %s', gname)
+      supervisor.removeProcessGroup(gname)
+      supervisor.addProcessGroup(gname)
+      logging.info('updated process group %s', gname)
 
-      for gname in added:
-          if valid_gnames and gname not in valid_gnames:
-              continue
-          supervisor.addProcessGroup(gname)
-          logging.info('added process group %s', gname)
+    for gname in added:
+      if valid_gnames and gname not in valid_gnames:
+        continue
+      supervisor.addProcessGroup(gname)
+      logging.info('added process group %s', gname)
 
 ################################################################################
 ################################################################################
@@ -1054,28 +1059,29 @@ class LoggerManager:
   def _send_logger_status_loop(self):
     """Grab logger status message from supervisor and send to cached data
     server via websocket. Also send cruise mode as separate message.
-    """    
+    """
     while not self.quit_flag:
-      config_status = self.supervisor.check_status()
       now = time.time()
+      try:
+        config_status = self.supervisor.check_status()
+        with self.config_lock:
+          # Stash status, note time and send update
+          self.config_status = config_status
+          self.status_time = now
 
-      with self.config_lock:
-        # Stash status, note time and send update
-        self.config_status = config_status
-        self.status_time = now
+          # Map status to logger
+          status_map = {}
+          for config, status in config_status.items():
+            logger = self.config_to_logger.get(config, None)
+            if logger:
+              status_map[logger] = {'config':config, 'status':status}
+        self._write_record_to_data_server('status:logger_status', status_map)
 
-        # Map status to logger
-        status_map = {}
-        for config, status in config_status.items():
-          logger = self.config_to_logger.get(config, None)
-          if logger:
-            status_map[logger] = {'config':config, 'status':status}
-      self._write_record_to_data_server('status:logger_status', status_map)
-
-      # Now get and send cruise mode
-      mode_map = { 'active_mode': self.api.get_active_mode() }
-      self._write_record_to_data_server('status:cruise_mode', mode_map)
-
+        # Now get and send cruise mode
+        mode_map = { 'active_mode': self.api.get_active_mode() }
+        self._write_record_to_data_server('status:cruise_mode', mode_map)
+      except ValueError as e:
+        logging.warning('Error while trying to send logger status: %s', e)
       time.sleep(self.interval)
 
   ############################
