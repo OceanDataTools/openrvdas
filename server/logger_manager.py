@@ -18,6 +18,8 @@ import threading
 import time
 import websockets
 
+from parse import parse
+
 # For communicating with supervisord server
 from xmlrpc.client import ServerProxy
 from xmlrpc.client import Fault as XmlRpcFault
@@ -910,7 +912,7 @@ class LoggerManager:
       logging.info('No config status found yet. Fetching one...')
       config_status = self.supervisor.check_status()
       if not config_status:
-        logging.info('Retrieved empty config status.')
+        logging.debug('Retrieved empty config status.')
       with self.config_lock:
         self.config_status = config_status
         self.status_time = time.time()
@@ -1126,31 +1128,42 @@ class LoggerManager:
       and sends it to the cached data server (or prints it out if we
       don't have a cached data server).
       """
-      if self.data_server_writer:
-        # Parse the logging line into a DASRecord
-        try:
-          components = line.split(' ', maxsplit=5)
-          (r_date, r_time, r_levelno, r_levelname,  r_filename_lineno,
-           r_message) = components
-          r_filename, r_lineno = r_filename_lineno.split(':')
-          record = {
-            'asctime': r_date + 'T' + r_time + 'Z',
-            'levelno': r_levelno,
-            'levelname': r_levelname,
-            'filename': r_filename,
-            'lineno': r_lineno,
-            'message': r_message
-            }
-        except ValueError:
-          logging.debug('Failed to parse: "%s"', line)
-          record = {'message': line}
+      # If no data server, just print to stdout
+      if not self.data_server_writer:
+        logging.info(field_name + ': ' + message)
+        return
 
-        # Send the record off the the data server
-        self._write_record_to_data_server(field_name, json.dumps(record))
+      # Try parsing the expected format
+      format = '{asctime:S} {levelno:d} {levelname:S} ' \
+               '{filename:S}:{lineno:d} {message}'
+      result = parse(format, message)
 
+      # If that parse failed, try parsing with date and time as
+      # separate fields.
+      if not result:
+        format = '{ascdate:S} {asctime:S} {levelno:d} {levelname:S} ' \
+                 '{filename:S}:{lineno:d} {message}'
+        result = parse(format, message)
+        if result:
+          result['asctime'] = result['asc_date'] + 'T' + result['asctime'] + 'Z'
+
+      # If we managed to parse, put it into a dict to send
+      if result:
+        record = {
+          'asctime': result['asctime'],
+          'levelno': result['levelno'],
+          'levelname': result['levelname'],
+          'message': result['message']
+        }
       else:
-        # If no data server, just print to stdout
-        logging.info(logger + ': ' + line)
+        logging.info('Failed to parse: "%s"', message)
+        record = {'message': message}
+
+      logging.debug('Sending stderr to CDS: field: %s, record: %s',
+                    field_name, record)
+      # Send the record off the the data server
+      self._write_record_to_data_server(field_name, json.dumps(record))
+
 
     # Start of actual _read_and_send_logger_stderr() code.
     if configs is None:
