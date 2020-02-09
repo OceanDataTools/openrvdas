@@ -438,9 +438,8 @@ cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 chdir           = ${INSTALL_ROOT}/openrvdas
 # Django's wsgi file
 module          = django_gui.wsgi
-# the base directory from which bin/python is available
-## NOTE: 'home' not needed because we'll invoke uwsgi from venv path.
-# home            = /usr/local
+# Where to find bin/python
+home            = ${INSTALL_ROOT}/openrvdas/venv
 
 # process-related settings
 # master

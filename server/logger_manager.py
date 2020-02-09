@@ -67,7 +67,7 @@ HOSTNAME = socket.gethostname()
 DEFAULT_DATA_SERVER_WEBSOCKET = 'localhost:8766'
 
 DEFAULT_SUPERVISOR_DIR = '/var/tmp/openrvdas/supervisor'
-DEFAULT_SUPERVISOR_PORT = 8002
+DEFAULT_SUPERVISOR_PORT = 9002
 DEFAULT_SUPERVISOR_LOGFILE_DIR = '/var/log/openrvdas'
 
 ############################

@@ -395,8 +395,8 @@ cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 chdir           = ${INSTALL_ROOT}/openrvdas
 # Django's wsgi file
 module          = django_gui.wsgi
-# NOTE: 'home' not needed because we'll invoke uwsgi from venv path
-# home            = /usr
+# Where to find bin/python
+home            = ${INSTALL_ROOT}/openrvdas/venv
 
 # process-related settings
 # master
@@ -549,6 +549,11 @@ firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
 firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
 firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
 firewall-cmd -q --permanent --add-port=8002/tcp > /dev/null
+
+# Supervisord ports - 9001 is default system-wide supervisor
+# and 9002 is the captive supervisor that logger_manager uses.
+firewall-cmd -q --permanent --add-port=9001/tcp > /dev/null
+firewall-cmd -q --permanent --add-port=9002/tcp > /dev/null
 
 # Websocket ports
 firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
