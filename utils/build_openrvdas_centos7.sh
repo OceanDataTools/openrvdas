@@ -193,7 +193,7 @@ source $VENV_PATH/bin/activate  # activate virtual environment
 # Inside the venv, python *is* the right version, right?
 python3 -m pip install --upgrade pip
 pip3 install \
-  Django~=2.2.4 \
+  Django~=2.1 \
   pyserial \
   uwsgi \
   websockets \
@@ -245,19 +245,19 @@ EOF
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"data\" appears to already exist - no problem
 create database data character set utf8;
 EOF
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"openrvdas\" appears to already exist - no problem
-create database openrvdas character set utf8;
-EOF
+#mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"openrvdas\" appears to already exist - no problem
+#create database openrvdas character set utf8;
+#EOF
 
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+#GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 
-GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
+#GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
+#GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
 
-GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+#GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+#GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 echo Done setting up database
