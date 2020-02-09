@@ -475,7 +475,7 @@ autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/uwsgi.err.log
 stdout_logfile=/var/log/openrvdas/uwsgi.out.log
-;user=$RVDAS_USER
+user=$RVDAS_USER
 
 [program:cached_data_server]
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
@@ -603,6 +603,14 @@ mkdir -p /var/run/supervisor/
 chgrp $RVDAS_USER /var/run/supervisor
 systemctl enable supervisord
 systemctl restart supervisord # nginx uwsgi are now started by supervisor
+
+# Previous installations used nginx and uwsgi as a service. We need to
+# disable them if they're running.
+echo Disabling legacy services
+systemctl stop nginx 2> /dev/null || echo nginx not running
+systemctl disable nginx 2> /dev/null || echo nginx disabled
+systemctl stop uwsgi 2> /dev/null || echo uwsgi not running
+systemctl disable uwsgi 2> /dev/null || echo uwsgi disabled
 
 # Deactivate the virtual environment - we'll be calling all relevant
 # binaries using their venv paths, so don't need it.
