@@ -182,7 +182,6 @@ fi
 echo "############################################################################"
 
 echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
-echo Please enter sudo password if prompted...
 
 # Set up virtual environment
 #pip3 install virtualenv
@@ -193,7 +192,7 @@ source $VENV_PATH/bin/activate  # activate virtual environment
 # Inside the venv, python *is* the right version, right?
 python3 -m pip install --upgrade pip
 pip3 install \
-  Django~=2.1 \
+  Django==2.1 \
   pyserial \
   uwsgi \
   websockets \
@@ -256,8 +255,8 @@ GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DA
 #GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
 #GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
 
-#GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-#GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY 'test' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 echo Done setting up database
@@ -531,6 +530,7 @@ EOF
 # Set permissions
 echo "############################################################################"
 echo Setting SELINUX permissions and firewall ports
+echo This could take a while...
 
 # The old way of enabling things...
 # (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...

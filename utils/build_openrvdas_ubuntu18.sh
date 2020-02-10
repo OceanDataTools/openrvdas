@@ -180,7 +180,6 @@ fi
 echo "############################################################################"
 
 echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
-echo Please enter sudo password if prompted...
 
 # Set up virtual environment
 #pip3 install virtualenv
@@ -191,7 +190,7 @@ source $VENV_PATH/bin/activate  # activate virtual environment
 # Inside the venv, python *is* the right version, right?
 python3 -m pip install --upgrade pip
 pip3 install \
-  Django~=2.1 \
+  Django==2.1 \
   pyserial \
   uwsgi \
   websockets \
@@ -245,8 +244,8 @@ update-rc.d mysql defaults
 echo "#########################################################################"
 echo Setting up database users
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-#drop user if exists 'test'@'localhost';
-#create user 'test'@'localhost' identified by 'test';
+drop user if exists 'test'@'localhost';
+create user 'test'@'localhost' identified by 'test';
 
 drop user if exists 'rvdas'@'localhost';
 create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
@@ -257,9 +256,9 @@ GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
 #create database if not exists openrvdas character set utf8;
 #GRANT ALL PRIVILEGES ON openrvdas.* TO '$RVDAS_USER'@'localhost';
 
-#create database if not exists test character set utf8;
-#GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
-#GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
+create database if not exists test character set utf8;
+GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
+GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
 
 #GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
 #GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
@@ -574,7 +573,7 @@ systemctl stop nginx 2> /dev/null || echo nginx not running
 systemctl disable nginx 2> /dev/null || echo nginx disabled
 systemctl stop uwsgi 2> /dev/null || echo uwsgi not running
 systemctl disable uwsgi 2> /dev/null || echo uwsgi disabled
-    
+
 # Deactivate the virtual environment - we'll be calling all relevant
 # binaries using their venv paths, so don't need it.
 deactivate
