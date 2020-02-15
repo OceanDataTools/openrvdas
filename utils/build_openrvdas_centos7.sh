@@ -468,6 +468,7 @@ stdout_logfile=/var/log/openrvdas/nginx.out.log
 
 [program:uwsgi]
 command=${VENV_BIN}/uwsgi /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+stopsignal=INT
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
