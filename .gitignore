@@ -26,3 +26,6 @@ django_gui/uwsgi_params
 
 # PyCharm
 .idea/
+
+# virtualenv
+venv/
