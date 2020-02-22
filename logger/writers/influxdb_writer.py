@@ -9,14 +9,20 @@ from logger.utils import timestamp
 from logger.utils.formats import Text
 from logger.writers.writer import Writer
 
+
+INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
   from logger.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
-  from influxdb_client import InfluxDBClient
-  from influxdb_client.client.write_api import ASYNCHRONOUS
   INFLUXDB_SETTINGS_FOUND = True
 except ModuleNotFoundError:
   INFLUXDB_SETTINGS_FOUND = False
-  INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
+
+try:
+  from influxdb_client import InfluxDBClient
+  from influxdb_client.client.write_api import ASYNCHRONOUS
+  INFLUXDB_CLIENT_FOUND = True
+except ModuleNotFoundError:
+  INFLUXDB_CLIENT_FOUND = False
 
 import time
 
@@ -37,6 +43,9 @@ class InfluxDBWriter(Writer):
       raise RuntimeError('File logger/settings.py not found. InfluxDB '
                          'functionality is not available. Have you copied '
                          'over logger/settings.py.dist to settings.py?')
+    if not INFLUXDB_CLIENT_FOUND:
+      raise RuntimeError('Python module influxdb_client not found. Please '
+                         'install using pip prior to using InfluxDBWriter.')
 
     self.client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_AUTH_TOKEN, org=INFLUXDB_ORG)
 
