@@ -140,51 +140,68 @@ yum -y update
 
 yum install -y socat git nginx sqlite-devel readline-devel \
     wget gcc zlib-devel openssl-devel \
-    python36 python36-devel python36-pip firewalld supervisor
-[ -e /usr/bin/python3 ] || ln -s /usr/bin/python36 /usr/bin/python3
+    mariadb-server mariadb-devel mariadb-libs \
+    python3 python36-devel python36-pip firewalld supervisor
+#[ -e /usr/bin/python3 ] || ln -s /usr/bin/python36 /usr/bin/python3
 
-# Set permissions
 echo "############################################################################"
-echo Setting SELINUX permissions and firewall ports
-
-# The old way of enabling things...
-# (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
-
-# The new way of more selectively enabling things
-setsebool -P nis_enabled 1
-setsebool -P use_nfs_home_dirs 1
-setsebool -P httpd_can_network_connect 1
-semanage permissive -a httpd_t
-
-# Set up the firewall and open some holes in it
-systemctl start firewalld
-systemctl enable firewalld
-
-firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
-firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
-firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
-firewall-cmd -q --permanent --add-port=8002/tcp > /dev/null
-
-# Websocket ports
-firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
-firewall-cmd -q --permanent --add-port=8766/tcp > /dev/null # data
-
-# Our favorite UDP port for network data
-firewall-cmd -q --permanent --add-port=6224/udp > /dev/null
-firewall-cmd -q --permanent --add-port=6225/udp > /dev/null
-
-# For unittest access
-firewall-cmd -q --permanent --add-port=8000/udp > /dev/null
-firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
-firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
-firewall-cmd -q --reload > /dev/null
-
-# Install database stuff and set up as service.
-echo "############################################################################"
-echo Installing Mariadb \(MySQL replacement in CentOS 7\)...
-yum install -y mariadb-server mariadb-devel mariadb-libs # CentOS
+echo Enabling Mariadb \(MySQL replacement in CentOS 7\)...
 service mariadb restart              # to manually start db server
 systemctl enable mariadb.service     # to make it start on boot
+
+# Set up OpenRVDAS
+echo "############################################################################"
+echo Fetching and setting up OpenRVDAS code...
+
+if [ ! -d $INSTALL_ROOT ]; then
+  echo Making install directory "$INSTALL_ROOT"
+  sudo mkdir -p $INSTALL_ROOT
+  sudo chown ${RVDAS_USER} $INSTALL_ROOT
+fi
+
+cd $INSTALL_ROOT
+if [ ! -e openrvdas ]; then
+  echo Making openrvdas directory.
+  sudo mkdir openrvdas
+  sudo chown ${RVDAS_USER} openrvdas
+fi
+
+if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+  cd openrvdas
+  git checkout $OPENRVDAS_BRANCH
+  git pull
+else                              # If we don't already have an installation
+  sudo rm -rf openrvdas           # in case there's a non-git dir there
+  sudo mkdir openrvdas
+  sudo chown ${RVDAS_USER} openrvdas
+  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+  cd openrvdas
+fi
+
+# Set up virtual env and python-dependent code (Django and uWSGI, etc)
+echo "############################################################################"
+
+echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
+
+# Set up virtual environment
+#pip3 install virtualenv
+VENV_PATH=$INSTALL_ROOT/openrvdas/venv
+python3 -m venv $VENV_PATH
+source $VENV_PATH/bin/activate  # activate virtual environment
+
+# Inside the venv, python *is* the right version, right?
+python3 -m pip install --upgrade pip
+pip3 install \
+  Django==2.1 \
+  pyserial \
+  uwsgi \
+  websockets \
+  PyYAML \
+  parse \
+  mysqlclient \
+  mysql-connector \
+  psutil
+  # diskcache
 
 echo "############################################################################"
 echo Setting up database tables and permissions
@@ -227,72 +244,30 @@ EOF
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"data\" appears to already exist - no problem
 create database data character set utf8;
 EOF
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"openrvdas\" appears to already exist - no problem
-create database openrvdas character set utf8;
-EOF
+#mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"openrvdas\" appears to already exist - no problem
+#create database openrvdas character set utf8;
+#EOF
 
 mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+#GRANT ALL PRIVILEGES ON openrvdas.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
 
-GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
+#GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
+#GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
 
 GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY 'test' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 echo Done setting up database
 
-# Django and uWSGI
-echo "############################################################################"
-
-echo Installing Django, uWSGI and other Python-dependent packages
-#export PATH=/usr/local/bin:/usr/bin:$PATH
-/usr/bin/pip3 install Django==2.2 pyserial uwsgi psutil \
-                   websockets PyYAML parse mysqlclient mysql-connector diskcache
-# uWSGI configuration
-#Following instructions in https://www.tecmint.com/create-new-service-units-in-systemd/
-echo "############################################################################"
-echo Configuring uWSGI as service
-
-# Create uwsgi.service file
-cat > /etc/systemd/system/uwsgi.service <<EOF
-[Unit]
-Description = Run uWSGI as a daemon
-After = network.target
-
-[Service]
-ExecStart = /etc/uwsgi/scripts/start_uwsgi_daemon.sh
-RemainAfterExit=true
-ExecStop = /etc/uwsgi/scripts/top_uwsgi_daemon.sh
-
-[Install]
-WantedBy = multi-user.target
-EOF
-
-# Create uWSGI start/stop scripts
-[ -e /etc/uwsgi/scripts ] || mkdir -p /etc/uwsgi/scripts
-cat > /etc/uwsgi/scripts/start_uwsgi_daemon.sh <<EOF
-#!/bin/bash
-# Start uWSGI as a daemon; installed as service
-/usr/local/bin/uwsgi \
-  --emperor /etc/uwsgi/vassals \
-  --uid ${RVDAS_USER} --gid ${RVDAS_USER} \
-  --pidfile /etc/uwsgi/process.pid \
-  --daemonize /var/log/uwsgi-emperor.log
-EOF
-
-cat > /etc/uwsgi/scripts/stop_uwsgi_daemon.sh <<EOF
-#!/bin/bash
-/usr/local/bin/uwsgi --stop /etc/uwsgi/process.pid
-EOF
-
-chmod 755 /etc/uwsgi/scripts/start_uwsgi_daemon.sh /etc/uwsgi/scripts/stop_uwsgi_daemon.sh
-
 # Set up nginx
 echo "############################################################################"
 echo Setting up NGINX
+# Disable because we're going to run it via supervisor
+systemctl stop nginx
+systemctl disable nginx # NGINX seems to be enabled by default?
+
 [ -e /etc/nginx/sites-available ] || mkdir /etc/nginx/sites-available
 [ -e /etc/nginx/sites-enabled ] || mkdir /etc/nginx/sites-enabled
 
@@ -312,26 +287,15 @@ EOF
   echo Done setting up NGINX
 fi
 
-# Set up openrvdas
-echo "############################################################################"
-echo Fetching and setting up OpenRVDAS code...
-cd $INSTALL_ROOT
+#cat > /etc/profile.d/openrvdas.sh <<EOF
+#export PYTHONPATH=$PYTHONPATH:${INSTALL_ROOT}/openrvdas
+#export PATH=$PATH:${INSTALL_ROOT}/openrvdas/logger/listener
+#EOF
 
-if [ -e openrvdas ]; then
-  cd openrvdas
-  git checkout $OPENRVDAS_BRANCH
-  git pull
-else
-  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
-  cd openrvdas
-fi
-
-cat > /etc/profile.d/openrvdas.sh <<EOF
-export PYTHONPATH=$PYTHONPATH:${INSTALL_ROOT}/openrvdas
-export PATH=$PATH:${INSTALL_ROOT}/openrvdas/logger/listener
-EOF
-
-echo Initializing OpenRVDAS database...
+# Set up Django database
+echo "#########################################################################"
+echo Initializing Django database...
+cd ${INSTALL_ROOT}/openrvdas
 cp django_gui/settings.py.dist django_gui/settings.py
 sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
 sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
@@ -344,10 +308,12 @@ cp display/js/widgets/settings.js.dist \
    display/js/widgets/settings.js
 sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
 
-python3 manage.py makemigrations django_gui
-python3 manage.py migrate
+# NOTE: we're still inside virtualenv, so we're getting the python
+# that was installed under it.
+python manage.py makemigrations django_gui
+python manage.py migrate
 rm -rf static
-python3 manage.py collectstatic --no-input --clear --link -v 0
+python manage.py collectstatic --no-input --clear --link -v 0
 chmod -R og+rX static
 
 # A temporary hack to allow the display/ pages to be accessed by Django
@@ -392,10 +358,10 @@ server {
         autoindex on;
     }
     location /js {
-        alias /opt/openrvdas/display/js; # display pages
+        alias /${INSTALL_ROOT}/openrvdas/display/js; # display pages
     }
     location /css {
-        alias /opt/openrvdas/display/css; # display pages
+        alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
     }
 
     location /static {
@@ -428,9 +394,8 @@ cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 chdir           = ${INSTALL_ROOT}/openrvdas
 # Django's wsgi file
 module          = django_gui.wsgi
-# the base directory from which bin/python is available
-# Do an ln -s bin/python3 bin/python in this dir!!!
-home            = /usr
+# Where to find bin/python
+home            = ${INSTALL_ROOT}/openrvdas/venv
 
 # process-related settings
 # master
@@ -456,13 +421,13 @@ chmod 755 ${INSTALL_ROOT}/openrvdas
 chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
 chgrp -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
 
-# Make uWSGI run on boot
-systemctl enable uwsgi.service
-service uwsgi start
+## Make uWSGI run on boot - No, we will start through supervisord
+#systemctl enable uwsgi.service
+#service uwsgi start
 
-# Make nginx run on boot:
-systemctl enable nginx.service
-service nginx start
+## Make nginx run on boot - No, we will start through supervisord
+#systemctl enable nginx.service
+#service nginx start
 
 echo "############################################################################"
 echo Setting up openrvdas service with supervisord
@@ -475,22 +440,45 @@ else
     SUPERVISOR_AUTOSTART=true
 fi
 
+VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
+
 cat > /etc/supervisord.d/openrvdas.ini <<EOF
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
 [unix_http_server]
-file=/var/run/supervisor/supervisor.sock ; (the path to the socket file)
-chmod=0770                               ; socket file mode (default 0700)
+file=/var/run/supervisor/supervisor.sock   ; (the path to the socket file)
+chmod=0770                      ; socket file mode (default 0700)
 chown=nobody:${RVDAS_USER}
 
 [inet_http_server]
-port=*:8001
+port=*:9001
 username=${RVDAS_USER}
 password=${RVDAS_USER}
 
 ; The scripts we're going to run
+[program:nginx]
+command=/usr/sbin/nginx -g 'daemon off;'
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/nginx.err.log
+stdout_logfile=/var/log/openrvdas/nginx.out.log
+;user=$RVDAS_USER
+
+[program:uwsgi]
+command=${VENV_BIN}/uwsgi /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+stopsignal=INT
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$SUPERVISOR_AUTOSTART
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/uwsgi.err.log
+stdout_logfile=/var/log/openrvdas/uwsgi.out.log
+user=$RVDAS_USER
+
 [program:cached_data_server]
-command=/usr/bin/python3 server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -500,7 +488,8 @@ stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=/usr/bin/python3 server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor_in /var/tmp/openrvdas/supervisor -v
+command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor_in /var/tmp/openrvdas/supervisor -v
+environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$SUPERVISOR_AUTOSTART
 autorestart=true
@@ -510,7 +499,7 @@ stdout_logfile=/var/log/openrvdas/logger_manager.out.log
 user=$RVDAS_USER
 
 [program:simulate_nbp]
-command=/usr/bin/python3 logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
+command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
@@ -520,7 +509,7 @@ stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
 user=$RVDAS_USER
 
 [program:simulate_skq]
-command=/usr/bin/python3 logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
+command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
 directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
@@ -528,10 +517,59 @@ startretries=3
 stderr_logfile=/var/log/openrvdas/simulate_skq.err.log
 stdout_logfile=/var/log/openrvdas/simulate_skq.out.log
 user=$RVDAS_USER
+
+[group:web]
+programs=nginx,uwsgi
+
+[group:openrvdas]
+programs=logger_manager,cached_data_server
+
+[group:simulate]
+programs=simulate_nbp,simulate_skq
 EOF
 
-mkdir -p /var/run/supervisor/
-chgrp $RVDAS_USER /var/run/supervisor
+# Set permissions
+echo "############################################################################"
+echo Setting SELINUX permissions and firewall ports
+echo This could take a while...
+
+# The old way of enabling things...
+# (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
+
+# The new way of more selectively enabling things
+setsebool -P nis_enabled 1
+setsebool -P use_nfs_home_dirs 1
+setsebool -P httpd_can_network_connect 1
+semanage permissive -a httpd_t
+
+# Set up the firewall and open some holes in it
+systemctl start firewalld
+systemctl enable firewalld
+
+firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
+firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
+firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
+firewall-cmd -q --permanent --add-port=8002/tcp > /dev/null
+
+# Supervisord ports - 9001 is default system-wide supervisor
+# and 9002 is the captive supervisor that logger_manager uses.
+firewall-cmd -q --permanent --add-port=9001/tcp > /dev/null
+firewall-cmd -q --permanent --add-port=9002/tcp > /dev/null
+
+# Websocket ports
+firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
+firewall-cmd -q --permanent --add-port=8766/tcp > /dev/null # data
+
+# Our favorite UDP port for network data
+firewall-cmd -q --permanent --add-port=6224/udp > /dev/null
+firewall-cmd -q --permanent --add-port=6225/udp > /dev/null
+
+# For unittest access
+firewall-cmd -q --permanent --add-port=8000/udp > /dev/null
+firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
+firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
+firewall-cmd -q --reload > /dev/null
+echo Done setting SELINUX permissions
 
 #echo "############################################################################"
 #while true; do
@@ -561,9 +599,24 @@ chgrp $RVDAS_USER /var/run/supervisor
 #done
 
 echo "#########################################################################"
+echo Restarting services: supervisor
+mkdir -p /var/run/supervisor/
+chgrp $RVDAS_USER /var/run/supervisor
 systemctl enable supervisord
-echo Restarting services: nginx, uwsgi, supervisor
-systemctl restart nginx uwsgi supervisord
+systemctl restart supervisord # nginx uwsgi are now started by supervisor
+
+# Previous installations used nginx and uwsgi as a service. We need to
+# disable them if they're running.
+echo Disabling legacy services
+systemctl stop nginx 2> /dev/null || echo nginx not running
+systemctl disable nginx 2> /dev/null || echo nginx disabled
+systemctl stop uwsgi 2> /dev/null || echo uwsgi not running
+systemctl disable uwsgi 2> /dev/null || echo uwsgi disabled
+
+# Deactivate the virtual environment - we'll be calling all relevant
+# binaries using their venv paths, so don't need it.
+deactivate
+
 echo "#########################################################################"
 echo Installation complete - happy logging!
 echo

@@ -213,16 +213,12 @@ class SimSerial:
     self.timestamp = TimestampTransform() if timestamp else None
     self.time_format = time_format
     self.filebase = filebase
-
-    # Complain and do nothing if either read_port or write_port
-    # exist. We'll mark that we're going to do nothing by leaving
-    # self.serial_params as None.
     self.serial_params = None
+
+    # Complain, but go ahead if read_port or write_port exist.
     for path in [self.read_port, self.write_port]:
       if os.path.exists(path):
-        logging.error('Path %s exists; not creating virtual serial port for %s',
-                      path, prefix)
-        return
+        logging.warning('Path %s exists; overwriting!')
 
     # Do we have any files we can actually read from?
     if not glob.glob(filebase + '*'):

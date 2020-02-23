@@ -15,6 +15,7 @@ django_gui/migrations
 
 django_gui/settings.py
 database/settings.py
+logger/settings.py
 hapi/settings.py
 display/js/widgets/settings.js
 static/
@@ -25,3 +26,6 @@ django_gui/uwsgi_params
 
 # PyCharm
 .idea/
+
+# virtualenv
+venv/

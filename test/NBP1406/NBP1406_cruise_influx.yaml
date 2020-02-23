@@ -279,6 +279,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: PCOD
 
   PCOD->file/net:
     name: PCOD->file/net
@@ -319,6 +322,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: PCOD
 
   PCOD->file/net/db:
     name: PCOD->file/net/db
@@ -358,6 +364,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: PCOD
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -402,6 +412,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: cwnc
 
   cwnc->file/net:
     name: cwnc->file/net
@@ -441,6 +454,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: cwnc
 
   cwnc->file/net/db:
     name: cwnc->file/net/db
@@ -480,6 +496,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: cwnc
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -524,6 +544,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: gp02
 
   gp02->file/net:
     name: gp02->file/net
@@ -563,6 +586,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: gp02
 
   gp02->file/net/db:
     name: gp02->file/net/db
@@ -602,6 +628,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: gp02
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -646,6 +676,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: gyr1
 
   gyr1->file/net:
     name: gyr1->file/net
@@ -685,6 +718,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: gyr1
 
   gyr1->file/net/db:
     name: gyr1->file/net/db
@@ -724,6 +760,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: gyr1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -768,6 +808,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: adcp
 
   adcp->file/net:
     name: adcp->file/net
@@ -807,6 +850,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: adcp
 
   adcp->file/net/db:
     name: adcp->file/net/db
@@ -846,6 +892,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: adcp
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -890,6 +940,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: eng1
 
   eng1->file/net:
     name: eng1->file/net
@@ -929,6 +982,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: eng1
 
   eng1->file/net/db:
     name: eng1->file/net/db
@@ -968,6 +1024,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: eng1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1012,6 +1072,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: svp1
 
   svp1->file/net:
     name: svp1->file/net
@@ -1051,6 +1114,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: svp1
 
   svp1->file/net/db:
     name: svp1->file/net/db
@@ -1090,6 +1156,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: svp1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1134,6 +1204,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: twnc
 
   twnc->file/net:
     name: twnc->file/net
@@ -1173,6 +1246,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: twnc
 
   twnc->file/net/db:
     name: twnc->file/net/db
@@ -1212,6 +1288,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: twnc
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1256,6 +1336,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: mbdp
 
   mbdp->file/net:
     name: mbdp->file/net
@@ -1295,6 +1378,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: mbdp
 
   mbdp->file/net/db:
     name: mbdp->file/net/db
@@ -1334,6 +1420,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: mbdp
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1378,6 +1468,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: knud
 
   knud->file/net:
     name: knud->file/net
@@ -1417,6 +1510,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: knud
 
   knud->file/net/db:
     name: knud->file/net/db
@@ -1456,6 +1552,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: knud
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1500,6 +1600,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: grv1
 
   grv1->file/net:
     name: grv1->file/net
@@ -1539,6 +1642,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: grv1
 
   grv1->file/net/db:
     name: grv1->file/net/db
@@ -1578,6 +1684,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: grv1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1622,6 +1732,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: mwx1
 
   mwx1->file/net:
     name: mwx1->file/net
@@ -1661,6 +1774,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: mwx1
 
   mwx1->file/net/db:
     name: mwx1->file/net/db
@@ -1700,6 +1816,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: mwx1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1744,6 +1864,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: pco2
 
   pco2->file/net:
     name: pco2->file/net
@@ -1783,6 +1906,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: pco2
 
   pco2->file/net/db:
     name: pco2->file/net/db
@@ -1822,6 +1948,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: pco2
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1866,6 +1996,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: pguv
 
   pguv->file/net:
     name: pguv->file/net
@@ -1905,6 +2038,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: pguv
 
   pguv->file/net/db:
     name: pguv->file/net/db
@@ -1944,6 +2080,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: pguv
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1988,6 +2128,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: s330
 
   s330->file/net:
     name: s330->file/net
@@ -2027,6 +2170,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: s330
 
   s330->file/net/db:
     name: s330->file/net/db
@@ -2066,6 +2212,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: s330
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2110,6 +2260,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: tsg1
 
   tsg1->file/net:
     name: tsg1->file/net
@@ -2149,6 +2302,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: tsg1
 
   tsg1->file/net/db:
     name: tsg1->file/net/db
@@ -2188,6 +2344,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: tsg1
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2232,6 +2392,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: rtmp
 
   rtmp->file/net:
     name: rtmp->file/net
@@ -2271,6 +2434,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: rtmp
 
   rtmp->file/net/db:
     name: rtmp->file/net/db
@@ -2310,6 +2476,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: rtmp
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2354,6 +2524,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: hdas
 
   hdas->file/net:
     name: hdas->file/net
@@ -2393,6 +2566,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: hdas
 
   hdas->file/net/db:
     name: hdas->file/net/db
@@ -2432,6 +2608,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: hdas
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2476,6 +2656,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: hdas
 
   tsg2->file/net:
     name: tsg2->file/net
@@ -2515,6 +2698,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: tsg2
 
   tsg2->file/net/db:
     name: tsg2->file/net/db
@@ -2554,6 +2740,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: tsg2
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2598,6 +2788,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: seap
 
   seap->file/net:
     name: seap->file/net
@@ -2637,6 +2830,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: seap
 
   seap->file/net/db:
     name: seap->file/net/db
@@ -2676,6 +2872,10 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
+        - class: InfluxDBWriter     # Write to InfluxDB
+          kwargs:
+            bucket_name: seap
+
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2853,4 +3053,3 @@ configs:
     - class: CachedDataWriter
       kwargs:
         data_server: localhost:8766
-

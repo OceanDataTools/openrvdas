@@ -16,16 +16,26 @@ from logger.writers.network_writer import NetworkWriter
 ################################################################################
 class UDPWriter(NetworkWriter):
   """Write UDP packets to network."""
-  def __init__(self, port, destination='', interface='',
+  def __init__(self, port, destination='',
+               interface='', # DEPRECATED!
                ttl=3, num_retry=2, eol=''):
     """
     Write text records to a network socket.
     ```
     port         Port to which packets should be sent
 
-    destination  If specified, either multicast group or unicast IP addr
+    destination  The destination to send UDP packets to. If omitted (or None)
+                 is equivalent to specifying destination='<broadcast>',
+                 which will send to all available interfaces.
 
-    interface    If specified, the network interface to send from
+                 Setting destination='255.255.255.255' means broadcast
+                 to local network. To broadcast to a specific interface,
+                 set destination to the broadcast address for that network.
+
+    interface    DEPRECATED - If specified, the network interface to
+                 send from. Preferred usage is to use the 'destination'
+                 argument and specify the broadcast address of the desired
+                 network.
 
     ttl          For multicast, how many network hops to allow
 
@@ -41,6 +51,14 @@ class UDPWriter(NetworkWriter):
 
     self.target_str = 'interface: %s, destination: %s, port: %d' % (interface, destination, port)
 
+    if interface:
+      logging.warning('DEPRECATED: UDPWriter(interface=%s). Instead of the '
+                      '"interface" parameter, UDPWriters should use the'
+                      '"destination" parameter. To broadcast over a specific '
+                      'interface, specify UDPWriter(destination=<interface '
+                      'broadcast address>) address as the destination.',
+                      interface)
+
     if interface and destination:
       ipaddress.ip_address(interface) # throw a ValueError if bad addr
       ipaddress.ip_address(destination)
@@ -51,6 +69,10 @@ class UDPWriter(NetworkWriter):
                       'interface and destination. Ignoring interface '
                       'specification.')
 
+    # THE FOLLOWING USE OF interface PARAMETER IS PARTIALLY BROKEN: it
+    # will fail if the netmask is not 255.255.255.0. This is why we
+    # deprecate the interface param.
+    #
     # If they've specified the interface we're supposed to be sending
     # via, then we have to do a little legerdemain: we're going to
     # connect to the broadcast address of the specified interface as

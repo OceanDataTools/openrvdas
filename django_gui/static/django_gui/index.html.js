@@ -270,7 +270,7 @@ function update_cruise_definition(timestamp, cruise_definition) {
   for (var logger_name in loggers) {
     //console.log('setting up logger ' + logger_name);
     var logger = loggers[logger_name];
-    global_logger_stderr[logger_name] = {};
+    global_logger_stderr[logger_name] = [];
 
     // table row creation
     var tr = document.createElement('tr');
@@ -433,33 +433,22 @@ function add_to_stderr(logger_name, value_list) {
       if (message['filename'] !== undefined) {
         prefix += message['filename'] + ':' + message['lineno'] + ' ';
       }
-      global_logger_stderr[logger_name][prefix + message['message']] = true;
+      var msg = message['message'].replace('\n','<br>');
+      global_logger_stderr[logger_name].push(prefix + msg);
+
     } catch (e) {
       // If not JSON, but a string that looks like a log line go ahead
       // and push it into the list.
       if (looks_like_log_line(message)) {
-        global_logger_stderr[logger_name][message] = true;
+        global_logger_stderr[logger_name].push(message);
       } else {
         console.log('Skipping unparseable log line: ' + message);
       }
     }
   }
-  // Once all messages have been added, sort, then put in place in
-  // proper divs
-  // Fetch the element where we're going to put the messages
-  var stderr_messages = logger_stderr(logger_name);
-  stderr_div.innerHTML = stderr_messages.join('<br>\n');
+  // Once all messages have been added, put in place in proper divs
+  stderr_div.innerHTML = global_logger_stderr[logger_name].join('<br>\n');
   stderr_div.scrollTop = stderr_div.scrollHeight;  // scroll to bottom
-}
-
-////////////////////////////
-// Return a list of the named logger's stderr messages.
-function logger_stderr(logger_name) {
-  var this_logger_stderr = global_logger_stderr[logger_name];
-  if (this_logger_stderr == undefined) {
-    return [];
-  }
-  return Object.keys(this_logger_stderr).sort()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
