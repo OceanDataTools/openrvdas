@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.7.4" />
 <title>server.cached_data_server API documentation</title>
 <meta name="description" content="Accept data in DASRecord or dict format via the cache_record() method,
 then serve it to anyone who connects via a websocket. A
@@ -11,7 +11,7 @@ CachedDataServer can be …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
@@ -96,7 +96,9 @@ serve_requests() for insight):</p>
          in without the same record size limits of a UDP packet).
 </code></pre>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">#!/usr/bin/env python3
 &#34;&#34;&#34;Accept data in DASRecord or dict format via the cache_record() method,
 then serve it to anyone who connects via a websocket. A
@@ -187,9 +189,7 @@ import websockets
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from logger.writers.text_file_writer import TextFileWriter
-from logger.utils.subsample import subsample
 from logger.utils.das_record import DASRecord
-from logger.utils.stderr_logging import setUpStdErrLogging
 from logger.utils.stderr_logging import StdErrLoggingHandler
 
 ############################
@@ -409,11 +409,11 @@ class RecordCache:
     &#34;&#34;&#34;
     logging.info(&#39;Loading from disk at %s&#39;, disk_cache)
     if not disk_cache:
-      logging.warning(&#39;load_from_disk called, but no disk_cache defined&#39;)
+      logging.info(&#39;load_from_disk called, but no disk_cache defined&#39;)
       return
 
     if not os.path.exists(disk_cache):
-      logging.warning(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
+      logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
       return
 
     field_files = [f for f in os.listdir(disk_cache)
@@ -427,7 +427,7 @@ class RecordCache:
           with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
             self.data[field] = json.load(cache_file)
 
-      except json.decoder.JSONDecodeError:
+      except (json.decoder.JSONDecodeError, UnicodeDecodeError):
         logging.warning(&#39;Failed to parse cache for %s&#39;, field)
 
 ############################
@@ -479,26 +479,6 @@ class WebSocketConnection:
         value is a dict of the format
         ```
           {field_name:{seconds:600}, field_name:{seconds:0},...}
-        ```
-
-        Each field name may also have a &#39;subsample&#39; specification
-        that will cause the CachedDataServer to preprocess its data
-        via the subsample() function in logger/utils/subsample.py:
-        ```
-          {
-            field_name1:{
-              seconds:600,
-              subsample:{
-                &#39;type&#39;:&#39;boxcar_average&#39;, &#39;window&#39;: 30, &#39;interval&#39;: 30
-              }
-            },
-            field_name1:{
-              seconds:600,
-              subsample:{
-                &#39;type&#39;:&#39;boxcar_average&#39;, &#39;window&#39;: 15, &#39;interval&#39;: 5
-              }
-            }
-          }
         ```
 
         The entire specification may also have a field called
@@ -612,6 +592,7 @@ class WebSocketConnection:
                 is_error=True)
               continue
 
+          # Which fields do they want?
           requested_fields = request.get(&#39;fields&#39;, None)
           if not requested_fields:
             await self.send_json_response(
@@ -619,6 +600,10 @@ class WebSocketConnection:
                &#39;error&#39;:&#39;no fields found in subscribe request&#39;},
               is_error=True)
             continue
+
+          # What format do they want output in? field_dict?
+          # record_list? By default, use field_dict.
+          requested_format = request.get(&#39;format&#39;, &#39;field_dict&#39;)
 
           # Parse out request field names and number of back seconds
           # requested. Encode that as &#39;last timestamp sent&#39;, unless back
@@ -633,10 +618,7 @@ class WebSocketConnection:
             else:
               back_seconds = field_spec.get(&#39;seconds&#39;, 0)
 
-            # If we&#39;re going to process the values with an subsampler
-            if &#39;subsample&#39; in field_spec:
-              field_timestamps[field_name] = 0
-            elif back_seconds == -1:
+            if back_seconds == -1:
               field_timestamps[field_name] = -1
             else:
               field_timestamps[field_name] = now - back_seconds
@@ -656,59 +638,129 @@ class WebSocketConnection:
               is_error=True)
             continue
 
+          ##########
           results = {}
-          for field_name, field_spec in requested_fields.items():
-           if not field_name in self.cache.locks:
-             logging.debug(&#39;No data for requested field %s&#39;, field_name)
-             continue
-           with self.cache.locks[field_name]:
-            latest_timestamp = field_timestamps.get(field_name, 0)
-            field_cache = self.cache.data.get(field_name, None)
-            if field_cache is None:
-              logging.debug(&#39;No cached data for %s&#39;, field_name)
-              continue
+          if requested_format == &#39;field_dict&#39;:
+            for field_name, field_spec in requested_fields.items():
+             if not field_name in self.cache.locks:
+               logging.debug(&#39;No data for requested field %s&#39;, field_name)
+               continue
+             with self.cache.locks[field_name]:
+              latest_timestamp = field_timestamps.get(field_name, 0)
+              field_cache = self.cache.data.get(field_name, None)
+              if field_cache is None:
+                logging.debug(&#39;No cached data for %s&#39;, field_name)
+                continue
 
-            # If no data for requested field, skip.
-            if not field_cache or not field_cache[-1]:
-              continue
+              # If no data for requested field, skip.
+              if not field_cache or not field_cache[-1]:
+                continue
 
-            # Check if we&#39;re returning raw values or
-            # processing/averaging them somehow.
-            subsample_spec = field_spec.get(&#39;subsample&#39;, None)
-            if subsample_spec:
-              field_results = subsample(subsample_spec, field_cache,
-                                        latest_timestamp, now)
-              results[field_name] = field_results
+              # Check if we&#39;re returning raw values or
+              # processing/averaging them somehow.
+              subsample_spec = field_spec.get(&#39;subsample&#39;, None)
+              if subsample_spec:
+                field_results = subsample(subsample_spec, field_cache,
+                                          latest_timestamp, now)
+                results[field_name] = field_results
 
-              # If we did get results, store the timestamp of that
-              # last one.
-              if field_results:
-                field_timestamps[field_name] = field_results[-1][0]
-              continue
+                # If we did get results, store the timestamp of that
+                # last one.
+                if field_results:
+                  field_timestamps[field_name] = field_results[-1][0]
+                continue
 
-            # If special case -1, they want just single most recent
-            # value, then future results. Grab last value, then set its
-            # timestamp as the last one we&#39;ve seen.
-            elif latest_timestamp == -1:
-              last_value = field_cache[-1]
-              results[field_name] = [ last_value ]
-              field_timestamps[field_name] = last_value[0] # ts of last value
-              continue
+              # If special case -1, they want just single most recent
+              # value, then future results. Grab last value, then set its
+              # timestamp as the last one we&#39;ve seen.
+              elif latest_timestamp == -1:
+                last_value = field_cache[-1]
+                results[field_name] = [ last_value ]
+                field_timestamps[field_name] = last_value[0] # ts of last value
+                continue
 
-            # Otherwise - if no data newer than the latest
-            # timestamp we&#39;ve already sent, skip,
-            elif not field_cache[-1][0] &gt; latest_timestamp:
-              continue
+              # Otherwise - if no data newer than the latest
+              # timestamp we&#39;ve already sent, skip,
+              elif not field_cache[-1][0] &gt; latest_timestamp:
+                continue
 
-            # Otherwise, copy over records arrived since
-            # latest_timestamp and update the latest_timestamp sent
-            # (first element of last pair in field_cache).
-            else:
-              field_results = [pair for pair in field_cache if
-                               pair[0] &gt; latest_timestamp]
-              results[field_name] = field_results
-              if field_results:
-                field_timestamps[field_name] = field_results[-1][0]
+              # Otherwise, copy over records arrived since
+              # latest_timestamp and update the latest_timestamp sent
+              # (first element of last pair in field_cache).
+              else:
+                field_results = [pair for pair in field_cache if
+                                 pair[0] &gt; latest_timestamp]
+                results[field_name] = field_results
+                if field_results:
+                  field_timestamps[field_name] = field_results[-1][0]
+
+          ##########
+          # If not outputting data as a field dict, output as a list
+          # of records.
+          elif requested_format == &#39;record_list&#39;:
+            records = {}
+            for field_name, field_spec in requested_fields.items():
+              if not field_name in self.cache.locks:
+                logging.debug(&#39;No data for requested field %s&#39;, field_name)
+                continue
+              with self.cache.locks[field_name]:
+                latest_timestamp = field_timestamps.get(field_name, 0)
+                field_cache = self.cache.data.get(field_name, None)
+
+                if not field_cache or not field_cache[-1]:
+                  logging.debug(&#39;No cached data for %s&#39;, field_name)
+                  continue
+
+                # If latest_timestamp is special case -1, they want just
+                # single most recent value, then future results. Grab
+                # last value, then set its timestamp as the last one
+                # we&#39;ve seen.
+                elif latest_timestamp == -1:
+                  last_ts, last_value = field_cache[-1]
+                  if not last_ts in records:
+                    records[last_ts] = {}
+                  records[last_ts][field_name] = last_value
+                  field_timestamps[field_name] = last_ts
+                  continue
+
+                # Otherwise - if no data newer than the latest
+                # timestamp we&#39;ve already sent, skip,
+                elif not field_cache[-1][0] &gt; latest_timestamp:
+                  continue
+
+                # Otherwise, copy over records arrived since
+                # latest_timestamp and update the latest_timestamp sent
+                # (first element of last pair in field_cache).
+                else:
+                  # Get the new (ts, value) pairs for this field
+                  field_results = [pair for pair in field_cache
+                                   if pair[0] &gt; latest_timestamp]
+
+                  # We know field_results is non-empty because of previous
+                  # elif, so new latest timestamp is last ts in it.
+                  field_timestamps[field_name] = field_results[-1][0]
+
+                  # Collate values by timestamp, folding into values for
+                  # other fields.
+                  for ts, value in field_results:
+                    if not ts in records:
+                      records[ts] = {}
+                    records[ts][field_name] = value
+
+            # Create and send a list with one DASRecord-like dict for
+            # each timestamp.
+            results = [{&#39;timestamp&#39;:ts, &#39;fields&#39;:records[ts]}
+                       for ts in sorted(records)]
+
+          # If unknown requested format
+          else:
+            mesg = (&#39;Unrecognized requested format: %s; valid formats are &#39;
+                    &#39;&#34;field_dict&#34; and &#34;record_list&#34;&#39; % requested_format)
+            await self.send_json_response(
+              {&#39;status&#39;: 400,
+               &#39;error&#39;: &#39;Unrecognized requested format: %s; valid formats are &#39;
+               &#39;&#34;field_dict&#34; and &#34;record_list&#34;&#39; % requested_format},
+              is_error=True)
 
           logging.debug(&#39;Websocket results: %s...&#39;, str(results)[0:100])
 
@@ -809,6 +861,7 @@ class CachedDataServer:
     self.back_seconds = back_seconds
     self.max_records = max_records
     self.cleanup_interval = cleanup_interval
+    self.event_loop = event_loop
 
     self.cache = RecordCache()
 
@@ -992,7 +1045,7 @@ if __name__ == &#39;__main__&#39;:
                       help=&#39;How often to clean old data out of the cache.&#39;)
 
   parser.add_argument(&#39;--interval&#39;, dest=&#39;interval&#39;, action=&#39;store&#39;,
-                      type=float, default=1,
+                      type=float, default=0.5,
                       help=&#39;How many seconds to sleep between successive &#39;
                       &#39;sends of data to clients.&#39;)
 
@@ -1011,7 +1064,6 @@ if __name__ == &#39;__main__&#39;:
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   logging.basicConfig(format=LOGGING_FORMAT)
   logging.getLogger().setLevel(log_level)
-  setUpStdErrLogging(log_level=log_level)
   if args.stderr_file:
     stderr_writer = [TextFileWriter(filename=args.stderr_file,
                                     split_by_date=True)]
@@ -1125,7 +1177,9 @@ from in-memory cache</p>
 <p>event_loop
 If not None, the event loop to use for websocket events</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class CachedDataServer:
   &#34;&#34;&#34;Class that caches field:value pairs passed to it in either a
   DASRecord or a simple dict. It also establishes a websocket server
@@ -1193,6 +1247,7 @@ If not None, the event loop to use for websocket events</p></section>
     self.back_seconds = back_seconds
     self.max_records = max_records
     self.cleanup_interval = cleanup_interval
+    self.event_loop = event_loop
 
     self.cache = RecordCache()
 
@@ -1345,7 +1400,9 @@ If not None, the event loop to use for websocket events</p></section>
 <dd>
 <section class="desc"><p>Cache the passed record.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def cache_record(self, record):
   &#34;&#34;&#34;Cache the passed record.&#34;&#34;&#34;
   self.cache.cache_record(record)</code></pre>
@@ -1357,7 +1414,9 @@ If not None, the event loop to use for websocket events</p></section>
 <dd>
 <section class="desc"><p>Clear out records older than oldest seconds.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def cleanup_loop(self):
   &#34;&#34;&#34;Clear out records older than oldest seconds.&#34;&#34;&#34;
   while not self.quit_flag:
@@ -1378,7 +1437,9 @@ If not None, the event loop to use for websocket events</p></section>
 <dd>
 <section class="desc"><p>Exit the loop and shut down all loggers.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def quit(self):
   &#34;&#34;&#34;Exit the loop and shut down all loggers.
   &#34;&#34;&#34;
@@ -1406,7 +1467,9 @@ If not None, the event loop to use for websocket events</p></section>
 <section class="desc"><p>Structure for storing/retrieving record data and metadata.</p>
 <p>In-memory storage for key:value pairs.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class RecordCache:
   &#34;&#34;&#34;Structure for storing/retrieving record data and metadata.&#34;&#34;&#34;
   def __init__(self):
@@ -1623,11 +1686,11 @@ If not None, the event loop to use for websocket events</p></section>
     &#34;&#34;&#34;
     logging.info(&#39;Loading from disk at %s&#39;, disk_cache)
     if not disk_cache:
-      logging.warning(&#39;load_from_disk called, but no disk_cache defined&#39;)
+      logging.info(&#39;load_from_disk called, but no disk_cache defined&#39;)
       return
 
     if not os.path.exists(disk_cache):
-      logging.warning(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
+      logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
       return
 
     field_files = [f for f in os.listdir(disk_cache)
@@ -1641,7 +1704,7 @@ If not None, the event loop to use for websocket events</p></section>
           with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
             self.data[field] = json.load(cache_file)
 
-      except json.decoder.JSONDecodeError:
+      except (json.decoder.JSONDecodeError, UnicodeDecodeError):
         logging.warning(&#39;Failed to parse cache for %s&#39;, field)</code></pre>
 </details>
 <h3>Methods</h3>
@@ -1705,7 +1768,9 @@ cache of metadata about the fields:</p>
 RecordParser (and its enclosing ParseTransform) if the parser's
 <code>metadata_interval</code> value is not None.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def cache_record(self, record):
   &#34;&#34;&#34;Add the passed record to the cache.
 
@@ -1839,7 +1904,9 @@ seconds, but keep at least one (most recent) value.</p>
 <p>If max_records is non-zero, truncate to that many of the most
 recent records.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def cleanup(self, oldest=0, max_records=0):
   &#34;&#34;&#34;Remove any data from cache with a timestamp older than &#39;oldest&#39;
   seconds, but keep at least one (most recent) value.
@@ -1876,7 +1943,9 @@ recent records.</p></section>
 <section class="desc"><p>Return a dict of metadata for the specified list of fields. If no
 fields are specified, return metadata for all fields.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_metadata(self, fields=None):
   &#34;&#34;&#34;Return a dict of metadata for the specified list of fields. If no
   fields are specified, return metadata for all fields.
@@ -1894,7 +1963,9 @@ fields are specified, return metadata for all fields.</p></section>
 <dd>
 <section class="desc"><p>Return a list of all keys in the cache.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def keys(self):
   &#34;&#34;&#34;Return a list of all keys in the cache.&#34;&#34;&#34;
   return list(self.data.keys())</code></pre>
@@ -1906,17 +1977,19 @@ fields are specified, return metadata for all fields.</p></section>
 <dd>
 <section class="desc"><p>Load the data dict from directory of JSON-encoded cache files.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def load_from_disk(self, disk_cache):
   &#34;&#34;&#34;Load the data dict from directory of JSON-encoded cache files.
   &#34;&#34;&#34;
   logging.info(&#39;Loading from disk at %s&#39;, disk_cache)
   if not disk_cache:
-    logging.warning(&#39;load_from_disk called, but no disk_cache defined&#39;)
+    logging.info(&#39;load_from_disk called, but no disk_cache defined&#39;)
     return
 
   if not os.path.exists(disk_cache):
-    logging.warning(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
+    logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
     return
 
   field_files = [f for f in os.listdir(disk_cache)
@@ -1930,7 +2003,7 @@ fields are specified, return metadata for all fields.</p></section>
         with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
           self.data[field] = json.load(cache_file)
 
-    except json.decoder.JSONDecodeError:
+    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
       logging.warning(&#39;Failed to parse cache for %s&#39;, field)</code></pre>
 </details>
 </dd>
@@ -1941,7 +2014,9 @@ fields are specified, return metadata for all fields.</p></section>
 <section class="desc"><p>Create one JSON-encoded cache file per field in the directory named
 by disk_cache.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def save_to_disk(self, disk_cache):
   &#34;&#34;&#34;Create one JSON-encoded cache file per field in the directory named
   by disk_cache.
@@ -1972,7 +2047,9 @@ by disk_cache.</p></section>
 <dd>
 <section class="desc"><p>Handle the websocket connection, serving data as requested.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class WebSocketConnection:
   &#34;&#34;&#34;Handle the websocket connection, serving data as requested.&#34;&#34;&#34;
   ############################
@@ -2021,26 +2098,6 @@ by disk_cache.</p></section>
         value is a dict of the format
         ```
           {field_name:{seconds:600}, field_name:{seconds:0},...}
-        ```
-
-        Each field name may also have a &#39;subsample&#39; specification
-        that will cause the CachedDataServer to preprocess its data
-        via the subsample() function in logger/utils/subsample.py:
-        ```
-          {
-            field_name1:{
-              seconds:600,
-              subsample:{
-                &#39;type&#39;:&#39;boxcar_average&#39;, &#39;window&#39;: 30, &#39;interval&#39;: 30
-              }
-            },
-            field_name1:{
-              seconds:600,
-              subsample:{
-                &#39;type&#39;:&#39;boxcar_average&#39;, &#39;window&#39;: 15, &#39;interval&#39;: 5
-              }
-            }
-          }
         ```
 
         The entire specification may also have a field called
@@ -2154,6 +2211,7 @@ by disk_cache.</p></section>
                 is_error=True)
               continue
 
+          # Which fields do they want?
           requested_fields = request.get(&#39;fields&#39;, None)
           if not requested_fields:
             await self.send_json_response(
@@ -2161,6 +2219,10 @@ by disk_cache.</p></section>
                &#39;error&#39;:&#39;no fields found in subscribe request&#39;},
               is_error=True)
             continue
+
+          # What format do they want output in? field_dict?
+          # record_list? By default, use field_dict.
+          requested_format = request.get(&#39;format&#39;, &#39;field_dict&#39;)
 
           # Parse out request field names and number of back seconds
           # requested. Encode that as &#39;last timestamp sent&#39;, unless back
@@ -2175,10 +2237,7 @@ by disk_cache.</p></section>
             else:
               back_seconds = field_spec.get(&#39;seconds&#39;, 0)
 
-            # If we&#39;re going to process the values with an subsampler
-            if &#39;subsample&#39; in field_spec:
-              field_timestamps[field_name] = 0
-            elif back_seconds == -1:
+            if back_seconds == -1:
               field_timestamps[field_name] = -1
             else:
               field_timestamps[field_name] = now - back_seconds
@@ -2198,59 +2257,129 @@ by disk_cache.</p></section>
               is_error=True)
             continue
 
+          ##########
           results = {}
-          for field_name, field_spec in requested_fields.items():
-           if not field_name in self.cache.locks:
-             logging.debug(&#39;No data for requested field %s&#39;, field_name)
-             continue
-           with self.cache.locks[field_name]:
-            latest_timestamp = field_timestamps.get(field_name, 0)
-            field_cache = self.cache.data.get(field_name, None)
-            if field_cache is None:
-              logging.debug(&#39;No cached data for %s&#39;, field_name)
-              continue
+          if requested_format == &#39;field_dict&#39;:
+            for field_name, field_spec in requested_fields.items():
+             if not field_name in self.cache.locks:
+               logging.debug(&#39;No data for requested field %s&#39;, field_name)
+               continue
+             with self.cache.locks[field_name]:
+              latest_timestamp = field_timestamps.get(field_name, 0)
+              field_cache = self.cache.data.get(field_name, None)
+              if field_cache is None:
+                logging.debug(&#39;No cached data for %s&#39;, field_name)
+                continue
 
-            # If no data for requested field, skip.
-            if not field_cache or not field_cache[-1]:
-              continue
+              # If no data for requested field, skip.
+              if not field_cache or not field_cache[-1]:
+                continue
 
-            # Check if we&#39;re returning raw values or
-            # processing/averaging them somehow.
-            subsample_spec = field_spec.get(&#39;subsample&#39;, None)
-            if subsample_spec:
-              field_results = subsample(subsample_spec, field_cache,
-                                        latest_timestamp, now)
-              results[field_name] = field_results
+              # Check if we&#39;re returning raw values or
+              # processing/averaging them somehow.
+              subsample_spec = field_spec.get(&#39;subsample&#39;, None)
+              if subsample_spec:
+                field_results = subsample(subsample_spec, field_cache,
+                                          latest_timestamp, now)
+                results[field_name] = field_results
 
-              # If we did get results, store the timestamp of that
-              # last one.
-              if field_results:
-                field_timestamps[field_name] = field_results[-1][0]
-              continue
+                # If we did get results, store the timestamp of that
+                # last one.
+                if field_results:
+                  field_timestamps[field_name] = field_results[-1][0]
+                continue
 
-            # If special case -1, they want just single most recent
-            # value, then future results. Grab last value, then set its
-            # timestamp as the last one we&#39;ve seen.
-            elif latest_timestamp == -1:
-              last_value = field_cache[-1]
-              results[field_name] = [ last_value ]
-              field_timestamps[field_name] = last_value[0] # ts of last value
-              continue
+              # If special case -1, they want just single most recent
+              # value, then future results. Grab last value, then set its
+              # timestamp as the last one we&#39;ve seen.
+              elif latest_timestamp == -1:
+                last_value = field_cache[-1]
+                results[field_name] = [ last_value ]
+                field_timestamps[field_name] = last_value[0] # ts of last value
+                continue
 
-            # Otherwise - if no data newer than the latest
-            # timestamp we&#39;ve already sent, skip,
-            elif not field_cache[-1][0] &gt; latest_timestamp:
-              continue
+              # Otherwise - if no data newer than the latest
+              # timestamp we&#39;ve already sent, skip,
+              elif not field_cache[-1][0] &gt; latest_timestamp:
+                continue
 
-            # Otherwise, copy over records arrived since
-            # latest_timestamp and update the latest_timestamp sent
-            # (first element of last pair in field_cache).
-            else:
-              field_results = [pair for pair in field_cache if
-                               pair[0] &gt; latest_timestamp]
-              results[field_name] = field_results
-              if field_results:
-                field_timestamps[field_name] = field_results[-1][0]
+              # Otherwise, copy over records arrived since
+              # latest_timestamp and update the latest_timestamp sent
+              # (first element of last pair in field_cache).
+              else:
+                field_results = [pair for pair in field_cache if
+                                 pair[0] &gt; latest_timestamp]
+                results[field_name] = field_results
+                if field_results:
+                  field_timestamps[field_name] = field_results[-1][0]
+
+          ##########
+          # If not outputting data as a field dict, output as a list
+          # of records.
+          elif requested_format == &#39;record_list&#39;:
+            records = {}
+            for field_name, field_spec in requested_fields.items():
+              if not field_name in self.cache.locks:
+                logging.debug(&#39;No data for requested field %s&#39;, field_name)
+                continue
+              with self.cache.locks[field_name]:
+                latest_timestamp = field_timestamps.get(field_name, 0)
+                field_cache = self.cache.data.get(field_name, None)
+
+                if not field_cache or not field_cache[-1]:
+                  logging.debug(&#39;No cached data for %s&#39;, field_name)
+                  continue
+
+                # If latest_timestamp is special case -1, they want just
+                # single most recent value, then future results. Grab
+                # last value, then set its timestamp as the last one
+                # we&#39;ve seen.
+                elif latest_timestamp == -1:
+                  last_ts, last_value = field_cache[-1]
+                  if not last_ts in records:
+                    records[last_ts] = {}
+                  records[last_ts][field_name] = last_value
+                  field_timestamps[field_name] = last_ts
+                  continue
+
+                # Otherwise - if no data newer than the latest
+                # timestamp we&#39;ve already sent, skip,
+                elif not field_cache[-1][0] &gt; latest_timestamp:
+                  continue
+
+                # Otherwise, copy over records arrived since
+                # latest_timestamp and update the latest_timestamp sent
+                # (first element of last pair in field_cache).
+                else:
+                  # Get the new (ts, value) pairs for this field
+                  field_results = [pair for pair in field_cache
+                                   if pair[0] &gt; latest_timestamp]
+
+                  # We know field_results is non-empty because of previous
+                  # elif, so new latest timestamp is last ts in it.
+                  field_timestamps[field_name] = field_results[-1][0]
+
+                  # Collate values by timestamp, folding into values for
+                  # other fields.
+                  for ts, value in field_results:
+                    if not ts in records:
+                      records[ts] = {}
+                    records[ts][field_name] = value
+
+            # Create and send a list with one DASRecord-like dict for
+            # each timestamp.
+            results = [{&#39;timestamp&#39;:ts, &#39;fields&#39;:records[ts]}
+                       for ts in sorted(records)]
+
+          # If unknown requested format
+          else:
+            mesg = (&#39;Unrecognized requested format: %s; valid formats are &#39;
+                    &#39;&#34;field_dict&#34; and &#34;record_list&#34;&#39; % requested_format)
+            await self.send_json_response(
+              {&#39;status&#39;: 400,
+               &#39;error&#39;: &#39;Unrecognized requested format: %s; valid formats are &#39;
+               &#39;&#34;field_dict&#34; and &#34;record_list&#34;&#39; % requested_format},
+              is_error=True)
 
           logging.debug(&#39;Websocket results: %s...&#39;, str(results)[0:100])
 
@@ -2291,7 +2420,9 @@ by disk_cache.</p></section>
 <dd>
 <section class="desc"><p>Has our client closed the connection?</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def closed(self):
   &#34;&#34;&#34;Has our client closed the connection?&#34;&#34;&#34;
   return self.quit_flag</code></pre>
@@ -2303,7 +2434,9 @@ by disk_cache.</p></section>
 <dd>
 <section class="desc"><p>Close the connection from our end and quit.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def quit(self):
   &#34;&#34;&#34;Close the connection from our end and quit.&#34;&#34;&#34;
   self.quit_flag = True</code></pre>
@@ -2315,7 +2448,9 @@ by disk_cache.</p></section>
 <dd>
 <section class="desc"></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">async def send_json_response(self, response, is_error=False):
   logging.debug(&#39;CachedDataServer sending %d bytes&#39;,
                 len(json.dumps(response)))
@@ -2347,26 +2482,6 @@ subscribe - look for a field called 'fields' in the request whose
       {field_name:{seconds:600}, field_name:{seconds:0},...}
     ```
 
-    Each field name may also have a 'subsample' specification
-    that will cause the CachedDataServer to preprocess its data
-    via the subsample() function in logger/utils/subsample.py:
-    ```
-      {
-        field_name1:{
-          seconds:600,
-          subsample:{
-            'type':'boxcar_average', 'window': 30, 'interval': 30
-          }
-        },
-        field_name1:{
-          seconds:600,
-          subsample:{
-            'type':'boxcar_average', 'window': 15, 'interval': 5
-          }
-        }
-      }
-    ```
-
     The entire specification may also have a field called
     'interval', specifying how often server should provide
     updates. Will default to what was specified on command line
@@ -2396,7 +2511,9 @@ ready - client has processed the previous data message and is ready
     for more.
 </code></pre></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">@asyncio.coroutine
 async def serve_requests(self):
   &#34;&#34;&#34;Wait for requests and serve data, if it exists, from
@@ -2417,26 +2534,6 @@ async def serve_requests(self):
       value is a dict of the format
       ```
         {field_name:{seconds:600}, field_name:{seconds:0},...}
-      ```
-
-      Each field name may also have a &#39;subsample&#39; specification
-      that will cause the CachedDataServer to preprocess its data
-      via the subsample() function in logger/utils/subsample.py:
-      ```
-        {
-          field_name1:{
-            seconds:600,
-            subsample:{
-              &#39;type&#39;:&#39;boxcar_average&#39;, &#39;window&#39;: 30, &#39;interval&#39;: 30
-            }
-          },
-          field_name1:{
-            seconds:600,
-            subsample:{
-              &#39;type&#39;:&#39;boxcar_average&#39;, &#39;window&#39;: 15, &#39;interval&#39;: 5
-            }
-          }
-        }
       ```
 
       The entire specification may also have a field called
@@ -2550,6 +2647,7 @@ async def serve_requests(self):
               is_error=True)
             continue
 
+        # Which fields do they want?
         requested_fields = request.get(&#39;fields&#39;, None)
         if not requested_fields:
           await self.send_json_response(
@@ -2557,6 +2655,10 @@ async def serve_requests(self):
              &#39;error&#39;:&#39;no fields found in subscribe request&#39;},
             is_error=True)
           continue
+
+        # What format do they want output in? field_dict?
+        # record_list? By default, use field_dict.
+        requested_format = request.get(&#39;format&#39;, &#39;field_dict&#39;)
 
         # Parse out request field names and number of back seconds
         # requested. Encode that as &#39;last timestamp sent&#39;, unless back
@@ -2571,10 +2673,7 @@ async def serve_requests(self):
           else:
             back_seconds = field_spec.get(&#39;seconds&#39;, 0)
 
-          # If we&#39;re going to process the values with an subsampler
-          if &#39;subsample&#39; in field_spec:
-            field_timestamps[field_name] = 0
-          elif back_seconds == -1:
+          if back_seconds == -1:
             field_timestamps[field_name] = -1
           else:
             field_timestamps[field_name] = now - back_seconds
@@ -2594,59 +2693,129 @@ async def serve_requests(self):
             is_error=True)
           continue
 
+        ##########
         results = {}
-        for field_name, field_spec in requested_fields.items():
-         if not field_name in self.cache.locks:
-           logging.debug(&#39;No data for requested field %s&#39;, field_name)
-           continue
-         with self.cache.locks[field_name]:
-          latest_timestamp = field_timestamps.get(field_name, 0)
-          field_cache = self.cache.data.get(field_name, None)
-          if field_cache is None:
-            logging.debug(&#39;No cached data for %s&#39;, field_name)
-            continue
+        if requested_format == &#39;field_dict&#39;:
+          for field_name, field_spec in requested_fields.items():
+           if not field_name in self.cache.locks:
+             logging.debug(&#39;No data for requested field %s&#39;, field_name)
+             continue
+           with self.cache.locks[field_name]:
+            latest_timestamp = field_timestamps.get(field_name, 0)
+            field_cache = self.cache.data.get(field_name, None)
+            if field_cache is None:
+              logging.debug(&#39;No cached data for %s&#39;, field_name)
+              continue
 
-          # If no data for requested field, skip.
-          if not field_cache or not field_cache[-1]:
-            continue
+            # If no data for requested field, skip.
+            if not field_cache or not field_cache[-1]:
+              continue
 
-          # Check if we&#39;re returning raw values or
-          # processing/averaging them somehow.
-          subsample_spec = field_spec.get(&#39;subsample&#39;, None)
-          if subsample_spec:
-            field_results = subsample(subsample_spec, field_cache,
-                                      latest_timestamp, now)
-            results[field_name] = field_results
+            # Check if we&#39;re returning raw values or
+            # processing/averaging them somehow.
+            subsample_spec = field_spec.get(&#39;subsample&#39;, None)
+            if subsample_spec:
+              field_results = subsample(subsample_spec, field_cache,
+                                        latest_timestamp, now)
+              results[field_name] = field_results
 
-            # If we did get results, store the timestamp of that
-            # last one.
-            if field_results:
-              field_timestamps[field_name] = field_results[-1][0]
-            continue
+              # If we did get results, store the timestamp of that
+              # last one.
+              if field_results:
+                field_timestamps[field_name] = field_results[-1][0]
+              continue
 
-          # If special case -1, they want just single most recent
-          # value, then future results. Grab last value, then set its
-          # timestamp as the last one we&#39;ve seen.
-          elif latest_timestamp == -1:
-            last_value = field_cache[-1]
-            results[field_name] = [ last_value ]
-            field_timestamps[field_name] = last_value[0] # ts of last value
-            continue
+            # If special case -1, they want just single most recent
+            # value, then future results. Grab last value, then set its
+            # timestamp as the last one we&#39;ve seen.
+            elif latest_timestamp == -1:
+              last_value = field_cache[-1]
+              results[field_name] = [ last_value ]
+              field_timestamps[field_name] = last_value[0] # ts of last value
+              continue
 
-          # Otherwise - if no data newer than the latest
-          # timestamp we&#39;ve already sent, skip,
-          elif not field_cache[-1][0] &gt; latest_timestamp:
-            continue
+            # Otherwise - if no data newer than the latest
+            # timestamp we&#39;ve already sent, skip,
+            elif not field_cache[-1][0] &gt; latest_timestamp:
+              continue
 
-          # Otherwise, copy over records arrived since
-          # latest_timestamp and update the latest_timestamp sent
-          # (first element of last pair in field_cache).
-          else:
-            field_results = [pair for pair in field_cache if
-                             pair[0] &gt; latest_timestamp]
-            results[field_name] = field_results
-            if field_results:
-              field_timestamps[field_name] = field_results[-1][0]
+            # Otherwise, copy over records arrived since
+            # latest_timestamp and update the latest_timestamp sent
+            # (first element of last pair in field_cache).
+            else:
+              field_results = [pair for pair in field_cache if
+                               pair[0] &gt; latest_timestamp]
+              results[field_name] = field_results
+              if field_results:
+                field_timestamps[field_name] = field_results[-1][0]
+
+        ##########
+        # If not outputting data as a field dict, output as a list
+        # of records.
+        elif requested_format == &#39;record_list&#39;:
+          records = {}
+          for field_name, field_spec in requested_fields.items():
+            if not field_name in self.cache.locks:
+              logging.debug(&#39;No data for requested field %s&#39;, field_name)
+              continue
+            with self.cache.locks[field_name]:
+              latest_timestamp = field_timestamps.get(field_name, 0)
+              field_cache = self.cache.data.get(field_name, None)
+
+              if not field_cache or not field_cache[-1]:
+                logging.debug(&#39;No cached data for %s&#39;, field_name)
+                continue
+
+              # If latest_timestamp is special case -1, they want just
+              # single most recent value, then future results. Grab
+              # last value, then set its timestamp as the last one
+              # we&#39;ve seen.
+              elif latest_timestamp == -1:
+                last_ts, last_value = field_cache[-1]
+                if not last_ts in records:
+                  records[last_ts] = {}
+                records[last_ts][field_name] = last_value
+                field_timestamps[field_name] = last_ts
+                continue
+
+              # Otherwise - if no data newer than the latest
+              # timestamp we&#39;ve already sent, skip,
+              elif not field_cache[-1][0] &gt; latest_timestamp:
+                continue
+
+              # Otherwise, copy over records arrived since
+              # latest_timestamp and update the latest_timestamp sent
+              # (first element of last pair in field_cache).
+              else:
+                # Get the new (ts, value) pairs for this field
+                field_results = [pair for pair in field_cache
+                                 if pair[0] &gt; latest_timestamp]
+
+                # We know field_results is non-empty because of previous
+                # elif, so new latest timestamp is last ts in it.
+                field_timestamps[field_name] = field_results[-1][0]
+
+                # Collate values by timestamp, folding into values for
+                # other fields.
+                for ts, value in field_results:
+                  if not ts in records:
+                    records[ts] = {}
+                  records[ts][field_name] = value
+
+          # Create and send a list with one DASRecord-like dict for
+          # each timestamp.
+          results = [{&#39;timestamp&#39;:ts, &#39;fields&#39;:records[ts]}
+                     for ts in sorted(records)]
+
+        # If unknown requested format
+        else:
+          mesg = (&#39;Unrecognized requested format: %s; valid formats are &#39;
+                  &#39;&#34;field_dict&#34; and &#34;record_list&#34;&#39; % requested_format)
+          await self.send_json_response(
+            {&#39;status&#39;: 400,
+             &#39;error&#39;: &#39;Unrecognized requested format: %s; valid formats are &#39;
+             &#39;&#34;field_dict&#34; and &#34;record_list&#34;&#39; % requested_format},
+            is_error=True)
 
         logging.debug(&#39;Websocket results: %s...&#39;, str(results)[0:100])
 
@@ -2732,7 +2901,7 @@ async def serve_requests(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

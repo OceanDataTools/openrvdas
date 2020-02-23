@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.7.4" />
 <title>server.in_memory_server_api API documentation</title>
 <meta name="description" content="API implementation for interacting with an in-memory data store …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
@@ -25,7 +25,9 @@
 exercises this class. Also see server/server_api.py for full
 documentation on the ServerAPI.</p>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">#!/usr/bin/env python3
 &#34;&#34;&#34;API implementation for interacting with an in-memory data store.
 
@@ -35,6 +37,7 @@ documentation on the ServerAPI.
 &#34;&#34;&#34;
 
 import argparse
+import datetime
 import logging
 import json
 import os
@@ -74,29 +77,23 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   def get_configuration(self):
     &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-    config = self.config
-    return config
+    return self.config
 
   ############################
   def get_modes(self):
     &#34;&#34;&#34;Return list of modes defined for given cruise.&#34;&#34;&#34;
-    config = self.get_configuration()
-    try:
-      return list(config.get(&#39;modes&#39;, None))
-    except:
-      return []
+    return list(self.config.get(&#39;modes&#39;, []))
 
   ############################
   def get_active_mode(self):
     &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-    return self.mode
+    return self.config.get(&#39;active_mode&#39;, None)
 
   ############################
   def get_default_mode(self):
     &#34;&#34;&#34;Get the name of the default mode for the specified cruise
     from the data store.&#34;&#34;&#34;
-    config = self.get_configuration()
-    return config.get(&#39;default_mode&#39;, None)
+    return self.config.get(&#39;default_mode&#39;, None)
 
   ############################
   def get_logger(self, logger):
@@ -159,13 +156,12 @@ class InMemoryServerAPI(ServerAPI):
     in the specified mode. If mode is omitted, retrieve name of logger&#39;s
     current config.&#34;&#34;&#34;
 
-    # If mode is not specified, get logger&#39;s current config name
-    if mode is None:
-      mode = self.mode
-
     if not self.config:
       raise ValueError(&#39;No configuration loaded&#39;)
 
+    # If mode is not specified, get logger&#39;s current config name
+    if mode is None:
+      mode = self.get_active_mode()
     modes = self.config.get(&#39;modes&#39;)
     mode_configs = modes.get(mode, None)
     if mode_configs is None:
@@ -192,15 +188,13 @@ class InMemoryServerAPI(ServerAPI):
   ############################
   def set_active_mode(self, mode):
     &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
-    _config = self.get_configuration()
-    modes = _config.get(&#39;modes&#39;, None)
+    modes = self.config.get(&#39;modes&#39;, None)
     if not modes:
       raise ValueError(&#39;Config has no modes??&#39;)
     if not mode in modes:
       raise ValueError(&#39;Config has no mode &#34;%s&#34;&#39; % (mode))
 
-    # Set new current mode in data store
-    self.mode = mode
+    self.config[&#39;active_mode&#39;] = mode
 
     # Update the stored {logger:config_name} dict to match new mode
     # Here&#39;s a quick one-liner that doesn&#39;t do any checking:
@@ -228,35 +222,6 @@ class InMemoryServerAPI(ServerAPI):
 
     logging.info(&#39;Signaling update&#39;)
     self.signal_update()
-
-  #############################
-  # API method to register a callback. When the data store changes,
-  # methods that are registered via on_update() will be called so they
-  # can fetch updated results. If cruise_id==None, make callback when
-  # any cruise_id update is registered.
-  #############################
-  def on_update(self, callback, kwargs=None):
-    &#34;&#34;&#34;Register a method to be called when datastore changes.&#34;&#34;&#34;
-    # if not cruise_id in self.callbacks:
-    #   self.callbacks[cruise_id] = []
-    if kwargs is None:
-      kwargs = {}
-    self.callbacks.append((callback, kwargs))
-
-  #############################
-  def signal_update(self):
-    &#34;&#34;&#34;Call the registered methods when an update has been signalled.&#34;&#34;&#34;
-
-    for (callback, kwargs) in self.callbacks:
-      logging.debug(&#39;Executing update callback: %s&#39;,
-                    callback)
-      callback(**kwargs)
-
-    # If cruise_id is *not* None, then we&#39;ve now done the callbacks
-    # for that specified cruise. But we may also have callbacks (filed
-    # under None) that are supposed to be executed when *any* cruise
-    # is updated. Do those now.
-    # self.signal_update()
 
   ############################
   # Methods for feeding data from LoggerServer back into the API
@@ -372,21 +337,17 @@ class InMemoryServerAPI(ServerAPI):
   def load_configuration(self, config):
     &#34;&#34;&#34;Add a complete cruise configuration (id, modes, configs, 
     default) to the data store.&#34;&#34;&#34;
-    # if &#39;cruise&#39; in cruise_config and &#39;id&#39; in cruise_config[&#39;cruise&#39;]:
-    #   cruise_id = cruise_config[&#39;cruise&#39;][&#39;id&#39;]
-    # else:
-    #   cruise_id = &#39;cruise_%d&#39; % len(cruise_configs.keys())
-
-    # if ID_SEPARATOR in cruise_id:
-    #   raise ValueError(&#39;Illegal character &#34;%s&#34; in cruise id: &#34;%s&#34;&#39; %
-    #                    ID_SEPARATOR, cruise_id)
-
     self.config = config
+    self.config[&#39;loaded_time&#39;] = datetime.datetime.utcnow()
 
     # Set cruise into default mode, if one is defined
     if &#39;default_mode&#39; in config:
-      self.set_active_mode(config[&#39;default_mode&#39;])
+      active_mode = config[&#39;default_mode&#39;]
+      self.set_active_mode(active_mode)
 
+    # Let anyone who&#39;s interested know that we&#39;ve got new configurations.
+    self.signal_load()
+    
   ############################
   def delete_configuration(self):
     &#34;&#34;&#34;Remove the specified cruise from the data store.&#34;&#34;&#34;
@@ -467,7 +428,9 @@ cruise_config as follows:</p>
 }
 </code></pre></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class InMemoryServerAPI(ServerAPI):
   ############################
   def __init__(self):
@@ -490,29 +453,23 @@ cruise_config as follows:</p>
   ############################
   def get_configuration(self):
     &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-    config = self.config
-    return config
+    return self.config
 
   ############################
   def get_modes(self):
     &#34;&#34;&#34;Return list of modes defined for given cruise.&#34;&#34;&#34;
-    config = self.get_configuration()
-    try:
-      return list(config.get(&#39;modes&#39;, None))
-    except:
-      return []
+    return list(self.config.get(&#39;modes&#39;, []))
 
   ############################
   def get_active_mode(self):
     &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-    return self.mode
+    return self.config.get(&#39;active_mode&#39;, None)
 
   ############################
   def get_default_mode(self):
     &#34;&#34;&#34;Get the name of the default mode for the specified cruise
     from the data store.&#34;&#34;&#34;
-    config = self.get_configuration()
-    return config.get(&#39;default_mode&#39;, None)
+    return self.config.get(&#39;default_mode&#39;, None)
 
   ############################
   def get_logger(self, logger):
@@ -575,13 +532,12 @@ cruise_config as follows:</p>
     in the specified mode. If mode is omitted, retrieve name of logger&#39;s
     current config.&#34;&#34;&#34;
 
-    # If mode is not specified, get logger&#39;s current config name
-    if mode is None:
-      mode = self.mode
-
     if not self.config:
       raise ValueError(&#39;No configuration loaded&#39;)
 
+    # If mode is not specified, get logger&#39;s current config name
+    if mode is None:
+      mode = self.get_active_mode()
     modes = self.config.get(&#39;modes&#39;)
     mode_configs = modes.get(mode, None)
     if mode_configs is None:
@@ -608,15 +564,13 @@ cruise_config as follows:</p>
   ############################
   def set_active_mode(self, mode):
     &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
-    _config = self.get_configuration()
-    modes = _config.get(&#39;modes&#39;, None)
+    modes = self.config.get(&#39;modes&#39;, None)
     if not modes:
       raise ValueError(&#39;Config has no modes??&#39;)
     if not mode in modes:
       raise ValueError(&#39;Config has no mode &#34;%s&#34;&#39; % (mode))
 
-    # Set new current mode in data store
-    self.mode = mode
+    self.config[&#39;active_mode&#39;] = mode
 
     # Update the stored {logger:config_name} dict to match new mode
     # Here&#39;s a quick one-liner that doesn&#39;t do any checking:
@@ -644,35 +598,6 @@ cruise_config as follows:</p>
 
     logging.info(&#39;Signaling update&#39;)
     self.signal_update()
-
-  #############################
-  # API method to register a callback. When the data store changes,
-  # methods that are registered via on_update() will be called so they
-  # can fetch updated results. If cruise_id==None, make callback when
-  # any cruise_id update is registered.
-  #############################
-  def on_update(self, callback, kwargs=None):
-    &#34;&#34;&#34;Register a method to be called when datastore changes.&#34;&#34;&#34;
-    # if not cruise_id in self.callbacks:
-    #   self.callbacks[cruise_id] = []
-    if kwargs is None:
-      kwargs = {}
-    self.callbacks.append((callback, kwargs))
-
-  #############################
-  def signal_update(self):
-    &#34;&#34;&#34;Call the registered methods when an update has been signalled.&#34;&#34;&#34;
-
-    for (callback, kwargs) in self.callbacks:
-      logging.debug(&#39;Executing update callback: %s&#39;,
-                    callback)
-      callback(**kwargs)
-
-    # If cruise_id is *not* None, then we&#39;ve now done the callbacks
-    # for that specified cruise. But we may also have callbacks (filed
-    # under None) that are supposed to be executed when *any* cruise
-    # is updated. Do those now.
-    # self.signal_update()
 
   ############################
   # Methods for feeding data from LoggerServer back into the API
@@ -788,21 +713,17 @@ cruise_config as follows:</p>
   def load_configuration(self, config):
     &#34;&#34;&#34;Add a complete cruise configuration (id, modes, configs, 
     default) to the data store.&#34;&#34;&#34;
-    # if &#39;cruise&#39; in cruise_config and &#39;id&#39; in cruise_config[&#39;cruise&#39;]:
-    #   cruise_id = cruise_config[&#39;cruise&#39;][&#39;id&#39;]
-    # else:
-    #   cruise_id = &#39;cruise_%d&#39; % len(cruise_configs.keys())
-
-    # if ID_SEPARATOR in cruise_id:
-    #   raise ValueError(&#39;Illegal character &#34;%s&#34; in cruise id: &#34;%s&#34;&#39; %
-    #                    ID_SEPARATOR, cruise_id)
-
     self.config = config
+    self.config[&#39;loaded_time&#39;] = datetime.datetime.utcnow()
 
     # Set cruise into default mode, if one is defined
     if &#39;default_mode&#39; in config:
-      self.set_active_mode(config[&#39;default_mode&#39;])
+      active_mode = config[&#39;default_mode&#39;]
+      self.set_active_mode(active_mode)
 
+    # Let anyone who&#39;s interested know that we&#39;ve got new configurations.
+    self.signal_load()
+    
   ############################
   def delete_configuration(self):
     &#34;&#34;&#34;Remove the specified cruise from the data store.&#34;&#34;&#34;
@@ -824,7 +745,9 @@ cruise_config as follows:</p>
 <dd>
 <section class="desc"><p>Remove the specified cruise from the data store.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def delete_configuration(self):
   &#34;&#34;&#34;Remove the specified cruise from the data store.&#34;&#34;&#34;
   self.config = {}
@@ -840,10 +763,12 @@ cruise_config as follows:</p>
 <dd>
 <section class="desc"><p>Return cruise config for specified cruise id.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_active_mode(self):
   &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-  return self.mode</code></pre>
+  return self.config.get(&#39;active_mode&#39;, None)</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.get_configuration"><code class="name flex">
@@ -852,11 +777,12 @@ cruise_config as follows:</p>
 <dd>
 <section class="desc"><p>Return cruise config for specified cruise id.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_configuration(self):
   &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-  config = self.config
-  return config</code></pre>
+  return self.config</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.get_default_mode"><code class="name flex">
@@ -866,12 +792,13 @@ cruise_config as follows:</p>
 <section class="desc"><p>Get the name of the default mode for the specified cruise
 from the data store.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_default_mode(self):
   &#34;&#34;&#34;Get the name of the default mode for the specified cruise
   from the data store.&#34;&#34;&#34;
-  config = self.get_configuration()
-  return config.get(&#39;default_mode&#39;, None)</code></pre>
+  return self.config.get(&#39;default_mode&#39;, None)</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.get_logger"><code class="name flex">
@@ -880,7 +807,9 @@ from the data store.</p></section>
 <dd>
 <section class="desc"><p>Retrieve the logger spec for the specified logger id.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_logger(self, logger):
   &#34;&#34;&#34;Retrieve the logger spec for the specified logger id.&#34;&#34;&#34;
   loggers = self.get_loggers()
@@ -896,7 +825,9 @@ from the data store.</p></section>
 <dd>
 <section class="desc"><p>Retrieve the config associated with the specified name.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_logger_config(self, config_name):
   &#34;&#34;&#34;Retrieve the config associated with the specified name.&#34;&#34;&#34;
   config = self.get_configuration()
@@ -920,19 +851,20 @@ from the data store.</p></section>
 in the specified mode. If mode is omitted, retrieve name of logger's
 current config.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_logger_config_name(self, logger_id, mode=None):
   &#34;&#34;&#34;Retrieve name of the config associated with the specified logger
   in the specified mode. If mode is omitted, retrieve name of logger&#39;s
   current config.&#34;&#34;&#34;
 
-  # If mode is not specified, get logger&#39;s current config name
-  if mode is None:
-    mode = self.mode
-
   if not self.config:
     raise ValueError(&#39;No configuration loaded&#39;)
 
+  # If mode is not specified, get logger&#39;s current config name
+  if mode is None:
+    mode = self.get_active_mode()
   modes = self.config.get(&#39;modes&#39;)
   mode_configs = modes.get(mode, None)
   if mode_configs is None:
@@ -955,7 +887,9 @@ current config.</p></section>
 ["off", "knud-&gt;net", "knud-&gt;net/file", "knud-&gt;net/file/db"]</p>
 </blockquote></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_logger_config_names(self, logger_id):
   &#34;&#34;&#34;Retrieve list of config names that are valid for the specified logger .
   &gt; api.get_logger_config_names(&#39;NBP1406&#39;, &#39;knud&#39;)
@@ -974,7 +908,9 @@ data store. If mode is omitted, retrieve configs associated with
 the cruise's current logger configs. If cruise_id is omitted,
 return configs for <em>all</em> cruises.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_logger_configs(self, mode=None):
   &#34;&#34;&#34;Retrieve the configs associated with a cruise id and mode from the
   data store. If mode is omitted, retrieve configs associated with
@@ -997,7 +933,9 @@ return configs for <em>all</em> cruises.</p></section>
 {logger_id:{'configs':[<name_1>,<name_2>,&hellip;], 'active':<name>},&hellip;}
 for all loggers.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_loggers(self):
   &#34;&#34;&#34;Get a dict of
       {logger_id:{&#39;configs&#39;:[&lt;name_1&gt;,&lt;name_2&gt;,...], &#39;active&#39;:&lt;name&gt;},...}
@@ -1021,14 +959,12 @@ for all loggers.</p></section>
 <dd>
 <section class="desc"><p>Return list of modes defined for given cruise.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_modes(self):
   &#34;&#34;&#34;Return list of modes defined for given cruise.&#34;&#34;&#34;
-  config = self.get_configuration()
-  try:
-    return list(config.get(&#39;modes&#39;, None))
-  except:
-    return []</code></pre>
+  return list(self.config.get(&#39;modes&#39;, []))</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.load_configuration"><code class="name flex">
@@ -1038,24 +974,22 @@ for all loggers.</p></section>
 <section class="desc"><p>Add a complete cruise configuration (id, modes, configs,
 default) to the data store.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def load_configuration(self, config):
   &#34;&#34;&#34;Add a complete cruise configuration (id, modes, configs, 
   default) to the data store.&#34;&#34;&#34;
-  # if &#39;cruise&#39; in cruise_config and &#39;id&#39; in cruise_config[&#39;cruise&#39;]:
-  #   cruise_id = cruise_config[&#39;cruise&#39;][&#39;id&#39;]
-  # else:
-  #   cruise_id = &#39;cruise_%d&#39; % len(cruise_configs.keys())
-
-  # if ID_SEPARATOR in cruise_id:
-  #   raise ValueError(&#39;Illegal character &#34;%s&#34; in cruise id: &#34;%s&#34;&#39; %
-  #                    ID_SEPARATOR, cruise_id)
-
   self.config = config
+  self.config[&#39;loaded_time&#39;] = datetime.datetime.utcnow()
 
   # Set cruise into default mode, if one is defined
   if &#39;default_mode&#39; in config:
-    self.set_active_mode(config[&#39;default_mode&#39;])</code></pre>
+    active_mode = config[&#39;default_mode&#39;]
+    self.set_active_mode(active_mode)
+
+  # Let anyone who&#39;s interested know that we&#39;ve got new configurations.
+  self.signal_load()</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.set_active_logger_config"><code class="name flex">
@@ -1066,7 +1000,9 @@ default) to the data store.</p></section>
 whether logger is compatible with config, so we rely on whoever is
 calling us to have made that determination.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def set_active_logger_config(self, logger, config_name):
   &#34;&#34;&#34;Set specified logger to new config. NOTE: we have no way to check
   whether logger is compatible with config, so we rely on whoever is
@@ -1085,18 +1021,18 @@ calling us to have made that determination.</p></section>
 <dd>
 <section class="desc"><p>Set the current mode of the specified cruise in the data store.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def set_active_mode(self, mode):
   &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
-  _config = self.get_configuration()
-  modes = _config.get(&#39;modes&#39;, None)
+  modes = self.config.get(&#39;modes&#39;, None)
   if not modes:
     raise ValueError(&#39;Config has no modes??&#39;)
   if not mode in modes:
     raise ValueError(&#39;Config has no mode &#34;%s&#34;&#39; % (mode))
 
-  # Set new current mode in data store
-  self.mode = mode
+  self.config[&#39;active_mode&#39;] = mode
 
   # Update the stored {logger:config_name} dict to match new mode
   # Here&#39;s a quick one-liner that doesn&#39;t do any checking:
@@ -1114,11 +1050,30 @@ calling us to have made that determination.</p></section>
   self.signal_update()</code></pre>
 </details>
 </dd>
+<dt id="server.in_memory_server_api.InMemoryServerAPI.update_status"><code class="name flex">
+<span>def <span class="ident">update_status</span></span>(<span>self, status)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Save/register the loggers' retrieved status report with the API.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_status(self, status):
+  &#34;&#34;&#34;Save/register the loggers&#39; retrieved status report with the API.&#34;&#34;&#34;
+  self.status.append( (time.time(), status) )</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="server.server_api.ServerAPI" href="server_api.html#server.server_api.ServerAPI">ServerAPI</a></b></code>:
 <ul class="hlist">
+<li><code><a title="server.server_api.ServerAPI.CRITICAL" href="server_api.html#server.server_api.ServerAPI.CRITICAL">CRITICAL</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.DEBUG" href="server_api.html#server.server_api.ServerAPI.DEBUG">DEBUG</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.ERROR" href="server_api.html#server.server_api.ServerAPI.ERROR">ERROR</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.INFO" href="server_api.html#server.server_api.ServerAPI.INFO">INFO</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.WARNING" href="server_api.html#server.server_api.ServerAPI.WARNING">WARNING</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.add_logger" href="server_api.html#server.server_api.ServerAPI.add_logger">add_logger</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.add_logger_config" href="server_api.html#server.server_api.ServerAPI.add_logger_config">add_logger_config</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.add_logger_config_to_logger" href="server_api.html#server.server_api.ServerAPI.add_logger_config_to_logger">add_logger_config_to_logger</a></code></li>
@@ -1130,11 +1085,12 @@ calling us to have made that determination.</p></section>
 <li><code><a title="server.server_api.ServerAPI.get_message_log" href="server_api.html#server.server_api.ServerAPI.get_message_log">get_message_log</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.get_status" href="server_api.html#server.server_api.ServerAPI.get_status">get_status</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.message_log" href="server_api.html#server.server_api.ServerAPI.message_log">message_log</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.on_load" href="server_api.html#server.server_api.ServerAPI.on_load">on_load</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.on_quit" href="server_api.html#server.server_api.ServerAPI.on_quit">on_quit</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.on_update" href="server_api.html#server.server_api.ServerAPI.on_update">on_update</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.quit" href="server_api.html#server.server_api.ServerAPI.quit">quit</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.signal_load" href="server_api.html#server.server_api.ServerAPI.signal_load">signal_load</a></code></li>
 <li><code><a title="server.server_api.ServerAPI.signal_update" href="server_api.html#server.server_api.ServerAPI.signal_update">signal_update</a></code></li>
-<li><code><a title="server.server_api.ServerAPI.update_status" href="server_api.html#server.server_api.ServerAPI.update_status">update_status</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1172,6 +1128,7 @@ calling us to have made that determination.</p></section>
 <li><code><a title="server.in_memory_server_api.InMemoryServerAPI.load_configuration" href="#server.in_memory_server_api.InMemoryServerAPI.load_configuration">load_configuration</a></code></li>
 <li><code><a title="server.in_memory_server_api.InMemoryServerAPI.set_active_logger_config" href="#server.in_memory_server_api.InMemoryServerAPI.set_active_logger_config">set_active_logger_config</a></code></li>
 <li><code><a title="server.in_memory_server_api.InMemoryServerAPI.set_active_mode" href="#server.in_memory_server_api.InMemoryServerAPI.set_active_mode">set_active_mode</a></code></li>
+<li><code><a title="server.in_memory_server_api.InMemoryServerAPI.update_status" href="#server.in_memory_server_api.InMemoryServerAPI.update_status">update_status</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1180,7 +1137,7 @@ calling us to have made that determination.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

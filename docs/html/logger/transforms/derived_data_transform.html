@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.7.4" />
 <title>logger.transforms.derived_data_transform API documentation</title>
-<meta name="description" content="Contains DerivedDataTransform and ComposedDerivedDataTransform …" />
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
@@ -20,256 +20,25 @@
 <h1 class="title">Module <code>logger.transforms.derived_data_transform</code></h1>
 </header>
 <section id="section-intro">
-<p>Contains DerivedDataTransform and ComposedDerivedDataTransform.</p>
-<p>A DerivedDataTransform is intended to be fed with a dictionary of
-field values and returns a dictionary of field values. It is required
-to implement a fields() method reporting which fields it's interested
-in, to allow the caller (typically a ComposedDerivedDataTransform) to
-call it only when new values are available for fields in which it is
-interested.</p>
-<p>A ComposedDerivedDataTransform is initialized with a list of
-DerivedDataTransforms. The transform() method then takes either
-DASRecords or <code>{field:[[timestamp, value],...]}</code> dictionaries, caches
-the received values, distributes them among the contained
-DerivedDataTransforms, and aggregates their outputs, either into an
-anonymous DASRecord or a field dictionary, depending on how it was
-initialized.</p>
-<p>The transforms can take data in one of three formats (and will return
-data in the same format as the input:</p>
-<ul>
-<li>DASRecord</li>
-<li>a single record dict with keys 'timestamp' and 'fields'</li>
-<li>a field dict of format</li>
-</ul>
-<pre><code>     {data_id: [(timestamp, value), 
-                (timestamp, value),
-               ...)]}
-</code></pre>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">#!/usr/bin/env python3
-&#34;&#34;&#34;Contains DerivedDataTransform and ComposedDerivedDataTransform.
 
-A DerivedDataTransform is intended to be fed with a dictionary of
-field values and returns a dictionary of field values. It is required
-to implement a fields() method reporting which fields it&#39;s interested
-in, to allow the caller (typically a ComposedDerivedDataTransform) to
-call it only when new values are available for fields in which it is
-interested.
-
-A ComposedDerivedDataTransform is initialized with a list of
-DerivedDataTransforms. The transform() method then takes either
-DASRecords or ``{field:[[timestamp, value],...]}`` dictionaries, caches
-the received values, distributes them among the contained
-DerivedDataTransforms, and aggregates their outputs, either into an
-anonymous DASRecord or a field dictionary, depending on how it was
-initialized.
-
-The transforms can take data in one of three formats (and will return
-data in the same format as the input:
-
- - DASRecord
- - a single record dict with keys &#39;timestamp&#39; and &#39;fields&#39;
- - a field dict of format
-```
-     {data_id: [(timestamp, value), 
-                (timestamp, value),
-               ...)]}
-```
-&#34;&#34;&#34;
-import logging
-import pprint
 import sys
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from collections import OrderedDict
-
 from logger.transforms.transform import Transform
-from logger.utils import formats
-from logger.utils.das_record import DASRecord
 
 ################################################################################
 class DerivedDataTransform(Transform):
+  &#34;&#34;&#34;Trivial base class for derived data transforms. Derived data
+  transforms used to have some complicated invocation process to make
+  them more efficient, but we&#39;ve opted to make them just like any
+  other transform for simplicity.
   &#34;&#34;&#34;
-  Base class for derived data transforms that take in a dict of values (only
-  some of which they are interested in) and emit a dict of derived values.
-
-  Required methods are:
-  ```
-  fields() - return a list of field_names in which we are interested. We
-    will only be called when there are new values available for one or
-    more of these fields.
-
-  transform(value_dict, timestamp_dict=None) - look for the fields we are
-    interested in (and optionally, their timestamps, if available) and
-    generate a DASRecord containing the derived values. If timestamp_dict
-    is available, the timestamp on the DASRecord would typically be the
-    latest timestamp of any field value used, otherwise the current time.
-  ```
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self):
-    &#34;&#34;&#34;Abstract base class for DerivedDataTransforms.&#34;&#34;&#34;
-    super().__init__(input_format=formats.Python, output_format=formats.Python)
-
-  ############################
-  def fields(self):
-    &#34;&#34;&#34;What fields is this transform interested in?&#34;&#34;&#34;
-    raise NotImplementedError(&#39;&#34;fields()&#34; method not defined for abstract &#39;
-                              &#39;class DerivedDataTransform&#39;)
-
-  ############################
-  def transform(self, value_dict, timestamp_dict=None):
-    &#34;&#34;&#34;Compute our new derived values from the value dict.&#34;&#34;&#34;
-    raise NotImplementedError(&#39;&#34;transform()&#34; method not defined for abstract &#39;
-                              &#39;class DerivedDataTransform&#39;)
-
-
-################################################################################
-class ComposedDerivedDataTransform(Transform):
-  &#34;&#34;&#34;Container for DerivedDataTransforms. Initialize with a list of
-  DerivedDataTransforms. The transform() method then takes either
-  DASRecords or ``{field:[[timestamp, value],...]}`` dictionaries, caches
-  the received values, distributes them among the contained
-  DerivedDataTransforms, and aggregates their outputs (either into an
-  anonymous DASRecord or a field dictionary, depending on how it was
-  initialized).
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, transforms):
-    &#34;&#34;&#34;Composed transform that contains DerivedDataTransforms.&#34;&#34;&#34;
-    super().__init__(input_format=formats.Python, output_format=formats.Python)
-
-    # All transforms we&#39;re passed must be DerivedDataTransforms
-    for transform in transforms:
-      if not DerivedDataTransform in type(transform).mro():
-        raise TypeError(&#39;Transforms passed to ComposedDerivedDataTransform &#39;
-                        &#39;must be of type DerivedDataTransform. Received %s&#39;,
-                        type(transform))
-
-    # Register which fields each transform is interested in so that we
-    # only call it when we have an update for one or more of those fields.
-    self.fields = {}
-    for transform in transforms:
-      for field in transform.fields():
-        if not field in self.fields:
-          self.fields[field] = set()
-        self.fields[field].add(transform)
-
-    self.transforms = transforms
-
-    self.values = {}
-    self.timestamps = {}
-
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Take input in one of three formats, transform it appropriately, and
-    return data in that same format as received:
-
-    - DASRecord
-    - a single record dict with keys &#39;timestamp&#39; and &#39;fields&#39;
-    - a field dict of format
-      ``` {data_id: [(timestamp, value), 
-                     (timestamp, value),
-                     ...]}
-      ```
-    &#34;&#34;&#34;
-    if not record:
-      return
-
-    # What type of record is this?
-    if type(record) is DASRecord:
-      record_type = &#39;DASRecord&#39;
-      timestamp = record.timestamp
-      fields = record.fields
-    elif type(record) is dict and &#39;timestamp&#39; in record and &#39;fields&#39; in record:
-      record_type = &#39;SingleDict&#39;
-      timestamp = record.get(&#39;timestamp&#39;, None)
-      fields = record.get(&#39;fields&#39;, {})
-    elif type(record) is dict:
-      record_type = &#39;FieldDict&#39;
-      fields = record
-    else:
-      raise TypeError(&#39;ComposedDerivedDataTransform.transform(record) &#39;
-                      &#39;received record of inappropriate type: %s\n%s&#39;,
-                      type(record), pprint.pformat(record))
-
-    # DASRecords and SingleDicts are easy - we only have one timestamp
-    # to deal with, so only have to run each transform once.
-    if record_type in (&#39;DASRecord&#39;, &#39;SingleDict&#39;):
-      # Which transforms are interested in values contained in record?
-      transforms_to_run = set()
-      for field, value in fields.items():
-        field_transforms = self.fields.get(field, set())
-        transforms_to_run.update(field_transforms)
-
-        self.values[field] = value
-        self.timestamps[field] = timestamp
-
-      # Run all transforms that have registered interest in these
-      # fields, then aggregate results into a single dict.
-      results = {}
-      for transform in transforms_to_run:
-        t_results = transform.transform(self.values, self.timestamps)
-        if t_results:
-          results.update(t_results)
-
-      # Return an anonymous DASRecord or single dict with the results
-      # we&#39;ve aggregated.
-      if not results:
-        return None
-
-      if record_type == &#39;DASRecord&#39;:
-        return DASRecord(timestamp=timestamp, fields=results)
-      else:
-        return {&#39;timestamp&#39;: timestamp, &#39;fields&#39;: results}
-
-    # If here, we believe we&#39;ve received a field dict, in which each
-    # field may have multiple [timestamp, value] pairs. First thing we
-    # do is reformat the data into a map of
-    #        {timestamp: {field:value, field:value],...}}
-    values_by_timestamp = {}
-    try:
-      for field, ts_value_list in fields.items():
-        for (timestamp, value) in ts_value_list:
-          if not timestamp in values_by_timestamp:
-            values_by_timestamp[timestamp] = {}
-          values_by_timestamp[timestamp][field] = value
-    except ValueError:
-      logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
-                    field, pprint.pformat(ts_value_list))
-
-    # Now go through each timestamp, update the values in it, then run
-    # the transforms that are interested in the values that have
-    # updated. Append the resulting transformed [timestamp, value]
-    # pairs to the appropriate field name.
-    results = {}
-    for timestamp in sorted(values_by_timestamp):
-      fields = values_by_timestamp[timestamp]
-      logging.debug(&#39;timestamp %f, fields: %s&#39;, timestamp, fields)
-
-      # Which transforms are interested in values contained in this
-      # particular timestamp?
-      transforms_to_run = set()
-      for field, value in fields.items():
-        field_transforms = self.fields.get(field, set())
-        transforms_to_run.update(field_transforms)
-
-        self.values[field] = value
-        self.timestamps[field] = timestamp
-
-      # Run all transforms and aggregate results into a single dict
-      for transform in transforms_to_run:
-        field_values = transform.transform(self.values, self.timestamps)
-        if not field_values:
-          continue
-
-        for field, value in field_values.items():
-          if not field in results:
-            results[field] = []
-          results[field].append([timestamp, value])
-
-    return results or None</code></pre>
+  pass</code></pre>
 </details>
 </section>
 <section>
@@ -281,363 +50,27 @@ class ComposedDerivedDataTransform(Transform):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="logger.transforms.derived_data_transform.ComposedDerivedDataTransform"><code class="flex name class">
-<span>class <span class="ident">ComposedDerivedDataTransform</span></span>
-<span>(</span><span>transforms)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Container for DerivedDataTransforms. Initialize with a list of
-DerivedDataTransforms. The transform() method then takes either
-DASRecords or <code>{field:[[timestamp, value],...]}</code> dictionaries, caches
-the received values, distributes them among the contained
-DerivedDataTransforms, and aggregates their outputs (either into an
-anonymous DASRecord or a field dictionary, depending on how it was
-initialized).</p>
-<p>Composed transform that contains DerivedDataTransforms.</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class ComposedDerivedDataTransform(Transform):
-  &#34;&#34;&#34;Container for DerivedDataTransforms. Initialize with a list of
-  DerivedDataTransforms. The transform() method then takes either
-  DASRecords or ``{field:[[timestamp, value],...]}`` dictionaries, caches
-  the received values, distributes them among the contained
-  DerivedDataTransforms, and aggregates their outputs (either into an
-  anonymous DASRecord or a field dictionary, depending on how it was
-  initialized).
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, transforms):
-    &#34;&#34;&#34;Composed transform that contains DerivedDataTransforms.&#34;&#34;&#34;
-    super().__init__(input_format=formats.Python, output_format=formats.Python)
-
-    # All transforms we&#39;re passed must be DerivedDataTransforms
-    for transform in transforms:
-      if not DerivedDataTransform in type(transform).mro():
-        raise TypeError(&#39;Transforms passed to ComposedDerivedDataTransform &#39;
-                        &#39;must be of type DerivedDataTransform. Received %s&#39;,
-                        type(transform))
-
-    # Register which fields each transform is interested in so that we
-    # only call it when we have an update for one or more of those fields.
-    self.fields = {}
-    for transform in transforms:
-      for field in transform.fields():
-        if not field in self.fields:
-          self.fields[field] = set()
-        self.fields[field].add(transform)
-
-    self.transforms = transforms
-
-    self.values = {}
-    self.timestamps = {}
-
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Take input in one of three formats, transform it appropriately, and
-    return data in that same format as received:
-
-    - DASRecord
-    - a single record dict with keys &#39;timestamp&#39; and &#39;fields&#39;
-    - a field dict of format
-      ``` {data_id: [(timestamp, value), 
-                     (timestamp, value),
-                     ...]}
-      ```
-    &#34;&#34;&#34;
-    if not record:
-      return
-
-    # What type of record is this?
-    if type(record) is DASRecord:
-      record_type = &#39;DASRecord&#39;
-      timestamp = record.timestamp
-      fields = record.fields
-    elif type(record) is dict and &#39;timestamp&#39; in record and &#39;fields&#39; in record:
-      record_type = &#39;SingleDict&#39;
-      timestamp = record.get(&#39;timestamp&#39;, None)
-      fields = record.get(&#39;fields&#39;, {})
-    elif type(record) is dict:
-      record_type = &#39;FieldDict&#39;
-      fields = record
-    else:
-      raise TypeError(&#39;ComposedDerivedDataTransform.transform(record) &#39;
-                      &#39;received record of inappropriate type: %s\n%s&#39;,
-                      type(record), pprint.pformat(record))
-
-    # DASRecords and SingleDicts are easy - we only have one timestamp
-    # to deal with, so only have to run each transform once.
-    if record_type in (&#39;DASRecord&#39;, &#39;SingleDict&#39;):
-      # Which transforms are interested in values contained in record?
-      transforms_to_run = set()
-      for field, value in fields.items():
-        field_transforms = self.fields.get(field, set())
-        transforms_to_run.update(field_transforms)
-
-        self.values[field] = value
-        self.timestamps[field] = timestamp
-
-      # Run all transforms that have registered interest in these
-      # fields, then aggregate results into a single dict.
-      results = {}
-      for transform in transforms_to_run:
-        t_results = transform.transform(self.values, self.timestamps)
-        if t_results:
-          results.update(t_results)
-
-      # Return an anonymous DASRecord or single dict with the results
-      # we&#39;ve aggregated.
-      if not results:
-        return None
-
-      if record_type == &#39;DASRecord&#39;:
-        return DASRecord(timestamp=timestamp, fields=results)
-      else:
-        return {&#39;timestamp&#39;: timestamp, &#39;fields&#39;: results}
-
-    # If here, we believe we&#39;ve received a field dict, in which each
-    # field may have multiple [timestamp, value] pairs. First thing we
-    # do is reformat the data into a map of
-    #        {timestamp: {field:value, field:value],...}}
-    values_by_timestamp = {}
-    try:
-      for field, ts_value_list in fields.items():
-        for (timestamp, value) in ts_value_list:
-          if not timestamp in values_by_timestamp:
-            values_by_timestamp[timestamp] = {}
-          values_by_timestamp[timestamp][field] = value
-    except ValueError:
-      logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
-                    field, pprint.pformat(ts_value_list))
-
-    # Now go through each timestamp, update the values in it, then run
-    # the transforms that are interested in the values that have
-    # updated. Append the resulting transformed [timestamp, value]
-    # pairs to the appropriate field name.
-    results = {}
-    for timestamp in sorted(values_by_timestamp):
-      fields = values_by_timestamp[timestamp]
-      logging.debug(&#39;timestamp %f, fields: %s&#39;, timestamp, fields)
-
-      # Which transforms are interested in values contained in this
-      # particular timestamp?
-      transforms_to_run = set()
-      for field, value in fields.items():
-        field_transforms = self.fields.get(field, set())
-        transforms_to_run.update(field_transforms)
-
-        self.values[field] = value
-        self.timestamps[field] = timestamp
-
-      # Run all transforms and aggregate results into a single dict
-      for transform in transforms_to_run:
-        field_values = transform.transform(self.values, self.timestamps)
-        if not field_values:
-          continue
-
-        for field, value in field_values.items():
-          if not field in results:
-            results[field] = []
-          results[field].append([timestamp, value])
-
-    return results or None</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="logger.transforms.derived_data_transform.ComposedDerivedDataTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Take input in one of three formats, transform it appropriately, and
-return data in that same format as received:</p>
-<ul>
-<li>DASRecord</li>
-<li>a single record dict with keys 'timestamp' and 'fields'</li>
-<li>a field dict of format
-<code>{data_id: [(timestamp, value),
-(timestamp, value),
-...]}</code></li>
-</ul></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def transform(self, record):
-  &#34;&#34;&#34;Take input in one of three formats, transform it appropriately, and
-  return data in that same format as received:
-
-  - DASRecord
-  - a single record dict with keys &#39;timestamp&#39; and &#39;fields&#39;
-  - a field dict of format
-    ``` {data_id: [(timestamp, value), 
-                   (timestamp, value),
-                   ...]}
-    ```
-  &#34;&#34;&#34;
-  if not record:
-    return
-
-  # What type of record is this?
-  if type(record) is DASRecord:
-    record_type = &#39;DASRecord&#39;
-    timestamp = record.timestamp
-    fields = record.fields
-  elif type(record) is dict and &#39;timestamp&#39; in record and &#39;fields&#39; in record:
-    record_type = &#39;SingleDict&#39;
-    timestamp = record.get(&#39;timestamp&#39;, None)
-    fields = record.get(&#39;fields&#39;, {})
-  elif type(record) is dict:
-    record_type = &#39;FieldDict&#39;
-    fields = record
-  else:
-    raise TypeError(&#39;ComposedDerivedDataTransform.transform(record) &#39;
-                    &#39;received record of inappropriate type: %s\n%s&#39;,
-                    type(record), pprint.pformat(record))
-
-  # DASRecords and SingleDicts are easy - we only have one timestamp
-  # to deal with, so only have to run each transform once.
-  if record_type in (&#39;DASRecord&#39;, &#39;SingleDict&#39;):
-    # Which transforms are interested in values contained in record?
-    transforms_to_run = set()
-    for field, value in fields.items():
-      field_transforms = self.fields.get(field, set())
-      transforms_to_run.update(field_transforms)
-
-      self.values[field] = value
-      self.timestamps[field] = timestamp
-
-    # Run all transforms that have registered interest in these
-    # fields, then aggregate results into a single dict.
-    results = {}
-    for transform in transforms_to_run:
-      t_results = transform.transform(self.values, self.timestamps)
-      if t_results:
-        results.update(t_results)
-
-    # Return an anonymous DASRecord or single dict with the results
-    # we&#39;ve aggregated.
-    if not results:
-      return None
-
-    if record_type == &#39;DASRecord&#39;:
-      return DASRecord(timestamp=timestamp, fields=results)
-    else:
-      return {&#39;timestamp&#39;: timestamp, &#39;fields&#39;: results}
-
-  # If here, we believe we&#39;ve received a field dict, in which each
-  # field may have multiple [timestamp, value] pairs. First thing we
-  # do is reformat the data into a map of
-  #        {timestamp: {field:value, field:value],...}}
-  values_by_timestamp = {}
-  try:
-    for field, ts_value_list in fields.items():
-      for (timestamp, value) in ts_value_list:
-        if not timestamp in values_by_timestamp:
-          values_by_timestamp[timestamp] = {}
-        values_by_timestamp[timestamp][field] = value
-  except ValueError:
-    logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
-                  field, pprint.pformat(ts_value_list))
-
-  # Now go through each timestamp, update the values in it, then run
-  # the transforms that are interested in the values that have
-  # updated. Append the resulting transformed [timestamp, value]
-  # pairs to the appropriate field name.
-  results = {}
-  for timestamp in sorted(values_by_timestamp):
-    fields = values_by_timestamp[timestamp]
-    logging.debug(&#39;timestamp %f, fields: %s&#39;, timestamp, fields)
-
-    # Which transforms are interested in values contained in this
-    # particular timestamp?
-    transforms_to_run = set()
-    for field, value in fields.items():
-      field_transforms = self.fields.get(field, set())
-      transforms_to_run.update(field_transforms)
-
-      self.values[field] = value
-      self.timestamps[field] = timestamp
-
-    # Run all transforms and aggregate results into a single dict
-    for transform in transforms_to_run:
-      field_values = transform.transform(self.values, self.timestamps)
-      if not field_values:
-        continue
-
-      for field, value in field_values.items():
-        if not field in results:
-          results[field] = []
-        results[field].append([timestamp, value])
-
-  return results or None</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
-<ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="logger.transforms.derived_data_transform.DerivedDataTransform"><code class="flex name class">
 <span>class <span class="ident">DerivedDataTransform</span></span>
+<span>(</span><span>input_format=logger.utils.formats.Unknown, output_format=logger.utils.formats.Unknown)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base class for derived data transforms that take in a dict of values (only
-some of which they are interested in) and emit a dict of derived values.</p>
-<p>Required methods are:</p>
-<pre><code>fields() - return a list of field_names in which we are interested. We
-  will only be called when there are new values available for one or
-  more of these fields.
-
-transform(value_dict, timestamp_dict=None) - look for the fields we are
-  interested in (and optionally, their timestamps, if available) and
-  generate a DASRecord containing the derived values. If timestamp_dict
-  is available, the timestamp on the DASRecord would typically be the
-  latest timestamp of any field value used, otherwise the current time.
-</code></pre>
-<p>Abstract base class for DerivedDataTransforms.</p></section>
+<section class="desc"><p>Trivial base class for derived data transforms. Derived data
+transforms used to have some complicated invocation process to make
+them more efficient, but we've opted to make them just like any
+other transform for simplicity.</p>
+<p>Abstract base class for data Transforms.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class DerivedDataTransform(Transform):
+  &#34;&#34;&#34;Trivial base class for derived data transforms. Derived data
+  transforms used to have some complicated invocation process to make
+  them more efficient, but we&#39;ve opted to make them just like any
+  other transform for simplicity.
   &#34;&#34;&#34;
-  Base class for derived data transforms that take in a dict of values (only
-  some of which they are interested in) and emit a dict of derived values.
-
-  Required methods are:
-  ```
-  fields() - return a list of field_names in which we are interested. We
-    will only be called when there are new values available for one or
-    more of these fields.
-
-  transform(value_dict, timestamp_dict=None) - look for the fields we are
-    interested in (and optionally, their timestamps, if available) and
-    generate a DASRecord containing the derived values. If timestamp_dict
-    is available, the timestamp on the DASRecord would typically be the
-    latest timestamp of any field value used, otherwise the current time.
-  ```
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self):
-    &#34;&#34;&#34;Abstract base class for DerivedDataTransforms.&#34;&#34;&#34;
-    super().__init__(input_format=formats.Python, output_format=formats.Python)
-
-  ############################
-  def fields(self):
-    &#34;&#34;&#34;What fields is this transform interested in?&#34;&#34;&#34;
-    raise NotImplementedError(&#39;&#34;fields()&#34; method not defined for abstract &#39;
-                              &#39;class DerivedDataTransform&#39;)
-
-  ############################
-  def transform(self, value_dict, timestamp_dict=None):
-    &#34;&#34;&#34;Compute our new derived values from the value dict.&#34;&#34;&#34;
-    raise NotImplementedError(&#39;&#34;transform()&#34; method not defined for abstract &#39;
-                              &#39;class DerivedDataTransform&#39;)</code></pre>
+  pass</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -645,45 +78,17 @@ transform(value_dict, timestamp_dict=None) - look for the fields we are
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="logger.transforms.true_winds_transform.TrueWindsTransform" href="true_winds_transform.html#logger.transforms.true_winds_transform.TrueWindsTransform">TrueWindsTransform</a></li>
+<li><a title="logger.transforms.interpolation_transform.InterpolationTransform" href="interpolation_transform.html#logger.transforms.interpolation_transform.InterpolationTransform">InterpolationTransform</a></li>
 <li><a title="logger.transforms.subsample_transform.SubsampleTransform" href="subsample_transform.html#logger.transforms.subsample_transform.SubsampleTransform">SubsampleTransform</a></li>
-<li><a title="logger.transforms.test_derived_data_transform.RecipTransform" href="test_derived_data_transform.html#logger.transforms.test_derived_data_transform.RecipTransform">RecipTransform</a></li>
+<li><a title="logger.transforms.true_winds_transform.TrueWindsTransform" href="true_winds_transform.html#logger.transforms.true_winds_transform.TrueWindsTransform">TrueWindsTransform</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="logger.transforms.derived_data_transform.DerivedDataTransform.fields"><code class="name flex">
-<span>def <span class="ident">fields</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>What fields is this transform interested in?</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def fields(self):
-  &#34;&#34;&#34;What fields is this transform interested in?&#34;&#34;&#34;
-  raise NotImplementedError(&#39;&#34;fields()&#34; method not defined for abstract &#39;
-                            &#39;class DerivedDataTransform&#39;)</code></pre>
-</details>
-</dd>
-<dt id="logger.transforms.derived_data_transform.DerivedDataTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, value_dict, timestamp_dict=None)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Compute our new derived values from the value dict.</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def transform(self, value_dict, timestamp_dict=None):
-  &#34;&#34;&#34;Compute our new derived values from the value dict.&#34;&#34;&#34;
-  raise NotImplementedError(&#39;&#34;transform()&#34; method not defined for abstract &#39;
-                            &#39;class DerivedDataTransform&#39;)</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
 <li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
 <li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.transform" href="transform.html#logger.transforms.transform.Transform.transform">transform</a></code></li>
 </ul>
 </li>
 </ul>
@@ -705,17 +110,7 @@ transform(value_dict, timestamp_dict=None) - look for the fields we are
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="logger.transforms.derived_data_transform.ComposedDerivedDataTransform" href="#logger.transforms.derived_data_transform.ComposedDerivedDataTransform">ComposedDerivedDataTransform</a></code></h4>
-<ul class="">
-<li><code><a title="logger.transforms.derived_data_transform.ComposedDerivedDataTransform.transform" href="#logger.transforms.derived_data_transform.ComposedDerivedDataTransform.transform">transform</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></code></h4>
-<ul class="">
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.fields" href="#logger.transforms.derived_data_transform.DerivedDataTransform.fields">fields</a></code></li>
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.transform" href="#logger.transforms.derived_data_transform.DerivedDataTransform.transform">transform</a></code></li>
-</ul>
 </li>
 </ul>
 </li>
@@ -723,7 +118,7 @@ transform(value_dict, timestamp_dict=None) - look for the fields we are
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

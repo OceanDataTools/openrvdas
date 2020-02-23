@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.7.4" />
 <title>logger.utils.das_record API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
@@ -21,11 +21,14 @@
 </header>
 <section id="section-intro">
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">#!/usr/bin/env python3
 
 import json
 import pprint
+import logging
 
 from logger.utils.timestamp import timestamp as timestamp_method
 from logger.utils.read_config import parse
@@ -96,11 +99,76 @@ class DASRecord:
 
   ############################
   def __eq__(self, other):
-    return (self.data_id == other.data_id and
+    return (other and
+            self.data_id == other.data_id and
             self.message_type == other.message_type and
             self.timestamp == other.timestamp and
             self.fields == other.fields and
-            self.metadata == other.metadata)</code></pre>
+            self.metadata == other.metadata)
+
+############################
+def to_das_record_list(record):
+  &#34;&#34;&#34;Utility function to normalize different types of records into a
+  list of DASRecords.
+
+  Take input in one of these three formats:
+     - DASRecord
+     - a single record dict with keys &#39;timestamp&#39; and &#39;fields&#39;
+     - a field dict of format
+       ``` {field_name: [(timestamp, value), (timestamp, value),...],
+            field_name: [(timestamp, value), (timestamp, value),...],
+           }
+       ```
+  and convert it into a list of zero or more DASRecords.
+  &#34;&#34;&#34;
+  # What type of record is this?
+  if not record:
+    return []
+
+  # If it&#39;s a list, assume it&#39;s already a list of DASRecords
+  if type(record) is list:
+    return record
+
+  # If it&#39;s a single DASRecord, it&#39;s easy
+  if type(record) is DASRecord:
+    return [record]
+
+  # At this point, if it&#39;s not a dict, we don&#39;t know *what* it is
+  if not type(record) is dict:
+    logging.error(&#39;Unknown type of input passed to to_das_record_list: %s: %s&#39;,
+                  type(record), record)
+    return []
+
+  # If it&#39;s a single timestamp dict, it&#39;s easy
+  elif &#39;timestamp&#39; in record and &#39;fields&#39; in record:
+    return [DASRecord(timestamp=record[&#39;timestamp&#39;],
+                      fields=record[&#39;fields&#39;],
+                      metadata=record.get(&#39;metadata&#39;, None))]
+
+  # If here, we believe we&#39;ve received a field dict, in which each
+  # field may have multiple [timestamp, value] pairs. First thing we
+  # do is reformat the data into a map of
+  #        {timestamp: {field:value, field:value},...}}
+  try:
+    by_timestamp = {}
+    for field, ts_value_list in record.items():
+      if not type(ts_value_list) is list:
+        logging.warning(&#39;Expected field_name: [(timestamp, value),...] pairs, &#39;
+                        &#39;found %s: %s&#39;, field, ts_value_list)
+        continue
+      for (timestamp, value) in ts_value_list:
+        if not timestamp in by_timestamp:
+          by_timestamp[timestamp] = {}
+        by_timestamp[timestamp][field] = value
+
+    # Now copy the entries into an ordered-by-timestamp list.
+    results = [DASRecord(timestamp=ts, fields=by_timestamp[ts])
+               for ts in sorted(by_timestamp)]
+    return results
+  except ValueError:
+    logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
+                  field, pprint.pformat(ts_value_list))
+    return []</code></pre>
 </details>
 </section>
 <section>
@@ -108,6 +176,91 @@ class DASRecord:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="logger.utils.das_record.to_das_record_list"><code class="name flex">
+<span>def <span class="ident">to_das_record_list</span></span>(<span>record)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Utility function to normalize different types of records into a
+list of DASRecords.</p>
+<p>Take input in one of these three formats:
+- DASRecord
+- a single record dict with keys 'timestamp' and 'fields'
+- a field dict of format
+<code>{field_name: [(timestamp, value), (timestamp, value),...],
+field_name: [(timestamp, value), (timestamp, value),...],
+}</code>
+and convert it into a list of zero or more DASRecords.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_das_record_list(record):
+  &#34;&#34;&#34;Utility function to normalize different types of records into a
+  list of DASRecords.
+
+  Take input in one of these three formats:
+     - DASRecord
+     - a single record dict with keys &#39;timestamp&#39; and &#39;fields&#39;
+     - a field dict of format
+       ``` {field_name: [(timestamp, value), (timestamp, value),...],
+            field_name: [(timestamp, value), (timestamp, value),...],
+           }
+       ```
+  and convert it into a list of zero or more DASRecords.
+  &#34;&#34;&#34;
+  # What type of record is this?
+  if not record:
+    return []
+
+  # If it&#39;s a list, assume it&#39;s already a list of DASRecords
+  if type(record) is list:
+    return record
+
+  # If it&#39;s a single DASRecord, it&#39;s easy
+  if type(record) is DASRecord:
+    return [record]
+
+  # At this point, if it&#39;s not a dict, we don&#39;t know *what* it is
+  if not type(record) is dict:
+    logging.error(&#39;Unknown type of input passed to to_das_record_list: %s: %s&#39;,
+                  type(record), record)
+    return []
+
+  # If it&#39;s a single timestamp dict, it&#39;s easy
+  elif &#39;timestamp&#39; in record and &#39;fields&#39; in record:
+    return [DASRecord(timestamp=record[&#39;timestamp&#39;],
+                      fields=record[&#39;fields&#39;],
+                      metadata=record.get(&#39;metadata&#39;, None))]
+
+  # If here, we believe we&#39;ve received a field dict, in which each
+  # field may have multiple [timestamp, value] pairs. First thing we
+  # do is reformat the data into a map of
+  #        {timestamp: {field:value, field:value},...}}
+  try:
+    by_timestamp = {}
+    for field, ts_value_list in record.items():
+      if not type(ts_value_list) is list:
+        logging.warning(&#39;Expected field_name: [(timestamp, value),...] pairs, &#39;
+                        &#39;found %s: %s&#39;, field, ts_value_list)
+        continue
+      for (timestamp, value) in ts_value_list:
+        if not timestamp in by_timestamp:
+          by_timestamp[timestamp] = {}
+        by_timestamp[timestamp][field] = value
+
+    # Now copy the entries into an ordered-by-timestamp list.
+    results = [DASRecord(timestamp=ts, fields=by_timestamp[ts])
+               for ts in sorted(by_timestamp)]
+    return results
+  except ValueError:
+    logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
+                  field, pprint.pformat(ts_value_list))
+    return []</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -126,7 +279,9 @@ instrument, timestamp, fields (a dictionary of fieldname-value pairs)
 and metadata.</p>
 <p>If timestamp is not specified, the instance will use the current time.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class DASRecord:
   &#34;&#34;&#34;DASRecord is a structured representation of the field names and
   values (and metadata) contained in a sensor record.
@@ -192,7 +347,8 @@ and metadata.</p>
 
   ############################
   def __eq__(self, other):
-    return (self.data_id == other.data_id and
+    return (other and
+            self.data_id == other.data_id and
             self.message_type == other.message_type and
             self.timestamp == other.timestamp and
             self.fields == other.fields and
@@ -206,7 +362,9 @@ and metadata.</p>
 <dd>
 <section class="desc"><p>Return DASRecord as a JSON string.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def as_json(self, pretty=False):
   &#34;&#34;&#34;Return DASRecord as a JSON string.&#34;&#34;&#34;
   json_dict = {
@@ -238,6 +396,11 @@ and metadata.</p>
 <li><code><a title="logger.utils" href="index.html">logger.utils</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="logger.utils.das_record.to_das_record_list" href="#logger.utils.das_record.to_das_record_list">to_das_record_list</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -252,7 +415,7 @@ and metadata.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

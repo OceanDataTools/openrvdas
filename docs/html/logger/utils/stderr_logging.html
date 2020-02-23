@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.7.4" />
 <title>logger.utils.stderr_logging API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
@@ -21,63 +21,33 @@
 </header>
 <section id="section-intro">
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">#!/usr/bin/env python3
 
+import json
 import logging
-import logging.handlers
 import time
+import sys
 
-from os import makedirs
-from os.path import dirname
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-# Default base of logging path. See setUpStdErrLogging() for explanation.
-DEFAULT_STDERR_PATH = &#39;/var/log/openrvdas/&#39;
-DEFAULT_LOGGING_FORMAT = &#39;%(asctime)-15s.%(msecs)03dZ %(filename)s:%(lineno)d: %(message)s&#39;
-DEFAULT_DATE_FORMAT = &#39;%Y-%m-%dT%H:%M:%S&#39;  # ISO8601
+from logger.utils.timestamp import TIME_FORMAT, LOGGING_TIME_FORMAT
 
-################################################################################
-# Set up logging first of all
-def setUpStdErrLogging(stderr_file=None, stderr_path=None,
-                       logging_format=DEFAULT_LOGGING_FORMAT, log_level=None):
-  &#34;&#34;&#34;Set up default logging module handler to send stderr to console but
-  also, if specified, to a stderr_file. If the string stderr_file is a
-  fully-qualified path (i.e. starts with &#39;/&#39;), use that; if not append
-  it to the string stderr_path.
-  &#34;&#34;&#34;
-  #logging.debug(&#39;setUpStdErrLogging file %s, path %s, level %s&#39;,
-  #              stderr_file, stderr_path, log_level)
-  
-  logging.basicConfig(format=logging_format)
-  if log_level:
-    logging.root.setLevel(log_level)
+DEFAULT_LOGGING_FORMAT = &#39; &#39;.join([
+  &#39;%(asctime)-15s.%(msecs)03dZ&#39;,
+  #&#39;%(asctime)s&#39;,
+  &#39;%(levelno)s&#39;,
+  &#39;%(levelname)s&#39;,
+  &#39;%(filename)s:%(lineno)d&#39;,
+  &#39;%(message)s&#39;,
+  ])
 
-  # If they&#39;ve not given us a file to log to, nothing else to do
-  if not stderr_file:
-    return
-  
-  # Send output to stderr
-  formatter = logging.Formatter(fmt=logging_format,
-                                datefmt=DEFAULT_DATE_FORMAT)
-  console_handler = logging.StreamHandler()
-  console_handler.setFormatter(formatter)
-  handlers = [console_handler]
-
-  # If not a full path, use default base path
-  if not stderr_file.find(&#39;/&#39;) == 0:
-    stderr_path = stderr_path or DEFAULT_STDERR_PATH
-    stderr_file = stderr_path + stderr_file
-
-  # Try to make enclosing dir if it doesn&#39;t exist
-  makedirs(dirname(stderr_file), exist_ok=True)
-
-  # Attach a filehandler that will write to the specified file
-  file_handler = logging.handlers.WatchedFileHandler(stderr_file)
-  file_handler.setFormatter(formatter)
-
-  logging.root.handlers = [console_handler, file_handler]
-  if log_level:
-    logging.root.setLevel(log_level)
+STDERR_FORMATTER = logging.Formatter(fmt=DEFAULT_LOGGING_FORMAT,
+                                     datefmt=LOGGING_TIME_FORMAT)
+STDERR_FORMATTER.converter = time.gmtime
 
 ############################
 class StdErrLoggingHandler(logging.Handler):
@@ -86,13 +56,17 @@ class StdErrLoggingHandler(logging.Handler):
 
     logging.getLogger().addHandler(StdErrLoggingHandler(my_writer))
   &#34;&#34;&#34;
-  def __init__(self, writers, logging_format=DEFAULT_LOGGING_FORMAT):
+  def __init__(self, writers, parse_to_json=False):
+    &#34;&#34;&#34;
+    writers - either a Writer object or a list of Writer objects
+
+    parse_to_json - if true, expect to receive output as
+        a string in DEFAULT_LOGGING_FORMAT, and parse it into a dict of
+        the respective values.
+    &#34;&#34;&#34;
     super().__init__()
     self.writers = writers
-
-    self.formatter = logging.Formatter(fmt=logging_format,
-                                       datefmt=DEFAULT_DATE_FORMAT)
-    self.formatter.converter = time.gmtime
+    self.parse_to_json = parse_to_json
 
   def emit(self, record):
     # Temporarily push the logging level up as high as it can go to
@@ -101,8 +75,20 @@ class StdErrLoggingHandler(logging.Handler):
     log_level = logging.root.getEffectiveLevel()
     logging.root.setLevel(logging.CRITICAL)
 
-    message = self.formatter.format(record)
-      
+    message = STDERR_FORMATTER.format(record)
+
+    # If we&#39;re supposed to parse string into a dict
+    if self.parse_to_json:
+      try:
+        (asctime, levelno, levelname, mesg) = message.split(&#39; &#39;, maxsplit=3)
+        levelno = int(levelno)
+        fields = {&#39;asctime&#39;:asctime, &#39;levelno&#39;:levelno,
+                   &#39;levelname&#39;:levelname, &#39;message&#39;:mesg}
+      except ValueError:
+        fields = {&#39;message&#39;:message}
+      message = json.dumps(fields)
+
+    # Write message out to each writer
     if type(self.writers) is list:
       [writer.write(message) for writer in self.writers if writer]
     else:
@@ -115,90 +101,43 @@ class StdErrLoggingHandler(logging.Handler):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="logger.utils.stderr_logging.setUpStdErrLogging"><code class="name flex">
-<span>def <span class="ident">setUpStdErrLogging</span></span>(<span>stderr_file=None, stderr_path=None, logging_format='%(asctime)-15s.%(msecs)03dZ %(filename)s:%(lineno)d: %(message)s', log_level=None)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Set up default logging module handler to send stderr to console but
-also, if specified, to a stderr_file. If the string stderr_file is a
-fully-qualified path (i.e. starts with '/'), use that; if not append
-it to the string stderr_path.</p></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def setUpStdErrLogging(stderr_file=None, stderr_path=None,
-                       logging_format=DEFAULT_LOGGING_FORMAT, log_level=None):
-  &#34;&#34;&#34;Set up default logging module handler to send stderr to console but
-  also, if specified, to a stderr_file. If the string stderr_file is a
-  fully-qualified path (i.e. starts with &#39;/&#39;), use that; if not append
-  it to the string stderr_path.
-  &#34;&#34;&#34;
-  #logging.debug(&#39;setUpStdErrLogging file %s, path %s, level %s&#39;,
-  #              stderr_file, stderr_path, log_level)
-  
-  logging.basicConfig(format=logging_format)
-  if log_level:
-    logging.root.setLevel(log_level)
-
-  # If they&#39;ve not given us a file to log to, nothing else to do
-  if not stderr_file:
-    return
-  
-  # Send output to stderr
-  formatter = logging.Formatter(fmt=logging_format,
-                                datefmt=DEFAULT_DATE_FORMAT)
-  console_handler = logging.StreamHandler()
-  console_handler.setFormatter(formatter)
-  handlers = [console_handler]
-
-  # If not a full path, use default base path
-  if not stderr_file.find(&#39;/&#39;) == 0:
-    stderr_path = stderr_path or DEFAULT_STDERR_PATH
-    stderr_file = stderr_path + stderr_file
-
-  # Try to make enclosing dir if it doesn&#39;t exist
-  makedirs(dirname(stderr_file), exist_ok=True)
-
-  # Attach a filehandler that will write to the specified file
-  file_handler = logging.handlers.WatchedFileHandler(stderr_file)
-  file_handler.setFormatter(formatter)
-
-  logging.root.handlers = [console_handler, file_handler]
-  if log_level:
-    logging.root.setLevel(log_level)</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="logger.utils.stderr_logging.StdErrLoggingHandler"><code class="flex name class">
 <span>class <span class="ident">StdErrLoggingHandler</span></span>
-<span>(</span><span>writers, logging_format='%(asctime)-15s.%(msecs)03dZ %(filename)s:%(lineno)d: %(message)s')</span>
+<span>(</span><span>writers, parse_to_json=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Write Python logging.* messages to whatever writer we're passed. To
 use, run</p>
 <p>logging.getLogger().addHandler(StdErrLoggingHandler(my_writer))</p>
-<p>Initializes the instance - basically setting the formatter to None
-and the filter list to empty.</p></section>
+<p>writers - either a Writer object or a list of Writer objects</p>
+<p>parse_to_json - if true, expect to receive output as
+a string in DEFAULT_LOGGING_FORMAT, and parse it into a dict of
+the respective values.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class StdErrLoggingHandler(logging.Handler):
   &#34;&#34;&#34;Write Python logging.* messages to whatever writer we&#39;re passed. To
   use, run
 
     logging.getLogger().addHandler(StdErrLoggingHandler(my_writer))
   &#34;&#34;&#34;
-  def __init__(self, writers, logging_format=DEFAULT_LOGGING_FORMAT):
+  def __init__(self, writers, parse_to_json=False):
+    &#34;&#34;&#34;
+    writers - either a Writer object or a list of Writer objects
+
+    parse_to_json - if true, expect to receive output as
+        a string in DEFAULT_LOGGING_FORMAT, and parse it into a dict of
+        the respective values.
+    &#34;&#34;&#34;
     super().__init__()
     self.writers = writers
-
-    self.formatter = logging.Formatter(fmt=logging_format,
-                                       datefmt=DEFAULT_DATE_FORMAT)
-    self.formatter.converter = time.gmtime
+    self.parse_to_json = parse_to_json
 
   def emit(self, record):
     # Temporarily push the logging level up as high as it can go to
@@ -207,8 +146,20 @@ and the filter list to empty.</p></section>
     log_level = logging.root.getEffectiveLevel()
     logging.root.setLevel(logging.CRITICAL)
 
-    message = self.formatter.format(record)
-      
+    message = STDERR_FORMATTER.format(record)
+
+    # If we&#39;re supposed to parse string into a dict
+    if self.parse_to_json:
+      try:
+        (asctime, levelno, levelname, mesg) = message.split(&#39; &#39;, maxsplit=3)
+        levelno = int(levelno)
+        fields = {&#39;asctime&#39;:asctime, &#39;levelno&#39;:levelno,
+                   &#39;levelname&#39;:levelname, &#39;message&#39;:mesg}
+      except ValueError:
+        fields = {&#39;message&#39;:message}
+      message = json.dumps(fields)
+
+    # Write message out to each writer
     if type(self.writers) is list:
       [writer.write(message) for writer in self.writers if writer]
     else:
@@ -230,7 +181,9 @@ and the filter list to empty.</p></section>
 <p>This version is intended to be implemented by subclasses and so
 raises a NotImplementedError.</p></section>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def emit(self, record):
   # Temporarily push the logging level up as high as it can go to
   # effectively disable recursion induced by logging that occurs inside
@@ -238,8 +191,20 @@ raises a NotImplementedError.</p></section>
   log_level = logging.root.getEffectiveLevel()
   logging.root.setLevel(logging.CRITICAL)
 
-  message = self.formatter.format(record)
-    
+  message = STDERR_FORMATTER.format(record)
+
+  # If we&#39;re supposed to parse string into a dict
+  if self.parse_to_json:
+    try:
+      (asctime, levelno, levelname, mesg) = message.split(&#39; &#39;, maxsplit=3)
+      levelno = int(levelno)
+      fields = {&#39;asctime&#39;:asctime, &#39;levelno&#39;:levelno,
+                 &#39;levelname&#39;:levelname, &#39;message&#39;:mesg}
+    except ValueError:
+      fields = {&#39;message&#39;:message}
+    message = json.dumps(fields)
+
+  # Write message out to each writer
   if type(self.writers) is list:
     [writer.write(message) for writer in self.writers if writer]
   else:
@@ -263,11 +228,6 @@ raises a NotImplementedError.</p></section>
 <li><code><a title="logger.utils" href="index.html">logger.utils</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="logger.utils.stderr_logging.setUpStdErrLogging" href="#logger.utils.stderr_logging.setUpStdErrLogging">setUpStdErrLogging</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -282,7 +242,7 @@ raises a NotImplementedError.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>
