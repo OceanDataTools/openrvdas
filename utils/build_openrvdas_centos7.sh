@@ -168,6 +168,7 @@ fi
 
 if [ -e openrvdas/.git ] ; then   # If we've already got an installation
   cd openrvdas
+  git pull
   git checkout $OPENRVDAS_BRANCH
   git pull
 else                              # If we don't already have an installation
