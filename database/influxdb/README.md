@@ -75,6 +75,15 @@ Note that the paths described below will vary depending on your system.
   INFLUXDB_AUTH_TOKEN = 'MKRK2bRwy1-RSzvXOeC85cW2yQrhVHwX5oeFhJ1UBd3zjz39Zqg97WRdr8u4RkSBiyOwX2ck4zixMnOml7SAoQ=='
   ```
 
+## Install the InfluxDB Python client
+
+Use the venv path version of pip to make sure the client is installed for the correct version of Python.
+
+```
+cd /opt/openrvdas
+venv/bin/pip install influxdb_client
+```
+
 ## Using InfluxDB
 
 At this point, an instance of ``InfluxDBWriter`` should be able to
