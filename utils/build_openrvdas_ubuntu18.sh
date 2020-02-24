@@ -528,7 +528,7 @@ user=$RVDAS_USER
 ;; Uncomment the following command block if you've installed InfluxDB
 ;; and want it to run as a service.
 ;[program:influxdb]
-;command=database/influxdb/influxd --reporting-disabled
+;command=database/influxdb/bin/influxd --reporting-disabled
 ;directory=${INSTALL_ROOT}/openrvdas
 ;autostart=$SUPERVISOR_AUTOSTART
 ;autorestart=true

@@ -21,35 +21,36 @@ Note that the paths described below will vary depending on your system.
   cd /tmp
   wget https://dl.influxdata.com/influxdb/releases/influxdb_2.0.0-beta.1_linux_amd64.tar.gz
   ```
-  
-* Uncompress the downloaded archive from wherever it is stored and copy its contents into this directory
+
+* Uncompress the downloaded archive from wherever it is stored and copy its contents into this directory.
 
   ```
   tar xvfz influxdb_2.0.0-beta.1_linux_amd64.tar.gz
-  cp influxdb_2.0.0-beta.1_linux_amd64.tar/* /opt/openrdas/database/influxdb
+  cp influxdb_2.0.0-beta.1_linux_amd64.tar/* /opt/openrdas/database/influxdb/bin
   ```
 
 ## Configure InfluxDB and set up credentials
-* Start the influxdb server running
+
+* Start the influxdb server running.
 
   ```
-  /opt/openrvdas/database/influxdb/influxd --reporting-disabled
+  /opt/openrvdas/database/influxdb/bin/influxd --reporting-disabled
   ```
 
   Note that if you're running on MacOS Catalina, the OS will flag the script as untrusted the first time you run it, and you will have to go to __System Preferences > Security & Privacy__ to select "Allow influxd", then run it again.
 
-* Set up the InfluxDB user credentials
+* Set up the InfluxDB user credentials. In a separate terminal, run:
 
   ```
-  /opt/openrvdas/database/influxdb/influx setup \
+  /opt/openrvdas/database/influxdb/bin/influx setup \
     --username rvdas --password rvdasrvdas \
     --org openrvdas --bucket openrvdas \
     --force
   ```
 
-  As with influxd, on MacOS Catalina, you will need to authorize the script the first time, then re-run it
+  As with influxd, on MacOS Catalina, you will need to authorize the script the first time, then re-run it.
 
-## Copy the credentials into place
+## Copy the credentials into place.
 
 *  When ``setup`` finishes running, it will tell you where it has stored the token it generated for you:
 
@@ -96,7 +97,7 @@ installation script (in CentOS it should be in
 ; Uncomment the following command block if you've installed InfluxDB
 ; and want it to run as a service.
 [program:influxdb]
-command=database/influxdb/influxd --reporting-disabled
+command=database/influxdb/bin/influxd --reporting-disabled
 directory=/opt/openrvdas
 autostart=false
 autorestart=true

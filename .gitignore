@@ -31,8 +31,5 @@ django_gui/uwsgi_params
 venv/
 
 # InfluxDB
-database/influxdb/LICENSE
-database/influxdb/README.md
-database/influxdb/influx
-database/influxdb/influxd
+database/influxdb/bin
 database/influxdb/settings.py
