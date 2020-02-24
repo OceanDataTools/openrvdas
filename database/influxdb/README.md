@@ -26,7 +26,7 @@ Note that the paths described below will vary depending on your system.
 
   ```
   tar xvfz influxdb_2.0.0-beta.1_linux_amd64.tar.gz
-  cp influxdb_2.0.0-beta.1_linux_amd64.tar/* /opt/openrdas/database/influxdb/bin
+  cp -r influxdb_2.0.0-beta.1_linux_amd64 /opt/openrvdas/database/influxdb/bin
   ```
 
 ## Configure InfluxDB and set up credentials
