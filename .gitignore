@@ -29,3 +29,10 @@ django_gui/uwsgi_params
 
 # virtualenv
 venv/
+
+# InfluxDB
+database/influxdb/LICENSE
+database/influxdb/README.md
+database/influxdb/influx
+database/influxdb/influxd
+database/influxdb/settings.py

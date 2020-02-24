@@ -518,6 +518,18 @@ stderr_logfile=/var/log/openrvdas/simulate_skq.err.log
 stdout_logfile=/var/log/openrvdas/simulate_skq.out.log
 user=$RVDAS_USER
 
+;; Uncomment the following command block if you've installed InfluxDB
+;; and want it to run as a service.
+;[program:influxdb]
+;command=database/influxdb/influxd --reporting-disabled
+;directory=${INSTALL_ROOT}/openrvdas
+;autostart=$SUPERVISOR_AUTOSTART
+;autorestart=true
+;startretries=3
+;stderr_logfile=/var/log/openrvdas/influxdb.err.log
+;stdout_logfile=/var/log/openrvdas/influxdb.out.log
+;user=$RVDAS_USER
+
 [group:web]
 programs=nginx,uwsgi
 
