@@ -196,15 +196,9 @@ create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
 create database if not exists data character set utf8;
 GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
 
-#create database if not exists openrvdas character set utf8;
-#GRANT ALL PRIVILEGES ON openrvdas.* TO '$RVDAS_USER'@'localhost';
-
 create database if not exists test character set utf8;
 GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
 GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
-
-#GRANT ALL PRIVILEGES ON test_openrvdas.* TO '$RVDAS_USER'@'localhost';
-#GRANT ALL PRIVILEGES ON test_openrvdas.* TO 'test'@'localhost' identified by 'test';
 
 flush privileges;
 \q
@@ -719,7 +713,7 @@ save_default_variables
 
 #########################################################################
 #########################################################################
-# Install yum stuff
+# Install packages
 echo "#####################################################################"
 echo Installing required packages from repository...
 install_packages
