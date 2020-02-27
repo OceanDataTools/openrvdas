@@ -251,6 +251,11 @@ function install_openrvdas {
       git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
       cd openrvdas
     fi
+
+    # A stupid MacOS-only hack we need to make because MacOS doesn't
+    # do well with supervisord's attempt to be available from all
+    # hosts via http.  Make it available only to localhost.
+    sed -i.bak 's/port=\*/port=localhost/' server/logger_manager.py
 }
 
 ###########################################################################
@@ -268,7 +273,7 @@ function setup_python_packages {
     # Inside the venv, python *is* the right version, right?
     python3 -m pip install --upgrade pip
     pip3 install \
-      Django==2.1 \
+      Django==2.1.5 \
       pyserial \
       uwsgi \
       websockets \
@@ -300,16 +305,11 @@ function setup_nginx {
     # so do a bit of hackery: chop off the closing "}" with head, append
     # the lines we need and a new closing "}" into a temp file, then copy back.
     if grep -q "/usr/local/etc/nginx/sites-enabled/" /usr/local/etc/nginx/nginx.conf; then
-      echo NGINX sites-available already registered. Skipping...
+        echo NGINX sites-available already registered. Skipping...
     else
-      head --lines=-2 /usr/local/etc/nginx/nginx.conf > /tmp/nginx.conf
-      cat >> /tmp/nginx.conf <<EOF
-   include /usr/local/etc/nginx/sites-enabled/*.conf;
-   server_names_hash_bucket_size 64;
-}
-EOF
-      mv -f /tmp/nginx.conf /usr/local/etc/nginx/nginx.conf
-      echo Done setting up NGINX
+        sed -i.bak 's/include servers\/\*;/include \/usr\/local\/etc\/nginx\/sites-enabled\/\*.conf\;\
+    server_names_hash_bucket_size 64\;/' /usr/local/etc/nginx/nginx.conf
+        echo Done setting up NGINX
     fi
 }
 
@@ -347,7 +347,17 @@ function setup_django {
 
     # Bass-ackwards way of creating superuser $RVDAS_USER, as the
     # createsuperuser command won't work from a script
-    echo "from django.contrib.auth.models import User; User.objects.filter(email='${RVDAS_USER}@example.com').delete(); User.objects.create_superuser('${RVDAS_USER}', '${RVDAS_USER}@example.com', '${RVDAS_DATABASE_PASSWORD}')" | python3 manage.py shell
+    python manage.py shell <<EOF
+from django.contrib.auth.models import User
+try:
+  User.objects.get(username='${RVDAS_USER}').delete()
+except User.DoesNotExist:
+  pass
+
+User.objects.create_superuser('${RVDAS_USER}',
+                              '${RVDAS_USER}@example.com',
+                              '${RVDAS_DATABASE_PASSWORD}')
+EOF
 }
 
 ###########################################################################
@@ -475,7 +485,7 @@ chmod=0770                      ; socket file mode (default 0700)
 ;chown=nobody:${RVDAS_USER} ; CAN'T GET THIS TO WORK WITH MACOS
 
 [inet_http_server]
-port=*:9001
+port=127.0.0.1:9001
 ;username=${RVDAS_USER}  ; Disabled for MacOS installation
 ;password=${RVDAS_USER}  ; "   "
 
