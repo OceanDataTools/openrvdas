@@ -105,7 +105,7 @@ nodaemon=true      ; start in foreground if true; default false
 minfds=1024        ; min. avail startup file descriptors; default 1024
 minprocs=200       ; min. avail process descriptors;default 200
 umask=022          ; process file creation umask; default 022
-user={user}        ; setuid to this UNIX account at startup; recommended if root
+;user={user}        ; setuid to this UNIX account at startup; recommended if root
 
 ; The rpcinterface:supervisor section must remain in the config file for
 ; RPC (supervisorctl/web interface) to work.  Additional interfaces may be
@@ -136,7 +136,7 @@ autostart=false
 autorestart={autorestart}
 startsecs={startsecs}
 startretries={startretries}
-user={user}
+;user={user}
 stderr_logfile_maxbytes=50MB
 stderr_logfile_backups=10
 stdout_logfile_maxbytes=50MB
