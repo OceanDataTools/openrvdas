@@ -51,7 +51,7 @@ class FormatTransform(Transform):
     for field, value in record_fields.items():
         fields[field] = value
 
-    # Add the timestamp as a field, as well
+    # Add the timestamp as a field as well.
     fields['timestamp'] = record.get('timestamp',0)
                             
     try:
