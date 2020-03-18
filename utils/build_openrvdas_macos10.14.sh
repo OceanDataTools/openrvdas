@@ -139,7 +139,7 @@ function install_packages {
     [ -e /usr/local/bin/nginx ]  || brew install nginx
     [ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
-    brew upgrade python socat openssh nginx supervisor || echo Upgraded packages
+    brew upgrade socat openssh nginx supervisor || echo Upgraded packages
     brew link --overwrite python || echo Linking Python
 }
 
