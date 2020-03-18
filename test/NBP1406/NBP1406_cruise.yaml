@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Sun Dec 29 23:36:35 2019 UTC
+#   time:     Wed Mar 18 15:00:36 2020 UTC
 #   user:     pablo
 #
 ########################################
@@ -267,7 +267,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -293,7 +293,6 @@ configs:
     - class: LogfileWriter      # Write to logfile
       kwargs:
         filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
-        rollover_hourly: True
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -304,7 +303,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -343,7 +342,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -390,7 +389,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -426,7 +425,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -465,7 +464,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -512,7 +511,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -548,7 +547,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -587,7 +586,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -634,7 +633,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -670,7 +669,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -709,7 +708,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -756,7 +755,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -792,7 +791,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -831,7 +830,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -878,7 +877,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -914,7 +913,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -953,7 +952,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1000,7 +999,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1036,7 +1035,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1075,7 +1074,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1122,7 +1121,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1158,7 +1157,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1197,7 +1196,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1244,7 +1243,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1280,7 +1279,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1319,7 +1318,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1366,7 +1365,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1402,7 +1401,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1441,7 +1440,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1488,7 +1487,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1524,7 +1523,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1563,7 +1562,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1610,7 +1609,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1646,7 +1645,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1685,7 +1684,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1732,7 +1731,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1768,7 +1767,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1807,7 +1806,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1854,7 +1853,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1890,7 +1889,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1929,7 +1928,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1976,7 +1975,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2012,7 +2011,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2051,7 +2050,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2098,7 +2097,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2134,7 +2133,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2173,7 +2172,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2220,7 +2219,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2256,7 +2255,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2295,7 +2294,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2342,7 +2341,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2378,7 +2377,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2417,7 +2416,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2464,7 +2463,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2500,7 +2499,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2539,7 +2538,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2586,7 +2585,7 @@ configs:
     - class: UDPWriter
       kwargs:
         port: 6224
-        interface: 0.0.0.0
+        destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2622,7 +2621,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2661,7 +2660,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 0.0.0.0
+            destination: 255.255.255.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:

@@ -3,14 +3,14 @@
 # YAML cruise definition file for OpenRVDAS.
 #
 # Created by:
-#   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Sun Dec 29 23:36:35 2019 UTC
+#   command:  local/usap/create_cruise.py local/usap/nbp/nbp_port_defs.yaml
+#   time:     Wed Mar 18 15:03:31 2020 UTC
 #   user:     pablo
 #
 ########################################
 cruise:
-  id: NBP1406
-  start: '2019-07-01'
+  id: NBP
+  start: '2019-01-01'
   end: '2019-12-31'
 
 ########################################
@@ -257,7 +257,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -279,9 +279,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: PCOD
 
   PCOD->file/net:
     name: PCOD->file/net
@@ -289,14 +286,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
-        rollover_hourly: True
+        filebase: /data/logger/PCOD/raw/NBP_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -322,9 +318,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: PCOD
 
   PCOD->file/net/db:
     name: PCOD->file/net/db
@@ -332,13 +325,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_PCOD
+        port: /dev/ttyr00
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
+        filebase: /data/logger/PCOD/raw/NBP_PCOD
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -364,10 +357,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: PCOD
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -390,7 +379,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -412,9 +401,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: cwnc
 
   cwnc->file/net:
     name: cwnc->file/net
@@ -422,13 +408,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
+        filebase: /data/logger/cwnc/raw/NBP_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -454,9 +440,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: cwnc
 
   cwnc->file/net/db:
     name: cwnc->file/net/db
@@ -464,13 +447,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_cwnc
+        port: /dev/ttyr01
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
+        filebase: /data/logger/cwnc/raw/NBP_cwnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -496,10 +479,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: cwnc
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -522,7 +501,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -544,9 +523,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: gp02
 
   gp02->file/net:
     name: gp02->file/net
@@ -554,13 +530,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
+        filebase: /data/logger/gp02/raw/NBP_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -586,9 +562,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: gp02
 
   gp02->file/net/db:
     name: gp02->file/net/db
@@ -596,13 +569,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gp02
+        port: /dev/ttyr03
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
+        filebase: /data/logger/gp02/raw/NBP_gp02
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -628,10 +601,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: gp02
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -654,7 +623,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -676,9 +645,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: gyr1
 
   gyr1->file/net:
     name: gyr1->file/net
@@ -686,13 +652,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
+        filebase: /data/logger/gyr1/raw/NBP_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -718,9 +684,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: gyr1
 
   gyr1->file/net/db:
     name: gyr1->file/net/db
@@ -728,13 +691,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 4800
-        port: /tmp/tty_gyr1
+        port: /dev/ttyr04
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
+        filebase: /data/logger/gyr1/raw/NBP_gyr1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -760,10 +723,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: gyr1
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -786,7 +745,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -808,9 +767,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: adcp
 
   adcp->file/net:
     name: adcp->file/net
@@ -818,13 +774,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
+        filebase: /data/logger/adcp/raw/NBP_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -850,9 +806,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: adcp
 
   adcp->file/net/db:
     name: adcp->file/net/db
@@ -860,13 +813,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_adcp
+        port: /dev/ttyr05
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
+        filebase: /data/logger/adcp/raw/NBP_adcp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -892,10 +845,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: adcp
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -918,7 +867,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -940,9 +889,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: eng1
 
   eng1->file/net:
     name: eng1->file/net
@@ -950,13 +896,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
+        filebase: /data/logger/eng1/raw/NBP_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -982,9 +928,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: eng1
 
   eng1->file/net/db:
     name: eng1->file/net/db
@@ -992,13 +935,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_eng1
+        port: /dev/ttyr06
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
+        filebase: /data/logger/eng1/raw/NBP_eng1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1024,10 +967,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: eng1
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1050,7 +989,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1072,9 +1011,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: svp1
 
   svp1->file/net:
     name: svp1->file/net
@@ -1082,13 +1018,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
+        filebase: /data/logger/svp1/raw/NBP_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1114,9 +1050,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: svp1
 
   svp1->file/net/db:
     name: svp1->file/net/db
@@ -1124,13 +1057,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_svp1
+        port: /dev/ttyr07
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
+        filebase: /data/logger/svp1/raw/NBP_svp1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1156,10 +1089,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: svp1
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1182,7 +1111,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1204,9 +1133,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: twnc
 
   twnc->file/net:
     name: twnc->file/net
@@ -1214,13 +1140,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
+        filebase: /data/logger/twnc/raw/NBP_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1246,9 +1172,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: twnc
 
   twnc->file/net/db:
     name: twnc->file/net/db
@@ -1256,13 +1179,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_twnc
+        port: /dev/ttyr0b
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
+        filebase: /data/logger/twnc/raw/NBP_twnc
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1288,10 +1211,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: twnc
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1314,7 +1233,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1336,9 +1255,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: mbdp
 
   mbdp->file/net:
     name: mbdp->file/net
@@ -1346,13 +1262,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
+        filebase: /data/logger/mbdp/raw/NBP_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1378,9 +1294,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: mbdp
 
   mbdp->file/net/db:
     name: mbdp->file/net/db
@@ -1388,13 +1301,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mbdp
+        port: /dev/ttyr0f
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
+        filebase: /data/logger/mbdp/raw/NBP_mbdp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1420,10 +1333,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: mbdp
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1446,7 +1355,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1468,9 +1377,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: knud
 
   knud->file/net:
     name: knud->file/net
@@ -1478,13 +1384,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/knud/raw/NBP1406_knud
+        filebase: /data/logger/knud/raw/NBP_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1510,9 +1416,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: knud
 
   knud->file/net/db:
     name: knud->file/net/db
@@ -1520,13 +1423,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 19200
-        port: /tmp/tty_knud
+        port: /dev/ttyr12
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/knud/raw/NBP1406_knud
+        filebase: /data/logger/knud/raw/NBP_knud
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1552,10 +1455,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: knud
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1578,7 +1477,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1600,9 +1499,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: grv1
 
   grv1->file/net:
     name: grv1->file/net
@@ -1610,13 +1506,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
+        filebase: /data/logger/grv1/raw/NBP_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1642,9 +1538,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: grv1
 
   grv1->file/net/db:
     name: grv1->file/net/db
@@ -1652,13 +1545,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_grv1
+        port: /dev/ttyr14
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
+        filebase: /data/logger/grv1/raw/NBP_grv1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1684,10 +1577,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: grv1
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1710,7 +1599,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1732,9 +1621,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: mwx1
 
   mwx1->file/net:
     name: mwx1->file/net
@@ -1742,13 +1628,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
+        filebase: /data/logger/mwx1/raw/NBP_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1774,9 +1660,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: mwx1
 
   mwx1->file/net/db:
     name: mwx1->file/net/db
@@ -1784,13 +1667,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_mwx1
+        port: /dev/ttyr16
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
+        filebase: /data/logger/mwx1/raw/NBP_mwx1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1816,10 +1699,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: mwx1
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1842,7 +1721,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1864,9 +1743,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: pco2
 
   pco2->file/net:
     name: pco2->file/net
@@ -1874,13 +1750,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
+        filebase: /data/logger/pco2/raw/NBP_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1906,9 +1782,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: pco2
 
   pco2->file/net/db:
     name: pco2->file/net/db
@@ -1916,13 +1789,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pco2
+        port: /dev/ttyr18
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
+        filebase: /data/logger/pco2/raw/NBP_pco2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -1948,10 +1821,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: pco2
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1974,7 +1843,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -1996,9 +1865,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: pguv
 
   pguv->file/net:
     name: pguv->file/net
@@ -2006,13 +1872,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
+        filebase: /data/logger/pguv/raw/NBP_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2038,9 +1904,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: pguv
 
   pguv->file/net/db:
     name: pguv->file/net/db
@@ -2048,13 +1911,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_pguv
+        port: /dev/ttyr1e
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
+        filebase: /data/logger/pguv/raw/NBP_pguv
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2080,10 +1943,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: pguv
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2106,7 +1965,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2128,9 +1987,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: s330
 
   s330->file/net:
     name: s330->file/net
@@ -2138,13 +1994,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/s330/raw/NBP1406_s330
+        filebase: /data/logger/s330/raw/NBP_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2170,9 +2026,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: s330
 
   s330->file/net/db:
     name: s330->file/net/db
@@ -2180,13 +2033,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_s330
+        port: /dev/ttyr22
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/s330/raw/NBP1406_s330
+        filebase: /data/logger/s330/raw/NBP_s330
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2212,10 +2065,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: s330
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2238,7 +2087,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2260,9 +2109,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: tsg1
 
   tsg1->file/net:
     name: tsg1->file/net
@@ -2270,13 +2116,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
+        filebase: /data/logger/tsg1/raw/NBP_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2302,9 +2148,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: tsg1
 
   tsg1->file/net/db:
     name: tsg1->file/net/db
@@ -2312,13 +2155,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg1
+        port: /dev/ttyr25
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
+        filebase: /data/logger/tsg1/raw/NBP_tsg1
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2344,10 +2187,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: tsg1
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2370,7 +2209,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2392,9 +2231,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: rtmp
 
   rtmp->file/net:
     name: rtmp->file/net
@@ -2402,13 +2238,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
+        filebase: /data/logger/rtmp/raw/NBP_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2434,9 +2270,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: rtmp
 
   rtmp->file/net/db:
     name: rtmp->file/net/db
@@ -2444,13 +2277,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_rtmp
+        port: /dev/ttyr26
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
+        filebase: /data/logger/rtmp/raw/NBP_rtmp
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2476,10 +2309,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: rtmp
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2502,7 +2331,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2524,9 +2353,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: hdas
 
   hdas->file/net:
     name: hdas->file/net
@@ -2534,13 +2360,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
+        filebase: /data/logger/hdas/raw/NBP_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2566,9 +2392,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: hdas
 
   hdas->file/net/db:
     name: hdas->file/net/db
@@ -2576,13 +2399,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_hdas
+        port: /dev/ttyr27
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
+        filebase: /data/logger/hdas/raw/NBP_hdas
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2608,10 +2431,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: hdas
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2634,7 +2453,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2656,9 +2475,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: hdas
 
   tsg2->file/net:
     name: tsg2->file/net
@@ -2666,13 +2482,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
+        filebase: /data/logger/tsg2/raw/NBP_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2698,9 +2514,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: tsg2
 
   tsg2->file/net/db:
     name: tsg2->file/net/db
@@ -2708,13 +2521,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_tsg2
+        port: /dev/ttyr29
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
+        filebase: /data/logger/tsg2/raw/NBP_tsg2
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2740,10 +2553,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: tsg2
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2766,7 +2575,7 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp and logger label
     - class: TimestampTransform
     - class: PrefixTransform
@@ -2788,9 +2597,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: seap
 
   seap->file/net:
     name: seap->file/net
@@ -2798,13 +2604,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/seap/raw/NBP1406_seap
+        filebase: /data/logger/seap/raw/NBP_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2830,9 +2636,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: seap
 
   seap->file/net/db:
     name: seap->file/net/db
@@ -2840,13 +2643,13 @@ configs:
       class: SerialReader
       kwargs:
         baudrate: 9600
-        port: /tmp/tty_seap
+        port: /dev/ttyr2a
     transforms:                 # Add timestamp
     - class: TimestampTransform
     writers:
     - class: LogfileWriter      # Write to logfile
       kwargs:
-        filebase: /var/tmp/log/seap/raw/NBP1406_seap
+        filebase: /data/logger/seap/raw/NBP_seap
     - class: ComposedWriter     # Also prefix with logger name and broadcast
       kwargs:                   # raw NMEA on UDP
         transforms:
@@ -2872,10 +2675,6 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: seap
-
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -3053,3 +2852,4 @@ configs:
     - class: CachedDataWriter
       kwargs:
         data_server: localhost:8766
+

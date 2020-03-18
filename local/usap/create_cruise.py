@@ -229,7 +229,7 @@ NET_WRITER_TEMPLATE="""
     - class: UDPWriter
       kwargs:
         port: %RAW_UDP_PORT%
-        interface: %INTERFACE%
+        destination: %UDP_DESTINATION%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -267,7 +267,7 @@ FILE_NET_WRITER_TEMPLATE="""
         - class: UDPWriter
           kwargs:
             port: %RAW_UDP_PORT%
-            interface: %INTERFACE%
+            destination: %UDP_DESTINATION%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -308,7 +308,7 @@ FULL_WRITER_TEMPLATE="""
         - class: UDPWriter
           kwargs:
             port: %RAW_UDP_PORT%
-            interface: %INTERFACE%
+            destination: %UDP_DESTINATION%
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -365,7 +365,7 @@ substitutions = {
   '%CRUISE_START%': port_def.get('cruise', {}).get('start'),
   '%CRUISE_END%': port_def.get('cruise', {}).get('end'),
 
-  '%INTERFACE%': port_def.get('network', {}).get('interface', '0.0.0.0'),
+  '%UDP_DESTINATION%': port_def.get('network', {}).get('destination', '255.255.255.255'),
   '%RAW_UDP_PORT%': port_def.get('network', {}).get('raw_udp_port'),
   '%PARSED_UDP_PORT%': port_def.get('network', {}).get('parsed_udp_port'),
   '%DATA_SERVER%': port_def.get('network', {}).get('data_server'),

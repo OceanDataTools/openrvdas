@@ -33,3 +33,9 @@ venv/
 # InfluxDB
 database/influxdb/bin
 database/influxdb/settings.py
+
+# Created by build scripts
+.build_openrvdas_preferences
+
+# Symlink for legacy widget paths
+widgets
