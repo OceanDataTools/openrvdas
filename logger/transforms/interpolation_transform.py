@@ -10,6 +10,8 @@ import threading
 import time
 import websockets
 
+from math import degrees, radians, sin, cos, atan2
+
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.writers.text_file_writer import TextFileWriter
@@ -291,6 +293,29 @@ def interpolate(algorithm, values, timestamp, now):
       else:
         break
     return value
+
+  # polar_average: interpret as an angle in degrees. Convert to points
+  # on a unit circle and return the angle of their centroid from the origin.
+  if alg_type == 'polar_average':
+    window = algorithm.get('window', 10)  # How far back/forward to average
+    lower_limit = timestamp - window/2
+    upper_limit = timestamp + window/2
+    vals_to_average = [val for ts, val in values
+                       if ts >= lower_limit and ts <= upper_limit]
+    if not vals_to_average:
+      return None
+
+    try:
+      val_radians = [radians(val) for val in vals_to_average]
+      x_mean = mean([sin(val) for val in val_radians])
+      y_mean = mean([cos(val) for val in val_radians])
+      angle = degrees(atan2(x_mean, y_mean))
+      if angle < 0:
+        angle += 360
+      return angle
+    except TypeError:
+      logging.error('Non-numeric value in subsample list: %s', vals_to_average)
+      return None
 
   # Not an algorithm we recognize
   else:

@@ -164,7 +164,7 @@ SNAPSHOT_TEMPLATE = """
           AvgPortTrueWindDir:
             source: PortTrueWindDir
             algorithm:
-              type: boxcar_average
+              type: polar_average
               window: 30
           AvgPortTrueWindSpeed:
             source: PortTrueWindSpeed
@@ -174,7 +174,7 @@ SNAPSHOT_TEMPLATE = """
           AvgStbdTrueWindDir:
             source: StbdTrueWindDir
             algorithm:
-              type: boxcar_average
+              type: polar_average
               window: 30
           AvgStbdTrueWindSpeed:
             source: StbdTrueWindSpeed

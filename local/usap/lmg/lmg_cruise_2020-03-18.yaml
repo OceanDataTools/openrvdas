@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_cruise.py local/usap/lmg/lmg_port_defs.yaml
-#   time:     Wed Mar 18 15:06:58 2020 UTC
+#   time:     Thu Mar 19 04:53:33 2020 UTC
 #   user:     pablo
 #
 ########################################
@@ -2415,7 +2415,7 @@ configs:
           AvgPortTrueWindDir:
             source: PortTrueWindDir
             algorithm:
-              type: boxcar_average
+              type: polar_average
               window: 30
           AvgPortTrueWindSpeed:
             source: PortTrueWindSpeed
@@ -2425,7 +2425,7 @@ configs:
           AvgStbdTrueWindDir:
             source: StbdTrueWindDir
             algorithm:
-              type: boxcar_average
+              type: polar_average
               window: 30
           AvgStbdTrueWindSpeed:
             source: StbdTrueWindSpeed
