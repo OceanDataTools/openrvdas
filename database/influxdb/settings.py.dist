@@ -1,9 +1,0 @@
-"""
-Settings for InfluxDB Readers and Writers.
-
-THIS FILE MUST BE COPIED OVER TO logger/settings.py and modified to be
-operational. Please see INSTALL.md in this directory.
-"""
-INFLUXDB_URL = 'http://localhost:9999'
-INFLUXDB_ORG = 'openrvdas'
-INFLUXDB_AUTH_TOKEN = ''
