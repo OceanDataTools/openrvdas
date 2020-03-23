@@ -31,8 +31,10 @@ django_gui/uwsgi_params
 venv/
 
 # InfluxDB
-database/influxdb/bin
-database/influxdb/settings.py
+database/influxdb/LICENSE
+database/influxdb/README.md
+database/influxdb/influx
+database/influxdb/influxd
 
 # Created by build scripts
 .build_openrvdas_preferences

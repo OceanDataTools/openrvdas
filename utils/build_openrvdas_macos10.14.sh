@@ -229,8 +229,17 @@ function install_influxdb {
     # RVDAS_USER - valid userid
     # INFLUXDB_PASSWORD - password to use for InfluxDB
 
-    INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_darwin_amd64 # for MacOS
-    #INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_linux_amd64 # for Linux
+    if [ `uname -s` = 'Darwin' ]; then
+        INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_darwin_amd64 # for MacOS
+    elif [ `uname -s` = 'Linux' ]; then
+        INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_linux_amd64 # for Linux
+    else
+        echo "ERROR: No appropriate InfluxDB binary found for architecture \"`uname -s`\"."
+        echo Exiting.
+        return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+    fi
+    
+        
     INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
     INFLUXDB_URL=http://$INFLUXDB_REPO/${INFLUXDB_RELEASE}.tar.gz
 
@@ -264,43 +273,52 @@ function install_influxdb {
     # Install the python client
     echo Installing Python client
     venv/bin/pip install influxdb_client
-    
+
     # Now create credentials for the server
-    echo "#####################################################################"
-    echo If you are running MacOS Catalina
-    echo
-    echo MacOS Catalina requires downloaded binaries to be signed by
-    echo registered Apple developers. Currently, when you first attempt to
-    echo run influxd or influx, macOS will prevent it from running.
-    echo
-    echo If you are running MacOS Catalina, prior to continuing, please
-    echo follow these steps to manually authorize the InfluxDB binaries:
-    echo
-    echo 1. Attempt to run openrvdas/database/influxdb/influx in a separate
-    echo    window.
-    echo 2. Open System Preferences and click "Security & Privacy."
-    echo 3. Under the General tab, there is a message about influx being
-    echo    blocked. Click Open Anyway.
-    echo 4. Repeat this with openrvdas/database/influxdb/influxd
-    echo
-    
-    echo Please hit return when you have completed these steps, or if you are
-    read -p "not using Catalina. " DONE
+    if [ `uname -s` = 'Darwin' ]; then
+        echo "#################################################################"
+        echo If you are running MacOS Catalina
+        echo
+        echo MacOS Catalina requires downloaded binaries to be signed by
+        echo registered Apple developers. Currently, when you first attempt to
+        echo run influxd or influx, macOS will prevent it from running.
+        echo
+        echo If you are running MacOS Catalina, prior to continuing, please
+        echo follow these steps to manually authorize the InfluxDB binaries:
+        echo
+        echo 1. Attempt to run openrvdas/database/influxdb/influx in a separate
+        echo    window.
+        echo 2. Open System Preferences and click "Security & Privacy."
+        echo 3. Under the General tab, there is a message about influx being
+        echo    blocked. Click Open Anyway.
+        echo 4. Repeat this with openrvdas/database/influxdb/influxd
+        echo
+        echo Please hit return when you have completed these steps, or if you
+        read -p "are not using Catalina. " DONE
+    fi
 
     # Clear out old setup
     rm -rf ~/.influxdb/ ~/.influxdbv2
-    
+
+    # Make sure no copies are already running
+    while [ ! -z `pgrep influxd` ]; do
+        echo
+        echo "A copy of influxd appears to already be running with pid `pgrep influxd`."
+        read -p "Please terminate it, then hit return to continue. " DONE
+    done
+
     # Start server in background
     echo
-    echo Starting background copy of InfluxDB server
+    echo Starting background InfluxDB server and waiting for it to spin up.
+    echo This may take 10-20 seconds...
     database/influxdb/influxd --reporting-disabled &> /dev/null &
     INFLUXDB_PID=$!
-    sleep 10
+    sleep 20
     
     echo
     database/influxdb/influx setup \
         --username $RVDAS_USER --password $INFLUXDB_PASSWORD \
-        --org openrvdas --bucket openrvdas --retention 0 --force
+        --org openrvdas --bucket openrvdas --retention 0 --force > /dev/null
 
     # The InfluxDB folks aren't making it easy to get the token. The
     # last beta changed where it's stored, and the command line docs
@@ -578,11 +596,11 @@ function setup_supervisor {
     # RVDAS_USER - valid username
     # INSTALL_ROOT - path where openrvdas/ is found
     # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false' 
-    # INFLUXDB_INSTALLED - set if InfluxDB is installed
+    # INSTALL_INFLUXDB - set if InfluxDB is installed
     # INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false' 
 
     # Comment out InfluxDB section if it's not installed
-    if [ ! -z $INFLUXDB_INSTALLED ]; then
+    if [ ! -z $INSTALL_INFLUXDB ]; then
         # InfluxDB is installed
         IDB_COMMENT=''
     else
@@ -995,7 +1013,7 @@ echo Setting up openrvdas service with supervisord
 # RVDAS_USER - valid username
 # INSTALL_ROOT - path where openrvdas/ is found
 # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false' 
-# INFLUXDB_INSTALLED - set if InfluxDB is installed
+# INSTALL_INFLUXDB - set if InfluxDB is installed
 # INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false' 
 setup_supervisor
 
