@@ -62,8 +62,8 @@ except ImportError:
   pass
 
 if not DATABASE_ENABLED:
-  logging.warning('Settings in database/settings.py not configured; database '
-                  'functionality may not be available.')
+  logging.info('Settings in database/settings.py not configured; database '
+               'functionality may not be available.')
 
 ################################################################################
 # InfluxDB settings
