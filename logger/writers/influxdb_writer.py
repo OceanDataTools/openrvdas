@@ -12,7 +12,7 @@ from logger.writers.writer import Writer
 
 INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
-  from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
+  from database.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
   INFLUXDB_SETTINGS_FOUND = True
 except ModuleNotFoundError:
   INFLUXDB_SETTINGS_FOUND = False
