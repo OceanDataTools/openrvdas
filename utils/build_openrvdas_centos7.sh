@@ -214,8 +214,8 @@ function install_influxdb {
         echo Exiting.
         return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
     fi
-    
-        
+
+
     INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
     INFLUXDB_URL=http://$INFLUXDB_REPO/${INFLUXDB_RELEASE}.tar.gz
 
@@ -225,7 +225,7 @@ function install_influxdb {
         echo code is in place. Exiting.
         return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
     fi
-        
+
     echo "#####################################################################"
     echo Installing InfluxDB...
     cd /tmp
@@ -243,7 +243,8 @@ function install_influxdb {
     fi
     mkdir -p $INSTALL_ROOT/openrvdas/database/influxdb
     echo Copying into place...
-    cp -f  ${INFLUXDB_RELEASE}/*  $INSTALL_ROOT/openrvdas/database/influxdb/
+    cp -f  ${INFLUXDB_RELEASE}/influx ${INFLUXDB_RELEASE}/influxd /usr/local/bin
+    #cp -f  ${INFLUXDB_RELEASE}/*  $INSTALL_ROOT/openrvdas/database/influxdb/
     cd $INSTALL_ROOT/openrvdas
 
     # Install the python client
@@ -262,12 +263,12 @@ function install_influxdb {
         echo If you are running MacOS Catalina, prior to continuing, please
         echo follow these steps to manually authorize the InfluxDB binaries:
         echo
-        echo 1. Attempt to run openrvdas/database/influxdb/influx in a separate
+        echo 1. Attempt to run /usr/local/bin/influx in a separate
         echo    window.
         echo 2. Open System Preferences and click "Security & Privacy."
         echo 3. Under the General tab, there is a message about influx being
         echo    blocked. Click Open Anyway.
-        echo 4. Repeat this with openrvdas/database/influxdb/influxd
+        echo 4. Repeat this with /usr/local/bin/influxd
         echo
         echo Please hit return when you have completed these steps, or if you
         read -p "are not using Catalina. " DONE
@@ -287,20 +288,21 @@ function install_influxdb {
     echo
     echo Starting background InfluxDB server and waiting for it to spin up.
     echo This may take 10-20 seconds...
-    database/influxdb/influxd --reporting-disabled &> /dev/null &
+    /usr/local/bin/influxd --reporting-disabled &> /dev/null &
     INFLUXDB_PID=$!
     sleep 20
-    
+
     echo
-    database/influxdb/influx setup \
+    /usr/local/bin/influx setup \
         --username $RVDAS_USER --password $INFLUXDB_PASSWORD \
         --org openrvdas --bucket openrvdas --retention 0 --force > /dev/null
 
     # The InfluxDB folks aren't making it easy to get the token. The
     # last beta changed where it's stored, and the command line docs
     # for retrieving it don't match the new binary.
+    INFLUXDB_AUTH_TOKEN=`/usr/local/bin/influx auth list | grep '\tactive\t' | cut -f2`
 
-    INFLUXDB_AUTH_TOKEN=`grep '^  token' ~/.influxdbv2/configs | sed -e 's/  token = "//' | sed -e 's/"$//'`
+    #INFLUXDB_AUTH_TOKEN=`grep '^  token' ~/.influxdbv2/configs | sed -e 's/  token = "//' | sed -e 's/"$//'`
 
     # Previous way of reading token:
     #INFLUXDB_CREDENTIALS=`eval echo "~/.influxdbv2/configs"`
@@ -356,7 +358,7 @@ function install_openrvdas {
     cp display/js/widgets/settings.js.dist \
        display/js/widgets/settings.js
     sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
-    
+
     # Copy the database settings.py.dist into place so that other
     # routines can make the modifications they need to it.
     cp database/settings.py.dist database/settings.py
@@ -560,9 +562,9 @@ function setup_supervisor {
     # Expect the following shell variables to be appropriately set:
     # RVDAS_USER - valid username
     # INSTALL_ROOT - path where openrvdas/ is found
-    # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false' 
+    # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
     # INSTALL_INFLUXDB - set if InfluxDB is installed
-    # INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false' 
+    # INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false'
 
     # Comment out InfluxDB section if it's not installed
     if [ ! -z $INSTALL_INFLUXDB ]; then
@@ -570,7 +572,7 @@ function setup_supervisor {
         IDB_COMMENT=''
     else
         # InfluxDB not installed; comment out section
-        IDB_COMMENT=';'  
+        IDB_COMMENT=';'
     fi
 
     VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
@@ -654,7 +656,7 @@ user=$RVDAS_USER
 ; Uncomment the following command block if you've installed InfluxDB
 ; and want it to run as a service.
 ${IDB_COMMENT}[program:influxdb]
-${IDB_COMMENT}command=${INSTALL_ROOT}/openrvdas/database/influxdb/influxd --reporting-disabled
+${IDB_COMMENT}command=/usr/local/bin/influxd --reporting-disabled
 ${IDB_COMMENT}directory=${INSTALL_ROOT}/openrvdas
 ${IDB_COMMENT}autostart=$INFLUXDB_AUTOSTART
 ${IDB_COMMENT}autorestart=true
@@ -1045,9 +1047,9 @@ echo Setting up openrvdas service with supervisord
 # Expect the following shell variables to be appropriately set:
 # RVDAS_USER - valid username
 # INSTALL_ROOT - path where openrvdas/ is found
-# OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false' 
+# OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
 # INSTALL_INFLUXDB - set if InfluxDB is installed
-# INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false' 
+# INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false'
 setup_supervisor
 
 #########################################################################
