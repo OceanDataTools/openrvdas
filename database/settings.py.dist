@@ -62,5 +62,11 @@ except ImportError:
   pass
 
 if not DATABASE_ENABLED:
-  logging.warning('Settings in database/settings.py not configured; database '
-                  'functionality may not be available.')
+  logging.info('Settings in database/settings.py not configured; database '
+               'functionality may not be available.')
+
+################################################################################
+# InfluxDB settings
+INFLUXDB_URL = 'http://localhost:9999'
+INFLUXDB_ORG = 'openrvdas'
+INFLUXDB_AUTH_TOKEN = 'DEFAULT_INFLUXDB_AUTH_TOKEN'

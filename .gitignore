@@ -29,3 +29,15 @@ django_gui/uwsgi_params
 
 # virtualenv
 venv/
+
+# InfluxDB
+database/influxdb/LICENSE
+database/influxdb/README.md
+database/influxdb/influx
+database/influxdb/influxd
+
+# Created by build scripts
+.build_openrvdas_preferences
+
+# Symlink for legacy widget paths
+widgets

@@ -98,15 +98,11 @@ class TestNetworkReader(unittest.TestCase):
     try:
       reader = NetworkReader(addr, eol='\n')
       result = reader.read()
-      self.assertEqual('f1 line 1\n', result)
+      self.assertEqual(['f1 line 1', 'f1 line 1a', 'f1 line 1b'], result)
       result = reader.read()
-      self.assertEqual('f1 line 1a\n', result)
+      self.assertEqual('f1 line 2', result)
       result = reader.read()
-      self.assertEqual('f1 line 1b\n', result)
-      result = reader.read()
-      self.assertEqual('f1 line 2\n', result)
-      result = reader.read()
-      self.assertEqual('f1 line 3\n', result)
+      self.assertEqual('f1 line 3', result)
     except ReaderTimeout:
       self.assertTrue(False, 'NetworkReader timed out in test - is port '
                       '%s open?' % addr)

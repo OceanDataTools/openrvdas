@@ -91,7 +91,7 @@ chmod=0770                  ; socket file mode (default 0700)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
 ;port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
-port=*:{port}      ; ip_address:port specifier, *:port for all iface
+port={host}:{port}         ; ip_address:port specifier, *:port for all iface
 {username_auth}            ; default is no username (open server)
 {password_auth}            ; default is no password (open server)
 
@@ -105,7 +105,7 @@ nodaemon=true      ; start in foreground if true; default false
 minfds=1024        ; min. avail startup file descriptors; default 1024
 minprocs=200       ; min. avail process descriptors;default 200
 umask=022          ; process file creation umask; default 022
-user={user}        ; setuid to this UNIX account at startup; recommended if root
+;user={user}        ; setuid to this UNIX account at startup; recommended if root
 
 ; The rpcinterface:supervisor section must remain in the config file for
 ; RPC (supervisorctl/web interface) to work.  Additional interfaces may be
@@ -136,7 +136,7 @@ autostart=false
 autorestart={autorestart}
 startsecs={startsecs}
 startretries={startretries}
-user={user}
+;user={user}
 stderr_logfile_maxbytes=50MB
 stderr_logfile_backups=10
 stdout_logfile_maxbytes=50MB
@@ -152,6 +152,7 @@ class SupervisorConnector:
   def __init__(self,
                start_supervisor_in=None,
                supervisor_logger_config=None,
+               supervisor_host='localhost',
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
                supervisor_auth=None,
@@ -171,7 +172,9 @@ class SupervisorConnector:
           for logger process definitions. Mutually exclusive with
           --start_supervisor_in flag.
 
-    supervisor_port - Localhost port at which supervisor should serve.
+    supervisor_host - Hostname at which supervisor should serve ('*' means any).
+
+    supervisor_port - Host port at which supervisor should serve.
 
     supervisor_logfile_dir - Directory where supevisord and logger
           stderr/stdout will be written.
@@ -194,6 +197,7 @@ class SupervisorConnector:
 
     self.supervisor_dir = start_supervisor_in
     self.supervisor_logger_config = supervisor_logger_config
+    self.supervisor_host = supervisor_host
     self.supervisor_port = supervisor_port
     self.supervisor_logfile_dir = supervisor_logfile_dir
     self.supervisor_auth = supervisor_auth
@@ -264,6 +268,7 @@ class SupervisorConnector:
     config_args = {
       'supervisor_dir': self.supervisor_dir,
       'logfile_dir': self.supervisor_logfile_dir,
+      'host': self.supervisor_host,
       'port': self.supervisor_port,
       'user': getpass.getuser(),
       'group': getpass.getuser(),
@@ -313,7 +318,9 @@ class SupervisorConnector:
     """Connect to server. If we fail, sleep a little and try again."""
     while True:
       auth = self.supervisor_auth + '@' if self.supervisor_auth else ''
-      host = 'localhost'
+      host = self.supervisor_host
+      if host == '*':
+        host = 'localhost'
       port = self.supervisor_port
       supervisor_url = 'http://%s%s:%d/RPC2' % (auth, host, port)
       logging.info('Connecting to supervisor at %s', supervisor_url)
@@ -669,13 +676,15 @@ class SupervisorConnector:
       supervisor = self.supervisor_rpc.supervisor
       try:
         result = supervisor.reloadConfig()
-      except xmlrpclib.Fault as e:
-        self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
-        if e.faultCode == xmlrpc.Faults.SHUTDOWN_STATE:
-          logging.info('ERROR: already shutting down')
-          return
-        else:
-          raise
+      except XmlRpcFault as e:
+        logging.info('XmlRpc fault: %s', str(e))
+        return
+        #self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
+        #if e.faultCode == 6 # XmlRpcFaults.SHUTDOWN_STATE:
+        #  logging.info('ERROR: already shutting down')
+        #  return
+        #else:
+        #  raise
 
       added, changed, removed = result[0]
       #valid_gnames = set([self.group])
@@ -1268,9 +1277,13 @@ if __name__ == '__main__':
                                 'supervisord process should look for logger '
                                 'process definitions. Mutually exclusive with '
                                 '--start_supervisor_in.')
+  parser.add_argument('--supervisor_host', dest='supervisor_host',
+                      action='store', type=str, default='*',
+                      help='Hostname at which supervisor should serve. "*" '
+                      'means "any" and will allow remote connections.')
   parser.add_argument('--supervisor_port', dest='supervisor_port',
                       action='store', type=int, default=DEFAULT_SUPERVISOR_PORT,
-                      help='Localhost port at which supervisor should serve.')
+                      help='Host port at which supervisor should serve.')
   parser.add_argument('--supervisor_logfile_dir',
                       dest='supervisor_logfile_dir', action='store',
                       default=DEFAULT_SUPERVISOR_LOGFILE_DIR,
@@ -1389,6 +1402,7 @@ if __name__ == '__main__':
   supervisor = SupervisorConnector(
     start_supervisor_in=args.start_supervisor_in,
     supervisor_logger_config=args.supervisor_logger_config,
+    supervisor_host=args.supervisor_host,
     supervisor_port=args.supervisor_port,
     supervisor_logfile_dir=args.supervisor_logfile_dir,
     supervisor_auth=args.supervisor_auth,

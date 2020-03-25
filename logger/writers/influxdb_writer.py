@@ -12,7 +12,7 @@ from logger.writers.writer import Writer
 
 INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
-  from logger.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
+  from database.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
   INFLUXDB_SETTINGS_FOUND = True
 except ModuleNotFoundError:
   INFLUXDB_SETTINGS_FOUND = False
@@ -40,12 +40,15 @@ class InfluxDBWriter(Writer):
     super().__init__(input_format=Text)
 
     if not INFLUXDB_SETTINGS_FOUND:
-      raise RuntimeError('File logger/settings.py not found. InfluxDB '
-                         'functionality is not available. Have you copied '
-                         'over logger/settings.py.dist to settings.py?')
+      raise RuntimeError('File database/influxdb/settings.py not found. '
+                         'InfluxDB functionality is not available. Have '
+                         'you copied over database/influxdb/settings.py.dist '
+                         'to database/influxdb/settings.py and followed the '
+                         'configuration instructions in it?')
     if not INFLUXDB_CLIENT_FOUND:
       raise RuntimeError('Python module influxdb_client not found. Please '
-                         'install using pip prior to using InfluxDBWriter.')
+                         'install using "pip install influxdb_client" prior '
+                         'to using InfluxDBWriter.')
 
     self.client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_AUTH_TOKEN, org=INFLUXDB_ORG)
 

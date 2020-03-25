@@ -17,11 +17,13 @@ file_root: /data/logger
 
 # Definitions for what network and ports the cruise is supposed to use
 network:
-  # The 'interface' key is used by UDPWriters. Specify the broadcast
-  # address of the interface to use that interface, use 0.0.0.0 to
-  # specify local network only, or use '<broadcast>' to use any
+  # The 'destination' key is used by UDPWriters. Specify the broadcast
+  # address of the network to be used, or 255.255.255.255 to broadcast
+  # to the local network only, or use '<broadcast>' to use any
   # available interface.
-  interface: 157.132.133.103   # lmg openrvdas
+  destination: 255.255.255.255 # 0.0.0.0
+
+  #interface: 157.132.133.103   # lmg openrvdas
   #interface: 157.132.133.194   # lmg-dast-s1-t
   
   raw_udp_port: 6224           # port for broadcasting raw records

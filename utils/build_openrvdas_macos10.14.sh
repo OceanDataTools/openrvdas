@@ -1,288 +1,206 @@
 #!/bin/bash -e
 
-# This script is designed to be run as root. It should take a clean CentOS 7
-# installation and install and configure all the components to run the full
-# OpenRVDAS system.
-
-# Once this script has completed and the machine has been rebooted,
-# you should be able to run "service openrvdas start" to have the
-# system up and running. We don't want to make it start automatically
-# by default, as it can eat away at both machine computation and
-# bandwidth budgets.
-
 # OpenRVDAS is available as open source under the MIT License at
 #   https:/github.com/oceandatatools/openrvdas
+#
+# This script installs and configures OpenRVDAS to run on CentOS7.  It
+# is designed to be run as root. It should take a (relatively) clean
+# CentOS 7 installation and install and configure all the components
+# to run the full OpenRVDAS system.
+#
+# It should be re-run whenever the code has been refresh. Preferably
+# by first running 'git pull' to get the latest copy of the script,
+# and then running 'utils/build_openrvdas_centos7.sh' to run that
+# script.
+#
+# The script has been designed to be idempotent, that is, if can be
+# run over again with no ill effects.
+#
+# If you have selected "yes" to running OpenRVDAS as a service then,
+# once this script has completed, you should be able to point a
+# browser to http://[hostname]:8000 and see the OpenRVDAS control
+# console.
+#
+# If you selected "no" when asked whether to run OpenRVDAS as a
+# service on boot, you will need to manually start the servers:
+#
+#   supervisorctl start web:*        # start NGINX and UWSGI
+#   supervisorctl start openrvdas:*  # start logger_manager and data server
+#
+# Regardless, running
+#
+#   supervisorctl status
+#
+# should show you which services are running.
+#
+#
+# This script is somewhat rudimentary and has not been extensively
+# tested. If it fails on some part of the installation, there is no
+# guarantee that fixing the specific issue and simply re-running will
+# produce the desired result.  Bug reports, and even better, bug
+# fixes, will be greatly appreciated.
 
-# This script is VERY rudimentary and has not been extensively tested. If it
-# fails on some part of the installation, there is no guarantee that fixing
-# the specific issue and simply re-running will produce the desired result.
-# Bug reports, and even better, bug fixes, will be greatly appreciated.
+PREFERENCES_FILE='.build_openrvdas_preferences'
 
-#DEFAULT_HOSTNAME=$HOSTNAME
-DEFAULT_INSTALL_ROOT=/opt
+###########################################################################
+###########################################################################
+# Read any pre-saved default variables from file
+function set_default_variables {
+    # Defaults that will be overwritten by the preferences file, if it
+    # exists.
+    DEFAULT_HOSTNAME=$HOSTNAME
+    DEFAULT_INSTALL_ROOT=/opt
+    #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
+    DEFAULT_HTTP_PROXY=$http_proxy
+
+    DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
+    DEFAULT_OPENRVDAS_BRANCH=master
+
+    DEFAULT_RVDAS_USER=rvdas
+
+    DEFAULT_INFLUXDB_PASSWORD=rvdasrvdas
+
+    # Read in the preferences file, if it exists, to overwrite the defaults.
+    if [ -e $PREFERENCES_FILE ]; then
+        echo Reading pre-saved defaults from "$PREFERENCES_FILE"
+        source $PREFERENCES_FILE
+        echo branch $DEFAULT_OPENRVDAS_BRANCH
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Save defaults in a preferences file for the next time we run.
+function save_default_variables {
+    cat > $PREFERENCES_FILE <<EOF
+# Defaults written by/to be read by build_openrvdas_centos7.sh
+
+DEFAULT_HOSTNAME=$HOSTNAME
+DEFAULT_INSTALL_ROOT=$INSTALL_ROOT
+
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
-DEFAULT_HTTP_PROXY=$http_proxy
+DEFAULT_HTTP_PROXY=$HTTP_PROXY
 
-DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
-DEFAULT_OPENRVDAS_BRANCH=master
+DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
+DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
 
-DEFAULT_RVDAS_USER=`whoami`
+DEFAULT_RVDAS_USER=$RVDAS_USER
+EOF
+}
 
-if [ "$(whoami)" == "root" ]; then
-  echo "ERROR: installation script must *not* be run as root."
-  return -1 2> /dev/null || exit -1  # terminate correctly if sourced/bashed
-fi
+###########################################################################
+###########################################################################
+# Set hostname
+function set_hostname {
+    HOSTNAME=$1
+    #hostnamectl set-hostname $HOSTNAME
+    #echo $HOSTNAME > /etc/hostname
+    #ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
+    #if grep -q "$ETC_HOSTS_LINE" /etc/hosts ; then
+    #    echo Hostname already in /etc/hosts
+    #else
+    #    echo "$ETC_HOSTS_LINE" >> /etc/hosts
+    #fi
+}
 
-echo "############################################################################"
-echo OpenRVDAS configuration script
-#while true; do
-#    read -p "Do you wish to continue? " yn
-#    case $yn in
-#        [Yy]* ) break;;
-#        [Nn]* ) exit;;
-#        * ) echo "Please answer yes or no.";;
-#    esac
-#done
+###########################################################################
+###########################################################################
+# Create user
+#function create_user {
+#    RVDAS_USER=$1
+#
+#    echo Checking if user $RVDAS_USER exists yet
+#    if id -u $RVDAS_USER > /dev/null; then
+#        echo User exists, skipping
+#    else
+#        echo Creating $RVDAS_USER
+#        adduser --gecos "" $RVDAS_USER
+#        #passwd $RVDAS_USER
+#        usermod -a -G tty $RVDAS_USER
+#    fi
+#}
 
-#read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
-#HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
-#echo "Hostname will be '$HOSTNAME'"
+###########################################################################
+###########################################################################
+# Install and configure required packages
+function install_packages {
+    # Install homebrew:
+    echo Checking for homebrew
+    [ -e /usr/local/bin/brew ] || echo Installing homebrew
+    [ -e /usr/local/bin/brew ] || ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-read -p "Install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
-INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
-echo "Install root will be '$INSTALL_ROOT'"
-echo
-read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
-OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
+    # Install git:
+    echo Looking for/installing git
+    [ -e /usr/local/bin/git ] || brew install git
 
-read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
-OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
+    # Install system packages we need
+    echo Installing python and supporting packages
+    [ -e /usr/local/bin/python ] || brew install python
+    [ -e /usr/local/bin/socat ]  || brew install socat
+    [ -e /usr/local/bin/ssh ]    || brew install openssh
+    [ -e /usr/local/bin/nginx ]  || brew install nginx
+    [ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
-read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
-HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
+    brew upgrade socat openssh nginx supervisor || echo Upgraded packages
+    brew link --overwrite python || echo Linking Python
+}
 
-[ -z $HTTP_PROXY ] || echo Setting up proxy $HTTP_PROXY
-[ -z $HTTP_PROXY ] || export http_proxy=$HTTP_PROXY
-[ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
+###########################################################################
+###########################################################################
+# Install and configure database
+function install_mysql {
+    # Expect the following shell variables to be appropriately set:
+    # RVDAS_USER - valid userid
+    # RVDAS_DATABASE_PASSWORD - current rvdas user MySQL database password
+    # NEW_ROOT_DATABASE_PASSWORD - new root password to use for MySQL
+    # CURRENT_ROOT_DATABASE_PASSWORD - current root password for MySQL
 
-echo Will install from github.com
-echo "Repository: '$OPENRVDAS_REPO'"
-echo "Branch: '$OPENRVDAS_BRANCH'"
-echo
+    echo "#####################################################################"
+    echo Installing and enabling MySQL...
+    [ -e /usr/local/bin/mysql ]  || brew install mysql
+    brew upgrade mysql || echo Upgraded database package
+    brew tap homebrew/services
+    brew services restart mysql
 
-# Set up for pre-existing user; haven't quite figured out how to create
-# new users properly on the command line
-while true; do
-  read -p "Existing user to set system up for? ($DEFAULT_RVDAS_USER) " RVDAS_USER
-  RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
+    echo "#####################################################################"
+    echo Setting up database tables and permissions
+    # Verify current root password for mysql
+    while true; do
+        # Check whether they're right about the current password; need
+        # a special case if the password is empty.
+        PASS=TRUE
+        [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root  < /dev/null) || PASS=FALSE
+        [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
+        case $PASS in
+            TRUE ) break;;
+            * ) echo "Database root password failed";read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD;;
+        esac
+    done
 
-  if id -u $RVDAS_USER > /dev/null; then
-    break
-  else
-    echo User \"${RVDAS_USER}\" not found - try again?
-  fi
-done
-
-## Create user if they don't exist yet
-#read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
-#RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
-#echo Checking if user $RVDAS_USER exists yet
-#if id -u $RVDAS_USER > /dev/null; then
-#  echo User exists, skipping
-#else
-#  echo Creating $RVDAS_USER
-#  adduser $RVDAS_USER
-#  #passwd $RVDAS_USER
-#  usermod -a -G tty $RVDAS_USER
-#fi
-
-# Get current and new passwords for database
-echo
-read -p "Database password to use for $RVDAS_USER? ($DEFAULT_RVDAS_DATABASE_PASSWORD) " RVDAS_DATABASE_PASSWORD
-RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$DEFAULT_RVDAS_DATABASE_PASSWORD}
-read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD
-read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
-NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
-
-echo
-echo "############################################################################"
-echo The OpenRVDAS server can be configured to start on boot. If you wish this
-echo to happen, it will be run/monitored by the supervisord service using the
-echo configuration file in /usr/local/etc/supervisor.d/openrvdas.ini.
-echo
-echo If you do not wish it to start automatically, it may still be run manually
-echo from the command line or started via supervisor by running supervisorctl
-echo and starting processes logger_manager and cached_data_server.
-echo
-while true; do
-    read -p "Do you wish to start the OpenRVDAS server on boot? " yn
-    case $yn in
-        [Yy]* )
-            START_OPENRVDAS_AS_SERVICE=True
-            echo Will enable openrvdas server run on boot.
-            break;;
-        [Nn]* )
-            break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
-echo "############################################################################"
-echo Beginning installation
-# Set creation mask so that everything we install is, by default,
-# world readable/executable.
-umask 022
-
-###### START OF SKIP
-# Convenient way of commenting out stuff
-if [ 0 -eq 1 ]; then
-  Commented out stuff goes here
-fi
-###### END OF SKIP
-
-# Create openrvdas log and tmp directories
-echo Creating openrvdas working directories in /var/tmp
-echo Please enter sudo password if prompted...
-sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
-sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
-
-## Set hostname
-#echo "############################################################################"
-#echo Setting hostname...
-#sudo hostname $HOSTNAME
-#if grep -q "^127.0.0.1" /etc/hosts | grep $HOSTNAME ; then
-#  echo Hostname already in /etc/hosts
-#else
-#  sudo echo "127.0.0.1    $HOSTNAME" >> /etc/hosts
-#fi
-
-# Install homebrew:
-echo Checking for homebrew
-[ -e /usr/local/bin/brew ] || echo Installing homebrew
-[ -e /usr/local/bin/brew ] || ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-# Install git:
-echo Looking for/installing git
-[ -e /usr/local/bin/git ] || brew install git
-
-# Install system packages we need
-echo Installing python and supporting packages
-[ -e /usr/local/bin/python ] || brew install python
-[ -e /usr/local/bin/socat ]  || brew install socat
-[ -e /usr/local/bin/ssh ]    || brew install openssh
-[ -e /usr/local/bin/mysql ]  || brew install mysql
-[ -e /usr/local/bin/nginx ]  || brew install nginx
-# [ -e /usr/local/bin/uwsgi ]  || brew install uwsgi # install under venv
-[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
-
-brew upgrade python socat openssh mysql nginx supervisor || echo Upgraded packages
-brew link --overwrite python || echo Linking Python
-
-echo Starting services mysql and supervisor
-brew tap homebrew/services
-brew services restart mysql
-brew services restart supervisor
-
-# Fetch OpenRVDAS code and set up directory
-echo "############################################################################"
-echo Fetching OpenRVDAS code...
-
-if [ ! -d $INSTALL_ROOT ]; then
-  echo Making install directory "$INSTALL_ROOT"
-  echo Please enter sudo password if prompted...
-  sudo mkdir -p $INSTALL_ROOT
-  sudo chown ${RVDAS_USER} $INSTALL_ROOT
-fi
-
-cd $INSTALL_ROOT
-if [ ! -e openrvdas ]; then
-  echo Making openrvdas directory.
-  echo Please enter sudo password if prompted...
-  sudo mkdir openrvdas
-  sudo chown ${RVDAS_USER} openrvdas
-fi
-
-if [ -e openrvdas/.git ] ; then   # If we've already got an installation
-  cd openrvdas
-  git checkout $OPENRVDAS_BRANCH
-  git pull
-else                              # If we don't already have an installation
-  sudo rm -rf openrvdas           # in case there's a non-git dir there
-  sudo mkdir openrvdas
-  sudo chown ${RVDAS_USER} openrvdas
-  git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
-  cd openrvdas
-fi
-
-# Set up virtual env and python-dependent code (Django and uWSGI, etc)
-echo "############################################################################"
-
-echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
-echo Please enter sudo password if prompted...
-
-# Set up virtual environment
-pip3 install virtualenv
-VENV_PATH=$INSTALL_ROOT/openrvdas/venv
-python3 -m venv $VENV_PATH
-source $VENV_PATH/bin/activate  # activate virtual environment
-
-# Inside the venv, python *is* the right version, right?
-python3 -m pip install --upgrade pip
-pip3 install \
-  Django==2.1 \
-  pyserial \
-  uwsgi \
-  websockets \
-  PyYAML \
-  parse \
-  mysqlclient \
-  mysql-connector \
-  psutil
-  # diskcache
-
-# Install database stuff and set up as service.
-echo "#########################################################################"
-echo Setting up MySQL database tables and permissions
-# Verify current root password for mysql
-while true; do
-  # Check whether they're right about the current password; need
-  # a special case if the password is empty.
-  PASS=TRUE
-  [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root  < /dev/null) || PASS=FALSE
-  [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
-  case $PASS in
-    TRUE ) break;;
-    * ) echo "Database root password failed";read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD;;
-  esac
-done
-
-# Set the new root password
-cat > /tmp/set_pwd <<EOF
+    # Set the new root password
+    cat > /tmp/set_pwd <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$NEW_ROOT_DATABASE_PASSWORD';
 FLUSH PRIVILEGES;
 EOF
 
-# If there's a current root password
-[ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /tmp/set_pwd
+    # If there's a current root password
+    [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /tmp/set_pwd
 
-# If there's no current root password
-[ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root < /tmp/set_pwd
-rm -f /tmp/set_pwd
+    # If there's no current root password
+    [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root < /tmp/set_pwd
+    rm -f /tmp/set_pwd
 
-# Now do the rest of the 'mysql_safe_installation' stuff
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
+    # Now do the rest of the 'mysql_safe_installation' stuff
+    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
 FLUSH PRIVILEGES;
 EOF
 
-#echo EXITING!
-#return -1 2> /dev/null || exit -1  # terminate correctly if sourced/bashed
-
-echo "#########################################################################"
-echo Setting up database users
-mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
+    echo "#####################################################################"
+    echo Setting up database users
+    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
 
@@ -292,88 +210,298 @@ create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
 create database if not exists data character set utf8;
 GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
 
-#create database if not exists openrvdas character set utf8;
-#GRANT ALL PRIVILEGES ON openrvdas.* TO '$RVDAS_USER'@'localhost';
-
 create database if not exists test character set utf8;
 GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
 GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost';
 
-#create database if not exists test_${RVDAS_USER} character set utf8;
-#GRANT ALL PRIVILEGES ON test_${RVDAS_USER}.* TO '$RVDAS_USER'@'localhost';
-#GRANT ALL PRIVILEGES ON test_${RVDAS_USER}.* TO 'test'@'localhost';
-
 flush privileges;
 \q
 EOF
-echo Done setting up database
-
-# Set up nginx
-echo "############################################################################"
-echo Setting up NGINX
-[ -e /usr/local/etc/nginx/sites-available ] || mkdir /usr/local/etc/nginx/sites-available
-[ -e /usr/local/etc/nginx/sites-enabled ] || mkdir /usr/local/etc/nginx/sites-enabled
-
-# We need to add a couple of lines to not quite the end of nginx.conf,
-# so do a bit of hackery: chop off the closing "}" with head, append
-# the lines we need and a new closing "}" into a temp file, then copy back.
-if grep -q "/usr/local/etc/nginx/sites-enabled/" /usr/local/etc/nginx/nginx.conf; then
-  echo NGINX sites-available already registered. Skipping...
-else
-  NGINX_CONF_LEN=`wc -l /usr/local/etc/nginx/nginx.conf | cut   -c1-8`
-
-  head -n $(($NGINX_CONF_LEN-1)) /usr/local/etc/nginx/nginx.conf > /tmp/nginx.conf
-  cat >> /tmp/nginx.conf <<EOF
-     include /usr/local/etc/nginx/sites-enabled/*.conf;
-     server_names_hash_bucket_size 64;
+    echo Done setting up database
 }
+
+###########################################################################
+###########################################################################
+# Install and configure InfluxDB - to be run *after* OpenRVDAS is in place!
+function install_influxdb {
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - where openrvdas/ may be found
+    # RVDAS_USER - valid userid
+    # INFLUXDB_PASSWORD - password to use for InfluxDB
+
+    if [ `uname -s` = 'Darwin' ]; then
+        INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_darwin_amd64 # for MacOS
+    elif [ `uname -s` = 'Linux' ]; then
+        INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_linux_amd64 # for Linux
+    else
+        echo "ERROR: No appropriate InfluxDB binary found for architecture \"`uname -s`\"."
+        echo Exiting.
+        return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+    fi
+
+
+    INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
+    INFLUXDB_URL=http://$INFLUXDB_REPO/${INFLUXDB_RELEASE}.tar.gz
+
+    # Check that OpenRVDAS code is in place already
+    if [ ! -e  $INSTALL_ROOT/openrvdas/database ]; then
+        echo SCRIPT ERROR: install_influxdb must be called *after* OpenRVDAS
+        echo code is in place. Exiting.
+        return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+    fi
+
+    echo "#####################################################################"
+    echo Installing InfluxDB...
+    cd /tmp
+    if [ -e ${INFLUXDB_RELEASE}.tar.gz ]; then
+        echo Already have archive locally: /tmp/${INFLUXDB_RELEASE}.tar.gz
+    else
+        echo Fetching binaries
+        wget $INFLUXDB_URL
+    fi
+    if [ -d ${INFLUXDB_RELEASE} ]; then
+        echo Already have uncompressed release locally: /tmp/${INFLUXDB_RELEASE}
+    else
+        echo Uncompressing...
+        tar xzf ${INFLUXDB_RELEASE}.tar.gz
+    fi
+    #mkdir -p $INSTALL_ROOT/openrvdas/database/influxdb
+    echo Copying into place...
+    echo Please enter sudo password if prompted.
+    sudo cp -f  ${INFLUXDB_RELEASE}/influx ${INFLUXDB_RELEASE}/influxd /usr/local/bin
+    cd $INSTALL_ROOT/openrvdas
+
+    # Install the python client
+    echo Installing Python client
+    venv/bin/pip install influxdb_client
+
+    # Now create credentials for the server
+    if [ `uname -s` = 'Darwin' ]; then
+        echo "#################################################################"
+        echo If you are running MacOS Catalina
+        echo
+        echo MacOS Catalina requires downloaded binaries to be signed by
+        echo registered Apple developers. Currently, when you first attempt to
+        echo run influxd or influx, macOS will prevent it from running.
+        echo
+        echo If you are running MacOS Catalina, prior to continuing, please
+        echo follow these steps to manually authorize the InfluxDB binaries:
+        echo
+        echo 1. Attempt to run /usr/local/bin/influx in a separate
+        echo    window.
+        echo 2. Open System Preferences and click "Security & Privacy."
+        echo 3. Under the General tab, there is a message about influx being
+        echo    blocked. Click Open Anyway.
+        echo 4. Repeat this with /usr/local/bin/influxd
+        echo
+        echo Please hit return when you have completed these steps, or if you
+        read -p "are not using Catalina. " DONE
+    fi
+
+    # Clear out old setup
+    rm -rf ~/.influxdb/ ~/.influxdbv2
+
+    # Make sure no copies are already running
+    while [ ! -z `pgrep influxd` ]; do
+        echo
+        echo "A copy of influxd appears to already be running with pid `pgrep influxd`."
+        read -p "Please terminate it, then hit return to continue. " DONE
+    done
+
+    # Start server in background
+    echo
+    echo Starting background InfluxDB server and waiting for it to spin up.
+    echo This may take 10-20 seconds...
+    /usr/local/bin/influxd --reporting-disabled &> /dev/null &
+    INFLUXDB_PID=$!
+    sleep 20
+
+    echo
+    /usr/local/bin/influx setup \
+        --username $RVDAS_USER --password $INFLUXDB_PASSWORD \
+        --org openrvdas --bucket openrvdas --retention 0 --force > /dev/null
+
+    # The InfluxDB folks aren't making it easy to get the token. The
+    # last beta changed where it's stored, and the command line docs
+    # for retrieving it don't match the new binary.
+    INFLUXDB_AUTH_TOKEN=`/usr/local/bin/influx auth list | grep '\tactive\t' | cut -f2`
+    #INFLUXDB_AUTH_TOKEN=`grep '^  token' ~/.influxdbv2/configs | sed -e 's/  token = "//' | sed -e 's/"$//'`
+
+    # Previous way of reading token:
+    #INFLUXDB_CREDENTIALS=`eval echo "~/.influxdbv2/configs"`
+    #read -r INFLUXDB_AUTH_TOKEN < $INFLUXDB_CREDENTIALS
+
+    # Copy the auth token into database settings
+    sed -i -e "s/DEFAULT_INFLUXDB_AUTH_TOKEN/${INFLUXDB_AUTH_TOKEN}/g" database/settings.py
+
+    # Shut down the background copy of InfluxDB we started
+    echo Killing background copy of InfluxDB server
+    kill -9 $INFLUXDB_PID
+
+    echo Done setting up InfluxDB!
+}
+
+###########################################################################
+###########################################################################
+# Install OpenRVDAS
+function install_openrvdas {
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - path where openrvdas/ is
+    # RVDAS_USER - valid userid
+    # OPENRVDAS_REPO - path to OpenRVDAS repo
+    # OPENRVDAS_BRANCH - branch of rep to install
+
+    if [ ! -d $INSTALL_ROOT ]; then
+      echo Making install directory "$INSTALL_ROOT"
+      sudo mkdir -p $INSTALL_ROOT
+      sudo chown ${RVDAS_USER} $INSTALL_ROOT
+    fi
+
+    cd $INSTALL_ROOT
+    if [ ! -e openrvdas ]; then
+      echo Making openrvdas directory.
+      sudo mkdir openrvdas
+      sudo chown ${RVDAS_USER} openrvdas
+    fi
+
+    if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+      cd openrvdas
+      git pull
+      git checkout $OPENRVDAS_BRANCH
+      git pull
+    else                              # If we don't already have an installation
+      sudo rm -rf openrvdas           # in case there's a non-git dir there
+      sudo mkdir openrvdas
+      sudo chown ${RVDAS_USER} openrvdas
+      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+      cd openrvdas
+    fi
+
+    # A stupid MacOS-only hack we need to make because MacOS doesn't
+    # do well with supervisord's attempt to be available from all
+    # hosts via http.  Make it available only to localhost.
+    sed -i.bak 's/port=\*/port=localhost/' server/logger_manager.py
+
+    # Copy widget settings into place and customize for this machine
+    cp display/js/widgets/settings.js.dist \
+       display/js/widgets/settings.js
+    sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
+
+    # Copy the database settings.py.dist into place so that other
+    # routines can make the modifications they need to it.
+    cp database/settings.py.dist database/settings.py
+    sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
+    sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
+
+}
+
+###########################################################################
+###########################################################################
+# Set up Python packages
+function setup_python_packages {
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - path where openrvdas/ is
+    # INSTALL_MYSQL - set if MySQL is to be installed, unset otherwise
+
+    # Set up virtual environment
+    VENV_PATH=$INSTALL_ROOT/openrvdas/venv
+    python3 -m venv $VENV_PATH
+    source $VENV_PATH/bin/activate  # activate virtual environment
+
+    # Inside the venv, python *is* the right version, right?
+    python3 -m pip install --upgrade pip
+    pip3 install \
+      Django==2.1.5 \
+      pyserial \
+      uwsgi \
+      websockets \
+      PyYAML \
+      parse \
+      psutil
+
+    # If we're installing database, then also install relevant
+    # Python clients.
+    if [ -n "$INSTALL_MYSQL" ]; then
+      pip3 install \
+        mysqlclient \
+        mysql-connector
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Set up NGINX
+function setup_nginx {
+    # Disable because we're going to run it via supervisor
+    #systemctl stop nginx
+    #systemctl disable nginx # NGINX seems to be enabled by default?
+
+    [ -e /usr/local/etc/nginx/sites-available ] || mkdir /usr/local/etc/nginx/sites-available
+    [ -e /usr/local/etc/nginx/sites-enabled ] || mkdir /usr/local/etc/nginx/sites-enabled
+
+    # We need to add a couple of lines to not quite the end of nginx.conf,
+    # so do a bit of hackery: chop off the closing "}" with head, append
+    # the lines we need and a new closing "}" into a temp file, then copy back.
+    if grep -q "/usr/local/etc/nginx/sites-enabled/" /usr/local/etc/nginx/nginx.conf; then
+        echo NGINX sites-available already registered. Skipping...
+    else
+        sed -i.bak 's/include servers\/\*;/include \/usr\/local\/etc\/nginx\/sites-enabled\/\*.conf\;\
+    server_names_hash_bucket_size 64\;/' /usr/local/etc/nginx/nginx.conf
+        echo Done setting up NGINX
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Set up Django
+function setup_django {
+    # Expect the following shell variables to be appropriately set:
+    # RVDAS_USER - valid userid
+    # RVDAS_DATABASE_PASSWORD - string to use for Django password
+
+    cd ${INSTALL_ROOT}/openrvdas
+    cp django_gui/settings.py.dist django_gui/settings.py
+    sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
+    sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
+
+    # NOTE: we're still inside virtualenv, so we're getting the python
+    # that was installed under it.
+    python manage.py makemigrations django_gui
+    python manage.py migrate
+    rm -rf static
+    python manage.py collectstatic --no-input --clear --link -v 0
+    chmod -R og+rX static
+
+    # A temporary hack to allow the display/ pages to be accessed by Django
+    # in their old location of static/widgets/
+    cd static;ln -s html widgets;cd ..
+
+    # Bass-ackwards way of creating superuser $RVDAS_USER, as the
+    # createsuperuser command won't work from a script
+    python manage.py shell <<EOF
+from django.contrib.auth.models import User
+try:
+  User.objects.get(username='${RVDAS_USER}').delete()
+except User.DoesNotExist:
+  pass
+
+User.objects.create_superuser('${RVDAS_USER}',
+                              '${RVDAS_USER}@example.com',
+                              '${RVDAS_DATABASE_PASSWORD}')
 EOF
-  mv -f /tmp/nginx.conf /usr/local/etc/nginx/nginx.conf
-  echo Done setting up NGINX
-fi
+}
 
-#cat > /etc/profile.d/openrvdas.sh <<EOF
-#export PYTHONPATH=$PYTHONPATH:${INSTALL_ROOT}/openrvdas
-#export PATH=$PATH:${INSTALL_ROOT}/openrvdas/logger/listener
-#EOF
+###########################################################################
+###########################################################################
+# Set up UWSGI
+function setup_uwsgi {
+    # Expect the following shell variables to be appropriately set:
+    # HOSTNAME - name of host
+    # INSTALL_ROOT - path where openrvdas/ is
 
-echo "############################################################################"
-echo Initializing OpenRVDAS database...
-cd ${INSTALL_ROOT}/openrvdas
-cp django_gui/settings.py.dist django_gui/settings.py
-sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
-sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
+    cp /usr/local/etc/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
 
-cp database/settings.py.dist database/settings.py
-sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
-sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
-
-cp display/js/widgets/settings.js.dist \
-   display/js/widgets/settings.js
-sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
-
-# NOTE: we're still inside virtualenv, so we're getting the python
-# that was installed under it.
-python manage.py makemigrations django_gui
-python manage.py migrate
-rm -rf static
-python manage.py collectstatic --no-input --clear --link -v 0
-chmod -R og+rX static
-
-# A temporary hack to allow the display/ pages to be accessed by Django
-# in their old location of static/widgets/
-cd static;ln -s html widgets;cd ..
-
-# Bass-ackwards way of creating superuser $RVDAS_USER, as the createsuperuser
-# command won't work from a script
-echo "from django.contrib.auth.models import User; User.objects.filter(email='${RVDAS_USER}@example.com').delete(); User.objects.create_superuser('${RVDAS_USER}', '${RVDAS_USER}@example.com', '${RVDAS_DATABASE_PASSWORD}')" | python3 manage.py shell
-
-# Connect uWSGI with our project installation
-echo "############################################################################"
-echo Creating OpenRVDAS-specific uWSGI files
-cp /usr/local/etc/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
-
-cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
+    cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
 # openrvdas_nginx.conf
 
 # the upstream component nginx needs to connect to
@@ -426,10 +554,10 @@ server {
 }
 EOF
 
-# Make symlink to nginx dir
-ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf /usr/local/etc/nginx/sites-enabled
+    # Make symlink to nginx dir
+    ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf /usr/local/etc/nginx/sites-enabled
 
-cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
+    cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 # openrvdas_uwsgi.ini file
 [uwsgi]
 
@@ -455,88 +583,89 @@ chmod-socket    = 666
 vacuum          = true
 EOF
 
-# Make vassal directory and copy symlink in
-[ -e /usr/local/etc/uwsgi/vassals ] || mkdir -p /usr/local/etc/uwsgi/vassals
-ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
-   /usr/local/etc/uwsgi/vassals/
+    # Make vassal directory and copy symlink in
+    [ -e /usr/local/etc/uwsgi/vassals ] || mkdir -p /usr/local/etc/uwsgi/vassals
+    ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
+          /usr/local/etc/uwsgi/vassals/
+}
 
-# Make everything accessible to nginx
-chmod 755 ${INSTALL_ROOT}/openrvdas
-chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
-chgrp -R `id -n -g ${RVDAS_USER}` ${INSTALL_ROOT}/openrvdas
+###########################################################################
+###########################################################################
+# Set up supervisord files
+function setup_supervisor {
+    # Expect the following shell variables to be appropriately set:
+    # RVDAS_USER - valid username
+    # INSTALL_ROOT - path where openrvdas/ is found
+    # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
+    # INSTALL_INFLUXDB - set if InfluxDB is installed
+    # INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false'
 
-## Make uWSGI run on boot
-# NOTE: No, we're running uwsgi from supervisord
-#brew services restart uwsgi
+    # Comment out InfluxDB section if it's not installed
+    if [ ! -z $INSTALL_INFLUXDB ]; then
+        # InfluxDB is installed
+        IDB_COMMENT=''
+    else
+        # InfluxDB not installed; comment out section
+        IDB_COMMENT=';'
+    fi
 
-# Make nginx run on boot:
-# NOTE: No, we're running nginx from supervisord
-#brew services restart nginx
+    VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
 
-echo "############################################################################"
-echo Setting up openrvdas service with supervisord
-if [ -z $START_OPENRVDAS_AS_SERVICE ]; then
-    echo Openrvdas will *not* start on boot. To start it, run supervisorctl
-    echo and start processes logger_manager and cached_data_server.
-    SUPERVISOR_AUTOSTART=false
-else
-    echo Openrvdas will start on boot
-    SUPERVISOR_AUTOSTART=true
-fi
+    cat > /tmp/openrvdas.ini <<EOF
+; First, override the default socket permissions to allow user
+; $RVDAS_USER to run supervisorctl
+[unix_http_server]
+file=/var/run/supervisor/supervisor.sock   ; (the path to the socket file)
+chmod=0770                      ; socket file mode (default 0700)
+;chown=nobody:${RVDAS_USER} ; CAN'T GET THIS TO WORK WITH MACOS
 
-VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
-
-echo Copying supervisor file openrvdas.ini into place.
-cat > /tmp/openrvdas.ini <<EOF
 [inet_http_server]
 port=127.0.0.1:9001
-username=${RVDAS_USER}
-password=${RVDAS_USER}
+;username=${RVDAS_USER}  ; Disabled for MacOS installation
+;password=${RVDAS_USER}  ; "   "
 
-[supervisorctl]
-serverurl=http://127.0.0.1:9001 ; use an http:// url to specify an inet socket
-
+; The scripts we're going to run
 [program:nginx]
 command=/usr/local/bin/nginx -g 'daemon off;'
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$SUPERVISOR_AUTOSTART
+autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/nginx.err.log
 stdout_logfile=/var/log/openrvdas/nginx.out.log
-user=$RVDAS_USER
+;user=$RVDAS_USER
 
 [program:uwsgi]
-command=${VENV_BIN}/uwsgi /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
 stopsignal=INT
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$SUPERVISOR_AUTOSTART
+autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/uwsgi.err.log
 stdout_logfile=/var/log/openrvdas/uwsgi.out.log
-user=$RVDAS_USER
+;user=$RVDAS_USER
 
 [program:cached_data_server]
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$SUPERVISOR_AUTOSTART
+autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
 stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
-user=$RVDAS_USER
+;user=$RVDAS_USER
 
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
+command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor_in /var/tmp/openrvdas/supervisor -v
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$SUPERVISOR_AUTOSTART
+autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/logger_manager.err.log
 stdout_logfile=/var/log/openrvdas/logger_manager.out.log
-user=$RVDAS_USER
+;user=$RVDAS_USER
 
 [program:simulate_nbp]
 command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
@@ -546,7 +675,7 @@ autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/simulate_nbp.err.log
 stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
-user=$RVDAS_USER
+;user=$RVDAS_USER
 
 [program:simulate_skq]
 command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
@@ -556,7 +685,19 @@ autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/simulate_skq.err.log
 stdout_logfile=/var/log/openrvdas/simulate_skq.out.log
-user=$RVDAS_USER
+;user=$RVDAS_USER
+
+; Uncomment the following command block if you've installed InfluxDB
+; and want it to run as a service.
+${IDB_COMMENT}[program:influxdb]
+${IDB_COMMENT}command=/usr/local/bin/influxd --reporting-disabled
+${IDB_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${IDB_COMMENT}autostart=$INFLUXDB_AUTOSTART
+${IDB_COMMENT}autorestart=true
+${IDB_COMMENT}startretries=3
+${IDB_COMMENT}stderr_logfile=/var/log/openrvdas/influxdb.err.log
+${IDB_COMMENT}stdout_logfile=/var/log/openrvdas/influxdb.out.log
+${IDB_COMMENT};user=$RVDAS_USER
 
 [group:web]
 programs=nginx,uwsgi
@@ -567,40 +708,337 @@ programs=logger_manager,cached_data_server
 [group:simulate]
 programs=simulate_nbp,simulate_skq
 EOF
-echo Please enter sudo password if prompted...
-sudo mkdir -p /usr/local/etc/supervisor.d/
-sudo cp /tmp/openrvdas.ini /usr/local/etc/supervisor.d/openrvdas.ini
 
-#echo "############################################################################"
-#while true; do
-#    read -p "Do you wish to install Redis? " yn
-#    case $yn in
-#        [Yy]* )
-#            apt-get install -y redis-server;
-#            pip3 install redis;
-#
-#            while true; do
-#                read -p "Do you wish to start a Redis server on boot? " ynb
-#                case $ynb in
-#                    [Yy]* )
-#                        systemctl start redis
-#                        #systemctl enable redis.service;
-#                        break;;
-#                    [Nn]* )
-#                        break;;
-#                    * ) echo "Please answer yes or no.";;
-#                esac
-#            done
-#            break;;
-#        [Nn]* )
-#            break;;
-#        * ) echo "Please answer yes or no.";;
-#    esac
-#done
+    echo Please enter sudo password if prompted...
+    sudo mkdir -p /usr/local/etc/supervisor.d/
+    sudo cp /tmp/openrvdas.ini /usr/local/etc/supervisor.d/openrvdas.ini
+}
+
+###########################################################################
+###########################################################################
+###########################################################################
+###########################################################################
+# Start of actual script
+###########################################################################
+###########################################################################
+
+# Read from the preferences file in $PREFERENCES_FILE, if it exists
+set_default_variables
+
+#if [ "$(whoami)" != "root" ]; then
+#  echo "ERROR: installation script must be run as root."
+#  return -1 2> /dev/null || exit -1  # terminate correctly if sourced/bashed
+#fi
+
+# Set creation mask so that everything we install is, by default,
+# world readable/executable.
+umask 022
+
+echo "#####################################################################"
+echo OpenRVDAS configuration script
+
+#echo "#####################################################################"
+#read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
+#HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
+#echo "Hostname will be '$HOSTNAME'"
+## Set hostname
+#set_hostname $HOSTNAME
+
+read -p "Install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
+INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
+echo "Install root will be '$INSTALL_ROOT'"
+echo
+read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
+OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
+
+read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
+OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
+
+read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
+HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
+
+[ -z $HTTP_PROXY ] || echo Setting up proxy $HTTP_PROXY
+[ -z $HTTP_PROXY ] || export http_proxy=$HTTP_PROXY
+[ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
+
+echo Will install from github.com
+echo "Repository: '$OPENRVDAS_REPO'"
+echo "Branch: '$OPENRVDAS_BRANCH'"
+echo
+
+# NOTE: On MacOS, creating a new user is a mess. We'll just prompt to
+# use an existing user.
+
+echo "#####################################################################"
+read -p "Existing user to set system up for? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
+#create_user $RVDAS_USER
+
+echo
+read -p "Django/database password to use for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
+RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
+
+#########################################################################
+#########################################################################
+# Do they want to install/configure MySQL for use by DatabaseWriter, etc?
+echo "#####################################################################"
+echo MySQL can be installed and configured so that DatabaseWriter and
+echo DatabaseReader have something to write to and read from.
+while true; do
+    read -p "Do you wish to install and configure MySQL? (no) " yn
+    case $yn in
+        [Yy]* )
+            INSTALL_MYSQL=True
+            break;;
+        [Nn]* )
+            unset INSTALL_MYSQL
+            break;;
+        "" )
+            unset INSTALL_MYSQL
+            break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+echo
+
+if [ -n "$INSTALL_MYSQL" ]; then
+    echo Will install/configure MySQL
+    # Get current and new passwords for database
+    echo Root database password will be empty on initial installation. If this
+    echo is the initial installation, hit "return" when prompted for root
+    echo database password, otherwise enter the password you used during the
+    echo initial installation.
+    echo
+    echo Current database password for root \(hit return if this is the
+    read -p "initial installation)? " CURRENT_ROOT_DATABASE_PASSWORD
+    read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
+    NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
+else
+    echo Skipping MySQL installation/configuration
+fi
+
+#########################################################################
+#########################################################################
+# Do they want to install/configure InfluxDB server?
+echo "#####################################################################"
+# InfluxDB already installed
+unset INSTALL_INFLUXDB
+while true; do
+    read -p "Install and configure InfluxDB? (no) " yn
+    case $yn in
+        [Yy]* )
+            INSTALL_INFLUXDB=True
+            break;;
+        [Nn]* )
+            break;;
+        "" )
+            break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+# Don't ask about running InfluxDB automatically unless it's going to
+# be installed in the first place.
+INFLUXDB_AUTOSTART=false
+if [ ! -z $INSTALL_INFLUXDB ]; then
+    # InfluxDB is already or is going to be installed.
+    echo
+    echo "InfluxDB password to use for user $RVDAS_USER?"
+    read -p "Must be at least eight characters ($DEFAULT_INFLUXDB_PASSWORD): " INFLUXDB_PASSWORD
+    INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD:-$DEFAULT_INFLUXDB_PASSWORD}
+    echo
+    echo InfluxDB can be configured to run automatically so that
+    echo InfluxDBDatabaseWriter can write to it, and Grafana-based
+    echo displays can read their data from it.
+    while true; do
+        read -p "Do you wish to automatically run InfluxDB? (no) " yn
+        case $yn in
+            [Yy]* )
+                INFLUXDB_AUTOSTART=true
+                break;;
+            [Nn]* )
+                break;;
+            "" )
+                break;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+fi
+echo
+
+#########################################################################
+#########################################################################
+# Start OpenRVDAS as a service?
+echo "#####################################################################"
+echo The OpenRVDAS server can be configured to start on boot. If you wish this
+echo to happen, it will be run/monitored by the supervisord service using the
+echo configuration file in /usr/local/etc/supervisord.d/openrvdas.ini.
+echo
+echo If you do not wish it to start automatically, it may still be run manually
+echo from the command line or started via supervisor by running supervisorctl
+echo and starting processes logger_manager and cached_data_server.
+echo
+OPENRVDAS_AUTOSTART=false
+while true; do
+    read -p "Do you wish to start the OpenRVDAS server on boot? (yes) " yn
+    case $yn in
+        [Yy]* )
+            OPENRVDAS_AUTOSTART=true
+            echo Will enable openrvdas server run on boot.
+            break;;
+        "" )
+            OPENRVDAS_AUTOSTART=true
+            echo Will enable openrvdas server run on boot.
+            break;;
+        [Nn]* )
+            break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+#########################################################################
+#########################################################################
+# Save defaults in a preferences file for the next time we run.
+save_default_variables
+
+#########################################################################
+#########################################################################
+# Install packages
+echo "#####################################################################"
+echo Installing required packages from repository...
+install_packages
+
+#########################################################################
+#########################################################################
+# If we're installing MySQL/MariaDB
+echo "#####################################################################"
+if [ -n "$INSTALL_MYSQL" ]; then
+    echo Installing/configuring database
+    # Expect the following shell variables to be appropriately set:
+    # RVDAS_USER - valid userid
+    # RVDAS_DATABASE_PASSWORD - current rvdas user MySQL database password
+    # NEW_ROOT_DATABASE_PASSWORD - new root password to use for MySQL
+    # CURRENT_ROOT_DATABASE_PASSWORD - current root password for MySQL
+    install_mysql
+else
+    echo Skipping database setup
+fi
+
+#########################################################################
+#########################################################################
+# Set up OpenRVDAS
+echo "#####################################################################"
+echo Fetching and setting up OpenRVDAS code...
+# Expect the following shell variables to be appropriately set:
+# INSTALL_ROOT - path where openrvdas/ is
+# RVDAS_USER - valid userid
+# OPENRVDAS_REPO - path to OpenRVDAS repo
+# OPENRVDAS_BRANCH - branch of rep to install
+install_openrvdas
+
+#########################################################################
+#########################################################################
+# Set up virtual env and python-dependent code (Django and uWSGI, etc)
+echo "#####################################################################"
+echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
+# Expect the following shell variables to be appropriately set:
+# INSTALL_ROOT - path where openrvdas/ is
+# INSTALL_MYSQL - set if MySQL is to be installed, unset otherwise
+setup_python_packages
+
+#########################################################################
+#########################################################################
+# Set up InfluxDB if they've asked for it
+if [ -n "$INSTALL_INFLUXDB" ]; then
+    echo "#####################################################################"
+    echo Installing and configuring InfluxDB
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - where openrvdas/ may be found
+    # RVDAS_USER - valid userid
+    # INFLUXDB_PASSWORD - password to use for InfluxDB
+    install_influxdb
+else
+    echo Skipping InfluxDB setup
+fi
+
+#########################################################################
+#########################################################################
+# Set up nginx
+echo "#####################################################################"
+echo Setting up NGINX
+setup_nginx
+
+#########################################################################
+#########################################################################
+# Set up uwsgi
+echo "#####################################################################"
+echo Setting up UWSGI
+# Expect the following shell variables to be appropriately set:
+# HOSTNAME - name of host
+# INSTALL_ROOT - path where openrvdas/ is
+setup_uwsgi
+
+#cat > /etc/profile.d/openrvdas.sh <<EOF
+#export PYTHONPATH=$PYTHONPATH:${INSTALL_ROOT}/openrvdas
+#export PATH=$PATH:${INSTALL_ROOT}/openrvdas/logger/listener
+#EOF
+
+#########################################################################
+#########################################################################
+# Set up Django database
+echo "#########################################################################"
+echo Initializing Django database...
+# Expect the following shell variables to be appropriately set:
+# RVDAS_USER - valid userid
+# RVDAS_DATABASE_PASSWORD - string to use for Django password
+setup_django
+
+# Connect uWSGI with our project installation
+echo "#####################################################################"
+echo Creating OpenRVDAS-specific uWSGI files
+
+# Make everything accessible to nginx
+chmod 755 ${INSTALL_ROOT}/openrvdas
+chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+#chgrp -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+
+# Create openrvdas log and tmp directories
+echo Creating openrvdas working directories in /var/tmp
+echo Please enter sudo password if prompted...
+sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
+sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
+
+echo "#####################################################################"
+echo Setting up openrvdas service with supervisord
+# Expect the following shell variables to be appropriately set:
+# RVDAS_USER - valid username
+# INSTALL_ROOT - path where openrvdas/ is found
+# OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
+# INSTALL_INFLUXDB - set if InfluxDB is installed
+# INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false'
+setup_supervisor
+
+#########################################################################
+#########################################################################
+# If we've been instructed to set up firewall, do so.
+#if [ -n "$INSTALL_FIREWALLD" ]; then
+#    setup_firewall
+#fi
 
 echo "#########################################################################"
-echo Restarting supervisor service
+echo Restarting services: supervisor
+sudo mkdir -p /var/run/supervisor/
+sudo chown $RVDAS_USER /var/run/supervisor
+brew tap homebrew/services
 brew services restart supervisor
+
+## Previous installations used nginx and uwsgi as a service. We need to
+## disable them if they're running.
+#echo Disabling legacy services
+#systemctl stop nginx 2> /dev/null || echo nginx not running
+#systemctl disable nginx 2> /dev/null || echo nginx disabled
+#systemctl stop uwsgi 2> /dev/null || echo uwsgi not running
+#systemctl disable uwsgi 2> /dev/null || echo uwsgi disabled
 
 # Deactivate the virtual environment - we'll be calling all relevant
 # binaries using their venv paths, so don't need it.

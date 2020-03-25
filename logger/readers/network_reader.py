@@ -98,14 +98,20 @@ class NetworkReader(Reader):
     # If an eol character/string has been specified, we may have to
     # loop our reads until we see an eol.
     while True:
-      eol_pos = self.record_buffer.find(self.eol)
+      eol_pos = self.record_buffer.rfind(self.eol)
       if eol_pos > -1:
-        # We have an eol string somewhere in our buffer. Return
-        # everything up to it.
-        record_end = eol_pos + len(self.eol)
-        record = self.record_buffer[0:record_end]
         logging.debug('NetworkReader found eol; returning record')
+
+        # We have an eol string somewhere in our buffer. Extract
+        # everything up to the last eol and split up by eol's.
+        record_end = eol_pos + len(self.eol)
+        record = self.record_buffer[0:eol_pos].split(self.eol)
         self.record_buffer = self.record_buffer[record_end:]
+
+        # If we only have one record in list, return it as a string,
+        # otherwise return as list of strings.
+        if len(record) == 1:
+          record = record[0]          
         return record
 
       # If no eol string, read, append, and try again.
