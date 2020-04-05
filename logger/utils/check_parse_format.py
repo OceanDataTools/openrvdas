@@ -103,6 +103,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   match_dict, max_span, format = check_parse_format(args.format, args.string)
+  print('')
   if match_dict is None:
     print('No match at all!')
   elif max_span is None:
