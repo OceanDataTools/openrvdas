@@ -109,7 +109,6 @@ def nmea_lat_lon_dir(text):
   positive.
   """
   if text:
-    print('XX: "%s"' % text)
     nmea_str, dir = text.split(',')
     nmea_value = float(nmea_str)
     normalized_value = nmea_value/100

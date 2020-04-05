@@ -24,6 +24,7 @@ as the start of a shell variable and may muck up your match.
 import logging
 import os.path
 import parse
+import pprint
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -48,18 +49,25 @@ extra_format_types['anything'] = anything
 
 ################################################################################
 def check_parse_format(format, string):
-  """Check whether a format pattern matches a string. Return None if
-  there is a complete match, or a tuple of
+  """Check whether a format pattern matches a string. If there is a
+  complete match, return
 
-    (index_of_max_match, substring of pattern that matches)
+    (match_dict, None, None)
 
-  if the match fails.
+  If there is a partial match, return
+
+    (match_dict, index_of_max_match, substring of pattern that matches)
+
+  If there is no match, return
+
+    (None, None, None)
   """
 
   # First check: do we match the entire string? If so, we're done -
   # return None.
-  if parse.parse(format, string, extra_types=extra_format_types):
-    return None
+  p = parse.parse(format, string, extra_types=extra_format_types)
+  if p:
+    return (p.named, None, None)
 
   # If we haven't matched, try matching shorter and shorter patterns,
   # followed by anything.
@@ -67,20 +75,23 @@ def check_parse_format(format, string):
   while max_index > 0:
     new_format = format[0:max_index] + '{Anything:anything}'
     try:
-      p = None
       p = parse.parse(new_format, string, extra_types=extra_format_types)
     except ValueError: # Probably got an incomplete pattern. Keep chopping.
-      pass
+      p = None
 
     if p:
       del p.spans['Anything']
-      max_span = max([v[1] for k,v in p.spans.items()])
-      return (max_span, format[0:max_index])
+      del p.named['Anything']
+      span_ends = [v[1] for k,v in p.spans.items()] or [0]
+      max_span = max(span_ends)
+      return (p.named, max_span, format[0:max_index])
 
     # If didn't match, shorten the format
     #print('Didn\'t match "{}"'.format(format[0:max_index]))
     max_index -= 1
 
+  # Nothing ever matched
+  return (None, None, None)
 
 ################################################################################
 if __name__ == '__main__':
@@ -91,11 +102,13 @@ if __name__ == '__main__':
   parser.add_argument('--string', dest='string', help='String to match')
   args = parser.parse_args()
 
-  result = check_parse_format(args.format, args.string)
-  if result is None:
-    print('Matches!')
+  match_dict, max_span, format = check_parse_format(args.format, args.string)
+  if match_dict is None:
+    print('No match at all!')
+  elif max_span is None:
+    print('Matches: %s' % pprint.pformat(match_dict))
   else:
-    max_span, format = result
-    print('Matches up to {}'.format(format))
+    print('Partial match up to "{}"'.format(format))
     print(args.string)
     print('_' * max_span + '^')
+    print('Values: %s' % pprint.pformat(match_dict))
