@@ -2,11 +2,11 @@
 
 """Tools for parsing NMEA and other text records.
 
-TODO: text to describe device and device_type formats
+By default, will load device and device_type definitions from files in
+local/devices/*.yaml. Please see documentation in
+local/devices/README.md for a description of the format these
+definitions should take.
 """
-
-import pprint
-
 import datetime
 import glob
 import json
@@ -21,77 +21,12 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.utils import read_config
 from logger.utils.das_record import DASRecord
 
+# Dict of format types that extend the default formats recognized by the
+# parse module.
+from logger.utils.record_parser_formats import extra_format_types
+
 DEFAULT_DEFINITION_PATH = 'local/devices/*.yaml'
 DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {message}'
-
-############################
-"""We want to expand the default repertoire of the parse() function to
-be able to handle ints/floats/strings that *might* be omitted. To do
-that, we define some additional named types for it that we can use in
-format definitions.
-
-These might be used, for example, in the following pattern where we
-might have either, both or neither of speed in knots and/or km/hour.
-
-  "{SpeedKt:of},N,{SpeedKm:of},K"
-
-The recognized format types we add are:
-  od = optional integer
-  of = optional generalized float
-  og = optional generalized number
-  ow = optional sequence of letters, numbers, underscores
-  nc = any ASCII text that is not a comma
-
-See 'Custom Type Conversions' in https://pypi.org/project/parse/ for a
-discussion of how format types work.
-
-TODO: allow device_type definitions to hand in their own format types.
-"""
-
-def optional_d(text):
-  """Method for parsing an 'optional' integer."""
-  if text:
-    return int(text)
-  else:
-    return None
-optional_d.pattern = r'\s*\d*'
-
-def optional_f(text):
-  """Method for parsing an 'optional' generalized float."""
-  if text:
-    return float(text)
-  else:
-    return None
-optional_f.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'
-
-def optional_g(text):
-  """Method for parsing an 'optional' generalized number."""
-  if text:
-    return float(text)
-  else:
-    return None
-optional_g.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
-
-def optional_w(text):
-  """Method for parsing an 'optional' letters/numbers/underscore
-  string."""
-  if text:
-    return text
-  else:
-    return None
-optional_w.pattern = r'\w*'
-
-def not_comma(text):
-  """Method for parsing a string (or anything) between commas
-  string."""
-  if text:
-    return text
-  else:
-    return None
-not_comma.pattern = r'[^,]*'
-
-parser_dict = dict(od=optional_d, of=optional_f, og=optional_g,
-                   ow=optional_w, nc=not_comma)
 
 ################################################################################
 class RecordParser:
@@ -125,7 +60,7 @@ class RecordParser:
     self.quiet = quiet
     self.record_format = record_format
     self.compiled_record_format = parse.compile(format=record_format,
-                                                extra_types=parser_dict)
+                                                extra_types=extra_format_types)
     self.return_das_record = return_das_record
     self.return_json = return_json
     if return_das_record and return_json:
@@ -201,11 +136,12 @@ class RecordParser:
       if type(format) is str:
         try:
           compiled_format = [parse.compile(format=format,
-                                           extra_types=parser_dict)]
+                                           extra_types=extra_format_types)]
         except ValueError as e:
           raise ValueError('Bad parser format: "%s": %s' % (format, e))
       else:
-        compiled_format = [parse.compile(format=f, extra_types=parser_dict)
+        compiled_format = [parse.compile(format=f,
+                                         extra_types=extra_format_types)
                            for f in format]
       self.device_types[device_type]['compiled_format'] = compiled_format
 
@@ -416,13 +352,13 @@ class RecordParser:
               logging.error('"devices" values in file %s must be dict. '
                             'Found type "%s"', filename, type(val))
               return None
-          
+
             for device_name, device_def in val.items():
               if device_name in definitions['devices']:
                 logging.warning('Duplicate definition for "%s" found in %s',
                                 device_name, filename)
               definitions['devices'][device_name] = device_def
-          
+
           # If we have a dict of device_type definitions, copy them into the
           # 'device_types' key of our definitions.
           elif key == 'device_types':
@@ -430,7 +366,7 @@ class RecordParser:
               logging.error('"device_typess" values in file %s must be dict. '
                             'Found type "%s"', filename, type(val))
               return None
-          
+
             for device_type_name, device_type_def in val.items():
               if device_type_name in definitions['device_types']:
                 logging.warning('Duplicate definition for "%s" found in %s',
@@ -450,7 +386,7 @@ class RecordParser:
               new_defs = self._new_read_definitions(filespec, definitions)
               definitions['devices'].update(new_defs.get('devices', {}))
               definitions['device_types'].update(new_defs.get('device_types', {}))
-          
+
           # If it's not an includes/devices/device_types def, assume
           # it's a (deprecated) top-level device or device_type
           # definition. Try adding it to the right place.

@@ -131,13 +131,20 @@ A format to parse it would be
 
 In addition to the default match types defined in the [PyPi parse()
 documentation](https://pypi.org/project/parse/), the
-[RecordParser](../../logger/utils/record_parser.py) defines a few
+[RecordParser](../../logger/utils/record_parser_formats.py) defines a few
 additional ones:
 
  - od = optional integer - may be empty
  - of = optional generalized float - may be empty
  - ow = optional sequence of letters, numbers, underscores
  - nc = any ASCII text that is not a comma
+
+ - nlat = an NMEA-format lat/lon string (DDDMM.MMMM) which is to be parsed
+        into decimal degrees.
+ - nlat_dir = an NMEA-format lat/lon string (DDDMM.MMMM) followed by a
+        comma and direction (N, E, W or S) which is to be parsed into
+        signed decimal degrees. South and West are negative, North and
+        East positive
  
 This allows simplifying format definitions for devices that may or may
 not have empty fields depending on how they've been
