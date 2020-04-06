@@ -88,7 +88,7 @@ The full specification can be found in
 
 To start/stop/restart the supervisor-maintained configuration, either
 via the local webserver at
-[http://openrvdas:8001](http://openrvdas:8001) (assuming your machine
+[http://openrvdas:9001](http://openrvdas:9001) (assuming your machine
 is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 
 ```

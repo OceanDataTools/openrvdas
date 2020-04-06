@@ -55,7 +55,7 @@ script that sets the ports up:
 or use the pre-installed ``supervisor`` configuration to have
 supervisord start and monitor the process for you. You can do this two
 ways, either via the local webserver at
-[http://openrvdas:8001](http://openrvdas:8001) (assuming your machine
+[http://openrvdas:9001](http://openrvdas:9001) (assuming your machine
 is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 
 ```

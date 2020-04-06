@@ -96,7 +96,7 @@ In addition to the NGINX webserver (and its Python helper interface UWSGI), Open
 
 The easiest way to manage these servers is via the supervisord package that is installed by the installation script. If you answered 'yes' when asked whether OpenRVDAS should start automatically on boot up, supervisord will start them for you; if you answered 'no', the supervisord configurations will have still be created, but you will need to manually tell supervisord to start/stop them.
 
-You can do this two ways, either via the local webserver at [http://openrvdas:8001](http://openrvdas:8001) (assuming your machine is named 'openrvdas') or via the command line ``supervisorctl`` tool:
+You can do this two ways, either via the local webserver at [http://openrvdas:9001](http://openrvdas:9001) (assuming your machine is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 
 ```
   rvdas@openrvdas:~> supervisorctl
