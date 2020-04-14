@@ -203,7 +203,17 @@ class DjangoServerAPI(ServerAPI):
     """Get OpenRVDAS configuration from the data store.
     """
     with self.config_rlock:
-      return self._get_cruise_object()
+      cruise = self._get_cruise_object()
+      config = {
+        'start': cruise.start,
+        'end': cruise.end,
+        'config_filename': cruise.config_filename,
+        'loaded_time': cruise.loaded_time,
+        'active_mode': cruise.active_mode__name,
+        'default_mode': cruise.default_mode__name,
+        'modes': cruise.modes()
+      }
+      return config
 
   ############################
   def get_modes(self):
@@ -682,25 +692,27 @@ class DjangoServerAPI(ServerAPI):
         # so no one else can mess until we're done with the transaction.
         loggers_lock = Logger.objects.select_for_update().all()
 
-          ################
-        # Begin by creating the Cruise object. If no cruise name, just
-        # call it 'Cruise'.
-        cruise_id = cruise_def.get('id', None)
-        if cruise_id is None:
-          cruise_id = 'Cruise'
-
+        ################
+        # Assemble the top-level information about the cruise
+        # definition. If no cruise name, just call it 'Cruise'.
+        cruise_id = cruise_def.get('id', 'Cruise')
+        cruise_start = cruise_def.get('start', None)
+        if cruise_start:
+          cruise_start = datetime_obj(cruise_start, time_format=DATE_FORMAT)          
+        cruise_end = cruise_def.get('end', None)
+        if cruise_end:
+          cruise_end = datetime_obj(cruise_end, time_format=DATE_FORMAT)
+        config_filename = cruise_def.get('config_filename', None)
+        
+          
         # Delete old cruise. There should be only one, but...
         for old_cruise in Cruise.objects.all():
           logging.info('Deleting old cruise "%s"', old_cruise.id)
           old_cruise.delete()
 
-        cruise = Cruise(id=cruise_id)
-        start_time = cruise_def.get('start', None)
-        if start_time:
-          cruise.start = datetime_obj(start_time, time_format=DATE_FORMAT)
-        end_time = cruise_def.get('end', None)
-        if end_time:
-          cruise.end = datetime_obj(end_time, time_format=DATE_FORMAT)
+        # Create and save the new cruise
+        cruise = Cruise(id=cruise_id, start=cruise_start, end=cruise_end,
+                        config_filename=config_filename)
         cruise.save()
 
         ################

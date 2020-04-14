@@ -74,22 +74,25 @@ def index(request):
         logging.warning('Error trying to set mode to "%s": %s',
                         new_mode_name, str(e))
 
-    # Did we get a cruise definition file? Load it. If there aren't
-    # any errors, switch to the configuration it defines.
-    elif 'load_config' in request.POST and 'config_file' in request.FILES:
-      config_file = request.FILES['config_file']
-      config_contents = config_file.read()
-      logging.warning('Uploading file "%s"...', config_file.name)
-
-      try:
-        configuration = parse(config_contents.decode('utf-8'))
-        api.load_configuration(configuration)
-      except JSONDecodeError as e:
-          errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
-      except ValueError as e:
-        errors.append(str(e))
-      if errors:
-        logging.warning('Errors! %s', errors)
+    ## Did we get a cruise definition file? Load it. If there aren't
+    ## any errors, switch to the configuration it defines.
+    #elif 'load_config' in request.POST and 'config_file' in request.FILES:
+    #  config_file = request.FILES['config_file']
+    #  config_contents = config_file.read()
+    #  logging.warning('Uploading file "%s"...', config_file.name)
+    #
+    #  try:
+    #    # Load the file to memory and parse to a dict. Add the name
+    #    # of the file we've just loaded to the dict.
+    #    configuration = parse(config_contents.decode('utf-8'))
+    #    configuration['config_filename'] = config_file.name
+    #    api.load_configuration(configuration)
+    #  except JSONDecodeError as e:
+    #      errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
+    #  except ValueError as e:
+    #    errors.append(str(e))
+    #  if errors:
+    #    logging.warning('Errors! %s', errors)
 
     # If they canceled the upload
     elif 'cancel' in request.POST:
@@ -105,7 +108,9 @@ def index(request):
     'errors': {'django': errors},
   }
   try:
-    template_vars['cruise_id'] = api.get_configuration().id
+    configuration = api.get_configuration()
+    template_vars['cruise_id'] = configuration.get('id', 'Cruise')
+    template_vars['filename'] = configuration.get('config_filename', '-none-')
     template_vars['loggers'] = api.get_loggers()
     template_vars['modes'] = api.get_modes()
     template_vars['active_mode'] = api.get_active_mode()
@@ -212,8 +217,11 @@ def choose_file(request, selection=None):
     target_file = request.POST.get('target_file', None)
     if target_file:
       try:
+        # Load the file to memory and parse to a dict. Add the name of
+        # the file we've just loaded to the dict.
         with open(target_file, 'r') as config_file:
           configuration = parse(config_file.read())
+          configuration['config_filename'] = target_file
           api.load_configuration(configuration)
       except (JSONDecodeError, ScannerError) as e:
           load_errors.append('Error loading "%s": %s' % (target_file, str(e)))

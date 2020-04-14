@@ -148,7 +148,10 @@ class ServerAPICommandLine:
         (load_cmd, filename) = command.split(maxsplit=1)
         logging.info('Loading config from %s', filename)
         try:
+          # Load the file to memory and parse to a dict. Add the name
+          # of the file we've just loaded to the dict.
           config = read_config(filename)
+          config['config_filename'] = filename
           self.api.load_configuration(config)
         except FileNotFoundError as e:
           logging.error('Unable to find file "%s"', filename)
