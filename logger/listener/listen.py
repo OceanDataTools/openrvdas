@@ -202,7 +202,7 @@ class ListenerFromLoggerConfig(Listener):
     kwarg_dict = class_json.get('kwargs', {})
     try:
      kwargs = self._kwargs_from_config(kwarg_dict)
-    except ValueError as e:
+    except (ValueError, RuntimeError) as e:
       raise ValueError('Class "%s": %s' % (class_name, e))
 
     if not kwargs:
@@ -212,7 +212,7 @@ class ListenerFromLoggerConfig(Listener):
     logging.debug('Instantiating {}({})'.format(class_name, kwargs))
     try:
       component = class_const(**kwargs)
-    except (TypeError, ValueError) as e:
+    except (TypeError, ValueError, RuntimeError) as e:
       raise ValueError('Class {}: {}\nClass definition: {}'.format(
         class_name, e, pprint.pformat(class_json)))
     return component

@@ -18,6 +18,7 @@ import threading
 import time
 import websockets
 
+from html import escape as escape_html
 from parse import parse
 
 # For communicating with supervisord server
@@ -1025,8 +1026,8 @@ class LoggerManager:
 
     while not self.quit_flag:
       try:
-        configuration = self.api.get_configuration() # a Cruise object
-        loaded_time = configuration.get('loaded_time')
+        cruise = self.api.get_configuration() # dict encoding a Cruise object
+        loaded_time = cruise.get('loaded_time')
         config_timestamp = datetime.datetime.timestamp(loaded_time)
       except (AttributeError, ValueError, TypeError):
         config_timestamp = 0
@@ -1037,17 +1038,16 @@ class LoggerManager:
         last_config_timestamp = config_timestamp
         self._build_new_config_file()
         try:
-          cruise = cruise.get('cruise', {})
-          cruise_def = {
+          cruise_dict = {
             'cruise_id': cruise.get('id', ''),
-            'filename': cruise.get('filename', 'None'),
+            'filename': cruise.get('config_filename', 'None'),
             'config_timestamp': config_timestamp,
             'loggers': self.api.get_loggers(),
-            'modes': configuration.get('modes', {}),
-            'active_mode': configuration.get('active_mode','')
+            'modes': cruise.get('modes', {}),
+            'active_mode': cruise.get('active_mode','')
           }
           self._write_record_to_data_server(
-            'status:cruise_definition', cruise_def)
+            'status:cruise_definition', cruise_dict)
         except (AttributeError, ValueError) as e:
           logging.info('No cruise definition found: %s', e)
 
@@ -1150,11 +1150,11 @@ class LoggerManager:
           'asctime': result['asctime'],
           'levelno': result['levelno'],
           'levelname': result['levelname'],
-          'message': result['message']
+          'message': escape_html(result['message'])
         }
       else:
         logging.info('Failed to parse: "%s"', message)
-        record = {'message': message}
+        record = {'message': 'Unparseable stderr message: "%s"' % escape_html(message)}
 
       logging.debug('Sending stderr to CDS: field: %s, record: %s',
                     field_name, record)

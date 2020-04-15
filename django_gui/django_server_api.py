@@ -205,6 +205,7 @@ class DjangoServerAPI(ServerAPI):
     with self.config_rlock:
       cruise = self._get_cruise_object()
       config = {
+        'id': cruise.id,
         'start': cruise.start,
         'end': cruise.end,
         'config_filename': cruise.config_filename,

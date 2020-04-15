@@ -133,18 +133,19 @@
 {# Load new definition                                                      #}
 {% if user.is_authenticated %}
 <hr>
+Current definition file: "<span id='filename'>{{ filename }}</span>"<br>
 <button id="server_messages" type="submit"
         onclick="open_load_definition(event);">
   Load new definition file
 </button>
 {% endif %}
-Current definition file is: "<span id='filename'>{{ filename }}</span>"
 <hr>
 <p>
   {% if user.is_authenticated %}
   Logged in as <b>{{ user }}.</b>
   <a href='/accounts/logout'>Log out</a>
   {% else %}
+  Current definition file is: "<span id='filename'>{{ filename }}</span>"<br>
   <a href='/accounts/login'><b>Log in</b></a> to manage servers, configurations or mode
   {% endif %}
 </p>
