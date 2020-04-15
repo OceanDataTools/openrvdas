@@ -91,8 +91,8 @@ chmod=0770                  ; socket file mode (default 0700)
 {password_auth}             ; default is no password (open server)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
-;port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
-port={host}:{port}         ; ip_address:port specifier, *:port for all iface
+port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
+;port={host}:{port}         ; ip_address:port specifier, *:port for all iface
 {username_auth}            ; default is no username (open server)
 {password_auth}            ; default is no password (open server)
 

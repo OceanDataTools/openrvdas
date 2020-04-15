@@ -615,7 +615,7 @@ function setup_supervisor {
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
 [unix_http_server]
-file=/var/run/supervisor/supervisor.sock   ; (the path to the socket file)
+file=/usr/local/var/run/supervisor.sock   ; (the path to the socket file)
 chmod=0770                      ; socket file mode (default 0700)
 ;chown=nobody:${RVDAS_USER} ; CAN'T GET THIS TO WORK WITH MACOS
 
@@ -1027,8 +1027,8 @@ setup_supervisor
 
 echo "#########################################################################"
 echo Restarting services: supervisor
-sudo mkdir -p /var/run/supervisor/
-sudo chown $RVDAS_USER /var/run/supervisor
+sudo mkdir -p /usr/local/var/run/
+sudo chown $RVDAS_USER /usr/local/var/run
 brew tap homebrew/services
 brew services restart supervisor
 
