@@ -209,8 +209,8 @@ class DjangoServerAPI(ServerAPI):
         'end': cruise.end,
         'config_filename': cruise.config_filename,
         'loaded_time': cruise.loaded_time,
-        'active_mode': cruise.active_mode__name,
-        'default_mode': cruise.default_mode__name,
+        'active_mode': cruise.active_mode.name,
+        'default_mode': cruise.default_mode.name,
         'modes': cruise.modes()
       }
       return config
@@ -698,12 +698,11 @@ class DjangoServerAPI(ServerAPI):
         cruise_id = cruise_def.get('id', 'Cruise')
         cruise_start = cruise_def.get('start', None)
         if cruise_start:
-          cruise_start = datetime_obj(cruise_start, time_format=DATE_FORMAT)          
+          cruise_start = datetime_obj(cruise_start, time_format=DATE_FORMAT)
         cruise_end = cruise_def.get('end', None)
         if cruise_end:
           cruise_end = datetime_obj(cruise_end, time_format=DATE_FORMAT)
         config_filename = cruise_def.get('config_filename', None)
-        
           
         # Delete old cruise. There should be only one, but...
         for old_cruise in Cruise.objects.all():

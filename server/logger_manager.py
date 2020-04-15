@@ -1025,13 +1025,8 @@ class LoggerManager:
 
     while not self.quit_flag:
       try:
-        # An ugly hack here: the Django API gives us a Cruise object,
-        # while the in-memory API gives us a dict. UGH!
-        cruise = self.api.get_configuration() # a Cruise object
-        if type(cruise) is dict:
-          loaded_time = cruise.get('loaded_time')
-        else:
-          loaded_time = cruise.loaded_time
+        configuration = self.api.get_configuration() # a Cruise object
+        loaded_time = configuration.get('loaded_time')
         config_timestamp = datetime.datetime.timestamp(loaded_time)
       except (AttributeError, ValueError, TypeError):
         config_timestamp = 0
@@ -1042,22 +1037,15 @@ class LoggerManager:
         last_config_timestamp = config_timestamp
         self._build_new_config_file()
         try:
-          if type(cruise) is dict:
-            cruise_def = {
-              'cruise_id': cruise.get('cruise', {}).get('id', ''),
-              'config_timestamp': config_timestamp,
-              'loggers': self.api.get_loggers(),
-              'modes': cruise.get('modes', {}),
-              'active_mode': cruise.get('active_mode','')
-            }
-          else:
-            cruise_def = {
-              'cruise_id': cruise.id,
-              'config_timestamp': config_timestamp,
-              'loggers': self.api.get_loggers(),
-              'modes': cruise.modes(),
-              'active_mode': cruise.active_mode.name
-            }
+          cruise = cruise.get('cruise', {})
+          cruise_def = {
+            'cruise_id': cruise.get('id', ''),
+            'filename': cruise.get('filename', 'None'),
+            'config_timestamp': config_timestamp,
+            'loggers': self.api.get_loggers(),
+            'modes': configuration.get('modes', {}),
+            'active_mode': configuration.get('active_mode','')
+          }
           self._write_record_to_data_server(
             'status:cruise_definition', cruise_def)
         except (AttributeError, ValueError) as e:

@@ -196,8 +196,9 @@ function update_cruise_definition(timestamp, cruise_definition) {
   }
 
   ////////////////////////////////
-  // Update the cruise id
+  // Update the cruise id and filename
   document.getElementById('cruise_id').innerHTML = cruise_definition.cruise_id;
+  document.getElementById('filename').innerHTML = cruise_definition.filename;
 
   ////////////////////////////////
   // Now update the cruise modes

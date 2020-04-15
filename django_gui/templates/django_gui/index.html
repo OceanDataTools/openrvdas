@@ -131,7 +131,6 @@
 </div>
 {# ######################################################################## #}
 {# Load new definition                                                      #}
-Current definition file is: "{{ filename }}"
 {% if user.is_authenticated %}
 <hr>
 <button id="server_messages" type="submit"
@@ -139,6 +138,7 @@ Current definition file is: "{{ filename }}"
   Load new definition file
 </button>
 {% endif %}
+Current definition file is: "<span id='filename'>{{ filename }}</span>"
 <hr>
 <p>
   {% if user.is_authenticated %}

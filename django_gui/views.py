@@ -221,7 +221,8 @@ def choose_file(request, selection=None):
         # the file we've just loaded to the dict.
         with open(target_file, 'r') as config_file:
           configuration = parse(config_file.read())
-          configuration['config_filename'] = target_file
+          if 'cruise' in configuration:
+            configuration['cruise']['config_filename'] = target_file
           api.load_configuration(configuration)
       except (JSONDecodeError, ScannerError) as e:
           load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
