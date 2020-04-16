@@ -131,7 +131,7 @@ files = {supervisor_dir}/supervisor.d/*.ini
 
 SUPERVISOR_LOGGER_TEMPLATE = """
 [program:{config_name}]
-command=logger/listener/listen.py --config_string '{config_json}' {log_v}
+command=logger/listener/listen.py --config_file {cruise_config_filename}:"{config_name}" {log_v}
 directory={directory}
 autostart=false
 autorestart={autorestart}
@@ -584,11 +584,20 @@ class SupervisorConnector:
     return results
 
   ############################
-  def create_new_supervisor_file(self, configs, supervisor_logfile_dir=None,
+  def create_new_supervisor_file(self, cruise_config_filename,
+                                 logger_config_names,
+                                 supervisor_logfile_dir=None,
                                  user=None, base_dir=None):
     """Create a new configuration file for supervisord to read.
 
-    configs - a dict of {logger_name:{config_name:config_spec}} entries.
+    cruise_config_filename - name of the file that contains the current
+        cruise definition.
+
+    logger_config_names - a dict of {logger_name:{config_name:runnable}}
+        entries, where 'runnable' is a Boolean on whether the config
+        has any readers or writers. If it doesn't (like, e.g., the
+        "off" config), it's not runnable and we shouldn't try to
+        restart it if/when it exits.
 
     supervisor_logfile_dir - path to which logger stderr/stdout should be
         written.
@@ -614,23 +623,21 @@ class SupervisorConnector:
       ])
 
     config_names = []
-    for logger, logger_configs in configs.items():
-      for config_name, config in logger_configs.items():
+    for logger, logger_configs in logger_config_names.items():
+      # If a logger isn't "runnable" because it doesn't have readers
+      # or writers (e.g. if it's an "off" config), then it'll
+      # terminate quietly after starting. Don't want to complain
+      # (startsecs=0) or restart (autorestart=false) it.
+      for config_name, runnable in logger_configs.items():
         # Supervisord doesn't like '/' in program names
         config_name = self._clean_name(config_name)
         config_names.append(config_name)
 
-        # If a logger isn't "runnable" because it doesn't have readers
-        # or writers (e.g. if it's an "off" config), then it'll
-        # terminate quietly after starting. Don't want to complain
-        # (startsecs=0) or restart (autorestart=false) it.
-        runnable = 'readers' in config and 'writers' in config
-
         # NOTE: supervisord has trouble with '%' in a string, so we
         # escape it by converting it to '%%'
         replacement_fields = {
+          'cruise_config_filename': cruise_config_filename,
           'config_name': config_name,
-          'config_json': json.dumps(config).replace('%', '%%'),
           'directory': base_dir,
           'autorestart': 'true' if runnable else 'false',
           'startsecs': '2' if runnable else '0',
@@ -810,6 +817,9 @@ class LoggerManager:
 
     # Stash a map of loggers->configs and configs->loggers
     try:
+      cruise = self.api.get_configuration()
+      self.cruise_config_filename = cruise['config_filename']
+
       self.loggers = self.api.get_loggers()
       self.config_to_logger = {}
       for logger in self.loggers:
@@ -872,20 +882,23 @@ class LoggerManager:
     logging.info('New cruise definition detected - rebuilding supervisord '
                  'config file')
     try:
+      cruise = self.api.get_configuration()
+      self.cruise_config_filename = cruise['config_filename']
       self.loggers = self.api.get_loggers()
       with self.config_lock:
         self.config_to_logger = {}
-        logger_config_strings = {}
+        logger_config_names = {}
         for logger, configs in self.loggers.items():
-          config_names = configs.get('configs', [])
           # Map config_name->logger
           for config in self.loggers[logger].get('configs', []):
             self.config_to_logger[config] = logger
 
-          # Map logger->{config_name:config_definition_str,...}
-          logger_config_strings[logger] = {
-            config_name: self.api.get_logger_config(config_name)
-            for config_name in config_names}
+          logger_config_names[logger] = {}
+          config_names = configs.get('configs', [])
+          for config_name in config_names:
+            config = self.api.get_logger_config(config_name)
+            runnable = 'readers' in config and 'writers' in config
+            logger_config_names[logger][config_name] = runnable
 
     # If no cruise loaded, create an empty config file
     except ValueError:
@@ -895,7 +908,8 @@ class LoggerManager:
     # Now create a .ini file of those configs for supervisord to run.
     with self.config_lock:
       self.supervisor.create_new_supervisor_file(
-        configs=logger_config_strings,
+        cruise_config_filename=self.cruise_config_filename,
+        logger_config_names=logger_config_names,
         supervisor_logfile_dir=self.supervisor_logfile_dir)
 
   ############################
