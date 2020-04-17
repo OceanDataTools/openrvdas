@@ -698,23 +698,6 @@ class SupervisorConnector:
       #valid_gnames = set([self.group])
       valid_gnames = set()
 
-      # NOTE: with valid_gnames defined as empty, as above, is the
-      # below block even necessary?
-
-      # If any gnames are specified we need to verify that they are
-      # valid in order to print a useful error message.
-      if valid_gnames:
-        groups = set()
-        for info in supervisor.getAllProcessInfo():
-          groups.add(info['group'])
-        # New gnames would not currently exist in this set so
-        # add those as well.
-        groups.update(added)
-
-        for gname in valid_gnames:
-          if gname not in groups:
-            logging.info('ERROR: no such group: %s' % gname)
-
     for gname in removed:
       if valid_gnames and gname not in valid_gnames:
         continue
@@ -800,6 +783,13 @@ class LoggerManager:
     self.config_status = {}
     self.status_time = 0
 
+    # Name and last-modified time of the config file we're working
+    # with. These will get filled in by _build_new_config_file(), but
+    # we want them defined at the start so that
+    # _monitor_file_modification_loop() has something to work with.
+    self.cruise_config_filename = None
+    self.cruise_config_timestamp = None
+
     # We'll loop to check the API for updates to our desired
     # configs. Do this in a separate thread. Also keep track of
     # currently active configs so that we know when an update is
@@ -818,7 +808,9 @@ class LoggerManager:
     # Stash a map of loggers->configs and configs->loggers
     try:
       cruise = self.api.get_configuration()
-      self.cruise_config_filename = cruise['config_filename']
+      config_filename = cruise['config_filename']
+      self.cruise_config_filename = config_filename
+      self.cruise_config_timestamp = os.path.getmtime(config_filename)
 
       self.loggers = self.api.get_loggers()
       self.config_to_logger = {}
@@ -866,6 +858,11 @@ class LoggerManager:
       target=self._send_logger_stderr_loop, daemon=True)
     self.send_logger_stderr_loop_thread.start()
 
+    self.monitor_file_modification_loop_thread = threading.Thread(
+      name='monitor_file_modification_loop',
+      target=self._monitor_file_modification_loop, daemon=True)
+    self.monitor_file_modification_loop_thread.start()
+
   ############################
   def quit(self):
     """Exit the loop and shut down all loggers."""
@@ -882,12 +879,15 @@ class LoggerManager:
     logging.info('New cruise definition detected - rebuilding supervisord '
                  'config file')
     try:
-      cruise = self.api.get_configuration()
-      self.cruise_config_filename = cruise['config_filename']
-      self.loggers = self.api.get_loggers()
       with self.config_lock:
+        cruise = self.api.get_configuration()
+        config_filename = cruise['config_filename']
+        self.cruise_config_filename = config_filename
+        self.cruise_config_timestamp = os.path.getmtime(config_filename)
+
         self.config_to_logger = {}
         logger_config_names = {}
+        self.loggers = self.api.get_loggers()
         for logger, configs in self.loggers.items():
           # Map config_name->logger
           for config in self.loggers[logger].get('configs', []):
@@ -1105,6 +1105,37 @@ class LoggerManager:
     while not self.quit_flag:
       self._read_and_send_logger_stderr()
       time.sleep(self.interval)
+
+  ############################
+  def _monitor_file_modification_loop(self):
+    """Check whether the config file we have loaded from has changed. If
+    so, send a status indicating which logger configurations have changed.
+    """
+    while not self.quit_flag:
+      time.sleep(5 * self.interval)
+
+      # If no config file defined, nothing to do
+      if not self.cruise_config_filename or not self.cruise_config_timestamp:
+        continue
+
+      # If file hasn't been modified since we loaded it
+      mtime = os.path.getmtime(self.cruise_config_filename)
+      if mtime <= self.cruise_config_timestamp:
+        continue
+
+      # If here, file has been modified since we last loaded it.
+      self._write_record_to_data_server('status:file_update', mtime)
+
+      ## In theory, we could read in the file and see what's changed.
+      #config = None
+      #try:
+      #  config = read_config(self.cruise_config_filename)
+      #except FileNotFoundError:
+      #  logging.error('Cruise definition file "%s" not found',
+      #                self.cruise_config_filename)
+      #except:
+      #  logging.error('Unable to parse cruise definition file "%s"',
+      #                self.cruise_config_filename)
 
   ############################
   def _write_log_message_to_data_server(self, field_name, message,
