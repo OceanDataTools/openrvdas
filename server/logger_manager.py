@@ -206,10 +206,6 @@ class SupervisorConnector:
     self.supervisor_rpc_lock = threading.Lock()
     self.supervisord_proc = None
 
-    # A map we'll fill in to get the logger that each config is
-    # associated with.
-    self.config_to_logger = {}
-
     if bool(start_supervisor_in) == bool(supervisor_logger_config):
       logging.fatal('SupervisorConnector must have either '
                     '"start_supervisor_in" or "supervisor_logger_config" '
@@ -404,9 +400,10 @@ class SupervisorConnector:
 
     with self.config_lock:
       for config in configs:
-        # Prepend logger/group name and remove objectionable characters
-        logger = self.config_to_logger[config]
-        cleaned_config = self._clean_name(logger + ':' + config)
+        # Each logger config is its own group, so just concatenate to
+        # get group:config. Clean it to remove characters that
+        # supervisor can't handle in group:config names
+        cleaned_config = self._clean_name(config + ':' + config)
         config_calls.append({'methodName':'supervisor.startProcess',
                              'params':[cleaned_config, False]})
 
@@ -449,9 +446,10 @@ class SupervisorConnector:
 
     with self.config_lock:
       for config in configs:
-        # Prepend logger/group name and remove objectionable characters
-        logger = self.config_to_logger[config]
-        cleaned_config = self._clean_name(logger + ':' + config)
+        # Each logger config is its own group, so just concatenate to
+        # get group:config. Clean it to remove characters that
+        # supervisor can't handle in group:config names
+        cleaned_config = self._clean_name(config + ':' + config)
         config_calls.append({'methodName':'supervisor.stopProcess',
                              'params':[cleaned_config, False]})
 
@@ -534,10 +532,10 @@ class SupervisorConnector:
     read_fault = False
     with self.config_lock:
       for config in configs:
-        # Need to prefix with logger/group name and clean characters
-        # that supervisord doesn't like.
-        logger = self.config_to_logger[config]
-        cleaned_config = self._clean_name(logger + ':' + config)
+        # Each logger config is its own group, so just concatenate to
+        # get group:config. Clean it to remove characters that
+        # supervisor can't handle in group:config names
+        cleaned_config = self._clean_name(config + ':' + config)
 
         # Initialize last read position of any configs we've not yet read
         if not config in self.read_stderr_offset:
@@ -572,7 +570,7 @@ class SupervisorConnector:
           # We can get these faults if our config has been updated on
           # disc but not reloaded.
           except XmlRpcFault as e:
-            logging.info('XmlRpcFault %d: %s', e.faultCode, e.faultString)
+            logging.info('XmlRpcFault %d while reading stderr for %s: %s', e.faultCode, config, e.faultString)
             overflow = False
             read_fault = True
 
@@ -612,11 +610,9 @@ class SupervisorConnector:
       ''
       ])
 
-    self.config_to_logger = {}
     for logger, logger_configs in configs.items():
       logger_config_names = []
       for config_name, config in logger_configs.items():
-        self.config_to_logger[config_name] = logger
 
         # Supervisord doesn't like '/' in program names
         config_name = self._clean_name(config_name)
@@ -646,13 +642,13 @@ class SupervisorConnector:
           }
         content_str += SUPERVISOR_LOGGER_TEMPLATE.format(**replacement_fields)
 
-      # The "reload" command reloads by groups, so pull all configs
-      # for a given logger into a single group.
-      content_str += '\n'.join([
-        '[group:%s]' % self._clean_name(logger),
-        'programs=%s' % ','.join(logger_config_names),
-        ''
-      ])
+        # The "reload" command reloads/restarts changed programs by
+        # groups, so make each config its own group.
+        content_str += '\n'.join([
+          '[group:%s]' % config_name,
+          'programs=%s' % config_name,
+          ''
+        ])
 
     # Open and write the config file.
     with open(self.supervisor_logger_config, 'w') as config_file:
@@ -669,7 +665,7 @@ class SupervisorConnector:
 
   ############################
   def reload_config_file(self):
-    """Tell our supervisor instance to reload config file and any groups."""
+    """Tell our supervisor instance to reload config file."""
     logging.info('Reloading config file')
 
     # Included code from supervisorctl:
@@ -678,22 +674,13 @@ class SupervisorConnector:
       supervisor = self.supervisor_rpc.supervisor
       try:
         result = supervisor.reloadConfig()
+        added, changed, removed = result[0]
       except XmlRpcFault as e:
         logging.info('XmlRpc fault: %s', str(e))
         return
-        #self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
-        #if e.faultCode == 6 # XmlRpcFaults.SHUTDOWN_STATE:
-        #  logging.info('ERROR: already shutting down')
-        #  return
-        #else:
-        #  raise
 
-      added, changed, removed = result[0]
-      valid_gnames = set()
-
+    # If group has been removed, stop then remove
     for gname in removed:
-      if valid_gnames and gname not in valid_gnames:
-        continue
       results = supervisor.stopProcessGroup(gname)
       logging.info('stopped %s', gname)
 
@@ -705,9 +692,8 @@ class SupervisorConnector:
       supervisor.removeProcessGroup(gname)
       logging.info('removed process group %s', gname)
 
+    # If changed: stop, remove, add
     for gname in changed:
-      if valid_gnames and gname not in valid_gnames:
-        continue
       supervisor.stopProcessGroup(gname)
       logging.info('stopped %s', gname)
 
@@ -715,9 +701,8 @@ class SupervisorConnector:
       supervisor.addProcessGroup(gname)
       logging.info('updated process group %s', gname)
 
+    # If added, just add
     for gname in added:
-      if valid_gnames and gname not in valid_gnames:
-        continue
       supervisor.addProcessGroup(gname)
       logging.info('added process group %s', gname)
 
