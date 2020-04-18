@@ -117,7 +117,7 @@ def index(request):
     template_vars['errors'] = errors
   except ValueError:
     logging.info('No configuration loaded')
-  
+
   return render(request, 'django_gui/index.html', template_vars)
 
 ################################################################################
@@ -153,11 +153,11 @@ def edit_config(request, logger_id):
 
     else:
       logging.debug('User canceled request')
-      
+
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 
-  # If not a POST, render the selector page: 
+  # If not a POST, render the selector page:
   # What's our current mode? What's the default config for this logger
   # in this mode?
   active_mode = api.get_active_mode()
@@ -168,7 +168,7 @@ def edit_config(request, logger_id):
   # dict of config_name: config_json
   config_map = {config_name: api.get_logger_config(config_name)
                 for config_name in config_options}
-  
+
   return render(request, 'django_gui/edit_config.html',
                 {
                   'logger_id': logger_id,
@@ -183,7 +183,7 @@ def choose_file(request, selection=None):
   """Render a chooser to pick and load a configuration file from the
   server side.
 
-  Files can be navigated/selected starting at a base defined by the list in 
+  Files can be navigated/selected starting at a base defined by the list in
   django_gui.settings.FILECHOOSER_DIRS.
   """
   global api
@@ -223,7 +223,12 @@ def choose_file(request, selection=None):
           configuration = parse(config_file.read())
           if 'cruise' in configuration:
             configuration['cruise']['config_filename'] = target_file
+
+          # Load the config and set to the default mode
           api.load_configuration(configuration)
+          default_mode = api.get_default_mode()
+          if default_mode:
+            api.set_active_mode(default_mode)
       except (JSONDecodeError, ScannerError) as e:
           load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
       except ValueError as e:
@@ -235,7 +240,7 @@ def choose_file(request, selection=None):
       else:
         logging.warning('Errors loading cruise definition: %s', load_errors)
         target_file = None
-    
+
     # Okay, it wasn't a request to load a target file. Do we have a
     # selection? If no target and no selection, it means they canceled
     # the choice.
@@ -279,7 +284,7 @@ def choose_file(request, selection=None):
                  'dir_name': dir_name,
                  'listing': listing,
                  'load_errors': load_errors})
-    
+
 ################################################################################
 def widget(request, field_list=''):
   global logger_server
