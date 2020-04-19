@@ -312,8 +312,7 @@ function install_influxdb {
     # The InfluxDB folks aren't making it easy to get the token. The
     # last beta changed where it's stored, and the command line docs
     # for retrieving it don't match the new binary.
-    INFLUXDB_AUTH_TOKEN=`/usr/local/bin/influx auth list | grep '\tactive\t' | cut -f2`
-
+    INFLUXDB_AUTH_TOKEN=`/usr/local/bin/influx auth list | grep 'active' | cut -f2`
     #INFLUXDB_AUTH_TOKEN=`grep '^  token' ~/.influxdbv2/configs | sed -e 's/  token = "//' | sed -e 's/"$//'`
 
     # Previous way of reading token:
