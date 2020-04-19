@@ -718,9 +718,9 @@ configs:
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
-        - class: InfluxDBWriter     # Write to InfluxDB
-          kwargs:
-            bucket_name: gyr1
+        #- class: InfluxDBWriter     # Write to InfluxDB
+        #  kwargs:
+        #    bucket_name: gyr1
 
   gyr1->file/net/db:
     name: gyr1->file/net/db

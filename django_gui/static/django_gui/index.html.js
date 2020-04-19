@@ -35,7 +35,8 @@ function initial_send_message() {
           'fields': {
             'status:cruise_definition':{'seconds':-1},
             'status:cruise_mode':{'seconds':-1},
-            'status:logger_status':{'seconds':-1}
+            'status:logger_status':{'seconds':-1},
+            'status:file_update':{'seconds':0}
           }
          }
 }
@@ -153,6 +154,13 @@ function process_data_message(message) {
       }
       break;
 
+    //////////////////
+    // The file from which our definition came has been updated. Make
+    // the section that offers to reload it visible.
+    case 'status:file_update':
+      document.getElementById('reload_span').style.display = 'inline';
+      break;
+
     ////////////////////////////////////////////////////
     // If something else, see if it's a logger status update
     default:
@@ -172,7 +180,7 @@ function process_data_message(message) {
     new_fields['status:cruise_definition'] = {'seconds':-1};
     new_fields['status:cruise_mode'] = {'seconds':-1};
     new_fields['status:logger_status'] = {'seconds':-1};
-
+    new_fields['status:file_update'] = {'seconds':0};
     var subscribe_message = {'type':'subscribe', 'fields':new_fields};
     send(subscribe_message);
   }
@@ -408,6 +416,7 @@ function looks_like_log_line(line) {
 // are unique - they're timestamped, so we'll only omit messages that
 // are true duplicates. Return true if we actually add anything.
 function add_to_stderr(logger_name, message) {
+  message = message.replace(/\n/, '<br>');
   if (global_logger_stderr[logger_name].indexOf(message) == -1) {
     global_logger_stderr[logger_name].push(message);
     return true;

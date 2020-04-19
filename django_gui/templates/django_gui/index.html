@@ -133,11 +133,32 @@
 {# Load new definition                                                      #}
 {% if user.is_authenticated %}
 <hr>
-Current definition file: "<span id='filename'>{{ filename }}</span>"<br>
-<button id="server_messages" type="submit"
-        onclick="open_load_definition(event);">
-  Load new definition file
-</button>
+<table>
+  <tr>
+    <td>
+      Current definition file:
+      <span id='filename'>{{ filename }}</span>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <span id='reload_span' style='display:none;'>
+        <form method='post' style='display:inline;'
+              enctype='multipart/form-data'>
+          {% csrf_token %}
+          <button name='reload_button' id='reload_button' type='submit'
+                   style='background-color:yellow'>
+          Definition is stale. Reload definition
+          </button>
+        </form>
+      </span>
+      <button id='load_definition_button' type='submit'
+              onclick='open_load_definition(event);'>
+        Load new definition
+      </button>
+    </td>
+  </tr>
+</table>
 {% endif %}
 <hr>
 <p>
@@ -145,7 +166,7 @@ Current definition file: "<span id='filename'>{{ filename }}</span>"<br>
   Logged in as <b>{{ user }}.</b>
   <a href='/accounts/logout'>Log out</a>
   {% else %}
-  Current definition file is: "<span id='filename'>{{ filename }}</span>"<br>
+  Current definition file: <span id='filename'>{{ filename }}</span><br>
   <a href='/accounts/login'><b>Log in</b></a> to manage servers, configurations or mode
   {% endif %}
 </p>

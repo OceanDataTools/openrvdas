@@ -20,7 +20,7 @@ sys.path.append(dirname(dirname(realpath(__file__))))
 from server.logger_manager import LoggerManager
 
 # Read in JSON with comments
-from logger.utils.read_config import parse
+from logger.utils.read_config import parse, read_config
 
 from django_gui.settings import HOSTNAME, STATIC_ROOT
 from django_gui.settings import WEBSOCKET_DATA_SERVER
@@ -74,25 +74,20 @@ def index(request):
         logging.warning('Error trying to set mode to "%s": %s',
                         new_mode_name, str(e))
 
-    ## Did we get a cruise definition file? Load it. If there aren't
-    ## any errors, switch to the configuration it defines.
-    #elif 'load_config' in request.POST and 'config_file' in request.FILES:
-    #  config_file = request.FILES['config_file']
-    #  config_contents = config_file.read()
-    #  logging.warning('Uploading file "%s"...', config_file.name)
-    #
-    #  try:
-    #    # Load the file to memory and parse to a dict. Add the name
-    #    # of the file we've just loaded to the dict.
-    #    configuration = parse(config_contents.decode('utf-8'))
-    #    configuration['config_filename'] = config_file.name
-    #    api.load_configuration(configuration)
-    #  except JSONDecodeError as e:
-    #      errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
-    #  except ValueError as e:
-    #    errors.append(str(e))
-    #  if errors:
-    #    logging.warning('Errors! %s', errors)
+    elif 'reload_button' in request.POST:
+      logging.info('reloading current configuration file')
+      try:
+        cruise = api.get_configuration()
+        filename = cruise['config_filename']
+
+        # Load the file to memory and parse to a dict. Add the name
+        # of the file we've just loaded to the dict.
+        config = read_config(filename)
+        if 'cruise' in config:
+          config['cruise']['config_filename'] = filename
+        api.load_configuration(config)
+      except ValueError as e:
+        logging.warning('Error reloading current configuration: %s', str(e))
 
     # If they canceled the upload
     elif 'cancel' in request.POST:
