@@ -20,9 +20,16 @@ except ModuleNotFoundError:
 ################################################################################
 class MQTTReader(Reader):
   """
-   
+  Read messages from an mqtt broker
   """
   def __init__(self, broker, channel):
+
+    """
+    Read text records from the channel subscription.
+    ```
+    channel     MQTT channel to read from, channel format[@broker/path_of_subscripton]
+    ```
+    """
 
     super().__init__(output_format=Text)
 
