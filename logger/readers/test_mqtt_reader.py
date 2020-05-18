@@ -42,14 +42,15 @@ class TestMQTTReader(unittest.TestCase):
 
     @unittest.skipUnless(PAHO_ENABLED, 'Paho MQTT not installed; tests of MQTT '
                          'functionality will not be run.')
+
     def test_read(self):
         # Creating a new instance from the mqtt broker address above
         # try to connect
-        #writer = MQTTWriter('%s@%s:%d' % (broker_address, channel, client_name))
-        reader = MQTTReader('%s@%s:%d' % (broker_address, channel, client_name))
+        writer = MQTTWriter('%s@%s:%s' % (broker_address, channel, client_name))
+        reader = MQTTReader('%s@%s:%s' % (broker_address, channel, client_name))
 
         for i in range(len(SAMPLE_DATA)):
-            writer.write(SAMPLE_DATA[i])
+            #writer.write(SAMPLE_DATA[i])
             self.assertEqual(SAMPLE_DATA[i], reader.read())
 
 

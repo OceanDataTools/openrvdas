@@ -46,7 +46,7 @@ class MQTTWriter(Writer):
       self.paho.subscribe(channel)
 
     except mqtt.WebsocketConnectionError as e:
-      logging.error('Unable to connect to broker at %s:%d',
+      logging.error('Unable to connect to broker at %s:%s',
                     self.broker, self.channel)
       raise e
 
