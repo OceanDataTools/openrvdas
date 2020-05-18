@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import logging
 import subprocess
 import sys
@@ -8,12 +7,13 @@ import time
 import unittest
 import warnings
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.mqtt_reader import MQTTReader
-# from logger.writers.mqtt_writer import MQTTWriter  // for when the writer is implemented
+from logger.writers.mqtt_writer import MQTTWriter  
 
+# Don't barf if they don't have redis installed. Only complain if
+# they actually try to use it, below
 try:
     # import the client | $ pip installing paho-mqtt is necessary
     import paho.mqtt.client as mqtt
@@ -33,6 +33,7 @@ SAMPLE_DATA = [
 
 broker_address = 'test_mqtt_reader'
 channel = 'path/of/devices'
+client_name='Instance1'
 
 ##############################################################################
 
@@ -44,11 +45,11 @@ class TestMQTTReader(unittest.TestCase):
     def test_read(self):
         # Creating a new instance from the mqtt broker address above
         # try to connect
-        # writer
-        reader = MQTTReader(broker_address, channel)
+        #writer = MQTTWriter('%s@%s:%d' % (broker_address, channel, client_name))
+        reader = MQTTReader('%s@%s:%d' % (broker_address, channel, client_name))
 
         for i in range(len(SAMPLE_DATA)):
-            # writer.write(SAMPLE_DATA[i]) When the writer is implemented
+            writer.write(SAMPLE_DATA[i])
             self.assertEqual(SAMPLE_DATA[i], reader.read())
 
 
