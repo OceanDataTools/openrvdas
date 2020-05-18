@@ -24,11 +24,12 @@ class MQTTReader(Reader):
   """
   Read messages from an mqtt broker
   """
-  def __init__(self, broker, channel):
+  def __init__(self, broker, channel, client_name):
 
     """
     Read text records from the channel subscription.
     ```
+    broker       MQTT broker to connect, broker format[###.###.#.###]
     channel     MQTT channel to read from, channel format[@broker/path_of_subscripton]
     ```
     """
@@ -41,9 +42,10 @@ class MQTTReader(Reader):
     
     self.broker = broker
     self.channel = channel
-    
+    self.client_name = client_name
+
     try:
-      self.paho = mqtt.Client('Instance1')
+      self.paho = mqtt.Client(client_name)
 
       self.paho.connect(broker)
       self.paho.subscribe(channel)
