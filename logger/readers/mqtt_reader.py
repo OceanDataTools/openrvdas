@@ -11,6 +11,8 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.utils.formats import Text
 from logger.readers.reader import Reader
 
+# Don't barf if they don't have redis installed. Only complain if
+# they actually try to use it, below
 try:
   import paho.mqtt.client as mqtt # import the client | $ pip installing paho-mqtt is necessary
   PAHO_ENABLED = True
