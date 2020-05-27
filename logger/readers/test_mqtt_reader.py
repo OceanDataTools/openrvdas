@@ -50,7 +50,7 @@ class TestMQTTReader(unittest.TestCase):
         reader = MQTTReader(broker_address, channel, client_name)
 
         for i in range(len(SAMPLE_DATA)):
-            #writer.write(SAMPLE_DATA[i])
+            writer.write(SAMPLE_DATA[i])
             self.assertEqual(SAMPLE_DATA[i], reader.read())
 
 
