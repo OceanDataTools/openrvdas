@@ -32,7 +32,7 @@ SAMPLE_DATA = [
 ]
 
 broker_address = 'test_mqtt_reader'
-channel = 'path/of/devices'
+channel = 'pathOfDevices'
 client_name='Instance1'
 
 ##############################################################################
@@ -46,8 +46,8 @@ class TestMQTTReader(unittest.TestCase):
     def test_read(self):
         # Creating a new instance from the mqtt broker address above
         # try to connect
-        writer = MQTTWriter('%s@%s:%s' % (broker_address, channel, client_name))
-        reader = MQTTReader('%s@%s:%s' % (broker_address, channel, client_name))
+        writer = MQTTWriter(broker_address, channel, client_name)
+        reader = MQTTReader(broker_address, channel, client_name)
 
         for i in range(len(SAMPLE_DATA)):
             #writer.write(SAMPLE_DATA[i])
