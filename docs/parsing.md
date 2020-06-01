@@ -1,6 +1,6 @@
 # Record Parsing
-© David Pablo Cohn - (david.cohn@gmail)  
-DRAFT 2019-12-13
+© David Pablo Cohn - (david.cohn@gmail)
+DRAFT 2020-05-31
 
 Perhaps the second most crucial task that a data acquisition system
 must accomplish (after reliably storing incoming data records) is to
@@ -71,6 +71,37 @@ Output:
 The basic operation of the parser is as follows
 
 ```
+  >>> parser = RecordParser(
+                 record_format='{data_id:w} {timestamp:ti} {field_string}',
+                 field_patterns=[
+                   '{:d}:{GravityValue:d} {GravityError:d}']
+               )
+  >>> parser.parse_record('grv1 2017-11-10T01:00:06.572Z 01:024557 00')
+
+    {
+      'data_id': grv1
+      'timestamp': 1510275606.572,
+      'fields':{
+        'GravityValue': 24557,
+        'GravityError': 0
+        }
+    }
+```
+
+If successful, parse_record() will return a dictionary of the
+components defined in the ``record_format`` definition (the one
+provided here is the default record format that will be used if
+omitted from the method call).
+
+If the ``record_format`` includes a ``field_string`` section,
+parse_record() will attempt to parse it, either using the
+``field_patterns`` provided or, if omitted, definitions read from a
+definition path (described further below).
+
+Below is an example where a RecordParser is constructed using only
+default values:
+
+```
   >>> parser = RecordParser()
   >>> record = 'knud 2014-08-01T00:00:00.814000Z 3.5kHz,5139.94,0,,,,1500,-39.587550,-37.472355'
   >>> parser.parse_record(record)
@@ -101,7 +132,7 @@ as ```DEFAULT_RECORD_FORMAT``` in
 can be overridden during creation of the RecordParser instance).
 
 After stripping the data\_id and timestamp off, we are left with the
-message itself. To parse that, we need to look up information about
+field string itself. To parse that, we need to look up information about
 the device that produced it, in this case, 'knud'.
 
 ### ParseTransform
@@ -302,13 +333,18 @@ definitions in ```DEFAULT_DEFINITION_PATH```, defined as
 ## Parser output format
 
 By default, a RecordParser will output a dict with three top-level fields:
+
 ```
 {'data_id': 'seap',
- 'fields': { ... },
  'timestamp': 1406851200.814
+ 'fields': { ... },
 }
 ```
-(it may, in the future, also emit a 'metadata' field containing additional information).
+
+If metadata about the fields are provided (either in the metadata
+argument or in the device definitions) and the metadata_interval
+argument is non-zero, it will be attached to records at intervals of
+that many seconds.
 
 If invoked with ```return_das_record=True``` it will return [DASRecord
 objects](../logger/utils/das_record.py), and if invoked with
@@ -345,7 +381,7 @@ GPVTG message in theory provides both true and magnetic headings, and speed in b
 ```
   "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
 ```
-  
+
 In practice, some of those fields may be empty:
 
 ```
@@ -355,13 +391,15 @@ But the 'f' format does not recognize empty numbers, so the above
 record will not match our format.
 
 To cope with this, we have created a few "extra" formats, defined in
-the initial section of
-[logger/utils/record\_parser.py](logger/utils/record_parser.py):
+[logger/utils/record\_parser\_formats.py](logger/utils/record_parser_formats.py):
 
  - od = optional integer
  - of = optional generalized float
  - ow = optional sequence of letters, numbers, underscores
  - nc = any ASCII text that is not a comma
+
+ - nlat = NMEA-formatted latitude or longitude, converted to decimal degrees
+ - nlat_dir = NMEA-formatted latitude or longitude, along with hemisphere (N/E/W/S) converted to signed decimal degrees. South and West are considered negative, North and East positive.
 
 Using these, the extended format string
 
