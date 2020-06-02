@@ -12,12 +12,17 @@ from logger.transforms.transform import Transform
 class ParseTransform(Transform):
   """Parse a "<data_id> <timestamp> <message>" record and return
   corresponding dict of values (or JSON or DASRecord if specified)."""
-  def __init__(self, field_patterns=None, metadata=None,
+  def __init__(self, record_format=None, field_patterns=None, metadata=None,
                definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                return_json=False, return_das_record=False,
                metadata_interval=None, quiet=False):
     """
     ```
+    record_format
+            If not None, a custom record format to use for parsing records.
+            The default, defined in logger/utils/record_parser.py, is
+            '{data_id:w} {timestamp:ti} {field_string}'.
+
     field_patterns
             If not None, a list of parse patterns to be tried instead
             of looking for device definitions along the definition path.
@@ -46,6 +51,7 @@ class ParseTransform(Transform):
     ```
     """
     self.parser = record_parser.RecordParser(
+      record_format=record_format,
       field_patterns=field_patterns,
       metadata=metadata,
       definition_path=definition_path,

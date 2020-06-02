@@ -31,7 +31,7 @@ DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {field_string}'
 ################################################################################
 class RecordParser:
   ############################
-  def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
+  def __init__(self, record_format=None,
                field_patterns=None, metadata=None,
                definition_path=DEFAULT_DEFINITION_PATH,
                return_das_record=False, return_json=False,
@@ -71,8 +71,8 @@ class RecordParser:
     self.quiet = quiet
     self.field_patterns = field_patterns
     self.metadata = metadata or {}
-    self.record_format = record_format
-    self.compiled_record_format = parse.compile(format=record_format,
+    self.record_format = record_format or DEFAULT_RECORD_FORMAT
+    self.compiled_record_format = parse.compile(format=self.record_format,
                                                 extra_types=extra_format_types)
     self.return_das_record = return_das_record
     self.return_json = return_json
