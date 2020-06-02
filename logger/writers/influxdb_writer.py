@@ -14,14 +14,14 @@ INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
   from database.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
   INFLUXDB_SETTINGS_FOUND = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
   INFLUXDB_SETTINGS_FOUND = False
 
 try:
   from influxdb_client import InfluxDBClient
   from influxdb_client.client.write_api import ASYNCHRONOUS
   INFLUXDB_CLIENT_FOUND = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
   INFLUXDB_CLIENT_FOUND = False
 
 import time
