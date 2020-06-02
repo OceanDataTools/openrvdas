@@ -12,7 +12,7 @@ from logger.transforms.transform import Transform
 class ParseTransform(Transform):
   """Parse a "<data_id> <timestamp> <message>" record and return
   corresponding dict of values (or JSON or DASRecord if specified)."""
-  def __init__(self, patterns=None,
+  def __init__(self, patterns=None, metadata=None,
                definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                return_json=False, return_das_record=False,
                metadata_interval=None, quiet=False):

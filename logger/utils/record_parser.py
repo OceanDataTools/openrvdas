@@ -39,10 +39,11 @@ class RecordParser:
     """Create a parser that will parse field values out of a text record
     and return either a Python dict of data_id, timestamp and fields,
     a JSON encoding of that dict, or a binary DASRecord.
-
+    ```
     record_format - string for parse.parse() to use to break out data_id
         and timestamp from the rest of the message. By default this will
-        look for 'data_id timestamp device_message'.
+        look for 'data_id timestamp field_string', where 'field_string'
+        is a str containing the fields to be parsed.
 
     field_patterns
         If not None, a list of parse patterns to be tried instead
@@ -65,6 +66,7 @@ class RecordParser:
         metadata_interval seconds.
 
     quiet - if not False, don't complain when unable to parse a record.
+    ```
     """
     self.quiet = quiet
     self.field_patterns = field_patterns
