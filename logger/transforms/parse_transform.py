@@ -12,23 +12,23 @@ from logger.transforms.transform import Transform
 class ParseTransform(Transform):
   """Parse a "<data_id> <timestamp> <message>" record and return
   corresponding dict of values (or JSON or DASRecord if specified)."""
-  def __init__(self, patterns=None, metadata=None,
+  def __init__(self, field_patterns=None, metadata=None,
                definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                return_json=False, return_das_record=False,
                metadata_interval=None, quiet=False):
     """
     ```
-    patterns
+    field_patterns
             If not None, a list of parse patterns to be tried instead
             of looking for device definitions along the definition path.
 
     metadata
-            If patterns is not None, the metadata to send along with
+            If field_patterns is not None, the metadata to send along with
             data records.
 
     definition_path
             Wildcarded path matching YAML definitions for devices. Used
-            only if 'patterns' is None
+            only if 'field_patterns' is None
 
     return_json
             Return a JSON-encoded representation of the dict
@@ -46,7 +46,7 @@ class ParseTransform(Transform):
     ```
     """
     self.parser = record_parser.RecordParser(
-      patterns=patterns,
+      field_patterns=field_patterns,
       metadata=metadata,
       definition_path=definition_path,
       return_json=return_json,
