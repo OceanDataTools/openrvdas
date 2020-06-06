@@ -18,75 +18,94 @@ LOGGING_FORMAT = '%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s'
 # Templates into which variables are to be folded to create a config
 # for each logger in each mode.
 MODE_CONFIG_TEMPLATES = {
-  'off': """      name:  {sensor_id}->{mode}
+  'off': """  {config_name}:
+    name: {config_name}
 """,
-  'raw': """      name:  {sensor_id}->raw
-      readers:
-      - class: UDPReader
-        kwargs:
-          port: {transmit_port}
-      writers:
-      - class: TextFileWriter
+  'raw': """  {config_name}:
+    name: {config_name}
+    readers:
+    - class: UDPReader
+      kwargs:
+        port: {transmit_port}
+    writers:
+    - class: TextFileWriter
 """,
-  'parsed': """      name:  {sensor_id}->parsed
-      readers:
-      - class: UDPReader
-        kwargs:
-          port: {transmit_port}
-      transforms:
-      - class: ParseTransform
-        kwargs:
-          record_format: '{{timestamp:ti}},{{field_string}}'
-          field_patterns: {field_patterns}
-          metadata: {metadata}
-          metadata_interval: {metadata_interval}
-      writers:
-      - class: TextFileWriter
+  'parsed': """  {config_name}:
+    name: {config_name}
+    readers:
+    - class: UDPReader
+      kwargs:
+        port: {transmit_port}
+    transforms:
+    - class: ParseTransform
+      kwargs:
+        record_format: '{{timestamp:ti}},{{field_string}}'
+        field_patterns: {field_patterns}
+        metadata: {metadata}
+        metadata_interval: {metadata_interval}
+    writers:
+    - class: TextFileWriter
 """,
-  'udp': """      name:  {sensor_id}->udp
-      readers:
-      - class: UDPReader
-        kwargs:
-          port: {transmit_port}
-      transforms:
-      - class: PrefixTransform
-        kwargs:
-          prefix: {sensor_id}
-      - class: ParseTransform
-        kwargs:
-          record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
-          field_patterns: {field_patterns}
-          metadata: {metadata}
-          metadata_interval: {metadata_interval}
-      writers:
-      - class: UDPWriter
-        kwargs:
-          port: 6221
+  'udp': """  {config_name}:
+    name: {config_name}
+    readers:
+    - class: UDPReader
+      kwargs:
+        port: {transmit_port}
+    transforms:
+    - class: PrefixTransform
+      kwargs:
+        prefix: {sensor_id}
+    - class: ParseTransform
+      kwargs:
+        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
+        field_patterns: {field_patterns}
+        metadata: {metadata}
+        metadata_interval: {metadata_interval}
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6221
 """,
-  'cache': """      name:  {sensor_id}->cache
-      readers:
-      - class: UDPReader
-        kwargs:
-          port: {transmit_port}
-      transforms:
-      - class: PrefixTransform
-        kwargs:
-          prefix: {sensor_id}
-      - class: ParseTransform
-        kwargs:
-          record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
-          field_patterns: {field_patterns}
-          metadata: {metadata}
-          metadata_interval: {metadata_interval}
-      writers:
-      - class: CachedDataWriter
-        kwargs:
-          data_server: localhost:8766
+  'cache': """  {config_name}:
+    name: {config_name}
+    readers:
+    - class: UDPReader
+      kwargs:
+        port: {transmit_port}
+    transforms:
+    - class: PrefixTransform
+      kwargs:
+        prefix: {sensor_id}
+    - class: ParseTransform
+      kwargs:
+        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
+        field_patterns: {field_patterns}
+        metadata: {metadata}
+        metadata_interval: {metadata_interval}
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
 """,
-#  'db': """      name:  {sensor_id}->db
-#""",
-#  'net/db': """      name:  {sensor_id}->net/db
-#""",
+  'database': """  {config_name}:
+    name: {config_name}
+    readers:
+    - class: UDPReader
+      kwargs:
+        port: {transmit_port}
+    transforms:
+    - class: PrefixTransform
+      kwargs:
+        prefix: {sensor_id}
+    - class: ParseTransform
+      kwargs:
+        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
+        field_patterns: {field_patterns}
+        metadata: {metadata}
+        metadata_interval: {metadata_interval}
+    writers: {writers}
+""",
 }
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -239,23 +258,21 @@ class CruiseDefinitionCreator:
     cruise_definition += '####################\nmodes:\n'
     for mode in MODE_CONFIG_TEMPLATES:
       cruise_definition += '  \'{}\':\n'.format(mode)
-      #mode_configs = {sensor_id: sensor_id + '->' + mode
-      #                for sensor_id in sensor_map}
-      #cruise_definition['modes'][mode] = mode_configs
       for sensor_id in sensor_map:
-        cruise_definition += '    {}: {}->{}\n'.format(sensor_id, sensor_id, mode)
-
+        cruise_definition += '    {}: {}->{}\n'.format(sensor_id,
+                                                       sensor_id, mode)
     cruise_definition += '\n####################\n'
     cruise_definition += 'default_mode: \'off\'\n'
 
     # Now create a config entry for every sensor x mode combination
-    cruise_definition += '\n####################\nconfigs:'
+    cruise_definition += '\n####################\nconfigs:\n'
     for sensor_id, sensor in sensor_map.items():
-      cruise_definition += '\n    #############\n    # {}'.format(sensor_id)
+      cruise_definition += '  #############\n  # {}\n'.format(sensor_id)
 
       for mode, mode_template in MODE_CONFIG_TEMPLATES.items():
-        config_name = sensor_id + '->' + mode
-        cruise_definition += '\n    {}:\n'.format(config_name)
+
+        # What's below is for creating the YAML text for a single
+        # logger config, defined by sensor_id X mode.
 
         # Get the pattern(s) we're supposed to match and munge them a
         # little to get in the right format. First, make sure it's a
@@ -272,65 +289,116 @@ class CruiseDefinitionCreator:
           if pat.find(ts_field) == 0
           ]
 
-        # Assemble names of variables in the pattern(s) to form a metadata dict
+        # Assemble names of variables in the pattern(s) to form a
+        # metadata dict.
         device_type = '{}: {} {}'.format(
           sensor.get('sensor_name','unknown type'),
           sensor.get('vendor', 'unknown vendor'),
           sensor.get('model', 'unknown model')
         )
 
+        # If we're supposed to be outputting metadata regularly,
+        # assemble the descriptions of each of the variables.
         metadata_dict = {}
         if self.metadata_interval:
-          var_name_pattern = '\\{(\\w+)[:\\}]'
-          for pattern in field_patterns:
-            variables = re.findall(var_name_pattern, pattern)
-            for var_name in variables:
+          for parameter in sensor_parameters[sensor_id]:
+            parameter_name = parameter.get('data_fieldname')
+            metadata_dict[parameter_name] = {
+              'device': sensor_id,
+              'device_type': device_type,
+              'device_type_field': parameter.get('short_name', '-'),
+              'description': parameter.get('description', '-'),
+              'units': parameter.get('units', '-'),
+            }
 
-              # Find the corresponding entry in the parameter table
-              found_match = False
-              for parameter in self.parameters:
-                if not parameter.get('data_fieldname') == var_name:
-                  continue
-                if not parameter.get('sensor_id') == sensor_id:
-                  continue
-                found_match = True
-                break
+        # Assemble the list of tables to which this sensor's data
+        # should be written.
+        sensor_tables = {}
+        for parameter in sensor_parameters[sensor_id]:
+          data_fieldname = parameter.get('data_fieldname')
+          data_table = parameter.get('data_table')
+          data_model = parameter.get('data_model')
+          if not data_table in sensor_tables:
+            sensor_tables[data_table] = {}
+          if not data_model in sensor_tables[data_table]:
+            sensor_tables[data_table][data_model] = []
+          sensor_tables[data_table][data_model].append(data_fieldname)
 
-              if found_match:
-                metadata_dict[var_name] = {
-                  'device': sensor_id,
-                  'device_type': device_type,
-                  'device_type_field': parameter.get('short_name', '-'),
-                  'description': parameter.get('description', '-'),
-                  'units': parameter.get('units', '-'),
-                }
-
-        # Assemble all the information needed for the config here
+        # Format of the writer(s) will depend on whether its
+        # parameters need to be written to more than one table. Break
+        # it out into a separate method to keep things more readable.
+        sensor_writers = self.generate_writers(sensor_tables)
+        
+        # Assemble all the information needed for the config here and
+        # append to our dict of configs.
         value_dict = {
+          'config_name': sensor_id + '->' + mode,
           'sensor_id': sensor_id,
           'mode': mode,
           'transmit_port': sensor.get('transmit_port'),
           'field_patterns': field_patterns,
           'metadata': metadata_dict,
-          'metadata_interval': self.metadata_interval
+          'metadata_interval': self.metadata_interval,
+          'writers': sensor_writers,
         }
         config = self.fill_template(mode_template, value_dict)
         cruise_definition += config
 
     return cruise_definition
 
-    # Vestigial code - we may need this soon
-    table_parameters = {}
-    for parameter in self.parameters:
-      table = parameter.get('data_table', None)
-      model = parameter.get('data_model', None)
-      sensor_id = parameter.get('sensor_id', None)
-      field = parameter.get('data_fieldname', None)
+  ############################
+  def generate_writers(self, sensor_tables):
+    """Given a dict of the tables and parameters that are to be written
+    to, create a simple or composed writer to do that. A simple writer
+    is one where all the parameters are getting written to the same
+    table/model. A composed writer is needed when some parameters are
+    going to one table and others to another one.
+    """
+    SIMPLE_WRITER = """    #- class: PostGresWriter
+    #  kwargs:
+    #    data_table: {data_table}
+    #    data_model: {data_model}
+    #    data_fieldnames: {data_fieldnames}"""
+    COMPOSED_WRITER = """    #- class: ComposedWriter
+    #  kwargs:
+    #    transforms:
+    #    - class: SelectFieldsTransform
+    #      kwargs:
+    #        keep: {data_fieldnames}
+    #    writers:
+    #    - class: PostGresWriter
+    #      kwargs:
+    #        data_table: {data_table}
+    #        data_model: {data_model}
+    #        data_fieldnames: {data_fieldnames}"""
 
-      if not table in table_parameters:
-        table_parameters[table] = []
-      table_parameters[table].append((sensor_id, field, model))
+    if len(sensor_tables) == 1:
+      template = SIMPLE_WRITER
+    else:
+      template = COMPOSED_WRITER
 
+    writer_str = '\n'
+    for data_table, models in sensor_tables.items():
+      # 'models' should be a dict of data_model:[param, param,...]
+      if len(models) != 1:
+        logging.fatal('More than one model used by a single data table?!? '
+                      'Table: %s, models: %s', data_table, models)
+
+      # Turn parameters into a comma-separated list of names. This
+      # 'for' should only have a single iteration, based on the prior
+      # test that len(models) == 1.
+      for data_model, parameters in models.items():
+        data_fieldnames = ','.join(parameters)
+
+      # Append our formatted writer to any existing ones for this
+      # sensor (if we have a simple writer, there will only be a
+      # single one of these).
+      writer_str += template.format(
+        data_table=data_table,
+        data_model=data_model,
+        data_fieldnames=data_fieldnames) + '\n'
+
+    return writer_str
 
   ############################
   def fill_template(self, template, value_dict):
