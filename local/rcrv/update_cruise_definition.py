@@ -354,23 +354,25 @@ class CruiseDefinitionCreator:
     table/model. A composed writer is needed when some parameters are
     going to one table and others to another one.
     """
-    SIMPLE_WRITER = """    #- class: PostGresWriter
-    #  kwargs:
-    #    data_table: {data_table}
-    #    data_model: {data_model}
-    #    data_fieldnames: {data_fieldnames}"""
-    COMPOSED_WRITER = """    #- class: ComposedWriter
-    #  kwargs:
-    #    transforms:
-    #    - class: SelectFieldsTransform
-    #      kwargs:
-    #        keep: {data_fieldnames}
-    #    writers:
-    #    - class: PostGresWriter
-    #      kwargs:
-    #        data_table: {data_table}
-    #        data_model: {data_model}
-    #        data_fieldnames: {data_fieldnames}"""
+    SIMPLE_WRITER = """    - class: PostgresWriter
+      module: local.rcrv.modules.postgres_writer
+      kwargs:
+        data_table: {data_table}
+        data_model: {data_model}
+        data_fieldnames: {data_fieldnames}"""
+    COMPOSED_WRITER = """    - class: ComposedWriter
+      module: local.rcrv.modules.postgres_writer
+      kwargs:
+        transforms:
+        - class: SelectFieldsTransform
+          kwargs:
+            keep: {data_fieldnames}
+        writers:
+        - class: PostgresWriter
+          kwargs:
+            data_table: {data_table}
+            data_model: {data_model}
+            data_fieldnames: {data_fieldnames}"""
 
     if len(sensor_tables) == 1:
       template = SIMPLE_WRITER
