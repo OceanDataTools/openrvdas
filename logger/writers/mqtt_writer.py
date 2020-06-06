@@ -28,6 +28,7 @@ class MQTTWriter(Writer):
     broker       MQTT broker to connect, broker format[###.###.#.###]
     channel      MQTT channel to read from, channel format[@broker/path_of_subscripton]
     ```
+    See /readers/mqtt_reader.py for info on how to start a broker
     """
     super().__init__(input_format=Text)
 

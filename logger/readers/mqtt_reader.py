@@ -28,9 +28,40 @@ class MQTTReader(Reader):
     """
     Read text records from the channel subscription.
     ```
-    broker       MQTT broker to connect, broker format[###.###.#.###]
+    broker       MQTT broker to connect, broker format[###.###.#.#]
     channel     MQTT channel to read from, channel format[@broker/path_of_subscripton]
     ```
+    Instructions on how to start an MQTT broker:
+
+    1. First install the Mosquitto Broker :
+	```
+	sudo apt-get update
+	sudo apt-get install mosquitto
+	sudo apt-get install mosquitto-clients
+	```
+    2. The mosquitto service starts automatically when downloaded but use :
+	```
+	sudo service mosquitto start
+	sudo service mosquitto stop
+	```
+	to start and stop the service.
+	
+    3. To test the install use:
+	```
+	netstat -at  
+	```
+	and you should see the MQTT broker which is the port 1883
+	
+    4. In order to manually subscribe to a client use : 
+	```
+	mosquitto_sub -t "example/topic"
+	```
+ 	and publish a message by using
+	```
+	mosquitto_pub -m "published message" -t "certain/channel"
+	``` 
+    5. Mosquitto uses a configuration file "mosquitto.conf" which you can find in /etc/mosquitto 	folder
+
     """
 
     super().__init__(output_format=Text)
