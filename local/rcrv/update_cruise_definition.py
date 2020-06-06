@@ -361,14 +361,15 @@ class CruiseDefinitionCreator:
         data_model: {data_model}
         data_fieldnames: {data_fieldnames}"""
     COMPOSED_WRITER = """    - class: ComposedWriter
-      module: local.rcrv.modules.postgres_writer
       kwargs:
         transforms:
         - class: SelectFieldsTransform
+          module: logger.transforms.select_fields_transform
           kwargs:
             keep: {data_fieldnames}
         writers:
         - class: PostgresWriter
+          module: local.rcrv.modules.postgres_writer
           kwargs:
             data_table: {data_table}
             data_model: {data_model}
