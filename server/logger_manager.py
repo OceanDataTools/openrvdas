@@ -9,6 +9,7 @@ import multiprocessing
 import os
 import pprint
 import psutil
+import shlex
 import signal
 import socket  # to get hostname
 import subprocess
@@ -130,7 +131,7 @@ files = {supervisor_dir}/supervisor.d/*.ini
 
 SUPERVISOR_LOGGER_TEMPLATE = """
 [program:{config_name}]
-command=venv/bin/python logger/listener/listen.py --config_string '{config_json}' {log_v}
+command=venv/bin/python logger/listener/listen.py --config_string {config_json} {log_v}
 directory={directory}
 autostart=false
 autorestart={autorestart}
@@ -628,7 +629,7 @@ class SupervisorConnector:
         # escape it by converting it to '%%'
         replacement_fields = {
           'config_name': config_name,
-          'config_json': json.dumps(config).replace('%', '%%'),
+          'config_json': shlex.quote(json.dumps(config)).replace('%', '%%'),
           'directory': base_dir,
           'autorestart': 'true' if runnable else 'false',
           'startsecs': '2' if runnable else '0',
