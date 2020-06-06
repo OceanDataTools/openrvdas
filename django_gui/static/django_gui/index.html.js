@@ -35,7 +35,8 @@ function initial_send_message() {
           'fields': {
             'status:cruise_definition':{'seconds':-1},
             'status:cruise_mode':{'seconds':-1},
-            'status:logger_status':{'seconds':-1}
+            'status:logger_status':{'seconds':-1},
+            'status:file_update':{'seconds':0}
           }
          }
 }
@@ -153,13 +154,20 @@ function process_data_message(message) {
       }
       break;
 
+    //////////////////
+    // The file from which our definition came has been updated. Make
+    // the section that offers to reload it visible.
+    case 'status:file_update':
+      document.getElementById('reload_span').style.display = 'inline';
+      break;
+
     ////////////////////////////////////////////////////
     // If something else, see if it's a logger status update
     default:
       var LOGGER_STDERR_PREFIX = 'stderr:logger:';
       if (field_name.indexOf(LOGGER_STDERR_PREFIX) == 0) {
         var logger_name = field_name.substr(LOGGER_STDERR_PREFIX.length);
-        add_to_stderr(logger_name, value_list);
+        process_logger_stderr(logger_name, value_list);
       }
     }
   }
@@ -172,7 +180,7 @@ function process_data_message(message) {
     new_fields['status:cruise_definition'] = {'seconds':-1};
     new_fields['status:cruise_mode'] = {'seconds':-1};
     new_fields['status:logger_status'] = {'seconds':-1};
-
+    new_fields['status:file_update'] = {'seconds':0};
     var subscribe_message = {'type':'subscribe', 'fields':new_fields};
     send(subscribe_message);
   }
@@ -196,8 +204,9 @@ function update_cruise_definition(timestamp, cruise_definition) {
   }
 
   ////////////////////////////////
-  // Update the cruise id
+  // Update the cruise id and filename
   document.getElementById('cruise_id').innerHTML = cruise_definition.cruise_id;
+  document.getElementById('filename').innerHTML = cruise_definition.filename;
 
   ////////////////////////////////
   // Now update the cruise modes
@@ -403,10 +412,25 @@ function looks_like_log_line(line) {
 }
 
 ////////////////////////////
+// Add a message to logger's global stderr display. Make sure messages
+// are unique - they're timestamped, so we'll only omit messages that
+// are true duplicates. Return true if we actually add anything.
+function add_to_stderr(logger_name, message) {
+  message = message.replace(/\n/, '<br>');
+  if (global_logger_stderr[logger_name].indexOf(message) == -1) {
+    global_logger_stderr[logger_name].push(message);
+    return true;
+  } else {
+    //console.log('Skipping duplicate message: ' + message);
+    return false;
+  }
+}
+
+////////////////////////////
 // Add a list of (timestamp, message) pairs to the stderr display for
 // logger_name. Make sure messages are in order and unique. Return true
 // if we actually add anything.
-function add_to_stderr(logger_name, value_list) {
+function process_logger_stderr(logger_name, value_list) {
   // Fetch the div where we're going to put these messages.
   var stderr_div = document.getElementById(logger_name + '_stderr');
   if (stderr_div == undefined) {
@@ -415,12 +439,13 @@ function add_to_stderr(logger_name, value_list) {
   }
 
   // Process each of the messages in the list.
+  var anything_added = false;
   for (var list_i = 0; list_i < value_list.length; list_i++) {
     var [timestamp, message] = value_list[value_list.length-1];
+    if (message.length == 0) {
+      continue;
+    }
     try {
-      if (message.length == 0) {
-        continue;
-      }
       // If we have a structured JSON message
       message = JSON.parse(message);
       var prefix = '';
@@ -434,21 +459,22 @@ function add_to_stderr(logger_name, value_list) {
         prefix += message['filename'] + ':' + message['lineno'] + ' ';
       }
       var msg = message['message'].replace('\n','<br>');
-      global_logger_stderr[logger_name].push(prefix + msg);
-
+      anything_added = anything_added || add_to_stderr(logger_name, prefix + msg);
     } catch (e) {
       // If not JSON, but a string that looks like a log line go ahead
-      // and push it into the list.
+      // and try adding.
       if (looks_like_log_line(message)) {
-        global_logger_stderr[logger_name].push(message);
+        anything_added = anything_added || add_to_stderr(logger_name, message);
       } else {
-        console.log('Skipping unparseable log line: ' + message);
+        console.log('Skipping unparseable log line: ' +  message);
       }
     }
   }
   // Once all messages have been added, put in place in proper divs
-  stderr_div.innerHTML = global_logger_stderr[logger_name].join('<br>\n');
-  stderr_div.scrollTop = stderr_div.scrollHeight;  // scroll to bottom
+  if (anything_added) {
+    stderr_div.innerHTML = global_logger_stderr[logger_name].join('<br>\n');
+    stderr_div.scrollTop = stderr_div.scrollHeight;  // scroll to bottom
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

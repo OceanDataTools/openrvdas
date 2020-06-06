@@ -143,6 +143,9 @@ class TestDjangoServerAPI(TestCase):
     api.load_configuration(sample_test_0)
 
     self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
+    self.assertEqual(api.get_active_mode(), None)
+    self.assertEqual(api.get_default_mode(), 'off')
+    api.set_active_mode('off')
     self.assertEqual(api.get_active_mode(), 'off')
     self.assertDictEqual(api.get_logger_configs(),
                          {'knud': {'name': 'off'},

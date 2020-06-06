@@ -20,7 +20,7 @@ sys.path.append(dirname(dirname(realpath(__file__))))
 from server.logger_manager import LoggerManager
 
 # Read in JSON with comments
-from logger.utils.read_config import parse
+from logger.utils.read_config import parse, read_config
 
 from django_gui.settings import HOSTNAME, STATIC_ROOT
 from django_gui.settings import WEBSOCKET_DATA_SERVER
@@ -74,22 +74,20 @@ def index(request):
         logging.warning('Error trying to set mode to "%s": %s',
                         new_mode_name, str(e))
 
-    # Did we get a cruise definition file? Load it. If there aren't
-    # any errors, switch to the configuration it defines.
-    elif 'load_config' in request.POST and 'config_file' in request.FILES:
-      config_file = request.FILES['config_file']
-      config_contents = config_file.read()
-      logging.warning('Uploading file "%s"...', config_file.name)
-
+    elif 'reload_button' in request.POST:
+      logging.info('reloading current configuration file')
       try:
-        configuration = parse(config_contents.decode('utf-8'))
-        api.load_configuration(configuration)
-      except JSONDecodeError as e:
-          errors.append('Error loading "%s": %s' % (config_file.name, str(e)))
+        cruise = api.get_configuration()
+        filename = cruise['config_filename']
+
+        # Load the file to memory and parse to a dict. Add the name
+        # of the file we've just loaded to the dict.
+        config = read_config(filename)
+        if 'cruise' in config:
+          config['cruise']['config_filename'] = filename
+        api.load_configuration(config)
       except ValueError as e:
-        errors.append(str(e))
-      if errors:
-        logging.warning('Errors! %s', errors)
+        logging.warning('Error reloading current configuration: %s', str(e))
 
     # If they canceled the upload
     elif 'cancel' in request.POST:
@@ -105,14 +103,16 @@ def index(request):
     'errors': {'django': errors},
   }
   try:
-    template_vars['cruise_id'] = api.get_configuration().id
+    configuration = api.get_configuration()
+    template_vars['cruise_id'] = configuration.get('id', 'Cruise')
+    template_vars['filename'] = configuration.get('config_filename', '-none-')
     template_vars['loggers'] = api.get_loggers()
     template_vars['modes'] = api.get_modes()
     template_vars['active_mode'] = api.get_active_mode()
     template_vars['errors'] = errors
   except ValueError:
     logging.info('No configuration loaded')
-  
+
   return render(request, 'django_gui/index.html', template_vars)
 
 ################################################################################
@@ -148,11 +148,11 @@ def edit_config(request, logger_id):
 
     else:
       logging.debug('User canceled request')
-      
+
     # Close window once we've done our processing
     return HttpResponse('<script>window.close()</script>')
 
-  # If not a POST, render the selector page: 
+  # If not a POST, render the selector page:
   # What's our current mode? What's the default config for this logger
   # in this mode?
   active_mode = api.get_active_mode()
@@ -163,7 +163,7 @@ def edit_config(request, logger_id):
   # dict of config_name: config_json
   config_map = {config_name: api.get_logger_config(config_name)
                 for config_name in config_options}
-  
+
   return render(request, 'django_gui/edit_config.html',
                 {
                   'logger_id': logger_id,
@@ -178,7 +178,7 @@ def choose_file(request, selection=None):
   """Render a chooser to pick and load a configuration file from the
   server side.
 
-  Files can be navigated/selected starting at a base defined by the list in 
+  Files can be navigated/selected starting at a base defined by the list in
   django_gui.settings.FILECHOOSER_DIRS.
   """
   global api
@@ -212,9 +212,18 @@ def choose_file(request, selection=None):
     target_file = request.POST.get('target_file', None)
     if target_file:
       try:
+        # Load the file to memory and parse to a dict. Add the name of
+        # the file we've just loaded to the dict.
         with open(target_file, 'r') as config_file:
           configuration = parse(config_file.read())
+          if 'cruise' in configuration:
+            configuration['cruise']['config_filename'] = target_file
+
+          # Load the config and set to the default mode
           api.load_configuration(configuration)
+          default_mode = api.get_default_mode()
+          if default_mode:
+            api.set_active_mode(default_mode)
       except (JSONDecodeError, ScannerError) as e:
           load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
       except ValueError as e:
@@ -226,7 +235,7 @@ def choose_file(request, selection=None):
       else:
         logging.warning('Errors loading cruise definition: %s', load_errors)
         target_file = None
-    
+
     # Okay, it wasn't a request to load a target file. Do we have a
     # selection? If no target and no selection, it means they canceled
     # the choice.
@@ -270,7 +279,7 @@ def choose_file(request, selection=None):
                  'dir_name': dir_name,
                  'listing': listing,
                  'load_errors': load_errors})
-    
+
 ################################################################################
 def widget(request, field_list=''):
   global logger_server

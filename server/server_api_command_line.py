@@ -65,7 +65,7 @@ class ServerAPICommandLine:
     logging.info('ServerAPICommandLine - quit requested')
     self.quit_requested = True
     self.api.quit()
-    
+
   ############################
   def run(self):
     """Iterate, reading commands and processing them."""
@@ -94,7 +94,10 @@ class ServerAPICommandLine:
     commands = [
       # ('cruises', 'Show list of loaded cruises'),
       ('load_configuration <configuration file name>',
-       'Load a new config from file'),
+       'Load a new config from file and set to default mode'),
+      ('reload_configuration',
+       'Reload the current configuration file and update any loggers whose '
+       'that configurations have changed'),
       ('set_configuration <JSON encoding of a configuration>',
        'Load a new configuration from passed JSON encoding'),
       ('delete_configuration',
@@ -133,7 +136,7 @@ class ServerAPICommandLine:
     try:
       if not command:
         logging.info('Empty command received')
-        
+
       # elif command == 'cruises':
       #   cruises = self.api.get_cruises()
       #   if cruises:
@@ -141,14 +144,39 @@ class ServerAPICommandLine:
       #   else:
       #     print('No cruises loaded')
 
-      # load_cruise <cruise config file name>
+      # load_configuration <cruise config file name>
       elif command == 'load_configuration':
         raise ValueError('format: load_configuration <config file name>')
       elif command.find('load_configuration ') == 0:
         (load_cmd, filename) = command.split(maxsplit=1)
         logging.info('Loading config from %s', filename)
         try:
+          # Load the file to memory and parse to a dict. Add the name
+          # of the file we've just loaded to the dict.
           config = read_config(filename)
+          if 'cruise' in config:
+            config['cruise']['config_filename'] = filename
+          self.api.load_configuration(config)
+          default_mode = self.api.get_default_mode()
+          if default_mode:
+            self.api.set_active_mode(default_mode)
+        except FileNotFoundError as e:
+          logging.error('Unable to find file "%s"', filename)
+
+      # reload_configuration <cruise config file name>
+      # Main difference here is that we already have the filename, and
+      # we *don't* reset everything to the default mode after loading.
+      elif command == 'reload_configuration':
+        try:
+          # Look up the filename of the current cruise_definition.
+          cruise = self.api.get_configuration()
+          filename = cruise['config_filename']
+
+          # Load the file to memory and parse to a dict. Add the name
+          # of the file we've just loaded to the dict.
+          config = read_config(filename)
+          if 'cruise' in config:
+            config['cruise']['config_filename'] = filename
           self.api.load_configuration(config)
         except FileNotFoundError as e:
           logging.error('Unable to find file "%s"', filename)
@@ -160,6 +188,9 @@ class ServerAPICommandLine:
         (cruise_cmd, config_json) = command.split(maxsplit=1)
         logging.info('Setting config to %s', config_json)
         self.api.load_configuration(json.loads(config_json))
+        default_mode = self.api.get_default_mode()
+        if default_mode:
+          self.api.set_active_mode(default_mode)
 
       # delete_cruise <cruise_id>
       # elif command == 'delete_configuration':
@@ -242,7 +273,7 @@ class ServerAPICommandLine:
         (config_cmd) = command.split(maxsplit=1)
         config_names = {logger_id:self.api.get_logger_config_name(logger_id)
                    for logger_id in self.api.get_loggers()}
-        if len(config_names) > 0:                 
+        if len(config_names) > 0:
           for logger_id, config_name in config_names.items():
             print('%s: %s' % (logger_id, config_name))
         else:

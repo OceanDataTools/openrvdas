@@ -203,7 +203,20 @@ class DjangoServerAPI(ServerAPI):
     """Get OpenRVDAS configuration from the data store.
     """
     with self.config_rlock:
-      return self._get_cruise_object()
+      cruise = self._get_cruise_object()
+      active_mode = cruise.active_mode.name if cruise.active_mode else None
+      default_mode = cruise.default_mode.name if cruise.default_mode else None
+      config = {
+        'id': cruise.id,
+        'start': cruise.start,
+        'end': cruise.end,
+        'config_filename': cruise.config_filename,
+        'loaded_time': cruise.loaded_time,
+        'active_mode': active_mode,
+        'default_mode': default_mode,
+        'modes': cruise.modes()
+      }
+      return config
 
   ############################
   def get_modes(self):
@@ -235,7 +248,7 @@ class DjangoServerAPI(ServerAPI):
     with self.config_rlock:
       while True:
         try:
-          cruise = self._get_cruise_objects.get()
+          cruise = self._get_cruise_object()
           if cruise.default_mode:
             return cruise.default_mode.name
           return None
@@ -363,9 +376,9 @@ class DjangoServerAPI(ServerAPI):
   ############################
   def set_active_mode(self, mode):
     """Set the current mode of the current cruise in the data store."""
-    with self.config_rlock:
-      while True:
-        try:
+    while True:
+      try:
+        with self.config_rlock:
           cruise = self._get_cruise_object()
           try:
             mode_obj = Mode.objects.get(name=mode)
@@ -373,9 +386,6 @@ class DjangoServerAPI(ServerAPI):
             raise ValueError('Cruise has no mode %s' % mode)
           cruise.active_mode = mode_obj
           cruise.save()
-
-          # Store the fact that our mode has been changed.
-          #CruiseState(cruise=cruise, active_mode=mode_obj).save()
 
           for logger in Logger.objects.filter(cruise=cruise):
             logger_id = logger.name
@@ -399,16 +409,16 @@ class DjangoServerAPI(ServerAPI):
           # values are stale.
           self._set_update_time()
 
-          # Notify any update_callbacks that wanted to be called when
-          # the state of the world changes.
-          logging.info('Signaling update')
-          self.signal_update()
-          return
-        except django.db.utils.OperationalError as e:
-          logging.warning('set_active_mode() '
-                          'Got DjangoOperationalError. Trying again: %s', e)
-          connection.close()
-          time.sleep(0.1)
+        # Notify any update_callbacks that wanted to be called when
+        # the state of the world changes.
+        logging.info('Signaling update')
+        self.signal_update()
+        return
+      except django.db.utils.OperationalError as e:
+        logging.warning('set_active_mode() '
+                        'Got DjangoOperationalError. Trying again: %s', e)
+        connection.close()
+        time.sleep(0.1)
 
   ############################
   def set_active_logger_config(self, logger, config_name):
@@ -682,25 +692,26 @@ class DjangoServerAPI(ServerAPI):
         # so no one else can mess until we're done with the transaction.
         loggers_lock = Logger.objects.select_for_update().all()
 
-          ################
-        # Begin by creating the Cruise object. If no cruise name, just
-        # call it 'Cruise'.
-        cruise_id = cruise_def.get('id', None)
-        if cruise_id is None:
-          cruise_id = 'Cruise'
-
+        ################
+        # Assemble the top-level information about the cruise
+        # definition. If no cruise name, just call it 'Cruise'.
+        cruise_id = cruise_def.get('id', 'Cruise')
+        cruise_start = cruise_def.get('start', None)
+        if cruise_start:
+          cruise_start = datetime_obj(cruise_start, time_format=DATE_FORMAT)
+        cruise_end = cruise_def.get('end', None)
+        if cruise_end:
+          cruise_end = datetime_obj(cruise_end, time_format=DATE_FORMAT)
+        config_filename = cruise_def.get('config_filename', None)
+          
         # Delete old cruise. There should be only one, but...
         for old_cruise in Cruise.objects.all():
           logging.info('Deleting old cruise "%s"', old_cruise.id)
           old_cruise.delete()
 
-        cruise = Cruise(id=cruise_id)
-        start_time = cruise_def.get('start', None)
-        if start_time:
-          cruise.start = datetime_obj(start_time, time_format=DATE_FORMAT)
-        end_time = cruise_def.get('end', None)
-        if end_time:
-          cruise.end = datetime_obj(end_time, time_format=DATE_FORMAT)
+        # Create and save the new cruise
+        cruise = Cruise(id=cruise_id, start=cruise_start, end=cruise_end,
+                        config_filename=config_filename)
         cruise.save()
 
         ################
@@ -735,9 +746,9 @@ class DjangoServerAPI(ServerAPI):
             if config_spec is None:
               raise ValueError('Config %s (declared by logger %s) not found' %
                                (config_name, logger_name))
-            logging.info('  Associating config %s with logger %s',
+            logging.debug('  Associating config %s with logger %s',
                          config_name, logger_name)
-            logging.info('config_spec: %s', config_spec)
+            logging.debug('config_spec: %s', config_spec)
 
             # A minor hack: fold the config's name into the spec
             if not 'name' in config_spec:
@@ -758,19 +769,19 @@ class DjangoServerAPI(ServerAPI):
                   mode = Mode.objects.get(name=mode_name, cruise=cruise)
                 except Mode.DoesNotExist:
                   raise ValueError('Mode %s does not exist?!?' % mode_name)
-                logging.info('    Associating config %s with mode %s',
+                logging.debug('    Associating config %s with mode %s',
                              config_name, mode_name)
                 config.modes.add(mode)
 
                 # Is this config in the default mode of this logger?
                 if mode_name == default_mode:
-                  logging.info('    Setting logger %s to default config: %s',
+                  logging.debug('    Setting logger %s to default config: %s',
                                logger_name, config_name)
                   logger.config = config
                   logger.save()
 
-        logging.info('Cruise loaded - setting to default mode %s', default_mode)
-        self.set_active_mode(default_mode)
+        logging.info('Cruise loaded')
+        #self.set_active_mode(default_mode) # we now do this outside of load
 
     # Let anyone who's interested know that we've got new configurations.
     self.signal_load()
@@ -779,9 +790,9 @@ class DjangoServerAPI(ServerAPI):
   def delete_configuration(self):
     """Remove the current cruise from the data store."""
     with self.config_rlock:
-      cruise = self._get_cruise_object()
-      cruise.delete()
-
+      Cruise.objects.all().delete()
+      self._set_update_time()
+      
   ############################
   # Methods for manually constructing/modifying a cruise spec via API
   #def add_cruise(self, cruise_id, start=None, end=None)

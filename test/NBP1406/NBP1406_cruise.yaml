@@ -2852,4 +2852,3 @@ configs:
     - class: CachedDataWriter
       kwargs:
         data_server: localhost:8766
-

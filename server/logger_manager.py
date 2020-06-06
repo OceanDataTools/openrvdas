@@ -9,6 +9,7 @@ import multiprocessing
 import os
 import pprint
 import psutil
+import shlex
 import signal
 import socket  # to get hostname
 import subprocess
@@ -18,6 +19,7 @@ import threading
 import time
 import websockets
 
+from html import escape as escape_html
 from parse import parse
 
 # For communicating with supervisord server
@@ -57,7 +59,6 @@ SUPERVISORD = 'supervisord'
 # process up.
 SUPERVISORD_NAME = 'logger_manager_supervisor'
 
-DEFAULT_GROUP = 'logger'
 DEFAULT_MAX_TRIES = 3
 
 SOURCE_NAME = 'LoggerManager'
@@ -90,8 +91,8 @@ chmod=0770                  ; socket file mode (default 0700)
 {password_auth}             ; default is no password (open server)
 
 [inet_http_server]         ; inet (TCP) server disabled by default
-;port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
-port={host}:{port}         ; ip_address:port specifier, *:port for all iface
+port=localhost:{port}      ; ip_address:port specifier, *:port for all iface
+;port={host}:{port}         ; ip_address:port specifier, *:port for all iface
 {username_auth}            ; default is no username (open server)
 {password_auth}            ; default is no password (open server)
 
@@ -130,7 +131,7 @@ files = {supervisor_dir}/supervisor.d/*.ini
 
 SUPERVISOR_LOGGER_TEMPLATE = """
 [program:{config_name}]
-command=logger/listener/listen.py --config_string '{config_json}' {log_v}
+command=venv/bin/python logger/listener/listen.py --config_string {config_json} {log_v}
 directory={directory}
 autostart=false
 autorestart={autorestart}
@@ -156,7 +157,6 @@ class SupervisorConnector:
                supervisor_port=DEFAULT_SUPERVISOR_PORT,
                supervisor_logfile_dir=DEFAULT_SUPERVISOR_LOGFILE_DIR,
                supervisor_auth=None,
-               group=DEFAULT_GROUP,
                max_tries=DEFAULT_MAX_TRIES,
                log_level=logging.WARNING):
     """Connect to a supervisord process, or start our own to manage
@@ -183,9 +183,6 @@ class SupervisorConnector:
           to authenticate to the supervisor instance. If omitted, no auth
           will be assumed.
 
-    group - process group in which the configs will be defined; will be
-          prepended to config names.
-
     max_tries = Number of times a failed logger should be retried if it
           fails on startup.
     ```
@@ -201,7 +198,6 @@ class SupervisorConnector:
     self.supervisor_port = supervisor_port
     self.supervisor_logfile_dir = supervisor_logfile_dir
     self.supervisor_auth = supervisor_auth
-    self.group = group
     self.max_tries = max_tries
     self.log_level = log_level
 
@@ -234,7 +230,7 @@ class SupervisorConnector:
       self.read_stderr_rpc =  self._create_supervisor_connection()
 
     # A lock for information we maintain about current configurations
-    self.config_lock = threading.Lock()
+    self.config_lock = threading.RLock()
     self.read_stderr_offset = {}  # how much of each stderr we've read
 
     # Finally, keep track of the configs that are currently active
@@ -405,11 +401,12 @@ class SupervisorConnector:
 
     with self.config_lock:
       for config in configs:
-        config = self._clean_name(config)  # get rid of objectionable characters
-        if self.group:
-          config = self.group + ':' + config
+        # Each logger config is its own group, so just concatenate to
+        # get group:config. Clean it to remove characters that
+        # supervisor can't handle in group:config names
+        cleaned_config = self._clean_name(config + ':' + config)
         config_calls.append({'methodName':'supervisor.startProcess',
-                             'params':[config, False]})
+                             'params':[cleaned_config, False]})
 
     # Make calls in parallel and update set of currently-running
     # configs. If we fail, simply return and count on trying again
@@ -450,11 +447,12 @@ class SupervisorConnector:
 
     with self.config_lock:
       for config in configs:
-        config = self._clean_name(config)  # get rid of objectionable characters
-        if self.group:
-          config = self.group + ':' + config
+        # Each logger config is its own group, so just concatenate to
+        # get group:config. Clean it to remove characters that
+        # supervisor can't handle in group:config names
+        cleaned_config = self._clean_name(config + ':' + config)
         config_calls.append({'methodName':'supervisor.stopProcess',
-                             'params':[config, False]})
+                             'params':[cleaned_config, False]})
 
     # Make calls in parallel and update set of currently-running
     # configs. If we fail, simply return and count on trying again
@@ -535,10 +533,10 @@ class SupervisorConnector:
     read_fault = False
     with self.config_lock:
       for config in configs:
-        # If we've got a group, need to prefix config name with it
-        cleaned_config = self._clean_name(config)
-        if self.group:
-          cleaned_config = self.group + ':' + cleaned_config
+        # Each logger config is its own group, so just concatenate to
+        # get group:config. Clean it to remove characters that
+        # supervisor can't handle in group:config names
+        cleaned_config = self._clean_name(config + ':' + config)
 
         # Initialize last read position of any configs we've not yet read
         if not config in self.read_stderr_offset:
@@ -573,7 +571,7 @@ class SupervisorConnector:
           # We can get these faults if our config has been updated on
           # disc but not reloaded.
           except XmlRpcFault as e:
-            logging.info('XmlRpcFault %d: %s', e.faultCode, e.faultString)
+            logging.info('XmlRpcFault %d while reading stderr for %s: %s', e.faultCode, config, e.faultString)
             overflow = False
             read_fault = True
 
@@ -583,7 +581,8 @@ class SupervisorConnector:
     return results
 
   ############################
-  def create_new_supervisor_file(self, configs, supervisor_logfile_dir=None,
+  def create_new_supervisor_file(self, configs,
+                                 supervisor_logfile_dir=None,
                                  user=None, base_dir=None):
     """Create a new configuration file for supervisord to read.
 
@@ -612,12 +611,13 @@ class SupervisorConnector:
       ''
       ])
 
-    config_names = []
     for logger, logger_configs in configs.items():
+      logger_config_names = []
       for config_name, config in logger_configs.items():
+
         # Supervisord doesn't like '/' in program names
         config_name = self._clean_name(config_name)
-        config_names.append(config_name)
+        logger_config_names.append(config_name)
 
         # If a logger isn't "runnable" because it doesn't have readers
         # or writers (e.g. if it's an "off" config), then it'll
@@ -629,7 +629,7 @@ class SupervisorConnector:
         # escape it by converting it to '%%'
         replacement_fields = {
           'config_name': config_name,
-          'config_json': json.dumps(config).replace('%', '%%'),
+          'config_json': shlex.quote(json.dumps(config)).replace('%', '%%'),
           'directory': base_dir,
           'autorestart': 'true' if runnable else 'false',
           'startsecs': '2' if runnable else '0',
@@ -642,15 +642,13 @@ class SupervisorConnector:
           }
         content_str += SUPERVISOR_LOGGER_TEMPLATE.format(**replacement_fields)
 
-    # If we've been given a group name, group all the logger configs
-    # together under it so we can start them all at the same time with
-    # a single call.
-    if self.group and config_names:
-      content_str += '\n'.join([
-        '[group:%s]' % self.group,
-        'programs=%s' % ','.join(config_names),
-        ''
-      ])
+        # The "reload" command reloads/restarts changed programs by
+        # groups, so make each config its own group.
+        content_str += '\n'.join([
+          '[group:%s]' % config_name,
+          'programs=%s' % config_name,
+          ''
+        ])
 
     # Open and write the config file.
     with open(self.supervisor_logger_config, 'w') as config_file:
@@ -667,7 +665,7 @@ class SupervisorConnector:
 
   ############################
   def reload_config_file(self):
-    """Tell our supervisor instance to reload config file and any groups."""
+    """Tell our supervisor instance to reload config file."""
     logging.info('Reloading config file')
 
     # Included code from supervisorctl:
@@ -676,40 +674,13 @@ class SupervisorConnector:
       supervisor = self.supervisor_rpc.supervisor
       try:
         result = supervisor.reloadConfig()
+        added, changed, removed = result[0]
       except XmlRpcFault as e:
         logging.info('XmlRpc fault: %s', str(e))
         return
-        #self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
-        #if e.faultCode == 6 # XmlRpcFaults.SHUTDOWN_STATE:
-        #  logging.info('ERROR: already shutting down')
-        #  return
-        #else:
-        #  raise
 
-      added, changed, removed = result[0]
-      #valid_gnames = set([self.group])
-      valid_gnames = set()
-
-      # NOTE: with valid_gnames defined as empty, as above, is the
-      # below block even necessary?
-
-      # If any gnames are specified we need to verify that they are
-      # valid in order to print a useful error message.
-      if valid_gnames:
-        groups = set()
-        for info in supervisor.getAllProcessInfo():
-          groups.add(info['group'])
-        # New gnames would not currently exist in this set so
-        # add those as well.
-        groups.update(added)
-
-        for gname in valid_gnames:
-          if gname not in groups:
-            logging.info('ERROR: no such group: %s' % gname)
-
+    # If group has been removed, stop then remove
     for gname in removed:
-      if valid_gnames and gname not in valid_gnames:
-        continue
       results = supervisor.stopProcessGroup(gname)
       logging.info('stopped %s', gname)
 
@@ -721,9 +692,8 @@ class SupervisorConnector:
       supervisor.removeProcessGroup(gname)
       logging.info('removed process group %s', gname)
 
+    # If changed: stop, remove, add
     for gname in changed:
-      if valid_gnames and gname not in valid_gnames:
-        continue
       supervisor.stopProcessGroup(gname)
       logging.info('stopped %s', gname)
 
@@ -731,9 +701,8 @@ class SupervisorConnector:
       supervisor.addProcessGroup(gname)
       logging.info('updated process group %s', gname)
 
+    # If added, just add
     for gname in added:
-      if valid_gnames and gname not in valid_gnames:
-        continue
       supervisor.addProcessGroup(gname)
       logging.info('added process group %s', gname)
 
@@ -814,6 +783,7 @@ class LoggerManager:
       for logger in self.loggers:
         for config in self.loggers[logger].get('configs', []):
           self.config_to_logger[config] = logger
+
     except ValueError:
       logging.info('No cruise defined yet.')
       self.loggers = {}
@@ -871,12 +841,12 @@ class LoggerManager:
     logging.info('New cruise definition detected - rebuilding supervisord '
                  'config file')
     try:
-      self.loggers = self.api.get_loggers()
       with self.config_lock:
+        self.loggers = self.api.get_loggers()
         self.config_to_logger = {}
         logger_config_strings = {}
-        for logger, configs in self.loggers.items():
-          config_names = configs.get('configs', [])
+        for logger, logger_configs in self.loggers.items():
+          logger_config_names = logger_configs.get('configs', [])
           # Map config_name->logger
           for config in self.loggers[logger].get('configs', []):
             self.config_to_logger[config] = logger
@@ -884,7 +854,7 @@ class LoggerManager:
           # Map logger->{config_name:config_definition_str,...}
           logger_config_strings[logger] = {
             config_name: self.api.get_logger_config(config_name)
-            for config_name in config_names}
+            for config_name in logger_config_names}
 
     # If no cruise loaded, create an empty config file
     except ValueError:
@@ -1025,16 +995,20 @@ class LoggerManager:
 
     while not self.quit_flag:
       try:
-        # An ugly hack here: the Django API gives us a Cruise object,
-        # while the in-memory API gives us a dict. UGH!
-        cruise = self.api.get_configuration() # a Cruise object
-        if type(cruise) is dict:
-          loaded_time = cruise.get('loaded_time')
-        else:
-          loaded_time = cruise.loaded_time
+        cruise = self.api.get_configuration() # dict encoding a Cruise object
+        loaded_time = cruise.get('loaded_time')
         config_timestamp = datetime.datetime.timestamp(loaded_time)
+        config_filename = cruise.get('config_filename', None)
       except (AttributeError, ValueError, TypeError):
         config_timestamp = 0
+        config_filename = None
+
+      # Has file changed since we loaded it? If so, send a notification
+      if config_filename:
+        mtime = os.path.getmtime(config_filename)
+        if mtime > config_timestamp:
+          logging.debug('Config file timestamp changed!')
+          self._write_record_to_data_server('status:file_update', mtime)
 
       # Have we got a config with a newer timestamp? If so, update the
       # supervisor config file and send the update to the console.
@@ -1042,24 +1016,16 @@ class LoggerManager:
         last_config_timestamp = config_timestamp
         self._build_new_config_file()
         try:
-          if type(cruise) is dict:
-            cruise_def = {
-              'cruise_id': cruise.get('cruise', {}).get('id', ''),
-              'config_timestamp': config_timestamp,
-              'loggers': self.api.get_loggers(),
-              'modes': cruise.get('modes', {}),
-              'active_mode': cruise.get('active_mode','')
-            }
-          else:
-            cruise_def = {
-              'cruise_id': cruise.id,
-              'config_timestamp': config_timestamp,
-              'loggers': self.api.get_loggers(),
-              'modes': cruise.modes(),
-              'active_mode': cruise.active_mode.name
-            }
+          cruise_dict = {
+            'cruise_id': cruise.get('id', ''),
+            'filename': cruise.get('config_filename', None),
+            'config_timestamp': config_timestamp,
+            'loggers': self.api.get_loggers(),
+            'modes': cruise.get('modes', {}),
+            'active_mode': self.api.get_active_mode()
+          }
           self._write_record_to_data_server(
-            'status:cruise_definition', cruise_def)
+            'status:cruise_definition', cruise_dict)
         except (AttributeError, ValueError) as e:
           logging.info('No cruise definition found: %s', e)
 
@@ -1142,6 +1108,9 @@ class LoggerManager:
         logging.info(field_name + ': ' + message)
         return
 
+      if not message:
+        return
+
       # Try parsing the expected format
       format = '{asctime:S} {levelno:d} {levelname:S} ' \
                '{filename:S}:{lineno:d} {message}'
@@ -1162,11 +1131,11 @@ class LoggerManager:
           'asctime': result['asctime'],
           'levelno': result['levelno'],
           'levelname': result['levelname'],
-          'message': result['message']
+          'message': escape_html(result['message'])
         }
       else:
-        logging.info('Failed to parse: "%s"', message)
-        record = {'message': message}
+        logging.debug('Failed to parse: "%s"', message)
+        record = {'message': 'Unparseable stderr message: "%s"' % escape_html(message)}
 
       logging.debug('Sending stderr to CDS: field: %s, record: %s',
                     field_name, record)
@@ -1406,7 +1375,6 @@ if __name__ == '__main__':
     supervisor_port=args.supervisor_port,
     supervisor_logfile_dir=args.supervisor_logfile_dir,
     supervisor_auth=args.supervisor_auth,
-    group='logger',
     max_tries=args.max_tries,
     log_level=log_level)
 
@@ -1436,18 +1404,20 @@ if __name__ == '__main__':
   # If they've given us an initial configuration, get and load it.
   if args.config:
     config = read_config(args.config)
+
+    # Hacky bit: need to stash the config filename for posterity
+    if 'cruise' in config:
+      config['cruise']['config_filename'] = args.config
     api.load_configuration(config)
+
+    active_mode = args.mode or api.get_default_mode()
+    api.set_active_mode(active_mode)
     api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
                     log_level=api.INFO,
-                    message='started with: %s' % args.config)
-  if args.mode:
-    if not args.config:
-      raise ValueError('Argument --mode can only be used with --config')
-    api.set_active_mode(args.mode)
-    api.message_log(source=SOURCE_NAME, user='(%s@%s)' % (USER, HOSTNAME),
-                    log_level=api.INFO,
-                    message='initial mode (%s@%s): %s' % (USER, HOSTNAME,
-                                                          args.mode))
+                    message='started with: %s, mode %s' %
+                    (args.config, active_mode))
+
+
   try:
     # If no console, just wait for the configuration update thread to
     # end as a signal that we're done.

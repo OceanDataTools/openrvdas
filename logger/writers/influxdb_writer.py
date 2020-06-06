@@ -14,14 +14,14 @@ INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
   from database.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL
   INFLUXDB_SETTINGS_FOUND = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
   INFLUXDB_SETTINGS_FOUND = False
 
 try:
   from influxdb_client import InfluxDBClient
   from influxdb_client.client.write_api import ASYNCHRONOUS
   INFLUXDB_CLIENT_FOUND = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
   INFLUXDB_CLIENT_FOUND = False
 
 import time
@@ -40,10 +40,10 @@ class InfluxDBWriter(Writer):
     super().__init__(input_format=Text)
 
     if not INFLUXDB_SETTINGS_FOUND:
-      raise RuntimeError('File database/influxdb/settings.py not found. '
+      raise RuntimeError('File database/settings.py not found. '
                          'InfluxDB functionality is not available. Have '
-                         'you copied over database/influxdb/settings.py.dist '
-                         'to database/influxdb/settings.py and followed the '
+                         'you copied over database/settings.py.dist '
+                         'to database/settings.py and followed the '
                          'configuration instructions in it?')
     if not INFLUXDB_CLIENT_FOUND:
       raise RuntimeError('Python module influxdb_client not found. Please '
