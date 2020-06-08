@@ -13,7 +13,7 @@ from logger.readers.reader import Reader
 # Don't barf if they don't have redis installed. Only complain if
 # they actually try to use it, below
 try:
-  import paho.mqtt.client as mqtt # import the client | $ pip installing paho-mqtt is necessary 
+  import paho.mqtt.client as mqtt # import the client | $ pip installing paho-mqtt is necessary
   PAHO_ENABLED = True
 except ModuleNotFoundError:
   PAHO_ENABLED = False
@@ -24,10 +24,10 @@ class MQTTReader(Reader):
   Read messages from an mqtt broker
   """
   def __init__(self, broker, channel, client_name):
-
     """
     Read text records from the channel subscription.
     ```
+
     broker       MQTT broker to connect, broker format[###.###.#.#]
     channel     MQTT channel to read from, channel format[@broker/path_of_subscripton]
     ```
@@ -45,23 +45,24 @@ class MQTTReader(Reader):
 	sudo service mosquitto stop
 	```
 	to start and stop the service.
-	
+
     3. To test the install use:
 	```
-	netstat -at  
+	netstat -at
 	```
 	and you should see the MQTT broker which is the port 1883
-	
-    4. In order to manually subscribe to a client use : 
+
+    4. In order to manually subscribe to a client use :
 	```
 	mosquitto_sub -t "example/topic"
 	```
  	and publish a message by using
 	```
 	mosquitto_pub -m "published message" -t "certain/channel"
-	``` 
+	```
     5. Mosquitto uses a configuration file "mosquitto.conf" which you can find in /etc/mosquitto 	folder
 
+    ```
     """
 
     super().__init__(output_format=Text)
@@ -69,14 +70,13 @@ class MQTTReader(Reader):
     if not PAHO_ENABLED:
       raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                 'try "pip install paho-mqtt" prior to use.')
-    
+
     self.broker = broker
     self.channel = channel
     self.client_name = client_name
 
     try:
       self.paho = mqtt.Client(client_name)
-
       self.paho.connect(broker)
       self.paho.subscribe(channel)
 

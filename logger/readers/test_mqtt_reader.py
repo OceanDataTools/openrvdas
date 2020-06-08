@@ -10,7 +10,7 @@ import warnings
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.mqtt_reader import MQTTReader
-from logger.writers.mqtt_writer import MQTTWriter  
+from logger.writers.mqtt_writer import MQTTWriter
 
 # Don't barf if they don't have redis installed. Only complain if
 # they actually try to use it, below
@@ -30,7 +30,7 @@ SAMPLE_DATA = [
     's330 2017-11-04T06:54:17.371220Z $INZDA,002038.17,07,08,2014,,*71',
     's330 2017-11-04T06:54:19.408518Z $INZDA,002039.17,07,08,2014,,*70',
 ]
-	  
+
 broker_address = '1883'
 channel = 'pathOfDevices'
 client_name='Instance1'
@@ -44,19 +44,18 @@ class TestMQTTReader(unittest.TestCase):
                          'functionality will not be run.')
 
     def test_read(self):
-        
+
         try:
             # Creating a new instance from the mqtt broker address above
             # try to connect
             writer = MQTTWriter(broker_address, channel, client_name)
             reader = MQTTReader(broker_address, channel, client_name)
-        
+
             for i in range(len(SAMPLE_DATA)):
                 writer.write(SAMPLE_DATA[i])
                 self.assertEqual(SAMPLE_DATA[i], reader.read())
         except:
             self.skipTest("No MQTT broker found - skipped test_mqtt_reader")
-      
 
 ################################################################################
 if __name__ == '__main__':
