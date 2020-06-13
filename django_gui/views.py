@@ -31,6 +31,25 @@ from django_gui.settings import FILECHOOSER_DIRS
 from .django_server_api import DjangoServerAPI
 api = None
 
+def login_user(request):
+  template_vars = {}
+  if request.method == 'POST':
+    username = request.POST['username']
+    password = request.POST['password']
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+      login(request, user)
+      return redirect('/')
+    else:
+      if not username:
+        template_vars['empty_username'] = 'Please enter username'
+      elif not password:
+        template_vars['empty_password'] = 'Please enter password'
+      elif user is None:
+        template_vars['invalid'] = 'Username and password do not match'
+
+  return render(request, 'django_gui/login_user.html', template_vars)
+
 def log_request(request, cmd):
   global api
   if api:
