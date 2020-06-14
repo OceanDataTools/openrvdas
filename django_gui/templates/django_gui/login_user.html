@@ -1,6 +1,8 @@
-{% extends 'base.html' %}
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">OpenRVDAS Administration</a></h1>
+{% endblock %}
 
-{% block title %}Login{% endblock %}
+{% block nav-global %}{% endblock %}
 
 {% block content %}
 
@@ -24,6 +26,10 @@
 	margin-top: 1em;
     }
   </style>
+
+  <head>
+    <title>Login</title>
+  </head>
 
   <form method='post' class='login-form'>
     <h2 class='login-title'>Login</h2>
