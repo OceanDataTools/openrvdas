@@ -31,6 +31,8 @@ from django_gui.settings import FILECHOOSER_DIRS
 from .django_server_api import DjangoServerAPI
 api = None
 
+from django.contrib.auth import authenticate, login
+
 def login_user(request):
   template_vars = {}
   if request.method == 'POST':
