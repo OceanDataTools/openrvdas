@@ -30,6 +30,8 @@ urlpatterns = [
   #path('logout/', auth_views.logout,
   #    {'next_page': '../'}, name='logout'),
 
+  path('login/', views.login_user, name='login_user'),
+
   path('server_messages', views.server_messages, name='server_messages'),
   path('server_messages/<int:log_level>', views.server_messages,
        name='server_messages'),
