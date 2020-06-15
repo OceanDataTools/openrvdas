@@ -10,7 +10,7 @@ import pprint
 import re
 import sys
 import time
-import urllib.request
+import urllib.request, urllib.error
 import yaml
 
 LOGGING_FORMAT = '%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s'
@@ -164,14 +164,14 @@ class CruiseDefinitionCreator:
     """
     logging.info('Getting updated parameters')
     changed = False
-    sensors = self.make_get_request('api/sensor/?format=json')
+    sensors = self.make_get_request('sensor/?format=json')
     if not sensors == self.sensors:
       logging.info('Sensors changed')
       #logging.debug('Sensors changed from %s to %s', self.sensors, sensors)
       self.sensors = sensors
       changed = True
 
-    parameters = self.make_get_request('api/parameter/?format=json')
+    parameters = self.make_get_request('parameter/?format=json')
     if not parameters == self.parameters:
       logging.info('Parameters changed')
       self.parameters = parameters
@@ -280,6 +280,7 @@ class CruiseDefinitionCreator:
         # pull the datetime/timestamp off separately, so if it's there
         # at the start of the pattern, get rid of it.
         field_patterns = sensor.get('text_regex_format').strip()
+        logging.debug('pattern: %s', field_patterns)
         if not type(field_patterns) is dict:
           field_patterns = [field_patterns]
           ts_field = '{datetime:ti},'
@@ -426,10 +427,14 @@ class CruiseDefinitionCreator:
     url += request
 
     logging.info('Getting %s', url)
-    with urllib.request.urlopen(url) as response:
-      result = response.read().decode('utf-8')
+    try:
+      with urllib.request.urlopen(url) as response:
+        result = response.read().decode('utf-8')
+        logging.debug('Result of GET %s: %s', url, result)
+    except urllib.error.HTTPError:
+      logging.fatal('Unable to open URL "%s"', url)
+      sys.exit(1)
 
-    logging.debug('Result of GET %s: %s', url, result)
     try:
       return yaml.load(result, Loader=yaml.FullLoader)
     except AttributeError:
