@@ -9,7 +9,7 @@ from logger.writers.writer import Writer
 
 ############################
 
-def get_checksum_str(source):
+def get_message_str(source):
     """ Returns checksum_str, which is everything between the '$' and '*' in the source string """
     
     if ((source.find('$')==-1) or (source.find('*')==-1)):
@@ -74,13 +74,12 @@ class NMEAChecksumTransform:
                         '(type %s): %s', type(record), record)
             return None
         
-        message_str = get_checksum_str(record)
-        checksum_str = get_checksum_str(record)
+        message_str = get_message_str(record)
 
         checksum_value = get_checksum_value(record)
         computed_checksum = compute_checksum(message_str)
         
-        if (checksum_str == None):
+        if (checksum_value == None):
             if (self.checksum_optional):
                 return record
         
@@ -104,7 +103,8 @@ class NMEAChecksumTransform:
             message - optional custom message. If None, then use self.error_message
         """
         
-        error_message = self.error_message + record
+        error_message = message or self.error_message
+        error_message += record
         
         if self.error_writer:
             self.error_writr.write(error_message)
