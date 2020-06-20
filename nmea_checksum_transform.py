@@ -10,15 +10,15 @@ from logger.writers.writer import Writer
 ############################
 
 def get_message_str(source):
-    """ Returns checksum_str, which is everything between the '$' and '*' in the source string """
+    """ Returns message_str, which is everything between the '$' and '*' in the source string """
     
     if ((source.find('$')==-1) or (source.find('*')==-1)):
         return None
     
     start = source.index('$')+1
     end = source.index('*')
-    checksum_str = source[start:end]
-    return checksum_str
+    message_str = source[start:end]
+    return message_str
 
 def get_checksum_value(source):
     """ Returns checksum_value, which is the parsed checksum value (after '*') from the source string """
@@ -42,22 +42,22 @@ class NMEAChecksumTransform:
     """
 
     DEFAULT_ERROR_MESSAGE = 'Bad checksum for record: '
-    def __init__(self, checksum_optional=False, error_message=DEFAULT_ERROR_MESSAGE, error_writer=None):
+    def __init__(self, checksum_optional=False, error_message=DEFAULT_ERROR_MESSAGE, writer=None):
         """
             checksum_optional — if True, then pass record along even if checksum is missing
             error_message — optional custom error message, if None then use DEFAULT_ERROR_MESSAGE
-            error_writer — optional error writer
+            writer — optional error writer
         """
 
         self.checksum_optional = checksum_optional
         self.error_message = error_message
-        self.error_writer = error_writer
+        self.writer = writer
     
-        # Tries to utilize the write() method of error_writer, which it would only have if the object is a Writer. If this fails, error_writer is set to None.
+        # Tries to utilize the write() method of writer, which it would only have if the object is a Writer. If this fails, writer is set to None.
         try:
-            self.error_writer.write()
+            self.writer.write()
         except AttributeError:
-            self.error_writer=None
+            self.writer=None
     
     def transform(self, record):
         """
@@ -74,10 +74,7 @@ class NMEAChecksumTransform:
                         '(type %s): %s', type(record), record)
             return None
         
-        message_str = get_message_str(record)
-
         checksum_value = get_checksum_value(record)
-        computed_checksum = compute_checksum(message_str)
         
         if (checksum_value == None):
             if (self.checksum_optional):
@@ -87,7 +84,10 @@ class NMEAChecksumTransform:
             self.send_error_message(record, 'No checksum found in record ')
             return None
 
-        # If here, then we have a checksum that matches
+        message_str = get_message_str(record)
+        computed_checksum = compute_checksum(message_str)
+        
+        # If here, and we are about to see if it matches
         if (computed_checksum == checksum_value):
             return record
         
@@ -97,7 +97,7 @@ class NMEAChecksumTransform:
 
     def send_error_message(self, record, message=None):
         """
-            Send error to error_writer if one exists, otherwise send it to stderr
+            Send error to writer if one exists, otherwise send it to stderr
             
             record - the record with the error
             message - optional custom message. If None, then use self.error_message
@@ -106,9 +106,7 @@ class NMEAChecksumTransform:
         error_message = message or self.error_message
         error_message += record
         
-        if self.error_writer:
-            self.error_writr.write(error_message)
+        if self.writer:
+            self.writer.write(error_message)
         else:
             logging.warning(error_message)
-                
-        return None
