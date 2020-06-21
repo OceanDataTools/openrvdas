@@ -52,12 +52,18 @@ class NMEAChecksumTransform:
         self.checksum_optional = checksum_optional
         self.error_message = error_message
         self.writer = writer
-    
-        # Tries to utilize the write() method of writer, which it would only have if the object is a Writer. If this fails, writer is set to None.
-        try:
-            self.writer.write()
-        except AttributeError:
-            self.writer=None
+
+        # Tries to utilize the write() method of writer, which it
+        # would only have if the object is a Writer. Send it a 'None'
+        # record, which all writers should ignore. If this fails,
+        # writer is set to None.
+        if writer:
+            try:
+                 writer.write(None)
+            except AttributeError:
+                logging.error('Writer passed to NMEAChecksumTransform has no '
+                              'write() method!')
+                self.writer=None
     
     def transform(self, record):
         """
