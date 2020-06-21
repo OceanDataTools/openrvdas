@@ -82,6 +82,7 @@ cat >> /tmp/temp_sup_file <<EOF
 [program:update_cruise_definition]
 command=${VENV_BIN}/python local/rcrv/update_cruise_definition.py --host_path $HOST_PATH --destination $CRUISE_FILE
 directory=${INSTALL_ROOT}/openrvdas
+startsecs=0
 autostart=false
 autorestart=false
 stderr_logfile=/var/log/openrvdas/update_cruise_definition.err.log
