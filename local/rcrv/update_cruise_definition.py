@@ -4,6 +4,7 @@ a cruise definition file. If the --interval flag is specified, check
 the database every that many seconds and, if there has been a change,
 output a new cruise definition.
 """
+import json
 import logging
 import os.path
 import pprint
@@ -275,20 +276,22 @@ class CruiseDefinitionCreator:
         # logger config, defined by sensor_id X mode.
 
         # Get the pattern(s) we're supposed to match and munge them a
-        # little to get in the right format. First, make sure it's a
-        # list (and make it one if it isn't). Second, we're going to
-        # pull the datetime/timestamp off separately, so if it's there
-        # at the start of the pattern, get rid of it.
-        field_patterns = sensor.get('text_regex_format').strip()
-        logging.debug('pattern: %s', field_patterns)
-        if not type(field_patterns) is dict:
+        # little to get in the right format. First, decode it from
+        # JSON. Second, make sure it's a list (and make it one if it
+        # isn't). Third, we're going to pull the datetime/timestamp
+        # off separately, so if it's there at the start of the
+        # pattern, get rid of it.
+        field_pattern_json = sensor.get('text_regex_format').strip()
+        field_patterns = json.loads(field_pattern_json)  # decode JSON
+        if not type(field_patterns) is list:             # make it a list 
           field_patterns = [field_patterns]
-          ts_field = '{datetime:ti},'
+        ts_field = '{datetime:ti},'                      # get rid of ts field
         field_patterns = [
           pat[len(ts_field):]
           for pat in field_patterns
           if pat.find(ts_field) == 0
           ]
+        logging.debug('pattern: %s', field_patterns)
 
         # Assemble names of variables in the pattern(s) to form a
         # metadata dict.
