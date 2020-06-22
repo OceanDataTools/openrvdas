@@ -99,7 +99,7 @@ MODE_CONFIG_TEMPLATES = {
     - class: LogfileWriter
       kwargs:
         filebase: /var/tmp/log/openrvdas/{sensor_id}/raw/{sensor_id}
-        skip_char: ','
+        split_char: ','
 """,
   'database': """  {config_name}:
     name: {config_name}
