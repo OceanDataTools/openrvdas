@@ -89,6 +89,18 @@ MODE_CONFIG_TEMPLATES = {
       kwargs:
         data_server: localhost:8766
 """,
+  'file': """  {config_name}:
+    name: {config_name}
+    readers:
+    - class: UDPReader
+      kwargs:
+        port: {transmit_port}
+    writers:
+    - class: LogfileWriter
+      kwargs:
+        filebase: /var/tmp/log/openrvdas/{sensor_id}/raw/{sensor_id}
+        skip_char: ','
+""",
   'database': """  {config_name}:
     name: {config_name}
     readers:

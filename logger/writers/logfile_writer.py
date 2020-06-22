@@ -15,7 +15,7 @@ class LogfileWriter(Writer):
   def __init__(self, filebase=None, flush=True,
                time_format=timestamp.TIME_FORMAT,
                date_format=timestamp.DATE_FORMAT,
-               suffix='',
+               split_char=' ', suffix='',
                rollover_hourly=False):
     """
     Write timestamped text records to file. Base filename will have
@@ -32,6 +32,8 @@ class LogfileWriter(Writer):
                     defaults to whatever's defined in
                     utils.timestamps.DATE_FORMAT.
 
+    split_char      Delimiter between timestamp and rest of message
+
     suffix          string to apply to the end of the log filename
 
     rollover_hourly Set files to truncate by hour.  By default files will
@@ -44,6 +46,7 @@ class LogfileWriter(Writer):
     self.flush = flush
     self.time_format = time_format
     self.date_format = date_format
+    self.split_char = split_char
     self.suffix = suffix
     self.rollover_hourly = rollover_hourly
 
@@ -72,7 +75,7 @@ class LogfileWriter(Writer):
 
     # First things first: get the date string from the record
     try:
-      time_str = record.split()[0]
+      time_str = record.split(self.split_char)[0]
       ts = timestamp.timestamp(time_str, time_format=self.time_format)
       hr_str = self.rollover_hourly and timestamp.date_str(ts, date_format='_%H00') or ""      
       date_str = timestamp.date_str(ts, date_format=self.date_format)
