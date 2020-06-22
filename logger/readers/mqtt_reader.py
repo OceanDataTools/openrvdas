@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import json
 import logging
 import socket
@@ -11,6 +10,8 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.utils.formats import Text
 from logger.readers.reader import Reader
 
+# Don't barf if they don't have redis installed. Only complain if
+# they actually try to use it, below
 try:
   import paho.mqtt.client as mqtt # import the client | $ pip installing paho-mqtt is necessary
   PAHO_ENABLED = True
@@ -22,12 +23,45 @@ class MQTTReader(Reader):
   """
   Read messages from an mqtt broker
   """
-  def __init__(self, broker, channel):
-
+  def __init__(self, broker, channel, client_name):
     """
     Read text records from the channel subscription.
     ```
+
+    broker       MQTT broker to connect, broker format[###.###.#.#]
     channel     MQTT channel to read from, channel format[@broker/path_of_subscripton]
+    ```
+    Instructions on how to start an MQTT broker:
+
+    1. First install the Mosquitto Broker :
+	```
+	sudo apt-get update
+	sudo apt-get install mosquitto
+	sudo apt-get install mosquitto-clients
+	```
+    2. The mosquitto service starts automatically when downloaded but use :
+	```
+	sudo service mosquitto start
+	sudo service mosquitto stop
+	```
+	to start and stop the service.
+
+    3. To test the install use:
+	```
+	netstat -at
+	```
+	and you should see the MQTT broker which is the port 1883
+
+    4. In order to manually subscribe to a client use :
+	```
+	mosquitto_sub -t "example/topic"
+	```
+ 	and publish a message by using
+	```
+	mosquitto_pub -m "published message" -t "certain/channel"
+	```
+    5. Mosquitto uses a configuration file "mosquitto.conf" which you can find in /etc/mosquitto 	folder
+
     ```
     """
 
@@ -36,18 +70,21 @@ class MQTTReader(Reader):
     if not PAHO_ENABLED:
       raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                 'try "pip install paho-mqtt" prior to use.')
-    
+
     self.broker = broker
     self.channel = channel
-    
-    try:
-      self.paho = mqtt.Client('Instance1')
+    self.client_name = client_name
 
+    try:
+      self.paho = mqtt.Client(client_name)
       self.paho.connect(broker)
       self.paho.subscribe(channel)
 
+      while paho.loop() == 0:
+        pass
+
     except mqtt.WebsocketConnectionError as e:
-      logging.error('Unable to connect to broker at %s:%d',
+      logging.error('Unable to connect to broker at %s:%s',
                     self.broker, self.channel)
       raise e
 

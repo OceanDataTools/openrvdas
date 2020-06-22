@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import logging
 import subprocess
 import sys
@@ -8,12 +7,13 @@ import time
 import unittest
 import warnings
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.mqtt_reader import MQTTReader
-# from logger.writers.mqtt_writer import MQTTWriter  // for when the writer is implemented
+from logger.writers.mqtt_writer import MQTTWriter
 
+# Don't barf if they don't have redis installed. Only complain if
+# they actually try to use it, below
 try:
     # import the client | $ pip installing paho-mqtt is necessary
     import paho.mqtt.client as mqtt
@@ -31,8 +31,9 @@ SAMPLE_DATA = [
     's330 2017-11-04T06:54:19.408518Z $INZDA,002039.17,07,08,2014,,*70',
 ]
 
-broker_address = 'test_mqtt_reader'
-channel = 'path/of/devices'
+broker_address = '1883'
+channel = 'pathOfDevices'
+client_name='Instance1'
 
 ##############################################################################
 
@@ -41,16 +42,20 @@ class TestMQTTReader(unittest.TestCase):
 
     @unittest.skipUnless(PAHO_ENABLED, 'Paho MQTT not installed; tests of MQTT '
                          'functionality will not be run.')
+
     def test_read(self):
-        # Creating a new instance from the mqtt broker address above
-        # try to connect
-        # writer
-        reader = MQTTReader(broker_address, channel)
 
-        for i in range(len(SAMPLE_DATA)):
-            # writer.write(SAMPLE_DATA[i]) When the writer is implemented
-            self.assertEqual(SAMPLE_DATA[i], reader.read())
+        try:
+            # Creating a new instance from the mqtt broker address above
+            # try to connect
+            writer = MQTTWriter(broker_address, channel, client_name)
+            reader = MQTTReader(broker_address, channel, client_name)
 
+            for i in range(len(SAMPLE_DATA)):
+                writer.write(SAMPLE_DATA[i])
+                self.assertEqual(SAMPLE_DATA[i], reader.read())
+        except:
+            self.skipTest("No MQTT broker found - skipped test_mqtt_reader")
 
 ################################################################################
 if __name__ == '__main__':
