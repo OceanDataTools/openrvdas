@@ -14,4 +14,4 @@ then:
 
 Browser should open on its own, but if not, load in browser:
 
-### localhost:5000
+### localhost:8000
