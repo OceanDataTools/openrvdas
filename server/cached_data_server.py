@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """Accept data in DASRecord or dict format via the cache_record() method,
 then serve it to anyone who connects via a websocket. A
 CachedDataServer can be instantiated by running this script from the
@@ -85,7 +84,6 @@ import sys
 import threading
 import time
 import websockets
-import re
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -352,31 +350,6 @@ class WebSocketConnection:
     self.quit_flag = True
 
   ############################
-  def get_matching_field_names(self, field_name):
-    """ 
-        If a wildcard field is present, returns a list (matching_field_names) of all the fields that match the pattern. Otherwise, it just returns the field_name as the sole entry in the list
-        
-        field_name - the name of the field as specified in the subscription request
-    """
-    
-    matching_field_names = set()
-    
-    # If the field name is a wildcard
-    if '*' in field_name:
-        field_name = field_name.replace("*", ".+")
-        
-        for field in self.cache.keys():
-            if re.search(field_name, field):
-                matching_field_names.add(field)
-  
-    # If here, the field name is not a wildcard
-    else:
-        matching_field_names.add(field_name)
-
-    return list(matching_field_names)
-
-  ############################
-
   async def send_json_response(self, response, is_error=False):
     logging.debug('CachedDataServer sending %d bytes',
                   len(json.dumps(response)))
@@ -438,7 +411,7 @@ class WebSocketConnection:
 
     """
     # The field details specified in a subscribe request
-    raw_requested_fields = {}
+    requested_fields = {}
 
     # A map from field_name:latest_timestamp_sent. If
     # latest_timestamp_sent is -1, then we'll always send just the
@@ -519,8 +492,8 @@ class WebSocketConnection:
               continue
 
           # Which fields do they want?
-          raw_requested_fields = request.get('fields', None)
-          if not raw_requested_fields:
+          requested_fields = request.get('fields', None)
+          if not requested_fields:
             await self.send_json_response(
               {'type':'subscribe', 'status':400,
                'error':'no fields found in subscribe request'},
@@ -534,32 +507,20 @@ class WebSocketConnection:
           # Parse out request field names and number of back seconds
           # requested. Encode that as 'last timestamp sent', unless back
           # seconds == -1. If -1, save it as -1, so that we know we're
-          # always just sending the the most recent field value. Stores
-          # all fields, including expanded entries from a wildcard, in the
-          # requested_fields dict.
-          
+          # always just sending the the most recent field value.
           now = time.time()
           field_timestamps = {}
-          requested_fields = {}
+          for field_name, field_spec in requested_fields.items():
+            # If we don't have a field spec dict
+            if not type(field_spec) is dict:
+              back_seconds = 0
+            else:
+              back_seconds = field_spec.get('seconds', 0)
 
-          for field_name, field_spec in raw_requested_fields.items():
-              
-            matching_field_names = self.get_matching_field_names(field_name)
-            
-            for matching_field_name in matching_field_names:
-                
-                requested_fields[matching_field_name] = field_spec
-                
-                # If we don't have a field spec dict
-                if not type(field_spec) is dict:
-                    back_seconds = 0
-                else:
-                    back_seconds = field_spec.get('seconds', 0)
-                        
-                if back_seconds == -1:
-                    field_timestamps[matching_field_name] = -1
-                else:
-                    field_timestamps[matching_field_name] = now - back_seconds
+            if back_seconds == -1:
+              field_timestamps[field_name] = -1
+            else:
+              field_timestamps[field_name] = now - back_seconds
 
           # Let client know request succeeded
           await self.send_json_response({'type':'subscribe', 'status':200})
