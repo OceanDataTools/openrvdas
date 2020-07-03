@@ -36,6 +36,9 @@ database/influxdb/README.md
 database/influxdb/influx
 database/influxdb/influxd
 
+# CORIOLIX
+local/rcrv/settings.py
+
 # Created by build scripts
 .build_openrvdas_preferences
 
