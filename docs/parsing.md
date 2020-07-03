@@ -395,6 +395,7 @@ To cope with this, we have created a few "extra" formats, defined in
 
  - od = optional integer
  - of = optional generalized float
+ - og = optional generalized number - will parse '#VALUE!' as None
  - ow = optional sequence of letters, numbers, underscores
  - nc = any ASCII text that is not a comma
 
