@@ -12,10 +12,10 @@ import sys
 
 sys.path.append('.')
 
-CORIOLIX_DATABASE = 'agg_openrvdas'
+CORIOLIX_DATABASE = 'database_name'
 CORIOLIX_DATABASE_HOST = 'localhost'
-CORIOLIX_DATABASE_USER = 'openrvdas_user'
-CORIOLIX_DATABASE_PASSWORD = 'coriolix_d@t@'
+CORIOLIX_DATABASE_USER = 'database_user'
+CORIOLIX_DATABASE_PASSWORD = 'database_passwd'
 
 # Which database connector to use. When selecting a new connector, you may
 # need to run the corresponding database/setup_xxx_connector.sh script.
