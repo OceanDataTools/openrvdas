@@ -1,0 +1,42 @@
+"""
+Settings for coriolix operations.
+
+THIS FILE MUST BE COPIED OVER TO local/rcrv/settings.py to be
+operational.
+
+See below for additional coriolix-specific install requirements
+
+"""
+import logging
+import sys
+
+sys.path.append('.')
+
+CORIOLIX_DATABASE = 'agg_openrvdas'
+CORIOLIX_DATABASE_HOST = 'localhost'
+CORIOLIX_DATABASE_USER = 'openrvdas_user'
+CORIOLIX_DATABASE_PASSWORD = 'coriolix_d@t@'
+
+# Which database connector to use. When selecting a new connector, you may
+# need to run the corresponding database/setup_xxx_connector.sh script.
+
+Connector = None
+CORIOLIX_ENABLED = False
+
+try:
+  # To set up PostgreSQL connectivity, install, configure and start
+  # PostgreSQL server, and set up appropriate postgres user:
+  #   apt-get install postgresql-12 postgresql-client-12 # ubuntu
+  #
+  #   pip3 install psycopg2-binary
+  #
+  from local.rcrv.modules.coriolix_connector import PROGRES_ENABLED, CORIOLIXConnector as Connector
+  if PROGRES_ENABLED:
+      CORIOLIX_ENABLED = True
+
+except ImportError:
+  pass
+
+if not DATABASE_ENABLED:
+  logging.info('Settings in local/rcrv/settings.py not configured; database '
+               'functionality may not be available.')
