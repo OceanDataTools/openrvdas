@@ -81,11 +81,11 @@ import logging
 import os
 import os.path
 import pprint
+import re
 import sys
 import threading
 import time
 import websockets
-import re
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -353,25 +353,27 @@ class WebSocketConnection:
 
   ############################
   def get_matching_field_names(self, field_name):
-    """ 
-        If a wildcard field is present, returns a list (matching_field_names) of all the fields that match the pattern. Otherwise, it just returns the field_name as the sole entry in the list
-        
-        field_name - the name of the field as specified in the subscription request
+    """If a wildcard field is present, returns a list
+    (matching_field_names) of all the fields that match the
+    pattern. Otherwise, it just returns the field_name as the sole
+    entry in the list
+
+    field_name - the name of the field as specified in the subscription request
     """
-    
+
     matching_field_names = set()
-    
+
     # If the field name is a wildcard
     if '*' in field_name:
-        field_name = field_name.replace("*", ".+")
-        
-        for field in self.cache.keys():
-            if re.search(field_name, field):
-                matching_field_names.add(field)
-  
+      field_name = field_name.replace("*", ".+")
+
+      for field in self.cache.keys():
+        if re.search(field_name, field):
+          matching_field_names.add(field)
+
     # If here, the field name is not a wildcard
     else:
-        matching_field_names.add(field_name)
+      matching_field_names.add(field_name)
 
     return list(matching_field_names)
 
@@ -537,29 +539,28 @@ class WebSocketConnection:
           # always just sending the the most recent field value. Stores
           # all fields, including expanded entries from a wildcard, in the
           # requested_fields dict.
-          
+
           now = time.time()
           field_timestamps = {}
           requested_fields = {}
 
           for field_name, field_spec in raw_requested_fields.items():
-              
+
             matching_field_names = self.get_matching_field_names(field_name)
-            
+
             for matching_field_name in matching_field_names:
-                
-                requested_fields[matching_field_name] = field_spec
-                
-                # If we don't have a field spec dict
-                if not type(field_spec) is dict:
-                    back_seconds = 0
-                else:
-                    back_seconds = field_spec.get('seconds', 0)
-                        
-                if back_seconds == -1:
-                    field_timestamps[matching_field_name] = -1
-                else:
-                    field_timestamps[matching_field_name] = now - back_seconds
+              requested_fields[matching_field_name] = field_spec
+
+              # If we don't have a field spec dict
+              if not type(field_spec) is dict:
+                back_seconds = 0
+              else:
+                back_seconds = field_spec.get('seconds', 0)
+
+              if back_seconds == -1:
+                field_timestamps[matching_field_name] = -1
+              else:
+                field_timestamps[matching_field_name] = now - back_seconds
 
           # Let client know request succeeded
           await self.send_json_response({'type':'subscribe', 'status':200})
