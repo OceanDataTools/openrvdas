@@ -101,7 +101,7 @@ MODE_CONFIG_TEMPLATES = {
         filebase: /var/tmp/log/openrvdas/{sensor_id}/raw/{sensor_id}
         split_char: ','
 """,
-  'database': """  {config_name}:
+  'coriolix': """  {config_name}:
     name: {config_name}
     readers:
     - class: UDPReader
@@ -370,8 +370,8 @@ class CruiseDefinitionCreator:
     table/model. A composed writer is needed when some parameters are
     going to one table and others to another one.
     """
-    SIMPLE_WRITER = """    - class: PostgresWriter
-      module: local.rcrv.modules.postgres_writer
+    SIMPLE_WRITER = """    - class: CORIOLIXWriter
+      module: local.rcrv.modules.coriolix_writer
       kwargs:
         data_table: {data_table}
         data_model: {data_model}
@@ -384,8 +384,8 @@ class CruiseDefinitionCreator:
           kwargs:
             keep: {data_fieldnames}
         writers:
-        - class: PostgresWriter
-          module: local.rcrv.modules.postgres_writer
+        - class: CORIOLIXWriter
+          module: local.rcrv.modules.coriolix_writer
           kwargs:
             data_table: {data_table}
             data_model: {data_model}

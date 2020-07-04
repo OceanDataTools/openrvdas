@@ -14,7 +14,7 @@
 # HOST_PATH and CRUISE_FILE should be set as appropriate for your
 # installation
 HOST_PATH='http://157.245.173.52:8000/api/'
-CRUISE_FILE='local/rcrv/cruise.yaml'
+CRUISE_FILE='./local/rcrv/cruise.yaml'
 
 echo
 echo Setting script to read CORIOLIX variables from $HOST_PATH
