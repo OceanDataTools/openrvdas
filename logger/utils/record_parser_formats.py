@@ -25,7 +25,7 @@ might have either, both or neither of speed in knots and/or km/hour.
 The recognized format types we add are:
   od   = optional integer
   of   = optional generalized float
-  og   = optional generalized number
+  og   = optional generalized number - also handles '#VALUE!' as None
   ow   = optional sequence of letters, numbers, underscores
 
   nlat = NMEA-formatted latitude or longitude, converted to decimal degrees
@@ -64,11 +64,13 @@ optional_f.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'
 ##########
 def optional_g(text):
   """Method for parsing an 'optional' generalized number."""
+  if text == '#VALUE!':
+    return None
   if text:
     return float(text)
   else:
     return None
-optional_g.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
+optional_g.pattern = r'(#VALUE!|\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
 
 ##########
 def optional_w(text):
