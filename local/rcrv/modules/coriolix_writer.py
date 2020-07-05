@@ -92,7 +92,7 @@ class CORIOLIXWriter(Writer):
     check; if we don't see if it's a suitably-formatted dict that we can
     convert into a DASRecord.
     """
-    logging.info('CORIOLIXWriter pretending to write:\n%s', record)
+    logging.info('CORIOLIXWriter pretending to write record to table: %s\n%s', self.data_table, record)
 
   ############################
   def write(self, record):
@@ -125,7 +125,7 @@ class CORIOLIXWriter(Writer):
     timestamp = record.get('timestamp', time.time())
     fields = record.get('fields', None)
     if fields is None:
-      logging.error('Dict record passed to DatabaseWriter has no "fields" '
+      logging.error('Dict record passed to CORIOLIXWriter has no "fields" '
                     'key, which either means it\'s not a dict you should be '
                     'passing, or it is in the old "field_dict" format that '
                     'assumes key:value pairs are at the top level.')
