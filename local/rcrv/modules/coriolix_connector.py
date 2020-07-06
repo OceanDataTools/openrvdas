@@ -166,7 +166,7 @@ class CORIOLIXConnector:
   #   self.exec_sql_command(write_cmd)
 
   ############################
-  def read(self, field_list=None, start=None, num_records=1):
+  def read(self, table_name, field_list=None, start=None, num_records=1):
     """Read the next record from table. If start is specified, reset read
     to start at that position."""
 
@@ -184,7 +184,7 @@ class CORIOLIXConnector:
     if num_records is not None:
       condition += ' limit %d' % num_records
 
-    query = 'select * from %s where %s' % (self.DATA_TABLE, condition)
+    query = 'select * from %s where %s' % (table_name, condition)
     logging.debug('read query: %s', query)
     return self._process_query(query)
 
@@ -213,24 +213,24 @@ class CORIOLIXConnector:
   #   logging.debug('read query: %s', query)
   #   return self._process_query(query)
 
-  ############################
-  def seek(self, offset=0, origin='current'):
-    """Behavior is intended to mimic file seek() behavior but with
-    respect to records: 'offset' means number of records, and origin
-    is either 'start', 'current' or 'end'."""
+  # ############################
+  # def seek(self, offset=0, origin='current'):
+  #   """Behavior is intended to mimic file seek() behavior but with
+  #   respect to records: 'offset' means number of records, and origin
+  #   is either 'start', 'current' or 'end'."""
 
-    num_rows = self._num_rows(self.DATA_TABLE)
+  #   num_rows = self._num_rows(self.DATA_TABLE)
 
-    if origin == 'current':
-      self.next_id += offset
-    elif origin == 'start':
-      self.next_id = offset + 1
-    elif origin == 'end':
-      self.next_id = num_rows + offset + 1
+  #   if origin == 'current':
+  #     self.next_id += offset
+  #   elif origin == 'start':
+  #     self.next_id = offset + 1
+  #   elif origin == 'end':
+  #     self.next_id = num_rows + offset + 1
 
-    self._next_id = min(num_rows, self.next_id)
+  #   self._next_id = min(num_rows, self.next_id)
 
-    logging.debug('Seek: next position %d', self.next_id)
+  #   logging.debug('Seek: next position %d', self.next_id)
 
   ############################
   def _num_rows(self, table_name):
