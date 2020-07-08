@@ -16,7 +16,7 @@ class DummyWriter:
         self.write_message = None
 
     def write(self, message):
-        logging.warning('write called: %s', message)
+        logging.debug('write called: %s', message)
         self.write_message = message
 
 class TestNMEAChecksumTransform(unittest.TestCase):
