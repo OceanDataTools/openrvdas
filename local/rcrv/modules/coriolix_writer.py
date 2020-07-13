@@ -86,13 +86,16 @@ class CORIOLIXWriter(Writer):
                        user=user, password=password,
                        save_source=save_source)
 
+    self.data_table = data_table
+    logging.info('Data table: %s', data_table)
+
   ############################
   def _write_record(self, record):
     """Write record to table. Connectors assume we've got a DASRecord, but
     check; if we don't see if it's a suitably-formatted dict that we can
     convert into a DASRecord.
     """
-    logging.info('CORIOLIXWriter pretending to write record to table: %s\n%s', self.data_table, record)
+    logging.warning('CORIOLIXWriter pretending to write record to table: %s\n%s', self.data_table, record)
 
   ############################
   def write(self, record):

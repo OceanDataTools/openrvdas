@@ -91,7 +91,7 @@ class PostgresWriter(Writer):
     check; if we don't see if it's a suitably-formatted dict that we can
     convert into a DASRecord.
     """
-    logging.info('PostgresWriter pretending to write:\n%s', record)
+    logging.warning('PostgresWriter pretending to write:\n%s', record)
 
   ############################
   def write(self, record):
