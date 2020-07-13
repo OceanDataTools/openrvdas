@@ -24,11 +24,14 @@ class TestCachedDataServer(unittest.TestCase):
 
   ############################
   def test_basic(self):
-    WEBSOCKET_PORT = 8766
+    WEBSOCKET_PORT = 8768
     cds = CachedDataServer(port=WEBSOCKET_PORT)
     cds.cache_record({'fields':{'field_1':'value_11',
                                 'field_2':'value_21',
-                                'field_3':'value_31'}})
+                                'field_3':'value_31',
+                                'field_4':'value_11',
+                                'field_51':'value_21',
+                                'field6_1':'value_31'}})
 
     # We call this in ensure_future, below
     async def run_test():
@@ -42,7 +45,7 @@ class TestCachedDataServer(unittest.TestCase):
         logging.info('got fields result: %s', result)
         response = json.loads(result)
         self.assertEqual(response.get('data', None),
-                         ['field_1', 'field_2', 'field_3'])
+                         ['field_1', 'field_2', 'field_3', 'field_4', 'field_51', 'field6_1'])
         #####
         to_send = {'type':'publish',
                    'data':{'timestamp':time.time(),
@@ -54,9 +57,9 @@ class TestCachedDataServer(unittest.TestCase):
 
         #####
         to_send = {'type':'subscribe', 'interval':0.2,
-                   'fields':{'field_1':{'seconds':1555507118},
-                             'field_2':{'seconds':0},
-                             'field_3':{'seconds':-1}}}
+                   'fields':{'field_*':{'seconds':1555507118}}}
+                       # 'field_2':{'seconds':0},
+                       # 'field_3':{'seconds':-1}}}
         await ws.send(json.dumps(to_send))
         result = await ws.recv()
         logging.info('got subscribe result: %s', result)
@@ -69,7 +72,7 @@ class TestCachedDataServer(unittest.TestCase):
         logging.info('got ready 1 result: %s', result)
 
         response = json.loads(result)        
-        self.assertEqual(len(response['data']), 2)
+        self.assertEqual(len(response['data']), 5)
         self.assertEqual(len(response['data']['field_1']), 2)
         self.assertEqual(response['data']['field_1'][0][1], 'value_11')
         self.assertEqual(response['data']['field_1'][1][1], 'value_12')
