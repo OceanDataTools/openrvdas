@@ -337,7 +337,8 @@ class WebSocketConnection:
     """If a wildcard field is present, returns a list
     (matching_field_names) of all the fields that match the
     pattern. Otherwise, it just returns the field_name as the sole
-    entry in the list
+    entry in the list.
+
     field_name - the name of the field as specified in the subscription request
     """
 

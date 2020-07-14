@@ -518,7 +518,8 @@ class TestRecordParser(unittest.TestCase):
 
     r = p.parse_record(GRV1_RECORDS[0])
     self.assertDictEqual(r, {'data_id': 'grv1', 'timestamp': 1510275606.572,
-                             'fields':{'Grv1Error': 0, 'Grv1Value': 24557}})
+                             'fields':{'Grv1Error': 0,
+                                       'Grv1Value': 24557}})
     r = p.parse_record(SEAP_RECORDS[0])
     self.assertDictEqual(r, {'data_id': 'seap',
                              'timestamp': 1509778839.291859,
@@ -539,6 +540,66 @@ class TestRecordParser(unittest.TestCase):
                                        'Seap200HeadingTrue': 235.77,
                                        'Seap200Pitch': 0.01}})
 
+  ############################
+  def test_inline_definitions(self):
+    p = RecordParser(record_format='{timestamp:ti} {field_string}',
+                     field_patterns=[
+                       '{CounterUnits:d}:{GravityValue:d} {GravityError:d}'])
+    r = p.parse_record('2017-11-10T01:00:06.572Z 01:024557 00')
+    self.assertDictEqual(r, {'timestamp': 1510275606.572,
+                             'fields':{'CounterUnits': 1,
+                                       'GravityValue': 24557,
+                                       'GravityError': 0}})
+
+    p = RecordParser(record_format='{timestamp:ti} {field_string}',
+                     field_patterns=[
+                       '$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{:x}',
+                       '$PSXN,22,{GyroCal:f},{GyroOffset:f}*{:x}',
+                       '$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{:x}',
+                     ])
+
+    r = p.parse_record('2017-11-04T07:00:39.291859Z $PSXN,20,1,0,0,0*3A')
+    self.assertDictEqual(r, {'timestamp': 1509778839.291859,
+                             'fields':{'HeightQual': 0,
+                                       'RollPitchQual': 0,
+                                       'HorizQual': 1,
+                                       'HeadingQual': 0}})
+    r = p.parse_record('2017-11-04T07:00:39.547251Z $PSXN,22,0.44,0.74*3A')
+    self.assertDictEqual(r, {'timestamp': 1509778839.547251,
+                             'fields':{'GyroOffset': 0.74,
+                                       'GyroCal': 0.44}})
+
+    r = p.parse_record('2017-11-04T07:00:39.802690Z $PSXN,23,-1.47,0.01,235.77,-0.38*34')
+    self.assertDictEqual(r, {'timestamp': 1509778839.802690,
+                             'fields':{'Roll': -1.47,
+                                       'Heave': -0.38,
+                                       'HeadingTrue': 235.77,
+                                       'Pitch': 0.01}})
+
+  ############################
+  def test_inline_definitions_with_metadata(self):
+    metadata={'CounterUnits':{'CounterUnitsMetadata'},
+              'GravityValue':{'GravityValueMetadata'},
+              'GravityError':{'GravityErrorMetadata'}
+    }
+    p = RecordParser(record_format='{timestamp:ti} {field_string}',
+                     field_patterns=[
+                       '{:d}:{GravityValue:d} {GravityError:d}'],
+                     metadata=metadata,
+                     metadata_interval=1)
+    r = p.parse_record('2017-11-10T01:00:06.572Z 01:024557 00')
+    self.assertDictEqual(r,
+                         {
+                           'timestamp': 1510275606.572,
+                             'fields':{'GravityValue': 24557,
+                                       'GravityError': 0},
+                             'metadata': {
+                               'fields': {
+                                 'GravityError': {'GravityErrorMetadata'},
+                                 'GravityValue': {'GravityValueMetadata'}
+                               }
+                             }
+                         })
   ############################
   def test_new_parse_records(self):
     """Test the "new" style of device/device_type definitions, where files
