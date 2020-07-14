@@ -8,7 +8,6 @@ for timestamped text data that it can parse into key:value pairs. It
 may also be instantiated as part of a CachedDataWriter that can be
 invoked on the command line via the listen.py script of via a
 configuration file.
-
 The following direct invocation of this script
 ```
     logger/utils/cached_data_server.py \
@@ -19,58 +18,44 @@ The following direct invocation of this script
       --v
 ```
 says to
-
 1. Listen on the UDP port specified by --udp for JSON-encoded,
    timestamped, field:value pairs. (See the definition for cache_record(),
    below for formats understood.)
-
 2. Store the received data in memory, retaining the most recent 3600
    seconds for each field (default is 86400 seconds = 24 hours).
-
    (The total number of values cached per field is also limited by the
    ``max_records`` parameter and defaults to 2880, equivalent to two
    records per minute for 24 hours. It may be overridden to "infinite"
    by setting ``--max_records=0`` on the command line.)
-
 3. Periodically back up the in-memory cache to a disk-based cache at
    /var/tmp/openrvdas/disk_cache (By default, back up every 60 seconds;
    this can be overridden with the --cleanup_interval argument).
-
 4. Wait for clients to connect to the websocket at port 8766 and serve
    them the requested data. Web clients may issue JSON-encoded
    requests of the following formats (see the definition of
    serve_requests() for insight):
 ```
    {'type':'fields'}   - return a list of fields for which cache has data
-
    {'type':'describe',
     'fields':['field_1', 'field_2', 'field_3']}
        - return a dict of metadata descriptions for each specified field. If
          'fields' is omitted, return a dict of metadata for *all* fields
-
    {'type':'subscribe',
     'fields':{'field_1':{'seconds':50},
               'field_2':{'seconds':0},
               'field_3':{'seconds':-1}}}
-
        - subscribe to updates for field_1, field_2 and field_3. Allowable
          values for 'seconds':
-
             0  - provide only new values that arrive after subscription
            -1  - provide the most recent value, and then all future new ones
            num - provide num seconds of back data, then all future new ones
-
          If 'seconds' is missing, use '0' as the default.
-
    {'type':'ready'}
-
        - indicate that client is ready to receive the next set of updates
          for subscribed fields.
-
    {'type':'publish', 'data':{'timestamp':1555468528.452,
                               'fields':{'field_1':'value_1',
                                         'field_2':'value_2'}}}
-
        - submit new data to the cache (an alternative way to get data
          in without the same record size limits of a UDP packet).
 ```
@@ -81,11 +66,11 @@ import logging
 import os
 import os.path
 import pprint
+import re
 import sys
 import threading
 import time
 import websockets
-import re
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -112,11 +97,8 @@ class RecordCache:
   ############################
   def cache_record(self, record):
     """Add the passed record to the cache.
-
     Expects passed records to be in one of two formats:
-
     1) DASRecord
-
     2) A dict encoding optionally a source data_id and timestamp and a
        mandatory 'fields' key of field_name: value pairs. This is the format
        emitted by default by ParseTransform:
@@ -258,7 +240,6 @@ class RecordCache:
   def cleanup(self, oldest=0, max_records=0):
     """Remove any data from cache with a timestamp older than 'oldest'
     seconds, but keep at least one (most recent) value.
-
     If max_records is non-zero, truncate to that many of the most
     recent records.
     """
@@ -353,25 +334,26 @@ class WebSocketConnection:
 
   ############################
   def get_matching_field_names(self, field_name):
-    """ 
-        If a wildcard field is present, returns a list (matching_field_names) of all the fields that match the pattern. Otherwise, it just returns the field_name as the sole entry in the list
-        
-        field_name - the name of the field as specified in the subscription request
+    """If a wildcard field is present, returns a list
+    (matching_field_names) of all the fields that match the
+    pattern. Otherwise, it just returns the field_name as the sole
+    entry in the list
+    field_name - the name of the field as specified in the subscription request
     """
-    
+
     matching_field_names = set()
-    
+
     # If the field name is a wildcard
     if '*' in field_name:
-        field_name = field_name.replace("*", ".+")
-        
-        for field in self.cache.keys():
-            if re.search(field_name, field):
-                matching_field_names.add(field)
-  
+      field_name = field_name.replace("*", ".+")
+
+      for field in self.cache.keys():
+        if re.search(field_name, field):
+          matching_field_names.add(field)
+
     # If here, the field name is not a wildcard
     else:
-        matching_field_names.add(field_name)
+      matching_field_names.add(field_name)
 
     return list(matching_field_names)
 
@@ -393,29 +375,23 @@ class WebSocketConnection:
     ```
     fields - return a (JSON encoded) list of fields for which cache
         has data.
-
     describe - return a (JSON encoded) dict of metadata for the listed
         fields.
-
     publish - look for a field called 'data' and expect its value to
         be a dict containing data in one of the formats accepted by
         cache_record().
-
     subscribe - look for a field called 'fields' in the request whose
         value is a dict of the format
         ```
           {field_name:{seconds:600}, field_name:{seconds:0},...}
         ```
-
         The entire specification may also have a field called
         'interval', specifying how often server should provide
         updates. Will default to what was specified on command line
         with --interval flag (which itself defaults to 1 second
         intervals):
         ```
-
         ```
-
         A subscription will instruct the CachedDataServer to begin
         serving JSON messages of the format
         ```
@@ -428,14 +404,11 @@ class WebSocketConnection:
         Initially provide the number of seconds worth of back data
         requested, and on subsequent calls, return all data that have
         arrived since last call.
-
         NOTE: if the 'seconds' field is -1, server will only ever provide
         the single most recent value for the relevant field.
-
     ready - client has processed the previous data message and is ready
         for more.
     ```
-
     """
     # The field details specified in a subscribe request
     raw_requested_fields = {}
@@ -537,29 +510,28 @@ class WebSocketConnection:
           # always just sending the the most recent field value. Stores
           # all fields, including expanded entries from a wildcard, in the
           # requested_fields dict.
-          
+
           now = time.time()
           field_timestamps = {}
           requested_fields = {}
 
           for field_name, field_spec in raw_requested_fields.items():
-              
+
             matching_field_names = self.get_matching_field_names(field_name)
-            
+
             for matching_field_name in matching_field_names:
-                
-                requested_fields[matching_field_name] = field_spec
-                
-                # If we don't have a field spec dict
-                if not type(field_spec) is dict:
-                    back_seconds = 0
-                else:
-                    back_seconds = field_spec.get('seconds', 0)
-                        
-                if back_seconds == -1:
-                    field_timestamps[matching_field_name] = -1
-                else:
-                    field_timestamps[matching_field_name] = now - back_seconds
+              requested_fields[matching_field_name] = field_spec
+
+              # If we don't have a field spec dict
+              if not type(field_spec) is dict:
+                back_seconds = 0
+              else:
+                back_seconds = field_spec.get('seconds', 0)
+
+              if back_seconds == -1:
+                field_timestamps[matching_field_name] = -1
+              else:
+                field_timestamps[matching_field_name] = now - back_seconds
 
           # Let client know request succeeded
           await self.send_json_response({'type':'subscribe', 'status':200})
@@ -737,14 +709,11 @@ class CachedDataServer:
   DASRecord or a simple dict. It also establishes a websocket server
   on the specified port and serves the cached values to clients that
   connect via a websocket.
-
   The server listens for two types of requests:
-
   1. If the request is the string "variables", return a list of the
      names of the variables the server has in cache and is able to
      serve. The server will continue listening for follow up messages,
      most likely this one:
-
   2. If the request is a python dict, assume it is of the form:
   ```
       {field_1_name: {'seconds': num_secs},
@@ -753,7 +722,6 @@ class CachedDataServer:
   ```
      where seconds is a float representing the number of seconds of
      back data being requested.
-
      This field dict is passed to serve_fields(), which will to retrieve
      num_secs of back data for each of the specified fields and return it
      as a JSON-encoded dict of the form:
@@ -776,22 +744,16 @@ class CachedDataServer:
                cleanup_interval=60, disk_cache=None, event_loop=None):
     """
     port         Port on which to serve websocket connections
-
     interval     How frequently to serve updates
-
     back_seconds
                  How many seconds of back data to retain
-
     max_records
                  Maximum number of records to store for each variable.
-
     cleanup_interval
                  How many seconds between calls to cleanup old cache entries
                  and save to disk (if disk_cache is specified)
-
     disk_cache   If not None, name of directory in which to backup values
                  from in-memory cache
-
     event_loop   If not None, the event loop to use for websocket events
     """
     self.port = port
