@@ -68,7 +68,7 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 1 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 2)
         self.assertEqual(len(response['data']['field_1']), 2)
         self.assertEqual(response['data']['field_1'][0][1], 'value_11')
@@ -93,7 +93,7 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 2 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 2)
         self.assertEqual(len(response['data']['field_1']), 1)
         self.assertEqual(response['data']['field_1'][0][1], 'value_13')
@@ -116,7 +116,7 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 3 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 1)
         self.assertEqual(len(response['data']['field_3']), 1)
         self.assertEqual(response['data']['field_3'][0][1], 'value_33')
@@ -171,7 +171,7 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 1 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 5)
         self.assertEqual(len(response['data']['field_1']), 2)
         self.assertEqual(response['data']['field_1'][0][1], 'value_11')
@@ -196,7 +196,7 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 2 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 2)
         self.assertEqual(len(response['data']['field_1']), 1)
         self.assertEqual(response['data']['field_1'][0][1], 'value_13')
@@ -219,14 +219,13 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 3 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 1)
         self.assertEqual(len(response['data']['field_3']), 1)
         self.assertEqual(response['data']['field_3'][0][1], 'value_33')
 
     asyncio.new_event_loop().run_until_complete(run_test())
     time.sleep(1)
-
 
   ############################
   def test_disk_cache(self):
@@ -300,7 +299,7 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 2 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 2)
         self.assertEqual(len(response['data']['field_1']), 1)
         self.assertEqual(response['data']['field_1'][0][1], 'value_13a')
@@ -323,14 +322,14 @@ class TestCachedDataServer(unittest.TestCase):
         result = await ws.recv()
         logging.info('got ready 3 result: %s', result)
 
-        response = json.loads(result)        
+        response = json.loads(result)
         self.assertEqual(len(response['data']), 1)
         self.assertEqual(len(response['data']['field_3']), 1)
         self.assertEqual(response['data']['field_3'][0][1], 'value_33a')
 
     asyncio.new_event_loop().run_until_complete(run_test())
     time.sleep(1)
-    
+
 ############################
 if __name__ == '__main__':
   import argparse
