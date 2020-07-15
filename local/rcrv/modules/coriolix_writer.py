@@ -143,11 +143,11 @@ class CORIOLIXWriter(Writer):
     timestamp = record.get('timestamp', time.time())
     fields = record.get('fields', None)
     if fields is None:
-      logging.error('Dict record passed to CORIOLIXWriter has no "fields" '
+      logging.info('Dict record passed to CORIOLIXWriter has no "fields" '
                     'key, which either means it\'s not a dict you should be '
                     'passing, or it is in the old "field_dict" format that '
                     'assumes key:value pairs are at the top level.')
-      logging.error('The record in question: %s', str(record))
+      logging.info('The record in question: %s', str(record))
       return
 
     das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)

@@ -40,7 +40,7 @@ MODE_CONFIG_TEMPLATES = {
     transforms:
     - class: ParseTransform
       kwargs:
-        record_format: '{{timestamp:ti}},{{field_string}}'
+        record_format: '{{timestamp:ti}},{{field_string:os}}'
         field_patterns: {field_patterns}
         metadata: {metadata}
         metadata_interval: {metadata_interval}
@@ -59,7 +59,7 @@ MODE_CONFIG_TEMPLATES = {
         prefix: {sensor_id}
     - class: ParseTransform
       kwargs:
-        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
+        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string:os}}'
         field_patterns: {field_patterns}
         metadata: {metadata}
         metadata_interval: {metadata_interval}
@@ -80,7 +80,7 @@ MODE_CONFIG_TEMPLATES = {
         prefix: {sensor_id}
     - class: ParseTransform
       kwargs:
-        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
+        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string:os}}'
         field_patterns: {field_patterns}
         metadata: {metadata}
         metadata_interval: {metadata_interval}
@@ -113,7 +113,7 @@ MODE_CONFIG_TEMPLATES = {
         prefix: {sensor_id}
     - class: ParseTransform
       kwargs:
-        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string}}'
+        record_format: '{{data_id:w}} {{timestamp:ti}},{{field_string:os}}'
         field_patterns: {field_patterns}
         metadata: {metadata}
         metadata_interval: {metadata_interval}
