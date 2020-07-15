@@ -9,7 +9,7 @@
 # This will also allow (under the default installation), triggering
 # the script via a call to supervisord's web interface:
 #
-#   wget -O - 'http://localhost:9001/index.html?processname=update_cruise_definition&action=start' > /dev/null
+#   wget -O - 'http://localhost:9001/index.html?processname=build_cruise_definition&action=start' > /dev/null
 
 # HOST_PATH and CRUISE_FILE should be set as appropriate for your
 # installation
@@ -80,7 +80,7 @@ cat >> /tmp/temp_sup_file <<EOF
 ; Script to check CORIOLIX database and update the cruise definition
 ; file if it has changed.
 [program:update_cruise_definition]
-command=${VENV_BIN}/python local/rcrv/update_cruise_definition.py --host_path $HOST_PATH --destination $CRUISE_FILE
+command=${VENV_BIN}/python local/rcrv/update_cruise_definition.py  --template local/rcrv/config_template.yaml --host_path $HOST_PATH --destination $CRUISE_FILE
 directory=${INSTALL_ROOT}/openrvdas
 startsecs=0
 autostart=false
