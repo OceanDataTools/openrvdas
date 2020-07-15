@@ -115,17 +115,16 @@ class PostgreSQLConnector:
       logging.error('Other error: "%s", encountered error "%s"',
                     command, str(e))
 
-
   ############################
   def table_exists(self, table_name):
     """Does the specified table exist in the database?"""
     cursor = self.connection.cursor()
-    cursor.execute('SELECT table_name FROM information_schema.tables WHERE "table_schema" = \'%s\' AND "table_name" = \'%s\'' % (self.database, table_name))
-    if cursor.fetchone():
+    # logging.warning(cursor.mogrify('SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = \'public\' AND table_name = \'%s\')' % (table_name)))
+    cursor.execute('SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = \'public\' AND table_name = \'%s\')' % (table_name))
+    if cursor.fetchone()[0]:
       exists = True
     else:
       exists = False
-    cursor.close()
     return exists
 
   ############################
