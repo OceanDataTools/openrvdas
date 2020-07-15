@@ -4,6 +4,7 @@ import logging
 import pprint
 import sys
 import time
+from datetime import datetime, timezone
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
@@ -17,6 +18,7 @@ try:
   from local.rcrv.modules.coriolix_connector import POSTGRES_ENABLED, CORIOLIXConnector as Connector
   from local.rcrv.settings import CORIOLIX_DATABASE, CORIOLIX_DATABASE_HOST
   from local.rcrv.settings import CORIOLIX_DATABASE_USER, CORIOLIX_DATABASE_PASSWORD
+  from psycopg2.extensions import AsIs
   CORIOLIX_SETTINGS_FOUND = True
 except ModuleNotFoundError:
   CORIOLIX_SETTINGS_FOUND = False
@@ -32,41 +34,24 @@ class CORIOLIXWriter(Writer):
                host=CORIOLIX_DATABASE_HOST,
                database=CORIOLIX_DATABASE, 
                user=CORIOLIX_DATABASE_USER,
-               password=CORIOLIX_DATABASE_PASSWORD,
-               save_source=True):
-    """Write to the passed record to a Postgres database table.
+               password=CORIOLIX_DATABASE_PASSWORD):
+    """Write the passed record to specified table in the CORIOLIX database.
 
     ```
-    data_table - To which table the received records should be written
+    data_table - To which table the received records should be written.
 
-    data_model - If specified, what data model to use for the records. If
-        not specified, writer will try to figure it out on its own.
+    data_model - What data model to use for the records.
 
-    data_fieldnames - Which fields should be written to the table. If not
-        specified, try to write all fields that match fields in the model.
+    data_fieldnames - Which fields should be written to the table.
 
-    host - hostname:port at which to connect
+    host - hostname:port at which to connect.
 
-    database - Database on host to which records should be written
-    ```
+    database - Database on host to which records should be written.
 
-    Expects passed source records to be in one of two formats:
+    user - User to use when connecting to the database.
 
-    1) DASRecord
+    password - Password for the specified database user.
 
-    2) A dict encoding optionally a source data_id and timestamp and a
-       mandatory 'fields' key of field_name: value pairs. This is the format
-       emitted by default by ParseTransform:
-    ```
-       {
-         'data_id': ...,
-         'timestamp': ...,
-         'fields': {
-           field_name: value,    # use default timestamp of 'now'
-           field_name: value,
-           ...
-         }
-       }
     ```
 
     Alternatively, it can accept and process a list of either of the
@@ -83,19 +68,49 @@ class CORIOLIXWriter(Writer):
                         'CORIOLIXWriter unavailable.')
     
     self.db = Connector(database=database, host=host,
-                       user=user, password=password,
-                       save_source=save_source)
+                       user=user, password=password)
+
+    # logging.warning(self.db.table_exists(data_table))
+    if not self.db.table_exists(data_table):
+      raise RuntimeError("The sensor data table {} does not exists.".format(data_table))
+
+    self.data_table = data_table
+    self.data_fieldnames = data_fieldnames.split(',')
+
+    # logging.info('Data table: %s', data_table)
 
     self.data_table = data_table
     logging.info('Data table: %s', data_table)
 
   ############################
   def _write_record(self, record):
-    """Write record to table. Connectors assume we've got a DASRecord, but
-    check; if we don't see if it's a suitably-formatted dict that we can
-    convert into a DASRecord.
+    """Write DASrecord to table.
     """
-    logging.warning('CORIOLIXWriter pretending to write record to table: %s\n%s', self.data_table, record)
+    # logging.warning('CORIOLIXWriter writing record to table: %s\n%s', self.data_table, record)
+
+    record.fields['datetime'] = datetime.fromtimestamp(record.timestamp, timezone.utc)
+    record.fields['sensor_id'] = record.data_id
+
+    fields = ['datetime', 'sensor_id'] + self.data_fieldnames
+
+    values = None
+    try:
+      values = [record.fields[field] for field in fields]
+    except Exception as e:
+      logging.error("Data record does not contain data values for all specified data fields\nExpected: %s, Missing: %s", ','.join(self.data_fieldnames), ','.join((list(set(self.data_fieldnames) - set(list(record.fields.keys()))))))
+      del record.fields['datetime']
+      return
+
+    insert_statement = 'insert into {} (%s) values %s'.format(self.data_table)
+
+    cursor = self.db.connection.cursor()
+    # logging.warning(cursor.mogrify(insert_statement, (AsIs(','.join(fields)), tuple(values))))
+    try:
+        cursor.execute(insert_statement, (AsIs(','.join(fields)), tuple(values)))
+    except Exception as e:
+        logging.error("Unable to insert data: %sSQL insert statement: %s", e, cursor.mogrify(insert_statement, (AsIs(','.join(fields)), tuple(values))))
+        
+    del record.fields['datetime']
 
   ############################
   def write(self, record):
