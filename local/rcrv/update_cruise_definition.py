@@ -332,7 +332,7 @@ class CruiseDefinitionCreator:
         sensor_tables = {}
         for parameter in sensor_parameters[sensor_id]:
           data_fieldname = parameter.get('data_fieldname')
-          data_table = parameter.get('data_table')
+          data_table = parameter.get('archive_data_table')
           data_model = parameter.get('data_model')
           if not data_table in sensor_tables:
             sensor_tables[data_table] = {}
