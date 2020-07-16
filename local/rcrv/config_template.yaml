@@ -25,14 +25,14 @@ loggers:
     - stderr       # echo raw input to stderr
     - udp          # parse and rebroadcast to UDP
     - file/udp     # store raw to logfile, parse and rebroadcast to UDP
-    - file/db      # store raw to logfile, parse and store to db
+    - file/udp/db      # store raw to logfile, parse and store to db
 
 
   #gyro004:  # example of a non-default set of configs for a sensor
   #  configs:
   #  - 'off'
   #  - udp
-  #  - file/db
+  #  - file/udp/db
 
 ####################
 # For each mode, what config should be run when OpenRVDAS is put in
@@ -48,7 +48,7 @@ modes:
     #gyro004: 'off'  # example of non-default config for mode
 
   underway:
-    default: file/db
+    default: file/udp/db
 
 ####################
 default_mode: 'off'
@@ -59,37 +59,6 @@ default_mode: 'off'
 config_globals:
   _UDP_WRITE_PORT_: 6221
   _FILE_BASE_: /var/tmp/log/openrvdas
-  
-  # A simple writer is one that only writes to one table. We'll swap
-  # either this or a list of _COMPOSED_WRITER_s in for
-  # _CORIOLIX_WRITER_, depending on whether the sensor needs to write
-  # to more than one table.
-  _SIMPLE_CORIOLIX_WRITER_:
-    class: CORIOLIXWriter
-    module: local.rcrv.modules.coriolix_writer
-    kwargs: 
-      data_table: _DATA_TABLE_
-      data_model: _DATA_MODEL_
-      data_fieldnames: _DATA_FIELDNAMES_
-
-  # If a sensor feed needs to write to multiple tables, we need to
-  # filter which field names go to which tables. We'll do that with a
-  # list of composed writers.
-  _COMPOSED_CORIOLIX_WRITER_:
-    class: ComposedWriter
-    kwargs:
-      transforms:
-      - class: SelectFieldsTransform
-        module: logger.transforms.select_fields_transform
-        kwargs:
-          keep: _DATA_FIELDNAMES_
-      writers:
-      - class: CORIOLIXWriter
-        module: local.rcrv.modules.coriolix_writer
-        kwargs:
-          data_table: _DATA_TABLE_
-          data_model: _DATA_MODEL_
-          data_fieldnames: _DATA_FIELDNAMES_
 
 ####################
 # Templates for configs
@@ -171,8 +140,8 @@ configs_templates:
             port: _UDP_WRITE_PORT_
 
   # Template to store raw to logfile, parse and rebroadcast to UDP
-  file/db:
-    name: _SENSOR_ID_->file/db
+  file/udp/db:
+    name: _SENSOR_ID_->file/udp/db
     readers:
     - class: UDPReader
       kwargs:
@@ -192,4 +161,11 @@ configs_templates:
           kwargs:
             record_format: '{data_id:w} {timestamp:ti},{field_string:os}'
             field_patterns: _FIELD_PATTERNS_
-        writers: _CORIOLIX_WRITERS_
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: _UDP_WRITE_PORT_
+        - class: CORIOLIXWriter
+          module: local.rcrv.modules.coriolix_writer
+          kwargs: 
+            data_table: _DATA_TABLE_

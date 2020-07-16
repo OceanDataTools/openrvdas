@@ -8,12 +8,11 @@ from datetime import datetime, timezone
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
 # Don't freak out if we can't find database settings - unless they actually
-# try to instantiate a DatabaseWriter.
+# try to instantiate a CORIOLIXWriter.
 try:
   from local.rcrv.modules.coriolix_connector import POSTGRES_ENABLED, CORIOLIXConnector as Connector
   from local.rcrv.settings import CORIOLIX_DATABASE, CORIOLIX_DATABASE_HOST
@@ -29,20 +28,16 @@ except ModuleNotFoundError:
 class CORIOLIXWriter(Writer):
   def __init__(self,
                data_table,
-               data_model=None,
-               data_fieldnames=None,
                host=CORIOLIX_DATABASE_HOST,
                database=CORIOLIX_DATABASE, 
                user=CORIOLIX_DATABASE_USER,
                password=CORIOLIX_DATABASE_PASSWORD):
-    """Write the passed record to specified table in the CORIOLIX database.
+    """Write the passed record or list of records to specified table(s) in
+the CORIOLIX database.
 
     ```
-    data_table - To which table the received records should be written.
-
-    data_model - What data model to use for the records.
-
-    data_fieldnames - Which fields should be written to the table.
+    data_table - a dict where the keys are tables to be written, and values
+             are lists of field names to be written to those tables.
 
     host - hostname:port at which to connect.
 
@@ -53,64 +48,59 @@ class CORIOLIXWriter(Writer):
     password - Password for the specified database user.
 
     ```
-
-    Alternatively, it can accept and process a list of either of the
-    above, which it will write sequentially.
     """
-    super().__init__(input_format=Python_Record)
+    super().__init__()
 
     if not CORIOLIX_SETTINGS_FOUND:
      raise RuntimeError('File local/rcrv/settings.py not found. CORIOLIX '
-                        'functionality is not available. Have you copied '
-                        'over local/rcrv/settings.py.dist to local/rcrv/settings.py?')
+                        'functionality is not available. Have you copied over '
+                        'local/rcrv/settings.py.dist to local/rcrv/settings.py?')
     if not POSTGRES_ENABLED:
-     raise RuntimeError('Postgres Database not configured in local.rcrv.modules.coriolix_connector.py; '
+     raise RuntimeError('Postgres Database not configured in '
+                        'local.rcrv.modules.coriolix_connector.py; '
                         'CORIOLIXWriter unavailable.')
     
     self.db = Connector(database=database, host=host,
-                       user=user, password=password)
+                        user=user, password=password)
 
-    # logging.warning(self.db.table_exists(data_table))
-    if not self.db.table_exists(data_table):
-      raise RuntimeError("The sensor data table {} does not exists.".format(data_table))
-
-    self.data_table = data_table
-    self.data_fieldnames = data_fieldnames.split(',')
-
-    # logging.info('Data table: %s', data_table)
+    if not type(data_table) is dict:
+      raise RuntimeError('Parameter "table" must be of type dict; '
+                         'found: {}'.format(type(data_table)))
+    for table in data_table:
+      if not self.db.table_exists(table):
+        raise RuntimeError('The sensor data table {} does not exist.'.format(table))
 
     self.data_table = data_table
-    logging.info('Data table: %s', data_table)
 
   ############################
   def _write_record(self, record):
-    """Write DASrecord to table.
+    """Write DASrecord to database.
     """
-    # logging.warning('CORIOLIXWriter writing record to table: %s\n%s', self.data_table, record)
+    record_datetime = datetime.fromtimestamp(record.timestamp, timezone.utc)
+    sensor_id = record.data_id
 
-    record.fields['datetime'] = datetime.fromtimestamp(record.timestamp, timezone.utc)
-    record.fields['sensor_id'] = record.data_id
+    # Iterate over the tables we're supposed to write to
+    for table, field_names in self.data_table.items():
+      table_fields = ['datetime', 'sensor_id'] + field_names
+      table_values = [record_datetime, sensor_id]
+      try:
+        table_values += [record.fields[field] for field in field_names]
 
-    fields = ['datetime', 'sensor_id'] + self.data_fieldnames
+      # Skip if we don't have the fields needed to write this table
+      except KeyError:
+        continue
 
-    values = None
-    try:
-      values = [record.fields[field] for field in fields]
-    except Exception as e:
-      logging.error("Data record does not contain data values for all specified data fields\nExpected: %s, Missing: %s", ','.join(self.data_fieldnames), ','.join((list(set(self.data_fieldnames) - set(list(record.fields.keys()))))))
-      del record.fields['datetime']
-      return
+      # Write to the table in question
+      insert_statement = 'insert into {} (%s) values %s'.format(table)
+      cursor = self.db.connection.cursor()
 
-    insert_statement = 'insert into {} (%s) values %s'.format(self.data_table)
-
-    cursor = self.db.connection.cursor()
-    # logging.warning(cursor.mogrify(insert_statement, (AsIs(','.join(fields)), tuple(values))))
-    try:
-        cursor.execute(insert_statement, (AsIs(','.join(fields)), tuple(values)))
-    except Exception as e:
-        logging.error("Unable to insert data: %sSQL insert statement: %s", e, cursor.mogrify(insert_statement, (AsIs(','.join(fields)), tuple(values))))
-        
-    del record.fields['datetime']
+      try:
+        cursor.execute(insert_statement,
+                       (AsIs(','.join(table_fields)), tuple(table_values)))
+      except Exception as e:
+        logging.error('Unable to insert data: %s; SQL insert statement: %s',
+                      e, cursor.mogrify(insert_statement,
+                                        (AsIs(','.join(fields)), tuple(values))))
 
   ############################
   def write(self, record):

@@ -415,7 +415,7 @@ class CruiseDefinitionCreator:
       # Format of the writer(s) will depend on whether its
       # parameters need to be written to more than one table. Break
       # it out into a separate method to keep things more readable.
-      coriolix_writers = self.generate_writers(sensor_tables)
+      data_table = self.generate_data_table(sensor_tables)
 
       # Assemble all the information needed for the config here and
       # append to our dict of configs. Start with any global
@@ -425,7 +425,7 @@ class CruiseDefinitionCreator:
         '_SENSOR_ID_': sensor_id,
         '_UDP_PORT_': sensor.get('transmit_port'),
         '_FIELD_PATTERNS_': field_patterns,
-        '_CORIOLIX_WRITERS_': coriolix_writers,
+        '_DATA_TABLE_': data_table,
       })
 
       # Get the template, do all the replacements and add to the
@@ -444,71 +444,26 @@ class CruiseDefinitionCreator:
     return cruise_definition
 
   ############################
-  def generate_writers(self, sensor_tables):
+  def generate_data_table(self, sensor_tables):
     """Given a dict of the tables and parameters that are to be written
-    to, create a simple or composed writer to do that. A simple writer
-    is one where all the parameters are getting written to the same
-    table/model. A composed writer is needed when some parameters are
-    going to one table and others to another one.
+    to, return a dict of {data_table: [field_1, field_2, ...]}.
     """
-
-    # If we're only writing to one table, we can get by with a simple
-    # writer; otherwise we need to have a list of composed writers,
-    # one for each table we need to write to.
-    if len(sensor_tables) == 1: # we just need a simple writer
-      template_name = '_SIMPLE_CORIOLIX_WRITER_'
-    else:
-      template_name = '_COMPOSED_CORIOLIX_WRITER_'
-
-    # Get the template for whichever writer we need
-    config_globals = self.template.get('config_globals', None)
-    if not config_globals:
-      logging.fatal('Template file %s contains no config_globals',
-                    self.template_file)
-      sys.exit(1)
-    template = config_globals.get(template_name, None)
-    if not template:
-      logging.fatal('Template file %s contains no %s template',
-                    self.template_file, template_name)
-      sys.exit(1)
-
-    # Now instantiate the writer(s), filling in the variables with the
-    # appropriate values.
-    writers = list()
-    for data_table, models in sensor_tables.items():
-      # 'models' should be a dict of data_model:[param, param,...]
+    data_table = {}
+    for table, models in sensor_tables.items():
+      # We *think* there *should* only be one model for each table.
       if len(models) != 1:
-        logging.fatal('More than one model used by a single data table?!? '
-                      'Table: %s, models: %s', data_table, models)
+        logging.fatal('More than one model per table?!?: table: %s, models: %s',
+                      table, models)
+        sys.exit(1)
 
-      # Turn parameters into a comma-separated list of names. This
-      # 'for' should only have a single iteration, based on the prior
-      # test that len(models) == 1.
-      for data_model, parameters in models.items():
-        data_fieldnames = ','.join(parameters)
+      # Aggregate the field names for this table.
+      field_names = []
+      for data_model, model_field_names in models.items():
+        field_names += model_field_names
+        
+      data_table[table] = field_names
 
-      value_dict = {
-        '_DATA_TABLE_': data_table,
-        '_DATA_MODEL_': data_model,
-        '_DATA_FIELDNAMES_': data_fieldnames
-      }
-
-      # Make a copy of the template and replace all the variables in
-      # it with their values for this writer.
-      writer = copy.deepcopy(template)
-      for old, new in value_dict.items():
-        writer = self._recursive_replace(writer, old, new)
-      
-      #if len(sensor_tables) != 1: # we just need a simple writer
-      #  logging.warning('Generated composed:\n%s',
-      #                  self.config_to_yaml(writer))
-
-      # Append our formatted writer to any existing ones for this
-      # sensor (if we have a simple writer, there will only be a
-      # single one of these).
-      writers.append(writer)
-
-    return writers
+    return data_table
 
   ############################
   def make_get_request(self, request):
