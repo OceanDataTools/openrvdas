@@ -11,13 +11,16 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
-# Don't freak out if we can't find database settings - unless they actually
-# try to instantiate a CORIOLIXWriter.
 try:
-  from local.rcrv.modules.coriolix_connector import POSTGRES_ENABLED, CORIOLIXConnector as Connector
+  import psycopg2
+  from psycopg2.extensions import AsIs
+  POSTGRES_ENABLED = True
+except ModuleNotFoundError:
+  POSTGRES_ENABLED = False
+
+try:
   from local.rcrv.settings import CORIOLIX_DATABASE, CORIOLIX_DATABASE_HOST
   from local.rcrv.settings import CORIOLIX_DATABASE_USER, CORIOLIX_DATABASE_PASSWORD
-  from psycopg2.extensions import AsIs
   CORIOLIX_SETTINGS_FOUND = True
 except ModuleNotFoundError:
   CORIOLIX_SETTINGS_FOUND = False
@@ -51,26 +54,41 @@ the CORIOLIX database.
     """
     super().__init__()
 
+    if not POSTGRES_ENABLED:
+     raise RuntimeError('Python PostgreSQL library \'psycopg2\'not installed '
+                        'CORIOLIXWriter unavailable.')
+
     if not CORIOLIX_SETTINGS_FOUND:
      raise RuntimeError('File local/rcrv/settings.py not found. CORIOLIX '
                         'functionality is not available. Have you copied over '
                         'local/rcrv/settings.py.dist to local/rcrv/settings.py?')
-    if not POSTGRES_ENABLED:
-     raise RuntimeError('Postgres Database not configured in '
-                        'local.rcrv.modules.coriolix_connector.py; '
-                        'CORIOLIXWriter unavailable.')
     
-    self.db = Connector(database=database, host=host,
-                        user=user, password=password)
+    try:
+      self.connection = psycopg2.connect(database=database, host=host, user=user, password=password)
+      self.connection.set_session(autocommit=True)
+    except:
+      raise RuntimeError('Unable to connect to CORIOLIX database.')
 
     if not type(data_table) is dict:
       raise RuntimeError('Parameter "table" must be of type dict; '
                          'found: {}'.format(type(data_table)))
     for table in data_table:
-      if not self.db.table_exists(table):
+      if not self._table_exists(table):
         raise RuntimeError('The sensor data table {} does not exist.'.format(table))
 
     self.data_table = data_table
+
+  ############################
+  def _table_exists(self, table_name):
+    """Does the specified table exist in the database?"""
+
+    with self.connection.cursor() as cursor:
+      cursor.execute('SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = \'public\' AND table_name = \'%s\')' % (table_name))
+      if cursor.fetchone()[0]:
+        exists = True
+      else:
+        exists = False
+      return exists
 
   ############################
   def _write_record(self, record):
@@ -92,15 +110,15 @@ the CORIOLIX database.
 
       # Write to the table in question
       insert_statement = 'insert into {} (%s) values %s'.format(table)
-      cursor = self.db.connection.cursor()
-
-      try:
-        cursor.execute(insert_statement,
-                       (AsIs(','.join(table_fields)), tuple(table_values)))
-      except Exception as e:
-        logging.error('Unable to insert data: %s; SQL insert statement: %s',
-                      e, cursor.mogrify(insert_statement,
-                                        (AsIs(','.join(fields)), tuple(values))))
+      
+      with self.connection.cursor() as cursor:
+        try:
+          cursor.execute(insert_statement,
+                         (AsIs(','.join(table_fields)), tuple(table_values)))
+        except Exception as e:
+          logging.error('Unable to insert data: %s; SQL insert statement: %s',
+                        e, cursor.mogrify(insert_statement,
+                                          (AsIs(','.join(fields)), tuple(values))))
 
   ############################
   def write(self, record):
@@ -143,3 +161,10 @@ the CORIOLIX database.
     das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
     self._write_record(das_record)
     return
+
+  ############################
+  def close(self):
+    """Close connection."""
+    self.connection.close()
+
+
