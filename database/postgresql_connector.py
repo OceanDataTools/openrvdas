@@ -58,7 +58,11 @@ class PostgreSQLConnector:
 
     self.database = database
 
-    self.connection = psycopg2.connect(database=database, host=host, user=user, password=password)
+    try:
+      self.connection = psycopg2.connect(database=database, host=host, user=user, password=password)
+    except:
+      raise RuntimeError('Unable to connect to PostGreSQL database.')
+
     self.save_source = save_source
 
     # What's the next id we're supposed to read? Or if we've been
@@ -103,29 +107,27 @@ class PostgreSQLConnector:
 
   ############################
   def exec_sql_command(self, command):
-    cursor = self.connection.cursor()
-    try:
-      cursor.execute(command)
-      self.connection.commit()
-      cursor.close()
-    except psycopg2.errors.ProgrammingError as e:
-      logging.error('Executing command: "%s", encountered error "%s"',
-                    command, str(e))
-    except Exception as e:
-      logging.error('Other error: "%s", encountered error "%s"',
-                    command, str(e))
+
+    with self.connection.cursor() as cursor:
+      try:
+        cursor.execute(command)
+      except psycopg2.errors.ProgrammingError as e:
+        logging.error('Executing command: "%s", encountered error "%s"',
+                      command, str(e))
+      except Exception as e:
+        logging.error('Other error: "%s", encountered error "%s"',
+                      command, str(e))
 
   ############################
   def table_exists(self, table_name):
     """Does the specified table exist in the database?"""
-    cursor = self.connection.cursor()
-    # logging.warning(cursor.mogrify('SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = \'public\' AND table_name = \'%s\')' % (table_name)))
-    cursor.execute('SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = \'public\' AND table_name = \'%s\')' % (table_name))
-    if cursor.fetchone()[0]:
-      exists = True
-    else:
-      exists = False
-    return exists
+    with self.connection.cursor() as cursor:
+      cursor.execute('SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = \'public\' AND table_name = \'%s\')' % (table_name))
+      if cursor.fetchone()[0]:
+        exists = True
+      else:
+        exists = False
+      return exists
 
   ############################
   def write_record(self, record):
@@ -153,11 +155,11 @@ class PostgreSQLConnector:
       # *claims* that this is kept on a per-client basis, so it's safe
       # even if another client does an intervening write.
       # query = 'select last_insert_id()'
-      query = 'select currval(pg_get_serial_sequence(\'%s\',\'id\'))' % (self.SOURCE_TABLE)
-      cursor = self.connection.cursor()
-      cursor.execute(query)
-      source_field = ', source'
-      source_id = next(cursor)[0]
+      query = 'SELECT currval(pg_get_serial_sequence(\'%s\',\'id\'))' % (self.SOURCE_TABLE)
+      with self.connection.cursor() as cursor:
+        cursor.execute(query)
+        source_field = ', source'
+        source_id = next(cursor)[0]
     else:
       source_field = ''
       source_id = None
@@ -292,41 +294,40 @@ class PostgreSQLConnector:
   ############################
   def _num_rows(self, table_name):
     query = 'select count(1) from %s' % table_name
-    cursor = self.connection.cursor()
-    cursor.execute(query)
-    num_rows = next(cursor)[0]
-    return num_rows
+    with self.connection.cursor() as cursor:
+      cursor.execute(query)
+      num_rows = next(cursor)[0]
+      return num_rows
 
   ############################
   def _process_query(self, query):
-    cursor = self.connection.cursor()
-    cursor.execute(query)
+    with self.connection.cursor() as cursor:
+      cursor.execute(query)
 
-    results = {}
-    for values in cursor:
-      (id, timestamp, field_name,
-       int_value, float_value, str_value, bool_value,
-       source) = values
+      results = {}
+      for values in cursor:
+        (id, timestamp, field_name,
+         int_value, float_value, str_value, bool_value,
+         source) = values
 
-      if not field_name in results:
-        results[field_name] = []
+        if not field_name in results:
+          results[field_name] = []
 
-      if int_value is not None:
-        val = int_value
-      elif float_value is not None:
-        val = float_value
-      elif str_value is not None:
-        val = str_value
-      elif float_value is not None:
-        val = int_value
-      elif bool_value is not None:
-        val = bool(bool_value)
+        if int_value is not None:
+          val = int_value
+        elif float_value is not None:
+          val = float_value
+        elif str_value is not None:
+          val = str_value
+        elif float_value is not None:
+          val = int_value
+        elif bool_value is not None:
+          val = bool(bool_value)
 
-      results[field_name].append((timestamp, val))
-      self.next_id = id + 1
-      self.last_timestamp = timestamp
-    cursor.close()
-    return results
+        results[field_name].append((timestamp, val))
+        self.next_id = id + 1
+        self.last_timestamp = timestamp
+      return results
 
   ############################
   def delete_table(self,  table_name):
