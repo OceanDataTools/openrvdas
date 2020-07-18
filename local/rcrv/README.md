@@ -4,7 +4,11 @@
 
 The file ``settings.py.dist`` in this directory must be copied over to
 ``settings.py`` prior to running anything that depends on a
-CORIOLIXWriter.
+CORIOLIXWriter.  Modify the variables declared in ``settings.py`` to
+refect the desired setup.
+
+The file ``config_template.yaml.dist`` in this directory must be copied over to
+``config_template.yaml`` prior to creating an OpenRVDAS configuration file using the ``build_cruise_definition.py`` script.
 
 ## Creating a new cruise definition file
 

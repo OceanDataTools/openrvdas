@@ -19,8 +19,7 @@ except ModuleNotFoundError:
   POSTGRES_ENABLED = False
 
 try:
-  from local.rcrv.settings import CORIOLIX_DATABASE, CORIOLIX_DATABASE_HOST
-  from local.rcrv.settings import CORIOLIX_DATABASE_USER, CORIOLIX_DATABASE_PASSWORD
+  from local.rcrv.settings import CORIOLIX_DATABASE, CORIOLIX_DATABASE_HOST, CORIOLIX_DATABASE_USER, CORIOLIX_DATABASE_PASSWORD
   CORIOLIX_SETTINGS_FOUND = True
 except ModuleNotFoundError:
   CORIOLIX_SETTINGS_FOUND = False
