@@ -48,7 +48,7 @@ OpenRVDAS has been fully installed and set up. This will allow you to
 trigger scrupt update via a call to supervisord's web interface:
 
 ```
-wget -O - 'http://localhost:9001/index.html?processname=update_cruise_definition&action=start' > /dev/null
+wget -O - 'http://localhost:9001/index.html?processname=build_cruise_definition&action=start' > /dev/null
 ```
 
 
