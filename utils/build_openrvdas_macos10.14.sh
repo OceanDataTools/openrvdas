@@ -417,7 +417,8 @@ function setup_python_packages {
       websockets \
       PyYAML \
       parse \
-      psutil
+      psutil \
+      supervisor
 
     # If we're installing database, then also install relevant
     # Python clients.
