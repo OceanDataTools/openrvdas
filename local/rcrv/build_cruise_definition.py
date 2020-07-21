@@ -250,6 +250,17 @@ class CruiseDefinitionCreator:
     cruise_definition = odict()
 
     ##########
+    # Start with boilerplate
+    template_cruise = self.template.get('cruise', None)
+    if not template_cruise:
+      template_cruise = {
+        'id': 'RCRV-Sample',
+        'start': '2020-01-01',
+        'end': '2020-12-31'
+      }
+    cruise_definition['cruise'] = template_cruise
+
+    ##########
     # Fill in the logger definitions. First, pull the logger templates
     # from the template dict. Should have a 'default' key, and may
     # have others, to override individually. Will look something like:

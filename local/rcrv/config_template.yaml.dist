@@ -14,6 +14,13 @@
 # declaration.
 
 ####################
+# Cruise boilerplate
+cruise:
+  id: RCRV-Sample
+  start: '2020-01-01'
+  end: '2020-12-31'
+
+####################
 # By default, all loggers will have the configs defined under
 # 'default'; this can be overridden by having the name of a sensor as
 # a key along with the set of configs that it should have, as in the
