@@ -17,9 +17,14 @@ VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
 
 # HOST_PATH and CRUISE_FILE should be set as appropriate for your
 # installation
-HOST_PATH=http://157.245.173.52:8000/api/
+DEFAULT_HOST_PATH='http://127.0.0.1:8000/api/'
 CRUISE_FILE=${SCRIPT_DIR}/cruise.yaml
 CONFIG_TEMPLATE=${SCRIPT_DIR}/config_template.yaml
+
+echo "#####################################################################"
+read -p "CORIOLIX API HOST_PATH ($DEFAULT_HOST_PATH)? " HOST_PATH
+HOST_PATH=${HOST_PATH:-$DEFAULT_HOST_PATH}
+
 echo
 echo Setting script to read CORIOLIX variables from $HOST_PATH
 echo Setting script to write cruise definitions to $CRUISE_FILE

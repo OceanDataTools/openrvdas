@@ -6,7 +6,7 @@ RCRV-specific code consists of two primary components:
  1. A project-specific CORIOLIXWriter module in
  ``local/rcrv/modules/coriolix-writer.py``
  
- 1. A script (``build_cruise_definition.py``) that connects to a
+ 2. A script (``build_cruise_definition.py``) that connects to a
  CORIOLIX database to retrieve sensor and parameter definitions and
  reads a local template file (such as the sample at
  ``config_template.yaml``) and creates an OpenRVDAS cruise definition
