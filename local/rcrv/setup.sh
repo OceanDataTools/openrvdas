@@ -18,18 +18,64 @@ VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
 # HOST_PATH and CRUISE_FILE should be set as appropriate for your
 # installation
 DEFAULT_HOST_PATH='http://127.0.0.1:8000/api/'
-CRUISE_FILE=${SCRIPT_DIR}/cruise.yaml
-CONFIG_TEMPLATE=${SCRIPT_DIR}/config_template.yaml
+DEFAULT_CRUISE_FILE=${SCRIPT_DIR}/cruise.yaml
+DEFAULT_CONFIG_TEMPLATE=${SCRIPT_DIR}/config_template.yaml
+
+PREFERENCES_FILE='${SCRIPT_DIR}/.coriolix_preferences'
+
+###########################################################################
+###########################################################################
+# Read any pre-saved default variables from file
+function set_default_variables {
+    # Defaults that will be overwritten by the preferences file, if it
+    # exists.
+    DEFAULT_HOST_PATH=$HOST_PATH
+    DEFAULT_CRUISE_FILE=$CRUISE_FILE
+    DEFAULT_CONFIG_TEMPLATE=$CONFIG_TEMPLATE
+
+    # Read in the preferences file, if it exists, to overwrite the defaults.
+    if [ -e $PREFERENCES_FILE ]; then
+        echo Reading pre-saved defaults from "$PREFERENCES_FILE"
+        source $PREFERENCES_FILE
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Save defaults in a preferences file for the next time we run.
+function save_default_variables {
+    cat > $PREFERENCES_FILE <<EOF
+# Defaults written by/to be read by setup.sh
+
+DEFAULT_HOST_PATH=$HOST_PATH
+DEFAULT_CRUISE_FILE=$CRUISE_FILE
+DEFAULT_CONFIG_TEMPLATE=$CONFIG_TEMPLATE
+
+EOF
+}
+
+set_default_variables
 
 echo "#####################################################################"
 read -p "CORIOLIX API HOST_PATH ($DEFAULT_HOST_PATH)? " HOST_PATH
 HOST_PATH=${HOST_PATH:-$DEFAULT_HOST_PATH}
 
+echo "#####################################################################"
+read -p "CORIOLIX cruise definition file template ($DEFAULT_CONFIG_TEMPLATE)? " CONFIG_TEMPLATE
+CONFIG_TEMPLATE=${CONFIG_TEMPLATE:-$DEFAULT_CONFIG_TEMPLATE}
+
+echo "#####################################################################"
+read -p "OpenRVDAS cruise definition file ($DEFAULT_CRUISE_FILE)? " CRUISE_FILE
+CRUISE_FILE=${CRUISE_FILE:-$DEFAULT_CRUISE_FILE}
+
 echo
 echo Setting script to read CORIOLIX variables from $HOST_PATH
+echo Setting script to use the cruise definition template: $CONFIG_TEMPLATE
 echo Setting script to write cruise definitions to $CRUISE_FILE
 read -p "Hit any key to continue, or Ctl-C to exit "
 echo
+
+save_default_variables
 
 #return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
 
