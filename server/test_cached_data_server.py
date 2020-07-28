@@ -229,7 +229,7 @@ class TestCachedDataServer(unittest.TestCase):
 
   ############################
   def test_disk_cache(self):
-    WEBSOCKET_PORT = 8769
+    WEBSOCKET_PORT = 8770
     tmpdir = tempfile.TemporaryDirectory()
     disk_cache = tmpdir.name + '/disk_cache'
     cds = CachedDataServer(port=WEBSOCKET_PORT, disk_cache=disk_cache)

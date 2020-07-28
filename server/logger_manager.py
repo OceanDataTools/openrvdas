@@ -911,7 +911,7 @@ class LoggerManager:
           non_running_configs.add(config)
 
       if non_running_configs:
-        logging.warning('Active configs found stopped: %s', non_running_configs)
+        logging.info('Active configs found stopped: %s', non_running_configs)
 
       # Get new configs in dict {logger:{'configs':[config_name,...]}}
       try:
