@@ -21,7 +21,7 @@ DEFAULT_HOST_PATH='http://127.0.0.1:8000/api/'
 DEFAULT_CRUISE_FILE=${SCRIPT_DIR}/cruise.yaml
 DEFAULT_CONFIG_TEMPLATE=${SCRIPT_DIR}/config_template.yaml
 
-PREFERENCES_FILE='${SCRIPT_DIR}/.coriolix_preferences'
+PREFERENCES_FILE=${SCRIPT_DIR}/.coriolix_preferences
 
 ###########################################################################
 ###########################################################################
@@ -29,9 +29,9 @@ PREFERENCES_FILE='${SCRIPT_DIR}/.coriolix_preferences'
 function set_default_variables {
     # Defaults that will be overwritten by the preferences file, if it
     # exists.
-    DEFAULT_HOST_PATH=$HOST_PATH
-    DEFAULT_CRUISE_FILE=$CRUISE_FILE
-    DEFAULT_CONFIG_TEMPLATE=$CONFIG_TEMPLATE
+    DEFAULT_HOST_PATH=$DEFAULT_HOST_PATH
+    DEFAULT_CRUISE_FILE=$DEFAULT_CRUISE_FILE
+    DEFAULT_CONFIG_TEMPLATE=$DEFAULT_CONFIG_TEMPLATE
 
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
@@ -89,6 +89,9 @@ case $PLATFORM_STRING in
     *Darwin* )
         PLATFORM='Darwin'
         ;;
+    *macOS* )
+        PLATFORM='Darwin'
+        ;;
     *Ubuntu* )
         PLATFORM='Ubuntu'
         ;;
@@ -121,18 +124,9 @@ if [[ ! -e $SUP_FILE ]]; then
     return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
 fi
 
-# Do we already have a program for build_cruise_definition?
-if grep -q build_cruise_definition $SUP_FILE; then
-    echo Supervisor file already has script added
-    return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
-fi
-
-# If we're here, it's time to add the new definitions to supervisor file
-echo Adding build_cruise_definition to supervisor file $SUP_FILE
-
 cp $SUP_FILE /tmp/temp_sup_file
-cat >> /tmp/temp_sup_file <<EOF
 
+cat > /tmp/build_cruise_definition_supervisor_conf <<EOF
 ; Script to check CORIOLIX database and update the cruise definition
 ; file if it has changed.
 [program:build_cruise_definition]
@@ -145,6 +139,27 @@ stderr_logfile=/var/log/openrvdas/build_cruise_definition.err.log
 stdout_logfile=/var/log/openrvdas/build_cruise_definition.out.log
 ;user=$RVDAS_USER
 EOF
-sudo cp /tmp/temp_sup_file $SUP_FILE
+
+# Do we already have a program for build_cruise_definition?
+if grep -q "### BEGIN CORIOLIX GENERATED CONTENT" $SUP_FILE; then
+    echo Updating existing build_cruise_definition configuration within Supervisor file $SUP_FILE
+
+    lead='^### BEGIN CORIOLIX GENERATED CONTENT$'
+    tail='^### END CORIOLIX GENERATED CONTENT$'
+    sed -e "/$lead/,/$tail/{ /$lead/{p;r /tmp/build_cruise_definition_supervisor_conf
+        }; /$tail/p;d; }"  /tmp/temp_sup_file > /tmp/updated_sup_file
+    sudo cp /tmp/updated_sup_file $SUP_FILE
+    # return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+
+else
+
+    # If we're here, it's time to add the new definitions to supervisor file
+    echo Adding build_cruise_definition configuration to Supervisor file $SUP_FILE
+    echo "### BEGIN CORIOLIX GENERATED CONTENT" >> /tmp/temp_sup_file
+    cat /tmp/build_cruise_definition_supervisor_conf >> /tmp/temp_sup_file
+    echo "### END CORIOLIX GENERATED CONTENT" >> /tmp/temp_sup_file
+    sudo cp /tmp/temp_sup_file $SUP_FILE
+
+fi
 
 echo Success!

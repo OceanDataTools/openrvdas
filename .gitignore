@@ -38,7 +38,8 @@ database/influxdb/influxd
 
 # CORIOLIX
 local/rcrv/settings.py
-local/rcrv/cruise_template.yaml
+local/rcrv/config_template.yaml
+local/rcrv/.coriolix_preferences
 
 # Created by build scripts
 .build_openrvdas_preferences
