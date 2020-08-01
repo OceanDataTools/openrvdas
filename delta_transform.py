@@ -15,7 +15,7 @@ class DeltaTransform:
     """
     self.rate = rate
     self.field_type = field_type
-    # Dict of {field_name: (timestamp, previous_value)} pairs
+    # Dict of {field_name: (previous_timestamp, previous_value)} pairs
     self.last_value = {}
     
   ############################
@@ -32,7 +32,7 @@ class DeltaTransform:
       
     elif type(record) is dict:
       fields = record.get('fields', None)
-      fields = record.get('timestamp', None)
+      timestamp = record.get('timestamp', None)
       
     elif type(record) is list:
       results = []
@@ -44,16 +44,22 @@ class DeltaTransform:
       return ('Record passed to DeltaTransform was neither a dict nor a '
               'DASRecord. Type was %s: %s' % (type(record), str(record)[:80])) 
     
+    if fields is None or timestamp is None
+      return ('Record passed to DeltaTransform either does not have a field or '
+              'a timestamp')
+    
     delta_values = {}
     rate_values = {}
     
     for key in fields:
-      if last_value.has_key(key):
-        delta_values[key] = fields[key] - last_value[key][1]
-        rate_values[key] = delta_values[key] / (timestamp - last_value[key][0])
-        last_value[key] = [timestamp, fields[key]]
-      else:
-        delta_values[key] = None
+      value = fields[key]
+      last_timestamp, last_value = self.last_value.get(key, (None, None))
+      
+      if last_value is not None:
+        delta_values[key] = value - last_value
+        rate_values[key] = delta_values[key] / (timestamp - last_timestamp)
+        
+      self.last_value[key] = (timestamp, value)
     
     if self.rate is True:
       return DASRecord(timestamp=timestamp, fields=rate_values)
@@ -64,41 +70,3 @@ class DeltaTransform:
       return DASRecord(timestamp=timestamp, fields=results)
     else:
       return DASRecord(timestamp=timestamp, fields=delta_values)
-      
-     ############################################################################# 
-     # OLD CODE
-    """
-    if type(record) is DASRecord:  
-      for single_record in record:
-        if not last_value.has_key(single_record.field):
-          last_value[single_record.fields] = [timestamp, single_record.value]
-          return None
-        else:
-          fields[single_record.fields] = [single_record.value]
-
-    if type(record) is dict:
-      if 'fields' in record:
-        for field in record:
-          if not last_value.has_key(field):
-            last_value[field] = [timestamp, field.value]
-            return None
-          else:
-            fields[field] = [field.value]
-      else:
-        if not last_value.has_key(record.field):
-          last_value[record.field] = [timestamp, record.value]
-          return None
-        else:
-          fields[record.field] = [record.value]
-    else:
-      return ('Record passed to DeltaTransform was neither a dict nor a '
-              'DASRecord. Type was %s: %s' % (type(record), str(record)[:80])) 
-    
-    for key in fields:
-      delta_value = fields[key] - last_value[key][1]
-      delta_time = timestamp - last_value[key][0]
-      if self.rate is True:
-        # return delta_value[key] / delta_time
-      else:
-        # return delta_value
-    
