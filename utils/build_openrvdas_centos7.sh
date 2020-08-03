@@ -697,6 +697,7 @@ function setup_firewall {
     systemctl start firewalld
     systemctl enable firewalld
 
+    firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
     firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
     firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
