@@ -181,6 +181,17 @@ by websocket clients:
    "format": "record_list"
   }
   ```
+  
+  Field names can also use * as a wildcard, in which case all fields
+  that match the pattern will be returned:
+  
+  ```
+  {"type":"subscribe",
+    "fields":{"field_*":{"seconds":50},
+              "field_3":{"seconds":-1}},
+   "format": "record_list"
+  }
+  ```
 
   If 'record\_list' is specified, results will be collated into a list
   of DASRecord-like dicts:
