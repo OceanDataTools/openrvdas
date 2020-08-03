@@ -71,6 +71,7 @@ class TestLoggerRunner(unittest.TestCase):
     self.config['modes']['on']['logger']['writers']['kwargs']['filename'] = self.dest_name
 
   ############################
+  @unittest.skip('The LoggerRunner is flakey and close to deprecation.')
   def test_basic(self):
 
     # Assure ourselves that the dest file doesn't exist yet and that

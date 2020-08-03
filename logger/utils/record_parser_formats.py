@@ -25,8 +25,9 @@ might have either, both or neither of speed in knots and/or km/hour.
 The recognized format types we add are:
   od   = optional integer
   of   = optional generalized float
-  og   = optional generalized number
+  og   = optional generalized number - also handles '#VALUE!' as None
   ow   = optional sequence of letters, numbers, underscores
+  os   = optional sequence of any characters - will match everything on line
 
   nlat = NMEA-formatted latitude or longitude, converted to decimal degrees
 
@@ -64,11 +65,13 @@ optional_f.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'
 ##########
 def optional_g(text):
   """Method for parsing an 'optional' generalized number."""
+  if text == '#VALUE!':
+    return None
   if text:
     return float(text)
   else:
     return None
-optional_g.pattern = r'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
+optional_g.pattern = r'(#VALUE!|\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'
 
 ##########
 def optional_w(text):
@@ -79,6 +82,17 @@ def optional_w(text):
   else:
     return None
 optional_w.pattern = r'\w*'
+
+##########
+def optional_s(text):
+  """Method for parsing any sequence of zero or more characters. Will absorb
+  everything in the string.
+  """
+  if text:
+    return text
+  else:
+    return ''
+optional_s.pattern = r'.*'
 
 ##########
 def nmea_lat_lon(text):
@@ -143,6 +157,7 @@ extra_format_types = dict(
   of=optional_f,
   og=optional_g,
   ow=optional_w,
+  os=optional_s,
 
   nlat=nmea_lat_lon,
   nlat_dir=nmea_lat_lon_dir,

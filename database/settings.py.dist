@@ -4,21 +4,7 @@ Settings for database operations.
 THIS FILE MUST BE COPIED OVER TO database/settings.py to be
 operational.
 
-To set up MySQL connectivity, install, configure and start
-MySQL server, and set up appropriate mysql user:
-
-   apt-get install mysql-server libmysqlclient-dev # ubuntu
-
-     or
-
-   yum install mariadb-server mariadb-devel mariadb-libs
-   
-     then
-
-   pip3 install mysqlclient, mysql-connector==2.1.6
-
-   # Create 'data' and 'test' databases and mysql_user
-   database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
+See below for additional database-specific install requirements
 
 """
 import logging
@@ -36,8 +22,9 @@ DEFAULT_DATABASE_PASSWORD = 'rvdas'
 
 Connector = None
 DATABASE_ENABLED = False
-MYSQL_ENABLED = False
 MONGO_ENABLED = False
+MYSQL_ENABLED = False
+POSTGRES_ENABLED = False
 
 try:
   # Specify/uncomment the database you're using here
@@ -46,7 +33,7 @@ try:
   # MySQL server, and set up appropriate mysql user:
   #   apt-get install mysql-server libmysqlclient-dev # ubuntu
   #
-  #   pip3 install mysqlclient, mysql-connector==2.1.6
+  #   pip3 install mysqlclient, mysql-connector-python
   #
   #   # Create 'data' and 'test' databases and mysql_user
   #   database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
@@ -54,6 +41,20 @@ try:
   from database.mysql_connector import MYSQL_ENABLED, MySQLConnector as Connector
   #from database.mysql_record_connector import MYSQL_ENABLED, MySQLRecordConnector as Connector
   if MYSQL_ENABLED:
+      DATABASE_ENABLED = True
+
+  # To set up PostgreSQL connectivity, install, configure and start
+  # PostgreSQL server, and set up appropriate postgres user:
+  #   apt-get install postgresql-12 postgresql-client-12 # ubuntu
+  #
+  #   pip3 install psycopg2-binary
+  #
+  #   # Create 'data' and 'test' databases and mysql_user
+  #   database/setup_postgres_connector.sh <root_pwd> <postgres_user> <postgres_user_pwd>
+  #
+  from database.postgresql_connector import POSTGRES_ENABLED, PostgreSQLConnector as Connector
+  #from database.postgresql_record_connector import POSTGRES_ENABLED, PostgreSQLRecordConnector as Connector
+  if POSTGRES_ENABLED:
       DATABASE_ENABLED = True
 
   # Put instructions and imports for other databases here

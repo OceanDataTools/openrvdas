@@ -272,12 +272,18 @@ class RecordParser:
     according to those formats, returning a dict of {field_name:
     field_value} or None if unable to match a format pattern.
     """
-    # Get device and device_type definitions for data_id
+    if not self.devices:
+      logging.warning('RecordParser has no device definitions; unable to parse!')
+      return None
+
+    # Get device and device_type definitions for data_id    
     device = self.devices.get(data_id, None)
     if not device:
       if not self.quiet:
-        logging.warning('Unrecognized data id "%s", record: %s', data_id,record)
-        logging.warning('Devices are: %s', ', '.join(self.devices.keys()))
+        logging.warning('Unrecognized data id "%s", field string: %s',
+                        data_id, field_string)
+        logging.warning('Known data ids are: "%s"',
+                        ', '.join(self.devices.keys()))
       return None
 
     device_type = device.get('device_type', None)

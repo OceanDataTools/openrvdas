@@ -106,6 +106,7 @@ class TestLoggerManagerAPI(unittest.TestCase):
     api = InMemoryServerAPI()
     supervisor = SupervisorConnector(
       start_supervisor_in=self.tmpdirname + '/supervisor',
+      supervisor_logfile_dir=self.tmpdirname,
       max_tries=1,
       log_level=logging.WARNING)
     logger_manager = LoggerManager(api=api, supervisor=supervisor,

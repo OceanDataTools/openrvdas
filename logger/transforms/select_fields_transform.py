@@ -105,4 +105,8 @@ class SelectFieldsTransform(Transform):
         if not key in self.keep:
           del fields[key]
 
+    # If no fields left, scrap the record
+    if not fields:
+      return None
+    
     return new_record

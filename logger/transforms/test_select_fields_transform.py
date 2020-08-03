@@ -21,8 +21,7 @@ class TestSelectFieldTransform(unittest.TestCase):
                          {'fields':{'a':1, 'b':2}})
     self.assertDictEqual(t.transform({'fields':{'b':2, 'c':3}}),
                          {'fields':{'b':2}})
-    self.assertDictEqual(t.transform({'fields':{'d':1, 'e':2, 'c':3}}),
-                         {'fields':{}})
+    self.assertEqual(t.transform({'fields':{'d':1, 'e':2, 'c':3}}), None)
 
     # Repeat for DASRecord
     dt = t.transform(DASRecord(fields={'a':1, 'b':2, 'c':3}))
@@ -32,12 +31,12 @@ class TestSelectFieldTransform(unittest.TestCase):
     self.assertDictEqual(dt.fields, {'b':2})
 
     dt = t.transform(DASRecord(fields={'d':1, 'e':2, 'c':3}))
-    self.assertDictEqual(dt.fields, {})
+    self.assertEqual(dt, None)
 
     # Repeat for top-level dict
     self.assertDictEqual(t.transform({'a':1, 'b':2, 'c':3}), {'a':1, 'b':2})
     self.assertDictEqual(t.transform({'b':2, 'c':3}), {'b':2})
-    self.assertDictEqual(t.transform({'d':1, 'e':2, 'c':3}), {})
+    self.assertEqual(t.transform({'d':1, 'e':2, 'c':3}), None)
 
     # Verify that transform doesn't modify original record
     fd = {'fields':{'a':1, 'b':2, 'c':3}}

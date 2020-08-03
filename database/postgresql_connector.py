@@ -34,29 +34,35 @@ from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 
 try:
-  import mysql.connector
-  MYSQL_ENABLED = True
+  import psycopg2
+  POSTGRES_ENABLED = True
 except ImportError:
-  MYSQL_ENABLED = False
+  POSTGRES_ENABLED = False
+
+# import psycopg2
+# POSTGRES_ENABLED = True
 
 ################################################################################
-class MySQLConnector:
+class PostgreSQLConnector:
   # Name of table in which we will store mappings from record field
   # names to the tnames of the tables containing those fields.
   DATA_TABLE = 'data'
   FIELD_TABLE = 'fields'
   SOURCE_TABLE = 'source'
 
-  def __init__(self, database, host, user, password,
-               tail=False, save_source=True):
-    """Interface to MySQLConnector, to be imported by, e.g. DatabaseWriter."""
-    if not MYSQL_ENABLED:
-      logging.warning('MySQL not found, so MySQL functionality not available.')
+  def __init__(self, database, host, user, password, tail=False, save_source=True):
+    """Interface to PostgreSQLConnector, to be imported by, e.g. DatabaseWriter."""
+    if not POSTGRES_ENABLED:
+      logging.warning('PostGres not found, so PostGres functionality not available.')
       return
 
-    self.connection = mysql.connector.connect(database=database, host=host,
-                                              user=user, password=password,
-                                              auth_plugin='mysql_native_password')
+    self.database = database
+
+    try:
+      self.connection = psycopg2.connect(database=database, host=host, user=user, password=password)
+    except:
+      raise RuntimeError('Unable to connect to PostGreSQL database.')
+
     self.save_source = save_source
 
     # What's the next id we're supposed to read? Or if we've been
@@ -64,11 +70,12 @@ class MySQLConnector:
     self.next_id = 1
     self.last_timestamp = 0
 
-    self.exec_sql_command('set autocommit = 1')
+    # self.exec_sql_command('SET AUTOCOMMIT TO ON')
+    self.connection.set_session(autocommit=True)
 
     # Create tables if they don't exist yet
     if not self.table_exists(self.SOURCE_TABLE):
-      table_cmd = 'CREATE TABLE %s (id INT PRIMARY KEY AUTO_INCREMENT, ' \
+      table_cmd = 'CREATE TABLE %s (id SERIAL PRIMARY KEY, ' \
                   'record TEXT)' % self.SOURCE_TABLE
       logging.info('Creating table with command: %s', table_cmd)
       self.exec_sql_command(table_cmd)
@@ -76,15 +83,14 @@ class MySQLConnector:
     if not self.table_exists(self.DATA_TABLE):
       table_cmd = ['CREATE TABLE %s ' % self.DATA_TABLE,
                    '(',
-                   'id INT PRIMARY KEY AUTO_INCREMENT,',
-                   'timestamp DOUBLE,',
+                   'id SERIAL PRIMARY KEY,',
+                   'timestamp DOUBLE PRECISION,',
                    'field_name VARCHAR(255),',
                    'int_value INT,',
-                   'float_value DOUBLE,',
+                   'float_value DOUBLE PRECISION,',
                    'str_value TEXT,',
                    'bool_value INT,',
                    'source INT,',
-                   'INDEX (timestamp),',
                    'FOREIGN KEY (source) REFERENCES %s(id)' \
                       % self.SOURCE_TABLE,
                    ')'
@@ -92,32 +98,36 @@ class MySQLConnector:
       logging.info('Creating table with command: %s', ' '.join(table_cmd))
       self.exec_sql_command(' '.join(table_cmd))
 
+      logging.info('Creating index')
+      self.exec_sql_command('CREATE INDEX timestamp_idx ON %s (timestamp)' % (self.DATA_TABLE))
+
     # Once tables are initialized, seek to end if tail is True
     if tail:
       self.seek(offset=0, origin='end')
 
   ############################
   def exec_sql_command(self, command):
-    cursor = self.connection.cursor()
-    try:
-      cursor.execute(command)
-      self.connection.commit()
-      cursor.close()
-    except mysql.connector.errors.Error as e:
-      logging.error('Executing command: "%s", encountered error "%s"',
-                    command, str(e))
+
+    with self.connection.cursor() as cursor:
+      try:
+        cursor.execute(command)
+      except psycopg2.errors.ProgrammingError as e:
+        logging.error('Executing command: "%s", encountered error "%s"',
+                      command, str(e))
+      except Exception as e:
+        logging.error('Other error: "%s", encountered error "%s"',
+                      command, str(e))
 
   ############################
   def table_exists(self, table_name):
     """Does the specified table exist in the database?"""
-    cursor = self.connection.cursor()
-    cursor.execute('SHOW TABLES LIKE "%s"' % table_name)
-    if cursor.fetchone():
-      exists = True
-    else:
-      exists = False
-    cursor.close()
-    return exists
+    with self.connection.cursor() as cursor:
+      cursor.execute('SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = \'public\' AND table_name = \'%s\')' % (table_name))
+      if cursor.fetchone()[0]:
+        exists = True
+      else:
+        exists = False
+      return exists
 
   ############################
   def write_record(self, record):
@@ -136,7 +146,7 @@ class MySQLConnector:
     # the id of the record we've just saved so that we can attach it
     # to the data values we're about to save.
     if self.save_source:
-      write_cmd = 'insert into `%s` (record) values (\'%s\')' % \
+      write_cmd = 'insert into %s (record) values (\'%s\')' % \
                   (self.SOURCE_TABLE, record.as_json())
       logging.debug('Inserting source into table with command: %s', write_cmd)
       self.exec_sql_command(write_cmd)
@@ -144,11 +154,12 @@ class MySQLConnector:
       # Get the id of the saved source record. Note: documentation
       # *claims* that this is kept on a per-client basis, so it's safe
       # even if another client does an intervening write.
-      query = 'select last_insert_id()'
-      cursor = self.connection.cursor()
-      cursor.execute(query)
-      source_field = ', source'
-      source_id = next(cursor)[0]
+      # query = 'select last_insert_id()'
+      query = 'SELECT currval(pg_get_serial_sequence(\'%s\',\'id\'))' % (self.SOURCE_TABLE)
+      with self.connection.cursor() as cursor:
+        cursor.execute(query)
+        source_field = ', source'
+        source_id = next(cursor)[0]
     else:
       source_field = ''
       source_id = None
@@ -168,18 +179,18 @@ class MySQLConnector:
     timestamp = record.timestamp
     values = []
     for field_name, value in record.fields.items():
-      value_array = ['%f' % timestamp, '"%s"' % field_name,
+      value_array = ['%f' % timestamp, '\'%s\'' % field_name,
                      'NULL', 'NULL', 'NULL', 'NULL']
       if type(value) is int:
         value_array[2] = '%d' % value
       elif type(value) is float:
         value_array[3] = '%f' % value
       elif type(value) is str:
-        value_array[4] = '"%s"' % value
+        value_array[4] = '\'%s\'' % value
       elif type(value) is bool:
         value_array[5] = '%d' % ('1' if value else '0')
       elif value is None:
-        value_array[4] = '""'
+        value_array[4] = '\'\''
       else:
         logging.error('Unknown record value type (%s) for %s: %s',
                       type(value), key, value)
@@ -208,7 +219,7 @@ class MySQLConnector:
     if not values:
       logging.warning('No values found in record %s', str(record))
                       
-    write_cmd = 'insert into `%s` (%s) values %s' % \
+    write_cmd = 'insert into %s (%s) values %s' % \
                   (self.DATA_TABLE, ','.join(fields), ','.join(values))
     logging.debug('Inserting record into table with command: %s', write_cmd)
     self.exec_sql_command(write_cmd)
@@ -224,7 +235,7 @@ class MySQLConnector:
 
     # If they haven't given us any fields, retrieve everything
     if field_list:
-      field_conditions = ['field_name="%s"' % f for f in field_list.split(',')]
+      field_conditions = ['field_name=\'%s\'' % f for f in field_list.split(',')]
       condition += ' and (%s)' % ' or '.join(field_conditions)
 
     condition += ' order by id'
@@ -232,7 +243,7 @@ class MySQLConnector:
     if num_records is not None:
       condition += ' limit %d' % num_records
 
-    query = 'select * from `%s` where %s' % (self.DATA_TABLE, condition)
+    query = 'select * from %s where %s' % (self.DATA_TABLE, condition)
     logging.debug('read query: %s', query)
     return self._process_query(query)
 
@@ -257,7 +268,7 @@ class MySQLConnector:
 
     condition += ' order by timestamp'
 
-    query = 'select * from `%s` where %s' % (self.DATA_TABLE, condition)
+    query = 'select * from %s where %s' % (self.DATA_TABLE, condition)
     logging.debug('read query: %s', query)
     return self._process_query(query)
 
@@ -282,42 +293,41 @@ class MySQLConnector:
 
   ############################
   def _num_rows(self, table_name):
-    query = 'select count(1) from `%s`' % table_name
-    cursor = self.connection.cursor()
-    cursor.execute(query)
-    num_rows = next(cursor)[0]
-    return num_rows
+    query = 'select count(1) from %s' % table_name
+    with self.connection.cursor() as cursor:
+      cursor.execute(query)
+      num_rows = next(cursor)[0]
+      return num_rows
 
   ############################
   def _process_query(self, query):
-    cursor = self.connection.cursor()
-    cursor.execute(query)
+    with self.connection.cursor() as cursor:
+      cursor.execute(query)
 
-    results = {}
-    for values in cursor:
-      (id, timestamp, field_name,
-       int_value, float_value, str_value, bool_value,
-       source) = values
+      results = {}
+      for values in cursor:
+        (id, timestamp, field_name,
+         int_value, float_value, str_value, bool_value,
+         source) = values
 
-      if not field_name in results:
-        results[field_name] = []
+        if not field_name in results:
+          results[field_name] = []
 
-      if int_value is not None:
-        val = int_value
-      elif float_value is not None:
-        val = float_value
-      elif str_value is not None:
-        val = str_value
-      elif float_value is not None:
-        val = int_value
-      elif bool_value is not None:
-        val = bool(bool_value)
+        if int_value is not None:
+          val = int_value
+        elif float_value is not None:
+          val = float_value
+        elif str_value is not None:
+          val = str_value
+        elif float_value is not None:
+          val = int_value
+        elif bool_value is not None:
+          val = bool(bool_value)
 
-      results[field_name].append((timestamp, val))
-      self.next_id = id + 1
-      self.last_timestamp = timestamp
-    cursor.close()
-    return results
+        results[field_name].append((timestamp, val))
+        self.next_id = id + 1
+        self.last_timestamp = timestamp
+      return results
 
   ############################
   def delete_table(self,  table_name):
