@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_influxdb_cruise.py local/usap/nbp/nbp_port_defs_2019-12-13.yaml
-#   time:     Tue Aug  4 22:45:21 2020 UTC
+#   time:     Wed Aug  5 00:29:42 2020 UTC
 #   user:     rvdas
 #
 ########################################
@@ -1759,7 +1759,6 @@ configs:
             metadata_interval: 10
             definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
-        - class: TextFileWriter
         - class: CachedDataWriter
           kwargs:
             data_server: localhost:8766
