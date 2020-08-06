@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 import sys
-import json
+import time
+
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
+from logger.utils.das_record import DASRecord
 from logger.utils import timestamp
 from logger.utils.formats import Text
 from logger.writers.writer import Writer
@@ -69,6 +72,7 @@ class InfluxDBWriter(Writer):
     self.org_id = our_org.id
 
     # get the bucketID from the name:
+    self.bucket_name = bucket_name
     self.bucket_api = self.client.buckets_api()
     bucket = self.bucket_api.find_bucket_by_name(bucket_name)
 
@@ -87,27 +91,44 @@ class InfluxDBWriter(Writer):
 
   ############################
   def write(self, record):
+    """Note: Assume record is a dict or DASRecord or list of
+    dict/DASRecord. In each record look for 'fields', 'data_id' and
+    'timestamp' (UTC epoch seconds). If data_id is missing, use the
+    bucket_name we were initialized with.
     """
-    Note: Assume record is a dict or list of dict. Each dict contains a list
-    of "fields" and float "timestamp" (UTC epoch seconds)
-    """
-    if record is None:
+
+    def record_to_influx(record):
+      """Put a single record into the format that InfluxDB wants."""
+      if type(record) is DASRecord:
+        data_id = record.data_id or self.bucket_name
+        fields = record.fields
+        timestamp = record.timestamp
+      else:
+        data_id = record.get('data_id', None) or self.bucket_name
+        fields = record.get('fields', {})
+        timestamp = record.get('timestamp', None) or time.time()
+      influxDB_record = {
+        'measurement': data_id,
+        'tags': {'sensor': data_id }, 
+        'fields': fields,
+        'time': int(timestamp*1000000000)
+      }
+      return influxDB_record
+
+    if not record:
       return
 
     logging.info('InfluxDBWriter writing record: %s', record)
 
-    if type(record) is not dict and type(record) is not list:
+    if not type(record) in [dict, list, DASRecord]:
       logging.warning('InfluxDBWriter could not ingest record '
                       'type %s: %s', type(record), str(record))
-
     try:
-      if type(record) is list:
-        influxDB_record = map(lambda single_record: {"measurement": single_record['data_id'], "tags": {"sensor": single_record['data_id'] }, "fields": single_record['fields'], "time": int(single_record['timestamp']*1000000000) }, record)
+      if type(record) in [list, DASRecord]:
+        influxDB_record = [record_to_influx(r) for r in record]
       else:
-        influxDB_record = {"measurement": record['data_id'], "tags": {"sensor": record['data_id'] }, "fields": record['fields'], "time": int(record['timestamp']*1000000000) }
-
+        influxDB_record = record_to_influx(record)    
       self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
-      return
 
     except:
       logging.warning('InfluxDBWriter could not ingest record '

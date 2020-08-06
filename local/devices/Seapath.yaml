@@ -16,7 +16,7 @@ Seapath200:
     - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
     - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
     - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+    - "$PSXN,23,{Roll:of},{Pitch:of},{HeadingTrue:of},{Heave:of}*{CheckSum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
