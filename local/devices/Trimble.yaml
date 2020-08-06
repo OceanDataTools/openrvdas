@@ -29,7 +29,7 @@ TrimbleGPS:
     - "$GPZDA,{GPSTime:d},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:od}*{CheckSum:x}"
     - "$GPZDA,{GPSTime:d},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:od},{Unknown:ow}*{CheckSum:x}"
     # "$GPDTM,W84,,0000.0000,N,00000.0000,E,0.0,W84*5F"
-    - "$GPDTM,{LocalDatum:w},{LocalDatumSubCode:ow},{LatitudeOffsetMinutes:f},{LatitudeOffestNorS:w},{LongitudeOffsetMinutes:f},{LongitudeOffestEorW:w},{AltitudeOffset:og},{Datum:w}*{Checksum:x}"
+    - "$GPDTM,{LocalDatum:w},{LocalDatumSubCode:ow},{LatitudeOffsetMinutes:f},{LatitudeOffsetNorS:w},{LongitudeOffsetMinutes:f},{LongitudeOffsetEorW:w},{AltitudeOffset:og},{Datum:w}*{Checksum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -146,4 +146,19 @@ TrimbleGPS:
       description: "A = Data valid, V = Data not valid"
     Mode:
       description: "A = GPS used, D = DGPS used, E = Dead reckoning, M = Manual mode, S = Simulator mode, N = Invalid"
-
+    LocalDatum:
+      description: unknown
+    LocalDatumSubCode:
+      description: unknown
+    LatitudeOffsetMinutes:
+      description: unknown
+    LatitudeOffsetNorS:
+      description: unknown
+    LongitudeOffsetMinutes:
+      description: unknown
+    LongitudeOffsetEorW:
+      description: unknown
+    AltitudeOffset:
+      description: unknown
+    Datum:
+      description: unknown

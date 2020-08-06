@@ -437,7 +437,15 @@ devices:
       MagneticVarEorW: "PcodMagVarEorW"
       DataValid: "PcodDataValid"
       Mode: "PcodMode"
-  
+      LocalDatum: "PcodLocalDatum"
+      LocalDatumSubCode: "PcodLocalDatumSubCode"
+      LatitudeOffsetMinutes: "PcodLatitudeOffsetMinutes"
+      LatitudeOffsetNorS: "PcodLatitudeOffsetNorS"
+      LongitudeOffsetMinutes: "PcodLongitudeOffsetMinutes"
+      LongitudeOffsetEorW: "PcodLongitudeOffsetEorW"
+      AltitudeOffset: "PcodAltitudeOffset"
+      Datum: "PcodDatum"
+
   ######################################
   bwnc:
     category: "device"
