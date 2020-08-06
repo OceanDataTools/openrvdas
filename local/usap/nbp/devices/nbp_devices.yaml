@@ -440,9 +440,9 @@ devices:
       LocalDatum: "PcodLocalDatum"
       LocalDatumSubCode: "PcodLocalDatumSubCode"
       LatitudeOffsetMinutes: "PcodLatitudeOffsetMinutes"
-      LatitudeOffestNorS: "PcodLatitudeOffestNorS"
+      LatitudeOffsetNorS: "PcodLatitudeOffsetNorS"
       LongitudeOffsetMinutes: "PcodLongitudeOffsetMinutes"
-      LongitudeOffestEorW: "PcodLongitudeOffestEorW"
+      LongitudeOffsetEorW: "PcodLongitudeOffsetEorW"
       AltitudeOffset: "PcodAltitudeOffset"
       Datum: "PcodDatum"
 
