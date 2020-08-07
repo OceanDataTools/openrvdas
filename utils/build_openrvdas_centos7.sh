@@ -249,7 +249,9 @@ function install_influxdb {
 
     # Install the python client
     echo Installing Python client
-    venv/bin/pip install influxdb_client
+    pip install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      influxdb_client
 
     # Now create credentials for the server
     if [ `uname -s` = 'Darwin' ]; then
@@ -378,9 +380,11 @@ function setup_python_packages {
     python3 -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
 
-    # Inside the venv, python *is* the right version, right?
-    python3 -m pip install --upgrade pip
-    pip3 install \
+    pip install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      --upgrade pip
+    pip install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       Django==2.1.5 \
       pyserial \
       uwsgi \
@@ -392,7 +396,8 @@ function setup_python_packages {
     # If we're installing database, then also install relevant
     # Python clients.
     if [ -n "$INSTALL_MYSQL" ]; then
-      pip3 install \
+      pip install \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         mysqlclient \
         mysql-connector
     fi
