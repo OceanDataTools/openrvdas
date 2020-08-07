@@ -1,9 +1,0 @@
-{
-    # Rate of turn
-    "$HEROT": {
-        "fields": [
-            ["RateOfTurn", "float"],
-            ["AConst", "str"]
-        ]                   
-    }
-}
