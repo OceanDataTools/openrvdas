@@ -292,7 +292,6 @@ The status of these servers (as well as the NGINX and UWSGI servers needed to su
   openrvdas:cached_data_server     STOPPED   Not started
   openrvdas:logger_manager         STOPPED   Not started
   simulate_nbp                     STOPPED   Not started
-  simulate_skq                     STOPPED   Not started
   web:nginx                        STOPPED   Not started
   web:uwsgi                        STOPPED   Not started
 
@@ -309,7 +308,6 @@ The status of these servers (as well as the NGINX and UWSGI servers needed to su
   openrvdas:cached_data_server     RUNNING   pid 14124, uptime 0:00:34
   openrvdas:logger_manager         RUNNING   pid 14123, uptime 0:00:34
   simulate_nbp                     STOPPED   Not started
-  simulate_skq                     STOPPED   Not started
   web:nginx                        RUNNING   pid 13684, uptime 0:01:22
   web:uwsgi                        RUNNING   pid 13685, uptime 0:01:22
 
@@ -323,7 +321,6 @@ You will have noticed that many of the examples in this documentation make use o
   openrvdas:cached_data_server     STOPPED   Feb 14 03:18 PM
   openrvdas:logger_manager         STOPPED   Feb 14 03:18 PM
   simulate_nbp                     STOPPED   Feb 14 03:18 PM
-  simulate_skq                     STOPPED   Not started
   web:nginx                        STOPPED   Feb 14 03:18 PM
   web:uwsgi                        STOPPED   Feb 14 03:18 PM
   supervisor> start simulate_nbp

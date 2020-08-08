@@ -678,16 +678,6 @@ stderr_logfile=/var/log/openrvdas/simulate_nbp.err.log
 stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
 ;user=$RVDAS_USER
 
-[program:simulate_skq]
-command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
-directory=${INSTALL_ROOT}/openrvdas
-autostart=false
-autorestart=true
-startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_skq.err.log
-stdout_logfile=/var/log/openrvdas/simulate_skq.out.log
-;user=$RVDAS_USER
-
 ; Uncomment the following command block if you've installed InfluxDB
 ; and want it to run as a service.
 ${IDB_COMMENT}[program:influxdb]
@@ -707,7 +697,7 @@ programs=nginx,uwsgi
 programs=logger_manager,cached_data_server
 
 [group:simulate]
-programs=simulate_nbp,simulate_skq
+programs=simulate_nbp
 EOF
 
     echo Please enter sudo password if prompted...
