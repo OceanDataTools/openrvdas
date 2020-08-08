@@ -93,7 +93,8 @@ TRUE_WIND_TEMPLATE = """
             data_server: %DATA_SERVER%
         - class: InfluxDBWriter
           kwargs:
-            bucket_name: true_wind
+            bucket_name: openrvdas
+            measurement_name: true_wind
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -117,7 +118,8 @@ TRUE_WIND_TEMPLATE = """
             data_server: %DATA_SERVER%
         - class: InfluxDBWriter
           kwargs:
-            bucket_name: true_wind
+            bucket_name: openrvdas
+            measurement_name: true_wind
 
 """
 SNAPSHOT_TEMPLATE = """
@@ -218,7 +220,8 @@ SNAPSHOT_TEMPLATE = """
         data_server: %DATA_SERVER%
     - class: InfluxDBWriter
       kwargs:
-        bucket_name: snapshot
+        bucket_name: openrvdas
+        measurement_name: snapshot
 
 """
 
@@ -258,7 +261,8 @@ NET_WRITER_TEMPLATE="""
             data_server: %DATA_SERVER%
         - class: InfluxDBWriter
           kwargs:
-            bucket_name: %LOGGER%
+            bucket_name: openrvdas
+            measurement_name: %LOGGER%
 """
 
 FILE_NET_WRITER_TEMPLATE="""
@@ -302,7 +306,8 @@ FILE_NET_WRITER_TEMPLATE="""
             data_server: %DATA_SERVER%
         - class: InfluxDBWriter
           kwargs:
-            bucket_name: %LOGGER%
+            bucket_name: openrvdas
+            measurement_name: %LOGGER%
 """
 
 FULL_WRITER_TEMPLATE="""
@@ -346,7 +351,8 @@ FULL_WRITER_TEMPLATE="""
             data_server: %DATA_SERVER%
         - class: InfluxDBWriter
           kwargs:
-            bucket_name: %LOGGER%
+            bucket_name: openrvdas
+            measurement_name: %LOGGER%
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
