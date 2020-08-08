@@ -2,6 +2,7 @@
 
 import json
 import logging
+import pprint
 import sys
 import time
 
@@ -32,12 +33,15 @@ import time
 ################################################################################
 class InfluxDBWriter(Writer):
   """Write to the specified file. If filename is empty, write to stdout."""
-  def __init__(self, bucket_name):
+  def __init__(self, bucket_name, measurement_name=None):
     """
     Write data records to the InfluxDB.
     ```
-    bucket_name  the name of the bucket in InfluxDB.  If the bucket does
-    not exists then this writer will try to create it.
+    bucket_name - the name of the bucket in InfluxDB.  If the bucket does
+                  not exists then this writer will try to create it.
+
+    measurement_name - optional measurement name to use. If not provided,
+                  writer will use the record's data_id
     ```
     """
     super().__init__(input_format=Text)
@@ -54,6 +58,9 @@ class InfluxDBWriter(Writer):
                          'to using InfluxDBWriter.')
 
     self.client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_AUTH_TOKEN, org=INFLUXDB_ORG)
+
+    self.bucket_name = bucket_name
+    self.measurement_name = measurement_name
 
     # get the orgID from the name:
     try:
@@ -72,7 +79,6 @@ class InfluxDBWriter(Writer):
     self.org_id = our_org.id
 
     # get the bucketID from the name:
-    self.bucket_name = bucket_name
     self.bucket_api = self.client.buckets_api()
     bucket = self.bucket_api.find_bucket_by_name(bucket_name)
 
@@ -100,16 +106,16 @@ class InfluxDBWriter(Writer):
     def record_to_influx(record):
       """Put a single record into the format that InfluxDB wants."""
       if type(record) is DASRecord:
-        data_id = record.data_id or self.bucket_name
+        data_id = record.data_id
         fields = record.fields
         timestamp = record.timestamp
       else:
-        data_id = record.get('data_id', None) or self.bucket_name
+        data_id = record.get('data_id', None)
         fields = record.get('fields', {})
         timestamp = record.get('timestamp', None) or time.time()
       influxDB_record = {
-        'measurement': data_id,
-        'tags': {'sensor': data_id }, 
+        'measurement': self.measurement_name or data_id,
+        'tags': {'sensor': data_id or self.measurement_name or self.bucket_name}, 
         'fields': fields,
         'time': int(timestamp*1000000000)
       }
@@ -121,15 +127,19 @@ class InfluxDBWriter(Writer):
     logging.info('InfluxDBWriter writing record: %s', record)
 
     if not type(record) in [dict, list, DASRecord]:
-      logging.warning('InfluxDBWriter could not ingest record '
-                      'type %s: %s', type(record), str(record))
+      logging.warning('InfluxDBWriter received record that was not dict, '
+                      'list or DASRecord format. Type %s: %s',
+                      type(record), str(record))
     try:
       if type(record) in [list, DASRecord]:
         influxDB_record = [record_to_influx(r) for r in record]
       else:
-        influxDB_record = record_to_influx(record)    
+        influxDB_record = record_to_influx(record)
+      #logging.info('influxdb\n bucket: %s\nrecord: %s',
+      #             self.bucket_name, pprint.pformat(influxDB_record))
       self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
 
-    except:
+    except Exception as e:
+      logging.warning('InfluxDBWriter exception: %s', str(e))
       logging.warning('InfluxDBWriter could not ingest record '
                       'type %s: %s', type(record), str(record))
