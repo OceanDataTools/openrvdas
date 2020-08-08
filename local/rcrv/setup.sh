@@ -46,11 +46,9 @@ function set_default_variables {
 function save_default_variables {
     cat > $PREFERENCES_FILE <<EOF
 # Defaults written by/to be read by setup.sh
-
 DEFAULT_HOST_PATH=$HOST_PATH
 DEFAULT_CRUISE_FILE=$CRUISE_FILE
 DEFAULT_CONFIG_TEMPLATE=$CONFIG_TEMPLATE
-
 EOF
 }
 
