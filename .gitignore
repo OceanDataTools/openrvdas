@@ -46,3 +46,6 @@ local/rcrv/.coriolix_preferences
 
 # Symlink for legacy widget paths
 widgets
+
+# For optional doc server
+mkdocs.yml
