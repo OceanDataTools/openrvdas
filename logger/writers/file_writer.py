@@ -39,9 +39,9 @@ class FileWriter(Writer):
                  filename. By overridding time_format, other split
                  intervals, such as hourly or monthly, may be imposed.
 
-    time_format  By default ISO 8601-compliant '%Y-%m-%d'. If,
-                 e.g. '%Y-%m' is used, files will be split by month;
-                 if %y-%m-%d:%H' is specified, splits will be
+    time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
+                 e.g. '-%Y-%m' is used, files will be split by month;
+                 if -%y-%m-%d:%H' is specified, splits will be
                  hourly. If '%y+%j' is specified, splits will be
                  daily, but named via Julian date.
 
