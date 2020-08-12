@@ -3,6 +3,7 @@
 
 ## Table of Contents
 
+* [CAVEAT](#caveat)
 * [Overview](#overview)
 * [Viewing Display Pages](#viewing-display-pages)
 * [Creating New Display Pages](#creating-new-display-pages)
@@ -15,6 +16,13 @@
 * [Contributing](#contributing)
 * [License](#license)
 * [Additional Licenses](#additional-licenses)
+
+## CAVEAT
+
+Much of this document is deprecated. The sections following this one
+all refer to OpenRVDAS-native displays, enabled on the browser side by
+either D3 or HighCharts-based widgets. For maintainability and future
+expansion, we are __strongly__ recommending that users focus on InfluxDB/Grafana-based displays, as described in the document [Grafana/InfluxDB-based Displays with OpenRVDAS](grafana_displays.md).
 
 ## Overview
 
