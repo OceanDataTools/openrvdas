@@ -58,8 +58,6 @@ class TestFileWriter(unittest.TestCase):
       writer.timestamp += 86400
       writer.write(SAMPLE_DATA[2])
 
-      logging.warning('ls %s', tmpdirname)
-
       with open(tmpdirname + '/g-2020-08-11') as f:
         self.assertEqual(SAMPLE_DATA[0], f.readline().strip())
       with open(tmpdirname + '/g-2020-08-12') as f:
