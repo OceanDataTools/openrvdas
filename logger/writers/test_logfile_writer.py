@@ -67,23 +67,6 @@ class TestLogfileWriter(unittest.TestCase):
         for i in r:
           self.assertEqual(lines[i], outfile.readline().rstrip())
 
-  ############################
-  def test_write_system_time(self):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-      lines = SAMPLE_DATA_NO_TIMESTAMP.split('\n')
-
-      filebase = tmpdirname + '/logfile'
-      writer = LogfileWriter(filebase, use_system_time=True)
-
-      r = range(0,3)
-      for i in r:
-        writer.write(lines[i])
-
-      date_str = timestamp.date_str()
-      with open(filebase + '-' + date_str, 'r') as outfile:
-        for i in r:
-          self.assertEqual(lines[i], outfile.readline().rstrip())
-
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
