@@ -86,6 +86,7 @@ from logger.writers.composed_writer import ComposedWriter
 from logger.writers.network_writer import NetworkWriter
 from logger.writers.udp_writer import UDPWriter
 from logger.writers.redis_writer import RedisWriter
+from logger.writers.file_writer import FileWriter
 from logger.writers.text_file_writer import TextFileWriter
 from logger.writers.logfile_writer import LogfileWriter
 from logger.writers.influxdb_writer import InfluxDBWriter

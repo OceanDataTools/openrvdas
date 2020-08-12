@@ -16,7 +16,6 @@ class LogfileWriter(Writer):
   def __init__(self, filebase=None, flush=True,
                time_format=timestamp.TIME_FORMAT,
                date_format=timestamp.DATE_FORMAT,
-               use_system_time=False,
                split_char=' ', suffix='',
                rollover_hourly=False):
     """Write timestamped text records to file. Base filename will have
@@ -33,10 +32,6 @@ class LogfileWriter(Writer):
                     defaults to whatever's defined in
                     utils.timestamps.DATE_FORMAT.
 
-    use_system_time If true, don't look for a timestamp at the start
-                    of the record; use the current system time (UTC)
-                    to decide when to roll over to the next file.
-
     split_char      Delimiter between timestamp and rest of message
 
     suffix          string to apply to the end of the log filename
@@ -51,7 +46,6 @@ class LogfileWriter(Writer):
     self.flush = flush
     self.time_format = time_format
     self.date_format = date_format
-    self.use_system_time = use_system_time
     self.split_char = split_char
     self.suffix = suffix
     self.rollover_hourly = rollover_hourly
@@ -74,20 +68,18 @@ class LogfileWriter(Writer):
         self.write(single_record)
       return
 
-    # Get the timestamp we'll be using
-    if self.use_system_time:
-      ts = time.time()
-    elif not type(record) is str:
-      logging.error('LogfileWriter.write() - record is not timestamped and '
-                      'use_system_time not specified. String: %s', record)
+    if not type(record) is str:
+      logging.error('LogfileWriter.write() - record not timestamped: %s ',
+                    record)
       return
-    else:
-      try: # Try to extract timestamp from record
-        time_str = record.split(self.split_char)[0]
-        ts = timestamp.timestamp(time_str, time_format=self.time_format)
-      except ValueError:
-        logging.error('LogfileWriter.write() - bad timestamp: %s', record)
-        return
+
+    # Get the timestamp we'll be using
+    try: # Try to extract timestamp from record
+      time_str = record.split(self.split_char)[0]
+      ts = timestamp.timestamp(time_str, time_format=self.time_format)
+    except ValueError:
+      logging.error('LogfileWriter.write() - bad timestamp: %s', record)
+      return
 
     # Now parse ts into hour and date strings
     hr_str = self.rollover_hourly and \
