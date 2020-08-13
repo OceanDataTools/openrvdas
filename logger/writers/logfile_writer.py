@@ -8,7 +8,7 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 from logger.utils import timestamp
 from logger.utils.formats import Text
 from logger.writers.writer import Writer
-from logger.writers.text_file_writer import TextFileWriter
+from logger.writers.file_writer import FileWriter
 
 ################################################################################
 class LogfileWriter(Writer):
@@ -93,7 +93,7 @@ class LogfileWriter(Writer):
       self.current_date = date_str
       self.current_hour = self.rollover_hourly and hr_str or ""
       logging.info('LogfileWriter opening new file: %s', self.current_filename)
-      self.writer = TextFileWriter(self.current_filename, self.flush)
+      self.writer = FileWriter(filename=self.current_filename, flush=self.flush)
 
     logging.debug('LogfileWriter writing record: %s', record)
     self.writer.write(record)
