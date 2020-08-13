@@ -385,7 +385,7 @@ function setup_python_packages {
       --upgrade pip
     pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-      Django==2.1.5 \
+      Django==3 \
       pyserial \
       uwsgi \
       websockets \

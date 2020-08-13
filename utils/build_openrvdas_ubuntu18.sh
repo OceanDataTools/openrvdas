@@ -393,7 +393,7 @@ function setup_python_packages {
     # Inside the venv, python *is* the right version, right?
     python3 -m pip install --upgrade pip
     pip3 install \
-      Django==2.1.5 \
+      Django==3 \
       pyserial \
       uwsgi \
       websockets \

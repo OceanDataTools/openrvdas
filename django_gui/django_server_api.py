@@ -83,7 +83,7 @@ class DjangoServerAPI(ServerAPI):
           try:
             last_update = LastUpdate.objects.latest('timestamp')
           except django.db.utils.OperationalError:
-            logging.warning('Failed MySQL read - trying again')
+            logging.warning('Failed Django database read - trying again')
             connection.close()
             time.sleep(0.05)
             continue
@@ -98,13 +98,18 @@ class DjangoServerAPI(ServerAPI):
     with self.config_rlock:
       while True:
         try:
+          # Saving updates the timestamp value
+          LastUpdate.objects.latest('timestamp').save()
+          break
+        # If we have no LastUpdate - create one
+        except LastUpdate.DoesNotExist:
           LastUpdate().save()
-          return
-        except django.db.utils.OperationalError as e:
-          logging.warning('_set_update_time() '
-                          'Got DjangoOperationalError. Trying again: %s', e)
+          break
+        # If database balked, back off, try again
+        except django.db.utils.OperationalError:
+          logging.warning('Failed Django database read - trying again')
           connection.close()
-          time.sleep(0.01)
+          time.sleep(0.05)
 
   #############################
   def _get_cruise_object(self):
