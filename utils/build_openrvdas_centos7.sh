@@ -121,10 +121,44 @@ function install_packages {
     yum install -y epel-release
     yum -y update
 
-    yum install -y socat git nginx sqlite-devel readline-devel \
-        wget gcc zlib-devel openssl-devel \
-        python3 python36-devel python36-pip supervisor
-        echo Installing required packages
+    echo Installing required packages
+    yum install -y wget socat git nginx gcc supervisor \
+        zlib-devel openssl-devel readline-devel libffi-devel
+
+        #sqlite-devel \
+        #python3 python3-devel python3-pip 
+
+    # Django 3+ requires a more recent version of sqlite3 than is
+    # included in CentOS 7. So instead of yum installing python3 and
+    # sqlite3, we build them from scratch. Painfully slow, but hey -
+    # isn't that par for CentOS builds?
+    export LD_LIBRARY_PATH=/usr/local/lib
+    export LD_RUN_PATH=/usr/local/lib
+
+    # Fetch and build SQLite3
+    cd /tmp
+    SQLITE_VERSION=3320300
+    SQLITE_BASE=sqlite-autoconf-${SQLITE_VERSION}
+    SQLITE_TGZ=${SQLITE_BASE}.tar.gz
+    [ -e $SQLITE_TGZ ] || wget https://www.sqlite.org/2020/${SQLITE_TGZ}
+    tar xzf ${SQLITE_TGZ}
+    cd ${SQLITE_BASE}
+    ./configure
+    make && make install
+
+    # Build Python, too
+    cd /tmp
+    PYTHON_VERSION=3.8.3
+    PYTHON_BASE=Python-${PYTHON_VERSION}
+    PYTHON_TGZ=${PYTHON_BASE}.tgz
+    [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
+    tar xvf ${PYTHON_TGZ}
+    cd ${PYTHON_BASE}
+    ./configure # --enable-optimizations
+    make altinstall
+
+    ln -s /usr/local/bin/python3.8 /usr/local/bin/python3
+    ln -s /usr/local/bin/pip3.8 /usr/local/bin/pip3
 }
 
 ###########################################################################
