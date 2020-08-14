@@ -198,7 +198,7 @@ Grafana and Telegraf may be started as system services using systemctl
 (or `brew services` on MacOS):
 
 ```
-systemctl start grafana
+systemctl start grafana-server
 systemctl start telegraf
 
 brew services start grafana  # MacOS
@@ -208,7 +208,7 @@ brew services start telegraf
 To have them start at machine boot, run
 
 ```
-systemctl enable grafana
+systemctl enable grafana-server
 systemctl enable telegraf
 
 brew services enable grafana  # MacOS
