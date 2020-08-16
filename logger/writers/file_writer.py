@@ -135,9 +135,8 @@ class FileWriter(Writer):
         self._set_file(self.filename)
 
     # Write the record and flush if requested
-    if self.delimiter is None:
-      self.file.write(record)
-    else:
-      self.file.write(record + self.delimiter)
+    self.file.write(record)
+    if self.delimiter is not None:
+      self.file.write(self.delimiter)
     if self.flush:
       self.file.flush()
