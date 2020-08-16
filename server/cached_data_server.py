@@ -171,12 +171,12 @@ class RecordCache:
       fields = record.get('fields', None)
       metadata = record.get('metadata', None)
       if fields is None:
-        logging.error('Dict record passed to cache_record() has no '
+        logging.debug('Dict record passed to cache_record() has no '
                       '"fields" key, which either means it\'s not a dict '
                       'you should be passing, or it is in the old "field_dict" '
                       'format that assumes key:value pairs are at the top '
                       'level.')
-        logging.error('The record in question: %s', str(record))
+        logging.debug('The record in question: %s', str(record))
         return
     else:
       logging.warning('Received non-DASRecord, non-dict input (type: %s): %s',
