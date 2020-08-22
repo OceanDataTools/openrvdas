@@ -402,6 +402,21 @@ class DjangoServerAPI(ServerAPI):
 
             new_config = self._get_logger_config_object(logger_id=logger_id,
                                                         mode=mode)
+
+            # If we get no new_config, this means that the logger has
+            # no config defined in this mode. That should not be. Try
+            # to recover by putting it in 'off'
+            if not new_config:
+              logging.warning('Logger %s has no configuration defined for '
+                              'mode %s?!? Setting to "off"', logger_id, mode)
+              new_config = self._get_logger_config_object(logger_id=logger_id,
+                                                          mode='off')
+            # If we get no new_config for mode 'off', just skip this logger.
+            if not new_config:
+              logging.warning('Logger %s has no configuration defined for '
+                              'mode "off:, either. Skipping it.', logger_id)
+              continue
+            
             # Save new config and note that its state has been updated
             logger.config = new_config
             logger.save()
