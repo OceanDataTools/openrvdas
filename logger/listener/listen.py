@@ -226,7 +226,7 @@ class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
     """Create a Listener from a JSON config string."""
     config = read_config.parse(config_str)
     logging.info('Received config string: %s', pprint.pformat(config))
-    super().__init__(config=config, log_level=log_level)
+    super().__init__(config=config)
 
 ################################################################################
 class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
@@ -256,7 +256,7 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
                          % (config_name, config_file))
 
     logging.info('Loaded config file: %s', pprint.pformat(config))
-    super().__init__(config=config, log_level=log_level)
+    super().__init__(config=config)
 
 ################################################################################
 if __name__ == '__main__':
@@ -558,11 +558,9 @@ if __name__ == '__main__':
 
     # Read config file or JSON string and instantiate.
     if parsed_args.config_file:
-      listener = ListenerFromLoggerConfigFile(parsed_args.config_file,
-                                              log_level=log_level)
+      listener = ListenerFromLoggerConfigFile(parsed_args.config_file)
     else:
-      listener = ListenerFromLoggerConfigString(parsed_args.config_string,
-                                                log_level=log_level)
+      listener = ListenerFromLoggerConfigString(parsed_args.config_string)
 
   # If not --config, go parse all those crazy command line arguments manually
   else:
@@ -840,8 +838,7 @@ if __name__ == '__main__':
     listener = Listener(readers=readers, transforms=transforms, writers=writers,
                         stderr_writers=stderr_writers,
                         interval=all_args.interval,
-                        check_format=all_args.check_format,
-                        log_level=log_level)
+                        check_format=all_args.check_format)
 
   ############################
   # Whichever way we created the listener, run it.
