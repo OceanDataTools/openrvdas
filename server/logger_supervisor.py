@@ -232,7 +232,7 @@ class LoggerSupervisor:
 
         logger_config = self.logger_config_map[logger]
         config_name = logger_config.get('name', 'no name')
-                                             
+
         if not runner.is_runnable():
           status = 'EXITED'
         elif runner.is_alive():

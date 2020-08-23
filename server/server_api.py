@@ -157,8 +157,8 @@ class ServerAPI:
 
   #############################
   def get_logger_config_name(self, logger_id, mode=None):
-    """Retrieve the name of the logger config associated with the 
-    specified logger in the specified mode. If mode is omitted, 
+    """Retrieve the name of the logger config associated with the
+    specified logger in the specified mode. If mode is omitted,
     retrieve config name associated with the active mode.
     > api.get_logger_config_name('knud')
         knud->net
@@ -302,7 +302,7 @@ class ServerAPI:
   #   > api.add_cruise('NBP1702', '2017-02-02', '2017-03-01')
   #   """
   #   raise NotImplementedError('add_cruise must be implemented by subclass')
-  
+
   #############################
   def delete_configuration(self):
     """Remove the specified cruise from the data store.
@@ -328,7 +328,7 @@ class ServerAPI:
 
   #############################
   def add_logger(self, logger_id, logger_config):
-    """Add a new logger to the data store. 
+    """Add a new logger to the data store.
 
     logger_config - a dict defining:
       host - optional restriction on which host logger must run
@@ -367,7 +367,7 @@ class ServerAPI:
 
   #############################
   def delete_logger_config(self, config_id):
-    """Delete specified config from data store (and by extension,   
+    """Delete specified config from data store (and by extension,
     from the mode and logger with which it is associated.
     > api.delete_logger_config('gyr2->net/file/db')
     """

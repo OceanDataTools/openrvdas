@@ -74,7 +74,7 @@ class LoggerManager:
 
     stderr_file_pattern - Pattern into which logger name will be
                interpolated to create the file path/name to which the
-               logger's stderr will be written. E.g. 
+               logger's stderr will be written. E.g.
                '/var/tmp/openrvdas/{logger}.stderr' If
                data_server_websocket is defined, will write logger
                stderr to it.
@@ -105,8 +105,8 @@ class LoggerManager:
       self.data_server_writer = CachedDataWriter(data_server_websocket)
     else:
       self.data_server_writer = None
-    
-    self.stderr_file_pattern = stderr_file_pattern    
+
+    self.stderr_file_pattern = stderr_file_pattern
     self.interval = interval
     self.logger_log_level = logger_log_level
 
@@ -181,14 +181,6 @@ class LoggerManager:
       name='send_cruise_definition_loop',
       target=self._send_cruise_definition_loop, daemon=True)
     self.send_cruise_definition_loop_thread.start()
-    
-
-    """
-    self.send_logger_status_loop_thread = threading.Thread(
-      name='send_logger_status_loop',
-      target=self._send_logger_status_loop, daemon=True)
-    self.send_logger_status_loop_thread.start()
-    """
 
   ############################
   def quit(self):
@@ -311,6 +303,27 @@ class LoggerManager:
       except KeyError:
         logging.warning('Couldn\'t parse stderr message: %s', record)
 
+  ############################
+  def _check_logger_status_loop(self):
+    """Grab logger status message from supervisor and send to cached data
+    server via websocket. Also send cruise mode as separate message.
+    """
+    while not self.quit_flag:
+      now = time.time()
+      try:
+        config_status = self.supervisor.get_status()
+        with self.config_lock:
+          # Stash status, note time and send update
+          self.config_status = config_status
+          self.status_time = now
+        self._write_record_to_data_server('status:logger_status', config_status)
+
+        # Now get and send cruise mode
+        mode_map = { 'active_mode': self.api.get_active_mode() }
+        self._write_record_to_data_server('status:cruise_mode', mode_map)
+      except ValueError as e:
+        logging.warning('Error while trying to send logger status: %s', e)
+      time.sleep(self.interval)
 
   ############################
   def _update_configs_loop(self):
@@ -402,28 +415,6 @@ class LoggerManager:
 
       # Whether or not we've sent an update, sleep
       time.sleep(self.interval * 2)
-
-  ############################
-  def _check_logger_status_loop(self):
-    """Grab logger status message from supervisor and send to cached data
-    server via websocket. Also send cruise mode as separate message.
-    """
-    while not self.quit_flag:
-      now = time.time()
-      try:
-        config_status = self.supervisor.get_status()
-        with self.config_lock:
-          # Stash status, note time and send update
-          self.config_status = config_status
-          self.status_time = now
-        self._write_record_to_data_server('status:logger_status', config_status)
-
-        # Now get and send cruise mode
-        mode_map = { 'active_mode': self.api.get_active_mode() }
-        self._write_record_to_data_server('status:cruise_mode', mode_map)
-      except ValueError as e:
-        logging.warning('Error while trying to send logger status: %s', e)
-      time.sleep(self.interval)
 
   ############################
   def _write_record_to_data_server(self, field_name, record):
@@ -582,7 +573,6 @@ if __name__ == '__main__':
 
   ############################
   # Create our logger supervisor.
-
   supervisor = LoggerSupervisor(
     configs=None,
     stderr_file_pattern=args.stderr_file_pattern,
@@ -601,6 +591,7 @@ if __name__ == '__main__':
 
   # When told to quit, shut down gracefully
   api.on_quit(callback=logger_manager.quit)
+  api.on_quit(callback=supervisor.quit)
 
   # When an active config changes in the database, update our configs here
   api.on_update(callback=logger_manager._update_configs)

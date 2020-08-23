@@ -14,8 +14,8 @@ command lines below)
 ```
    It may also be invoked with a cruise definition and a mode:
 ```
-     server/logger_runner.py \ 
-         --config test/NBP1406/NBP1406_cruise.yaml \ 
+     server/logger_runner.py \
+         --config test/NBP1406/NBP1406_cruise.yaml \
          --mode log
 ```
 2. As instantiated by a LoggerManager:
@@ -78,7 +78,7 @@ def config_from_filename(filename):
   a cruise definition, and what is after to be the name of a
   configuration inside that definition.
   """
-  
+
   config_name = None
   if filename.find(':') > 0:
     (filename, config_name) = filename.split(':', maxsplit=1)
@@ -122,10 +122,10 @@ def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
   # Make sure we can write the file in question
   if stderr_file:
     os.makedirs(os.path.dirname(stderr_file), exist_ok=True)
-    
+
   logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, filename=stderr_file,
                       level=log_level)
-  
+
   config_name = config.get('name', 'no_name')
   logging.warning('Starting logger %s config %s', logger, config_name)
 
@@ -199,7 +199,7 @@ class LoggerRunner:
                                            kwargs=run_logger_kwargs,
                                            daemon=True)
     self.process.start()
-    
+
   ############################
   def is_runnable(self):
     """Is this logger configuration runnable? (Or, e.g. does it just have
@@ -253,7 +253,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   # Set up logging first of all
-  
+
   LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
   logging.basicConfig(format=DEFAULT_LOGGING_FORMAT)
@@ -263,7 +263,7 @@ if __name__ == '__main__':
   logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
   config = config_from_filename(args.config)
-    
+
   # Finally, create our runner and run it
   runner = LoggerRunner(config=config,
                         name=args.name,
