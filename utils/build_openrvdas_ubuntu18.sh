@@ -634,7 +634,7 @@ stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor_in /var/tmp/openrvdas/supervisor -v
+command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
