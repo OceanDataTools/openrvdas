@@ -120,7 +120,7 @@ class DjangoServerAPI(ServerAPI):
         try:
           return Cruise.objects.get()
         except Cruise.DoesNotExist:
-          raise ValueError('No current cruise found"')
+          return None
         except django.db.utils.OperationalError as e:
           logging.warning('_get_cruise_object() '
                           'Got DjangoOperationalError. Trying again: %s', e)
@@ -209,6 +209,8 @@ class DjangoServerAPI(ServerAPI):
     """
     with self.config_rlock:
       cruise = self._get_cruise_object()
+      if cruise is None:
+        return None
       active_mode = cruise.active_mode.name if cruise.active_mode else None
       default_mode = cruise.default_mode.name if cruise.default_mode else None
       config = {
@@ -228,6 +230,8 @@ class DjangoServerAPI(ServerAPI):
     """Return list of modes defined for given cruise."""
     with self.config_rlock:
       cruise = self._get_cruise_object()
+      if cruise is None:
+        return None
       return cruise.modes()
 
   ############################
@@ -240,6 +244,8 @@ class DjangoServerAPI(ServerAPI):
         return self.active_mode
 
       cruise = self._get_cruise_object()
+      if cruise is None:
+        return None
       if cruise.active_mode:
         self.active_mode = cruise.active_mode.name
         self.active_mode_time = time.time()
@@ -254,6 +260,8 @@ class DjangoServerAPI(ServerAPI):
       while True:
         try:
           cruise = self._get_cruise_object()
+          if cruise is None:
+            return None
           if cruise.default_mode:
             return cruise.default_mode.name
           return None
@@ -385,6 +393,9 @@ class DjangoServerAPI(ServerAPI):
       try:
         with self.config_rlock:
           cruise = self._get_cruise_object()
+          if cruise is None:
+            logging.warning('Can not set active mode - no cruise found')
+            return
           try:
             mode_obj = Mode.objects.get(name=mode)
           except Mode.DoesNotExist:
