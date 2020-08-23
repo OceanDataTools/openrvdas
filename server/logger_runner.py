@@ -232,7 +232,11 @@ if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument('--config', dest='config', action='store', required=True,
-                      help='Initial set of configs to run.')
+                      help='Logger configuration to run. May either be the '
+                      'name of a file containing a single logger configuration '
+                      'or filename:config_name, for a file containing a cruise '
+                      'definition followed by the name of the specific '
+                      'configuration inside that definition.')
 
   parser.add_argument('--name', dest='name', action='store', default=None,
                       help='Name to give to logger process.')

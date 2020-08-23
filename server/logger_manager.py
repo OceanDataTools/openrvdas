@@ -388,6 +388,10 @@ class LoggerManager:
     while not self.quit_flag:
       try:
         self.cruise = self.api.get_configuration() # a Cruise object
+        if self.cruise is None:
+          logging.info('No cruise definition found in API')
+          time.sleep(self.interval * 2)
+          continue
         self.cruise_filename = self.cruise.get('config_filename', None)
         loaded_time = self.cruise.get('loaded_time')
         self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
