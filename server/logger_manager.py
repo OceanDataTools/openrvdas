@@ -7,6 +7,7 @@ import json
 import logging
 import multiprocessing
 import os
+import parse
 import pprint
 import signal
 import socket  # to get hostname
@@ -26,8 +27,8 @@ from server.cached_data_server import CachedDataServer
 
 # For sending stderr to CachedDataServer
 from logger.utils.read_config import read_config
+from logger.readers.text_file_reader import TextFileReader
 from logger.writers.cached_data_writer import CachedDataWriter
-from logger.writers.text_file_writer import TextFileWriter
 from logger.utils.stderr_logging import StdErrLoggingHandler
 
 from logger.utils.das_record import DASRecord
@@ -57,7 +58,7 @@ class LoggerManager:
   ############################
   def __init__(self,
                api, supervisor, data_server_websocket=None,
-               stderr_filebase='/var/tmp/openrvdas/',
+               stderr_file_pattern='/var/tmp/openrvdas/{logger}.stderr',
                interval=0.25, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
@@ -65,15 +66,18 @@ class LoggerManager:
     api - ServerAPI (or subclass) instance by which LoggerManager will get
           its data store updates
 
-    supervisor - a SupervisorConnector object to use to manage
-          logger processes.
+    supervisor - a LoggerSupervisor object to use to manage logger
+          processes.
 
     data_server_websocket - websocket address to which we are going to send
           our status updates.
 
-    stderr_filebase - Path/filebase to which stderr messages for the
-               logger manager and each logger should be written. Enables
-               relaying logger stderr to cached data server.
+    stderr_file_pattern - Pattern into which logger name will be
+               interpolated to create the file path/name to which the
+               logger's stderr will be written. E.g. 
+               '/var/tmp/openrvdas/{logger}.stderr' If
+               data_server_websocket is defined, will write logger
+               stderr to it.
 
     interval - number of seconds to sleep between checking/updating loggers
 
@@ -94,12 +98,20 @@ class LoggerManager:
     if not issubclass(type(api), ServerAPI):
       raise ValueError('Passed api "%s" must be subclass of ServerAPI' % api)
     self.api = api
+    self.supervisor = supervisor
+
+    # Data server to which we're going to send status updates
+    if data_server_websocket:
+      self.data_server_writer = CachedDataWriter(data_server_websocket)
+    else:
+      self.data_server_writer = None
+    
+    self.stderr_file_pattern = stderr_file_pattern    
     self.interval = interval
     self.logger_log_level = logger_log_level
-    self.quit_flag = False
 
-    # The XMLRPC connector to supervisord
-    self.supervisor = supervisor
+    # How our various loops and threads will know it's time to quit
+    self.quit_flag = False
 
     # Where we store the latest cruise definition and status reports.
     self.cruise = None
@@ -108,9 +120,17 @@ class LoggerManager:
 
     self.loggers = {}
     self.config_to_logger = {}
-    
+
     self.logger_status = None
     self.status_time = 0
+
+    # We loop to check the logger stderr and pass it off to the cached
+    # data server. Do this in a separate thread.
+    self.check_logger_stderr_thread = None
+
+    # We loop to check the logger status and pass it off to the cached
+    # data server. Do this in a separate thread.
+    self.check_logger_status_thread = None
 
     # We'll loop to check the API for updates to our desired
     # configs. Do this in a separate thread. Also keep track of
@@ -121,12 +141,6 @@ class LoggerManager:
 
     self.active_mode = None  # which mode is active now?
     self.active_configs = None  # which configs are active now?
-
-    # Data server to which we're going to send status updates
-    if data_server_websocket:
-      self.data_server_writer = CachedDataWriter(data_server_websocket)
-    else:
-      self.data_server_writer = None
 
   ############################
   def start(self):
@@ -141,19 +155,33 @@ class LoggerManager:
     """
     logging.info('Starting LoggerManager')
 
-    """
+    # Start thread to check stderr of all loggers and send to cached
+    # data server, if we've got the address of one.
+    self.check_logger_stderr_thread = threading.Thread(
+      name='check_logger_stderr_loop',
+      target=self._check_logger_stderr_loop, daemon=True)
+    self.check_logger_stderr_thread.start()
+
+    # Check logger status in a separate thread. If we've got the
+    # address of a data server websocket, send our updates to it.
+    self.check_logger_status_loop_thread = threading.Thread(
+      name='check_logger_status_loop',
+      target=self._check_logger_status_loop, daemon=True)
+    self.check_logger_status_loop_thread.start()
+
     # Update configs in a separate thread.
     self.update_configs_thread = threading.Thread(
       name='update_configs_loop',
       target=self._update_configs_loop, daemon=True)
     self.update_configs_thread.start()
-    """
-    # Start a separate threads to read logger status and stderr. If we've
-    # got the address of a data server websocket, send our updates to it.
+
+    # Check logger status in a separate thread. If we've got the
+    # address of a data server websocket, send our updates to it.
     self.send_cruise_definition_loop_thread = threading.Thread(
       name='send_cruise_definition_loop',
       target=self._send_cruise_definition_loop, daemon=True)
     self.send_cruise_definition_loop_thread.start()
+    
 
     """
     self.send_logger_status_loop_thread = threading.Thread(
@@ -191,7 +219,7 @@ class LoggerManager:
         loaded_time = self.cruise.get('loaded_time')
         self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
         self.active_mode = self.api.get_active_mode()
-        
+
         # Send updated cruise definition to CDS for console to read.
         cruise_dict = {
           'cruise_id': self.cruise.get('id', ''),
@@ -207,6 +235,83 @@ class LoggerManager:
     except (AttributeError, ValueError, TypeError) as e:
       logging.info('Failed to update cruise definition: %s', e)
 
+
+  ############################
+  def _check_logger_stderr_loop(self):
+    """Read the stderr file for each logger we have and, if we've got the
+    address of a cached data server, send the annotated messages to
+    it.
+
+    When a logger goes away, we leave the thread active - overhead is
+    pretty low, and the alternative is doing non-blocking reads or
+    trying to signal blocked threads to terminate.
+    """
+
+    # Map from logger: thread running a listener on its stderr file
+    stderr_file_thread = {}    # logger: thread running listener
+
+    while not self.quit_flag:
+      # Check if there are any loggers for which we don't have threads
+      for logger in self.loggers:
+        if not logger in stderr_file_thread:
+          stderr_file_name = self.stderr_file_pattern.format(logger=logger)
+
+          # Does stderr file exist? If so, start a thread reading it
+          if os.path.isfile(stderr_file_name):
+            logging.info('Listening to new stderr file "%s"', stderr_file_name)
+            stderr_file_thread[logger] = threading.Thread(
+              name=logger+'_stderr_reader',
+              target=self._stderr_file_to_cds,
+              kwargs={'logger': logger, 'stderr_file_name': stderr_file_name},
+              daemon=True)
+            stderr_file_thread[logger].start()
+
+      # Sleep before checking again whether there are any new loggers
+      # with stderr files.
+      time.sleep(self.interval * 2)
+
+  ##############################################################################
+  def _stderr_file_to_cds(self, logger, stderr_file_name):
+    """Iteratively read from a file (presumed to be a logger's stderr file
+    and send the lines to a cached data server labeled as coming from
+    stderr:logger:<logger>.
+
+    Format of error messages is as a JSON-encoded dict of asctime, levelno,
+    levelname, filename, lineno and message.
+
+    To be run in a separate thread from _check_logger_stderr_loop
+    """
+
+    if not self.data_server_writer:
+      logging.error('INTERNAL ERROR: called _stderr_file_to_cds(), but no '
+                    'cached data server defined?!?')
+      return
+
+    field_name = 'stderr:logger:' + logger
+    message_format = ('{ascdate:S} {asctime:S} {levelno:d} {levelname:w} '
+                      '{filename:w}.py:{lineno:d} {message}')
+
+    # Our caller checked that this file exists, so open with impunity.
+    reader = TextFileReader(file_spec=stderr_file_name, tail=True)
+    while not self.quit_flag:
+      record = reader.read()
+      try:
+        parsed_fields = parse.parse(message_format, record)
+        fields = {'asctime': (parsed_fields['ascdate'] + 'T' +
+                              parsed_fields['asctime']),
+                  'levelno': parsed_fields['levelno'],
+                  'levelname': parsed_fields['levelname'],
+                  'filename': parsed_fields['filename'] + '.py',
+                  'lineno': parsed_fields['lineno'],
+                  'message': parsed_fields['message']
+        }
+        das_record = DASRecord(fields={field_name: json.dumps(fields)})
+        #logging.warning('Message: %s', fields)
+        self.data_server_writer.write(das_record)
+      except KeyError:
+        logging.warning('Couldn\'t parse stderr message: %s', record)
+
+
   ############################
   def _update_configs_loop(self):
     """Iteratively check the API for updated configs and send them to the
@@ -220,12 +325,18 @@ class LoggerManager:
   def _update_configs(self):
     """Get list of new (latest) configs. Send to logger supervisor to make
     any necessary changes.
-    """
 
+    Note: we can't fold this into _update_configs_loop() because we may
+    need to ask the api to call it independently as a callback when it
+    notices that the config has changed. Search for the line:
+
+      api.on_update(callback=logger_manager._update_configs)
+
+    in this file to see where.
+    """
     # First, grab a status update.
     #self.logger_status = self.supervisor.check_status()
     #self.status_time = time.time()
-    logging.warning('Updating configs')
     with self.config_lock:
       # Get new configs in dict {logger:{'configs':[config_name,...]}}
       logger_configs = self.api.get_logger_configs()
@@ -293,26 +404,19 @@ class LoggerManager:
       time.sleep(self.interval * 2)
 
   ############################
-  def _send_logger_status_loop(self):
+  def _check_logger_status_loop(self):
     """Grab logger status message from supervisor and send to cached data
     server via websocket. Also send cruise mode as separate message.
     """
     while not self.quit_flag:
       now = time.time()
       try:
-        config_status = self.supervisor.check_status()
+        config_status = self.supervisor.get_status()
         with self.config_lock:
           # Stash status, note time and send update
           self.config_status = config_status
           self.status_time = now
-
-          # Map status to logger
-          status_map = {}
-          for config, status in config_status.items():
-            logger = self.config_to_logger.get(config, None)
-            if logger:
-              status_map[logger] = {'config':config, 'status':status}
-        self._write_record_to_data_server('status:logger_status', status_map)
+        self._write_record_to_data_server('status:logger_status', config_status)
 
         # Now get and send cruise mode
         mode_map = { 'active_mode': self.api.get_active_mode() }
@@ -320,17 +424,6 @@ class LoggerManager:
       except ValueError as e:
         logging.warning('Error while trying to send logger status: %s', e)
       time.sleep(self.interval)
-
-  ############################
-  def _write_log_message_to_data_server(self, field_name, message,
-                                        log_level=logging.INFO):
-    """Send something that looks like a logging message to the cached data
-    server.
-    """
-    asctime = datetime.datetime.utcnow().isoformat() + 'Z'
-    record = {'asctime': asctime, 'levelno': log_level,
-              'levelname': logging.getLevelName(log_level), 'message': message}
-    self._write_record_to_data_server(field_name, json.dumps(record))
 
   ############################
   def _write_record_to_data_server(self, field_name, record):
@@ -383,11 +476,12 @@ if __name__ == '__main__':
                       default='memory', help='What backing store database '
                       'to use.')
 
-  parser.add_argument('--stderr_filebase', dest='stderr_filebase',
-                      default='/var/tmp/openrvdas/',
-                      help='Path/filebase to which stderr messages for the '
-                      'logger manager and each logger should be written. '
-                      'Enables relaying logger stderr to cached data server.')
+  parser.add_argument('--stderr_file_pattern', dest='stderr_file_pattern',
+                      default='/var/tmp/openrvdas/{logger}.stderr',
+                      help='Pattern into which logger name will be '
+                      'interpolated to create the file path/name to which '
+                      'the logger\'s stderr will be written. E.g. '
+                      '\'/var/tmp/openrvdas/{logger}.stderr\'')
 
   # Arguments for cached data server
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',
@@ -491,8 +585,7 @@ if __name__ == '__main__':
 
   supervisor = LoggerSupervisor(
     configs=None,
-    stderr_filebase=args.stderr_filebase,
-    cds_host_port=args.data_server_websocket,
+    stderr_file_pattern=args.stderr_file_pattern,
     max_tries=args.max_tries,
     interval=args.interval,
     logger_log_level=logger_log_level)
@@ -502,7 +595,7 @@ if __name__ == '__main__':
   logger_manager = LoggerManager(
     api=api, supervisor=supervisor,
     data_server_websocket=args.data_server_websocket,
-    stderr_filebase=args.stderr_filebase,
+    stderr_file_pattern=args.stderr_file_pattern,
     interval=args.interval,
     logger_log_level=logger_log_level)
 

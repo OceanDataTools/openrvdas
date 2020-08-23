@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 """
 """
-import json
 import logging
 import os
-import parse
-import pprint
 import signal
 import sys
 import time
@@ -28,21 +25,19 @@ from server.logger_runner import LoggerRunner
 
 ################################################################################
 class LoggerSupervisor:
-  """Given a map of logger:config, make sure the relevant configs are
-  running for the relevant loggers."""
-  def __init__(self, configs=None, stderr_filebase=None,
-               cds_host_port=None, max_tries=3, min_uptime=10,
-               interval=1, logger_log_level=logging.WARNING):
+  """Given a map of {logger:config}, start the configs and make sure
+ they keep running.
+  """
+  def __init__(self, configs=None, stderr_file_pattern=None,
+               max_tries=3, min_uptime=10, interval=1,
+               logger_log_level=logging.WARNING):
     """
     ```
     configs   - dict of {logger_name: config} that are to be run
 
-    stderr_filebase - Path/filebase to which stderr messages for each
-               logger should be written. Enables relaying logger
-               stderr to cached data server.
-
-    cds_host_port - Optional host:port to which status message should be
-               sent to a cached data server
+    stderr_file_pattern - Pattern into which logger name will be interpolated
+               to create the file path/name to which the logger's stderr
+               will be written. E.g. '/var/tmp/openrvdas/{logger}.stderr'
 
     max_tries - number of times to try a dead logger config. If zero, then
                 never stop retrying.
@@ -57,25 +52,17 @@ class LoggerSupervisor:
     ```
     """
     self.configs = configs or {}
-    self.stderr_filebase = stderr_filebase
-    self.cds_host_port = cds_host_port
+    self.stderr_file_pattern = stderr_file_pattern
     self.max_tries = max_tries
     self.min_uptime = min_uptime
     self.interval = interval
     self.logger_log_level = logger_log_level
-
-    self.data_server_writer = None
-    if cds_host_port:
-      self.data_server_writer = CachedDataWriter(data_server=cds_host_port)
 
     # Where we store the map from logger name to config actually
     # running. Also map from logger name to LoggerRunner that's doing
     # the actual work.
     self.logger_config_map = {}
     self.logger_runner_map = {}
-
-    self.logger_stderr_file_map = {}       # logger: stderr_file
-    self.logger_stderr_file_thread = {}    # logger: thread running listener
     self.logger_map_lock = threading.Lock()
 
     # When each logger was last restarted, and how many times it has
@@ -148,62 +135,6 @@ class LoggerSupervisor:
         self.logger_last_started[logger] = time.time()
         runner.start()
 
-  ##############################################################################
-  def _stderr_file_to_cds(self, logger):
-    """Iteratively read from a file (presumed to be a logger's stderr file
-    and send the lines to a cached data server labeled as coming from
-    stderr:logger:<logger>.
-
-    Format of error messages is as a JSON-encoded dict of asctime, levelno,
-    levelname, filename, lineno and message.
-
-    To be run in a separate thread from _start_logger()
-
-    ONLY CALL THIS FROM WITHIN _start_logger FOR THREAD SAFETY
-    """
-
-    if not self.data_server_writer:
-      logging.error('INTERNAL ERROR: called _stder_file_to_cds(), but no '
-                    'cached data server defined?!?')
-      return
-
-    stderr_file = self.logger_stderr_file_map[logger]
-    field_name = 'stderr:logger:'+logger
-    cds_host_port = self.cds_host_port
-    logging.warning('Starting read %s: %s -> %s',
-                    logger, stderr_file, cds_host_port)
-
-    message_format = ('{ascdate:S} {asctime:S} {levelno:d} {levelname:w} '
-                      '{filename:w}.py:{lineno:d} {message}')
-
-    # Loop here until the file we're looking for actually exists
-    while not os.path.isfile(stderr_file):
-      logging.debug('Logfile %s does not exist yet', stderr_file)
-      time.sleep(1)
-    logging.warning('Logfile %s now exists!!!!', stderr_file)
-      
-    reader = TextFileReader(file_spec=stderr_file, tail=True)
-    
-    transform = ToDASRecordTransform(field_name=field_name)
-
-    while logger in self.logger_runner_map:
-      record = reader.read()
-      try:
-        parsed_fields = parse.parse(message_format, record)
-        fields = {'asctime': (parsed_fields['ascdate'] + 'T' +
-                              parsed_fields['asctime']),
-                  'levelno': parsed_fields['levelno'],
-                  'levelname': parsed_fields['levelname'],
-                  'filename': parsed_fields['filename'] + '.py',
-                  'lineno': parsed_fields['lineno'],
-                  'message': parsed_fields['message']
-        }
-        das_record = DASRecord(fields={field_name: json.dumps(fields)})
-        logging.warning('Message: %s', fields)
-        self.data_server_writer.write(das_record)
-      except KeyError:
-        logging.warning('Couldn\'t parse stderr message: %s', record)
-
   ###################
   def _start_logger(self, logger, config):
     """ONLY CALL THIS FROM WITHIN update_configs for thread safety."""
@@ -211,24 +142,14 @@ class LoggerSupervisor:
     logging.warning('Called _start_logger for %s: %s', logger, config_name)
 
     self.logger_config_map[logger] = config
-    stderr_file = self.stderr_filebase + logger + '.stderr'
-    self.logger_stderr_file_map[logger] = stderr_file
+    stderr_file = self.stderr_file_pattern.format(logger=logger)
 
-    runner = LoggerRunner(config=config, name=config_name,
+    runner = LoggerRunner(config=config, name=logger,
                           stderr_file=stderr_file,
                           logger_log_level=self.logger_log_level)
     self.logger_runner_map[logger] = runner
     self.logger_runner_map[logger].start()
 
-    # If we don't already have a thread listening on this file and
-    # sending its contents to the cached data server, start one now.
-    if not logger in self.logger_stderr_file_thread:
-      thread = threading.Thread(name=logger+'_stderr_read',
-                                target=self._stderr_file_to_cds,
-                                kwargs={'logger': logger},
-                                daemon=True)
-      thread.start()
-      self.logger_stderr_file_thread[logger] = thread
 
   ###################
   def _delete_logger(self, logger):
@@ -242,14 +163,6 @@ class LoggerSupervisor:
 
     del self.logger_config_map[logger]
     del self.logger_runner_map[logger]
-
-    # Shut down the listener waiting for output
-    #logging.warning('Waiting for status writer for %s to terminate.', logger)
-    #self.logger_stderr_file_thread[logger].join()
-    #logging.warning('Terminated.')
-    #del self.logger_stderr_file_thread[logger]
-    del self.logger_stderr_file_map[logger]
-    logging.warning('Logger %s has terminated', logger)
 
   ###################
   def update_configs(self, configs=None):
@@ -299,15 +212,37 @@ class LoggerSupervisor:
         self._start_logger(logger, new_config)
 
 
-"""
-      status = {
-        'config': config_name,
-        'errors': errors,
-        'running': running,
-        'failed': logger in self.failed_loggers,
-        'pid': process.pid if process else None
-      }
-"""
+  ###################
+  def get_status(self):
+    """Return a dict of the current config name and current run status of
+    each logger in the form, e.g.:
+
+    {'s330': {'config':'s330->net', 'status':'RUNNING'},
+     'gyr1': {'config':'gyr1->file', 'status':'FAILED'},
+    }
+
+    Possible status are EXITED, RUNNING, FAILED and STARTING. EXITED
+    is the status when a logger is not 'runnable' - e.g. the 'off'
+    config.  STARTING is used when a runner is runnable but is not
+    running and is not FAILED - i.e. we haven't given up on it.
+    """
+    logger_status = {}
+    with self.logger_map_lock:
+      for logger, runner in self.logger_runner_map.items():
+
+        logger_config = self.logger_config_map[logger]
+        config_name = logger_config.get('name', 'no name')
+                                             
+        if not runner.is_runnable():
+          status = 'EXITED'
+        elif runner.is_alive():
+          status = 'RUNNING'
+        elif runner.is_failed():
+          status = 'FAILED'
+        else:
+          status = 'STARTING'
+        logger_status[logger] = {'config': config_name , 'status':status}
+    return logger_status
 
 ################################################################################
 if __name__ == '__main__':
@@ -316,15 +251,12 @@ if __name__ == '__main__':
   parser.add_argument('--config', dest='config', action='store', required=True,
                       help='Initial set of configs to run.')
 
-  parser.add_argument('--stderr_filebase', dest='stderr_filebase',
-                      default='/var/tmp/openrvdas/',
-                      help='Path/filebase to which stderr messages '
-                      'for each logger should be written. Enables relaying '
-                      'logger stderr to cached data server.')
-
-  parser.add_argument('--cds_host_port', dest='cds_host_port', default=None,
-                      help='Host:port of cached data server to which '
-                        'stderr messages should be sent.')
+  parser.add_argument('--stderr_file_pattern', dest='stderr_file_pattern',
+                      default='/var/tmp/openrvdas/{logger}.stderr',
+                      help='Pattern into which logger name will be '
+                      'interpolated to create the file path/name to which '
+                      'the logger\'s stderr will be written. E.g. '
+                      '\'/var/tmp/openrvdas/{logger}.stderr\'')
 
   parser.add_argument('--max_tries', dest='max_tries', action='store',
                       type=int, default=3, help='How many times to try a '
@@ -370,8 +302,7 @@ if __name__ == '__main__':
   mode_configs = {logger: all_configs.get(mode_config_names[logger])
                   for logger in mode_config_names}
   sup = LoggerSupervisor(configs=mode_configs,
-                         stderr_filebase=args.stderr_filebase,
-                         cds_host_port=args.cds_host_port,
+                         stderr_file_pattern=args.stderr_file_pattern,
                          max_tries=args.max_tries,
                          min_uptime=args.min_uptime,
                          interval=args.interval,

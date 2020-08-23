@@ -97,6 +97,15 @@ def config_from_filename(filename):
   logging.info('Loaded config file: %s', pprint.pformat(config))
   return config
 
+############################
+def config_is_runnable(config):
+    """Is this logger configuration runnable? (Or, e.g. does it just have
+    a name and no readers/transforms/writers?)
+    """
+    if not config:
+      return False
+    return 'readers' in config or 'writers' in config
+
 ################################################################################
 def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
   """Run a logger, sending its stderr to a cached data server if so indicated
@@ -118,10 +127,15 @@ def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
                       level=log_level)
   
   config_name = config.get('name', 'no_name')
-  logging.warning('Starting logger %s: %s', logger, config_name)
+  logging.warning('Starting logger %s config %s', logger, config_name)
 
-  listener = ListenerFromLoggerConfig(config=config)
-  listener.run()
+  if config_is_runnable(config):
+    listener = ListenerFromLoggerConfig(config=config)
+    try:
+      listener.run()
+    except KeyboardInterrupt:
+      logging.warning('Received quit for %s', self.name)
+
 
 ################################################################################
 class LoggerRunner:
@@ -166,10 +180,14 @@ class LoggerRunner:
     self.failed = False
     num_tries = 0
 
-    # If config is not runnable, just say so and be done with it.
-    if not self.is_runnable():
-      logging.info('Process %s is complete. Not running.', self.name)
-      return
+    # We're going to go ahead and create the process, even if the
+    # config is not runnable, just so we can get log messages that the
+    # config has been started.
+
+    ## If config is not runnable, just say so and be done with it.
+    #if not self.is_runnable():
+    #  logging.info('Process %s is complete. Not running.', self.name)
+    #  return
 
     run_logger_kwargs = {
       'logger': self.name,
@@ -187,9 +205,7 @@ class LoggerRunner:
     """Is this logger configuration runnable? (Or, e.g. does it just have
     a name and no readers/transforms/writers?)
     """
-    if not self.config:
-      return False
-    return 'readers' in self.config or 'writers' in self.config
+    return config_is_runnable(self.config)
 
   ############################
   def is_alive(self):
