@@ -139,7 +139,7 @@ class LoggerSupervisor:
   def _start_logger(self, logger, config):
     """ONLY CALL THIS FROM WITHIN update_configs for thread safety."""
     config_name = config.get('name', logger + '_config')
-    logging.warning('Called _start_logger for %s: %s', logger, config_name)
+    logging.info('Called start_logger for %s: %s', logger, config_name)
 
     self.logger_config_map[logger] = config
     stderr_file = self.stderr_file_pattern.format(logger=logger)
@@ -158,7 +158,7 @@ class LoggerSupervisor:
     if not runner:
       logging.warning('Stale logger %s not found?!?', logger)
       return
-    logging.warning('Waiting for logger %s to complete', logger)
+    logging.info('Waiting for logger %s to complete', logger)
     runner.quit()
 
     del self.logger_config_map[logger]
