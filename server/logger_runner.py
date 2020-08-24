@@ -1,42 +1,31 @@
 #!/usr/bin/env python3
-"""Low-level class to start/stop loggers according passed in
-definitions and commands.
+"""Low-level class to run a logger config in its own process and write
+its stderr to a file.
 
-Intended to be used in one of three ways:
+Can be run from the command line as follows:
+```
+   server/logger_runner.py \
+     --config test/NBP1406/NBP1406_cruise.yaml:gyr1-\>net \
+     --stderr_file /var/log/openrvdas/gyr1.stderr
+```
 
-(See note below about simulated serial ports if you want to try the
-command lines below)
-
-1. As a simple standalone logger runner: you give it an intial dict of
-   logger configurations, and it tries to keep them running.
+But its main intended use is to be invoked by another module to start
+a logger in its own, non-blocking process:
 ```
-     server/logger_runner.py --config test/configs/sample_configs.yaml
+    runner = LoggerRunner(config=config, name=logger,
+                          stderr_file=stderr_file,
+                          logger_log_level=self.logger_log_level)
+    self.logger_runner_map[logger] = runner
+    self.logger_runner_map[logger].start()
 ```
-   It may also be invoked with a cruise definition and a mode:
-```
-     server/logger_runner.py \
-         --config test/NBP1406/NBP1406_cruise.yaml \
-         --mode log
-```
-2. As instantiated by a LoggerManager:
-```
-     server/logger_manager.py --config test/NBP1406/NBP1406_cruise.yaml -v
-```
-   When invoked as above, the LoggerManager will instantiate a LoggerRunner
-   interpret commands from the command line and dispatch the requested
-   loggers to its LoggerRunner. (Type "help" on the LoggerManager command
-   line for the commands it understands.)
-
-3. As instantiated by some other script that directly creates and
-   manages a LoggerRunner object.
-
 Simulated Serial Ports:
 
-The sample_configs.yaml and NBP1406_cruise.yaml files above specify
-configs that read from simulated serial ports and write to UDP port
-6224. To get the configs to actually run, you'll need to run
+The NBP1406_cruise.yaml file above specifies configs that read from
+simulated serial ports and write to UDP port 6224. To get the configs
+to actually run, you'll need to run
+
 ```
-  logger/utils/serial_sim.py --config test/NBP1406/serial_sim_NBP1406.yaml
+  logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 ```
 in a separate terminal window to create the virtual serial ports the
 sample config references and feed simulated data through them.)
@@ -55,10 +44,15 @@ import signal
 import sys
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
+from imp import reload
+
+# Add the openrvdas/ directory to module search path
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(realpath(__file__))))
 
 from logger.utils.read_config import read_config
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
+from logger.utils.timestamp import LOGGING_TIME_FORMAT
 from logger.transforms.to_das_record_transform import ToDASRecordTransform
 from logger.writers.cached_data_writer import CachedDataWriter
 from logger.writers.composed_writer import ComposedWriter
@@ -97,7 +91,7 @@ def config_from_filename(filename):
   logging.info('Loaded config file: %s', pprint.pformat(config))
   return config
 
-############################
+################################################################################
 def config_is_runnable(config):
     """Is this logger configuration runnable? (Or, e.g. does it just have
     a name and no readers/transforms/writers?)
@@ -123,7 +117,10 @@ def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
   if stderr_file:
     os.makedirs(os.path.dirname(stderr_file), exist_ok=True)
 
-  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, filename=stderr_file,
+  # Need to reset logging to its freshly-imported state
+  reload(logging)
+  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT,
+                      filename=stderr_file,
                       level=log_level)
 
   config_name = config.get('name', 'no_name')
