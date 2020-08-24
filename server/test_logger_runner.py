@@ -16,27 +16,18 @@ from logger.writers.text_file_writer import TextFileWriter
 from server.logger_runner import LoggerRunner
 
 CONFIG = {
-  "modes": {
-    "off": {
-      "logger":{}
-    },
-    "on": {
-      "logger": {
-        "readers": {
-          "class": "TextFileReader",
-          "kwargs": {
-            "interval": 0.1,
-            "tail": True
-          }  # we'll fill in filespec once we have tmpdir
-        },
-        "writers": {
-          "class": "TextFileWriter",
-          "kwargs": {}  # we'll fill in filespec once we have tmpdir
-        }
-      }
-    }
+  "name": "logger",
+  "readers": {
+    "class": "TextFileReader",
+    "kwargs": {
+      "interval": 0.1,
+      "tail": True
+    }  # we'll fill in filespec once we have tmpdir
   },
-  "default_mode": "off"
+  "writers": {
+    "class": "TextFileWriter",
+    "kwargs": {}  # we'll fill in filespec once we have tmpdir
+  }
 }
 
 SAMPLE_DATA = """Permission is hereby granted, free of charge, to any person
@@ -65,26 +56,19 @@ class TestLoggerRunner(unittest.TestCase):
     for line in SAMPLE_DATA:
       writer.write(line)
 
-    # Fill in the readers and writers in the config
     self.config = CONFIG
-    self.config['modes']['on']['logger']['readers']['kwargs']['file_spec'] = self.source_name
-    self.config['modes']['on']['logger']['writers']['kwargs']['filename'] = self.dest_name
+    self.config['readers']['kwargs']['file_spec'] = self.source_name
+    self.config['writers']['kwargs']['filename'] = self.dest_name
 
   ############################
-  @unittest.skip('The LoggerRunner is flakey and close to deprecation.')
   def test_basic(self):
 
     # Assure ourselves that the dest file doesn't exist yet and that
     # we're in our default mode
     self.assertFalse(os.path.exists(self.dest_name))
 
-    runner = LoggerRunner(interval=0.1)
-    runner_thread = threading.Thread(target=runner.run, daemon=True)
-    runner_thread.start()
-
-    runner.set_configs(self.config['modes']['on'])
-    #logging.warning('CONFIG: %s', self.config)
-    #time.sleep(600)
+    runner = LoggerRunner(config=self.config)
+    runner.start()
     time.sleep(1.0)
 
     reader = TextFileReader(self.dest_name)
@@ -94,36 +78,21 @@ class TestLoggerRunner(unittest.TestCase):
       logging.info('Against line:  "%s"', result)
       self.assertEqual(line, result)
 
-    self.assertTrue(runner.logger_is_alive('logger'))
-    pid = runner.processes['logger'].pid
+    self.assertTrue(runner.is_runnable())
+    self.assertTrue(runner.is_alive())
+    self.assertFalse(runner.is_failed())
 
-    status = runner.check_loggers()
-    self.assertDictEqual(status,
-                         {'logger': {'config': 'unknown',
-                                     'errors': [],
-                                     'running': True,
-                                     'pid': pid,
-                                     'failed': False}
-                         })
-    runner.set_configs(self.config['modes']['off'])
-    time.sleep(0.1)
-    self.assertDictEqual(runner.check_loggers(),
-                         {'logger': {'config': None,
-                                     'errors': [],
-                                     'running': None,
-                                     'pid': None,
-                                     'failed': False}
-                         })
-
-    # Verify that the process has indeed shut down. This should throw
-    # an exception if the process doesn't exist.
-    #with self.assertRaises(ProcessLookupError):
-    #  os.kill(pid, 0)
-
-    # Try shutting down
     runner.quit()
-    runner_thread.join(2.0)
-    self.assertFalse(runner_thread.is_alive())
+    self.assertFalse(runner.is_alive())
+
+    # Try a degenerate runner
+    runner = LoggerRunner(config={})
+    runner.start()
+    time.sleep(1.0)
+
+    self.assertFalse(runner.is_runnable())
+    self.assertFalse(runner.is_alive())
+    self.assertFalse(runner.is_failed())
 
 ################################################################################
 if __name__ == '__main__':

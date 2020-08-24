@@ -44,7 +44,7 @@ class DeltaTransform:
       return ('Record passed to DeltaTransform was neither a dict nor a '
               'DASRecord. Type was %s: %s' % (type(record), str(record)[:80])) 
     
-    if fields is None or timestamp is None
+    if fields is None or timestamp is None:
       return ('Record passed to DeltaTransform either does not have a field or '
               'a timestamp')
     

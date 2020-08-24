@@ -10,7 +10,7 @@ from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(r
 
 from logger.utils.das_record import DASRecord
 from logger.transforms.true_winds_transform import TrueWindsTransform
-from logger.transforms.parse_nmea_transform import ParseNMEATransform
+from logger.transforms.parse_transform import ParseTransform
 
 LINES = """mwx1 2017-11-04T05:12:19.537917Z PUS,A,071,010.90,M,+340.87,+015.31,60,08
 s330 2017-11-04T05:12:20.240177Z $INRMC,000000.16,A,3934.831698,S,03727.695242,W,10.8,227.19,070814,18.5,W,A*00
@@ -157,17 +157,22 @@ class TestTrueWindsTransform(unittest.TestCase):
     expected_results = RESULTS.copy()
 
     # Use port wind speed, output in m/s
-    tw = TrueWindsTransform(course_field='S330CourseTrue',
-                            speed_field='S330Speed',
-                            heading_field='S330HeadingTrue',
-                            wind_dir_field='MwxPortRelWindDir',
-                            update_on_fields=['MwxPortRelWindDir'],
-                            wind_speed_field='MwxPortRelWindSpeed',
+    tw = TrueWindsTransform(course_field='CourseTrue',
+                            speed_field='SpeedKt',
+                            heading_field='HeadingTrue',
+                            wind_dir_field='PortRelWindDir',
+                            update_on_fields=['PortRelWindDir'],
+                            wind_speed_field='PortRelWindSpeed',
                             true_dir_name='PortTrueWindDir',
                             true_speed_name='PortTrueWindSpeed',
                             apparent_dir_name='PortApparentWindDir',
                             convert_speed_factor=0.5144)
-    parse = ParseNMEATransform()
+    parse = ParseTransform(
+      field_patterns=[
+        'PUS,{:nc},{PortRelWindDir:g},{PortRelWindSpeed:g},M,{PortSoundSpeed:g},{PortSonicTemp:g},{PortStatus:d},{Checksum:nc}',
+        '$INHDT,{HeadingTrue:f},T*{CheckSum:x}',
+        '$INRMC,{GPSTime:f},{GPSStatus:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}',
+      ])
 
     value_dict = {}
     timestamp_dict = {}

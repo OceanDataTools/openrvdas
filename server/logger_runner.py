@@ -44,7 +44,7 @@ import signal
 import sys
 import time
 
-from imp import reload
+from importlib import reload
 
 # Add the openrvdas/ directory to module search path
 from os.path import dirname, realpath

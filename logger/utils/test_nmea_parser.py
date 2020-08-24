@@ -182,6 +182,7 @@ def create_file(filename, lines, interval=0, pre_sleep_interval=0):
     f.flush()
   f.close()
 
+@unittest.skip('The NMEAParser class is deprecated')
 class TestNMEAParser(unittest.TestCase):
 
   ############################

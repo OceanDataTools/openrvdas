@@ -200,8 +200,7 @@ class TestDjangoServerAPI(TestCase):
                             'active': 'off'}
                          })
     api.delete_configuration()
-    with self.assertRaises(ValueError):
-      api.get_configuration()
+    self.assertEqual(api.get_configuration(), None)
     self.assertDictEqual(api.get_logger_configs(), {})
 
 ################################################################################

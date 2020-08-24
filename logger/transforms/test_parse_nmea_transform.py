@@ -67,6 +67,7 @@ def ordered(obj):
         return obj
 
 ################################################################################
+@unittest.skip('The ParseNMEATransform class is deprecated')
 class TestParseNMEATransform(unittest.TestCase):
 
   ############################
