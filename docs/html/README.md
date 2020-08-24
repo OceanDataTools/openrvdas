@@ -7,7 +7,7 @@ This directory contains automatically-generated HTML documentation for OpenRVDAS
 The documents in this directory were generated automatically by [pdoc](https://pdoc3.github.io/pdoc/) using the commands:
 
 ```
-pip3 install pdoc
+pip3 install pdoc3
 
 # Generate docs for logger components and some server scripts
 pdoc3 --force --html -o docs/html logger
