@@ -222,8 +222,8 @@ directory=/opt/openrvdas
 autostart=true
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
-stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
+stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
+stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=rvdas
 
 [program:logger_manager]
@@ -232,8 +232,8 @@ directory=/opt/openrvdas
 autostart=true
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/logger_manager.err.log
-stdout_logfile=/var/log/openrvdas/logger_manager.out.log
+stderr_logfile=/var/log/openrvdas/logger_manager.stderr
+stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=rvdas
 ```
 

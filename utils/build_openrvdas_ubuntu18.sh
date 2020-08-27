@@ -608,8 +608,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/nginx.err.log
-stdout_logfile=/var/log/openrvdas/nginx.out.log
+stderr_logfile=/var/log/openrvdas/nginx.stderr
+stdout_logfile=/var/log/openrvdas/nginx.stdout
 ;user=$RVDAS_USER
 
 [program:uwsgi]
@@ -619,8 +619,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/uwsgi.err.log
-stdout_logfile=/var/log/openrvdas/uwsgi.out.log
+stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+stdout_logfile=/var/log/openrvdas/uwsgi.stdout
 user=$RVDAS_USER
 
 [program:cached_data_server]
@@ -629,8 +629,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
-stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
+stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
+stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=$RVDAS_USER
 
 [program:logger_manager]
@@ -640,8 +640,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/logger_manager.err.log
-stdout_logfile=/var/log/openrvdas/logger_manager.out.log
+stderr_logfile=/var/log/openrvdas/logger_manager.stderr
+stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=$RVDAS_USER
 
 [program:simulate_nbp]
@@ -650,8 +650,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_nbp.err.log
-stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
+stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
+stdout_logfile=/var/log/openrvdas/simulate_nbp.stdout
 user=$RVDAS_USER
 
 ; Uncomment the following command block if you've installed InfluxDB
@@ -662,8 +662,8 @@ ${IDB_COMMENT}directory=${INSTALL_ROOT}/openrvdas
 ${IDB_COMMENT}autostart=$INFLUXDB_AUTOSTART
 ${IDB_COMMENT}autorestart=true
 ${IDB_COMMENT}startretries=3
-${IDB_COMMENT}stderr_logfile=/var/log/openrvdas/influxdb.err.log
-${IDB_COMMENT}stdout_logfile=/var/log/openrvdas/influxdb.out.log
+${IDB_COMMENT}stderr_logfile=/var/log/openrvdas/influxdb.stderr
+${IDB_COMMENT}stdout_logfile=/var/log/openrvdas/influxdb.stdout
 ${IDB_COMMENT};user=$RVDAS_USER
 
 [group:web]

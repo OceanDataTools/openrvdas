@@ -58,7 +58,7 @@ class LoggerManager:
   ############################
   def __init__(self,
                api, supervisor, data_server_websocket=None,
-               stderr_file_pattern='/var/tmp/openrvdas/{logger}.stderr',
+               stderr_file_pattern='/var/log/openrvdas/{logger}.stderr',
                interval=0.25, logger_log_level=logging.WARNING):
     """Read desired/current logger configs from Django DB and try to run the
     loggers specified in those configs.
@@ -75,7 +75,7 @@ class LoggerManager:
     stderr_file_pattern - Pattern into which logger name will be
                interpolated to create the file path/name to which the
                logger's stderr will be written. E.g.
-               '/var/tmp/openrvdas/{logger}.stderr' If
+               '/var/log/openrvdas/{logger}.stderr' If
                data_server_websocket is defined, will write logger
                stderr to it.
 
@@ -472,11 +472,11 @@ if __name__ == '__main__':
                       'to use.')
 
   parser.add_argument('--stderr_file_pattern', dest='stderr_file_pattern',
-                      default='/var/tmp/openrvdas/{logger}.stderr',
+                      default='/var/log/openrvdas/{logger}.stderr',
                       help='Pattern into which logger name will be '
                       'interpolated to create the file path/name to which '
                       'the logger\'s stderr will be written. E.g. '
-                      '\'/var/tmp/openrvdas/{logger}.stderr\'')
+                      '\'/var/log/openrvdas/{logger}.stderr\'')
 
   # Arguments for cached data server
   parser.add_argument('--data_server_websocket', dest='data_server_websocket',

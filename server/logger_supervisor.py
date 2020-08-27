@@ -37,7 +37,7 @@ class LoggerSupervisor:
 
     stderr_file_pattern - Pattern into which logger name will be interpolated
                to create the file path/name to which the logger's stderr
-               will be written. E.g. '/var/tmp/openrvdas/{logger}.stderr'
+               will be written. E.g. '/var/log/openrvdas/{logger}.stderr'
 
     max_tries - number of times to try a dead logger config. If zero, then
                 never stop retrying.
@@ -252,11 +252,11 @@ if __name__ == '__main__':
                       help='Initial set of configs to run.')
 
   parser.add_argument('--stderr_file_pattern', dest='stderr_file_pattern',
-                      default='/var/tmp/openrvdas/{logger}.stderr',
+                      default='/var/log/openrvdas/{logger}.stderr',
                       help='Pattern into which logger name will be '
                       'interpolated to create the file path/name to which '
                       'the logger\'s stderr will be written. E.g. '
-                      '\'/var/tmp/openrvdas/{logger}.stderr\'')
+                      '\'/var/log/openrvdas/{logger}.stderr\'')
 
   parser.add_argument('--max_tries', dest='max_tries', action='store',
                       type=int, default=3, help='How many times to try a '
