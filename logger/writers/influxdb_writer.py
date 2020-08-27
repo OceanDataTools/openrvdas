@@ -124,7 +124,7 @@ class InfluxDBWriter(Writer):
     if not record:
       return
 
-    logging.info('InfluxDBWriter writing record: %s', record)
+    logging.debug('InfluxDBWriter writing record: %s', record)
 
     if not type(record) in [dict, list, DASRecord]:
       logging.warning('InfluxDBWriter received record that was not dict, '
