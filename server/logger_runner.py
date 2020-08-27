@@ -101,7 +101,7 @@ def config_is_runnable(config):
     return 'readers' in config or 'writers' in config
 
 ################################################################################
-def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
+def run_logger(logger, config, stderr_file=None, log_level=logging.INFO):
   """Run a logger, sending its stderr to a cached data server if so indicated
 
   logger -    Name of logger
@@ -124,7 +124,7 @@ def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
                       level=log_level)
 
   config_name = config.get('name', 'no_name')
-  logging.warning('Starting logger %s config %s', logger, config_name)
+  logging.info('Starting logger %s config %s', logger, config_name)
 
   if config_is_runnable(config):
     listener = ListenerFromLoggerConfig(config=config)
