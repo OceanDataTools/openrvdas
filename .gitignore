@@ -49,3 +49,8 @@ widgets
 
 # For optional doc server
 mkdocs.yml
+
+# Contrib logger creation tool
+contrib/utils/JSON_YAML_Creator/node_modules
+contrib/utils/JSON_YAML_Creator/package-lock.json
+contrib/utils/JSON_YAML_Creator/yarn.lock
