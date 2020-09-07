@@ -171,12 +171,12 @@ class RecordCache:
       fields = record.get('fields', None)
       metadata = record.get('metadata', None)
       if fields is None:
-        logging.error('Dict record passed to cache_record() has no '
+        logging.debug('Dict record passed to cache_record() has no '
                       '"fields" key, which either means it\'s not a dict '
                       'you should be passing, or it is in the old "field_dict" '
                       'format that assumes key:value pairs are at the top '
                       'level.')
-        logging.error('The record in question: %s', str(record))
+        logging.debug('The record in question: %s', str(record))
         return
     else:
       logging.warning('Received non-DASRecord, non-dict input (type: %s): %s',
@@ -533,6 +533,9 @@ class WebSocketConnection:
                 field_timestamps[matching_field_name] = -1
               else:
                 field_timestamps[matching_field_name] = now - back_seconds
+          
+          if raw_requested_fields and not requested_fields:
+            logging.info('Request doesn\'t match any existing fields')
 
           # Let client know request succeeded
           await self.send_json_response({'type':'subscribe', 'status':200})
@@ -543,11 +546,15 @@ class WebSocketConnection:
         elif request['type'] == 'ready':
           logging.debug('Websocket got ready...')
           if not field_timestamps:
+            # Client has told us that they're ready, but there are no
+            # fields that match their request. Let them know, then
+            # pause a moment before we try fielding their next
+            # request.
             await self.send_json_response(
               {'type':'ready', 'status':400,
-               'error':'client ready, but no data requested.'},
-              is_error=True)
-            continue
+               'error':'client ready, but no matching fields found (yet).'},
+              is_error=False)
+            await asyncio.sleep(self.interval*5)
 
           ##########
           results = {}

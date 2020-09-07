@@ -1,7 +1,0 @@
-{
-    "RTMP": {
-        "fields": [
-            ["Temp", "float"]
-        ]
-    }
-}

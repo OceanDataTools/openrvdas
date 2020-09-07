@@ -121,10 +121,44 @@ function install_packages {
     yum install -y epel-release
     yum -y update
 
-    yum install -y socat git nginx sqlite-devel readline-devel \
-        wget gcc zlib-devel openssl-devel \
-        python3 python36-devel python36-pip supervisor
-        echo Installing required packages
+    echo Installing required packages
+    yum install -y wget socat git nginx gcc supervisor \
+        zlib-devel openssl-devel readline-devel libffi-devel
+
+        #sqlite-devel \
+        #python3 python3-devel python3-pip 
+
+    # Django 3+ requires a more recent version of sqlite3 than is
+    # included in CentOS 7. So instead of yum installing python3 and
+    # sqlite3, we build them from scratch. Painfully slow, but hey -
+    # isn't that par for CentOS builds?
+    export LD_LIBRARY_PATH=/usr/local/lib
+    export LD_RUN_PATH=/usr/local/lib
+
+    # Fetch and build SQLite3
+    cd /tmp
+    SQLITE_VERSION=3320300
+    SQLITE_BASE=sqlite-autoconf-${SQLITE_VERSION}
+    SQLITE_TGZ=${SQLITE_BASE}.tar.gz
+    [ -e $SQLITE_TGZ ] || wget https://www.sqlite.org/2020/${SQLITE_TGZ}
+    tar xzf ${SQLITE_TGZ}
+    cd ${SQLITE_BASE}
+    ./configure
+    make && make install
+
+    # Build Python, too
+    cd /tmp
+    PYTHON_VERSION=3.8.3
+    PYTHON_BASE=Python-${PYTHON_VERSION}
+    PYTHON_TGZ=${PYTHON_BASE}.tgz
+    [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
+    tar xvf ${PYTHON_TGZ}
+    cd ${PYTHON_BASE}
+    ./configure # --enable-optimizations
+    make altinstall
+
+    ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
+    ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
 }
 
 ###########################################################################
@@ -249,7 +283,9 @@ function install_influxdb {
 
     # Install the python client
     echo Installing Python client
-    venv/bin/pip install influxdb_client
+    pip install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      influxdb_client
 
     # Now create credentials for the server
     if [ `uname -s` = 'Darwin' ]; then
@@ -378,10 +414,12 @@ function setup_python_packages {
     python3 -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
 
-    # Inside the venv, python *is* the right version, right?
-    python3 -m pip install --upgrade pip
-    pip3 install \
-      Django==2.1.5 \
+    pip install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      --upgrade pip
+    pip install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      Django==3 \
       pyserial \
       uwsgi \
       websockets \
@@ -392,7 +430,8 @@ function setup_python_packages {
     # If we're installing database, then also install relevant
     # Python clients.
     if [ -n "$INSTALL_MYSQL" ]; then
-      pip3 install \
+      pip install \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         mysqlclient \
         mysql-connector
     fi
@@ -596,8 +635,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/nginx.err.log
-stdout_logfile=/var/log/openrvdas/nginx.out.log
+stderr_logfile=/var/log/openrvdas/nginx.stderr
+stdout_logfile=/var/log/openrvdas/nginx.stdout
 ;user=$RVDAS_USER
 
 [program:uwsgi]
@@ -607,8 +646,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/uwsgi.err.log
-stdout_logfile=/var/log/openrvdas/uwsgi.out.log
+stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+stdout_logfile=/var/log/openrvdas/uwsgi.stdout
 user=$RVDAS_USER
 
 [program:cached_data_server]
@@ -617,19 +656,19 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
-stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
+stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
+stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor_in /var/tmp/openrvdas/supervisor -v
+command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v -V
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/logger_manager.err.log
-stdout_logfile=/var/log/openrvdas/logger_manager.out.log
+stderr_logfile=/var/log/openrvdas/logger_manager.stderr
+stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=$RVDAS_USER
 
 [program:simulate_nbp]
@@ -638,18 +677,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_nbp.err.log
-stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
-user=$RVDAS_USER
-
-[program:simulate_skq]
-command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/SKQ201822S/simulate_SKQ201822S.yaml
-directory=${INSTALL_ROOT}/openrvdas
-autostart=false
-autorestart=true
-startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_skq.err.log
-stdout_logfile=/var/log/openrvdas/simulate_skq.out.log
+stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
+stdout_logfile=/var/log/openrvdas/simulate_nbp.stdout
 user=$RVDAS_USER
 
 ; Uncomment the following command block if you've installed InfluxDB
@@ -660,8 +689,8 @@ ${IDB_COMMENT}directory=${INSTALL_ROOT}/openrvdas
 ${IDB_COMMENT}autostart=$INFLUXDB_AUTOSTART
 ${IDB_COMMENT}autorestart=true
 ${IDB_COMMENT}startretries=3
-${IDB_COMMENT}stderr_logfile=/var/log/openrvdas/influxdb.err.log
-${IDB_COMMENT}stdout_logfile=/var/log/openrvdas/influxdb.out.log
+${IDB_COMMENT}stderr_logfile=/var/log/openrvdas/influxdb.stderr
+${IDB_COMMENT}stdout_logfile=/var/log/openrvdas/influxdb.stdout
 ${IDB_COMMENT};user=$RVDAS_USER
 
 [group:web]
@@ -671,7 +700,7 @@ programs=nginx,uwsgi
 programs=logger_manager,cached_data_server
 
 [group:simulate]
-programs=simulate_nbp,simulate_skq
+programs=simulate_nbp
 EOF
 }
 
@@ -697,6 +726,7 @@ function setup_firewall {
     systemctl start firewalld
     systemctl enable firewalld
 
+    firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
     firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
     firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null

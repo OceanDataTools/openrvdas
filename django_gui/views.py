@@ -131,7 +131,7 @@ def index(request):
     template_vars['modes'] = api.get_modes()
     template_vars['active_mode'] = api.get_active_mode()
     template_vars['errors'] = errors
-  except ValueError:
+  except (ValueError, AttributeError):
     logging.info('No configuration loaded')
 
   return render(request, 'django_gui/index.html', template_vars)

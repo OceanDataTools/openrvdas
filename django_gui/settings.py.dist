@@ -23,6 +23,7 @@ STATIC_ROOT = BASE_DIR + '/static'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "django_gui/static"),
     os.path.join(BASE_DIR, "display"),
+    os.path.join(BASE_DIR, "docs"),
 ]
 
 # What URL to use to serve static files
@@ -45,6 +46,12 @@ import socket
 HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
+
+# Host name may be a fully-qualified domain. Also allow just the basic
+# name.
+if '.' in HOSTNAME:
+  name_pieces = HOSTNAME.split('.')
+  ALLOWED_HOSTS.append(name_pieces[0])
 
 # Try to get (at least one) machine IP address to add to ALLOWED_HOSTS
 try:

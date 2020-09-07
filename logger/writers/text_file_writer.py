@@ -46,8 +46,8 @@ class TextFileWriter(Writer):
     self.file_date = None
     self.file = None
     
-    if filename:
-      # If directory doesn't exist, try to create it
+    # If directory doesn't exist, try to create it
+    if filename and create_path:
       file_dir = os.path.dirname(filename)
       if file_dir:
         os.makedirs(file_dir, exist_ok=True)

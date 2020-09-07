@@ -57,7 +57,6 @@ class PostgreSQLConnector:
       return
 
     self.database = database
-
     try:
       self.connection = psycopg2.connect(database=database, host=host, user=user, password=password)
     except:
@@ -107,7 +106,6 @@ class PostgreSQLConnector:
 
   ############################
   def exec_sql_command(self, command):
-
     with self.connection.cursor() as cursor:
       try:
         cursor.execute(command)

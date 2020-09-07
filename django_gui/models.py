@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 
@@ -54,7 +55,7 @@ class LoggerConfigState(models.Model):
   timestamp = models.DateTimeField(auto_now_add=True)
   last_checked = models.DateTimeField(auto_now=True)
 
-  running = models.NullBooleanField(default=False, blank=True, null=True)
+  running = models.BooleanField(default=False, blank=True, null=True)
   failed = models.BooleanField(default=False, blank=True)
   pid = models.IntegerField(default=0, blank=True, null=True)
   errors = models.TextField(default='', blank=True, null=True)

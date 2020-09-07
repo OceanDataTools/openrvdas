@@ -12,7 +12,6 @@ This document describes operation of the [Logger Manager](../server/logger_manag
 * [The high-order bits](#the-high-order-bits)
 * [Cruises, modes and configurations](#cruises-modes-and-configurations)
 * [What the logger manager does](#what-the-logger-manager-does)
-* [The logger manager and supervisord](#the-logger-manager-and-supervisord)
 * [Running from the command line](#running-from-the-command-line)
 * [Driving widget-based data display](#driving-widget-based-data-display)
 * [Web-based control of the logger manager](#web-based-control-of-the-logger-manager)
@@ -114,59 +113,14 @@ Perusing a complete cruise configuration file such as [test/NBP1406/NBP1406_crui
 
 ![Logger Manager Web console](images/sample_cruise_edit_s330_small.png)
 
-
-## The logger manager and supervisord
-
-The logger manager doesn't directly run logger processes. Instead, it acts as a sort of puppetmaster for the [supervisord](http://supervisord.org/) package, which was developed specifically for running and monitoring processes. Depending on how it is invoked, the logger manager will either start its own local instance of supervisord or will try to use an existing instance by writing supervisord config files to the appropriate location and connecting on the appropriate port.
-
-If given no instructions to the contrary, the logger manager will start its own copy of supervisord as a separate process and attach it to port 9002 on the host machine. It will create configuration files for the process in the ``/var/tmp/openrvdas/supervisor/`` directory, including logger configurations in ``/var/tmp/openrvdas/supervisor/supervisor.d/loggers.ini``.
-
-If the ``--supervisor_logger_config`` argument is provided, the logger manager will assume that a supervisord instance is running. It will write logger configurations to the file location specified and will assume that the existing supervisord instance will pick them up there. It will attempt to contact the instance using the default port (9002) to instruct it when to start/stop which configurations.
-
-The default port may be overridden with the ``--supervisor_port`` option.
-
-```
-# Connect to an already-running supervisord instance at port 9005
-# (default is 9002). Expect that instance to pick up configurations
-# written to /opt/openrvdas/server/supervisord/supervisor.d/loggers.ini
-server/logger_manager.py \
-     --supervisor_logger_config /opt/openrvdas/server/supervisor/supervisor.d/loggers.ini \
-     --supervisor_port 9005
-```
-
-If the ``--start_supervisor_in`` argument is specified, it will tell the logger manager to start its own supervisord instance in that directory rather than the default of ``/var/tmp/openrvdas/supervisor``. 
-
-```
-# Start our own instance of supervisord. Create the directory
-# /var/tmp/openrvdas/supervisor if it doesn't exist, and write
-# our configurations there. Use default port 9002.
-server/logger_manager.py \
-     --start_supervisor_in /var/tmp/openrvdas/supervisor
-```
-
-![Logger Manager Diagram](images/logger_manager_diagram.png)
-
-By default, the supervisor process and all its loggers will write their stderr and stdout to appropriately-named files in ``/var/log/openrvdas``. This location may be changed by specifying the ``--supervisor_logfile_dir`` flag:
-
-```
-# Store stderr, stdout logs somewhere transient and out of the way
-server/logger_manager.py --supervisor_logfile_dir /var/tmp/log/openrvdas 
-```
-
-###Looking in on supervisord
-
-If all is working as intended, the 'captive' supervisord instance under the logger manager's hood should be effectively invisible. In the discussion and diagrams below, we omit displaying/discussing it explicitly and assume that it is simply a part of the logger manager.
-
-That being said, there are several options if you _do_ want to peer in on what the captive supervisord process is doing. You can use the command line ``supervisorctl`` command. By default, ``supervisorctl`` will connect to the master supervisord process on port 9001; in the default installation, this is the process that will be running the logger manager itself, along with the NGINX server, cached data server and possibly other support scripts. To point it at the logger manager's captive instance, specify the port to which it should connect:
-
-```
-> supervisorctl -s http://localhost:9002  # or whichever host:port
-```
-
-The supervisord process also launches a rudimentary web server that you can connect to. Pointing a browser to [http://localhost:9002](http://localhost:9002) (or whatever port you've told supervisord to use) and entering the OpenRVDAS username and password when prompted will allow you to see the complete definitions for each logger configuration, as well as which are running or stopped:
-
-![Supervisord web view](images/local_supervisor_web.png)
-
+By default, when the logger manager runs a logger, it will redirect
+stderr for that process to a file, by default at
+``/var/tmp/openrvdas/{logger}.stderr``. This can be overridden by
+specifying the ``--stderr_file_pattern`` flag when invoking
+``logger_manager.py``. The argument should have the string
+``{logger}`` in it somewhere; this will be replaced by the name of the
+relevant logger, e.g. ``/var/tmp/openrvdas/gyr1.stderr``, when each
+process is started up.
 
 ## Running from the command line
 
@@ -259,7 +213,7 @@ logger manager may be controlled by a web console.
 If the system is installed using the default build scripts in the
 [utils directory](../utils), it will be configured to use the Django-based database (backed by SQLite) to maintain logger state and to serve a Django-based web console served by Nginx. The default installation will also configure a cached data server, which the web interface will rely on for real time status updates (the web interfaces will still be able to start/stop/select logger configurations without a cached data server; it will just not receive feedback on whether those loggers have been successfully started/stopped).
 
-In the default installation, the Linux ``supervisord`` daemon is configured to be able to run and monitor both the logger manager and cached data server on demand. **Note that this is a different instance from the captive instance that the logger manager runs when invoked, and is run as root.** Its configuration file is in ``/etc/supervisor/conf.d/openrvdas`` on Ubuntu and ``/etc/supervisord/openrvdas.ini`` on CentOS/RedHat:
+In the default installation, the Linux ``supervisord`` daemon is configured to be able to run and monitor both the logger manager and cached data server on demand. Its configuration file is in ``/etc/supervisor/conf.d/openrvdas`` on Ubuntu and ``/etc/supervisord/openrvdas.ini`` on CentOS/RedHat:
 
 ```
 [program:cached_data_server]
@@ -268,8 +222,8 @@ directory=/opt/openrvdas
 autostart=true
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
-stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
+stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
+stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=rvdas
 
 [program:logger_manager]
@@ -278,8 +232,8 @@ directory=/opt/openrvdas
 autostart=true
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/logger_manager.err.log
-stdout_logfile=/var/log/openrvdas/logger_manager.out.log
+stderr_logfile=/var/log/openrvdas/logger_manager.stderr
+stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=rvdas
 ```
 
@@ -292,7 +246,6 @@ The status of these servers (as well as the NGINX and UWSGI servers needed to su
   openrvdas:cached_data_server     STOPPED   Not started
   openrvdas:logger_manager         STOPPED   Not started
   simulate_nbp                     STOPPED   Not started
-  simulate_skq                     STOPPED   Not started
   web:nginx                        STOPPED   Not started
   web:uwsgi                        STOPPED   Not started
 
@@ -309,7 +262,6 @@ The status of these servers (as well as the NGINX and UWSGI servers needed to su
   openrvdas:cached_data_server     RUNNING   pid 14124, uptime 0:00:34
   openrvdas:logger_manager         RUNNING   pid 14123, uptime 0:00:34
   simulate_nbp                     STOPPED   Not started
-  simulate_skq                     STOPPED   Not started
   web:nginx                        RUNNING   pid 13684, uptime 0:01:22
   web:uwsgi                        RUNNING   pid 13685, uptime 0:01:22
 
@@ -323,7 +275,6 @@ You will have noticed that many of the examples in this documentation make use o
   openrvdas:cached_data_server     STOPPED   Feb 14 03:18 PM
   openrvdas:logger_manager         STOPPED   Feb 14 03:18 PM
   simulate_nbp                     STOPPED   Feb 14 03:18 PM
-  simulate_skq                     STOPPED   Not started
   web:nginx                        STOPPED   Feb 14 03:18 PM
   web:uwsgi                        STOPPED   Feb 14 03:18 PM
   supervisor> start simulate_nbp

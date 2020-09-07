@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.8.4" />
 <title>server.server_api API documentation</title>
 <meta name="description" content="API for interacting with data store. Implementations should subclass." />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -184,8 +186,8 @@ class ServerAPI:
 
   #############################
   def get_logger_config_name(self, logger_id, mode=None):
-    &#34;&#34;&#34;Retrieve the name of the logger config associated with the 
-    specified logger in the specified mode. If mode is omitted, 
+    &#34;&#34;&#34;Retrieve the name of the logger config associated with the
+    specified logger in the specified mode. If mode is omitted,
     retrieve config name associated with the active mode.
     &gt; api.get_logger_config_name(&#39;knud&#39;)
         knud-&gt;net
@@ -329,7 +331,7 @@ class ServerAPI:
   #   &gt; api.add_cruise(&#39;NBP1702&#39;, &#39;2017-02-02&#39;, &#39;2017-03-01&#39;)
   #   &#34;&#34;&#34;
   #   raise NotImplementedError(&#39;add_cruise must be implemented by subclass&#39;)
-  
+
   #############################
   def delete_configuration(self):
     &#34;&#34;&#34;Remove the specified cruise from the data store.
@@ -355,7 +357,7 @@ class ServerAPI:
 
   #############################
   def add_logger(self, logger_id, logger_config):
-    &#34;&#34;&#34;Add a new logger to the data store. 
+    &#34;&#34;&#34;Add a new logger to the data store.
 
     logger_config - a dict defining:
       host - optional restriction on which host logger must run
@@ -394,7 +396,7 @@ class ServerAPI:
 
   #############################
   def delete_logger_config(self, config_id):
-    &#34;&#34;&#34;Delete specified config from data store (and by extension,   
+    &#34;&#34;&#34;Delete specified config from data store (and by extension,
     from the mode and logger with which it is associated.
     &gt; api.delete_logger_config(&#39;gyr2-&gt;net/file/db&#39;)
     &#34;&#34;&#34;
@@ -414,7 +416,7 @@ class ServerAPI:
 <span>class <span class="ident">ServerAPI</span></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Abstract base class defining an API through which a LoggerServer
+<div class="desc"><p>Abstract base class defining an API through which a LoggerServer
 can interact with a data store.</p>
 <p>Parameters below have the following semantics:</p>
 <pre><code>configuration - dict definition of a OpenRVDAS configuration
@@ -457,7 +459,7 @@ cruise_config as follows:</p>
     &quot;gyr1-&gt;file/net/dbnet&quot;: { config_spec }
   }
 }
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -604,8 +606,8 @@ cruise_config as follows:</p>
 
   #############################
   def get_logger_config_name(self, logger_id, mode=None):
-    &#34;&#34;&#34;Retrieve the name of the logger config associated with the 
-    specified logger in the specified mode. If mode is omitted, 
+    &#34;&#34;&#34;Retrieve the name of the logger config associated with the
+    specified logger in the specified mode. If mode is omitted,
     retrieve config name associated with the active mode.
     &gt; api.get_logger_config_name(&#39;knud&#39;)
         knud-&gt;net
@@ -749,7 +751,7 @@ cruise_config as follows:</p>
   #   &gt; api.add_cruise(&#39;NBP1702&#39;, &#39;2017-02-02&#39;, &#39;2017-03-01&#39;)
   #   &#34;&#34;&#34;
   #   raise NotImplementedError(&#39;add_cruise must be implemented by subclass&#39;)
-  
+
   #############################
   def delete_configuration(self):
     &#34;&#34;&#34;Remove the specified cruise from the data store.
@@ -775,7 +777,7 @@ cruise_config as follows:</p>
 
   #############################
   def add_logger(self, logger_id, logger_config):
-    &#34;&#34;&#34;Add a new logger to the data store. 
+    &#34;&#34;&#34;Add a new logger to the data store.
 
     logger_config - a dict defining:
       host - optional restriction on which host logger must run
@@ -814,7 +816,7 @@ cruise_config as follows:</p>
 
   #############################
   def delete_logger_config(self, config_id):
-    &#34;&#34;&#34;Delete specified config from data store (and by extension,   
+    &#34;&#34;&#34;Delete specified config from data store (and by extension,
     from the mode and logger with which it is associated.
     &gt; api.delete_logger_config(&#39;gyr2-&gt;net/file/db&#39;)
     &#34;&#34;&#34;
@@ -828,108 +830,23 @@ cruise_config as follows:</p>
 <dl>
 <dt id="server.server_api.ServerAPI.CRITICAL"><code class="name">var <span class="ident">CRITICAL</span></code></dt>
 <dd>
-<section class="desc"><p>int([x]) -&gt; integer
-int(x, base=10) -&gt; integer</p>
-<p>Convert a number or string to an integer, or return 0 if no arguments
-are given.
-If x is a number, return x.<strong>int</strong>().
-For floating point
-numbers, this truncates towards zero.</p>
-<p>If x is not a number or if base is given, then x must be a string,
-bytes, or bytearray instance representing an integer literal in the
-given base.
-The literal can be preceded by '+' or '-' and be surrounded
-by whitespace.
-The base defaults to 10.
-Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.</p>
-<pre><code>&gt;&gt;&gt; int('0b100', base=0)
-4
-</code></pre></section>
+<div class="desc"></div>
 </dd>
 <dt id="server.server_api.ServerAPI.DEBUG"><code class="name">var <span class="ident">DEBUG</span></code></dt>
 <dd>
-<section class="desc"><p>int([x]) -&gt; integer
-int(x, base=10) -&gt; integer</p>
-<p>Convert a number or string to an integer, or return 0 if no arguments
-are given.
-If x is a number, return x.<strong>int</strong>().
-For floating point
-numbers, this truncates towards zero.</p>
-<p>If x is not a number or if base is given, then x must be a string,
-bytes, or bytearray instance representing an integer literal in the
-given base.
-The literal can be preceded by '+' or '-' and be surrounded
-by whitespace.
-The base defaults to 10.
-Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.</p>
-<pre><code>&gt;&gt;&gt; int('0b100', base=0)
-4
-</code></pre></section>
+<div class="desc"></div>
 </dd>
 <dt id="server.server_api.ServerAPI.ERROR"><code class="name">var <span class="ident">ERROR</span></code></dt>
 <dd>
-<section class="desc"><p>int([x]) -&gt; integer
-int(x, base=10) -&gt; integer</p>
-<p>Convert a number or string to an integer, or return 0 if no arguments
-are given.
-If x is a number, return x.<strong>int</strong>().
-For floating point
-numbers, this truncates towards zero.</p>
-<p>If x is not a number or if base is given, then x must be a string,
-bytes, or bytearray instance representing an integer literal in the
-given base.
-The literal can be preceded by '+' or '-' and be surrounded
-by whitespace.
-The base defaults to 10.
-Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.</p>
-<pre><code>&gt;&gt;&gt; int('0b100', base=0)
-4
-</code></pre></section>
+<div class="desc"></div>
 </dd>
 <dt id="server.server_api.ServerAPI.INFO"><code class="name">var <span class="ident">INFO</span></code></dt>
 <dd>
-<section class="desc"><p>int([x]) -&gt; integer
-int(x, base=10) -&gt; integer</p>
-<p>Convert a number or string to an integer, or return 0 if no arguments
-are given.
-If x is a number, return x.<strong>int</strong>().
-For floating point
-numbers, this truncates towards zero.</p>
-<p>If x is not a number or if base is given, then x must be a string,
-bytes, or bytearray instance representing an integer literal in the
-given base.
-The literal can be preceded by '+' or '-' and be surrounded
-by whitespace.
-The base defaults to 10.
-Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.</p>
-<pre><code>&gt;&gt;&gt; int('0b100', base=0)
-4
-</code></pre></section>
+<div class="desc"></div>
 </dd>
 <dt id="server.server_api.ServerAPI.WARNING"><code class="name">var <span class="ident">WARNING</span></code></dt>
 <dd>
-<section class="desc"><p>int([x]) -&gt; integer
-int(x, base=10) -&gt; integer</p>
-<p>Convert a number or string to an integer, or return 0 if no arguments
-are given.
-If x is a number, return x.<strong>int</strong>().
-For floating point
-numbers, this truncates towards zero.</p>
-<p>If x is not a number or if base is given, then x must be a string,
-bytes, or bytearray instance representing an integer literal in the
-given base.
-The literal can be preceded by '+' or '-' and be surrounded
-by whitespace.
-The base defaults to 10.
-Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.</p>
-<pre><code>&gt;&gt;&gt; int('0b100', base=0)
-4
-</code></pre></section>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -938,19 +855,19 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <span>def <span class="ident">add_logger</span></span>(<span>self, logger_id, logger_config)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Add a new logger to the data store. </p>
+<div class="desc"><p>Add a new logger to the data store.</p>
 <p>logger_config - a dict defining:
 host - optional restriction on which host logger must run
 configs - list of logger_config names</p>
 <blockquote>
 <p>api.add_logger(gyr2', { 'host_id': <host_id>, 'configs': [....] })</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_logger(self, logger_id, logger_config):
-  &#34;&#34;&#34;Add a new logger to the data store. 
+  &#34;&#34;&#34;Add a new logger to the data store.
 
   logger_config - a dict defining:
     host - optional restriction on which host logger must run
@@ -964,10 +881,10 @@ configs - list of logger_config names</p>
 <span>def <span class="ident">add_logger_config</span></span>(<span>self, logger_config_name, logger_config_spec)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Add a new logger config to the data store.</p>
+<div class="desc"><p>Add a new logger config to the data store.</p>
 <blockquote>
 <p>api.add_logger_config('gyr2-&gt;net/file/db', { logger_config_spec })</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -983,10 +900,10 @@ configs - list of logger_config names</p>
 <span>def <span class="ident">add_logger_config_to_logger</span></span>(<span>self, config, logger_id)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Associate a config with a logger.</p>
+<div class="desc"><p>Associate a config with a logger.</p>
 <blockquote>
 <p>api.add_logger_config_to_logger('gyr2-&gt;net/file/db', 'gyr2')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1002,10 +919,10 @@ configs - list of logger_config names</p>
 <span>def <span class="ident">add_logger_config_to_mode</span></span>(<span>self, config, logger_id, mode)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Associate a config with a logger and mode.</p>
+<div class="desc"><p>Associate a config with a logger and mode.</p>
 <blockquote>
 <p>api.add_logger_config_to_mode('gyr2-&gt;net/file/db', 'gyr2', 'underway')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1021,10 +938,10 @@ configs - list of logger_config names</p>
 <span>def <span class="ident">add_mode</span></span>(<span>self, mode)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Add a new mode to the OpenRVDAS configuration.</p>
+<div class="desc"><p>Add a new mode to the OpenRVDAS configuration.</p>
 <blockquote>
 <p>api.add_mode('underway')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1040,10 +957,10 @@ configs - list of logger_config names</p>
 <span>def <span class="ident">delete_configuration</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Remove the specified cruise from the data store.</p>
+<div class="desc"><p>Remove the specified cruise from the data store.</p>
 <blockquote>
 <p>api.delete_configuration()</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1059,10 +976,10 @@ configs - list of logger_config names</p>
 <span>def <span class="ident">delete_logger</span></span>(<span>self, logger_id)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Remove a logger and all its associated logger_configs from the data store.</p>
+<div class="desc"><p>Remove a logger and all its associated logger_configs from the data store.</p>
 <blockquote>
 <p>api.delete_logger(gyr2')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1078,17 +995,17 @@ configs - list of logger_config names</p>
 <span>def <span class="ident">delete_logger_config</span></span>(<span>self, config_id)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Delete specified config from data store (and by extension, <br>
+<div class="desc"><p>Delete specified config from data store (and by extension,
 from the mode and logger with which it is associated.</p>
 <blockquote>
 <p>api.delete_logger_config('gyr2-&gt;net/file/db')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def delete_logger_config(self, config_id):
-  &#34;&#34;&#34;Delete specified config from data store (and by extension,   
+  &#34;&#34;&#34;Delete specified config from data store (and by extension,
   from the mode and logger with which it is associated.
   &gt; api.delete_logger_config(&#39;gyr2-&gt;net/file/db&#39;)
   &#34;&#34;&#34;
@@ -1099,12 +1016,12 @@ from the mode and logger with which it is associated.</p>
 <span>def <span class="ident">delete_mode</span></span>(<span>self, mode)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Delete the named mode (and all its configs) from the
+<div class="desc"><p>Delete the named mode (and all its configs) from the
 data store. If the deleted mode is the active mode, set
 the active mode to the default mode.</p>
 <blockquote>
 <p>api.delete_mode('underway')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1122,11 +1039,11 @@ the active mode to the default mode.</p>
 <span>def <span class="ident">get_active_mode</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get the currently active mode from the data store.</p>
+<div class="desc"><p>Get the currently active mode from the data store.</p>
 <blockquote>
 <p>api.get_active_mode()
 "port"</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1143,7 +1060,7 @@ the active mode to the default mode.</p>
 <span>def <span class="ident">get_configuration</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get OpenRVDAS configuration from the data store.</p></section>
+<div class="desc"><p>Get OpenRVDAS configuration from the data store.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1158,11 +1075,11 @@ the active mode to the default mode.</p>
 <span>def <span class="ident">get_default_mode</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get the default mode from the data store.</p>
+<div class="desc"><p>Get the default mode from the data store.</p>
 <blockquote>
 <p>api.get_default_mode()
 "off"</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1179,10 +1096,10 @@ the active mode to the default mode.</p>
 <span>def <span class="ident">get_logger</span></span>(<span>self, logger_id)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Retrieve the logger spec for the specified logger id.</p>
+<div class="desc"><p>Retrieve the logger spec for the specified logger id.</p>
 <blockquote>
 <p _configs_:...="&quot;configs&quot;:..." _host_id_:="&quot;host_id&quot;:" _knud-_net_="&quot;knud-&gt;net&quot;," _knud.pi_="&quot;knud.pi&quot;," _name_:="&quot;name&quot;:">api.get_logger('knud')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1199,10 +1116,10 @@ the active mode to the default mode.</p>
 <span>def <span class="ident">get_logger_config</span></span>(<span>self, config_name)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Retrieve the logger config associated with the specified name.</p>
+<div class="desc"><p>Retrieve the logger config associated with the specified name.</p>
 <blockquote>
 <p _..._="[...]" _readers_:="&quot;readers&quot;:" _transforms_:="&quot;transforms&quot;:" _writers_:="&quot;writers&quot;:">api.get_logger_config('knud-&gt;net')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1219,20 +1136,20 @@ the active mode to the default mode.</p>
 <span>def <span class="ident">get_logger_config_name</span></span>(<span>self, logger_id, mode=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Retrieve the name of the logger config associated with the
+<div class="desc"><p>Retrieve the name of the logger config associated with the
 specified logger in the specified mode. If mode is omitted,
 retrieve config name associated with the active mode.</p>
 <blockquote>
 <p>api.get_logger_config_name('knud')
 knud-&gt;net</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_logger_config_name(self, logger_id, mode=None):
-  &#34;&#34;&#34;Retrieve the name of the logger config associated with the 
-  specified logger in the specified mode. If mode is omitted, 
+  &#34;&#34;&#34;Retrieve the name of the logger config associated with the
+  specified logger in the specified mode. If mode is omitted,
   retrieve config name associated with the active mode.
   &gt; api.get_logger_config_name(&#39;knud&#39;)
       knud-&gt;net
@@ -1245,11 +1162,11 @@ knud-&gt;net</p>
 <span>def <span class="ident">get_logger_config_names</span></span>(<span>self, logger_id)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Retrieve list of logger config names for the specified logger.</p>
+<div class="desc"><p>Retrieve list of logger config names for the specified logger.</p>
 <blockquote>
 <p>api.get_logger_config_names('knud')
 ["off", "knud-&gt;net", "knud-&gt;net/file", "knud-&gt;net/file/db"]</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1267,14 +1184,14 @@ knud-&gt;net</p>
 <span>def <span class="ident">get_logger_configs</span></span>(<span>self, mode=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Retrieve the configs associated with a mode from the data store.
+<div class="desc"><p>Retrieve the configs associated with a mode from the data store.
 If mode is omitted, retrieve configs associated with the active mode.</p>
 <blockquote>
 <p>api.get_logger_configs()
 {"knud": { config_spec },
 "gyr1": { config_spec }
 }</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1294,14 +1211,14 @@ If mode is omitted, retrieve configs associated with the active mode.</p>
 <span>def <span class="ident">get_loggers</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get the dict of {logger_id:logger_spec,&hellip;} from the data store.</p>
+<div class="desc"><p>Get the dict of {logger_id:logger_spec,&hellip;} from the data store.</p>
 <blockquote>
 <p>api.get_loggers()
 {
 "knud": {"host": "knud.pi", "configs":&hellip;},
 "gyr1": {"configs":&hellip;}
 }</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1321,10 +1238,10 @@ If mode is omitted, retrieve configs associated with the active mode.</p>
 <span>def <span class="ident">get_message_log</span></span>(<span>self, source=None, user=None, log_level=9223372036854775807, since_timestamp=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Retrieve log messages from source at or above log_level since
+<div class="desc"><p>Retrieve log messages from source at or above log_level since
 timestamp. If source is omitted, retrieve from all sources. If
 log_level is omitted, retrieve at all levels. If since_timestamp is
-omitted, only retrieve most recent message.</p></section>
+omitted, only retrieve most recent message.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1343,11 +1260,11 @@ omitted, only retrieve most recent message.</p></section>
 <span>def <span class="ident">get_modes</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get the list of modes from the data store.</p>
+<div class="desc"><p>Get the list of modes from the data store.</p>
 <blockquote>
 <p>api.get_modes()
 ["off", "port", "underway"]</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1364,9 +1281,9 @@ omitted, only retrieve most recent message.</p></section>
 <span>def <span class="ident">get_status</span></span>(<span>self, since_timestamp=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Retrieve a dict of the most-recent status report from each
+<div class="desc"><p>Retrieve a dict of the most-recent status report from each
 logger. If since_timestamp is specified, retrieve all status reports
-since that time.</p></section>
+since that time.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1382,10 +1299,10 @@ since that time.</p></section>
 <span>def <span class="ident">load_configuration</span></span>(<span>self, configuration)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Load a complete cruise configuration to the data store.</p>
+<div class="desc"><p>Load a complete cruise configuration to the data store.</p>
 <blockquote>
 <p>api.load_configuration({ configuration })</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1401,7 +1318,7 @@ since that time.</p></section>
 <span>def <span class="ident">message_log</span></span>(<span>self, source, user, log_level, message)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Timestamp and store the passed message.</p></section>
+<div class="desc"><p>Timestamp and store the passed message.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1415,7 +1332,7 @@ since that time.</p></section>
 <span>def <span class="ident">on_load</span></span>(<span>self, callback, kwargs=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Register a method to be called when new configs have been loaded.</p></section>
+<div class="desc"><p>Register a method to be called when new configs have been loaded.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1431,7 +1348,7 @@ since that time.</p></section>
 <span>def <span class="ident">on_quit</span></span>(<span>self, callback, kwargs=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Register a method to be called when quit is signaled changes.</p></section>
+<div class="desc"><p>Register a method to be called when quit is signaled changes.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1447,7 +1364,7 @@ since that time.</p></section>
 <span>def <span class="ident">on_update</span></span>(<span>self, callback, kwargs=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Register a method to be called when current configs change.</p></section>
+<div class="desc"><p>Register a method to be called when current configs change.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1463,7 +1380,7 @@ since that time.</p></section>
 <span>def <span class="ident">quit</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Execute any callbacks that were registered to run on quit.</p></section>
+<div class="desc"><p>Execute any callbacks that were registered to run on quit.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1479,11 +1396,11 @@ since that time.</p></section>
 <span>def <span class="ident">set_active_logger_config</span></span>(<span>self, logger, config_name)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Set the active logger config for the specified logger to
+<div class="desc"><p>Set the active logger config for the specified logger to
 the specific logger_config name.</p>
 <blockquote>
 <p>api.set_active_logger_config('knud', 'knud-&gt;file/net/db')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1501,10 +1418,10 @@ the specific logger_config name.</p>
 <span>def <span class="ident">set_active_mode</span></span>(<span>self, mode)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Set the active mode for OpenRVDAS.</p>
+<div class="desc"><p>Set the active mode for OpenRVDAS.</p>
 <blockquote>
 <p>api.set_active_mode(port')</p>
-</blockquote></section>
+</blockquote></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1520,7 +1437,7 @@ the specific logger_config name.</p>
 <span>def <span class="ident">signal_load</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Call the registered methods when new configs have been loaded.</p></section>
+<div class="desc"><p>Call the registered methods when new configs have been loaded.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1536,7 +1453,7 @@ the specific logger_config name.</p>
 <span>def <span class="ident">signal_update</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Call the registered methods when current configs change.</p></section>
+<div class="desc"><p>Call the registered methods when current configs change.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1613,9 +1530,7 @@ the specific logger_config name.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

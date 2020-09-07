@@ -80,7 +80,7 @@ cache in /var/tmp/openrvdas/disk\_cache that it can call on to "warm
 up" the in-memory cache if it is terminated and restarted.
 
 Its stderr and stdout are written to
-``/var/log/openrvdas/cached_data_server.[err,out].log`` respectively.
+``/var/log/openrvdas/cached_data_server.std[err,out]`` respectively.
 
 The full specification can be found in
 ``/etc/supervisor/conf.d/openrvdas.conf`` in Ubuntu and

@@ -2,12 +2,13 @@
 
 import logging
 import sys
+import time
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils import timestamp
 from logger.utils.formats import Text
 from logger.writers.writer import Writer
-from logger.writers.text_file_writer import TextFileWriter
+from logger.writers.file_writer import FileWriter
 
 ################################################################################
 class LogfileWriter(Writer):
@@ -17,8 +18,7 @@ class LogfileWriter(Writer):
                date_format=timestamp.DATE_FORMAT,
                split_char=' ', suffix='',
                rollover_hourly=False):
-    """
-    Write timestamped text records to file. Base filename will have
+    """Write timestamped text records to file. Base filename will have
     date appended, in keeping with R2R format recommendations
     (http://www.rvdata.us/operators/directory). When timestamped date on
     records rolls over to next day, create new file with new date suffix.
@@ -69,20 +69,23 @@ class LogfileWriter(Writer):
       return
 
     if not type(record) is str:
-      logging.error('LogfileWriter.write() - record is not timestamped string: '
-                    '%s', record)
+      logging.error('LogfileWriter.write() - record not timestamped: %s ',
+                    record)
       return
 
-    # First things first: get the date string from the record
-    try:
+    # Get the timestamp we'll be using
+    try: # Try to extract timestamp from record
       time_str = record.split(self.split_char)[0]
       ts = timestamp.timestamp(time_str, time_format=self.time_format)
-      hr_str = self.rollover_hourly and timestamp.date_str(ts, date_format='_%H00') or ""      
-      date_str = timestamp.date_str(ts, date_format=self.date_format)
-      logging.debug('LogfileWriter date_str: %s', date_str)
     except ValueError:
-      logging.error('LogfileWriter.write() - bad record timestamp: %s', record)
+      logging.error('LogfileWriter.write() - bad timestamp: %s', record)
       return
+
+    # Now parse ts into hour and date strings
+    hr_str = self.rollover_hourly and \
+             timestamp.date_str(ts, date_format='_%H00') or ""
+    date_str = timestamp.date_str(ts, date_format=self.date_format)
+    logging.debug('LogfileWriter date_str: %s', date_str)
 
     # Is it time to create a new file to write to?
     if not self.writer or date_str != self.current_date or hr_str != self.current_hour:
@@ -90,7 +93,7 @@ class LogfileWriter(Writer):
       self.current_date = date_str
       self.current_hour = self.rollover_hourly and hr_str or ""
       logging.info('LogfileWriter opening new file: %s', self.current_filename)
-      self.writer = TextFileWriter(self.current_filename, self.flush)
+      self.writer = FileWriter(filename=self.current_filename, flush=self.flush)
 
     logging.debug('LogfileWriter writing record: %s', record)
     self.writer.write(record)

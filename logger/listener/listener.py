@@ -26,8 +26,7 @@ class Listener:
   """
   ############################
   def __init__(self, readers=[], transforms=[], writers=[], stderr_writers=[],
-               host_id='', interval=0, name=None, check_format=False,
-               log_level=None):
+               host_id='', interval=0, name=None, check_format=False):
     """listener = Listener(readers, transforms=[], writers=[],
                         interval=0, check_format=False)
 
@@ -39,10 +38,6 @@ class Listener:
 
     stderr_writers A single Writer or a list of zero or more Writers to which
                    the logger's stderr should be written.
-
-    host_id        Optional host_id on which Listener is to be run. Ignored
-                   here, but it may show up as part of a config, so we need
-                   to be able to handle is in kwargs.
 
     interval       How long to sleep before reading sequential records
 

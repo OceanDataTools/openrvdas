@@ -7,12 +7,11 @@ from logger.utils import timestamp
 from logger.transforms.transform import Transform
 
 ################################################################################
-
 def polar_diff(last_value, value):
   return ((value - last_value) + 180) % 360 - 180
 
+################################################################################
 class DeltaTransform:
-
   def __init__(self, rate=False, field_type=None):
   """
     rate — whether to return the rate (delta/second) for some or all fields, or just return the delta
@@ -27,7 +26,6 @@ class DeltaTransform:
   
   ############################
   def transform(self, record):
-    
     if not record:
       return None
     
@@ -36,7 +34,7 @@ class DeltaTransform:
     if type(record) is DASRecord:
       fields = record.fields
       timestamp = record.timestamp
-          
+
     elif type(record) is dict:
       fields = record.get('fields', None)
       timestamp = record.get('timestamp', None)

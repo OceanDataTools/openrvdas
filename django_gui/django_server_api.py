@@ -83,7 +83,7 @@ class DjangoServerAPI(ServerAPI):
           try:
             last_update = LastUpdate.objects.latest('timestamp')
           except django.db.utils.OperationalError:
-            logging.warning('Failed MySQL read - trying again')
+            logging.warning('Failed Django database read - trying again')
             connection.close()
             time.sleep(0.05)
             continue
@@ -98,13 +98,18 @@ class DjangoServerAPI(ServerAPI):
     with self.config_rlock:
       while True:
         try:
+          # Saving updates the timestamp value
+          LastUpdate.objects.latest('timestamp').save()
+          break
+        # If we have no LastUpdate - create one
+        except LastUpdate.DoesNotExist:
           LastUpdate().save()
-          return
-        except django.db.utils.OperationalError as e:
-          logging.warning('_set_update_time() '
-                          'Got DjangoOperationalError. Trying again: %s', e)
+          break
+        # If database balked, back off, try again
+        except django.db.utils.OperationalError:
+          logging.warning('Failed Django database read - trying again')
           connection.close()
-          time.sleep(0.01)
+          time.sleep(0.05)
 
   #############################
   def _get_cruise_object(self):
@@ -115,7 +120,7 @@ class DjangoServerAPI(ServerAPI):
         try:
           return Cruise.objects.get()
         except Cruise.DoesNotExist:
-          raise ValueError('No current cruise found"')
+          return None
         except django.db.utils.OperationalError as e:
           logging.warning('_get_cruise_object() '
                           'Got DjangoOperationalError. Trying again: %s', e)
@@ -204,6 +209,8 @@ class DjangoServerAPI(ServerAPI):
     """
     with self.config_rlock:
       cruise = self._get_cruise_object()
+      if cruise is None:
+        return None
       active_mode = cruise.active_mode.name if cruise.active_mode else None
       default_mode = cruise.default_mode.name if cruise.default_mode else None
       config = {
@@ -223,6 +230,8 @@ class DjangoServerAPI(ServerAPI):
     """Return list of modes defined for given cruise."""
     with self.config_rlock:
       cruise = self._get_cruise_object()
+      if cruise is None:
+        return None
       return cruise.modes()
 
   ############################
@@ -235,6 +244,8 @@ class DjangoServerAPI(ServerAPI):
         return self.active_mode
 
       cruise = self._get_cruise_object()
+      if cruise is None:
+        return None
       if cruise.active_mode:
         self.active_mode = cruise.active_mode.name
         self.active_mode_time = time.time()
@@ -249,6 +260,8 @@ class DjangoServerAPI(ServerAPI):
       while True:
         try:
           cruise = self._get_cruise_object()
+          if cruise is None:
+            return None
           if cruise.default_mode:
             return cruise.default_mode.name
           return None
@@ -380,6 +393,9 @@ class DjangoServerAPI(ServerAPI):
       try:
         with self.config_rlock:
           cruise = self._get_cruise_object()
+          if cruise is None:
+            logging.warning('Can not set active mode - no cruise found')
+            return
           try:
             mode_obj = Mode.objects.get(name=mode)
           except Mode.DoesNotExist:
@@ -397,6 +413,21 @@ class DjangoServerAPI(ServerAPI):
 
             new_config = self._get_logger_config_object(logger_id=logger_id,
                                                         mode=mode)
+
+            # If we get no new_config, this means that the logger has
+            # no config defined in this mode. That should not be. Try
+            # to recover by putting it in 'off'
+            if not new_config:
+              logging.warning('Logger %s has no configuration defined for '
+                              'mode %s?!? Setting to "off"', logger_id, mode)
+              new_config = self._get_logger_config_object(logger_id=logger_id,
+                                                          mode='off')
+            # If we get no new_config for mode 'off', just skip this logger.
+            if not new_config:
+              logging.warning('Logger %s has no configuration defined for '
+                              'mode "off:, either. Skipping it.', logger_id)
+              continue
+            
             # Save new config and note that its state has been updated
             logger.config = new_config
             logger.save()

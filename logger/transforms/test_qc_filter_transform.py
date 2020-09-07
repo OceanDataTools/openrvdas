@@ -8,7 +8,7 @@ import warnings
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.transforms.qc_filter_transform import QCFilterTransform
-from logger.transforms.parse_nmea_transform import ParseNMEATransform
+from logger.transforms.parse_transform import ParseTransform
 
 LINES = """grv1 2017-11-04T05:12:21.018622Z 01:025876 00
 grv1 2017-11-04T05:12:21.273413Z 01:022013 00
@@ -25,8 +25,8 @@ class TestQCFilterTransform(unittest.TestCase):
 
   ############################
   def test_default(self):
-    p = ParseNMEATransform()
-    q = QCFilterTransform(bounds='Grav1ValueMg:22000:23000,Grav1Error::2')
+    p = ParseTransform(field_patterns=['{Units:d}:{GravValue:d} {GravError:d}'])
+    q = QCFilterTransform(bounds='GravValue:22000:23000,GravError::2')
 
     record = p.transform('grv1 2017-11-04T05:12:21.273413Z 01:022013 00')
     self.assertIsNone(q.transform(record))
@@ -36,17 +36,18 @@ class TestQCFilterTransform(unittest.TestCase):
 
     record = p.transform('grv1 2017-11-04T05:12:21.273413Z 01:023013 00')
     self.assertEqual(q.transform(record),
-                      'Grav1ValueMg: 23013 > upper bound 23000')
+                      'GravValue: 23013 > upper bound 23000')
 
     record = p.transform('grv1 2017-11-04T05:12:21.273413Z 01:023013 03')
 
     self.assertEqual(q.transform(record).split(';').sort(),
-                     'Grav1ValueMg: 23013 > upper bound 23000; Grav1Error: 3 > upper bound 2'.split(';').sort())
+                     'GravValue: 23013 > upper bound 23000; GravError: 3 > upper bound 2'.split(';').sort())
 
   ############################
   def test_error(self):
-    p = ParseNMEATransform()
-    q = QCFilterTransform(bounds='KnudLFDepth:0:6000,KnudHFDepth:0:5000')
+    p = ParseTransform(
+      field_patterns=['{LF:nc},{LFDepth:of},{LFValid:od},{HF:nc},{HFDepth:of},{HFValid:od},{SoundSpeed:og},{Latitude:f},{Longitude:f}'])
+    q = QCFilterTransform(bounds='LFDepth:0:6000,HFDepth:0:5000')
 
     record = 'knud 2017-11-04T05:12:21.981359Z'
     self.assertEqual(q.transform(record),
@@ -54,18 +55,17 @@ class TestQCFilterTransform(unittest.TestCase):
 
     record = p.transform('knud 2017-11-04T05:12:21.981359Z 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183')
     self.assertEqual(q.transform(record),
-                     'KnudHFDepth: non-numeric value: "None"')
+                     'HFDepth: non-numeric value: "None"')
 
 
   ############################
   def test_message(self):
-    p = ParseNMEATransform()
-    q = QCFilterTransform(bounds='KnudLFDepth:0:6000,KnudHFDepth:0:5000',
+    q = QCFilterTransform(bounds='LFDepth:0:6000,HFDepth:0:5000',
                           message='The sky is falling!')
-    record = {'KnudLFDepth':5999}
+    record = {'LFDepth':5999}
     self.assertEqual(q.transform(record), None)
 
-    record = {'KnudLFDepth':6001}
+    record = {'LFDepth':6001}
     self.assertEqual(q.transform(record), 'The sky is falling!')
 
 ################################################################################
