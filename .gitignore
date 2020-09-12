@@ -43,6 +43,7 @@ local/rcrv/.coriolix_preferences
 
 # Created by build scripts
 .build_openrvdas_preferences
+.install_influxdb_preferences
 
 # Symlink for legacy widget paths
 widgets
