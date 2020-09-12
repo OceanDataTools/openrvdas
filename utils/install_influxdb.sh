@@ -4,29 +4,15 @@
 #   https:/github.com/oceandatatools/openrvdas
 #
 # This script installs and configures InfluxDB, Grafana (and
-# optionally Telegraf), installs them as system services and makes the
-# necessary arrangements for OpenRVDAS to feed data to InfluxDB.  It
-# is designed to be run as root.
+# optionally Telegraf) and creates a supervisord file that allows them
+# to be started/stopped by supervisorctl. It should be run as the user
+# who will be running OpenRVDAS (e.g. 'rvdas').
 #
 # The script has been designed to be idempotent, that is, if can be
 # run over again with no ill effects.
 #
 # Once installed, you should be able to start/stop/disable the
-# relevant services using either systemctl (Linux) or brew services
-# (MacOS):
-#
-# systemctl [command] [service]
-#
-# where command is one of
-#  - stop/start/restart - stop/start/restart the running server
-#  - enable/disable - set the server to start on system startup (or not)
-#
-# and service is one of
-#  - influxdb
-#  - grafana-server
-#  - telegraf
-#
-# For MacOS, use 'brew services' instead of 'systemctl'
+# relevant services using supervisorctl.
 #
 # When running, you should be able to reach the relevant servers at:
 #  - influxdb:       localhost:9999
@@ -90,7 +76,7 @@ function set_default_variables {
     DEFAULT_RUN_INFLUXDB=yes
     DEFAULT_RUN_GRAFANA=yes
     DEFAULT_RUN_TELEGRAF=yes
-    
+
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
@@ -151,12 +137,7 @@ yes_no() {
 # package for InfluxDB is v1.8, so we need to create our own formula
 # for grabbing and bottling up v2.
 function create_influx_bottle {
-    # Counts on INFLUXDB_URL and RUN_INFLUXDB being defined
-    if [ $RUN_INFLUXDB == "yes" ];then
-        RUN_AT_LOAD=true
-    else
-        RUN_AT_LOAD=false
-    fi
+    # Counts on INFLUXDB_URL being defined
 
     cat > /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/influxdbv2.rb <<EOF
 class Influxdbv2 < Formula
@@ -213,7 +194,7 @@ class Influxdbv2 < Formula
             <string>--reporting-disabled</string>
           </array>
           <key>RunAtLoad</key>
-          <${RUN_AT_LOAD}/>
+          <false}/>
           <key>WorkingDirectory</key>
           <string>#{var}</string>
           <key>StandardErrorPath</key>
@@ -234,6 +215,26 @@ EOF
 }
 
 ###########################################################################
+# An ugly, but necessary thing.
+function get_influxdb_auth_token {
+
+    CONFIG_FILE=~/.influxdbv2/configs
+    if [[ ! -e $CONFIG_FILE ]];then
+        echo "No InfluxDB config file found: $CONFIG_FILE; can't extract token"
+        return
+    fi
+    TOKEN_LINE=`grep '^  token = ' $CONFIG_FILE`
+    INFLUXDB_AUTH_TOKEN=`echo $TOKEN_LINE | cut -d\" -f2`
+
+
+    if [[ -z "$INFLUXDB_AUTH_TOKEN" ]];then
+        echo Unable to find InfluxDB auth token in config file \"$CONFIG_FILE\"
+    else
+        echo Retrieved InfluxDB auth token: $INFLUXDB_AUTH_TOKEN
+    fi
+}
+
+###########################################################################
 ###########################################################################
 # Install and configure InfluxDB - to be run *after* OpenRVDAS is in place!
 function install_influxdb {
@@ -246,75 +247,36 @@ function install_influxdb {
 
     echo "#####################################################################"
     echo Installing InfluxDB...
-    
+
+    # Is there already an installation?
+    if [ -d ~/.influxdbv2 ];then
+        echo
+        echo "An installation of InfluxDB appears to already exist. Overwriting"
+        echo "will reset any existing tokens and require resetting connections "
+        echo "from all Grafana and Telegraf servers."
+        yes_no "Overwrite existing installation?" no
+        if [ $YES_NO_RESULT == 'no' ];then
+            return 0
+        fi
+    fi
+
+    # If here, we're installing new or overwriting the existing installation.
+    # Clear out any old setup directories.
+    rm -rf ~/.influxdbv2
+
     # If we're on MacOS, use brew. We need to bottle our own copy of
     # InfluxDB to get V2.
     if [ `uname -s` = 'Darwin' ]; then
-        if [ -d ~/.influxdbv2 ];then
-            echo
-            echo "An installation of InfluxDB appears to already exist. Overwriting"
-            echo "Will reset any existing tokens and require resetting connections "
-            echo "From all Grafana and Telegraf servers."
-            yes_no "Overwrite existing installation?" no
-            if [ $YES_NO_RESULT == 'no' ];then
-                return 0
-            fi
-        fi
-        
-        # If here, we're installing new or overwriting the existing installation.
-        # Clear out any old setup directories.
-        rm -rf ~/.influxdbv2
-
         INFLUXDB_RELEASE=influxdb_2.0.0-beta.15_darwin_amd64 # for MacOS
         INFLUXDB_URL=https://$INFLUXDB_REPO/${INFLUXDB_RELEASE}.tar.gz
         create_influx_bottle
         brew reinstall influxdbv2
 
-        # We need to start influxdb up to do setup
-        brew services restart influxdbv2
-
-        echo Sleeping to give InfluxDB time to start up
-        sleep 15
-        echo Running influx setup
-        /usr/local/bin/influx setup \
-          --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
-          --org openrvdas --bucket openrvdas --retention 0 --force # > /dev/null
-
-        echo Getting auth token
-        INFLUXDB_AUTH_TOKEN=`/usr/local/bin/influx auth list | grep $INFLUXDB_USER | cut -f2`
-        # Copy the auth token into database settings
-        sed -i -e "s/INFLUXDB_AUTH_TOKEN = '.*'/INFLUXDB_AUTH_TOKEN = '${INFLUXDB_AUTH_TOKEN}'/" $INSTALL_ROOT/openrvdas/database/settings.py
-
-        # Now shut down server if we've not been asked to keep it
-        # running.
-        if [ $RUN_INFLUXDB == 'yes' ];then
-            brew services start influxdbv2
-        else
-            brew services stop influxdbv2
-        fi
-        
     # If we're on Linux, grab and copy
     elif [ `uname -s` = 'Linux' ]; then
         INFLUXDB_RELEASE=influxdb_2.0.0-beta.15_linux_amd64 # for Linux
         INFLUXDB_URL=http://$INFLUXDB_REPO/${INFLUXDB_RELEASE}.tar.gz
 
-        # Check if we've already got an installation, and give user an
-        # option to skip if they don't want to clobber it and install over
-        # it.
-        if [ -e '/usr/local/bin/influx' ]; then
-            echo
-            echo "An installation of InfluxDB appears to already exist. Overwriting"
-            echo "Will reset any existing tokens and require resetting connections "
-            echo "From all Grafana and Telegraf servers."
-            yes_no "Overwrite existing installation?" no
-            if [ $YES_NO_RESULT == 'no' ];then
-                return 0
-            fi
-        fi
-        
-        # If here, we're installing new or overwriting the existing installation.
-        # Clear out any old setup directories.
-        rm -rf ~/.influxdbv2 /var/root/.influxdbv2 /private/var/root/.influxdbv2/configs
         pushd /tmp
         if [ -e ${INFLUXDB_RELEASE}.tar.gz ]; then
             echo Already have archive locally: /tmp/${INFLUXDB_RELEASE}.tar.gz
@@ -332,16 +294,36 @@ function install_influxdb {
         cp -f  ${INFLUXDB_RELEASE}/influx ${INFLUXDB_RELEASE}/influxd /usr/local/bin
         popd
 
-        echo Need systemctl stuff for InfluxDB!!!!!!
-        
     # If not MacOS and not Linux, we don't know how to install InfluxDB
     else
         echo "ERROR: No InfluxDB binary found for architecture \"`uname -s`\"."
         exit_gracefully
     fi
 
+    # Run setup
     echo "#################################################################"
+    echo Running InfluxDB setup - killing all currently-running instances
+    killall influxd || echo no processes killed
+    echo Running server in background
+    /usr/local/bin/influxd --reporting-disabled > /dev/null &
+    echo Sleeping to give server time to start up
+    sleep 15
+    echo Running influx setup
+    /usr/local/bin/influx setup \
+        --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
+        --org openrvdas --bucket openrvdas --retention 0 --force # > /dev/null
+    echo Killing the InfluxDB instance we started
+    killall influxd || echo no processes killed
+
+    # Make sure setup succeeded by trying to get auth token
+    get_influxdb_auth_token
+    if [[ -z "$INFLUXDB_AUTH_TOKEN" ]];then
+        echo Failed to get InfluxDB auth token - setup failed!
+        exit_gracefully
+    fi
+
     # Install the InfluxDB python client
+    echo "#################################################################"
     echo Installing Python client
     pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
@@ -363,58 +345,42 @@ function install_grafana {
         brew reinstall grafana
 
         echo Downloading plugins
-        sudo /usr/local/bin/grafana-cli --pluginsDir /usr/local/var/lib/grafana/data/plugins plugins install grafana-influxdb-flux-datasource
-        sudo /usr/local/bin/grafana-cli --pluginsDir /usr/local/var/lib/grafana/data/plugins plugins install briangann-gauge-panel
+        /usr/local/bin/grafana-cli --pluginsDir /usr/local/var/lib/grafana/plugins plugins install grafana-influxdb-flux-datasource
+        /usr/local/bin/grafana-cli --pluginsDir /usr/local/var/lib/grafana/plugins plugins install briangann-gauge-panel
 
-        if [ $RUN_GRAFANA == 'yes' ];then
-            brew services start grafana
-        fi
-
-    # If CentOS/Ubuntu/etc, use 
+    # If CentOS/Ubuntu/etc, use
     elif [ `uname -s` = 'Linux' ]; then
         sdfasdf
         chown -R grafana /var/lib/grafana/plugins/
-        chgrp -R grafana /var/lib/grafana/plugins/    
+        chgrp -R grafana /var/lib/grafana/plugins/
 
     else
         echo "ERROR: Unknown OS/architecture \"`uname -s`\"."
         exit_gracefully
     fi
+
     echo Done setting up Grafana!
 }
-
-###########################################################################
-# An ugly, but necessary thing. We don't know if they've already set
-# this, so we need to start up influxdb if it's not running, fetch it
-# using auth, then return it to its prior state.
-function set_influxdb_auth_token {
-    if [[ -z "`brew services | grep influxdbv2 | grep stopped`" ]];then
-        INFLUX_WAS_RUNNING=true
-    else
-        brew services start influxdbv2
-        sleep 15
-        INFLUX_WAS_RUNNING=false
-    fi
-
-    INFLUXDB_AUTH_TOKEN=`/usr/local/bin/influx auth list | grep $INFLUXDB_USER | cut -f2`
-
-    if [ $INFLUX_WAS_RUNNING == "false" ];then
-        brew services stop influxdbv2
-    fi
-}    
 
 ###########################################################################
 # Tweak the telegraf.conf file to fit our installation
 function fix_telegraf_conf {
     TELEGRAF_CONF=$1
+    ORGANIZATION=openrvdas
+    BUCKET=openrvdas
 
-    set_influxdb_auth_token
-    echo HAVE TOKEN: $
+    # Make sure we've got an InfluxDB auth token
+    get_influxdb_auth_token
+    if [[ -z "$INFLUXDB_AUTH_TOKEN" ]];then
+        echo Failed to get InfluxDB auth token - Telegraf setup failed!
+        exit_gracefully
+    fi
+
     sed -i -e "s/\[\[outputs.influxdb\]\]/\#\[\[outputs.influxdb\]\]/" $TELEGRAF_CONF
     sed -i -e "s/# \[\[outputs.influxdb_v2\]\]/\[\[outputs.influxdb_v2\]\]/" $TELEGRAF_CONF
     sed -i -e "s/#   token = \"\"/   token = \"${INFLUXDB_AUTH_TOKEN}\"/" $TELEGRAF_CONF
-    sed -i -e "s/#   organization = \"\"/   organization = \"openrvdas\"/" $TELEGRAF_CONF
-    sed -i -e "s/#   bucket = \"\"/   bucket = \"openrvdas\"/" $TELEGRAF_CONF
+    sed -i -e "s/#   organization = \"\"/   organization = \"$ORGANIZATION\"/" $TELEGRAF_CONF
+    sed -i -e "s/#   bucket = \"\"/   bucket = \"$BUCKET\"/" $TELEGRAF_CONF
 }
 
 ###########################################################################
@@ -427,11 +393,7 @@ function install_telegraf {
         brew reinstall telegraf
         fix_telegraf_conf /usr/local/etc/telegraf.conf
 
-        if [ $RUN_TELEGRAF == 'yes' ];then
-            brew services start telegraf
-        fi
-
-    # If CentOS/Ubuntu/etc, use 
+    # If CentOS/Ubuntu/etc, use
     elif [ `uname -s` = 'Linux' ]; then
         sdfasdf
 
@@ -439,7 +401,159 @@ function install_telegraf {
         echo "ERROR: Unknown OS/architecture \"`uname -s`\"."
         exit_gracefully
     fi
-    echo 7
+
+    echo Done setting up Grafana!
+}
+
+###########################################################################
+# Set up supervisord file to start/stop all the relevant scripts.
+function set_up_supervisor {
+    echo "#####################################################################"
+    echo Setting up supervisord file...
+
+    if [ `uname -s` = 'Darwin' ]; then
+        SUPERVISOR_FILE=/usr/local/etc/supervisor.d/influx.ini
+
+    # If CentOS/Ubuntu/etc, different distributions hide them
+    # different places. Sigh.
+    elif [ `uname -s` = 'Linux' ]; then
+        if [[ -d /etc/supervisor/conf.d ]];then
+            SUPERVISOR_FILE=/etc/supervisor/conf.d/influx.conf
+        elif [[ -d /etc/supervisor.d ]];then
+            SUPERVISOR_FILE=/etc/supervisor.d/influx.ini
+        else
+            echo "Can't figure where to put control file for supervisor!"
+            exit_gracefully
+        fi
+    else
+        echo "ERROR: Unknown OS/architecture \"`uname -s`\"."
+        exit_gracefully
+    fi
+
+    cat > $SUPERVISOR_FILE <<EOF
+; Control file for InfluxDB, Grafana and Telegraf. Generated using the
+; openrvdas/utils/install_influxdb.sh script
+EOF
+
+    ##########
+    # If InfluxDB is installed, create an entry for it
+    if [[ -e /usr/local/bin/influxd ]]; then
+        if [[ $RUN_INFLUXDB == 'yes' ]];then
+            AUTOSTART_INFLUXDB=true
+        else
+            AUTOSTART_INFLUXDB=false
+        fi
+        cat >> $SUPERVISOR_FILE <<EOF
+
+; Run InfluxDB
+[program:influxdb]
+command=/usr/local/bin/influxd --reporting-disabled
+directory=/opt/openrvdas
+autostart=$AUTOSTART_INFLUXDB
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/influxdb.stderr
+EOF
+    fi
+
+    ##########
+    # If Grafana is installed, create an entry for it. Grafana
+    # requires all sorts of command line help, and the locations of
+    # the files it needs depend on the system, so hunt around.
+    if [[ -e /usr/local/bin/grafana-server ]]; then
+        # Find Grafana config
+        if [[ -e /etc/grafana/grafana.ini ]];then
+            GRAFANA_INI=/etc/grafana/grafana.ini
+        elif [[ -e /usr/local/etc/grafana/grafana.ini ]];then
+            GRAFANA_INI=/usr/local/etc/grafana/grafana.ini
+        else
+            echo "Can't find grafana.ini file!"
+            exit_gracefully
+        fi
+        # Find Grafana plugins
+        if [[ -d /var/lib/grafana/plugins ]];then
+            GRAFANA_PLUGINS=/var/lib/grafana/plugins
+        elif [[ -d /usr/local/var/lib/grafana/plugins ]];then
+            GRAFANA_PLUGINS=/usr/local/var/lib/grafana/plugins
+        else
+            echo "Can't find grafana plugins!"
+            exit_gracefully
+        fi
+        # Find homepath
+        if [[ -d /usr/share/grafana ]];then
+            GRAFANA_HOMEPATH=/usr/share/grafana
+        elif [[ -d /usr/local/opt/grafana/share/grafana ]];then
+            GRAFANA_HOMEPATH=/usr/local/opt/grafana/share/grafana
+        else
+            echo "Can't find grafana homepath!"
+            exit_gracefully
+        fi
+
+        if [[ $RUN_GRAFANA == 'yes' ]];then
+            AUTOSTART_GRAFANA=true
+        else
+            AUTOSTART_GRAFANA=false
+        fi
+        cat >> $SUPERVISOR_FILE <<EOF
+
+; Run Grafana
+[program:grafana]
+command=/usr/local/bin/grafana-server --config=${GRAFANA_INI} --homepath $GRAFANA_HOMEPATH cfg:default.paths.plugins=${GRAFANA_PLUGINS}
+directory=/opt/openrvdas
+autostart=$AUTOSTART_GRAFANA
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/grafana.stderr
+EOF
+    fi
+
+    ##########
+    # If Telegraf is installed, create an entry for it.
+    if [[ -e /usr/local/bin/telegraf ]]; then
+        # Find Telegraf config
+        if [[ -e /etc/telegraf.conf ]];then
+            TELEGRAF_CONFIG=/etc/telegraf.conf
+        elif [[ -e /usr/local/etc/telegraf.conf ]];then
+            TELEGRAF_CONFIG=/usr/local/etc/telegraf.conf
+        else
+            echo "Can't find telegraf.conf file!"
+            exit_gracefully
+        fi
+        # Find Telegraf plugins
+        if [[ -d /etc/telegraf/telegraf.d ]];then
+            TELEGRAF_DIR=/etc/telegraf/telegraf.d
+        elif [[ -d /usr/local/etc/telegraf.d ]];then
+            TELEGRAF_DIR=/usr/local/etc/telegraf.d
+        else
+            echo "Can't find telegraf config directory!"
+            exit_gracefully
+        fi
+
+        if [[ $RUN_TELEGRAF == 'yes' ]];then
+            AUTOSTART_TELEGRAF=true
+        else
+            AUTOSTART_TELEGRAF=false
+        fi
+        cat >> $SUPERVISOR_FILE <<EOF
+
+; Run Telegraf
+[program:telegraf]
+command=/usr/local/bin/telegraf --config=${TELEGRAF_CONFIG} --config-directory $TELEGRAF_DIR
+directory=/opt/openrvdas
+autostart=$AUTOSTART_TELEGRAF
+autorestart=true
+startretries=3
+stderr_logfile=/var/log/openrvdas/telegraf.stderr
+EOF
+    fi
+
+    cat >> $SUPERVISOR_FILE <<EOF
+
+[group:influx]
+programs=influxdb,grafana,telegraf
+EOF
+    echo Done setting up supervisor files. Please restart/reload supervisor
+    echo for changes to take effect!
 }
 
 ###########################################################################
@@ -515,7 +629,6 @@ save_default_variables
 [ -z $HTTP_PROXY ] || export http_proxy=$HTTP_PROXY
 [ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
 
-
 #########################################################################
 # Let's get to installing things!
 if [ $INSTALL_INFLUXDB == 'yes' ];then
@@ -529,6 +642,8 @@ fi
 if [ $INSTALL_TELEGRAF == 'yes' ];then
     install_telegraf
 fi
+
+set_up_supervisor
 
 #########################################################################
 # Deactivate the virtual environment - we'll be calling all relevant
