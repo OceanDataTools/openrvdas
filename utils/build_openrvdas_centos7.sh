@@ -109,6 +109,7 @@ function create_user {
         adduser $RVDAS_USER
         passwd $RVDAS_USER
         usermod -a -G tty $RVDAS_USER
+        usermod -a -G wheel $RVDAS_USER
     fi
 }
 

@@ -115,6 +115,7 @@ function create_user {
         adduser --gecos "" $RVDAS_USER
         #passwd $RVDAS_USER
         usermod -a -G tty $RVDAS_USER
+        usermod -a -G sudo $RVDAS_USER
     fi
 }
 
