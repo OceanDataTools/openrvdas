@@ -6,13 +6,31 @@
 # This script installs and configures InfluxDB, Grafana (and
 # optionally Telegraf) and creates a supervisord file that allows them
 # to be started/stopped by supervisorctl. It should be run as the user
-# who will be running OpenRVDAS (e.g. 'rvdas').
+# who will be running OpenRVDAS (e.g. 'rvdas'):
+#
+#     sudo rvdas utils/install_influxdb.sh
 #
 # The script has been designed to be idempotent, that is, if can be
 # run over again with no ill effects.
 #
 # Once installed, you should be able to start/stop/disable the
-# relevant services using supervisorctl.
+# relevant services using supervisorctl. If you have selected "Run
+# (InfluxDB/Grafana/Telegraf) on boot," those services should start up
+# as soon as supervisord does. If you have selected them to not start
+# on boot, you can start/stop/restart them manually using
+# supervisorctl:
+#
+# > supervisorctl status
+# influx:grafana                   STOPPED   Sep 13 06:22 AM
+# influx:influxdb                  STOPPED   Sep 13 06:22 AM
+# influx:telegraf                  STOPPED   Sep 13 06:22 AM
+#
+# > supervisorctl start influx:influxdb
+# influx:influxdb: started
+#
+# > supervisorctl start influx:*
+# influx:grafana: started
+# influx:telegraf: started
 #
 # When running, you should be able to reach the relevant servers at:
 #  - influxdb:       localhost:9999
@@ -44,6 +62,29 @@
 
 PREFERENCES_FILE='.install_influxdb_preferences'
 
+# Defaults that will be overwritten by the preferences file, if it
+# exists.
+DEFAULT_INSTALL_ROOT=/opt
+#DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
+DEFAULT_HTTP_PROXY=$http_proxy
+
+DEFAULT_INFLUXDB_USER=rvdas
+DEFAULT_INFLUXDB_PASSWORD=rvdasrvdas
+
+DEFAULT_INSTALL_INFLUXDB=yes
+DEFAULT_INSTALL_GRAFANA=yes
+DEFAULT_INSTALL_TELEGRAF=yes
+
+DEFAULT_RUN_INFLUXDB=yes
+DEFAULT_RUN_GRAFANA=yes
+DEFAULT_RUN_TELEGRAF=yes
+
+# Organization to be used by OpenRVDAS and Telegraf when writing to InfluxDB
+ORGANIZATION=openrvdas
+
+# Bucket Telegraf should write its data to
+TELEGRAF_BUCKET=_monitoring
+
 ###########################################################################
 ###########################################################################
 function exit_gracefully {
@@ -60,23 +101,6 @@ function exit_gracefully {
 ###########################################################################
 # Read any pre-saved default variables from file
 function set_default_variables {
-    # Defaults that will be overwritten by the preferences file, if it
-    # exists.
-    DEFAULT_INSTALL_ROOT=/opt
-    #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
-    DEFAULT_HTTP_PROXY=$http_proxy
-
-    DEFAULT_INFLUXDB_USER=rvdas
-    DEFAULT_INFLUXDB_PASSWORD=rvdasrvdas
-
-    DEFAULT_INSTALL_INFLUXDB=yes
-    DEFAULT_INSTALL_GRAFANA=yes
-    DEFAULT_INSTALL_TELEGRAF=yes
-
-    DEFAULT_RUN_INFLUXDB=yes
-    DEFAULT_RUN_GRAFANA=yes
-    DEFAULT_RUN_TELEGRAF=yes
-
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
@@ -226,12 +250,24 @@ function get_influxdb_auth_token {
     TOKEN_LINE=`grep '^  token = ' $CONFIG_FILE`
     INFLUXDB_AUTH_TOKEN=`echo $TOKEN_LINE | cut -d\" -f2`
 
-
     if [[ -z "$INFLUXDB_AUTH_TOKEN" ]];then
         echo Unable to find InfluxDB auth token in config file \"$CONFIG_FILE\"
+        exit_gracefully
     else
         echo Retrieved InfluxDB auth token: $INFLUXDB_AUTH_TOKEN
     fi
+}
+
+###########################################################################
+# Tweak the database/settings.py file to use new token
+function fix_database_settings {
+    SETTINGS=$INSTALL_ROOT/openrvdas/database/settings.py
+
+    # Make sure we've got an InfluxDB auth token
+    get_influxdb_auth_token
+
+    sed -i -e "s/INFLUXDB_ORG = '.*'/INFLUXDB_ORG = '$ORGANIZATION'/" $SETTINGS
+    sed -i -e "s/INFLUXDB_AUTH_TOKEN = '.*'/INFLUXDB_AUTH_TOKEN = '$INFLUXDB_AUTH_TOKEN'/" $SETTINGS
 }
 
 ###########################################################################
@@ -303,7 +339,7 @@ function install_influxdb {
     # Run setup
     echo "#################################################################"
     echo Running InfluxDB setup - killing all currently-running instances
-    killall influxd || echo no processes killed
+    killall influxd || echo No processes killed
     echo Running server in background
     /usr/local/bin/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
@@ -315,12 +351,9 @@ function install_influxdb {
     echo Killing the InfluxDB instance we started
     killall influxd || echo no processes killed
 
-    # Make sure setup succeeded by trying to get auth token
-    get_influxdb_auth_token
-    if [[ -z "$INFLUXDB_AUTH_TOKEN" ]];then
-        echo Failed to get InfluxDB auth token - setup failed!
-        exit_gracefully
-    fi
+    # Set the values in database/settings.py so that InfluxDBWriter
+    # has correct default organization and token.
+    fix_database_settings
 
     # Install the InfluxDB python client
     echo "#################################################################"
@@ -365,22 +398,16 @@ function install_grafana {
 ###########################################################################
 # Tweak the telegraf.conf file to fit our installation
 function fix_telegraf_conf {
-    TELEGRAF_CONF=$1
-    ORGANIZATION=openrvdas
-    BUCKET=openrvdas
+    TELEGRAF_CONF=/usr/local/etc/telegraf.conf
 
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
-    if [[ -z "$INFLUXDB_AUTH_TOKEN" ]];then
-        echo Failed to get InfluxDB auth token - Telegraf setup failed!
-        exit_gracefully
-    fi
 
     sed -i -e "s/\[\[outputs.influxdb\]\]/\#\[\[outputs.influxdb\]\]/" $TELEGRAF_CONF
     sed -i -e "s/# \[\[outputs.influxdb_v2\]\]/\[\[outputs.influxdb_v2\]\]/" $TELEGRAF_CONF
     sed -i -e "s/#   token = \"\"/   token = \"${INFLUXDB_AUTH_TOKEN}\"/" $TELEGRAF_CONF
     sed -i -e "s/#   organization = \"\"/   organization = \"$ORGANIZATION\"/" $TELEGRAF_CONF
-    sed -i -e "s/#   bucket = \"\"/   bucket = \"$BUCKET\"/" $TELEGRAF_CONF
+    sed -i -e "s/#   bucket = \"\"/   bucket = \"$TELEGRAF_BUCKET\"/" $TELEGRAF_CONF
 }
 
 ###########################################################################
@@ -391,7 +418,7 @@ function install_telegraf {
 
     if [ `uname -s` = 'Darwin' ]; then
         brew reinstall telegraf
-        fix_telegraf_conf /usr/local/etc/telegraf.conf
+        fix_telegraf_conf
 
     # If CentOS/Ubuntu/etc, use
     elif [ `uname -s` = 'Linux' ]; then
