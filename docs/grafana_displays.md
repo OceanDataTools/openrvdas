@@ -5,14 +5,9 @@
 
 * [Overview](#overview)
 * [Installation](#installation)
-   * [InfluxDB](#influxdb)
-   * [Grafana](#grafana)
-   * [Telegraf](#telegraf)
-* [Configuration](#configuration)
-   * [InfluxDB](#influxdb-1)
-   * [Grafana](#grafana-1)
-   * [Telegraf](#telegraf-1)
-* [Running InfluxDB, Grafana and Telegraf as services](#running-influxdb-grafana-and-telegraf-as-services)
+* [Running](#running)
+* [Configuing Grafana](#configuring-grafana)
+* [Writing data to InfluxDB](#writing-data-to-influxdb)
 * [Creating Grafana Dashboards](#creating-grafana-dashboards)
 
 ## Overview
@@ -53,6 +48,20 @@ Then re-run the installation script, and it should pick up where it
 left off.
 
 ## Running
+
+You shouldn't need to, but after the installation script has
+completed, you can run InfluxDB, Grafana and Telegraf from the command
+line:
+
+```
+/usr/local/bin/influxd --reporting-disabled
+
+/usr/local/bin/grafana-server --homepath /usr/local/etc/grafana
+
+/usr/local/bin/telegraf --config=/usr/local/etc/telegraf/etc/telegraf/telegraf.conf
+```
+
+Instead of doing this, you should start/stop them using `supervisord`.
 
 In addition to putting links to the relevant binaries in
 /usr/local/bin, the script also creates a config file that can be read
@@ -103,16 +112,9 @@ influx:grafana: started
 >
 ```
 
-By looking at the influx.[ini,conf] file, you can see how each of the
-packages is invoked:
-
-```
-/usr/local/bin/influxd --reporting-disabled
-
-/usr/local/bin/grafana-server --homepath /usr/local/etc/grafana
-
-/usr/local/bin/telegraf --config=/usr/local/etc/telegraf/etc/telegraf/telegraf.conf
-```
+If anything is going wrong with one of the scripts run by
+`supervisord`, you can examine its stderr in
+`/var/log/openrvdas/[influxdb,grafana,telegraf].stderr`.
 
 ## Configuring Grafana
 
