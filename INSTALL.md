@@ -90,9 +90,11 @@ If you make this change, you will want to restart several services:
 systemctl restart nginx uwsgi
 ```
 
+If you wish to use InfluxDB and Grafana to create dashboards and display data, please see and follow the instructions in [Grafana/InfluxDB-based Displays](docs/grafana-displays.md).
+
 ## Starting and Stopping Servers
 
-In addition to the NGINX webserver (and its Python helper interface UWSGI), OpenRVDAS relies on two servers: ``logger_manager.py`` and ``cached_data_server.py`` (see [Controlling Loggers](../docs/controlling_loggers.md) for details). 
+In addition to the NGINX webserver (and its Python helper interface UWSGI), OpenRVDAS relies on two servers: ``logger_manager.py`` and ``cached_data_server.py`` (see [Controlling Loggers](docs/controlling_loggers.md) for details). 
 
 The easiest way to manage these servers is via the supervisord package that is installed by the installation script. If you answered 'yes' when asked whether OpenRVDAS should start automatically on boot up, supervisord will start them for you; if you answered 'no', the supervisord configurations will have still be created, but you will need to manually tell supervisord to start/stop them.
 
