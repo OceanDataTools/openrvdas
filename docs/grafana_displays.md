@@ -33,7 +33,14 @@ There is now an installation script ``utils/install_influxdb.sh`` that
 will walk you through the installation and configuration of InfluxDB,
 Grafana and Telegraf.
 
-There is one hitch if installing with MacOS Catalina, due to its
+If you are upgrading an existing installation and had already installed
+InfluxDB, you will need to disable the old invocation of InfluxDB. You can
+do this either by re-running the main installation script, or manually
+editing the OpenRVDAS supervisor file, which is in either `/etc/supervisord.d/openrvdas.ini`,
+`/usr/local/etc/supervisor.d/openrvdas.ini`, or `/etc/supervisor/conf.d/openrvdas.conf`
+depending on operating system.
+
+There is one more hitch if installing with MacOS Catalina, due to its
 reluctance to run unfamiliar packages. If you are running under
 Catalina, the system will balk when the script first tries to run
 ``influx`` and ``influxd``. If that happens:
