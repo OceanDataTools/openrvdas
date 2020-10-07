@@ -15,7 +15,8 @@ class ParseTransform(Transform):
   def __init__(self, record_format=None, field_patterns=None, metadata=None,
                definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                return_json=False, return_das_record=False,
-               metadata_interval=None, quiet=False):
+               metadata_interval=None, quiet=False, prepend_data_id=False, 
+               delimiter=':'):
     """
     ```
     record_format
@@ -48,6 +49,15 @@ class ParseTransform(Transform):
             haven't been returned in the last metadata_interval seconds.
 
     quiet - if not False, don't complain when unable to parse a record.
+
+    prepend_data_id
+            If true prepend the instrument data_id to field_names in the record.
+
+    delimiter 
+            The string to insert between data_id and field_name when prepend_data_id is true. 
+            Defaults to ':'.
+            Not used if prepend_data_id is false.
+
     ```
     """
     self.parser = record_parser.RecordParser(
@@ -58,7 +68,9 @@ class ParseTransform(Transform):
       return_json=return_json,
       return_das_record=return_das_record,
       metadata_interval=metadata_interval,
-      quiet=quiet)
+      quiet=quiet,
+      prepend_data_id=prepend_data_id,
+      delimiter=delimiter)
 
   ############################
   def transform(self, record):
