@@ -5,13 +5,11 @@ import sys
 import tempfile
 import time
 import unittest
-import warnings
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
 
-from logger.writers.logfile_writer import LogfileWriter
-from logger.utils import formats
-from logger.utils import timestamp
 
 SAMPLE_DATA = """2017-11-03T17:23:04.832875Z Nel mezzo del cammin di nostra vita
 2017-11-03T17:23:04.833188Z mi ritrovai per una selva oscura,
@@ -28,58 +26,60 @@ SAMPLE_DATA_NO_TIMESTAMP = """Io non so ben ridir com' i' v'intrai,
 che la verace via abbandonai.
 """
 
+
 class TestLogfileWriter(unittest.TestCase):
 
-  ############################
-  def test_write(self):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-      lines = SAMPLE_DATA.split('\n')
+    ############################
+    def test_write(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
 
-      filebase = tmpdirname + '/logfile'
+            filebase = tmpdirname + '/logfile'
 
-      writer = LogfileWriter(filebase)
+            writer = LogfileWriter(filebase)
 
-      with self.assertLogs(logging.getLogger(), logging.ERROR):
-        writer.write('there is no timestamp here')
+            with self.assertLogs(logging.getLogger(), logging.ERROR):
+                writer.write('there is no timestamp here')
 
-      r = range(0,3)
-      for i in r:
-        writer.write(lines[i])
-        time.sleep(0.25)
+            r = range(0, 3)
+            for i in r:
+                writer.write(lines[i])
+                time.sleep(0.25)
 
-      with open(filebase + '-2017-11-03', 'r') as outfile:
-        for i in r:
-          self.assertEqual(lines[i], outfile.readline().rstrip())
+            with open(filebase + '-2017-11-03', 'r') as outfile:
+                for i in r:
+                    self.assertEqual(lines[i], outfile.readline().rstrip())
 
-      r = range(3,6)
-      for i in r:
-        writer.write(lines[i])
+            r = range(3, 6)
+            for i in r:
+                writer.write(lines[i])
 
-      with open(filebase + '-2017-11-04', 'r') as outfile:
-        for i in r:
-          self.assertEqual(lines[i], outfile.readline().rstrip())
+            with open(filebase + '-2017-11-04', 'r') as outfile:
+                for i in r:
+                    self.assertEqual(lines[i], outfile.readline().rstrip())
 
-      r = range(6,9)
-      for i in r:
-        writer.write(lines[i])
+            r = range(6, 9)
+            for i in r:
+                writer.write(lines[i])
 
-      with open(filebase + '-2017-11-05', 'r') as outfile:
-        for i in r:
-          self.assertEqual(lines[i], outfile.readline().rstrip())
+            with open(filebase + '-2017-11-05', 'r') as outfile:
+                for i in r:
+                    self.assertEqual(lines[i], outfile.readline().rstrip())
+
 
 if __name__ == '__main__':
-  import argparse
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbosity', dest='verbosity',
-                      default=0, action='count',
-                      help='Increase output verbosity')
-  args = parser.parse_args()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', dest='verbosity',
+                        default=0, action='count',
+                        help='Increase output verbosity')
+    args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(message)s'
-  logging.basicConfig(format=LOGGING_FORMAT)
+    LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+    logging.basicConfig(format=LOGGING_FORMAT)
 
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-  unittest.main(warnings='ignore')
+    unittest.main(warnings='ignore')

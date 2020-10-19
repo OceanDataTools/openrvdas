@@ -3,116 +3,115 @@
 import logging
 import sys
 import tempfile
-import threading
 import time
 import unittest
 import warnings
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
 
-from logger.writers.text_file_writer import TextFileWriter
-from logger.writers.composed_writer import ComposedWriter
-from logger.writers.writer import Writer
-from logger.transforms.prefix_transform import PrefixTransform
-from logger.transforms.parse_nmea_transform import ParseNMEATransform
-from logger.utils import formats
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
+from logger.writers.composed_writer import ComposedWriter  # noqa: E402
+from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
+from logger.transforms.parse_nmea_transform import ParseNMEATransform  # noqa: E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
 
-################################################################################
+
 class TestComposedWriter(unittest.TestCase):
 
-  ############################
-  # To suppress resource warnings about unclosed files
-  def setUp(self):
-    warnings.simplefilter("ignore", ResourceWarning)
+    ############################
+    # To suppress resource warnings about unclosed files
+    def setUp(self):
+        warnings.simplefilter("ignore", ResourceWarning)
 
-    self.tmpdir = tempfile.TemporaryDirectory()
-    self.tmpdirname = self.tmpdir.name
-    logging.info('created temporary directory "%s"', self.tmpdirname)
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdirname = self.tmpdir.name
+        logging.info('created temporary directory "%s"', self.tmpdirname)
 
-  ############################
-  def test_check_format(self):
-    f1_name = self.tmpdirname + '/f1'
-    f2_name = self.tmpdirname + '/f2'
+    ############################
+    def test_check_format(self):
+        f1_name = self.tmpdirname + '/f1'
+        f2_name = self.tmpdirname + '/f2'
 
-    # This should be okay
-    writer = ComposedWriter(transforms=[PrefixTransform('prefix')],
-                            writers=[TextFileWriter(f1_name),
-                                     TextFileWriter(f2_name)],
-                            check_format=True)
+        # This should be okay
+        ComposedWriter(transforms=[PrefixTransform('prefix')],
+                       writers=[TextFileWriter(f1_name),
+                                TextFileWriter(f2_name)],
+                       check_format=True)
 
-    # Should raise an error if formats are not compatible
-    with self.assertLogs(logging.getLogger(), logging.ERROR):
-      with self.assertRaises(ValueError):
-        writer = ComposedWriter(transforms=[ParseNMEATransform()],
+        # Should raise an error if formats are not compatible
+        with self.assertLogs(logging.getLogger(), logging.ERROR):
+            with self.assertRaises(ValueError):
+                ComposedWriter(transforms=[ParseNMEATransform()],
+                               writers=[TextFileWriter(f1_name),
+                                        TextFileWriter(f2_name)],
+                               check_format=True)
+
+    ############################
+    def test_all_files(self):
+
+        f1_name = self.tmpdirname + '/f1'
+        f2_name = self.tmpdirname + '/f2'
+        writer = ComposedWriter(transforms=[],
                                 writers=[TextFileWriter(f1_name),
-                                         TextFileWriter(f2_name)],
-                                check_format=True)
+                                         TextFileWriter(f2_name)])
 
-  ############################
-  def test_all_files(self):
+        f1 = open(f1_name, 'r')
+        f2 = open(f2_name, 'r')
 
-    f1_name = self.tmpdirname + '/f1'
-    f2_name = self.tmpdirname + '/f2'
-    writer = ComposedWriter(transforms=[],
-                            writers=[TextFileWriter(f1_name),
-                                     TextFileWriter(f2_name)])
+        for line in SAMPLE_DATA:
+            writer.write(line)
+            time.sleep(0.1)
+            f1_line = f1.readline().rstrip()
+            f2_line = f2.readline().rstrip()
 
-    f1 = open(f1_name, 'r')
-    f2 = open(f2_name, 'r')
+            logging.info('wrote: "%s", f1: "%s", f2: "%s"', line, f1_line, f2_line)
+            self.assertEqual(line, f1_line)
+            self.assertEqual(line, f2_line)
 
-    for line in SAMPLE_DATA:
-      writer.write(line)
-      time.sleep(0.1)
-      f1_line = f1.readline().rstrip()
-      f2_line = f2.readline().rstrip()
+    ############################
+    def test_prefix(self):
 
-      logging.info('wrote: "%s", f1: "%s", f2: "%s"', line, f1_line, f2_line)
-      self.assertEqual(line, f1_line)
-      self.assertEqual(line, f2_line)
+        prefix_1 = PrefixTransform('p1')
+        prefix_2 = PrefixTransform('p2')
 
-  ############################
-  def test_prefix(self):
+        f1_name = self.tmpdirname + '/f1'
+        f2_name = self.tmpdirname + '/f2'
+        writer = ComposedWriter(transforms=[prefix_1, prefix_2],
+                                writers=[TextFileWriter(f1_name),
+                                         TextFileWriter(f2_name)])
 
-    prefix_1 = PrefixTransform('p1')
-    prefix_2 = PrefixTransform('p2')
+        f1 = open(f1_name, 'r')
+        f2 = open(f2_name, 'r')
 
-    f1_name = self.tmpdirname + '/f1'
-    f2_name = self.tmpdirname + '/f2'
-    writer = ComposedWriter(transforms=[prefix_1, prefix_2],
-                            writers=[TextFileWriter(f1_name),
-                                     TextFileWriter(f2_name)])
+        for line in SAMPLE_DATA:
+            writer.write(line)
+            time.sleep(0.1)
+            f1_line = f1.readline().rstrip()
+            f2_line = f2.readline().rstrip()
 
-    f1 = open(f1_name, 'r')
-    f2 = open(f2_name, 'r')
+            logging.info('wrote: "%s", f1: "%s", f2: "%s"', line, f1_line, f2_line)
+            self.assertEqual('p2 p1 ' + line, f1_line)
+            self.assertEqual('p2 p1 ' + line, f2_line)
 
-    for line in SAMPLE_DATA:
-      writer.write(line)
-      time.sleep(0.1)
-      f1_line = f1.readline().rstrip()
-      f2_line = f2.readline().rstrip()
-
-      logging.info('wrote: "%s", f1: "%s", f2: "%s"', line, f1_line, f2_line)
-      self.assertEqual('p2 p1 ' + line, f1_line)
-      self.assertEqual('p2 p1 ' + line, f2_line)
 
 ################################################################################
 if __name__ == '__main__':
-  import argparse
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbosity', dest='verbosity',
-                      default=0, action='count',
-                      help='Increase output verbosity')
-  args = parser.parse_args()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', dest='verbosity',
+                        default=0, action='count',
+                        help='Increase output verbosity')
+    args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-  logging.basicConfig(format=LOGGING_FORMAT)
+    LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+    logging.basicConfig(format=LOGGING_FORMAT)
 
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-  unittest.main(warnings='ignore')
+    unittest.main(warnings='ignore')

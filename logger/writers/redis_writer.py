@@ -1,86 +1,86 @@
 #!/usr/bin/env python3
 
-import json
 import logging
-import socket
 import sys
 
 # Don't barf if they don't have redis installed. Only complain if
 # they actually try to use it, below
 try:
-  import redis
-  REDIS_ENABLED = True
+    import redis
+    REDIS_ENABLED = True
 except ModuleNotFoundError:
-  REDIS_ENABLED = False
+    REDIS_ENABLED = False
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.utils.formats import Text
-from logger.writers.writer import Writer
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.formats import Text  # noqa: E402
+from logger.writers.writer import Writer  # noqa: E402
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = '6379'
 
-################################################################################
+
 class RedisWriter(Writer):
-  """Write to redis server pubsub channel."""
-  def __init__(self, channel, password=None):
-    """
-    Write text records to a Redis pubsub server channel.
-    ```
-    channel      Redis channel to write to, format channel[@hostname[:port]]
-    ```
-    """
-    super().__init__(input_format=Text)
+    """Write to redis server pubsub channel."""
 
-    if not REDIS_ENABLED:
-      raise ModuleNotFoundError('RedisReader(): Redis is not installed. Please '
-                                'try "pip3 install redis" prior to use.')    
-    self.channel = channel
-    self.hostname = DEFAULT_HOST
-    self.port = DEFAULT_PORT
+    def __init__(self, channel, password=None):
+        """
+        Write text records to a Redis pubsub server channel.
+        ```
+        channel      Redis channel to write to, format channel[@hostname[:port]]
+        ```
+        """
+        super().__init__(input_format=Text)
 
-    if channel.find('@') > 0:
-      (self.channel, self.hostname) = channel.split(sep='@', maxsplit=1)
-    if self.hostname.find(':') > 0:
-      (self.hostname, self.port) = self.hostname.split(sep=':', maxsplit=1)
-    self.port = int(self.port)
+        if not REDIS_ENABLED:
+            raise ModuleNotFoundError('RedisReader(): Redis is not installed. Please '
+                                      'try "pip3 install redis" prior to use.')
+        self.channel = channel
+        self.hostname = DEFAULT_HOST
+        self.port = DEFAULT_PORT
 
-    # Connect to the specified server
-    try:
-      self.redis = redis.StrictRedis(host=self.hostname, port=self.port,
-                                     password=password, decode_responses=True)
-      self.redis.ping()
-      self.pubsub = self.redis.pubsub()
-    except redis.exceptions.ConnectionError as e:
-      logging.error('Unable to connect to server at %s:%d',
-                    self.hostname, self.port)
-      raise e
+        if channel.find('@') > 0:
+            (self.channel, self.hostname) = channel.split(sep='@', maxsplit=1)
+        if self.hostname.find(':') > 0:
+            (self.hostname, self.port) = self.hostname.split(sep=':', maxsplit=1)
+        self.port = int(self.port)
 
-  ############################
-  def write(self, record):
-    """Write the record to the pubsub channel."""
+        # Connect to the specified server
+        try:
+            self.redis = redis.StrictRedis(host=self.hostname, port=self.port,
+                                           password=password, decode_responses=True)
+            self.redis.ping()
+            self.pubsub = self.redis.pubsub()
+        except redis.exceptions.ConnectionError as e:
+            logging.error('Unable to connect to server at %s:%d',
+                          self.hostname, self.port)
+            raise e
 
-    if not record:
-      return
+    ############################
+    def write(self, record):
+        """Write the record to the pubsub channel."""
 
-    # If we've got a list, hope it's a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if type(record) is list:
-      for single_record in record:
-        self.write(single_record)
-      return
+        if not record:
+            return
 
-    ## If record is not a string, try converting to JSON. If we don't know
-    ## how, throw a hail Mary and force it into str format
-    #if not type(record) is str:
-    #  if type(record) in [int, float, bool, list, dict]:
-    #    record = json.dumps(record)
-    #  else:
-    #    record = str(record)
+        # If we've got a list, hope it's a list of records. Recurse,
+        # calling write() on each of the list elements in order.
+        if isinstance(record, list):
+            for single_record in record:
+                self.write(single_record)
+            return
 
-    try:
-      self.redis.publish(self.channel, record)
-    except redis.exceptions.ConnectionError as e:
-      logging.error('Unable to connect to server at %s', server)
-      raise e
+        # If record is not a string, try converting to JSON. If we don't know
+        # how, throw a hail Mary and force it into str format
+        # if not type(record) is str:
+        #  if type(record) in [int, float, bool, list, dict]:
+        #    record = json.dumps(record)
+        #  else:
+        #    record = str(record)
+
+        try:
+            self.redis.publish(self.channel, record)
+        except redis.exceptions.ConnectionError as e:
+            logging.error('Unable to connect to server at %s:%d',
+                          self.hostname, self.port)
+            raise e

@@ -27,12 +27,13 @@ import logging
 from math import pi, cos, sin, atan2, sqrt
 
 DEFAULT_ZRL = 0.0  # clockwise angle between bow and anemometer reference line
-DEFAULT_MISSING_VALUES = [-1111.0, # missing val for course_over_ground
-                          -9999.0, # missing val for speed_over_ground
+DEFAULT_MISSING_VALUES = [-1111.0,  # missing val for course_over_ground
+                          -9999.0,  # missing val for speed_over_ground
                           1111.0,  # missing val for wind_dir
                           9999.0,  # missing val for wind_speed
                           5555.0,  # missing val for heading
-                         ]
+                          ]
+
 
 ################################################################################
 def truew(crse=None,
@@ -140,18 +141,18 @@ def truew(crse=None,
         mwdir = mwdir - 360.0
     # Determine the east-west vector component and the
     # north-south vector component of the true wind
-    x = wspd*cos(mwdir*dtor) + cspd*cos(mcrse*dtor)
-    y = wspd*sin(mwdir*dtor) + cspd*sin(mcrse*dtor)
+    x = wspd * cos(mwdir * dtor) + cspd * cos(mcrse * dtor)
+    y = wspd * sin(mwdir * dtor) + cspd * sin(mcrse * dtor)
     # Use the two vector components to calculate the true wind
     # speed
-    tspd = sqrt(x*x + y*y)
+    tspd = sqrt(x * x + y * y)
     calm_flag = 1
     # Determine the angle for the true wind
     if (abs(x) > 1e-05):
-        mtdir = (atan2(y,x)) / dtor
+        mtdir = (atan2(y, x)) / dtor
     else:
         if (abs(y) > 1e-05):
-            mtdir = 180.0 - (90.0*y) / abs(y)
+            mtdir = 180.0 - (90.0 * y) / abs(y)
         else:
             # The true wind speed is essentially zero: winds
             # are calm and direction is not well defined
@@ -163,10 +164,10 @@ def truew(crse=None,
     # Make sure that the true wind angle is between
     # 0 and 360 degrees
     while tdir < 0.0:
-        tdir = (tdir + 360.0)*calm_flag
+        tdir = (tdir + 360.0) * calm_flag
 
     while tdir > 360.0:
-        tdir = (tdir - 360.0)*calm_flag
+        tdir = (tdir - 360.0) * calm_flag
 
     # Ensure wmo convention for tdir = 360 for win
     # from north and tspd > 0
@@ -174,6 +175,7 @@ def truew(crse=None,
         tdir = 360.0
 
     return (tdir, tspd, adir)
+
 
 ################################################################################
 if __name__ == '__main__':

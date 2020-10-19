@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 
-import json
 import logging
-import re
 import sys
 import tempfile
-import threading
 import unittest
-import warnings
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.utils import read_config
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils import read_config  # noqa: E402
 
 
 SAMPLE_JSON = """{
@@ -48,51 +44,56 @@ BAD_JSON2 = """{
 """
 
 ################################################################################
+
+
 def create_file(filename, lines):
-  logging.info('creating file "%s"', filename)
-  f = open(filename, 'w')
-  for line in lines:
-    f.write(line + '\n')
-    f.flush()
-  f.close()
+    logging.info('creating file "%s"', filename)
+    f = open(filename, 'w')
+    for line in lines:
+        f.write(line + '\n')
+        f.flush()
+    f.close()
 
 ################################################################################
+
+
 class TestReadJson(unittest.TestCase):
-  ############################
-  def test_parse_config(self):
-    result = read_config.parse(SAMPLE_JSON)
-    self.assertEqual(result['gyr1']['port'], '/tmp/tty_gyr1')
-    self.assertEqual(len(result), 4)
+    ############################
+    def test_parse_config(self):
+        result = read_config.parse(SAMPLE_JSON)
+        self.assertEqual(result['gyr1']['port'], '/tmp/tty_gyr1')
+        self.assertEqual(len(result), 4)
 
-  ############################
-  def test_read_config(self):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-      tmpfilename = tmpdirname + '/f.yaml'
-      create_file(tmpfilename, SAMPLE_JSON.split('\n'))
+    ############################
+    def test_read_config(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmpfilename = tmpdirname + '/f.yaml'
+            create_file(tmpfilename, SAMPLE_JSON.split('\n'))
 
-      result = read_config.read_config(tmpfilename)
-      self.assertEqual(result['gyr1']['port'], '/tmp/tty_gyr1')
-      self.assertEqual(len(result), 4)
+            result = read_config.read_config(tmpfilename)
+            self.assertEqual(result['gyr1']['port'], '/tmp/tty_gyr1')
+            self.assertEqual(len(result), 4)
 
-      # Let it figure out that it's JSON
-      result = read_config.read_config(tmpfilename)
-      self.assertEqual(result['gyr1']['port'], '/tmp/tty_gyr1')
-      self.assertEqual(len(result), 4)
+            # Let it figure out that it's JSON
+            result = read_config.read_config(tmpfilename)
+            self.assertEqual(result['gyr1']['port'], '/tmp/tty_gyr1')
+            self.assertEqual(len(result), 4)
+
 
 ################################################################################
 if __name__ == '__main__':
-  import argparse
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbosity', dest='verbosity',
-                      default=0, action='count',
-                      help='Increase output verbosity')
-  args = parser.parse_args()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', dest='verbosity',
+                        default=0, action='count',
+                        help='Increase output verbosity')
+    args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-  logging.basicConfig(format=LOGGING_FORMAT)
+    LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+    logging.basicConfig(format=LOGGING_FORMAT)
 
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-  unittest.main(warnings='ignore')
+    unittest.main(warnings='ignore')
