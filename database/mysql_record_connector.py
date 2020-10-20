@@ -126,7 +126,6 @@ class MySQLRecordConnector:
             value = ''  # coerce to a str
         if type(value) not in self.TYPE_MAP:
             logging.error('Unrecognized value type in record: %s', type(value))
-            logging.error('Record: %s', str(record))
             raise TypeError('Unrecognized value type in record: %s', type(value))
         return self.TYPE_MAP[type(value)]
 
@@ -139,8 +138,7 @@ class MySQLRecordConnector:
             return
         table_name = self.table_name_from_record(record)
         if self.table_exists(table_name):
-            logging.warning('Trying to create table that already exists: %s',
-                            table_name)
+            logging.info('Trying to create table that already exists: %s', table_name)
             return
 
         # Id and timestamp are needed for all tables
@@ -204,7 +202,7 @@ class MySQLRecordConnector:
 
     def _add_missing_columns(self, table_name, record):
         for field in record.fields.keys():
-            value_type =  self.value_type(record.fields[field])
+            value_type = self.value_type(record.fields[field])
             add_cmd = f'alter table {table_name} add column {field} {value_type};'
             try:
                 self.exec_sql_command(add_cmd)

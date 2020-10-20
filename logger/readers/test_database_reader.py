@@ -6,7 +6,7 @@ import unittest
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.nmea_parser import NMEAParser  # noqa: E402
+from logger.utils.record_parser import RecordParser  # noqa: E402
 from logger.writers.database_writer import DatabaseWriter  # noqa: E402
 from logger.readers.database_reader import DatabaseReader  # noqa: E402
 from database.settings import DATABASE_ENABLED  # noqa: E402
@@ -68,7 +68,8 @@ class TestDatabaseReader(unittest.TestCase):
                          'Database not configured in database/settings.py.')
     def test_read(self):
         # Create records using synthetic, randomized data id and write to db
-        parser = NMEAParser()
+        parser = RecordParser(definition_path='local/usap/nbp/devices/nbp_devices.yaml',
+                              return_das_record=True)
         writer = DatabaseWriter(database='test', host='localhost',
                                 user='test', password='test')
         writer.db.exec_sql_command('truncate table data')
