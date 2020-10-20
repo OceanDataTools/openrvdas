@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 
 import logging
-import subprocess
 import sys
-import time
 import unittest
-import warnings
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.readers.mqtt_reader import MQTTReader
-from logger.writers.mqtt_writer import MQTTWriter
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.writers.mqtt_writer import MQTTWriter  # noqa: E402
+from logger.readers.mqtt_reader import MQTTReader  # noqa: E402
 
 # Don't barf if they don't have redis installed. Only complain if
 # they actually try to use it, below
 try:
     # import the client | $ pip installing paho-mqtt is necessary
-    import paho.mqtt.client as mqtt
+    import paho.mqtt.client as mqtt  # noqa: F401
     PAHO_ENABLED = True
 except ModuleNotFoundError:
     PAHO_ENABLED = False
@@ -33,16 +30,14 @@ SAMPLE_DATA = [
 
 broker_address = '1883'
 channel = 'pathOfDevices'
-client_name='Instance1'
+client_name = 'Instance1'
+
 
 ##############################################################################
-
-
 class TestMQTTReader(unittest.TestCase):
 
     @unittest.skipUnless(PAHO_ENABLED, 'Paho MQTT not installed; tests of MQTT '
                          'functionality will not be run.')
-
     def test_read(self):
 
         try:
@@ -54,8 +49,9 @@ class TestMQTTReader(unittest.TestCase):
             for i in range(len(SAMPLE_DATA)):
                 writer.write(SAMPLE_DATA[i])
                 self.assertEqual(SAMPLE_DATA[i], reader.read())
-        except:
+        except:  # noqa: E722
             self.skipTest("No MQTT broker found - skipped test_mqtt_reader")
+
 
 ################################################################################
 if __name__ == '__main__':
