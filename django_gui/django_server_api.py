@@ -117,9 +117,7 @@ class DjangoServerAPI(ServerAPI):
         with self.config_rlock:
             while True:
                 try:
-                    cruise = Cruise.objects.get()
-                    if not cruise:
-                        return None
+                    return Cruise.objects.get() or None
                 except Cruise.DoesNotExist:
                     return None
                 except django.db.utils.OperationalError as e:
