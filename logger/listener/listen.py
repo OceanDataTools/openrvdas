@@ -82,6 +82,7 @@ from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
 from logger.writers.database_writer import DatabaseWriter  # noqa: E402
 from logger.writers.record_screen_writer import RecordScreenWriter  # noqa: E402
 from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
+from logger.writers.influxdb_writer import InfluxDBWriter  # noqa: E402,F401
 from logger.writers.composed_writer import ComposedWriter  # noqa: E402,F401
 
 from logger.utils import read_config, timestamp, nmea_parser, record_parser  # noqa: E402
