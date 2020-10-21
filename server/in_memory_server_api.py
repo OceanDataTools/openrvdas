@@ -45,7 +45,7 @@ class InMemoryServerAPI(ServerAPI):
     ############################
     def get_configuration(self):
         """Return cruise config for specified cruise id."""
-        return self.config
+        return self.config or None
 
     ############################
     def get_modes(self):
@@ -79,6 +79,8 @@ class InMemoryServerAPI(ServerAPI):
         for all loggers.
         """
         config = self.get_configuration()
+        if not config:
+            return None
 
         if 'loggers' not in config:
             raise ValueError('No loggers found')
@@ -111,6 +113,9 @@ class InMemoryServerAPI(ServerAPI):
         the cruise's current logger configs. If cruise_id is omitted,
         return configs for *all* cruises."""
         loggers = self.get_loggers()
+        if not loggers:
+            return None
+
         output = {}
         for logger in loggers:
             logger_config_name = self.get_logger_config_name(logger, mode)

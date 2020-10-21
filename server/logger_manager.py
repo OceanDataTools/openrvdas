@@ -388,7 +388,7 @@ class LoggerManager:
         while not self.quit_flag:
             try:
                 self.cruise = self.api.get_configuration()  # a Cruise object
-                if self.cruise is None:
+                if not self.cruise:
                     logging.info('No cruise definition found in API')
                     time.sleep(self.interval * 2)
                     continue

@@ -6,13 +6,6 @@ exercises this class. Also see server/server_api.py for full
 documentation on the ServerAPI.
 """
 
-from os.path import dirname, realpath
-from server.server_api import ServerAPI
-from .models import LastUpdate
-from .models import LogMessage
-from .models import Mode, Cruise
-from .models import Logger, LoggerConfig, LoggerConfigState
-from django.db import connection, transaction
 import json
 import logging
 import os
@@ -21,13 +14,22 @@ import threading
 import time
 
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
-django.setup()
 
-
+from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.timestamp import datetime_obj, datetime_obj_from_timestamp  # noqa: E402
 from logger.utils.timestamp import DATE_FORMAT  # noqa: E402
+
+from server.server_api import ServerAPI  # noqa: E402
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
+django.setup()
+from .models import LastUpdate  # noqa: E402
+from .models import LogMessage  # noqa: E402
+from .models import Mode, Cruise  # noqa: E402
+from .models import Logger, LoggerConfig, LoggerConfigState  # noqa: E402
+from django.db import connection, transaction  # noqa: E402
+
 
 DEFAULT_MAX_TRIES = 3
 
@@ -110,12 +112,14 @@ class DjangoServerAPI(ServerAPI):
 
     #############################
     def _get_cruise_object(self):
-        """Helper function for getting cruise object from id. Raise exception
+        """Helper function for getting cruise object from id. Return None
         if it does not exist."""
         with self.config_rlock:
             while True:
                 try:
-                    return Cruise.objects.get()
+                    cruise = Cruise.objects.get()
+                    if not cruise:
+                        return None
                 except Cruise.DoesNotExist:
                     return None
                 except django.db.utils.OperationalError as e:
@@ -206,7 +210,7 @@ class DjangoServerAPI(ServerAPI):
         """
         with self.config_rlock:
             cruise = self._get_cruise_object()
-            if cruise is None:
+            if not cruise:
                 return None
             active_mode = cruise.active_mode.name if cruise.active_mode else None
             default_mode = cruise.default_mode.name if cruise.default_mode else None
