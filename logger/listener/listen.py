@@ -54,6 +54,7 @@ from logger.readers.redis_reader import RedisReader  # noqa: E402
 from logger.readers.serial_reader import SerialReader  # noqa: E402
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.readers.database_reader import DatabaseReader  # noqa: E402
+from logger.readers.composed_reader import ComposedReader  # noqa:E402,F401
 
 from logger.transforms.extract_field_transform import ExtractFieldTransform  # noqa: E402
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
@@ -70,6 +71,7 @@ from logger.transforms.from_json_transform import FromJSONTransform  # noqa: E40
 from logger.transforms.to_json_transform import ToJSONTransform  # noqa: E402
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.transforms.count_transform import CountTransform  # noqa: E402
+from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E402,F401
 
 # Compute and emit various NMEA strings
 from logger.writers.network_writer import NetworkWriter  # noqa: E402
@@ -80,6 +82,7 @@ from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
 from logger.writers.database_writer import DatabaseWriter  # noqa: E402
 from logger.writers.record_screen_writer import RecordScreenWriter  # noqa: E402
 from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
+from logger.writers.composed_writer import ComposedWriter  # noqa: E402,F401
 
 from logger.utils import read_config, timestamp, nmea_parser, record_parser  # noqa: E402
 from logger.utils.stderr_logging import StdErrLoggingHandler, STDERR_FORMATTER  # noqa: E402
