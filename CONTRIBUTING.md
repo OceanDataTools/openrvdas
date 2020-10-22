@@ -156,10 +156,16 @@ our coding conventions (below) and make sure all of your commits are atomic (one
 
 ### Python Styleguide
 
-* With few exceptions, we try to adhere to the [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html)
-* Exceptions include:
-  * We prefer two-space indentation to four-space indentation.
-  * All unqualified imports (``import foo``) are clustered alphabetically before qualified imports (``from foo import bar``).
+* With few exceptions, we try to adhere to PEP8 and the [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html)
+* The primary exceptions are
+   * We (grudgingly) allow a maximum line length of 100 characters
+   * All unqualified imports (``import foo``) are clustered alphabetically before qualified imports (``from foo import bar``).
+* We test code compliance with PEP8 with `flake8`
+  * Install flake8 with `pip install flake8`
+  * Run from project root with `flake8 [subdir path]`
+  * Add pragma comments to disable warnings on a line-by-line basis, e.g.
+  
+      ```from foo import bar  # noqa: E401, F502```
 * Do not mix styles: when editing a pre-existing file, strive for consistency with the file's style over adherence with the Style Guide.
  
 ### JavaScript Styleguide
