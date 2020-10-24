@@ -120,9 +120,7 @@ class TestInMemoryServerAPI(unittest.TestCase):
                                  'active': 's330->net/file'}
         })
         api.delete_configuration()
-        # self.assertEqual(api.get_cruises(), ['NBP1701'])
-        with self.assertRaises(ValueError):
-            api.get_logger_configs()
+        self.assertEqual(None, api.get_logger_configs())
 
 
 ################################################################################

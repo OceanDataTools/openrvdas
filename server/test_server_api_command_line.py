@@ -162,8 +162,7 @@ class TestInMemoryServerAPI(unittest.TestCase):
                                  'active': 's330->net/file'
                              }})
         api.delete_configuration()
-        with self.assertRaises(ValueError):
-            api.get_logger_configs()
+        self.assertEqual(None, api.get_logger_configs())
 
 
 ################################################################################
