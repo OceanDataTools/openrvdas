@@ -35,7 +35,8 @@ class RecordParser:
                  field_patterns=None, metadata=None,
                  definition_path=DEFAULT_DEFINITION_PATH,
                  return_das_record=False, return_json=False,
-                 metadata_interval=None, quiet=False):
+                 metadata_interval=None, quiet=False,
+                 prepend_data_id=False, delimiter=':'):
         """Create a parser that will parse field values out of a text record
         and return either a Python dict of data_id, timestamp and fields,
         a JSON encoding of that dict, or a binary DASRecord.
@@ -66,6 +67,14 @@ class RecordParser:
             metadata_interval seconds.
 
         quiet - if not False, don't complain when unable to parse a record.
+
+        prepend_data_id - If true prepend the instrument data_id to field_names
+            in the record.
+
+        delimiter
+            The string to insert between data_id and field_name when prepend_data_id is true.
+            Defaults to ':'.
+            Not used if prepend_data_id is false.
         ```
         """
         self.quiet = quiet
@@ -82,6 +91,8 @@ class RecordParser:
 
         self.metadata_interval = metadata_interval
         self.metadata_last_sent = {}
+        self.prepend_data_id = prepend_data_id
+        self.delimiter = delimiter
 
         # If we've been explicitly given the field_patterns we're to use for
         # parsing, compile them now.
@@ -228,6 +239,19 @@ class RecordParser:
                 fields = self.parse_for_data_id(data_id, field_string)
 
         if fields:
+            if self.prepend_data_id:
+                # This conditional dictates whether fields are stored with just the
+                # field_name key, or <data_id><delimiter><field_name>
+                # Doing some work directly on the fields dict, so we'll take a copy
+                # to loop over.
+                fields_copy = fields.copy()
+                # Reset the fields dict
+                fields = {}
+                for field in fields_copy:
+                    # Determine the new "field_name"
+                    key = '' + data_id + self.delimiter + field
+                    # Set the value
+                    fields[key] = fields_copy[field]
             parsed_record['fields'] = fields
 
         # If we have parsed fields, see if we also have metadata. Are we
