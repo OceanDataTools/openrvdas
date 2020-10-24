@@ -51,72 +51,86 @@ anything, and has no common elements with any other format.
 ########################################
 # Test whether the passed object is actually a valid format, as
 # defined in this file.
+
+
 def is_format(format):
-  # Is format even a class?
-  if not type(format) == type(Bytes):
+    # Is format even a class?
+    if not isinstance(format, type(Bytes)):
+        return False
+
+    # Is it a class that inherits from one of the format classes defined here?
+    if format == Unknown or Bytes.can_accept(format):
+        return True
+
     return False
-
-  # Is it a class that inherits from one of the format classes defined here?
-  if format == Unknown or Bytes.can_accept(format):
-    return True
-
-  return False
 
 ########################################
 # 'Unknown' is a special case format - it can't accept anything, and
 # has no other common formats
-class Unknown:
-  @classmethod
-  def can_accept(self, other_format):
-    return False
 
-  @classmethod
-  def common(self, other_format):
-    return None
+
+class Unknown:
+    @classmethod
+    def can_accept(self, other_format):
+        return False
+
+    @classmethod
+    def common(self, other_format):
+        return None
 
 ########################################
 # 'Bytes' is the highest, most general format in the hierarchy. All
 # more-specific formats inherit from it.
+
+
 class Bytes:
-  @classmethod
-  def can_accept(self, other_format):
-    return self in other_format.mro()
+    @classmethod
+    def can_accept(self, other_format):
+        return self in other_format.mro()
 
-  # Most specific common format
-  @classmethod
-  def common(self, other_format):
-    # We have nothing in common with Unknown
-    if not other_format or other_format == Unknown:
-      return None
+    # Most specific common format
+    @classmethod
+    def common(self, other_format):
+        # We have nothing in common with Unknown
+        if not other_format or other_format == Unknown:
+            return None
 
-    # Chase up module resolution order of superclasses for a match
-    other_hierarchy = other_format.mro()
-    for c in self.mro():
-      if c in other_hierarchy:
-        return c
-    # Shouldn't actually get here, but...
-    return None
+        # Chase up module resolution order of superclasses for a match
+        other_hierarchy = other_format.mro()
+        for c in self.mro():
+            if c in other_hierarchy:
+                return c
+        # Shouldn't actually get here, but...
+        return None
+
 
 class Text(Bytes):
-  pass
+    pass
+
 
 class NMEA(Text):
-  pass
+    pass
+
 
 class JSON(Text):
-  pass
+    pass
+
 
 class JSON_Record(JSON):
-  pass
+    pass
+
 
 class Python(Bytes):
-  pass
+    pass
+
 
 class Python_Record(Python):
-  pass
+    pass
+
 
 class XML(Text):
-  pass
+    pass
+
 
 class XML_OSU(XML):
-  pass
+    pass

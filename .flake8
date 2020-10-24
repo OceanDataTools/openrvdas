@@ -1,7 +1,4 @@
 [flake8]
-# E111 indentation is not a multiple of four
-# E114 indentation is not a multiple of four (comment)
-# E402 module level import not at top of file
-ignore = E111,E114,E402
-exclude = .git,docs,venv
-max-complexity = 10
+exclude = .git,docs,venv,django_gui/migrations
+max-line-length=100
+# max-complexity = 10
