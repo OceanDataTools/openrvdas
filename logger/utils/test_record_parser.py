@@ -176,20 +176,20 @@ Seapath200:
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-    - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
-    - "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
-    - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
-    - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
-    - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+    GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+    HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    VTG: "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+    ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
+    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+    PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
 
     # Additional Formats with missing fields to pick up slack for
     # devices that don't emit all fields. TODO: tweak parser to allow
     # for missing values.
-    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
-    - "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
-    - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
+    GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
+    VTG: "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
+    ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -396,20 +396,20 @@ device_types:
     # If device type can output multiple formats, include them as a
     # list. Parser will use the first one that matches the whole line.
     format:
-      - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-      - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
-      - "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
-      - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
-      - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
-      - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-      - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+      GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+      HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+      VTG: "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+      ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
+      PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+      PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+      PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
 
       # Additional Formats with missing fields to pick up slack for
       # devices that don't emit all fields. TODO: tweak parser to allow
       # for missing values.
-      - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
-      - "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
-      - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
+      GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
+      VTG: "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
+      ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
 
 """
 
@@ -526,6 +526,7 @@ class TestRecordParser(unittest.TestCase):
         r = p.parse_record(SEAP_RECORDS[0])
         self.assertDictEqual(r, {'data_id': 'seap',
                                  'timestamp': 1509778839.291859,
+                                 'message_type': 'PSXN20',
                                  'fields': {'Seap200HeightQual': 0,
                                             'Seap200RollPitchQual': 0,
                                             'Seap200HorizQual': 1,
@@ -533,11 +534,13 @@ class TestRecordParser(unittest.TestCase):
         r = p.parse_record(SEAP_RECORDS[1])
         self.assertDictEqual(r, {'data_id': 'seap',
                                  'timestamp': 1509778839.547251,
+                                 'message_type': 'PSXN22',
                                  'fields': {'Seap200GyroOffset': 0.74,
                                             'Seap200GyroCal': 0.44}})
 
         r = p.parse_record(SEAP_RECORDS[2])
         self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
+                                 'message_type': 'PSXN23',
                                  'fields': {'Seap200Roll': -1.47,
                                             'Seap200Heave': -0.38,
                                             'Seap200HeadingTrue': 235.77,
@@ -618,6 +621,7 @@ class TestRecordParser(unittest.TestCase):
         r = p.parse_record(SEAP_RECORDS[0])
         self.assertDictEqual(r, {'data_id': 'seap',
                                  'timestamp': 1509778839.291859,
+                                 'message_type': 'PSXN20',
                                  'fields': {'Seap200HeightQual': 0,
                                             'Seap200RollPitchQual': 0,
                                             'Seap200HorizQual': 1,
@@ -625,11 +629,13 @@ class TestRecordParser(unittest.TestCase):
         r = p.parse_record(SEAP_RECORDS[1])
         self.assertDictEqual(r, {'data_id': 'seap',
                                  'timestamp': 1509778839.547251,
+                                 'message_type': 'PSXN22',
                                  'fields': {'Seap200GyroOffset': 0.74,
                                             'Seap200GyroCal': 0.44}})
 
         r = p.parse_record(SEAP_RECORDS[2])
         self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
+                                 'message_type': 'PSXN23',
                                  'fields': {'Seap200Roll': -1.47,
                                             'Seap200Heave': -0.38,
                                             'Seap200HeadingTrue': 235.77,
@@ -661,6 +667,7 @@ class TestRecordParser(unittest.TestCase):
         self.assertDictEqual(json.loads(r),
                              {'data_id': 'seap',
                               'timestamp': 1509778839.291859,
+                              'message_type': 'PSXN20',
                               'fields': {'Seap200HeightQual': 0,
                                          'Seap200RollPitchQual': 0,
                                          'Seap200HorizQual': 1,
@@ -669,11 +676,13 @@ class TestRecordParser(unittest.TestCase):
         self.assertDictEqual(json.loads(r),
                              {'data_id': 'seap',
                               'timestamp': 1509778839.547251,
+                              'message_type': 'PSXN22',
                               'fields': {'Seap200GyroOffset': 0.74,
                                          'Seap200GyroCal': 0.44}})
         r = p.parse_record(SEAP_RECORDS[2])
         self.assertDictEqual(json.loads(r),
                              {'data_id': 'seap', 'timestamp': 1509778839.802690,
+                              'message_type': 'PSXN23',
                               'fields': {'Seap200Roll': -1.47,
                                          'Seap200Heave': -0.38,
                                          'Seap200HeadingTrue': 235.77,
@@ -689,16 +698,19 @@ class TestRecordParser(unittest.TestCase):
                                       fields={'Grv1Error': 0, 'Grv1Value': 24557}))
         r = p.parse_record(SEAP_RECORDS[0])
         self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.291859,
+                                      message_type='PSXN20',
                                       fields={'Seap200HeightQual': 0,
                                               'Seap200RollPitchQual': 0,
                                               'Seap200HorizQual': 1,
                                               'Seap200HeadingQual': 0}))
         r = p.parse_record(SEAP_RECORDS[1])
         self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.547251,
+                                      message_type='PSXN22',
                                       fields={'Seap200GyroOffset': 0.74,
                                               'Seap200GyroCal': 0.44}))
         r = p.parse_record(SEAP_RECORDS[2])
         self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.802690,
+                                      message_type='PSXN23',
                                       fields={'Seap200Roll': -1.47,
                                               'Seap200Heave': -0.38,
                                               'Seap200HeadingTrue': 235.77,

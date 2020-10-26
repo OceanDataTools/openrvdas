@@ -12,22 +12,28 @@ TrimbleGPS:
   format:
     #  $GPGGA,131526,     5310.2611,   S,       07054.3576,   W,       1,             9,          0.9,      26.1,              M,   ,                ,     ,     *1B
     #  $GPGGA,131819,     5310.2620,   S       ,07054.3564,   W,       1,             7          ,1.4,      29.1,              M,   ,                ,     ,     *16
+    GGA:
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{:ow}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{:ow},{:ow}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od},{Unknown:og}*{CheckSum:x}"
+    GLL:
     - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixTime:g},{DataValid:w},{Mode:w}*{CheckSum:x}"
     - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixTime:g},{Mode:w}*{CheckSum:x}"
-    - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
 
     #  $GPRMC,131208,     A,            5310.2626,   S,       07054.3592,   W,       0.1,        171.9,         020819,     14.2,           E                  ,A       *2B
+    RMC:
     - "$GPRMC,{GPSTime:og},{GPSStatus:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:f},{MagneticVarEorW:w},{Mode:w}*{Checksum:x}"
     - "$GPRMC,{GPSTime:og},{GPSStatus:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:f},{MagneticVarEorW:w}*{Checksum:x}"
+    VTG:
     - "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
     - "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
+    ZDA:
     - "$GPZDA,{GPSTime:d},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:od}*{CheckSum:x}"
     - "$GPZDA,{GPSTime:og},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:od},{Unknown:ow}*{CheckSum:x}"
+    DTM:
     # "$GPDTM,W84,,0000.0000,N,00000.0000,E,0.0,W84*5F"
     - "$GPDTM,{LocalDatum:w},{LocalDatumSubCode:ow},{LatitudeOffsetMinutes:f},{LatitudeOffsetNorS:w},{LongitudeOffsetMinutes:f},{LongitudeOffsetEorW:w},{AltitudeOffset:og},{Datum:w}*{Checksum:x}"
 

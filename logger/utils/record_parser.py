@@ -48,7 +48,8 @@ class RecordParser:
 
         field_patterns
             If not None, a list of parse patterns to be tried instead
-            of looking for device definitions along the definition path.
+            of looking for device definitions along the definition path,
+            or a dict of message_type:[parse_pattern, parse_pattern].
 
         metadata
             If field_patterns is not None, the metadata to send along with
@@ -95,12 +96,11 @@ class RecordParser:
         self.delimiter = delimiter
 
         # If we've been explicitly given the field_patterns we're to use for
-        # parsing, compile them now.
+        # parsing, compile them now. Patterns may either be a list of strings,
+        # a dict of strings or a dict of lists of strings.
         if field_patterns:
-            self.compiled_field_patterns = [
-                parse.compile(format=p, extra_types=extra_format_types)
-                for p in field_patterns
-            ]
+            self.compiled_field_patterns = self._compile_formats_from_patterns(field_patterns)
+            self.metadata = metadata
 
         # If we've not been given field_patterns to use for parsing, read in all
         # the devices and device types to compile them.
@@ -111,7 +111,29 @@ class RecordParser:
             self.devices = definitions.get('devices', {})
             self.device_types = definitions.get('device_types', {})
 
-            # If we haven't been handed a dict of metadata, compile it from
+            # Some limited error checking: make sure that all devices have a
+            # defined device_type.
+            for device, device_def in self.devices.items():
+                device_type = device_def.get('device_type', None)
+                if not device_type:
+                    raise ValueError('Device definition for "%s" has no declaration of '
+                                     'its device_type.' % device)
+                if device_type not in self.device_types:
+                    raise ValueError('Device type "%s" (declared in definition of "%s") '
+                                     'is undefined.' % (device_type, device))
+
+            # Compile format definitions so that we can run them more
+            # quickly. If format is a single string, normalize it into a list
+            # to simplify later code.
+            for device_type, device_type_def in self.device_types.items():
+                format = device_type_def.get('format', None)
+                if format is None:
+                    raise ValueError('Device type %s has no format definition'
+                                     % device_type)
+                compiled_format = self._compile_formats_from_patterns(format)
+                self.device_types[device_type]['compiled_format'] = compiled_format
+
+            # Metadata: If we haven't been handed a dict of metadata, compile it from
             # the devices we've read.
             #
             # It's a map from variable name to the device and device type it
@@ -154,37 +176,6 @@ class RecordParser:
                         }
                         self.metadata[device_field].update(field_desc)
 
-            # Some limited error checking: make sure that all devices have a
-            # defined device_type.
-            for device, device_def in self.devices.items():
-                device_type = device_def.get('device_type', None)
-                if not device_type:
-                    raise ValueError('Device definition for "%s" has no declaration of '
-                                     'its device_type.' % device)
-                if device_type not in self.device_types:
-                    raise ValueError('Device type "%s" (declared in definition of "%s") '
-                                     'is undefined.' % (device_type, device))
-
-            # Compile format definitions so that we can run them more
-            # quickly. If format is a single string, normalize it into a list
-            # to simplify later code.
-            for device_type, device_type_def in self.device_types.items():
-                format = device_type_def.get('format', None)
-                if format is None:
-                    raise ValueError('Device type %s has no format definition'
-                                     % device_type)
-                if isinstance(format, str):
-                    try:
-                        compiled_format = [parse.compile(format=format,
-                                                         extra_types=extra_format_types)]
-                    except ValueError as e:
-                        raise ValueError('Bad parser format: "%s": %s' % (format, e))
-                else:
-                    compiled_format = [parse.compile(format=f,
-                                                     extra_types=extra_format_types)
-                                       for f in format]
-                self.device_types[device_type]['compiled_format'] = compiled_format
-
     ############################
     def parse_record(self, record):
         """Parse an id-prefixed text record into a Python dict of data_id,
@@ -196,6 +187,7 @@ class RecordParser:
             logging.info('Record is not a string: "%s"', record)
             return None
         try:
+            # Break record into (by default) data_id, timestamp and field_string
             parsed_record = self.compiled_record_format.parse(record).named
         except (ValueError, AttributeError):
             if not self.quiet:
@@ -211,48 +203,59 @@ class RecordParser:
 
         # Extract the field string we're going to parse; remove trailing
         # whitespace.
-        field_string = parsed_record.get('field_string', None).rstrip()
-        if field_string is not None:
-            del parsed_record['field_string']
+        field_string = parsed_record.get('field_string', None)
+
+        # If we don't have fields, there's nothing to parse
+        if field_string is None:
+            return None
+        field_string = field_string.strip()
+        if not field_string:
+            return None
 
         fields = {}
-        if field_string:
-            # If we've been given a set of field_patterns to apply, use the
-            # first that matches.
-            if self.field_patterns:
-                for trial_pattern in self.compiled_field_patterns:
-                    parsed_fields = trial_pattern.parse(field_string)
-                    # Did we find a parse that matched? If so, return its named fields
-                    if parsed_fields:
-                        fields = parsed_fields.named
-                        break
 
-            # If we were given no explicit field_patterns to use, we need to
-            # count on the record having a data_id that lets us figure out
-            # which device, and therefore which field_patterns to try.
-            else:
-                data_id = parsed_record.get('data_id', None)
-                if data_id is None:
-                    if not self.quiet:
-                        logging.warning('No data id found in record: %s', record)
-                    return None
-                fields = self.parse_for_data_id(data_id, field_string)
+        # If we've been given a set of field_patterns to apply, use the
+        # first that matches.
+        if self.field_patterns:
+            fields, message_type = self._parse_field_string(field_string,
+                                                            self.compiled_field_patterns)
+        # If we were given no explicit field_patterns to use, we need to
+        # count on the record having a data_id that lets us figure out
+        # which device, and therefore which field_patterns to try.
+        else:
+            data_id = parsed_record.get('data_id', None)
+            if data_id is None:
+                if not self.quiet:
+                    logging.warning('No data id found in record: %s', record)
+                return None
+            fields, message_type = self.parse_for_data_id(data_id, field_string)
 
-        if fields:
-            if self.prepend_data_id:
-                # This conditional dictates whether fields are stored with just the
-                # field_name key, or <data_id><delimiter><field_name>
-                # Doing some work directly on the fields dict, so we'll take a copy
-                # to loop over.
-                fields_copy = fields.copy()
-                # Reset the fields dict
-                fields = {}
-                for field in fields_copy:
-                    # Determine the new "field_name"
-                    key = '' + data_id + self.delimiter + field
-                    # Set the value
-                    fields[key] = fields_copy[field]
-            parsed_record['fields'] = fields
+        # We should now have a dictionary of fields. If not, go home
+        if not fields:
+            if not self.quiet:
+                logging.warning('No formats matched field_string "%s"', field_string)
+            return None
+
+        # Some folks want the data_id prepended
+        if self.prepend_data_id:
+            # This conditional dictates whether fields are stored with just the
+            # field_name key, or <data_id><delimiter><field_name>
+            # Doing some work directly on the fields dict, so we'll take a copy
+            # to loop over.
+            fields_copy = fields.copy()
+            # Reset the fields dict
+            fields = {}
+            for field in fields_copy:
+                # Determine the new "field_name"
+                key = '' + data_id + self.delimiter + field
+                # Set the value
+                fields[key] = fields_copy[field]
+
+        # Remove raw 'field_string' and add parsed 'fields' to parsed_record
+        del parsed_record['field_string']
+        parsed_record['fields'] = fields
+        if message_type:
+            parsed_record['message_type'] = message_type
 
         # If we have parsed fields, see if we also have metadata. Are we
         # supposed to occasionally send it for our variables? Is it time
@@ -281,7 +284,8 @@ class RecordParser:
         if self.return_das_record:
             try:
                 return DASRecord(data_id=data_id, timestamp=timestamp,
-                                 fields=fields, metadata=metadata)
+                                 message_type=message_type, fields=fields,
+                                 metadata=metadata)
             except KeyError:
                 return None
 
@@ -289,6 +293,42 @@ class RecordParser:
             return json.dumps(parsed_record)
         else:
             return parsed_record
+
+    ############################
+    def _parse_field_string(self, field_string, compiled_field_patterns):
+        # Default if we don't match anything
+        fields = {}
+        message_type = None
+
+        # If our pattern(s) are just a single compiled parser, try parsing and
+        # return with no message type.
+        if isinstance(compiled_field_patterns, parse.Parser):
+            result = compiled_field_patterns.parse(field_string)
+            if result:
+                fields = result.named
+
+        # Else, if it's a list, try it out on all the elements.
+        elif isinstance(compiled_field_patterns, list):
+            for pattern in compiled_field_patterns:
+                fields, message_type = self._parse_field_string(field_string, pattern)
+                if fields:
+                    break
+
+        # If it's a dict, try out on all values, using the key as message type.
+        # It's syntactically possible for the internal set of patterns to have
+        # their own message types. Not sure why someone would ever create patterns
+        # that did this, but if they do, let that override our base one.
+        elif isinstance(compiled_field_patterns, dict):
+            for message_type, pattern in compiled_field_patterns.items():
+                fields, int_message_type = self._parse_field_string(field_string, pattern)
+                message_type = int_message_type or message_type
+                if fields:
+                    break
+        else:
+            raise ValueError('Unexpected pattern type in parser: %s'
+                             % type(compiled_field_patterns))
+
+        return fields, message_type
 
     ############################
     def parse_for_data_id(self, data_id, field_string):
@@ -316,14 +356,21 @@ class RecordParser:
                 logging.error('Internal error: No "device_type" for device %s!', device)
             return None
 
-        # Now parse the field_string, based on device type. If something goes
-        # wrong during parsing, expect a ValueError.
-        try:
-            parsed_fields = self.parse(device_type=device_type, field_string=field_string)
-            logging.debug('Got fields: %s', pprint.pformat(parsed_fields))
-        except ValueError as e:
-            logging.error(str(e))
+        device_definition = self.device_types.get(device_type, None)
+        if not device_definition:
+            if not self.quiet:
+                logging.error('No definition found for device_type "%s"', device_type)
             return None
+
+        compiled_format_patterns = device_definition.get('compiled_format', None)
+        parsed_fields, message_type = \
+            self._parse_field_string(field_string, compiled_format_patterns)
+
+        # Did we get anything?
+        if not parsed_fields and not self.quiet:
+            logging.warning('No formats matched field_string "%s"', field_string)
+
+        logging.debug('Got fields: %s', pprint.pformat(parsed_fields))
 
         # Finally, convert field values to variable names specific to device
         device_fields = device.get('fields', None)
@@ -348,34 +395,33 @@ class RecordParser:
             fields[variable_name] = value
 
         logging.debug('Got fields: %s', pprint.pformat(fields))
-        return fields
+        return fields, message_type
 
     ############################
-    def parse(self, device_type, field_string):
-        """Parse a text field_string for the given device_type into a flat Python
-        dict; raise ValueError if there are problems, return empty dict if
-        there is no match to the provided formats.
-
+    def _compile_formats_from_patterns(self, field_patterns):
+        """Return a list/dict of patterns compiled from the
+        str/list/dict of passed field_patterns.
         """
-        device_definition = self.device_types.get(device_type, None)
-        if not device_definition:
-            raise ValueError('No definition found for device_type "%s"', device_type)
+        if isinstance(field_patterns, str):
+            return [parse.compile(format=field_patterns,
+                                  extra_types=extra_format_types)]
+        elif isinstance(field_patterns, list):
+            return [parse.compile(format=p, extra_types=extra_format_types)
+                    for p in field_patterns]
+        elif isinstance(field_patterns, dict):
+            compiled_field_patterns = {}
+            for message_type, message_pattern in field_patterns.items():
+                compiled_patterns = self._compile_formats_from_patterns(message_pattern)
+                compiled_field_patterns[message_type] = compiled_patterns
+            return compiled_field_patterns
 
-        compiled_format = device_definition.get('compiled_format', None)
-        for trial_format in compiled_format:
-            fields = trial_format.parse(field_string)
-            if fields:
-                return fields.named
-
-        # Nothing matched, go home empty-handed
-        if not self.quiet:
-            logging.warning('No formats for %s matched field_string "%s"',
-                            device_type, field_string)
-        return {}
+        else:
+            raise ValueError('Passed field_patterns must be str, list or dict. Found %s: %s'
+                             % (type(field_patterns), str(field_patterns)))
 
     ############################
     def _read_definitions(self, filespec_paths):
-        """Read the files on the filespec_paths and return dictinary of
+        """Read the files on the filespec_paths and return dictionary of
         accumulated definitions.
         """
         definitions = {}
@@ -396,7 +442,7 @@ class RecordParser:
 
     ############################
     def _new_read_definitions(self, filespec_paths, definitions=None):
-        """Read the files on the filespec_paths and return dictinary of
+        """Read the files on the filespec_paths and return dictionary of
         accumulated definitions.
 
         filespec_paths - a list of possibly-globbed filespecs to be read
