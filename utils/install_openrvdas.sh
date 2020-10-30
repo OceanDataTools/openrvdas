@@ -40,7 +40,7 @@
 # produce the desired result.  Bug reports, and even better, bug
 # fixes, will be greatly appreciated.
 
-PREFERENCES_FILE='.build_openrvdas_preferences'
+PREFERENCES_FILE='.install_openrvdas_preferences'
 
 ###########################################################################
 ###########################################################################
@@ -115,6 +115,10 @@ function set_default_variables {
 
     DEFAULT_RVDAS_USER=rvdas
 
+    DEFAULT_INSTALL_MYSQL=no
+    DEFAULT_INSTALL_FIREWALLD=no
+    DEFAULT_OPENRVDAS_AUTOSTART=yes
+
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
@@ -140,6 +144,11 @@ DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
 DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
+
+DEFAULT_INSTALL_MYSQL=$INSTALL_MYSQL
+DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
+DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
 EOF
 }
 
@@ -598,7 +607,7 @@ function setup_python_packages {
 function setup_nginx {
 
       # MacOS
-        if [ $OS_TYPE == 'MacOS' ]; then
+    if [ $OS_TYPE == 'MacOS' ]; then
         # We need to add a couple of lines to not quite the end of nginx.conf,
         # so do a bit of hackery: chop off the closing "}" with head, append
         # the lines we need and a new closing "}" into a temp file, then copy back.
@@ -631,6 +640,7 @@ function setup_nginx {
     }
 EOF
           mv -f /tmp/nginx.conf /etc/nginx/nginx.conf
+        fi
     fi
 }
 
@@ -684,11 +694,11 @@ function setup_uwsgi {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME= /usr/local/etc
+        ETC_HOME=/usr/local/etc
 
     # CentOS/RHEL and Ubuntu/Debian
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        ETC_HOME= /etc
+        ETC_HOME=/etc
     fi
 
     cp $ETC_HOME/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
@@ -791,30 +801,42 @@ function setup_supervisor {
     # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
 
     VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
+    if [ $OPENRVDAS_AUTOSTART = 'yes' ]; then
+        AUTOSTART=true
+    else
+        AUTOSTART=false
+    fi
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME= /usr/local/etc
+        ETC_HOME=/usr/local/etc
         HTTP_HOST=127.0.0.1
         NGINX_BIN=/usr/local/bin/nginx
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
         SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
+        SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
+        COMMENT_SOCK_OWNER=';'
 
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
-        ETC_HOME= /etc
+        ETC_HOME=/etc
         HTTP_HOST='*'
         NGINX_BIN=/usr/sbin/nginx
         SUPERVISOR_DIR=/etc/supervisord.d
         SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
+        SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
+        COMMENT_SOCK_OWNER=''
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-        ETC_HOME= /etc
+        ETC_HOME=/etc
         HTTP_HOST='*'
         NGINX_BIN=/usr/sbin/nginx
         SUPERVISOR_DIR=/etc/supervisor/conf.d
         SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.conf
+        SUPERVISOR_SOCK=/var/run/supervisor.sock
+        COMMENT_SOCK_OWNER=''
+
     fi
 
     # Write out supervisor file, filling in variables
@@ -822,9 +844,9 @@ function setup_supervisor {
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
 [unix_http_server]
-file=/var/run/supervisor/supervisor.sock   ; (the path to the socket file)
-chmod=0770                      ; socket file mode (default 0700)
-chown=nobody:${RVDAS_USER}
+file=$SUPERVISOR_SOCK   ; (the path to the socket file)
+chmod=0770              ; socket file mode (default 0700)
+${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_USER}
 
 [inet_http_server]
 port=${HTTP_HOST}:9001
@@ -835,7 +857,7 @@ password=${RVDAS_USER}
 [program:nginx]
 command=${NGINX_BIN} -g 'daemon off;'
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$OPENRVDAS_AUTOSTART
+autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/nginx.stderr
@@ -846,7 +868,7 @@ stdout_logfile=/var/log/openrvdas/nginx.stdout
 command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
 stopsignal=INT
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$OPENRVDAS_AUTOSTART
+autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/uwsgi.stderr
@@ -856,7 +878,7 @@ user=$RVDAS_USER
 [program:cached_data_server]
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$OPENRVDAS_AUTOSTART
+autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
@@ -867,7 +889,7 @@ user=$RVDAS_USER
 command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v -V
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
-autostart=$OPENRVDAS_AUTOSTART
+autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/logger_manager.stderr
@@ -903,9 +925,10 @@ EOF
 ###########################################################################
 # CentOS/RHEL ONLY - Set up firewall daemon and open relevant ports
 function setup_firewall {
-    if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ];; then
+    if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         echo No firewall setup on $OS_TYPE
         return
+    fi
 
     # All this is CentOS/RHEL only
     yum install -y firewalld
@@ -1038,9 +1061,10 @@ echo "#####################################################################"
 echo MySQL or MariaDB, the CentOS replacement for MySQL, can be installed and
 echo configured so that DatabaseWriter and DatabaseReader have something to
 echo write to and read from.
-yes_no "Install and configure MySQL database? (no) " $INSTALL_MYSQL
+yes_no "Install and configure MySQL database? " $DEFAULT_INSTALL_MYSQL
+INSTALL_MYSQL=$YES_NO_RESULT
 
-if [ -n "$INSTALL_MYSQL" ]; then
+if [ $INSTALL_MYSQL == 'yes' ]; then
     echo Will install/configure MySQL
     # Get current and new passwords for database
     echo Root database password will be empty on initial installation. If this
@@ -1059,11 +1083,13 @@ fi
 #########################################################################
 #########################################################################
 # CentOS/RHEL only: do they want to install/configure firewalld?
+INSTALL_FIREWALLD=no
 if [ $OS_TYPE == 'CentOS' ]; then
     echo "#####################################################################"
     echo The firewalld daemon can be installed and configured to only allow access
     echo to ports used by OpenRVDAS.
-    yes_no "Install and configure firewalld? (no) " INSTALL_FIREWALLD False
+    yes_no "Install and configure firewalld?" $DEFAULT_INSTALL_FIREWALLD
+    INSTALL_FIREWALLD=$YES_NO_RESULT
 fi
 
 #########################################################################
@@ -1078,8 +1104,8 @@ echo If you do not wish it to start automatically, it may still be run manually
 echo from the command line or started via supervisor by running supervisorctl
 echo and starting processes logger_manager and cached_data_server.
 echo
-OPENRVDAS_AUTOSTART=false
-yes_no "Start the OpenRVDAS server on boot? (yes) " OPENRVDAS_AUTOSTART True
+yes_no "Start the OpenRVDAS server on boot? " $DEFAULT_OPENRVDAS_AUTOSTART
+OPENRVDAS_AUTOSTART=$YES_NO_RESULT
 
 #########################################################################
 #########################################################################
@@ -1097,7 +1123,7 @@ install_packages
 #########################################################################
 # If we're installing MySQL/MariaDB
 echo "#####################################################################"
-if [ -n "$INSTALL_MYSQL" ]; then
+if [ $INSTALL_MYSQL == 'yes' ]; then
     echo Installing/configuring database
     # Expect the following shell variables to be appropriately set:
     # RVDAS_USER - valid userid
@@ -1195,12 +1221,19 @@ echo Restarting services: supervisor
         brew tap homebrew/services
         brew services restart supervisor
 
-    # If we're on Linux
+    # Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         sudo mkdir -p /var/run/supervisor/
         sudo chgrp $RVDAS_USER /var/run/supervisor
-        systemctl enable supervisord
-        systemctl restart supervisord # nginx uwsgi are now started by supervisor
+
+        # CentOS/RHEL
+        if [ $OS_TYPE == 'CentOS' ]; then
+            systemctl enable supervisord
+            systemctl restart supervisord
+        else # Ubuntu/Debian
+            systemctl enable supervisor
+            systemctl restart supervisor
+        fi
 
         # Previous installations used nginx and uwsgi as a service. We need to
         # disable them if they're running.
