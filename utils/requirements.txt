@@ -7,7 +7,6 @@
 --trusted-host files.pythonhosted.org
 
 # Packages
-wheel
 pyserial
 uwsgi
 websockets

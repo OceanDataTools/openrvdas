@@ -591,6 +591,7 @@ function setup_python_packages {
     pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       --upgrade pip
+    pip install wheel  # To help with the rest of the installations
 
     pip install -r utils/requirements.txt
 
