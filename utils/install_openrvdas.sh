@@ -596,7 +596,7 @@ function setup_python_packages {
 
     # If we're installing database, then also install relevant
     # Python clients.
-    if [ -n "$INSTALL_MYSQL" ]; then
+    if [ $INSTALL_MYSQL == 'yes' ]; then
       pip install -r utils/requirements_mysql.txt
     fi
 }
@@ -1208,7 +1208,7 @@ setup_supervisor
 #########################################################################
 #########################################################################
 # If we've been instructed to set up firewall, do so.
-if [ -n "$INSTALL_FIREWALLD" ]; then
+if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
 fi
 
