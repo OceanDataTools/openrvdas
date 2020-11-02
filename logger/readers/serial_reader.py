@@ -68,7 +68,9 @@ class SerialReader(Reader):
             eol: \r
         ```
         """
-        super().__init__(output_format=Text)
+        super().__init__(output_format=Text,
+                         encoding=encoding,
+                         encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
             raise RuntimeError('Serial port functionality not available. Please '
@@ -92,7 +94,7 @@ class SerialReader(Reader):
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
         if eol is not None and self.encoding:
-            eol = eol.encode(self.encoding).decode('unicode_escape').eol.encode(self.encoding)
+            eol = self._encode_str(eol)
         self.eol = eol
 
     ############################
@@ -105,20 +107,10 @@ class SerialReader(Reader):
             else:
                 record = self.serial.readline()
 
-            if not record:
-                return None
-            if self.encoding:
-                try:
-                    record = record.decode(encoding=self.encoding,
-                                           errors=self.encoding_errors).rstrip()
-                    return record
-                except UnicodeDecodeError as e:
-                    logging.warning('Error decoding string "%s" from encoding "%s": %s',
-                                    record, self.encoding, str(e))
-                    return None
+            return self._decode_bytes(record)
         except KeyboardInterrupt as e:
             raise e
         except serial.serialutil.SerialException as e:
             logging.error(str(e))
-        return None
+            return None
 

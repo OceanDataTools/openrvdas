@@ -49,18 +49,13 @@ class PolledSerialReader(SerialReader):
                 logging.error(str(e))
 
     ############################
-    def _to_bytes(self, the_str):
-        """Convert a string to bytes, unescaping things like \n and \r."""
-        return the_str.encode().decode("unicode_escape").encode('utf8')
-
-    ############################
     def _send_command(self, command):
         """Send a command, or list of commands to the serial port."""
         if not command:
             return
         if type(command) is str:
             # Do some craziness to unescape escape sequences like '\n'
-            self.serial.write(self._to_bytes(command))
+            self.serial.write(self._encode_str(command))
             return
 
         if not type(command) is list:
@@ -87,7 +82,7 @@ class PolledSerialReader(SerialReader):
             else:
                 # If it's a normal command we're sending
                 logging.info('Sending serial command "%s"', cmd)
-                self.serial.write(self._to_bytes(cmd))
+                self.serial.write(self._encode_str(cmd))
 
     ############################
     def read(self):

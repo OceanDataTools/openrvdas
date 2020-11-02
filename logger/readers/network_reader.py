@@ -27,7 +27,8 @@ class NetworkReader(Reader):
     """
     ############################
 
-    def __init__(self, network, eol=None, read_buffer_size=READ_BUFFER_SIZE):
+    def __init__(self, network, eol=None, read_buffer_size=READ_BUFFER_SIZE,
+                 encoding='utf-8', encoding_errors='ignore'):
         """
         ```
         network      Network address to read, in host:port format (e.g.
@@ -42,11 +43,24 @@ class NetworkReader(Reader):
                      are encountered in a packet, split the packet and return
                      the first of them, buffering the remainder for subsequent
                      calls.
+
+        encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
+                and return raw bytes. Other possible encodings are listed in online
+                documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - 'ignore' by default. Other error strategies are 'strict',
+                'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
         ```
         """
-        super().__init__(output_format=Text)
+        super().__init__(output_format=Text,
+                         encoding=encoding,
+                         encoding_errors=encoding_errors)
 
         self.network = network
+        if eol is not None:
+            eol = self._unescape_str(eol)
         self.eol = eol
         self.read_buffer_size = read_buffer_size
 
@@ -93,9 +107,7 @@ class NetworkReader(Reader):
         if not self.eol:
             record = self.socket.recv(self.read_buffer_size)
             logging.debug('NetworkReader.read() received %d bytes', len(record))
-            if record:
-                record = record.decode('utf-8')
-            return record
+            return self._decode_bytes(record)
 
         # If an eol character/string has been specified, we may have to
         # loop our reads until we see an eol.
@@ -120,4 +132,4 @@ class NetworkReader(Reader):
             record = self.socket.recv(self.read_buffer_size)
             logging.debug('NetworkReader.read() received %d bytes', len(record))
             if record:
-                self.record_buffer += record.decode('utf-8')
+                self.record_buffer += self._decode_bytes(record)

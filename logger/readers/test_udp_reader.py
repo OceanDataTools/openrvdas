@@ -48,6 +48,7 @@ class TestUDPReader(unittest.TestCase):
         time.sleep(delay)
         try:
             reader = UDPReader(port=port, source=source, eol=eol)
+            print('DATA: %s' % data)
             for line in data:
                 time.sleep(0.1)
                 logging.debug('UDPReader reading...')

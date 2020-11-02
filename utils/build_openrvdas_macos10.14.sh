@@ -482,7 +482,7 @@ function setup_supervisor {
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
 [unix_http_server]
-file=/usr/local/var/run/supervisor.sock   ; (the path to the socket file)
+  file=/usr/local/var/run/supervisor.sock   ; (the path to the socket file)
 chmod=0770                      ; socket file mode (default 0700)
 ;chown=nobody:${RVDAS_USER} ; CAN'T GET THIS TO WORK WITH MACOS
 
