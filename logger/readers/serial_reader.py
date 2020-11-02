@@ -107,7 +107,10 @@ class SerialReader(Reader):
             else:
                 record = self.serial.readline()
 
-            return self._decode_bytes(record)
+            if not record:
+                return None
+            return self._decode_bytes(record).rstrip()
+
         except KeyboardInterrupt as e:
             raise e
         except serial.serialutil.SerialException as e:

@@ -70,7 +70,7 @@ class Reader:
 
         try:
             return record.decode(encoding=self.encoding,
-                                 errors=self.encoding_errors).rstrip()
+                                 errors=self.encoding_errors)
         except UnicodeDecodeError as e:
             logging.warning('Error decoding string "%s" from encoding "%s": %s',
                             record, self.encoding, str(e))
