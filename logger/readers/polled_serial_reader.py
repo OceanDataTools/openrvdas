@@ -18,8 +18,9 @@ class PolledSerialReader(SerialReader):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, max_bytes=None, eol=None, start_cmd=None,
-                 pre_read_cmd=None, stop_cmd=None):
+                 exclusive=None, max_bytes=None, eol=None, ,
+                 encoding='utf-8', encoding_errors='ignore',
+                 start_cmd=None, pre_read_cmd=None, stop_cmd=None):
         """Extends the standard serial reader by allowing the user to define
         strings to send to the serial host on startup, before each read and
         just prior to the reader being destroyed.
@@ -37,7 +38,9 @@ class PolledSerialReader(SerialReader):
                          parity=parity, stopbits=stopbits, timeout=timeout,
                          xonxoff=xonxoff, rtscts=rtscts, write_timeout=write_timeout,
                          dsrdtr=dsrdtr, inter_byte_timeout=inter_byte_timeout,
-                         exclusive=exclusive, max_bytes=max_bytes, eol=eol)
+                         exclusive=exclusive, max_bytes=max_bytes, eol=eol,
+                         encoding=encoding, encoding_errors=encoding_errors)
+        )
 
         if self.start_cmd:
             try:

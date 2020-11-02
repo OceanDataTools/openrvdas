@@ -122,7 +122,58 @@ class TestSerialReader(unittest.TestCase):
             logging.debug('data: %s, read: %s', data, record)
             self.assertEqual(data, record)
 
-    ############################
+        ############################
+        # When timeout specified...
+        def test_unicode(self):
+            port = PORT.replace('%DIR%', self.tmpdirname)
+            sim = SimSerial(port=port, source_file=self.logfile_filename,
+                            use_timestamps=False)
+            sim_thread = threading.Thread(target=sim.run)
+            sim_thread.start()
+
+            # Give it a moment to get started
+            time.sleep(0.1)
+
+            # For some reason, the test complains unless we actually read
+            # from the port. This first SerialReader is here just to get
+            # rid of the error message that pops up from SimSerial if we
+            # don't use it.
+            s = SerialReader(port=port)
+            for line in SAMPLE_DATA.split('\n'):
+                record = s.read()
+
+            # Now we're going to create SerialReaders with stubbed
+            # self.serial.readline methods so that when they're called,
+            # we instead get the same bit of bad unicode over and over
+            # again. We want to test that it performs correctly under
+            # conditions.
+
+            # A dummy serial readline that will feed us bad unicode
+            def dummy_readline():
+                return b'\xe2\x99\xa5\x99\xe2\x99\xa5\x00\xe2\x99\xa5\xe2\x99\xa5'
+
+            # Create a SerialReader, then replace its serial reader with a stub so
+            # we can feed it bad records.
+
+            s = SerialReader(port=port)
+            s.serial.readline = dummy_readline
+            self.assertEqual('♥♥\x00♥♥', s.read())
+
+            s = SerialReader(port=port, encoding_errors='replace')
+            s.serial.readline = dummy_readline
+            self.assertEqual('♥�♥\x00♥♥', s.read())
+
+            s = SerialReader(port=port, encoding_errors='strict')
+            s.serial.readline = dummy_readline
+            with self.assertLogs(logging.getLogger(), logging.WARNING):
+                self.assertEqual(None, s.read())
+
+            # Don't decode at all - return raw bytes
+            s = SerialReader(port=port, encoding=None)
+            s.serial.readline = dummy_readline
+            self.assertEqual(dummy_readline(), s.read())
+
+        ############################
     # When timeout specified...
     def test_timeout(self):
         port = PORT.replace('%DIR%', self.tmpdirname)
@@ -153,7 +204,7 @@ if __name__ == '__main__':
                         help='Increase output verbosity')
     args = parser.parse_args()
 
-    LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+    LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
     logging.basicConfig(format=LOGGING_FORMAT)
 
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
