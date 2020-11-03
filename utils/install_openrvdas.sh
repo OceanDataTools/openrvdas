@@ -160,10 +160,10 @@ function set_hostname {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        sudo scutil --set HostName $HOSTNAME
-        sudo scutil --set LocalHostName $HOSTNAME
-        sudo scutil --set ComputerName $HOSTNAME
-        dscacheutil -flushcache
+        #sudo scutil --set HostName $HOSTNAME
+        #sudo scutil --set LocalHostName $HOSTNAME
+        #sudo scutil --set ComputerName $HOSTNAME
+        #dscacheutil -flushcache
 
     # If we're on CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
