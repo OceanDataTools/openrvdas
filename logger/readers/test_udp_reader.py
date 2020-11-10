@@ -65,11 +65,11 @@ class TestUDPReader(unittest.TestCase):
         #########
         # BROADCAST
         dest = ''
-        w_thread = threading.Thread(target=self.write_udp,
+        w_thread = threading.Thread(target=self.write_udp, name='write_thread',
                                     args=(port, dest, SAMPLE_DATA, None, 0.1, 0.2))
-        r1_thread = threading.Thread(target=self.read_udp,
+        r1_thread = threading.Thread(target=self.read_udp, name='read_thread_1',
                                      args=(port, dest, SAMPLE_DATA, None, 0.1))
-        r2_thread = threading.Thread(target=self.read_udp,
+        r2_thread = threading.Thread(target=self.read_udp, name='read_thread_2',
                                      args=(port, dest, SAMPLE_DATA, None, 0.1))
 
         # Set timeout we can catch if things are taking too long
@@ -92,13 +92,13 @@ class TestUDPReader(unittest.TestCase):
         # MULTICAST
         dest = '224.1.1.1'
         w_thread = threading.Thread(
-            target=self.write_udp,
+            target=self.write_udp, name='multicast1',
             args=(port, dest, SAMPLE_DATA, None, 0.1, 0.2))
         r1_thread = threading.Thread(
-            target=self.read_udp,
+            target=self.read_udp, name='multicast2',
             args=(port, dest, SAMPLE_DATA, None, 0.1))
         r2_thread = threading.Thread(
-            target=self.read_udp,
+            target=self.read_udp, name='multicast3',
             args=(port, dest, SAMPLE_DATA, None, 0.1))
 
         # Set timeout we can catch if things are taking too long
@@ -121,7 +121,7 @@ class TestUDPReader(unittest.TestCase):
         # MULTICAST listening to the wrong group
         dest = '224.1.1.1'
         w_thread = threading.Thread(
-            target=self.write_udp,
+            target=self.write_udp, name='multicast_wrong',
             args=(port, dest, SAMPLE_DATA, None, 0.1, 0.2))
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
@@ -146,13 +146,13 @@ class TestUDPReader(unittest.TestCase):
         dest = ''
 
         w_thread = threading.Thread(
-            target=self.write_udp,
+            target=self.write_udp, name='eol_write_thread',
             args=(port, dest, EOL_SAMPLE_DATA, None, 0.1, 0.2))
         r1_thread = threading.Thread(
-            target=self.read_udp,
+            target=self.read_udp, name='eol_read_thread_1',
             args=(port, dest, EOL_SAMPLE_DATA, None, 0.1))
         r2_thread = threading.Thread(
-            target=self.read_udp,
+            target=self.read_udp, name='eol_read_thread_2',
             args=(port, dest, EOL_SAMPLE_DATA, None, 0.1))
 
         # Set timeout we can catch if things are taking too long
