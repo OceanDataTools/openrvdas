@@ -160,6 +160,7 @@ function set_hostname {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
+        echo Not changing hostname on MacOS
         #sudo scutil --set HostName $HOSTNAME
         #sudo scutil --set LocalHostName $HOSTNAME
         #sudo scutil --set ComputerName $HOSTNAME
@@ -1019,13 +1020,17 @@ echo "#####################################################################"
 echo OpenRVDAS configuration script
 
 echo "#####################################################################"
-read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
-HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
-echo "Hostname will be '$HOSTNAME'"
-# Set hostname
-set_hostname $HOSTNAME
 
-read -p "Install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
+# We don't set hostname on MacOS
+if [ $OS_TYPE != 'MacOS' ]; then
+    read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
+    HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
+    echo "Hostname will be '$HOSTNAME'"
+    # Set hostname
+    set_hostname $HOSTNAME
+fi
+
+read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo "Install root will be '$INSTALL_ROOT'"
 echo
@@ -1058,6 +1063,13 @@ elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
 fi
 RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
 create_user $RVDAS_USER
+
+if [ $OS_TYPE == 'MacOS' ]; then
+    RVDAS_GROUP=wheel
+# If we're on Linux
+else
+    RVDAS_GROUP=$RVDAS_USER
+fi
 
 echo
 read -p "Django/database password to use for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
@@ -1200,11 +1212,12 @@ echo Creating OpenRVDAS-specific uWSGI files
 # Make everything accessible to nginx
 chmod 755 ${INSTALL_ROOT}/openrvdas
 chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
-chgrp -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
 
 # Create openrvdas log and tmp directories
-mkdir -p /var/log/openrvdas /var/tmp/openrvdas
-chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
+sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
+sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
+sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
 
 echo "#####################################################################"
 echo Setting up openrvdas service with supervisord
@@ -1227,13 +1240,14 @@ echo Restarting services: supervisor
     if [ $OS_TYPE == 'MacOS' ]; then
         sudo mkdir -p /usr/local/var/run/
         sudo chown $RVDAS_USER /usr/local/var/run
+        sudo chgrp $RVDAS_GROUP /usr/local/var/run
         brew tap homebrew/services
         brew services restart supervisor
 
     # Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         sudo mkdir -p /var/run/supervisor/
-        sudo chgrp $RVDAS_USER /var/run/supervisor
+        sudo chgrp $RVDAS_GROUP /var/run/supervisor
 
         # CentOS/RHEL
         if [ $OS_TYPE == 'CentOS' ]; then
