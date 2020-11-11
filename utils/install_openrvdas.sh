@@ -618,6 +618,9 @@ function setup_nginx {
 
       # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
+        [ -e /usr/local/etc/nginx/sites-available ] || mkdir /usr/local/etc/nginx/sites-available
+        [ -e /usr/local/etc/nginx/sites-enabled ] || mkdir /usr/local/etc/nginx/sites-enabled
+
         # We need to add a couple of lines to not quite the end of nginx.conf,
         # so do a bit of hackery: chop off the closing "}" with head, append
         # the lines we need and a new closing "}" into a temp file, then copy back.
