@@ -871,7 +871,7 @@ autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/nginx.stderr
-stdout_logfile=/var/log/openrvdas/nginx.stdout
+;stdout_logfile=/var/log/openrvdas/nginx.stdout
 ;user=$RVDAS_USER
 
 [program:uwsgi]
@@ -882,7 +882,7 @@ autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-stdout_logfile=/var/log/openrvdas/uwsgi.stdout
+;stdout_logfile=/var/log/openrvdas/uwsgi.stdout
 user=$RVDAS_USER
 
 [program:cached_data_server]
@@ -892,7 +892,7 @@ autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
-stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
+;stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=$RVDAS_USER
 
 [program:logger_manager]
@@ -903,7 +903,7 @@ autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/logger_manager.stderr
-stdout_logfile=/var/log/openrvdas/logger_manager.stdout
+;stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=$RVDAS_USER
 
 [program:simulate_nbp]
@@ -913,7 +913,7 @@ autostart=false
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
-stdout_logfile=/var/log/openrvdas/simulate_nbp.stdout
+;stdout_logfile=/var/log/openrvdas/simulate_nbp.stdout
 user=$RVDAS_USER
 
 [group:web]
