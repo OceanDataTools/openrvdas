@@ -87,12 +87,9 @@ FILECHOOSER_DIRS = [BASE_DIR + '/local',
 #
 # If, on the other hand, our data server is running somewhere else,
 # specify it here.
-WEBSOCKET_DATA_HOST = '' # HOSTNAME
-WEBSOCKET_DATA_PORT = 8766
-WEBSOCKET_DATA_SERVER = '%s:%d' % (WEBSOCKET_DATA_HOST,
-                                   WEBSOCKET_DATA_PORT)
-# Application definition
+WEBSOCKET_DATA_SERVER = ':%d/cds-ws' % SERVER_PORT
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

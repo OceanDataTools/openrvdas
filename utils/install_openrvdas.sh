@@ -766,12 +766,12 @@ server {
     }
 
     # Externally, serve cached data server at $SERVER_PORT/cds-ws
-    location /cds-ws/ {
+    location /cds-ws {
         proxy_pass http://localhost:8766;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "Upgrade";
-        proxy_set_header Host $host;
+        proxy_set_header Host \$host;
     }
 
     # Finally, send all non-media requests to the Django server.
