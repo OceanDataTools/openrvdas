@@ -47,6 +47,8 @@ HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
+SERVER_PORT = 8000
+
 # Host name may be a fully-qualified domain. Also allow just the basic
 # name.
 if '.' in HOSTNAME:

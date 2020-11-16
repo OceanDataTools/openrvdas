@@ -210,6 +210,17 @@ function fix_database_settings {
 
 ###########################################################################
 ###########################################################################
+# If we're on RHEL/CentOS and firewalld is running, open the ports we'll
+# need to have available.
+function open_required_ports {
+    if [ $OS_TYPE == 'CentOS' ] && [ `systemctl is-active firewalld` == 'active' ]; then
+        echo Opening ports 9999 \(InfluxDB\) and 3000 \(Grafana\)
+        firewall-cmd -q --permanent --add-port=9999/tcp > /dev/null  # InfluxDB
+        firewall-cmd -q --permanent --add-port=3000/tcp > /dev/null  # Grafana
+    fi
+}
+###########################################################################
+###########################################################################
 # Install and configure InfluxDB - to be run *after* OpenRVDAS is in place!
 function install_influxdb {
     # Expect the following shell variables to be appropriately set:
@@ -646,6 +657,8 @@ fi
 if [ $INSTALL_TELEGRAF == 'yes' ];then
     install_telegraf
 fi
+
+open_required_ports
 
 set_up_supervisor
 

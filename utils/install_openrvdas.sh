@@ -112,6 +112,7 @@ function set_default_variables {
 
     DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
     DEFAULT_OPENRVDAS_BRANCH=master
+    DEFAULT_SERVER_PORT=8000
 
     DEFAULT_RVDAS_USER=rvdas
 
@@ -142,6 +143,7 @@ DEFAULT_HTTP_PROXY=$HTTP_PROXY
 
 DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
 DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
+DEFAULT_SERVER_PORT=$SERVER_PORT
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
 
@@ -576,6 +578,7 @@ function install_openrvdas {
     cp display/js/widgets/settings.js.dist \
        display/js/widgets/settings.js
     sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
+    sed -i -e "s/:8000/:${SERVER_PORT}/g" display/js/widgets/settings.js
 
     # Copy the database settings.py.dist into place so that other
     # routines can make the modifications they need to it.
@@ -667,6 +670,7 @@ function setup_django {
 
     cd ${INSTALL_ROOT}/openrvdas
     cp django_gui/settings.py.dist django_gui/settings.py
+    sed -i -e "s/SERVER_PORT = 8000/SERVER_PORT = ${SERVER_PORT}/g" django_gui/settings.py
     sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
     sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
 
@@ -727,7 +731,7 @@ upstream django {
 # configuration of the server
 server {
     # the port your site will be served on
-    listen      8000;
+    listen      ${SERVER_PORT};
     # the domain name it will serve for
     server_name ${HOSTNAME}; # substitute machine's IP address or FQDN
     charset     utf-8;
@@ -759,6 +763,15 @@ server {
     location /docs {
         alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
         autoindex on;
+    }
+
+    # Externally, serve cached data server at $SERVER_PORT/cds-ws
+    location /cds-ws/ {
+        proxy_pass http://localhost:8766;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
     }
 
     # Finally, send all non-media requests to the Django server.
@@ -963,32 +976,28 @@ function setup_firewall {
     systemctl enable firewalld
 
     firewall-cmd -q --set-default-zone=public
-    firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
-    firewall-cmd -q --permanent --add-port=8000/tcp > /dev/null
-    firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
-    firewall-cmd -q --permanent --add-port=8002/tcp > /dev/null
+    firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
+    #firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
+
+    #firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
+    #firewall-cmd -q --permanent --add-port=8002/tcp > /dev/null
 
     # Supervisord ports - 9001 is default system-wide supervisor
     # and 9002 is the captive supervisor that logger_manager uses.
-    firewall-cmd -q --permanent --add-port=9001/tcp > /dev/null
-    firewall-cmd -q --permanent --add-port=9002/tcp > /dev/null
-
-    # InfluxDB and Grafana ports, in case it's used
-    firewall-cmd -q --permanent --add-port=9999/tcp > /dev/null
-    firewall-cmd -q --permanent --add-port=3000/tcp > /dev/null
+    #firewall-cmd -q --permanent --add-port=9001/tcp > /dev/null
 
     # Websocket ports
-    firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
-    firewall-cmd -q --permanent --add-port=8766/tcp > /dev/null # data
+    #firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
+    #firewall-cmd -q --permanent --add-port=8766/tcp > /dev/null # data
 
     # Our favorite UDP port for network data
     firewall-cmd -q --permanent --add-port=6224/udp > /dev/null
     firewall-cmd -q --permanent --add-port=6225/udp > /dev/null
 
     # For unittest access
-    firewall-cmd -q --permanent --add-port=8000/udp > /dev/null
-    firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
-    firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
+    #firewall-cmd -q --permanent --add-port=8000/udp > /dev/null
+    #firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
+    #firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
     firewall-cmd -q --reload > /dev/null
     echo Done setting SELINUX permissions
 }
@@ -1043,6 +1052,9 @@ OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
 read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
 OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 
+read -p "Port on which to serve web console? ($DEFAULT_SERVER_PORT) " SERVER_PORT
+SERVER_PORT=${SERVER_PORT:-$DEFAULT_SERVER_PORT}
+
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
@@ -1053,7 +1065,7 @@ HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 echo Will install from github.com
 echo "Repository: '$OPENRVDAS_REPO'"
 echo "Branch: '$OPENRVDAS_BRANCH'"
-echo
+echo "Serving on port $SERVER_PORT"
 
 # Create user if they don't exist yet on Linux, but MacOS needs to
 # user a pre-existing user, because creating a user is a pain.
