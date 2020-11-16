@@ -47,8 +47,6 @@ HOSTNAME = socket.gethostname()
 
 ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 
-SERVER_PORT = 8000
-
 # Host name may be a fully-qualified domain. Also allow just the basic
 # name.
 if '.' in HOSTNAME:
@@ -72,11 +70,11 @@ else: # if we got 127.0.1.1, try an expensive way of getting HOST_IP
   except OSError:
     pass  # failed to get interface
 
-# We'll allow the user to load cruise definition files from the
-# server-side system, but restrict them to loading from these
-# directories.
-FILECHOOSER_DIRS = [BASE_DIR + '/local',
-                    BASE_DIR + '/test']
+# What port Django will serve on. Default is 8000 but can be changed
+# during installation by utils/install_openrvdas.sh. NOTE: do not
+# simply edit this value in settings.py without also modifying the
+# value in django_gui/openrvdas_nginx.conf and display/js/widgets/settings.js
+SERVER_PORT = 8000
 
 # Websocket we'll connect to for logger data updates. By default,
 # we'll pass in an empty host, which will tell the client that it
@@ -88,6 +86,12 @@ FILECHOOSER_DIRS = [BASE_DIR + '/local',
 # If, on the other hand, our data server is running somewhere else,
 # specify it here.
 WEBSOCKET_DATA_SERVER = ':%d/cds-ws' % SERVER_PORT
+
+# We'll allow the user to load cruise definition files from the
+# server-side system, but restrict them to loading from these
+# directories.
+FILECHOOSER_DIRS = [BASE_DIR + '/local',
+                    BASE_DIR + '/test']
 
 # Application definition
 INSTALLED_APPS = [

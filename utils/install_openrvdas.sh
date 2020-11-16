@@ -977,6 +977,25 @@ function setup_firewall {
 
     firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
+
+    if [ ! -z "$TCP_PORTS_TO_OPEN" ]; then
+        for PORT in "${TCP_PORTS_TO_OPEN[@]}"
+        do
+            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
+            echo Opening $PORT/tcp
+            firewall-cmd -q --permanent --add-port=$PORT/tcp
+        done
+    fi
+
+    if [ ! -z "$UDP_PORTS_TO_OPEN" ]; then
+        for PORT in "${UDP_PORTS_TO_OPEN[@]}"
+        do
+            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
+            echo Opening $PORT/udp
+            firewall-cmd -q --permanent --add-port=$PORT/udp
+        done
+    fi
+
     #firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
 
     #firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
@@ -991,8 +1010,8 @@ function setup_firewall {
     #firewall-cmd -q --permanent --add-port=8766/tcp > /dev/null # data
 
     # Our favorite UDP port for network data
-    firewall-cmd -q --permanent --add-port=6224/udp > /dev/null
-    firewall-cmd -q --permanent --add-port=6225/udp > /dev/null
+    #firewall-cmd -q --permanent --add-port=6224/udp > /dev/null
+    #firewall-cmd -q --permanent --add-port=6225/udp > /dev/null
 
     # For unittest access
     #firewall-cmd -q --permanent --add-port=8000/udp > /dev/null
@@ -1126,6 +1145,14 @@ if [ $OS_TYPE == 'CentOS' ]; then
     echo to ports used by OpenRVDAS.
     yes_no "Install and configure firewalld?" $DEFAULT_INSTALL_FIREWALLD
     INSTALL_FIREWALLD=$YES_NO_RESULT
+
+    if [ $INSTALL_FIREWALLD == 'yes' ]; then
+        echo The installation script will open port $SERVER_PORT for TCP console access.
+        echo What other ports should be opened for TCP or UDP? \(enter comma-separated
+        echo list of numbers, or hit return to open no additional ports.\)
+        IFS=',' read -p "TCP ports to open? " -a TCP_PORTS_TO_OPEN
+        IFS=',' read -p "UDP ports to open? " -a UDP_PORTS_TO_OPEN
+    fi
 fi
 
 #########################################################################
