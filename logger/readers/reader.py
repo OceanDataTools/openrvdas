@@ -3,6 +3,7 @@
 Abstract base class for data Readers.
 """
 
+import logging
 import sys
 
 from os.path import dirname, realpath

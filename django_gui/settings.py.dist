@@ -38,7 +38,7 @@ SECRET_KEY = 'z40)h+9#4w(yj22z+(e@in@y7xoz6dgs&!nuc+atqmzpb%-0-!'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-import socket
+import socket  # noqa: E402
 
 # If the system-defined hostname from gethostname(), below, is
 # incorrect or unacceptable for some reason, comment it out and define
@@ -50,25 +50,25 @@ ALLOWED_HOSTS = [HOSTNAME, 'localhost']
 # Host name may be a fully-qualified domain. Also allow just the basic
 # name.
 if '.' in HOSTNAME:
-  name_pieces = HOSTNAME.split('.')
-  ALLOWED_HOSTS.append(name_pieces[0])
+    name_pieces = HOSTNAME.split('.')
+    ALLOWED_HOSTS.append(name_pieces[0])
 
 # Try to get (at least one) machine IP address to add to ALLOWED_HOSTS
 try:
-  HOST_IP = socket.gethostbyname(HOSTNAME)
+    HOST_IP = socket.gethostbyname(HOSTNAME)
 except socket.gaierror:
-  HOST_IP = socket.gethostbyname('localhost')
+    HOST_IP = socket.gethostbyname('localhost')
 
 if HOST_IP.find('127.0') != 0:
-  ALLOWED_HOSTS.append(HOST_IP)
-else: # if we got 127.0.1.1, try an expensive way of getting HOST_IP
-  try:
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ALLOWED_HOSTS.append(s.getsockname()[0])
-    s.close()
-  except OSError:
-    pass  # failed to get interface
+    ALLOWED_HOSTS.append(HOST_IP)
+else:  # if we got 127.0.1.1, try an expensive way of getting HOST_IP
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ALLOWED_HOSTS.append(s.getsockname()[0])
+        s.close()
+    except OSError:
+        pass  # failed to get interface
 
 # What port Django will serve on. Default is 8000 but can be changed
 # during installation by utils/install_openrvdas.sh. NOTE: do not
@@ -142,35 +142,35 @@ WSGI_APPLICATION = 'django_gui.wsgi.application'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
-    #'default': {
-    #    'ENGINE': 'django.db.backends.mysql',
-    #    'CONN_MAX_AGE': 280,
-    #    'NAME': 'openrvdas',
-    #    'USER': 'rvdas',
-    #    'PASSWORD': 'rvdas',
-    #    'HOST': 'localhost',
-    #    'PORT': '',
-    #},
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'CONN_MAX_AGE': 280,
+    #     'NAME': 'openrvdas',
+    #     'USER': 'rvdas',
+    #     'PASSWORD': 'rvdas',
+    #     'HOST': 'localhost',
+    #     'PORT': '',
+    # },
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
 
-  'OPTIONS': {
-    'timeout': 20,
-  },
+    'OPTIONS': {
+        'timeout': 20,
+    },
 }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    #{
-    #    'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    #},
-    #{
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    # },
+    # {
     #    'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    #},
+    # },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },

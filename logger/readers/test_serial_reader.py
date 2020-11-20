@@ -140,7 +140,7 @@ class TestSerialReader(unittest.TestCase):
             # don't use it.
             s = SerialReader(port=port)
             for line in SAMPLE_DATA.split('\n'):
-                record = s.read()
+                s.read()
 
             # Now we're going to create SerialReaders with stubbed
             # self.serial.readline methods so that when they're called,

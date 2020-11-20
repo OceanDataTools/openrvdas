@@ -116,4 +116,3 @@ class SerialReader(Reader):
         except serial.serialutil.SerialException as e:
             logging.error(str(e))
             return None
-
