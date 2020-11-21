@@ -11,7 +11,7 @@ To begin installation, grab the script from github:
 OPENRVDAS_REPO=raw.githubusercontent.com/oceandatatools/openrvdas
 
 BRANCH=master  # stable master branch
-#BRANCH=DEV    # development branch with latest changes
+#BRANCH=dev    # development branch with latest changes
 
 wget https://$OPENRVDAS_REPO/$BRANCH/utils/install_openrvdas.sh
 ```
