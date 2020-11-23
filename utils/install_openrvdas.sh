@@ -83,6 +83,16 @@ yes_no() {
 function get_os_type {
     if [[ `uname -s` == 'Darwin' ]];then
         OS_TYPE=MacOS
+        if [[ `uname -p` == 'arm' ]];then
+            echo
+            echo "WARNING: As of 11/20/2020, Homebrew did not yet support ARM architecture on"
+            echo "MacOS. If installation fails, please try installing using the built-in Rosetta"
+            echo "interpreter: Make a copy of /Applications/Terminal.app (e.g. RTerminal.app)."
+            echo "Select it in the Finder and open its information pane (Clover-I). Select "
+            echo "'Open using Rosetta', and use this copy of Terminal when installing OpenRVDAS."
+            read -p "Hit return to continue. " DUMMY_VAR
+            echo
+        fi
     elif [[ `uname -s` == 'Linux' ]];then
         if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]];then
             OS_TYPE=Ubuntu
