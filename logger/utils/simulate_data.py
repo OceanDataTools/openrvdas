@@ -221,7 +221,7 @@ class SimSerial:
         # Complain, but go ahead if read_port or write_port exist.
         for path in [self.read_port, self.write_port]:
             if os.path.exists(path):
-                logging.warning('Path %s exists; overwriting!')
+                logging.warning('Path %s exists; overwriting!', path)
 
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + '*'):
@@ -296,7 +296,7 @@ class SimSerial:
             return
 
         """Create the virtual port with socat and start feeding it records from
-    the designated logfile. If loop==True, loop when reaching end of input."""
+        the designated logfile. If loop==True, loop when reaching end of input."""
         self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
         self.socat_thread.start()
         time.sleep(0.2)
