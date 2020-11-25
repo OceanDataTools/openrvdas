@@ -251,7 +251,7 @@ function install_packages {
 
         # Install system packages we need
         echo Installing python and supporting packages
-        [ -e /usr/local/bin/python ] || brew install python
+        [ -e /usr/local/bin/python3 ] || brew install python
         [ -e /usr/local/bin/socat ]  || brew install socat
         [ -e /usr/local/bin/ssh ]    || brew install openssh
         [ -e /usr/local/bin/nginx ]  || brew install nginx
@@ -926,7 +926,7 @@ user=$RVDAS_USER
 
 [program:cached_data_server]
 ; Cached data server serves locally on 8766 but is proxied by NGINX
-; to serve wss externally on :${SERVER_PORT}/ws-cds
+; to serve wss externally on :${SERVER_PORT}/cds-ws
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
@@ -938,8 +938,8 @@ user=$RVDAS_USER
 
 [program:logger_manager]
 ; Cached data server serves locally on 8766 but is proxied by NGINX
-; to serve wss externally on :${SERVER_PORT}/ws-cds
-command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :${SERVER_PORT}/ws-cds -v -V --no-console
+; to serve wss externally on :${SERVER_PORT}/cds-ws
+command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :${SERVER_PORT}/cds-ws -v -V --no-console
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
