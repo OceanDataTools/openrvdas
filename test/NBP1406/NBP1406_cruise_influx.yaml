@@ -278,7 +278,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -321,7 +321,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -364,7 +364,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -412,7 +412,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -455,7 +455,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -498,7 +498,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -546,7 +546,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -589,7 +589,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -632,7 +632,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -680,7 +680,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -723,7 +723,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -766,7 +766,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -814,7 +814,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -857,7 +857,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -900,7 +900,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -948,7 +948,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -991,7 +991,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1034,7 +1034,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1082,7 +1082,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1125,7 +1125,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1168,7 +1168,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1216,7 +1216,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1259,7 +1259,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1302,7 +1302,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1350,7 +1350,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1393,7 +1393,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1436,7 +1436,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1484,7 +1484,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1527,7 +1527,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1570,7 +1570,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1618,7 +1618,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1661,7 +1661,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1704,7 +1704,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1752,7 +1752,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1795,7 +1795,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1838,7 +1838,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1886,7 +1886,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1929,7 +1929,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -1972,7 +1972,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2020,7 +2020,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2063,7 +2063,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2106,7 +2106,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2154,7 +2154,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2197,7 +2197,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2240,7 +2240,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2288,7 +2288,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2331,7 +2331,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2374,7 +2374,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2422,7 +2422,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2465,7 +2465,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2508,7 +2508,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2556,7 +2556,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2599,7 +2599,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2642,7 +2642,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2690,7 +2690,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2733,7 +2733,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2776,7 +2776,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2824,7 +2824,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2867,7 +2867,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2910,7 +2910,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2936,7 +2936,7 @@ configs:
     readers:
       class: CachedDataReader
       kwargs:
-        data_server: localhost:8766
+        data_server: localhost:/cds-ws
         subscription:
           fields:
             S330CourseTrue:
@@ -2974,7 +2974,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -2999,7 +2999,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -3015,7 +3015,7 @@ configs:
     readers:
       class: CachedDataReader
       kwargs:
-        data_server: localhost:8766
+        data_server: localhost:/cds-ws
         subscription:
           fields:
             MwxAirTemp:
@@ -3100,7 +3100,7 @@ configs:
     writers:
     - class: CachedDataWriter
       kwargs:
-        data_server: localhost:8766
+        data_server: localhost:/cds-ws
     - class: InfluxDBWriter
       kwargs:
         bucket_name: openrvdas

@@ -23,12 +23,11 @@
 // in the calling page.
 
 ////////////////////////////////////////////////////////////////////////////////
-var [ws_hostname, ws_port] = WEBSOCKET_SERVER.split(':');
-if (ws_hostname.length == 0) {
-  // If we have no hostname, get it from our containing page
-  ws_hostname = window.location.hostname;
+var websocket_server = WEBSOCKET_SERVER;
+// It's possible that we get an empty hostname, e.g. ':8000/cds-ws
+if (websocket_server.indexOf(':') == 0) {
+  websocket_server = window.location.hostname + websocket_server;
 }
-var websocket_server = "ws://" + ws_hostname + ':' + ws_port + "/";
 
 //////////////////////////////////////////////////////////////
 if (! "WebSocket" in window) {
@@ -47,7 +46,7 @@ connect_websocket();
 //////////////////////////////////////////////////////
 function connect_websocket() {
   console.log("Trying to connect to websocket at " + websocket_server);
-  ws = new WebSocket(websocket_server);
+  ws = new WebSocket('wss://' + websocket_server);
   
   ws.onopen = function() {
     // We've succeeded in opening - don't try anymore

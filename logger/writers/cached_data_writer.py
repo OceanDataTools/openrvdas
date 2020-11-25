@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import ssl
 import sys
 import threading
 import websockets
@@ -12,11 +13,11 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
-
 class CachedDataWriter(Writer):
     def __init__(self, data_server, start_server=False, back_seconds=480,
                  cleanup_interval=6, update_interval=1,
-                 max_backup=60 * 60 * 24):
+                 max_backup=60 * 60 * 24,
+                 check_cert=False):
         """Feed passed records to a CachedDataServer via a websocket. Expects
         records in DASRecord or dict formats.
         ```
@@ -35,11 +36,15 @@ class CachedDataWriter(Writer):
                       oldest records. By default, cache one day's worth of
                       records at 1 Hz (86,400 records). If max_backup is zero,
                       cache size is unbounded.
+
+        check_cert  - If True, check the server's TLS certificate for validity;
+                      if a str, use as local filepath location of .pem file to
+                      check against.
         ```
         """
         host_port = data_server.split(':')
         if len(host_port) == 1:
-            self.data_server = 'localhost:' + data_server  # they gave us ':8765'
+            self.data_server = 'localhost:' + data_server  # they gave us '8766'
         elif not len(host_port[0]):
             self.data_server = 'localhost' + data_server   # they gave us ':8766'
         else:
@@ -48,6 +53,7 @@ class CachedDataWriter(Writer):
         self.websocket = None
         self.back_seconds = back_seconds
         self.cleanup_interval = cleanup_interval
+        self.check_cert = check_cert
 
         # Event loop we'll use to asynchronously manage writes to websocket
         self.event_loop = asyncio.new_event_loop()
@@ -74,10 +80,23 @@ class CachedDataWriter(Writer):
             and cleanups.
             """
             while True:
-                logging.info('CachedDataWriter trying to connect to '
+                logging.warning('CachedDataWriter trying to connect to '
                              + self.data_server)
                 try:
-                    async with websockets.connect('ws://' + self.data_server) as ws:
+                    # If check_cert is a str, take it as the location of the
+                    # .pem file we'll check for validity. Otherwise, if not
+                    # False, take as a bool to verify by own means.
+                    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                    if self.check_cert:
+                        if isinstance(self.check_cert, str):
+                            ssl_context.load_verify_locations(self.check_cert)
+                        else:
+                            ssl_context.verify_mode = ssl.CERT_REQUIRED
+                    else:
+                        ssl_context.verify_mode = ssl.CERT_NONE
+
+                    logging.warning(f'CachedDataWriter connecting to {self.data_server}')
+                    async with websockets.connect('wss://' + self.data_server, ssl=ssl_context) as ws:
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
@@ -91,6 +110,11 @@ class CachedDataWriter(Writer):
 
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning('CachedDataWriter lost websocket connection to '
+                                    'data server; trying to reconnect.')
+                    await asyncio.sleep(0.2)
+
+                except websockets.exceptions.InvalidStatusCode:
+                    logging.warning('CachedDataWriter InvalidStatusCode connecting to '
                                     'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
 

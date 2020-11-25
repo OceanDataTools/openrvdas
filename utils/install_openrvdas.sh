@@ -122,7 +122,7 @@ function set_default_variables {
 
     DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
     DEFAULT_OPENRVDAS_BRANCH=master
-    DEFAULT_SERVER_PORT=8000
+    DEFAULT_SERVER_PORT=443
 
     DEFAULT_RVDAS_USER=rvdas
 
@@ -588,7 +588,7 @@ function install_openrvdas {
     cp display/js/widgets/settings.js.dist \
        display/js/widgets/settings.js
     sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
-    sed -i -e "s/:8000/:${SERVER_PORT}/g" display/js/widgets/settings.js
+    sed -i -e "s/:443/:${SERVER_PORT}/g" display/js/widgets/settings.js
 
     # Copy the database settings.py.dist into place so that other
     # routines can make the modifications they need to it.
@@ -680,7 +680,7 @@ function setup_django {
 
     cd ${INSTALL_ROOT}/openrvdas
     cp django_gui/settings.py.dist django_gui/settings.py
-    sed -i -e "s/SERVER_PORT = 8000/SERVER_PORT = ${SERVER_PORT}/g" django_gui/settings.py
+    sed -i -e "s/SERVER_PORT = 443/SERVER_PORT = ${SERVER_PORT}/g" django_gui/settings.py
     sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
     sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
 
@@ -738,13 +738,25 @@ upstream django {
     server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
 }
 
-# configuration of the server
+# Redirect HTTP port 80 ->HTTPS
+# server {
+#    listen 80 default_server;
+#    server_name _;
+#    return 301 https://$host$request_uri;
+# }
+
+# OpenRVDAS HTTPS server
 server {
-    # the port your site will be served on
-    listen      ${SERVER_PORT};
-    # the domain name it will serve for
-    server_name ${HOSTNAME}; # substitute machine's IP address or FQDN
+    # the port your site will be served on; typically 443
+    listen      *:${SERVER_PORT} ssl;
+    server_name _; # accept any host name
     charset     utf-8;
+
+    ssl_certificate     /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.crt;
+    ssl_certificate_key /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.key;
+    ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
 
     # max upload size
     client_max_body_size 75M;   # adjust to taste
@@ -775,7 +787,8 @@ server {
         autoindex on;
     }
 
-    # Externally, serve cached data server at $SERVER_PORT/cds-ws
+    # Internally, Cached Data Server operates on port 8766; we proxy
+    # it externally, serve cached data server at $SERVER_PORT/cds-ws
     location /cds-ws {
         proxy_pass http://localhost:8766;
         proxy_http_version 1.1;
@@ -784,7 +797,7 @@ server {
         proxy_set_header Host \$host;
     }
 
-    # Finally, send all non-media requests to the Django server.
+    # Finally, send all non-CDS, non-media requests to the Django server.
     location / {
         uwsgi_pass  django;
         include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
@@ -912,6 +925,8 @@ stderr_logfile=/var/log/openrvdas/uwsgi.stderr
 user=$RVDAS_USER
 
 [program:cached_data_server]
+; Cached data server serves locally on 8766 but is proxied by NGINX
+; to serve wss externally on :${SERVER_PORT}/ws-cds
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
@@ -922,7 +937,9 @@ stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v -V
+; Cached data server serves locally on 8766 but is proxied by NGINX
+; to serve wss externally on :${SERVER_PORT}/ws-cds
+command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :${SERVER_PORT}/ws-cds -v -V --no-console
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART

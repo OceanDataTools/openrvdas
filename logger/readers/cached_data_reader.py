@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import queue
+import ssl
 import sys
 import threading
 import time
@@ -27,7 +28,8 @@ class CachedDataReader(Reader):
     websocket connection.
     """
 
-    def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET):
+    def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET,
+                 check_cert=False):
         """
         ```
         subscription - a dictionary corresponding to the full
@@ -40,6 +42,10 @@ class CachedDataReader(Reader):
 
         data_server - the host and port at which to try to connect to a
             CachedDataServer
+
+        check_cert  - If True, check the server's TLS certificate for validity;
+                      if a str, use as local filepath location of .pem file to
+                      check against.
         ```
         When invoked in a config file, this would be:
         ```
@@ -63,6 +69,7 @@ class CachedDataReader(Reader):
         self.subscription = subscription
         subscription['type'] = 'subscribe'
         self.data_server = data_server
+        self.check_cert = check_cert
 
         # We won't initialize our websocket until the first read()
         # call. At that point we'll launch an async process in a separate
@@ -129,7 +136,20 @@ class CachedDataReader(Reader):
             # Iterate if we lose the websocket for some reason other than a 'quit'
             while not self.quit_flag:
                 try:
-                    async with websockets.connect('ws://' + self.data_server) as ws:
+                    # If check_cert is a str, take it as the location of the
+                    # .pem file we'll check for validity. Otherwise, if not
+                    # False, take as a bool to verify by own means.
+                    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                    if self.check_cert:
+                        if isinstance(self.check_cert, str):
+                            ssl_context.load_verify_locations(self.check_cert)
+                        else:
+                            ssl_context.verify_mode = ssl.CERT_REQUIRED
+                    else:
+                        ssl_context.verify_mode = ssl.CERT_NONE
+
+                    logging.warning(f'CachedDataReader connecting to {self.data_server}')
+                    async with websockets.connect('wss://' + self.data_server, ssl=ssl_context) as ws:
                         logging.info('Connected to data server %s', self.data_server)
                         # Send our subscription request
                         await ws.send(json.dumps(self.subscription))
@@ -149,6 +169,12 @@ class CachedDataReader(Reader):
                     logging.warning('CachedDataReader lost websocket connection to '
                                     'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
+
+                except websockets.exceptions.InvalidStatusCode:
+                    logging.warning('CachedDataWriter InvalidStatusCode connecting to '
+                                    'data server; trying to reconnect.')
+                    await asyncio.sleep(0.2)
+
                 except OSError as e:
                     logging.info('Unable to connect to data server. '
                                  'Sleeping to try again...')

@@ -8,7 +8,7 @@
     readers:
       class: CachedDataReader
       kwargs:
-        data_server: localhost:8766
+        data_server: localhost:/cds-ws
         subscription:
           fields:
             MwxAirTemp:
@@ -103,7 +103,7 @@
     - class: TextFileWriter
     - class: CachedDataWriter
       kwargs:
-        data_server: localhost:8766
+        data_server: localhost:/cds-ws
 
     # Send stderr to stdout and to CachedDataServer
     stderr_writers:
@@ -117,4 +117,4 @@
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:8766
+            data_server: localhost:/cds-ws
