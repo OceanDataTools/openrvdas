@@ -123,6 +123,11 @@ function set_default_variables {
     DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
     DEFAULT_OPENRVDAS_BRANCH=master
     DEFAULT_SERVER_PORT=443
+    DEFAULT_REDIRECT_PORT_80=yes
+
+    DEFAULT_HAVE_SSL_CERTIFICATE=no
+    DEFAULT_SSL_CRT_LOCATION=
+    DEFAULT_SSL_KEY_LOCATION=
 
     DEFAULT_RVDAS_USER=rvdas
 
@@ -154,6 +159,11 @@ DEFAULT_HTTP_PROXY=$HTTP_PROXY
 DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
 DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
 DEFAULT_SERVER_PORT=$SERVER_PORT
+DEFAULT_REDIRECT_PORT_80=$REDIRECT_PORT_80
+
+DEFAULT_HAVE_SSL_CERTIFICATE=$HAVE_SSL_CERTIFICATE
+DEFAULT_SSL_CRT_LOCATION=$SSL_CRT_LOCATION
+DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
 
@@ -629,7 +639,7 @@ function setup_python_packages {
 # Set up NGINX
 function setup_nginx {
 
-      # MacOS
+    # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         [ -e /usr/local/etc/nginx/sites-available ] || mkdir /usr/local/etc/nginx/sites-available
         [ -e /usr/local/etc/nginx/sites-enabled ] || mkdir /usr/local/etc/nginx/sites-enabled
@@ -668,6 +678,19 @@ EOF
           mv -f /tmp/nginx.conf /etc/nginx/nginx.conf
         fi
     fi
+}
+
+###########################################################################
+###########################################################################
+# Set up certificate files, if requested
+function setup_ssl_certificate {
+    echo Certificate will be placed in ${SSL_CRT_LOCATION}
+    echo Key will be placed in ${SSL_KEY_LOCATION}
+    echo Please answer the following prompts to continue:
+    echo
+    openssl req \
+       -newkey rsa:2048 -nodes -keyout ${SSL_KEY_LOCATION} \
+       -x509 -days 365 -out ${SSL_CRT_LOCATION}
 }
 
 ###########################################################################
@@ -727,9 +750,17 @@ function setup_uwsgi {
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         ETC_HOME=/etc
     fi
-
     cp $ETC_HOME/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
 
+    # If they want us to redirect HTTP requests for port 80 to HTTPS,
+    # leave the redirect section of the nginx conf file uncommented
+    if [ $REDIRECT_PORT_80 == 'yes' ]; then
+        REDIRECT_COMMENT=''
+    else
+        REDIRECT_COMMENT='# '
+    fi
+
+    # Put the nginx conf file in place and link it up
     cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
 # openrvdas_nginx.conf
 
@@ -739,11 +770,11 @@ upstream django {
 }
 
 # Redirect HTTP port 80 ->HTTPS
-# server {
-#    listen 80 default_server;
-#    server_name _;
-#    return 301 https://$host$request_uri;
-# }
+${REDIRECT_COMMENT}server {
+${REDIRECT_COMMENT}   listen 80 default_server;
+${REDIRECT_COMMENT}   server_name _;
+${REDIRECT_COMMENT}   return 301 https://\$host:${SERVER_PORT}\$request_uri;
+${REDIRECT_COMMENT}}
 
 # OpenRVDAS HTTPS server
 server {
@@ -752,11 +783,10 @@ server {
     server_name _; # accept any host name
     charset     utf-8;
 
-    ssl_certificate     /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.crt;
-    ssl_certificate_key /${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.key;
+    ssl_certificate     $SSL_CRT_LOCATION;
+    ssl_certificate_key $SSL_KEY_LOCATION;
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;
-
 
     # max upload size
     client_max_body_size 75M;   # adjust to taste
@@ -1101,6 +1131,13 @@ OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 read -p "Port on which to serve web console? ($DEFAULT_SERVER_PORT) " SERVER_PORT
 SERVER_PORT=${SERVER_PORT:-$DEFAULT_SERVER_PORT}
 
+echo
+echo NGINX can forward HTTP requests for port 80 to the HTTPS server at
+echo port ${SERVER_PORT}. Would you like to enable this?
+yes_no "Forward HTTP port 80 requests to ${SERVER_PORT}? " $DEFAULT_REDIRECT_PORT_80
+REDIRECT_PORT_80=$YES_NO_RESULT
+
+echo
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
@@ -1115,6 +1152,7 @@ echo "Serving on port $SERVER_PORT"
 
 # Create user if they don't exist yet on Linux, but MacOS needs to
 # user a pre-existing user, because creating a user is a pain.
+echo
 echo "#####################################################################"
 if [ $OS_TYPE == 'MacOS' ]; then
     read -p "Existing user to set system up for? ($DEFAULT_RVDAS_USER) " RVDAS_USER
@@ -1132,17 +1170,42 @@ else
     RVDAS_GROUP=$RVDAS_USER
 fi
 
-echo
 read -p "Django/database password to use for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
 RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
 #########################################################################
 #########################################################################
+# Get or create SSL keys
+echo
+echo "#####################################################################"
+echo The OpenRVDAS console, cached data server and display widgets use HTTPS
+echo and WSS \(secure websockets\) for communication and require an SSL
+echo certificate in the form of .key and .crt files. If you already have such
+echo keys on your machine that you wish to use, answer "yes" to the question
+echo below, and you will be prompted for their locations. Otherwise answer "no"
+echo and you will be prompted to create them.
+echo
+yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
+HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
+if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
+    read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+    read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+else
+    read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+    read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+fi
+SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
+SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
+
+#########################################################################
+#########################################################################
 # Do they want to install/configure MySQL for use by DatabaseWriter, etc?
+echo
 echo "#####################################################################"
 echo MySQL or MariaDB, the CentOS replacement for MySQL, can be installed and
 echo configured so that DatabaseWriter and DatabaseReader have something to
 echo write to and read from.
+echo
 yes_no "Install and configure MySQL database? " $DEFAULT_INSTALL_MYSQL
 INSTALL_MYSQL=$YES_NO_RESULT
 
@@ -1167,9 +1230,11 @@ fi
 # CentOS/RHEL only: do they want to install/configure firewalld?
 INSTALL_FIREWALLD=no
 if [ $OS_TYPE == 'CentOS' ]; then
+    echo
     echo "#####################################################################"
     echo The firewalld daemon can be installed and configured to only allow access
     echo to ports used by OpenRVDAS.
+    echo
     yes_no "Install and configure firewalld?" $DEFAULT_INSTALL_FIREWALLD
     INSTALL_FIREWALLD=$YES_NO_RESULT
 
@@ -1185,6 +1250,7 @@ fi
 #########################################################################
 #########################################################################
 # Start OpenRVDAS as a service?
+echo
 echo "#####################################################################"
 echo The OpenRVDAS server can be configured to start on boot. If you wish this
 echo to happen, it will be run/monitored by the supervisord service using the
@@ -1256,7 +1322,18 @@ setup_nginx
 
 #########################################################################
 #########################################################################
+# Create new self-signed SSL certificate, if that's what they want
+if [ $HAVE_SSL_CERTIFICATE == 'no' ]; then
+    echo
+    echo "#####################################################################"
+    echo Ready to set up new self-signed SSL certificate.
+    setup_ssl_certificate
+fi
+
+#########################################################################
+#########################################################################
 # Set up uwsgi
+echo
 echo "#####################################################################"
 echo Setting up UWSGI
 # Expect the following shell variables to be appropriately set:
@@ -1267,6 +1344,7 @@ setup_uwsgi
 #########################################################################
 #########################################################################
 # Set up Django database
+echo
 echo "#########################################################################"
 echo Initializing Django database...
 # Expect the following shell variables to be appropriately set:
@@ -1275,6 +1353,7 @@ echo Initializing Django database...
 setup_django
 
 # Connect uWSGI with our project installation
+echo
 echo "#####################################################################"
 echo Creating OpenRVDAS-specific uWSGI files
 
@@ -1288,6 +1367,7 @@ sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
 sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
 sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
 
+echo
 echo "#####################################################################"
 echo Setting up openrvdas service with supervisord
 # Expect the following shell variables to be appropriately set:
@@ -1303,6 +1383,7 @@ if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
 fi
 
+echo
 echo "#########################################################################"
 echo Restarting services: supervisor
     # If we're on MacOS
@@ -1341,6 +1422,7 @@ echo Restarting services: supervisor
 # binaries using their venv paths, so don't need it.
 deactivate
 
+echo
 echo "#########################################################################"
 echo Installation complete - happy logging!
 echo

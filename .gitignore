@@ -13,16 +13,22 @@ __pycache__
 db.sqlite3
 django_gui/migrations
 
+# Files copied from their respective .dist sources
+# by utils/install_openrvdas.sh
 django_gui/settings.py
+django_gui/settings.py-e
 database/settings.py
+database/settings.py-e
 logger/settings.py
 hapi/settings.py
 display/js/widgets/settings.js
-static/
 
+# Files created by utils/install_openrvdas.sh
 django_gui/openrvdas_nginx.conf
 django_gui/openrvdas_uwsgi.ini
 django_gui/uwsgi_params
+
+static/
 
 # PyCharm
 .idea/
