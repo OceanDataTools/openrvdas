@@ -206,6 +206,11 @@ function fix_database_settings {
 
     sed -i -e "s/INFLUXDB_ORG = '.*'/INFLUXDB_ORG = '$ORGANIZATION'/" $SETTINGS
     sed -i -e "s/INFLUXDB_AUTH_TOKEN = '.*'/INFLUXDB_AUTH_TOKEN = '$INFLUXDB_AUTH_TOKEN'/" $SETTINGS
+
+    # If they've run this with an old installation of OpenRVDAS,
+    # database/settings.py may have the old/wrong port number for InfluxDB
+    sed -i -e "s/INFLUXDB_URL = 'http://localhost:9999'/INFLUXDB_URL = 'http://localhost:8086'/" $SETTINGS
+
 }
 
 ###########################################################################
