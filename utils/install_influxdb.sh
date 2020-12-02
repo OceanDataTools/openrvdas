@@ -209,7 +209,7 @@ function fix_database_settings {
 
     # If they've run this with an old installation of OpenRVDAS,
     # database/settings.py may have the old/wrong port number for InfluxDB
-    sed -i -e "s/INFLUXDB_URL = 'http://localhost:9999'/INFLUXDB_URL = 'http://localhost:8086'/" $SETTINGS
+    sed -i -e "s/INFLUXDB_URL = 'http:\/\/localhost:9999'/INFLUXDB_URL = 'http:\/\/localhost:8086'/" $SETTINGS
 
 }
 
