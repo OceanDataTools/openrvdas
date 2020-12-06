@@ -130,6 +130,10 @@ function set_default_variables {
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
 
+    DEFAULT_SUPERVISORD_WEBINTERFACE=no
+    DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
+    DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
+
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
@@ -160,6 +164,10 @@ DEFAULT_RVDAS_USER=$RVDAS_USER
 DEFAULT_INSTALL_MYSQL=$INSTALL_MYSQL
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
+DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
+DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
+DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=$SUPERVISORD_WEBINTERFACE_PORT
 
 EOF
 }
@@ -883,11 +891,24 @@ function setup_supervisor {
 file=$SUPERVISOR_SOCK   ; (the path to the socket file)
 chmod=0770              ; socket file mode (default 0700)
 ${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_USER}
+EOF
+
+    if [ $SUPERVISORD_WEBINTERFACE == 'yes']; then
+        cat >> /tmp/openrvdas.ini <<EOF
 
 [inet_http_server]
-port=${HTTP_HOST}:9001
-username=${RVDAS_USER}
-password=${RVDAS_USER}
+port=${HTTP_HOST}:${SUPERVISORD_WEBINTERFACE_PORT}
+EOF
+        if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes']; then
+            SUPERVISORD_WEBINTERFACE_HASH= `echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{print $1}'`
+            cat >> /tmp/openrvdas.ini <<EOF
+username=${SUPERVISORD_WEBINTERFACE_USER}
+password=${SUPERVISORD_WEBINTERFACE_HASH} ; echo -n "<password>" | sha1sum | awk '{print $1}'
+EOF
+        fi
+    fi
+
+    cat >> /tmp/openrvdas.ini <<EOF
 
 ; The scripts we're going to run
 [program:nginx]
@@ -987,6 +1008,10 @@ function setup_firewall {
 
     firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
+
+    if [ $SUPERVISORD_WEBINTERFACE == 'yes']; then
+        firewall-cmd -q --permanent --add-port=${SUPERVISORD_WEBINTERFACE_PORT}/tcp > /dev/null
+    fi
 
     if [ ! -z "$TCP_PORTS_TO_OPEN" ]; then
         for PORT in "${TCP_PORTS_TO_OPEN[@]}"
@@ -1179,6 +1204,41 @@ echo and starting processes logger_manager and cached_data_server.
 echo
 yes_no "Start the OpenRVDAS server on boot? " $DEFAULT_OPENRVDAS_AUTOSTART
 OPENRVDAS_AUTOSTART=$YES_NO_RESULT
+
+
+
+#########################################################################
+# Enable Supervisor web-interface?
+echo "#####################################################################"
+echo The supervisord service provides an optional web-interface that enables
+echo operators to start/stop/restart the OpenRVDAS main processes from a web-
+echo browser.
+echo
+echo Would you like to enable the supervisord web-interface?
+echo
+yes_no "Enable Supervisor Web-interface? " $DEFAULT_SUPERVISORD_WEBINTERFACE
+SUPERVISORD_WEBINTERFACE=$YES_NO_RESULT
+
+if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
+
+    read -p "Port on which to serve web interface? ($DEFAULT_SUPERVISORD_WEBINTERFACE_PORT) " SUPERVISORD_WEBINTERFACE_PORT
+    SUPERVISORD_WEBINTERFACE_PORT=${SUPERVISORD_WEBINTERFACE_PORT:-$DEFAULT_SUPERVISORD_WEBINTERFACE_PORT}
+
+    echo Would you like to enable a password on the supervisord web-interface?
+    echo
+    yes_no "Enable Supervisor Web-interface user/pass? " $DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH
+    SUPERVISORD_WEBINTERFACE_AUTH=$YES_NO_RESULT
+
+    if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
+
+        read -p "Username? ($RVDAS_USER) " SUPERVISORD_WEBINTERFACE_USER
+        SUPERVISORD_WEBINTERFACE_USER=${SUPERVISORD_WEBINTERFACE_USER:-$RVDAS_USER}
+
+        read -p "Password? ($RVDAS_USER) " SUPERVISORD_WEBINTERFACE_PASS
+        SUPERVISORD_WEBINTERFACE_PASS=${SUPERVISORD_WEBINTERFACE_PASS:-$RVDAS_USER}
+
+    fi
+fi
 
 #########################################################################
 #########################################################################
