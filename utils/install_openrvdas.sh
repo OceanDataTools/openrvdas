@@ -893,17 +893,16 @@ chmod=0770              ; socket file mode (default 0700)
 ${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_USER}
 EOF
 
-    if [ $SUPERVISORD_WEBINTERFACE == 'yes']; then
+    if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
         cat >> /tmp/openrvdas.ini <<EOF
 
 [inet_http_server]
-port=${HTTP_HOST}:${SUPERVISORD_WEBINTERFACE_PORT}
+port=${SUPERVISORD_WEBINTERFACE_PORT}
 EOF
-        if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes']; then
-            SUPERVISORD_WEBINTERFACE_HASH= `echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{print $1}'`
+        if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
             cat >> /tmp/openrvdas.ini <<EOF
 username=${SUPERVISORD_WEBINTERFACE_USER}
-password=${SUPERVISORD_WEBINTERFACE_HASH} ; echo -n "<password>" | sha1sum | awk '{print $1}'
+password=${SUPERVISORD_WEBINTERFACE_PASS}
 EOF
         fi
     fi
@@ -1213,8 +1212,6 @@ echo "#####################################################################"
 echo The supervisord service provides an optional web-interface that enables
 echo operators to start/stop/restart the OpenRVDAS main processes from a web-
 echo browser.
-echo
-echo Would you like to enable the supervisord web-interface?
 echo
 yes_no "Enable Supervisor Web-interface? " $DEFAULT_SUPERVISORD_WEBINTERFACE
 SUPERVISORD_WEBINTERFACE=$YES_NO_RESULT
