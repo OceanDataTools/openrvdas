@@ -903,7 +903,7 @@ EOF
             SUPERVISORD_WEBINTERFACE_HASH=`echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{printf("{SHA}%s",$1)}'`
             cat >> /tmp/openrvdas.ini <<EOF
 username=${SUPERVISORD_WEBINTERFACE_USER}
-password=${SUPERVISORD_WEBINTERFACE_HASH} ; echo -n "<password>" | sha1sum | awk '{printf("{SHA}%s",\$1}'
+password=${SUPERVISORD_WEBINTERFACE_HASH} ; echo -n "<password>" | sha1sum | awk '{printf("{SHA}%s",\$1)}'
 EOF
         fi
     fi
