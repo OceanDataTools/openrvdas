@@ -1009,7 +1009,7 @@ function setup_firewall {
     firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
 
-    if [ $SUPERVISORD_WEBINTERFACE == 'yes']; then
+    if [ "$SUPERVISORD_WEBINTERFACE" == 'yes' ]; then
         firewall-cmd -q --permanent --add-port=${SUPERVISORD_WEBINTERFACE_PORT}/tcp > /dev/null
     fi
 
