@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>server.logger_runner API documentation</title>
 <meta name="description" content="Low-level class to run a logger config in its own process and write
 its stderr to a file …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -26,7 +26,7 @@ its stderr to a file …" />
 <p>Low-level class to run a logger config in its own process and write
 its stderr to a file.</p>
 <p>Can be run from the command line as follows:</p>
-<pre><code>   server/logger_runner.py      --config test/NBP1406/NBP1406_cruise.yaml:gyr1-\&gt;net      --stderr_file /var/log/openrvdas/gyr1.stderr
+<pre><code>   server/logger_runner.py      --config test/NBP1406/NBP1406_cruise.yaml:gyr1-&gt;net      --stderr_file /var/log/openrvdas/gyr1.stderr
 </code></pre>
 <p>But its main intended use is to be invoked by another module to start
 a logger in its own, non-blocking process:</p>
@@ -59,7 +59,7 @@ its stderr to a file.
 Can be run from the command line as follows:
 ```
    server/logger_runner.py \
-     --config test/NBP1406/NBP1406_cruise.yaml:gyr1-\&gt;net \
+     --config test/NBP1406/NBP1406_cruise.yaml:gyr1-&gt;net \
      --stderr_file /var/log/openrvdas/gyr1.stderr
 ```
 
@@ -96,54 +96,51 @@ import os
 import pprint
 import signal
 import sys
-import time
 
 from importlib import reload
 
 # Add the openrvdas/ directory to module search path
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
+from logger.utils.read_config import read_config  # noqa: E402
+from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
+from logger.listener.listen import ListenerFromLoggerConfig  # noqa: E402
 
-from logger.utils.read_config import read_config
-from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT
-from logger.utils.timestamp import LOGGING_TIME_FORMAT
-from logger.transforms.to_das_record_transform import ToDASRecordTransform
-from logger.writers.cached_data_writer import CachedDataWriter
-from logger.writers.composed_writer import ComposedWriter
-from logger.listener.listen import ListenerFromLoggerConfig
 
 ################################################################################
 def kill_handler(self, signum):
-  &#34;&#34;&#34;Translate an external signal (such as we&#39;d get from os.kill) into a
-  KeyboardInterrupt, which will signal the start() loop to exit nicely.&#34;&#34;&#34;
-  logging.info(&#39;Received external kill&#39;)
-  raise KeyboardInterrupt(&#39;Received external kill signal&#39;)
+    &#34;&#34;&#34;Translate an external signal (such as we&#39;d get from os.kill) into a
+    KeyboardInterrupt, which will signal the start() loop to exit nicely.&#34;&#34;&#34;
+    logging.info(&#39;Received external kill&#39;)
+    raise KeyboardInterrupt(&#39;Received external kill signal&#39;)
+
 
 ################################################################################
 def config_from_filename(filename):
-  &#34;&#34;&#34;Load a logger configuration from a filename. If there&#39;s a &#39;:&#39; in
-  the config file name, then we expect what is before the colon to be
-  a cruise definition, and what is after to be the name of a
-  configuration inside that definition.
-  &#34;&#34;&#34;
+    &#34;&#34;&#34;Load a logger configuration from a filename. If there&#39;s a &#39;:&#39; in
+    the config file name, then we expect what is before the colon to be
+    a cruise definition, and what is after to be the name of a
+    configuration inside that definition.
+    &#34;&#34;&#34;
 
-  config_name = None
-  if filename.find(&#39;:&#39;) &gt; 0:
-    (filename, config_name) = filename.split(&#39;:&#39;, maxsplit=1)
-  config = read_config(filename)
+    config_name = None
+    if filename.find(&#39;:&#39;) &gt; 0:
+        (filename, config_name) = filename.split(&#39;:&#39;, maxsplit=1)
+    config = read_config(filename)
 
-  if config_name:
-    config_dict = config.get(&#39;configs&#39;, None)
-    if not config_dict:
-      raise ValueError(&#39;Configuration name &#34;%s&#34; specified, but no &#39;
-                       &#39;&#34;configs&#34; section found in file &#34;%s&#34;&#39;
-                       % (config_name, config_file))
-    config = config_dict.get(config_name, None)
-    if not config:
-      raise ValueError(&#39;Configuration name &#34;%s&#34; not found in file &#34;%s&#34;&#39;
-                       % (config_name, filename))
-  logging.info(&#39;Loaded config file: %s&#39;, pprint.pformat(config))
-  return config
+    if config_name:
+        config_dict = config.get(&#39;configs&#39;, None)
+        if not config_dict:
+            raise ValueError(&#39;Configuration name &#34;%s&#34; specified, but no &#39;
+                             &#39;&#34;configs&#34; section found in file &#34;%s&#34;&#39;
+                             % (config_name, filename))
+        config = config_dict.get(config_name, None)
+        if not config:
+            raise ValueError(&#39;Configuration name &#34;%s&#34; not found in file &#34;%s&#34;&#39;
+                             % (config_name, filename))
+    logging.info(&#39;Loaded config file: %s&#39;, pprint.pformat(config))
+    return config
+
 
 ################################################################################
 def config_is_runnable(config):
@@ -151,183 +148,184 @@ def config_is_runnable(config):
     a name and no readers/transforms/writers?)
     &#34;&#34;&#34;
     if not config:
-      return False
+        return False
     return &#39;readers&#39; in config or &#39;writers&#39; in config
 
+
 ################################################################################
-def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
-  &#34;&#34;&#34;Run a logger, sending its stderr to a cached data server if so indicated
+def run_logger(logger, config, stderr_file=None, log_level=logging.INFO):
+    &#34;&#34;&#34;Run a logger, sending its stderr to a cached data server if so indicated
 
-  logger -    Name of logger
+    logger -    Name of logger
 
-  config -    Config dict
+    config -    Config dict
 
-  stderr_file  - If not None, send stderr to this file
+    stderr_file  - If not None, send stderr to this file
 
-  log_level - Level at which logger should be logging (e.g logging.WARNING,
-              logging.INFO, etc.
-  &#34;&#34;&#34;
-  # Make sure we can write the file in question
-  if stderr_file:
-    os.makedirs(os.path.dirname(stderr_file), exist_ok=True)
+    log_level - Level at which logger should be logging (e.g logging.WARNING,
+                logging.INFO, etc.
+    &#34;&#34;&#34;
+    # Make sure we can write the file in question
+    if stderr_file:
+        os.makedirs(os.path.dirname(stderr_file), exist_ok=True)
 
-  # Need to reset logging to its freshly-imported state
-  reload(logging)
-  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT,
-                      filename=stderr_file,
-                      level=log_level)
+    # Need to reset logging to its freshly-imported state
+    reload(logging)
+    logging.basicConfig(format=DEFAULT_LOGGING_FORMAT,
+                        filename=stderr_file,
+                        level=log_level)
 
-  config_name = config.get(&#39;name&#39;, &#39;no_name&#39;)
-  logging.warning(&#39;Starting logger %s config %s&#39;, logger, config_name)
+    config_name = config.get(&#39;name&#39;, &#39;no_name&#39;)
+    logging.info(&#39;Starting logger %s config %s&#39;, logger, config_name)
 
-  if config_is_runnable(config):
-    listener = ListenerFromLoggerConfig(config=config)
-    try:
-      listener.run()
-    except KeyboardInterrupt:
-      logging.warning(&#39;Received quit for %s&#39;, self.name)
+    if config_is_runnable(config):
+        listener = ListenerFromLoggerConfig(config=config)
+        try:
+            listener.run()
+        except KeyboardInterrupt:
+            logging.warning(&#39;Received quit for %s&#39;, config_name)
 
 
 ################################################################################
 class LoggerRunner:
-  ############################
-  def __init__(self, config, name=None, stderr_file=None,
-               logger_log_level=logging.WARNING):
-    &#34;&#34;&#34;Create a LoggerRunner.
-    ```
-    config   - Python dict containing the logger configuration to be run
+    ############################
+    def __init__(self, config, name=None, stderr_file=None,
+                 logger_log_level=logging.WARNING):
+        &#34;&#34;&#34;Create a LoggerRunner.
+        ```
+        config   - Python dict containing the logger configuration to be run
 
-    name     - Optional name to give to logger process.
+        name     - Optional name to give to logger process.
 
-    stderr_file - Optional filename to direct stderr to
+        stderr_file - Optional filename to direct stderr to
 
-    logger_log_level - At what logging level our logger should operate.
-    ```
-    &#34;&#34;&#34;
-    self.config = config
-    self.name = name or config.get(&#39;name&#39;, &#39;Unnamed logger&#39;)
-    self.stderr_file = stderr_file
-    self.logger_log_level = logger_log_level
+        logger_log_level - At what logging level our logger should operate.
+        ```
+        &#34;&#34;&#34;
+        self.config = config
+        self.name = name or config.get(&#39;name&#39;, &#39;Unnamed logger&#39;)
+        self.stderr_file = stderr_file
+        self.logger_log_level = logger_log_level
 
-    self.process = None     # this is hold the logger process
-    self.failed = False     # flag - has logger failed?
-    self.quit_flag = False  # flag - has quit been signaled?
+        self.process = None     # this is hold the logger process
+        self.failed = False     # flag - has logger failed?
+        self.quit_flag = False  # flag - has quit been signaled?
 
-    # Set the signal handler so that an external break will get
-    # translated into a KeyboardInterrupt. But signal only works if
-    # we&#39;re in the main thread - catch if we&#39;re not, and just assume
-    # everything&#39;s gonna be okay and we&#39;ll get shut down with a proper
-    # &#34;quit()&#34; call otherwise.
-    try:
-      signal.signal(signal.SIGTERM, kill_handler)
-    except ValueError:
-      logging.info(&#39;LoggerRunner not running in main thread; &#39;
-                   &#39;shutting down with Ctl-C may not work.&#39;)
+        # Set the signal handler so that an external break will get
+        # translated into a KeyboardInterrupt. But signal only works if
+        # we&#39;re in the main thread - catch if we&#39;re not, and just assume
+        # everything&#39;s gonna be okay and we&#39;ll get shut down with a proper
+        # &#34;quit()&#34; call otherwise.
+        try:
+            signal.signal(signal.SIGTERM, kill_handler)
+        except ValueError:
+            logging.info(&#39;LoggerRunner not running in main thread; &#39;
+                         &#39;shutting down with Ctl-C may not work.&#39;)
 
-  ############################
-  def start(self):
-    &#34;&#34;&#34;Start a listener subprocess.&#34;&#34;&#34;
-    self.quit_flag = False
-    self.failed = False
-    num_tries = 0
+    ############################
+    def start(self):
+        &#34;&#34;&#34;Start a listener subprocess.&#34;&#34;&#34;
+        self.quit_flag = False
+        self.failed = False
 
-    # We&#39;re going to go ahead and create the process, even if the
-    # config is not runnable, just so we can get log messages that the
-    # config has been started.
+        # We&#39;re going to go ahead and create the process, even if the
+        # config is not runnable, just so we can get log messages that the
+        # config has been started.
 
-    ## If config is not runnable, just say so and be done with it.
-    #if not self.is_runnable():
-    #  logging.info(&#39;Process %s is complete. Not running.&#39;, self.name)
-    #  return
+        # If config is not runnable, just say so and be done with it.
+        # if not self.is_runnable():
+        #  logging.info(&#39;Process %s is complete. Not running.&#39;, self.name)
+        #  return
 
-    run_logger_kwargs = {
-      &#39;logger&#39;: self.name,
-      &#39;config&#39;: self.config,
-      &#39;stderr_file&#39;: self.stderr_file,
-      &#39;log_level&#39;: self.logger_log_level
-    }
-    self.process = multiprocessing.Process(target=run_logger,
-                                           kwargs=run_logger_kwargs,
-                                           daemon=True)
-    self.process.start()
+        run_logger_kwargs = {
+            &#39;logger&#39;: self.name,
+            &#39;config&#39;: self.config,
+            &#39;stderr_file&#39;: self.stderr_file,
+            &#39;log_level&#39;: self.logger_log_level
+        }
+        self.process = multiprocessing.Process(target=run_logger,
+                                               kwargs=run_logger_kwargs,
+                                               daemon=True)
+        self.process.start()
 
-  ############################
-  def is_runnable(self):
-    &#34;&#34;&#34;Is this logger configuration runnable? (Or, e.g. does it just have
-    a name and no readers/transforms/writers?)
-    &#34;&#34;&#34;
-    return config_is_runnable(self.config)
+    ############################
+    def is_runnable(self):
+        &#34;&#34;&#34;Is this logger configuration runnable? (Or, e.g. does it just have
+        a name and no readers/transforms/writers?)
+        &#34;&#34;&#34;
+        return config_is_runnable(self.config)
 
-  ############################
-  def is_alive(self):
-    &#34;&#34;&#34;Is the logger in question alive?&#34;&#34;&#34;
-    return self.process and self.process.is_alive()
+    ############################
+    def is_alive(self):
+        &#34;&#34;&#34;Is the logger in question alive?&#34;&#34;&#34;
+        return self.process and self.process.is_alive()
 
-  ############################
-  def is_failed(self):
-    &#34;&#34;&#34;Return whether the logger has failed.&#34;&#34;&#34;
-    return self.failed
+    ############################
+    def is_failed(self):
+        &#34;&#34;&#34;Return whether the logger has failed.&#34;&#34;&#34;
+        return self.failed
 
-  ############################
-  def quit(self):
-    &#34;&#34;&#34;Signal loop exit and send termination signal to process.&#34;&#34;&#34;
-    self.quit_flag = True
-    if self.process:
-      self.process.terminate()
-      self.process.join()
-    self.process = None
-    self.failed = False
+    ############################
+    def quit(self):
+        &#34;&#34;&#34;Signal loop exit and send termination signal to process.&#34;&#34;&#34;
+        self.quit_flag = True
+        if self.process:
+            self.process.terminate()
+            self.process.join()
+        self.process = None
+        self.failed = False
+
 
 ################################################################################
 if __name__ == &#39;__main__&#39;:
-  import argparse
-  parser = argparse.ArgumentParser()
-  parser.add_argument(&#39;--config&#39;, dest=&#39;config&#39;, action=&#39;store&#39;, required=True,
-                      help=&#39;Logger configuration to run. May either be the &#39;
-                      &#39;name of a file containing a single logger configuration &#39;
-                      &#39;or filename:config_name, for a file containing a cruise &#39;
-                      &#39;definition followed by the name of the specific &#39;
-                      &#39;configuration inside that definition.&#39;)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(&#39;--config&#39;, dest=&#39;config&#39;, action=&#39;store&#39;, required=True,
+                        help=&#39;Logger configuration to run. May either be the &#39;
+                        &#39;name of a file containing a single logger configuration &#39;
+                        &#39;or filename:config_name, for a file containing a cruise &#39;
+                        &#39;definition followed by the name of the specific &#39;
+                        &#39;configuration inside that definition.&#39;)
 
-  parser.add_argument(&#39;--name&#39;, dest=&#39;name&#39;, action=&#39;store&#39;, default=None,
-                      help=&#39;Name to give to logger process.&#39;)
+    parser.add_argument(&#39;--name&#39;, dest=&#39;name&#39;, action=&#39;store&#39;, default=None,
+                        help=&#39;Name to give to logger process.&#39;)
 
-  parser.add_argument(&#39;--stderr_file&#39;, dest=&#39;stderr_file&#39;, default=None,
-                      help=&#39;Optional filename to which stderr should be &#39;
-                      &#39;written. Will attempt to create path if it does not &#39;
-                      &#39;exist.&#39;)
+    parser.add_argument(&#39;--stderr_file&#39;, dest=&#39;stderr_file&#39;, default=None,
+                        help=&#39;Optional filename to which stderr should be &#39;
+                        &#39;written. Will attempt to create path if it does not &#39;
+                        &#39;exist.&#39;)
 
-  parser.add_argument(&#39;-v&#39;, &#39;--verbosity&#39;, dest=&#39;verbosity&#39;,
-                      default=0, action=&#39;count&#39;,
-                      help=&#39;Increase output verbosity&#39;)
+    parser.add_argument(&#39;-v&#39;, &#39;--verbosity&#39;, dest=&#39;verbosity&#39;,
+                        default=0, action=&#39;count&#39;,
+                        help=&#39;Increase output verbosity&#39;)
 
-  parser.add_argument(&#39;-V&#39;, &#39;--logger_verbosity&#39;, dest=&#39;logger_verbosity&#39;,
-                      default=0, action=&#39;count&#39;,
-                      help=&#39;Increase output verbosity of component loggers&#39;)
+    parser.add_argument(&#39;-V&#39;, &#39;--logger_verbosity&#39;, dest=&#39;logger_verbosity&#39;,
+                        default=0, action=&#39;count&#39;,
+                        help=&#39;Increase output verbosity of component loggers&#39;)
 
-  args = parser.parse_args()
+    args = parser.parse_args()
 
-  # Set up logging first of all
+    # Set up logging first of all
 
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
-  log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT)
-  logging.getLogger().setLevel(log_level)
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
+    logging.basicConfig(format=DEFAULT_LOGGING_FORMAT)
+    logging.getLogger().setLevel(log_level)
 
-  # What level do we want our component loggers to write?
-  logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
+    # What level do we want our component loggers to write?
+    logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
-  config = config_from_filename(args.config)
+    config = config_from_filename(args.config)
 
-  # Finally, create our runner and run it
-  runner = LoggerRunner(config=config,
-                        name=args.name,
-                        stderr_file=args.stderr_file,
-                        logger_log_level=logger_log_level)
-  runner.start()
+    # Finally, create our runner and run it
+    runner = LoggerRunner(config=config,
+                          name=args.name,
+                          stderr_file=args.stderr_file,
+                          logger_log_level=logger_log_level)
+    runner.start()
 
-  # Wait for it to complete
-  runner.process.join()</code></pre>
+    # Wait for it to complete
+    runner.process.join()</code></pre>
 </details>
 </section>
 <section>
@@ -350,29 +348,29 @@ configuration inside that definition.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def config_from_filename(filename):
-  &#34;&#34;&#34;Load a logger configuration from a filename. If there&#39;s a &#39;:&#39; in
-  the config file name, then we expect what is before the colon to be
-  a cruise definition, and what is after to be the name of a
-  configuration inside that definition.
-  &#34;&#34;&#34;
+    &#34;&#34;&#34;Load a logger configuration from a filename. If there&#39;s a &#39;:&#39; in
+    the config file name, then we expect what is before the colon to be
+    a cruise definition, and what is after to be the name of a
+    configuration inside that definition.
+    &#34;&#34;&#34;
 
-  config_name = None
-  if filename.find(&#39;:&#39;) &gt; 0:
-    (filename, config_name) = filename.split(&#39;:&#39;, maxsplit=1)
-  config = read_config(filename)
+    config_name = None
+    if filename.find(&#39;:&#39;) &gt; 0:
+        (filename, config_name) = filename.split(&#39;:&#39;, maxsplit=1)
+    config = read_config(filename)
 
-  if config_name:
-    config_dict = config.get(&#39;configs&#39;, None)
-    if not config_dict:
-      raise ValueError(&#39;Configuration name &#34;%s&#34; specified, but no &#39;
-                       &#39;&#34;configs&#34; section found in file &#34;%s&#34;&#39;
-                       % (config_name, config_file))
-    config = config_dict.get(config_name, None)
-    if not config:
-      raise ValueError(&#39;Configuration name &#34;%s&#34; not found in file &#34;%s&#34;&#39;
-                       % (config_name, filename))
-  logging.info(&#39;Loaded config file: %s&#39;, pprint.pformat(config))
-  return config</code></pre>
+    if config_name:
+        config_dict = config.get(&#39;configs&#39;, None)
+        if not config_dict:
+            raise ValueError(&#39;Configuration name &#34;%s&#34; specified, but no &#39;
+                             &#39;&#34;configs&#34; section found in file &#34;%s&#34;&#39;
+                             % (config_name, filename))
+        config = config_dict.get(config_name, None)
+        if not config:
+            raise ValueError(&#39;Configuration name &#34;%s&#34; not found in file &#34;%s&#34;&#39;
+                             % (config_name, filename))
+    logging.info(&#39;Loaded config file: %s&#39;, pprint.pformat(config))
+    return config</code></pre>
 </details>
 </dd>
 <dt id="server.logger_runner.config_is_runnable"><code class="name flex">
@@ -390,7 +388,7 @@ a name and no readers/transforms/writers?)</p></div>
     a name and no readers/transforms/writers?)
     &#34;&#34;&#34;
     if not config:
-      return False
+        return False
     return &#39;readers&#39; in config or &#39;writers&#39; in config</code></pre>
 </details>
 </dd>
@@ -405,14 +403,14 @@ KeyboardInterrupt, which will signal the start() loop to exit nicely.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def kill_handler(self, signum):
-  &#34;&#34;&#34;Translate an external signal (such as we&#39;d get from os.kill) into a
-  KeyboardInterrupt, which will signal the start() loop to exit nicely.&#34;&#34;&#34;
-  logging.info(&#39;Received external kill&#39;)
-  raise KeyboardInterrupt(&#39;Received external kill signal&#39;)</code></pre>
+    &#34;&#34;&#34;Translate an external signal (such as we&#39;d get from os.kill) into a
+    KeyboardInterrupt, which will signal the start() loop to exit nicely.&#34;&#34;&#34;
+    logging.info(&#39;Received external kill&#39;)
+    raise KeyboardInterrupt(&#39;Received external kill signal&#39;)</code></pre>
 </details>
 </dd>
 <dt id="server.logger_runner.run_logger"><code class="name flex">
-<span>def <span class="ident">run_logger</span></span>(<span>logger, config, stderr_file=None, log_level=30)</span>
+<span>def <span class="ident">run_logger</span></span>(<span>logger, config, stderr_file=None, log_level=20)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Run a logger, sending its stderr to a cached data server if so indicated</p>
@@ -428,37 +426,37 @@ logging.INFO, etc.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run_logger(logger, config, stderr_file=None, log_level=logging.WARNING):
-  &#34;&#34;&#34;Run a logger, sending its stderr to a cached data server if so indicated
+<pre><code class="python">def run_logger(logger, config, stderr_file=None, log_level=logging.INFO):
+    &#34;&#34;&#34;Run a logger, sending its stderr to a cached data server if so indicated
 
-  logger -    Name of logger
+    logger -    Name of logger
 
-  config -    Config dict
+    config -    Config dict
 
-  stderr_file  - If not None, send stderr to this file
+    stderr_file  - If not None, send stderr to this file
 
-  log_level - Level at which logger should be logging (e.g logging.WARNING,
-              logging.INFO, etc.
-  &#34;&#34;&#34;
-  # Make sure we can write the file in question
-  if stderr_file:
-    os.makedirs(os.path.dirname(stderr_file), exist_ok=True)
+    log_level - Level at which logger should be logging (e.g logging.WARNING,
+                logging.INFO, etc.
+    &#34;&#34;&#34;
+    # Make sure we can write the file in question
+    if stderr_file:
+        os.makedirs(os.path.dirname(stderr_file), exist_ok=True)
 
-  # Need to reset logging to its freshly-imported state
-  reload(logging)
-  logging.basicConfig(format=DEFAULT_LOGGING_FORMAT,
-                      filename=stderr_file,
-                      level=log_level)
+    # Need to reset logging to its freshly-imported state
+    reload(logging)
+    logging.basicConfig(format=DEFAULT_LOGGING_FORMAT,
+                        filename=stderr_file,
+                        level=log_level)
 
-  config_name = config.get(&#39;name&#39;, &#39;no_name&#39;)
-  logging.warning(&#39;Starting logger %s config %s&#39;, logger, config_name)
+    config_name = config.get(&#39;name&#39;, &#39;no_name&#39;)
+    logging.info(&#39;Starting logger %s config %s&#39;, logger, config_name)
 
-  if config_is_runnable(config):
-    listener = ListenerFromLoggerConfig(config=config)
-    try:
-      listener.run()
-    except KeyboardInterrupt:
-      logging.warning(&#39;Received quit for %s&#39;, self.name)</code></pre>
+    if config_is_runnable(config):
+        listener = ListenerFromLoggerConfig(config=config)
+        try:
+            listener.run()
+        except KeyboardInterrupt:
+            logging.warning(&#39;Received quit for %s&#39;, config_name)</code></pre>
 </details>
 </dd>
 </dl>
@@ -485,93 +483,92 @@ logger_log_level - At what logging level our logger should operate.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LoggerRunner:
-  ############################
-  def __init__(self, config, name=None, stderr_file=None,
-               logger_log_level=logging.WARNING):
-    &#34;&#34;&#34;Create a LoggerRunner.
-    ```
-    config   - Python dict containing the logger configuration to be run
+    ############################
+    def __init__(self, config, name=None, stderr_file=None,
+                 logger_log_level=logging.WARNING):
+        &#34;&#34;&#34;Create a LoggerRunner.
+        ```
+        config   - Python dict containing the logger configuration to be run
 
-    name     - Optional name to give to logger process.
+        name     - Optional name to give to logger process.
 
-    stderr_file - Optional filename to direct stderr to
+        stderr_file - Optional filename to direct stderr to
 
-    logger_log_level - At what logging level our logger should operate.
-    ```
-    &#34;&#34;&#34;
-    self.config = config
-    self.name = name or config.get(&#39;name&#39;, &#39;Unnamed logger&#39;)
-    self.stderr_file = stderr_file
-    self.logger_log_level = logger_log_level
+        logger_log_level - At what logging level our logger should operate.
+        ```
+        &#34;&#34;&#34;
+        self.config = config
+        self.name = name or config.get(&#39;name&#39;, &#39;Unnamed logger&#39;)
+        self.stderr_file = stderr_file
+        self.logger_log_level = logger_log_level
 
-    self.process = None     # this is hold the logger process
-    self.failed = False     # flag - has logger failed?
-    self.quit_flag = False  # flag - has quit been signaled?
+        self.process = None     # this is hold the logger process
+        self.failed = False     # flag - has logger failed?
+        self.quit_flag = False  # flag - has quit been signaled?
 
-    # Set the signal handler so that an external break will get
-    # translated into a KeyboardInterrupt. But signal only works if
-    # we&#39;re in the main thread - catch if we&#39;re not, and just assume
-    # everything&#39;s gonna be okay and we&#39;ll get shut down with a proper
-    # &#34;quit()&#34; call otherwise.
-    try:
-      signal.signal(signal.SIGTERM, kill_handler)
-    except ValueError:
-      logging.info(&#39;LoggerRunner not running in main thread; &#39;
-                   &#39;shutting down with Ctl-C may not work.&#39;)
+        # Set the signal handler so that an external break will get
+        # translated into a KeyboardInterrupt. But signal only works if
+        # we&#39;re in the main thread - catch if we&#39;re not, and just assume
+        # everything&#39;s gonna be okay and we&#39;ll get shut down with a proper
+        # &#34;quit()&#34; call otherwise.
+        try:
+            signal.signal(signal.SIGTERM, kill_handler)
+        except ValueError:
+            logging.info(&#39;LoggerRunner not running in main thread; &#39;
+                         &#39;shutting down with Ctl-C may not work.&#39;)
 
-  ############################
-  def start(self):
-    &#34;&#34;&#34;Start a listener subprocess.&#34;&#34;&#34;
-    self.quit_flag = False
-    self.failed = False
-    num_tries = 0
+    ############################
+    def start(self):
+        &#34;&#34;&#34;Start a listener subprocess.&#34;&#34;&#34;
+        self.quit_flag = False
+        self.failed = False
 
-    # We&#39;re going to go ahead and create the process, even if the
-    # config is not runnable, just so we can get log messages that the
-    # config has been started.
+        # We&#39;re going to go ahead and create the process, even if the
+        # config is not runnable, just so we can get log messages that the
+        # config has been started.
 
-    ## If config is not runnable, just say so and be done with it.
-    #if not self.is_runnable():
-    #  logging.info(&#39;Process %s is complete. Not running.&#39;, self.name)
-    #  return
+        # If config is not runnable, just say so and be done with it.
+        # if not self.is_runnable():
+        #  logging.info(&#39;Process %s is complete. Not running.&#39;, self.name)
+        #  return
 
-    run_logger_kwargs = {
-      &#39;logger&#39;: self.name,
-      &#39;config&#39;: self.config,
-      &#39;stderr_file&#39;: self.stderr_file,
-      &#39;log_level&#39;: self.logger_log_level
-    }
-    self.process = multiprocessing.Process(target=run_logger,
-                                           kwargs=run_logger_kwargs,
-                                           daemon=True)
-    self.process.start()
+        run_logger_kwargs = {
+            &#39;logger&#39;: self.name,
+            &#39;config&#39;: self.config,
+            &#39;stderr_file&#39;: self.stderr_file,
+            &#39;log_level&#39;: self.logger_log_level
+        }
+        self.process = multiprocessing.Process(target=run_logger,
+                                               kwargs=run_logger_kwargs,
+                                               daemon=True)
+        self.process.start()
 
-  ############################
-  def is_runnable(self):
-    &#34;&#34;&#34;Is this logger configuration runnable? (Or, e.g. does it just have
-    a name and no readers/transforms/writers?)
-    &#34;&#34;&#34;
-    return config_is_runnable(self.config)
+    ############################
+    def is_runnable(self):
+        &#34;&#34;&#34;Is this logger configuration runnable? (Or, e.g. does it just have
+        a name and no readers/transforms/writers?)
+        &#34;&#34;&#34;
+        return config_is_runnable(self.config)
 
-  ############################
-  def is_alive(self):
-    &#34;&#34;&#34;Is the logger in question alive?&#34;&#34;&#34;
-    return self.process and self.process.is_alive()
+    ############################
+    def is_alive(self):
+        &#34;&#34;&#34;Is the logger in question alive?&#34;&#34;&#34;
+        return self.process and self.process.is_alive()
 
-  ############################
-  def is_failed(self):
-    &#34;&#34;&#34;Return whether the logger has failed.&#34;&#34;&#34;
-    return self.failed
+    ############################
+    def is_failed(self):
+        &#34;&#34;&#34;Return whether the logger has failed.&#34;&#34;&#34;
+        return self.failed
 
-  ############################
-  def quit(self):
-    &#34;&#34;&#34;Signal loop exit and send termination signal to process.&#34;&#34;&#34;
-    self.quit_flag = True
-    if self.process:
-      self.process.terminate()
-      self.process.join()
-    self.process = None
-    self.failed = False</code></pre>
+    ############################
+    def quit(self):
+        &#34;&#34;&#34;Signal loop exit and send termination signal to process.&#34;&#34;&#34;
+        self.quit_flag = True
+        if self.process:
+            self.process.terminate()
+            self.process.join()
+        self.process = None
+        self.failed = False</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -585,8 +582,8 @@ logger_log_level - At what logging level our logger should operate.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_alive(self):
-  &#34;&#34;&#34;Is the logger in question alive?&#34;&#34;&#34;
-  return self.process and self.process.is_alive()</code></pre>
+    &#34;&#34;&#34;Is the logger in question alive?&#34;&#34;&#34;
+    return self.process and self.process.is_alive()</code></pre>
 </details>
 </dd>
 <dt id="server.logger_runner.LoggerRunner.is_failed"><code class="name flex">
@@ -599,8 +596,8 @@ logger_log_level - At what logging level our logger should operate.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_failed(self):
-  &#34;&#34;&#34;Return whether the logger has failed.&#34;&#34;&#34;
-  return self.failed</code></pre>
+    &#34;&#34;&#34;Return whether the logger has failed.&#34;&#34;&#34;
+    return self.failed</code></pre>
 </details>
 </dd>
 <dt id="server.logger_runner.LoggerRunner.is_runnable"><code class="name flex">
@@ -614,10 +611,10 @@ a name and no readers/transforms/writers?)</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def is_runnable(self):
-  &#34;&#34;&#34;Is this logger configuration runnable? (Or, e.g. does it just have
-  a name and no readers/transforms/writers?)
-  &#34;&#34;&#34;
-  return config_is_runnable(self.config)</code></pre>
+    &#34;&#34;&#34;Is this logger configuration runnable? (Or, e.g. does it just have
+    a name and no readers/transforms/writers?)
+    &#34;&#34;&#34;
+    return config_is_runnable(self.config)</code></pre>
 </details>
 </dd>
 <dt id="server.logger_runner.LoggerRunner.quit"><code class="name flex">
@@ -630,13 +627,13 @@ a name and no readers/transforms/writers?)</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def quit(self):
-  &#34;&#34;&#34;Signal loop exit and send termination signal to process.&#34;&#34;&#34;
-  self.quit_flag = True
-  if self.process:
-    self.process.terminate()
-    self.process.join()
-  self.process = None
-  self.failed = False</code></pre>
+    &#34;&#34;&#34;Signal loop exit and send termination signal to process.&#34;&#34;&#34;
+    self.quit_flag = True
+    if self.process:
+        self.process.terminate()
+        self.process.join()
+    self.process = None
+    self.failed = False</code></pre>
 </details>
 </dd>
 <dt id="server.logger_runner.LoggerRunner.start"><code class="name flex">
@@ -649,30 +646,29 @@ a name and no readers/transforms/writers?)</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def start(self):
-  &#34;&#34;&#34;Start a listener subprocess.&#34;&#34;&#34;
-  self.quit_flag = False
-  self.failed = False
-  num_tries = 0
+    &#34;&#34;&#34;Start a listener subprocess.&#34;&#34;&#34;
+    self.quit_flag = False
+    self.failed = False
 
-  # We&#39;re going to go ahead and create the process, even if the
-  # config is not runnable, just so we can get log messages that the
-  # config has been started.
+    # We&#39;re going to go ahead and create the process, even if the
+    # config is not runnable, just so we can get log messages that the
+    # config has been started.
 
-  ## If config is not runnable, just say so and be done with it.
-  #if not self.is_runnable():
-  #  logging.info(&#39;Process %s is complete. Not running.&#39;, self.name)
-  #  return
+    # If config is not runnable, just say so and be done with it.
+    # if not self.is_runnable():
+    #  logging.info(&#39;Process %s is complete. Not running.&#39;, self.name)
+    #  return
 
-  run_logger_kwargs = {
-    &#39;logger&#39;: self.name,
-    &#39;config&#39;: self.config,
-    &#39;stderr_file&#39;: self.stderr_file,
-    &#39;log_level&#39;: self.logger_log_level
-  }
-  self.process = multiprocessing.Process(target=run_logger,
-                                         kwargs=run_logger_kwargs,
-                                         daemon=True)
-  self.process.start()</code></pre>
+    run_logger_kwargs = {
+        &#39;logger&#39;: self.name,
+        &#39;config&#39;: self.config,
+        &#39;stderr_file&#39;: self.stderr_file,
+        &#39;log_level&#39;: self.logger_log_level
+    }
+    self.process = multiprocessing.Process(target=run_logger,
+                                           kwargs=run_logger_kwargs,
+                                           daemon=True)
+    self.process.start()</code></pre>
 </details>
 </dd>
 </dl>
@@ -717,7 +713,7 @@ a name and no readers/transforms/writers?)</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

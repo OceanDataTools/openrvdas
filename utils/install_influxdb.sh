@@ -206,6 +206,11 @@ function fix_database_settings {
 
     sed -i -e "s/INFLUXDB_ORG = '.*'/INFLUXDB_ORG = '$ORGANIZATION'/" $SETTINGS
     sed -i -e "s/INFLUXDB_AUTH_TOKEN = '.*'/INFLUXDB_AUTH_TOKEN = '$INFLUXDB_AUTH_TOKEN'/" $SETTINGS
+
+    # If they've run this with an old installation of OpenRVDAS,
+    # database/settings.py may have the old/wrong port number for InfluxDB
+    sed -i -e "s/INFLUXDB_URL = 'http:\/\/localhost:9999'/INFLUXDB_URL = 'http:\/\/localhost:8086'/" $SETTINGS
+
 }
 
 ###########################################################################
@@ -230,7 +235,7 @@ function install_influxdb {
     # INFLUXDB_PASSWORD - password to use for InfluxDB
 
     INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
-    INFLUXDB_RELEASE=influxdb_2.0.0-beta.16
+    INFLUXDB_RELEASE=influxdb-2.0.2
 
     echo "#####################################################################"
     echo Installing InfluxDB...
@@ -316,7 +321,7 @@ function install_influxdb {
 function install_grafana {
     echo "#####################################################################"
     echo Installing Grafana...
-    GRAFANA_RELEASE=grafana-7.1.5
+    GRAFANA_RELEASE=grafana-7.3.4
     GRAFANA_REPO=dl.grafana.com/oss/release
 
     # If we're on MacOS
@@ -350,6 +355,7 @@ function install_grafana {
     if [ $OS_TYPE == 'MacOS' ]; then
         cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
         ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
+        ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         CURRENT_USER=$USER
@@ -359,6 +365,8 @@ function install_grafana {
         sudo chown -R $CURRENT_USER /usr/local/etc/grafana
     fi
     popd >> /dev/null
+
+    grafana-cli --homepath /usr/local/etc/grafana admin reset-admin-password $INFLUXDB_PASSWORD
 
     PLUGINS_DIR=/usr/local/etc/grafana/data/plugins
     echo Downloading plugins
@@ -373,8 +381,13 @@ function install_grafana {
 function install_telegraf {
     echo "#####################################################################"
     echo Installing Telegraf...
-    TELEGRAF_RELEASE=telegraf-1.15.3
+    TELEGRAF_RELEASE=telegraf-1.13.3
     TELEGRAF_REPO=dl.influxdata.com/telegraf/releases
+
+    # NOTE: in 1.13.3, the tgz file uncompresses to a directory that
+    # doesn't include the release number, so just 'telegraf'
+    TELEGRAF_UNCOMPRESSED=$TELEGRAF_RELEASE
+    TELEGRAF_UNCOMPRESSED='telegraf'  #
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
@@ -400,7 +413,7 @@ function install_telegraf {
         echo Fetching binaries
         wget $TELEGRAF_URL
     fi
-    if [ -d ${TELEGRAF_RELEASE} ]; then
+    if [ -d ${TELEGRAF_UNCOMPRESSED} ]; then
         echo Already have uncompressed release locally: /tmp/${TELEGRAF_RELEASE}
     else
         echo Uncompressing...
@@ -409,12 +422,12 @@ function install_telegraf {
 
     echo Copying into place...
     if [ $OS_TYPE == 'MacOS' ]; then
-        cp -rf ${TELEGRAF_RELEASE} /usr/local/etc/telegraf
+        cp -rf ${TELEGRAF_UNCOMPRESSED} /usr/local/etc/telegraf
         ln -fs /usr/local/etc/telegraf/usr/bin/telegraf /usr/local/bin
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         CURRENT_USER=$USER
-        sudo cp -rf ${TELEGRAF_RELEASE} /usr/local/etc/telegraf
+        sudo cp -rf ${TELEGRAF_UNCOMPRESSED} /usr/local/etc/telegraf
         sudo ln -fs /usr/local/etc/telegraf/usr/bin/telegraf /usr/local/bin
         sudo chown -R $CURRENT_USER /usr/local/etc/telegraf
     fi
@@ -629,10 +642,28 @@ else
 fi
 
 echo "#####################################################################"
+echo "This script will create an InfluxDB user and set its password as you"
+echo "specify. It will also set the password for Grafana's 'admin' account"
+echo "to this password. However, Grafana has no command line mechanism for"
+echo "creating new users, so you will need to either use Grafana's 'admin'"
+echo "account or use Grafana's web interface (at hostname:3000) to manually"
+echo "create a new user."
+echo
 read -p "InfluxDB user to create? ($DEFAULT_INFLUXDB_USER) " INFLUXDB_USER
 INFLUXDB_USER=${INFLUXDB_USER:-$DEFAULT_INFLUXDB_USER}
-read -p "Password to use for user $INFLUXDB_USER? ($DEFAULT_INFLUXDB_PASSWORD) " INFLUXDB_PASSWORD
-INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD:-$DEFAULT_INFLUXDB_PASSWORD}
+
+while true; do
+    echo
+    echo "Passwords for InfluxDB must be at least 8 characters long."
+    echo
+    read -p "Password to use for user $INFLUXDB_USER? ($DEFAULT_INFLUXDB_PASSWORD) " INFLUXDB_PASSWORD
+    INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD:-$DEFAULT_INFLUXDB_PASSWORD}
+    if [ ${#INFLUXDB_PASSWORD} -ge 8 ]; then
+      break
+    fi
+done
+
+
 
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}

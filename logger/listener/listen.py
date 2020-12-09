@@ -77,7 +77,8 @@ from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E
 from logger.writers.network_writer import NetworkWriter  # noqa: E402
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
 from logger.writers.redis_writer import RedisWriter  # noqa: E402
-from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
+from logger.writers.file_writer import FileWriter  # noqa: E402
+from logger.writers.text_file_writer import TextFileWriter  # noqa: E402, F401
 from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
 from logger.writers.database_writer import DatabaseWriter  # noqa: E402
 from logger.writers.record_screen_writer import RecordScreenWriter  # noqa: E402
@@ -773,7 +774,7 @@ if __name__ == '__main__':
                 for filename in new_args.write_file.split(','):
                     if filename == '-':
                         filename = None
-                    writers.append(TextFileWriter(filename=filename))
+                    writers.append(FileWriter(filename=filename))
 
             if new_args.write_logfile:
                 writers.append(LogfileWriter(filebase=new_args.write_logfile))
@@ -826,7 +827,7 @@ if __name__ == '__main__':
         if not readers:
             readers.append(TextFileReader())
         if not writers:
-            writers.append(TextFileWriter())
+            writers.append(FileWriter())
 
         ##########################
         # Now that we've got our readers, transforms and writers defined,

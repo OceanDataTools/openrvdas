@@ -1,5 +1,5 @@
 # Grafana/InfluxDB-based Displays with OpenRVDAS
-© 2020 David Pablo Cohn - DRAFT 2020-09-13
+© 2020 David Pablo Cohn - DRAFT 2020-12-01
 
 ## Table of Contents
 
@@ -127,7 +127,7 @@ If anything is going wrong with one of the scripts run by
 
 Once the packages are loaded and running, you will need to connect Grafana to InfluxDB.
 
-* Point a browser window ``<machine name>:9999``; log into InfluxDB using
+* Point a browser window ``<machine name>:8086``; log into InfluxDB using
   the username and password you set in the previous step.
 
 * Select the "Load Data" menu on the far left (shaped like an
@@ -144,7 +144,7 @@ Once the packages are loaded and running, you will need to connect Grafana to In
   "Add data source". Select “Flux (InfluxDB) [BETA]”. Set
 
   * Default data source as true
-  * URL: ``http://machine name>:9999`` # machine where InfluxDB is running
+  * URL: ``http://machine name>:8086`` # machine where InfluxDB is running
   * Organization: openrvdas
   * Token: Paste this in from your browser clipboard
 
@@ -165,7 +165,7 @@ something like:
 ```
 ################################################################################
 # InfluxDB settings
-INFLUXDB_URL = 'http://localhost:9999'
+INFLUXDB_URL = 'http://localhost:8086'
 INFLUXDB_ORG = 'openrvdas'
 INFLUXDB_AUTH_TOKEN = '4_e-eyx0h8i0UzVkC5jlRy6s4LQM8UXgJAE5xT2a7izbH2_PwyxKY--lQ7FTGvKj5rh9vg04MeksHUL017SNwQ=='  # your InfluxDB token here
 ```
@@ -227,7 +227,7 @@ section.
   it. Instead, I generate the query using the InfluxDB server:
 
   * Open a browser on the machine serving InfluxDB, e.g
-    http://nbp-odas-t:9999
+    http://nbp-odas-t:8086
 
   * Select “Data Explorer (the zigzag) from the left panel. This will
     show you what fields are available. Select the sensors and field

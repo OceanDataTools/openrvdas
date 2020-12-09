@@ -18,13 +18,21 @@ $HEHDT,087.1,T*21
 $HEHDT,087.1,T*21
 $HEHDT,087.1,T*21
 
-If the flag --timestamp is specified, the records will have a
-timestamp prepended to them; if --prefix gyro is specified, they will
-have 'gyro' prepended:
 
-gyro 2019-11-28T01:01:38.762221Z $HEHDT,087.1,T*21
-gyro 2019-11-28T01:01:38.837441Z $HEHDT,087.1,T*21
-gyro 2019-11-28T01:01:38.953182Z $HEHDT,087.1,T*21
+By default, the reader assumes that the log file record format is
+"{timestamp:ti} {record}" but if, for example, the timestamp has a different
+format, or a different separator is used between the timestamp and record,
+the default may be overridden with the --record_format argument. E.g. if a
+comma is used as the delimiter between timestamp and record:
+
+2019-11-28T01:01:38.762221Z,$HEHDT,087.1,T*21
+2019-11-28T01:01:38.953182Z,$HEHDT,087.1,T*21
+
+you may specify
+
+   simulate_data.py --udp 6224 \
+     --filebase test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
+     --record_format '{timestamp:ti},{record}'
 
 Unless --no-loop is specified on the command line, the system will
 rewind to the beginning of all log files when it reaches the end of
@@ -80,6 +88,7 @@ serial port options:
 import glob
 import logging
 import os.path
+import parse
 import subprocess
 import sys
 import threading
@@ -87,9 +96,6 @@ import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
-from logger.transforms.slice_transform import SliceTransform  # noqa: E402
-from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402
-from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
 
@@ -101,27 +107,27 @@ class SimUDP:
     """Open a network port and feed stored logfile data to it."""
     ############################
 
-    def __init__(self, port, prefix=None, timestamp=False,
-                 time_format=TIME_FORMAT, filebase=None, eol='\n'):
+    def __init__(self, port, filebase=None, record_format=None,
+                 time_format=TIME_FORMAT, eol='\n'):
         """
         ```
         port -  UDP port on which to write records.
-
-        prefix - If non-empty, prefix to add
-
-        timestamp = If True, apply current timestamp to record
 
         time_format - What format to use for timestamp
 
         filebase - Prefix string to be matched (with a following "*") to find
                    files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
+
+        record_format
+                     If specified, a custom record format to use for extracting
+                     timestamp and record. The default is '{timestamp:ti} {record}'
         ```
         """
         self.port = port
-        self.prefix = PrefixTransform(prefix) if prefix else None
-        self.timestamp = TimestampTransform() if timestamp else None
         self.time_format = time_format
         self.filebase = filebase
+        self.record_format = record_format or '{timestamp:ti} {record}'
+        self.compiled_record_format = parse.compile(self.record_format)
 
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + '*'):
@@ -130,8 +136,8 @@ class SimUDP:
             return
 
         self.reader = LogfileReader(filebase=filebase, use_timestamps=True,
+                                    record_format=self.record_format,
                                     time_format=self.time_format)
-        self.slice_n = SliceTransform(fields='1:')  # strip off timestamp
         self.writer = UDPWriter(port=port, eol=eol)
 
         self.first_time = True
@@ -158,21 +164,23 @@ class SimUDP:
                         break
                     logging.info('Looping instrument %s', self.prefix)
                     self.reader = LogfileReader(filebase=self.filebase,
+                                                record_format=self.record_format,
                                                 use_timestamps=True)
                     continue
 
-                # Strip off timestamp
-                record = self.slice_n.transform(record)
-                if not record:
-                    continue
-                record = record.strip()
-                if not record:
+                # We've now got a record. Try parsing timestamp off it
+                try:
+                    parsed_record = self.compiled_record_format.parse(record).named
+                    record = parsed_record['record']
+
+                # We had a problem parsing. Discard record and try reading next one.
+                except (KeyError, ValueError, AttributeError):
+                    logging.warning('Unable to parse record into "%s"', self.record_format)
+                    logging.warning('Record: %s', record)
                     continue
 
-                if self.timestamp:      # do we want to add a timestamp?
-                    record = self.timestamp.transform(record)
-                if self.prefix:         # do we want to add prefix?
-                    record = self.prefix.transform(record)
+                if not record:
+                    continue
 
                 self.writer.write(record)
                 self.first_time = False
@@ -189,8 +197,8 @@ class SimSerial:
     """Create a virtual serial port and feed stored logfile data to it."""
     ############################
 
-    def __init__(self, port, prefix=None, timestamp=False,
-                 time_format=TIME_FORMAT, filebase=None, eol='\n',
+    def __init__(self, port, time_format=TIME_FORMAT, filebase=None,
+                 record_format=None, eol='\n',
                  baudrate=9600, bytesize=8, parity='N', stopbits=1,
                  timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
                  dsrdtr=False, inter_byte_timeout=None, exclusive=None):
@@ -201,9 +209,11 @@ class SimSerial:
         port - Temporary serial port to create and make available for reading
                records.
 
-        prefix - If non-empty, prefix name prefix to add
+        filebase     Possibly wildcarded string specifying files to be opened.
 
-        timestamp = If True, apply current timestamp to record
+        record_format
+                     If specified, a custom record format to use for extracting
+                     timestamp and record. The default is '{timestamp:ti} {record}'.
 
         time_format - What format to use for timestamp
         ```
@@ -212,20 +222,20 @@ class SimSerial:
         # to port_in and read the values back out from port
         self.read_port = port
         self.write_port = port + '_in'
-        self.prefix = PrefixTransform(prefix) if prefix else None
-        self.timestamp = TimestampTransform() if timestamp else None
         self.time_format = time_format
         self.filebase = filebase
+        self.record_format = record_format or '{timestamp:ti} {record}'
+        self.compiled_record_format = parse.compile(self.record_format)
         self.serial_params = None
 
         # Complain, but go ahead if read_port or write_port exist.
         for path in [self.read_port, self.write_port]:
             if os.path.exists(path):
-                logging.warning('Path %s exists; overwriting!')
+                logging.warning('Path %s exists; overwriting!', path)
 
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + '*'):
-            logging.warning('%s: no files matching "%s*"', prefix, filebase)
+            logging.warning('No files matching "%s*"', filebase)
             return
 
         # Set up our parameters
@@ -296,15 +306,14 @@ class SimSerial:
             return
 
         """Create the virtual port with socat and start feeding it records from
-    the designated logfile. If loop==True, loop when reaching end of input."""
+        the designated logfile. If loop==True, loop when reaching end of input."""
         self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
         self.socat_thread.start()
         time.sleep(0.2)
 
         self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
-                                    time_format=self.time_format)
+                                    record_format=self.record_format, time_format=self.time_format)
 
-        self.slice_n = SliceTransform('1:')  # strip off the first field (timestamp)
         self.writer = TextFileWriter(self.write_port, truncate=True)
 
         logging.info('Starting %s: %s', self.read_port, self.filebase)
@@ -319,15 +328,22 @@ class SimSerial:
                         break
                     self.reader = LogfileReader(filebase=self.filebase,
                                                 use_timestamps=True,
+                                                record_format=self.record_format,
                                                 time_format=self.time_format)
 
-                record = self.slice_n.transform(record)  # strip the timestamp
+                # We've now got a record. Try parsing timestamp off it
+                try:
+                    parsed_record = self.compiled_record_format.parse(record).named
+                    record = parsed_record['record']
+
+                # We had a problem parsing. Discard record and try reading next one.
+                except (KeyError, ValueError, AttributeError):
+                    logging.warning('Unable to parse record into "%s"', self.record_format)
+                    logging.warning('Record: %s', record)
+                    continue
+
                 if not record:
                     continue
-                if self.timestamp:      # do we want to add a timestamp?
-                    record = self.timestamp.transform(record)
-                if self.prefix:         # do we want to add prefix?
-                    record = self.prefix.transform(record)
 
                 logging.debug('SimSerial writing: %s', record)
                 self.writer.write(record)   # and write it to the virtual port
@@ -355,14 +371,6 @@ if __name__ == '__main__':
     parser.add_argument('--udp', dest='udp', type=int,
                         help='UDP port to broadcast on')
 
-    parser.add_argument('--prefix', dest='prefix',
-                        help='Optional instrument prefix to prepend to output '
-                        'records')
-
-    parser.add_argument('--timestamp', dest='timestamp', action='store_true',
-                        help='If True, prefix each record with a current '
-                        'timestamp')
-
     parser.add_argument('--time_format', dest='time_format', default=TIME_FORMAT,
                         help='Format string for parsing timestamp')
 
@@ -370,6 +378,11 @@ if __name__ == '__main__':
                         help='Basename of logfiles to read from. A "*" will be '
                         'appended to this string and all matching files will '
                         'be read in order.')
+
+    parser.add_argument('--record_format', dest='record_format',
+                        default='{timestamp:ti} {record}',
+                        help='If specified, a custom record format to use for extracting '
+                        'timestamp and record. The default is {timestamp:ti} {record}')
 
     parser.add_argument('--loop', dest='loop', action='store_true', default=True,
                         help='If True, loop when reaching end of sample data')
@@ -440,17 +453,17 @@ if __name__ == '__main__':
 
         # Is it a serial port?
         if args.serial:
-            simulator = SimSerial(port=args.serial, prefix=args.prefix,
-                                  timestamp=args.timestamp,
+            simulator = SimSerial(port=args.serial,
                                   time_format=args.time_format,
                                   baudrate=args.baud,
-                                  filebase=args.filebase)
+                                  filebase=args.filebase,
+                                  record_format=args.record_format)
         # Is it a UDP port?
         elif args.udp:
-            simulator = SimUDP(port=args.udp, prefix=args.prefix,
-                               timestamp=args.timestamp,
+            simulator = SimUDP(port=args.udp,
                                time_format=args.time_format,
-                               filebase=args.filebase)
+                               filebase=args.filebase,
+                               record_format=args.record_format)
         else:
             parser.error('If --filebase specified, must also specify either --serial '
                          'or --udp.')
