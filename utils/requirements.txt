@@ -13,6 +13,7 @@ websockets
 PyYAML
 parse
 psutil
+ssl
 
 # Version-restricted packages
 Django==3.0.7

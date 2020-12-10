@@ -122,9 +122,11 @@ function set_default_variables {
 
     DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
     DEFAULT_OPENRVDAS_BRANCH=master
-    DEFAULT_SERVER_PORT=443
-    DEFAULT_REDIRECT_PORT_80=yes
 
+    DEFAULT_SERVER_PORT=80
+    DEFAULT_SSL_SERVER_PORT=443
+
+    DEFAULT_USE_SSL=no
     DEFAULT_HAVE_SSL_CERTIFICATE=no
     DEFAULT_SSL_CRT_LOCATION=
     DEFAULT_SSL_KEY_LOCATION=
@@ -162,9 +164,11 @@ DEFAULT_HTTP_PROXY=$HTTP_PROXY
 
 DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
 DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
-DEFAULT_SERVER_PORT=$SERVER_PORT
-DEFAULT_REDIRECT_PORT_80=$REDIRECT_PORT_80
 
+DEFAULT_SERVER_PORT=$SERVER_PORT
+DEFAULT_SSL_SERVER_PORT=$SSL_SERVER_PORT
+
+DEFAULT_USE_SSL=USE_SSL
 DEFAULT_HAVE_SSL_CERTIFICATE=$HAVE_SSL_CERTIFICATE
 DEFAULT_SSL_CRT_LOCATION=$SSL_CRT_LOCATION
 DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
@@ -647,45 +651,113 @@ function setup_python_packages {
 # Set up NGINX
 function setup_nginx {
 
-    # MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-        [ -e /usr/local/etc/nginx/sites-available ] || mkdir /usr/local/etc/nginx/sites-available
-        [ -e /usr/local/etc/nginx/sites-enabled ] || mkdir /usr/local/etc/nginx/sites-enabled
-
-        # We need to add a couple of lines to not quite the end of nginx.conf,
-        # so do a bit of hackery: chop off the closing "}" with head, append
-        # the lines we need and a new closing "}" into a temp file, then copy back.
-        if grep -q "/usr/local/etc/nginx/sites-enabled/" /usr/local/etc/nginx/nginx.conf; then
-            echo NGINX sites-available already registered. Skipping...
-        else
-            sed -i.bak 's/include servers\/\*;/include \/usr\/local\/etc\/nginx\/sites-enabled\/\*.conf\;\
-                        server_names_hash_bucket_size 64\;/' /usr/local/etc/nginx/nginx.conf
-        fi
-
     # CentOS/RHEL or Debian/Ubuntu
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+    if [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         # Disable because we're going to run it via supervisor
         systemctl stop nginx
         systemctl disable nginx # NGINX seems to be enabled by default?
-
-        [ -e /etc/nginx/sites-available ] || mkdir /etc/nginx/sites-available
-        [ -e /etc/nginx/sites-enabled ] || mkdir /etc/nginx/sites-enabled
-
-        # We need to add a couple of lines to not quite the end of nginx.conf,
-        # so do a bit of hackery: chop off the closing "}" with head, append
-        # the lines we need and a new closing "}" into a temp file, then copy back.
-        if grep -q "/etc/nginx/sites-enabled/" /etc/nginx/nginx.conf; then
-            echo NGINX sites-available already registered. Skipping...
-        else
-            head --lines=-2 /etc/nginx/nginx.conf > /tmp/nginx.conf
-            cat >> /tmp/nginx.conf <<EOF
-       include /etc/nginx/sites-enabled/*.conf;
-       server_names_hash_bucket_size 64;
-    }
-EOF
-          mv -f /tmp/nginx.conf /etc/nginx/nginx.conf
-        fi
     fi
+
+    if [ "$USE_SSL" == "yes" ]; then
+        $NGINX_SERVER_PORT=$SSL_SERVER_PORT
+        $NGINX_PROTOCOL='ssl'
+        $SSL_COMMENT=''   # don't comment out SSL stuff
+    else
+        $NGINX_SERVER_PORT=$SERVER_PORT
+        $NGINX_PROTOCOL='default_server http2'
+        $SSL_COMMENT='#'   # do comment out SSL stuff
+
+    fi
+
+    # Put the nginx conf file in place and link it up
+    cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
+# openrvdas_nginx.conf
+
+worker_processes  auto;
+events {
+    worker_connections  1024;
+}
+
+http {
+    #include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+    keepalive_timeout  65;
+
+    # the upstream component nginx needs to connect to
+    upstream django {
+        server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
+    }
+
+    # OpenRVDAS HTTPS server
+    server {
+        # the port your site will be served on; typically 443
+        listen      *:${NGINX_SERVER_PORT} ${NGINX_PROTOCOL};
+        server_name _; # accept any host name
+        charset     utf-8;
+
+        # Section will be commented out if we're not using SSL
+        ${SSL_COMMENT}ssl_certificate     $SSL_CRT_LOCATION;
+        ${SSL_COMMENT}ssl_certificate_key $SSL_KEY_LOCATION;
+        ${SSL_COMMENT}ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+        ${SSL_COMMENT}ssl_ciphers         HIGH:!aNULL:!MD5;
+
+        # max upload size
+        client_max_body_size 75M;   # adjust to taste
+
+        # Django media
+        location /media  {
+            alias ${INSTALL_ROOT}/openrvdas/media;  # project media files
+        }
+
+        location /display {
+            alias ${INSTALL_ROOT}/openrvdas/display/html; # display pages
+            autoindex on;
+        }
+        location /js {
+            alias /${INSTALL_ROOT}/openrvdas/display/js; # display pages
+        }
+        location /css {
+            alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
+        }
+
+        location /static {
+            alias ${INSTALL_ROOT}/openrvdas/static; # project static files
+            autoindex on;
+        }
+
+        location /docs {
+            alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
+            autoindex on;
+        }
+
+        # Internally, Cached Data Server operates on port 8766; we proxy
+        # it externally, serve cached data server at $SERVER_PORT/cds-ws
+        location /cds-ws {
+            proxy_pass http://localhost:8766;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host \$host;
+        }
+
+        # Finally, send all non-CDS, non-media requests to the Django server.
+        location / {
+            uwsgi_pass  django;
+            include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
+        }
+    }
+}
+EOF
+
 }
 
 ###########################################################################
@@ -759,92 +831,6 @@ function setup_uwsgi {
         ETC_HOME=/etc
     fi
     cp $ETC_HOME/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
-
-    # If they want us to redirect HTTP requests for port 80 to HTTPS,
-    # leave the redirect section of the nginx conf file uncommented
-    if [ $REDIRECT_PORT_80 == 'yes' ]; then
-        REDIRECT_COMMENT=''
-    else
-        REDIRECT_COMMENT='# '
-    fi
-
-    # Put the nginx conf file in place and link it up
-    cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
-# openrvdas_nginx.conf
-
-# the upstream component nginx needs to connect to
-upstream django {
-    server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
-}
-
-# Redirect HTTP port 80 ->HTTPS
-${REDIRECT_COMMENT}server {
-${REDIRECT_COMMENT}   listen 80 default_server;
-${REDIRECT_COMMENT}   server_name _;
-${REDIRECT_COMMENT}   return 301 https://\$host:${SERVER_PORT}\$request_uri;
-${REDIRECT_COMMENT}}
-
-# OpenRVDAS HTTPS server
-server {
-    # the port your site will be served on; typically 443
-    listen      *:${SERVER_PORT} ssl;
-    server_name _; # accept any host name
-    charset     utf-8;
-
-    ssl_certificate     $SSL_CRT_LOCATION;
-    ssl_certificate_key $SSL_KEY_LOCATION;
-    ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
-    ssl_ciphers         HIGH:!aNULL:!MD5;
-
-    # max upload size
-    client_max_body_size 75M;   # adjust to taste
-
-    # Django media
-    location /media  {
-        alias ${INSTALL_ROOT}/openrvdas/media;  # project media files
-    }
-
-    location /display {
-        alias ${INSTALL_ROOT}/openrvdas/display/html; # display pages
-        autoindex on;
-    }
-    location /js {
-        alias /${INSTALL_ROOT}/openrvdas/display/js; # display pages
-    }
-    location /css {
-        alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
-    }
-
-    location /static {
-        alias ${INSTALL_ROOT}/openrvdas/static; # project static files
-        autoindex on;
-    }
-
-    location /docs {
-        alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
-        autoindex on;
-    }
-
-    # Internally, Cached Data Server operates on port 8766; we proxy
-    # it externally, serve cached data server at $SERVER_PORT/cds-ws
-    location /cds-ws {
-        proxy_pass http://localhost:8766;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "Upgrade";
-        proxy_set_header Host \$host;
-    }
-
-    # Finally, send all non-CDS, non-media requests to the Django server.
-    location / {
-        uwsgi_pass  django;
-        include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
-    }
-}
-EOF
-
-    # Make symlink to nginx dir
-    ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf $ETC_HOME/nginx/sites-enabled
 
     cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 # openrvdas_uwsgi.ini file
@@ -955,13 +941,12 @@ EOF
 
 ; The scripts we're going to run
 [program:nginx]
-command=${NGINX_BIN} -g 'daemon off;'
+command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/nginx.stderr
-;stdout_logfile=/var/log/openrvdas/nginx.stdout
 ;user=$RVDAS_USER
 
 [program:uwsgi]
@@ -972,32 +957,25 @@ autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-;stdout_logfile=/var/log/openrvdas/uwsgi.stdout
 user=$RVDAS_USER
 
 [program:cached_data_server]
-; Cached data server serves locally on 8766 but is proxied by NGINX
-; to serve wss externally on :${SERVER_PORT}/cds-ws
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
-;stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=$RVDAS_USER
 
 [program:logger_manager]
-; Cached data server serves locally on 8766 but is proxied by NGINX
-; to serve wss externally on :${SERVER_PORT}/cds-ws
-command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :${SERVER_PORT}/cds-ws -v -V --no-console
+command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :8766 -v -V --no-console
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/logger_manager.stderr
-;stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=$RVDAS_USER
 
 [program:simulate_nbp]
@@ -1007,7 +985,6 @@ autostart=false
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
-;stdout_logfile=/var/log/openrvdas/simulate_nbp.stdout
 user=$RVDAS_USER
 
 [group:web]
@@ -1153,15 +1130,6 @@ OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
 read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
 OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 
-read -p "Port on which to serve web console? ($DEFAULT_SERVER_PORT) " SERVER_PORT
-SERVER_PORT=${SERVER_PORT:-$DEFAULT_SERVER_PORT}
-
-echo
-echo NGINX can forward HTTP requests for port 80 to the HTTPS server at
-echo port ${SERVER_PORT}. Would you like to enable this?
-yes_no "Forward HTTP port 80 requests to ${SERVER_PORT}? " $DEFAULT_REDIRECT_PORT_80
-REDIRECT_PORT_80=$YES_NO_RESULT
-
 echo
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
@@ -1173,7 +1141,6 @@ HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 echo Will install from github.com
 echo "Repository: '$OPENRVDAS_REPO'"
 echo "Branch: '$OPENRVDAS_BRANCH'"
-echo "Serving on port $SERVER_PORT"
 
 # Create user if they don't exist yet on Linux, but MacOS needs to
 # user a pre-existing user, because creating a user is a pain.
@@ -1200,27 +1167,45 @@ RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
 #########################################################################
 #########################################################################
-# Get or create SSL keys
 echo
-echo "#####################################################################"
-echo The OpenRVDAS console, cached data server and display widgets use HTTPS
-echo and WSS \(secure websockets\) for communication and require an SSL
-echo certificate in the form of .key and .crt files. If you already have such
-echo keys on your machine that you wish to use, answer "yes" to the question
-echo below, and you will be prompted for their locations. Otherwise answer "no"
-echo and you will be prompted to create them.
+echo "OpenRVDAS can use SSL via secure websockets for off-server access to web"
+echo "console and display widgets. If you enable SSL, you will need to either"
+echo "have or create SSL .key and .crt files."
 echo
-yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
-HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
-if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
-    read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-    read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+yes_no "Use SSL and secure websockets? " $DEFAULT_USE_SSL
+USE_SSL=$YES_NO_RESULT
+
+if [ "$USE_SSL" == "yes" ]; then
+    echo
+    read -p "Port on which to serve web console? ($DEFAULT_SSL_SERVER_PORT) " SSL_SERVER_PORT
+    SSL_SERVER_PORT=${SSL_SERVER_PORT:-$DEFAULT_SSL_SERVER_PORT}
+
+    # Get or create SSL keys
+    echo
+    echo "#####################################################################"
+    echo The OpenRVDAS console, cached data server and display widgets use HTTPS
+    echo and WSS \(secure websockets\) for communication and require an SSL
+    echo certificate in the form of .key and .crt files. If you already have such
+    echo keys on your machine that you wish to use, answer "yes" to the question
+    echo below, and you will be prompted for their locations. Otherwise answer "no"
+    echo and you will be prompted to create a self-signed certificate.
+    echo
+    yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
+    HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
+    if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
+        read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+    else
+        read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+    fi
+    SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
+    SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
 else
-    read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-    read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+    echo
+    read -p "Port on which to serve web console? ($DEFAULT_SERVER_PORT) " SERVER_PORT
+    SERVER_PORT=${SERVER_PORT:-$DEFAULT_SERVER_PORT}
 fi
-SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
-SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
 
 #########################################################################
 #########################################################################
@@ -1288,8 +1273,6 @@ echo
 yes_no "Start the OpenRVDAS server on boot? " $DEFAULT_OPENRVDAS_AUTOSTART
 OPENRVDAS_AUTOSTART=$YES_NO_RESULT
 
-
-
 #########################################################################
 # Enable Supervisor web-interface?
 echo "#####################################################################"
@@ -1311,13 +1294,11 @@ if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
     SUPERVISORD_WEBINTERFACE_AUTH=$YES_NO_RESULT
 
     if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
-
         read -p "Username? ($RVDAS_USER) " SUPERVISORD_WEBINTERFACE_USER
         SUPERVISORD_WEBINTERFACE_USER=${SUPERVISORD_WEBINTERFACE_USER:-$RVDAS_USER}
 
         read -p "Password? ($RVDAS_USER) " SUPERVISORD_WEBINTERFACE_PASS
         SUPERVISORD_WEBINTERFACE_PASS=${SUPERVISORD_WEBINTERFACE_PASS:-$RVDAS_USER}
-
     fi
 fi
 

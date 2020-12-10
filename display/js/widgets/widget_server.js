@@ -40,7 +40,7 @@ function WidgetServer(widget_list, websocket_server) {
   // the data request we've prepared.
   this.serve = function() {
     console.log('Trying to reconnect to websocket server at ' + this.websocket_server);
-    this.ws = new WebSocket('wss://' + this.websocket_server);
+    this.ws = new WebSocket(this.websocket_server);
 
     ////////////////
     this.ws.onopen = function() {

@@ -29,7 +29,7 @@ class CachedDataReader(Reader):
     """
 
     def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET,
-                 check_cert=False):
+                 use_wss=False, check_cert=False):
         """
         ```
         subscription - a dictionary corresponding to the full
@@ -43,9 +43,11 @@ class CachedDataReader(Reader):
         data_server - the host and port at which to try to connect to a
             CachedDataServer
 
-        check_cert  - If True, check the server's TLS certificate for validity;
-                      if a str, use as local filepath location of .pem file to
-                      check against.
+        use_wss -     If True, use secure websockets
+
+        check_cert  - If True and use_wss is True, check the server's TLS certificate
+                      for validity; if a str, use as local filepath location of .pem
+                      file to check against.
         ```
         When invoked in a config file, this would be:
         ```
@@ -69,6 +71,7 @@ class CachedDataReader(Reader):
         self.subscription = subscription
         subscription['type'] = 'subscribe'
         self.data_server = data_server
+        self.use_wss = use_wss
         self.check_cert = check_cert
 
         # We won't initialize our websocket until the first read()
@@ -136,21 +139,27 @@ class CachedDataReader(Reader):
             # Iterate if we lose the websocket for some reason other than a 'quit'
             while not self.quit_flag:
                 try:
-                    # If check_cert is a str, take it as the location of the
-                    # .pem file we'll check for validity. Otherwise, if not
-                    # False, take as a bool to verify by own means.
-                    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-                    if self.check_cert:
-                        if isinstance(self.check_cert, str):
-                            ssl_context.load_verify_locations(self.check_cert)
+                    if self.use_wss:
+                        # If check_cert is a str, take it as the location of the
+                        # .pem file we'll check for validity. Otherwise, if not
+                        # False, take as a bool to verify by own means.
+                        ws_data_server = 'wss://' + self.data_server
+                        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                        if self.check_cert:
+                            if isinstance(self.check_cert, str):
+                                ssl_context.load_verify_locations(self.check_cert)
+                            else:
+                                ssl_context.verify_mode = ssl.CERT_REQUIRED
                         else:
-                            ssl_context.verify_mode = ssl.CERT_REQUIRED
-                    else:
-                        ssl_context.verify_mode = ssl.CERT_NONE
+                            ssl_context.verify_mode = ssl.CERT_NONE
 
-                    logging.warning(f'CachedDataReader connecting to {self.data_server}')
-                    async with websockets.connect('wss://' + self.data_server, ssl=ssl_context) as ws:
-                        logging.info('Connected to data server %s', self.data_server)
+                    else:  # not using wss
+                        ws_data_server = 'ws://' + self.data_server
+                        ssl_context = None
+
+                    logging.warning(f'CachedDataReader connecting to {ws_data_server}')
+                    async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
+                        logging.info(f'Connected to data server {ws_data_server}')
                         # Send our subscription request
                         await ws.send(json.dumps(self.subscription))
                         result = await ws.recv()

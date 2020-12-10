@@ -17,7 +17,7 @@ class CachedDataWriter(Writer):
     def __init__(self, data_server, start_server=False, back_seconds=480,
                  cleanup_interval=6, update_interval=1,
                  max_backup=60 * 60 * 24,
-                 check_cert=False):
+                 use_wss=False, check_cert=False):
         """Feed passed records to a CachedDataServer via a websocket. Expects
         records in DASRecord or dict formats.
         ```
@@ -37,9 +37,12 @@ class CachedDataWriter(Writer):
                       records at 1 Hz (86,400 records). If max_backup is zero,
                       cache size is unbounded.
 
-        check_cert  - If True, check the server's TLS certificate for validity;
-                      if a str, use as local filepath location of .pem file to
-                      check against.
+        use_wss -     If True, use secure websockets
+
+        check_cert  - If True and use_wss is True, check the server's TLS certificate
+                      for validity; if a str, use as local filepath location of .pem
+                      file to check against.
+
         ```
         """
         host_port = data_server.split(':')
@@ -53,6 +56,7 @@ class CachedDataWriter(Writer):
         self.websocket = None
         self.back_seconds = back_seconds
         self.cleanup_interval = cleanup_interval
+        self.use_wss = use_wss
         self.check_cert = check_cert
 
         # Event loop we'll use to asynchronously manage writes to websocket
@@ -83,20 +87,27 @@ class CachedDataWriter(Writer):
                 logging.warning('CachedDataWriter trying to connect to '
                              + self.data_server)
                 try:
-                    # If check_cert is a str, take it as the location of the
-                    # .pem file we'll check for validity. Otherwise, if not
-                    # False, take as a bool to verify by own means.
-                    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-                    if self.check_cert:
-                        if isinstance(self.check_cert, str):
-                            ssl_context.load_verify_locations(self.check_cert)
+                    if self.use_wss:
+                        # If check_cert is a str, take it as the location of the
+                        # .pem file we'll check for validity. Otherwise, if not
+                        # False, take as a bool to verify by own means.
+                        ws_data_server = 'wss://' + self.data_server
+                        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                        if self.check_cert:
+                            if isinstance(self.check_cert, str):
+                                ssl_context.load_verify_locations(self.check_cert)
+                            else:
+                                ssl_context.verify_mode = ssl.CERT_REQUIRED
                         else:
-                            ssl_context.verify_mode = ssl.CERT_REQUIRED
-                    else:
-                        ssl_context.verify_mode = ssl.CERT_NONE
+                            ssl_context.verify_mode = ssl.CERT_NONE
 
-                    logging.warning(f'CachedDataWriter connecting to {self.data_server}')
-                    async with websockets.connect('wss://' + self.data_server, ssl=ssl_context) as ws:
+                    else:  # not using wss
+                        ws_data_server = 'ws://' + self.data_server
+                        ssl_context = None
+
+                    logging.warning(f'CachedDataWriter connecting to {ws_data_server}')
+                    async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
+                        logging.info(f'Connected to data server {ws_data_server}')
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
@@ -108,6 +119,8 @@ class CachedDataWriter(Writer):
                             except asyncio.QueueEmpty:
                                 await asyncio.sleep(.2)
 
+                except BrokenPipeError:
+                    pass
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning('CachedDataWriter lost websocket connection to '
                                     'data server; trying to reconnect.')

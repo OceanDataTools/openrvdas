@@ -24,9 +24,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 var websocket_server = WEBSOCKET_SERVER;
-// It's possible that we get an empty hostname, e.g. ':8000/cds-ws
-if (websocket_server.indexOf(':') == 0) {
-  websocket_server = window.location.hostname + websocket_server;
+// It's possible that we get an empty hostname, e.g. 'wss://:8000/cds-ws
+if (websocket_server.indexOf('//:') > 0) {
+  websocket_server = websocket_server.replace('//:', '//' + location.hostname + ':');
 }
 
 //////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ connect_websocket();
 //////////////////////////////////////////////////////
 function connect_websocket() {
   console.log("Trying to connect to websocket at " + websocket_server);
-  ws = new WebSocket('wss://' + websocket_server);
+  ws = new WebSocket(websocket_server);
   
   ws.onopen = function() {
     // We've succeeded in opening - don't try anymore

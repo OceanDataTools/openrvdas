@@ -278,7 +278,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   PCOD->file/net:
     name: PCOD->file/net
@@ -317,7 +317,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   PCOD->file/net/db:
     name: PCOD->file/net/db
@@ -356,7 +356,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -400,7 +400,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   cwnc->file/net:
     name: cwnc->file/net
@@ -439,7 +439,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   cwnc->file/net/db:
     name: cwnc->file/net/db
@@ -478,7 +478,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -522,7 +522,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   gp02->file/net:
     name: gp02->file/net
@@ -561,7 +561,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   gp02->file/net/db:
     name: gp02->file/net/db
@@ -600,7 +600,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -644,7 +644,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   gyr1->file/net:
     name: gyr1->file/net
@@ -683,7 +683,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   gyr1->file/net/db:
     name: gyr1->file/net/db
@@ -722,7 +722,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -766,7 +766,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   adcp->file/net:
     name: adcp->file/net
@@ -805,7 +805,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   adcp->file/net/db:
     name: adcp->file/net/db
@@ -844,7 +844,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -888,7 +888,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   eng1->file/net:
     name: eng1->file/net
@@ -927,7 +927,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   eng1->file/net/db:
     name: eng1->file/net/db
@@ -966,7 +966,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1010,7 +1010,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   svp1->file/net:
     name: svp1->file/net
@@ -1049,7 +1049,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   svp1->file/net/db:
     name: svp1->file/net/db
@@ -1088,7 +1088,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1132,7 +1132,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   twnc->file/net:
     name: twnc->file/net
@@ -1171,7 +1171,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   twnc->file/net/db:
     name: twnc->file/net/db
@@ -1210,7 +1210,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1254,7 +1254,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   mbdp->file/net:
     name: mbdp->file/net
@@ -1293,7 +1293,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   mbdp->file/net/db:
     name: mbdp->file/net/db
@@ -1332,7 +1332,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1376,7 +1376,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   knud->file/net:
     name: knud->file/net
@@ -1415,7 +1415,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   knud->file/net/db:
     name: knud->file/net/db
@@ -1454,7 +1454,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1498,7 +1498,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   grv1->file/net:
     name: grv1->file/net
@@ -1537,7 +1537,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   grv1->file/net/db:
     name: grv1->file/net/db
@@ -1576,7 +1576,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1620,7 +1620,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   mwx1->file/net:
     name: mwx1->file/net
@@ -1659,7 +1659,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   mwx1->file/net/db:
     name: mwx1->file/net/db
@@ -1698,7 +1698,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1742,7 +1742,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   pco2->file/net:
     name: pco2->file/net
@@ -1781,7 +1781,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   pco2->file/net/db:
     name: pco2->file/net/db
@@ -1820,7 +1820,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1864,7 +1864,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   pguv->file/net:
     name: pguv->file/net
@@ -1903,7 +1903,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   pguv->file/net/db:
     name: pguv->file/net/db
@@ -1942,7 +1942,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -1986,7 +1986,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws/cds-ws
+            data_server: localhost:87668766
 
   s330->file/net:
     name: s330->file/net
@@ -2025,7 +2025,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   s330->file/net/db:
     name: s330->file/net/db
@@ -2064,7 +2064,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2108,7 +2108,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   tsg1->file/net:
     name: tsg1->file/net
@@ -2147,7 +2147,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   tsg1->file/net/db:
     name: tsg1->file/net/db
@@ -2186,7 +2186,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2230,7 +2230,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   rtmp->file/net:
     name: rtmp->file/net
@@ -2269,7 +2269,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   rtmp->file/net/db:
     name: rtmp->file/net/db
@@ -2308,7 +2308,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2352,7 +2352,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   hdas->file/net:
     name: hdas->file/net
@@ -2391,7 +2391,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   hdas->file/net/db:
     name: hdas->file/net/db
@@ -2430,7 +2430,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2474,7 +2474,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   tsg2->file/net:
     name: tsg2->file/net
@@ -2513,7 +2513,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   tsg2->file/net/db:
     name: tsg2->file/net/db
@@ -2552,7 +2552,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2596,7 +2596,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   seap->file/net:
     name: seap->file/net
@@ -2635,7 +2635,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   seap->file/net/db:
     name: seap->file/net/db
@@ -2674,7 +2674,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter     # Also write parsed data to database
       kwargs:
         transforms:
@@ -2696,7 +2696,7 @@ configs:
     readers:
       class: CachedDataReader
       kwargs:
-        data_server: localhost:/cds-ws
+        data_server: localhost:8766
         subscription:
           fields:
             S330CourseTrue:
@@ -2734,7 +2734,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
     - class: ComposedWriter
       kwargs:
         transforms:
@@ -2755,7 +2755,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:/cds-ws
+            data_server: localhost:8766
 
   # Derived data subsampling logger
   snapshot->off:
@@ -2766,7 +2766,7 @@ configs:
     readers:
       class: CachedDataReader
       kwargs:
-        data_server: localhost:/cds-ws
+        data_server: localhost:8766
         subscription:
           fields:
             MwxAirTemp:
@@ -2851,4 +2851,4 @@ configs:
     writers:
     - class: CachedDataWriter
       kwargs:
-        data_server: localhost:/cds-ws
+        data_server: localhost:8766
