@@ -1986,7 +1986,7 @@ configs:
         writers:
         - class: CachedDataWriter
           kwargs:
-            data_server: localhost:87668766
+            data_server: localhost:8766
 
   s330->file/net:
     name: s330->file/net

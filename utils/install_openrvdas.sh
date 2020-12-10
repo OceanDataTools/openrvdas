@@ -1281,6 +1281,7 @@ OPENRVDAS_AUTOSTART=$YES_NO_RESULT
 
 #########################################################################
 # Enable Supervisor web-interface?
+echo
 echo "#####################################################################"
 echo The supervisord service provides an optional web-interface that enables
 echo operators to start/stop/restart the OpenRVDAS main processes from a web-
