@@ -90,6 +90,7 @@ function get_os_type {
             echo "interpreter: Make a copy of /Applications/Terminal.app (e.g. RTerminal.app)."
             echo "Select it in the Finder and open its information pane (Clover-I). Select "
             echo "'Open using Rosetta', and use this copy of Terminal when installing OpenRVDAS."
+            echo
             read -p "Hit return to continue. " DUMMY_VAR
             echo
         fi
@@ -123,7 +124,7 @@ function set_default_variables {
     DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
     DEFAULT_OPENRVDAS_BRANCH=master
 
-    DEFAULT_SERVER_PORT=80
+    DEFAULT_NONSSL_SERVER_PORT=80
     DEFAULT_SSL_SERVER_PORT=443
 
     DEFAULT_USE_SSL=no
@@ -165,7 +166,7 @@ DEFAULT_HTTP_PROXY=$HTTP_PROXY
 DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
 DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
 
-DEFAULT_SERVER_PORT=$SERVER_PORT
+DEFAULT_NONSSL_SERVER_PORT=$NONSSL_SERVER_PORT
 DEFAULT_SSL_SERVER_PORT=$SSL_SERVER_PORT
 
 DEFAULT_USE_SSL=USE_SSL
@@ -609,8 +610,9 @@ function install_openrvdas {
     # Copy widget settings into place and customize for this machine
     cp display/js/widgets/settings.js.dist \
        display/js/widgets/settings.js
+    sed -i -e "s/= 'ws'/= '${WEBSOCKET_PROTOCOL}'/g" display/js/widgets/settings.js
     sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
-    sed -i -e "s/:443/:${SERVER_PORT}/g" display/js/widgets/settings.js
+    sed -i -e "s/ = 80/ = ${SERVER_PORT}/g" display/js/widgets/settings.js
 
     # Copy the database settings.py.dist into place so that other
     # routines can make the modifications they need to it.
@@ -659,12 +661,10 @@ function setup_nginx {
     fi
 
     if [ "$USE_SSL" == "yes" ]; then
-        $NGINX_SERVER_PORT=$SSL_SERVER_PORT
-        $NGINX_PROTOCOL='ssl'
+        $SERVER_PROTOCOL='ssl'
         $SSL_COMMENT=''   # don't comment out SSL stuff
     else
-        $NGINX_SERVER_PORT=$SERVER_PORT
-        $NGINX_PROTOCOL='default_server http2'
+        $SERVER_PROTOCOL='default_server http2'
         $SSL_COMMENT='#'   # do comment out SSL stuff
 
     fi
@@ -700,7 +700,7 @@ http {
     # OpenRVDAS HTTPS server
     server {
         # the port your site will be served on; typically 443
-        listen      *:${NGINX_SERVER_PORT} ${NGINX_PROTOCOL};
+        listen      *:${SERVER_PORT} ${SERVER_PROTOCOL};
         server_name _; # accept any host name
         charset     utf-8;
 
@@ -783,7 +783,8 @@ function setup_django {
 
     cd ${INSTALL_ROOT}/openrvdas
     cp django_gui/settings.py.dist django_gui/settings.py
-    sed -i -e "s/SERVER_PORT = 443/SERVER_PORT = ${SERVER_PORT}/g" django_gui/settings.py
+    sed -i -e "s/WEBSOCKET_PROTOCOL = 'ws'/WEBSOCKET_PROTOCOL = '${WEBSOCKET_PROTOCOL}'/g" django_gui/settings.py
+    sed -i -e "s/WEBSOCKET_PORT = 80/WEBSOCKET_PORT = ${SERVER_PORT}/g" django_gui/settings.py
     sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
     sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
 
@@ -1130,7 +1131,6 @@ OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
 read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
 OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 
-echo
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
@@ -1138,6 +1138,7 @@ HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 [ -z $HTTP_PROXY ] || export http_proxy=$HTTP_PROXY
 [ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
 
+echo
 echo Will install from github.com
 echo "Repository: '$OPENRVDAS_REPO'"
 echo "Branch: '$OPENRVDAS_BRANCH'"
@@ -1168,6 +1169,7 @@ RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 #########################################################################
 #########################################################################
 echo
+echo "#####################################################################"
 echo "OpenRVDAS can use SSL via secure websockets for off-server access to web"
 echo "console and display widgets. If you enable SSL, you will need to either"
 echo "have or create SSL .key and .crt files."
@@ -1179,6 +1181,8 @@ if [ "$USE_SSL" == "yes" ]; then
     echo
     read -p "Port on which to serve web console? ($DEFAULT_SSL_SERVER_PORT) " SSL_SERVER_PORT
     SSL_SERVER_PORT=${SSL_SERVER_PORT:-$DEFAULT_SSL_SERVER_PORT}
+    SERVER_PORT=$SSL_SERVER_PORT
+    WEBSOCKET_PROTOCOL='wss'
 
     # Get or create SSL keys
     echo
@@ -1203,8 +1207,10 @@ if [ "$USE_SSL" == "yes" ]; then
     SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
 else
     echo
-    read -p "Port on which to serve web console? ($DEFAULT_SERVER_PORT) " SERVER_PORT
-    SERVER_PORT=${SERVER_PORT:-$DEFAULT_SERVER_PORT}
+    read -p "Port on which to serve web console? ($DEFAULT_NONSSL_SERVER_PORT) " NONSSL_SERVER_PORT
+    NONSSL_SERVER_PORT=${NONSSL_SERVER_PORT:-$DEFAULT_NONSSL_SERVER_PORT}
+    SERVER_PORT=$NONSSL_SERVER_PORT
+    WEBSOCKET_PROTOCOL='ws'
 fi
 
 #########################################################################

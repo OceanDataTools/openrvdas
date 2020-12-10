@@ -85,8 +85,8 @@ WEBSOCKET_HOST = 'localhost'
 # during installation by utils/install_openrvdas.sh. NOTE: do not
 # simply edit this value in settings.py without also modifying the
 # value in django_gui/openrvdas_nginx.conf and display/js/widgets/settings.js
-WEBSOCKET_PROTOCOL = 'wss'
-WEBSOCKET_PORT = 443
+WEBSOCKET_PROTOCOL = 'ws'
+WEBSOCKET_PORT = 80
 WEBSOCKET_PATH = '/cds-ws'
 WEBSOCKET_DATA_SERVER = f'{WEBSOCKET_PROTOCOL}://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}{WEBSOCKET_PATH}'
 
