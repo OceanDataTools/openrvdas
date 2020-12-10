@@ -661,11 +661,11 @@ function setup_nginx {
     fi
 
     if [ "$USE_SSL" == "yes" ]; then
-        $SERVER_PROTOCOL='ssl'
-        $SSL_COMMENT=''   # don't comment out SSL stuff
+        SERVER_PROTOCOL='ssl'
+        SSL_COMMENT=''   # don't comment out SSL stuff
     else
-        $SERVER_PROTOCOL='default_server http2'
-        $SSL_COMMENT='#'   # do comment out SSL stuff
+        SERVER_PROTOCOL='default_server http2'
+        SSL_COMMENT='#'   # do comment out SSL stuff
 
     fi
 
