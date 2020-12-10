@@ -664,7 +664,7 @@ function setup_nginx {
         SERVER_PROTOCOL='ssl'
         SSL_COMMENT=''   # don't comment out SSL stuff
     else
-        SERVER_PROTOCOL='default_server http2'
+        SERVER_PROTOCOL='default_server'
         SSL_COMMENT='#'   # do comment out SSL stuff
 
     fi
