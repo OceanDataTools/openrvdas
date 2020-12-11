@@ -1181,6 +1181,7 @@ if [ "$USE_SSL" == "yes" ]; then
     echo
     read -p "Port on which to serve web console? ($DEFAULT_SSL_SERVER_PORT) " $SSL_SERVER_PORT
     SSL_SERVER_PORT=${SSL_SERVER_PORT:-$DEFAULT_SSL_SERVER_PORT}
+    NONSSL_SERVER_PORT=$DEFAULT_NONSSL_SERVER_PORT  # save this in case they run non-ssl in future
     SERVER_PORT=$SSL_SERVER_PORT
     WEBSOCKET_PROTOCOL='wss'
 
@@ -1209,6 +1210,7 @@ else
     echo
     read -p "Port on which to serve web console? ($DEFAULT_NONSSL_SERVER_PORT) " $NONSSL_SERVER_PORT
     NONSSL_SERVER_PORT=${NONSSL_SERVER_PORT:-$DEFAULT_NONSSL_SERVER_PORT}
+    SSL_SERVER_PORT=$DEFAULT_SSL_SERVER_PORT  # save this in case they run ssl in future
     SERVER_PORT=$NONSSL_SERVER_PORT
     WEBSOCKET_PROTOCOL='ws'
 fi
