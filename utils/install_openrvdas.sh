@@ -1174,6 +1174,11 @@ echo "OpenRVDAS can use SSL via secure websockets for off-server access to web"
 echo "console and display widgets. If you enable SSL, you will need to either"
 echo "have or create SSL .key and .crt files."
 echo
+echo "If you create a self-signed certificate, users may need to take additional"
+echo "steps to connect to the web console and display widgets from their machines'"
+echo "browsers. For guidance on this, please see the secure_websockets.md doc in"
+echo "this project's docs subdirectory."
+echo
 yes_no "Use SSL and secure websockets? " $DEFAULT_USE_SSL
 USE_SSL=$YES_NO_RESULT
 
