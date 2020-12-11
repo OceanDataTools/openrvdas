@@ -79,7 +79,7 @@ else:  # if we got 127.0.1.1, try an expensive way of getting HOST_IP
 #
 # If, on the other hand, our data server is running somewhere else,
 # specify it here.
-WEBSOCKET_HOST = 'localhost'
+WEBSOCKET_HOST = ''
 
 # What port Django will serve on. Default is 8000 but can be changed
 # during installation by utils/install_openrvdas.sh. NOTE: do not
