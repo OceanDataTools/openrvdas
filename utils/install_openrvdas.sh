@@ -349,14 +349,14 @@ function install_packages {
 ###########################################################################
 function install_mysql_macos {
     echo "#####################################################################"
-    echo Installing and enabling MySQL...
+    echo "Installing and enabling MySQL..."
     [ -e /usr/local/bin/mysql ]  || brew install mysql
     brew upgrade mysql || echo Upgraded database package
     brew tap homebrew/services
     brew services restart mysql
 
     echo "#####################################################################"
-    echo Setting up database tables and permissions
+    echo "Setting up database tables and permissions"
     # Verify current root password for mysql
     while true; do
         # Check whether they're right about the current password; need
@@ -392,7 +392,7 @@ FLUSH PRIVILEGES;
 EOF
 
     echo "#####################################################################"
-    echo Setting up database users
+    echo "Setting up database users"
     mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
@@ -417,14 +417,14 @@ EOF
 ###########################################################################
 function install_mysql_centos {
     echo "#####################################################################"
-    echo Installing and enabling Mariadb \(MySQL replacement in CentOS 7\)...
+    echo "Installing and enabling Mariadb (MySQL replacement in CentOS 7)..."
 
     yum install -y  mariadb-server mariadb-devel mariadb-libs
     systemctl restart mariadb              # to manually start db server
     systemctl enable mariadb               # to make it start on boot
 
     echo "#####################################################################"
-    echo Setting up database tables and permissions
+    echo "Setting up database tables and permissions"
     # Verify current root password for mysql
     while true; do
         # Check whether they're right about the current password; need
@@ -461,7 +461,7 @@ EOF
 
     # Try creating databases. Command will fail if they exist, so we need
     # to do one at a time and trap any possible errors.
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"data\" appears to already exist - no problem
+    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo "table \"data\" appears to already exist - no problem"
 create database data character set utf8;
 EOF
 
@@ -472,21 +472,21 @@ GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DA
 GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY 'test' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
-    echo Done setting up MariaDB
+    echo "Done setting up MariaDB"
 }
 
 ###########################################################################
 ###########################################################################
 function install_mysql_ubuntu {
     echo "#####################################################################"
-    echo Installing and enabling MySQL...
+    echo "Installing and enabling MySQL..."
 
     apt install -y mysql-server mysql-common mysql-client libmysqlclient-dev
     systemctl restart mysql    # to manually start db server
     systemctl enable mysql     # to make it start on boot
 
     echo "#####################################################################"
-    echo Setting up database tables and permissions
+    echo "Setting up database tables and permissions"
     # Verify current root password for mysql
     while true; do
         # Check whether they're right about the current password; need
@@ -525,7 +525,7 @@ EOF
     update-rc.d mysql defaults
 
     echo "#####################################################################"
-    echo Setting up database users
+    echo "Setting up database users"
     mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
@@ -543,7 +543,7 @@ GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
 flush privileges;
 \q
 EOF
-    echo Done setting up MySQL
+    echo "Done setting up MySQL"
 
 }
 
@@ -582,14 +582,14 @@ function install_openrvdas {
     # OPENRVDAS_BRANCH - branch of rep to install
 
     if [ ! -d $INSTALL_ROOT ]; then
-      echo Making install directory "$INSTALL_ROOT"
+      echo "Making install directory \"$INSTALL_ROOT\""
       sudo mkdir -p $INSTALL_ROOT
       sudo chown ${RVDAS_USER} $INSTALL_ROOT
     fi
 
     cd $INSTALL_ROOT
     if [ ! -e openrvdas ]; then
-      echo Making openrvdas directory.
+      echo "Making openrvdas directory."
       sudo mkdir openrvdas
       sudo chown ${RVDAS_USER} openrvdas
     fi
@@ -764,9 +764,9 @@ EOF
 ###########################################################################
 # Set up certificate files, if requested
 function setup_ssl_certificate {
-    echo Certificate will be placed in ${SSL_CRT_LOCATION}
-    echo Key will be placed in ${SSL_KEY_LOCATION}
-    echo Please answer the following prompts to continue:
+    echo "Certificate will be placed in ${SSL_CRT_LOCATION}"
+    echo "Key will be placed in ${SSL_KEY_LOCATION}"
+    echo "Please answer the following prompts to continue:"
     echo
     openssl req \
        -newkey rsa:2048 -nodes -keyout ${SSL_KEY_LOCATION} \
@@ -1008,15 +1008,15 @@ EOF
 # CentOS/RHEL ONLY - Set up firewall daemon and open relevant ports
 function setup_firewall {
     if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        echo No firewall setup on $OS_TYPE
+        echo "No firewall setup on $OS_TYPE"
         return
     fi
 
     # All this is CentOS/RHEL only
     yum install -y firewalld
     echo "#####################################################################"
-    echo Setting SELINUX permissions and firewall ports
-    echo This could take a while...
+    echo "Setting SELINUX permissions and firewall ports"
+    echo "This could take a while..."
 
     # The old way of enabling things...
     # (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
@@ -1078,7 +1078,7 @@ function setup_firewall {
     #firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
     #firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
     firewall-cmd -q --reload > /dev/null
-    echo Done setting SELINUX permissions
+    echo "Done setting SELINUX permissions"
 }
 
 ###########################################################################
@@ -1108,10 +1108,9 @@ fi
 umask 022
 
 echo "#####################################################################"
-echo OpenRVDAS configuration script
+echo "OpenRVDAS configuration script"
 
 echo "#####################################################################"
-
 # We don't set hostname on MacOS
 if [ $OS_TYPE != 'MacOS' ]; then
     read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
@@ -1139,7 +1138,7 @@ HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 [ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
 
 echo
-echo Will install from github.com
+echo "Will install from github.com"
 echo "Repository: '$OPENRVDAS_REPO'"
 echo "Branch: '$OPENRVDAS_BRANCH'"
 
@@ -1195,12 +1194,12 @@ if [ "$USE_SSL" == "yes" ]; then
     # Get or create SSL keys
     echo
     echo "#####################################################################"
-    echo The OpenRVDAS console, cached data server and display widgets use HTTPS
-    echo and WSS \(secure websockets\) for communication and require an SSL
-    echo certificate in the form of .key and .crt files. If you already have such
-    echo keys on your machine that you wish to use, answer "yes" to the question
-    echo below, and you will be prompted for their locations. Otherwise answer "no"
-    echo and you will be prompted to create a self-signed certificate.
+    echo "The OpenRVDAS console, cached data server and display widgets use HTTPS"
+    echo "and WSS \(secure websockets\) for communication and require an SSL"
+    echo "certificate in the form of .key and .crt files. If you already have such"
+    echo "keys on your machine that you wish to use, answer "yes" to the question"
+    echo "below, and you will be prompted for their locations. Otherwise answer \"no\""
+    echo "and you will be prompted to create a self-signed certificate."
     echo
     yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
     HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
@@ -1232,9 +1231,9 @@ fi
 # Do they want to install/configure MySQL for use by DatabaseWriter, etc?
 echo
 echo "#####################################################################"
-echo MySQL or MariaDB, the CentOS replacement for MySQL, can be installed and
-echo configured so that DatabaseWriter and DatabaseReader have something to
-echo write to and read from.
+echo "MySQL or MariaDB, the CentOS replacement for MySQL, can be installed and"
+echo "configured so that DatabaseWriter and DatabaseReader have something to"
+echo "write to and read from."
 echo
 yes_no "Install and configure MySQL database? " $DEFAULT_INSTALL_MYSQL
 INSTALL_MYSQL=$YES_NO_RESULT
@@ -1242,17 +1241,17 @@ INSTALL_MYSQL=$YES_NO_RESULT
 if [ $INSTALL_MYSQL == 'yes' ]; then
     echo Will install/configure MySQL
     # Get current and new passwords for database
-    echo Root database password will be empty on initial installation. If this
-    echo is the initial installation, hit "return" when prompted for root
-    echo database password, otherwise enter the password you used during the
-    echo initial installation.
+    echo "Root database password will be empty on initial installation. If this"
+    echo "is the initial installation, hit "return" when prompted for root"
+    echo "database password, otherwise enter the password you used during the"
+    echo "initial installation."
     echo
-    echo Current database password for root \(hit return if this is the
+    echo "Current database password for root \(hit return if this is the"
     read -p "initial installation)? " CURRENT_ROOT_DATABASE_PASSWORD
     read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
     NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
 else
-    echo Skipping MySQL installation/configuration
+    echo "Skipping MySQL installation/configuration"
 fi
 
 #########################################################################
@@ -1262,18 +1261,19 @@ INSTALL_FIREWALLD=no
 if [ $OS_TYPE == 'CentOS' ]; then
     echo
     echo "#####################################################################"
-    echo The firewalld daemon can be installed and configured to only allow access
-    echo to ports used by OpenRVDAS.
+    echo "The firewalld daemon can be installed and configured to only allow access"
+    echo "to ports used by OpenRVDAS."
     echo
     yes_no "Install and configure firewalld?" $DEFAULT_INSTALL_FIREWALLD
     INSTALL_FIREWALLD=$YES_NO_RESULT
 
     if [ $INSTALL_FIREWALLD == 'yes' ]; then
-        echo The installation script will open port $SERVER_PORT for TCP console access.
-        echo What other ports should be opened for TCP or UDP? \(enter comma-separated
-        echo list of numbers, or hit return to open no additional ports.\)
-        IFS=',' read -p "TCP ports to open? " -a TCP_PORTS_TO_OPEN
-        IFS=',' read -p "UDP ports to open? " -a UDP_PORTS_TO_OPEN
+        echo "The installation script will open port $SERVER_PORT for TCP console access."
+        echo "What other ports should be opened for TCP or UDP? (enter comma-separated"
+        echo "list of numbers, or hit return to open no additional ports.)"
+        echo
+        IFS=',' read -p "Additional TCP ports to open? " -a TCP_PORTS_TO_OPEN
+        IFS=',' read -p "Additional UDP ports to open? " -a UDP_PORTS_TO_OPEN
     fi
 fi
 
@@ -1282,13 +1282,13 @@ fi
 # Start OpenRVDAS as a service?
 echo
 echo "#####################################################################"
-echo The OpenRVDAS server can be configured to start on boot. If you wish this
-echo to happen, it will be run/monitored by the supervisord service using the
-echo configuration file in /etc/supervisord.d/openrvdas.ini.
+echo "The OpenRVDAS server can be configured to start on boot. If you wish this"
+echo "to happen, it will be run/monitored by the supervisord service using the"
+echo "configuration file in /etc/supervisord.d/openrvdas.ini."
 echo
-echo If you do not wish it to start automatically, it may still be run manually
-echo from the command line or started via supervisor by running supervisorctl
-echo and starting processes logger_manager and cached_data_server.
+echo "If you do not wish it to start automatically, it may still be run manually"
+echo "from the command line or started via supervisor by running supervisorctl"
+echo "and starting processes logger_manager and cached_data_server."
 echo
 yes_no "Start the OpenRVDAS server on boot? " $DEFAULT_OPENRVDAS_AUTOSTART
 OPENRVDAS_AUTOSTART=$YES_NO_RESULT
@@ -1297,9 +1297,9 @@ OPENRVDAS_AUTOSTART=$YES_NO_RESULT
 # Enable Supervisor web-interface?
 echo
 echo "#####################################################################"
-echo The supervisord service provides an optional web-interface that enables
-echo operators to start/stop/restart the OpenRVDAS main processes from a web-
-echo browser.
+echo "The supervisord service provides an optional web-interface that enables"
+echo "operators to start/stop/restart the OpenRVDAS main processes from a web-"
+echo "browser."
 echo
 yes_no "Enable Supervisor Web-interface? " $DEFAULT_SUPERVISORD_WEBINTERFACE
 SUPERVISORD_WEBINTERFACE=$YES_NO_RESULT
@@ -1309,7 +1309,7 @@ if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
     read -p "Port on which to serve web interface? ($DEFAULT_SUPERVISORD_WEBINTERFACE_PORT) " SUPERVISORD_WEBINTERFACE_PORT
     SUPERVISORD_WEBINTERFACE_PORT=${SUPERVISORD_WEBINTERFACE_PORT:-$DEFAULT_SUPERVISORD_WEBINTERFACE_PORT}
 
-    echo Would you like to enable a password on the supervisord web-interface?
+    echo "Would you like to enable a password on the supervisord web-interface?"
     echo
     yes_no "Enable Supervisor Web-interface user/pass? " $DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH
     SUPERVISORD_WEBINTERFACE_AUTH=$YES_NO_RESULT
@@ -1332,7 +1332,7 @@ save_default_variables
 #########################################################################
 # Install packages
 echo "#####################################################################"
-echo Installing required packages from repository...
+echo "Installing required packages from repository..."
 install_packages
 
 #########################################################################
@@ -1340,7 +1340,7 @@ install_packages
 # If we're installing MySQL/MariaDB
 echo "#####################################################################"
 if [ $INSTALL_MYSQL == 'yes' ]; then
-    echo Installing/configuring database
+    echo "Installing/configuring database"
     # Expect the following shell variables to be appropriately set:
     # RVDAS_USER - valid userid
     # RVDAS_DATABASE_PASSWORD - current rvdas user MySQL database password
@@ -1348,14 +1348,14 @@ if [ $INSTALL_MYSQL == 'yes' ]; then
     # CURRENT_ROOT_DATABASE_PASSWORD - current root password for MySQL
     install_mysql
 else
-    echo Skipping database setup
+    echo "Skipping database setup"
 fi
 
 #########################################################################
 #########################################################################
 # Set up OpenRVDAS
 echo "#####################################################################"
-echo Fetching and setting up OpenRVDAS code...
+echo "Fetching and setting up OpenRVDAS code..."
 # Expect the following shell variables to be appropriately set:
 # INSTALL_ROOT - path where openrvdas/ is
 # RVDAS_USER - valid userid
@@ -1367,7 +1367,7 @@ install_openrvdas
 #########################################################################
 # Set up virtual env and python-dependent code (Django and uWSGI, etc)
 echo "#####################################################################"
-echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
+echo "Installing virtual environment for Django, uWSGI and other Python-dependent packages."
 # Expect the following shell variables to be appropriately set:
 # INSTALL_ROOT - path where openrvdas/ is
 # INSTALL_MYSQL - set if MySQL is to be installed, unset otherwise
@@ -1377,16 +1377,16 @@ setup_python_packages
 #########################################################################
 # Set up nginx
 echo "#####################################################################"
-echo Setting up NGINX
+echo "Setting up NGINX"
 setup_nginx
 
 #########################################################################
 #########################################################################
 # Create new self-signed SSL certificate, if that's what they want
-if [ $HAVE_SSL_CERTIFICATE == 'no' ]; then
+if [ $USE_SSL == "yes" ] && [ $HAVE_SSL_CERTIFICATE == 'no' ]; then
     echo
     echo "#####################################################################"
-    echo Ready to set up new self-signed SSL certificate.
+    echo "Ready to set up new self-signed SSL certificate."
     setup_ssl_certificate
 fi
 
@@ -1395,7 +1395,7 @@ fi
 # Set up uwsgi
 echo
 echo "#####################################################################"
-echo Setting up UWSGI
+echo "Setting up UWSGI"
 # Expect the following shell variables to be appropriately set:
 # HOSTNAME - name of host
 # INSTALL_ROOT - path where openrvdas/ is
@@ -1406,7 +1406,7 @@ setup_uwsgi
 # Set up Django database
 echo
 echo "#########################################################################"
-echo Initializing Django database...
+echo "Initializing Django database..."
 # Expect the following shell variables to be appropriately set:
 # RVDAS_USER - valid userid
 # RVDAS_DATABASE_PASSWORD - string to use for Django password
@@ -1415,7 +1415,7 @@ setup_django
 # Connect uWSGI with our project installation
 echo
 echo "#####################################################################"
-echo Creating OpenRVDAS-specific uWSGI files
+echo "Creating OpenRVDAS-specific uWSGI files"
 
 # Make everything accessible to nginx
 chmod 755 ${INSTALL_ROOT}/openrvdas
@@ -1429,7 +1429,7 @@ sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
 
 echo
 echo "#####################################################################"
-echo Setting up openrvdas service with supervisord
+echo "Setting up openrvdas service with supervisord"
 # Expect the following shell variables to be appropriately set:
 # RVDAS_USER - valid username
 # INSTALL_ROOT - path where openrvdas/ is found
@@ -1445,7 +1445,7 @@ fi
 
 echo
 echo "#########################################################################"
-echo Restarting services: supervisor
+echo "Restarting services: supervisor"
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         sudo mkdir -p /usr/local/var/run/
@@ -1471,10 +1471,10 @@ echo Restarting services: supervisor
         # Previous installations used nginx and uwsgi as a service. We need to
         # disable them if they're running.
         echo Disabling legacy services
-        systemctl stop nginx 2> /dev/null || echo nginx not running
-        systemctl disable nginx 2> /dev/null || echo nginx disabled
-        systemctl stop uwsgi 2> /dev/null || echo uwsgi not running
-        systemctl disable uwsgi 2> /dev/null || echo uwsgi disabled
+        systemctl stop nginx 2> /dev/null || echo "nginx not running"
+        systemctl disable nginx 2> /dev/null || echo "nginx disabled"
+        systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
+        systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
     fi
 
 
@@ -1484,5 +1484,5 @@ deactivate
 
 echo
 echo "#########################################################################"
-echo Installation complete - happy logging!
+echo "Installation complete - happy logging!"
 echo

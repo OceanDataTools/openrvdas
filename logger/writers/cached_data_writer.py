@@ -13,6 +13,7 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
+
 class CachedDataWriter(Writer):
     def __init__(self, data_server, start_server=False, back_seconds=480,
                  cleanup_interval=6, update_interval=1,
@@ -85,7 +86,7 @@ class CachedDataWriter(Writer):
             """
             while True:
                 logging.warning('CachedDataWriter trying to connect to '
-                             + self.data_server)
+                                + self.data_server)
                 try:
                     if self.use_wss:
                         # If check_cert is a str, take it as the location of the
