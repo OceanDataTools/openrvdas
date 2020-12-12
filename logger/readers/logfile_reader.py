@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import parse
 import sys
 import time
 
@@ -23,8 +24,10 @@ class LogfileReader(TimestampedReader):
 
     def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
                  retry_interval=0.1, interval=0, use_timestamps=False,
+                 record_format=None,
                  time_format=timestamp.TIME_FORMAT,
-                 date_format=timestamp.DATE_FORMAT):
+                 date_format=timestamp.DATE_FORMAT,
+                 quiet=False):
         """
         ```
         filebase     Possibly wildcarded string specifying files to be opened.
@@ -47,6 +50,17 @@ class LogfileReader(TimestampedReader):
         interval
                      How long to sleep between returning records. In general
                      this should be zero except for debugging purposes.
+
+        use_timestamps
+                     If True, use the timestamps from the log file to determine
+                     at what interval each record should be emitted.
+
+        record_format
+                     If specified, a custom record format to use for extracting
+                     timestamp and record. The default is '{timestamp:ti} {record}'.
+
+        quiet - if not False, don't complain when unable to parse a record.
+
         ```
         Note that the order in which files are opened will probably be in
         alphanumeric by filename, but this is not strictly enforced and
@@ -59,10 +73,13 @@ class LogfileReader(TimestampedReader):
 
         self.filebase = filebase
         self.use_timestamps = use_timestamps
+        self.record_format = record_format or '{timestamp:ti} {record}'
+        self.compiled_record_format = parse.compile(self.record_format)
         self.date_format = date_format
         self.time_format = time_format
         self.tail = tail
         self.refresh_file_spec = refresh_file_spec
+        self.quiet = quiet
 
         # If use_timestamps, we need to keep track of our last_read to
         # know how long to sleep
@@ -123,13 +140,17 @@ class LogfileReader(TimestampedReader):
             # timestamp off the front. If we can't, complain and try getting
             # the next record.
             try:
-                time_str = record.split(' ', 1)[0]
-                ts = timestamp.timestamp(time_str, time_format=self.time_format)
+                parsed_record = self.compiled_record_format.parse(record).named
+                ts = parsed_record['timestamp'].timestamp()
                 break
-            except ValueError:
-                # If, for some reason, the record is malformed, complain and
-                # loop to try fetching the next record
-                logging.warning('Unable to parse time string from record: %s', record)
+
+            # We had a problem parsing. Discard record and try reading next one.
+            # Complain if appropriate.
+            except (KeyError, ValueError, AttributeError):
+                if not self.quiet:
+                    logging.warning('Unable to parse record into "%s"', self.record_format)
+                    logging.warning('Record: %s', record)
+                continue
 
         # If here, we've got a record and a timestamp and are intending to
         # use it. Figure out how long we should sleep before returning it.

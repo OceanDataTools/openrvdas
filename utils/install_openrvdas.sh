@@ -90,6 +90,7 @@ function get_os_type {
             echo "interpreter: Make a copy of /Applications/Terminal.app (e.g. RTerminal.app)."
             echo "Select it in the Finder and open its information pane (Clover-I). Select "
             echo "'Open using Rosetta', and use this copy of Terminal when installing OpenRVDAS."
+            echo
             read -p "Hit return to continue. " DUMMY_VAR
             echo
         fi
@@ -122,13 +123,24 @@ function set_default_variables {
 
     DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
     DEFAULT_OPENRVDAS_BRANCH=master
-    DEFAULT_SERVER_PORT=8000
+
+    DEFAULT_NONSSL_SERVER_PORT=80
+    DEFAULT_SSL_SERVER_PORT=443
+
+    DEFAULT_USE_SSL=no
+    DEFAULT_HAVE_SSL_CERTIFICATE=no
+    DEFAULT_SSL_CRT_LOCATION=
+    DEFAULT_SSL_KEY_LOCATION=
 
     DEFAULT_RVDAS_USER=rvdas
 
     DEFAULT_INSTALL_MYSQL=no
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
+
+    DEFAULT_SUPERVISORD_WEBINTERFACE=no
+    DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
+    DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
 
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
@@ -153,13 +165,24 @@ DEFAULT_HTTP_PROXY=$HTTP_PROXY
 
 DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
 DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
-DEFAULT_SERVER_PORT=$SERVER_PORT
+
+DEFAULT_NONSSL_SERVER_PORT=$NONSSL_SERVER_PORT
+DEFAULT_SSL_SERVER_PORT=$SSL_SERVER_PORT
+
+DEFAULT_USE_SSL=$USE_SSL
+DEFAULT_HAVE_SSL_CERTIFICATE=$HAVE_SSL_CERTIFICATE
+DEFAULT_SSL_CRT_LOCATION=$SSL_CRT_LOCATION
+DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
 
 DEFAULT_INSTALL_MYSQL=$INSTALL_MYSQL
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
+DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
+DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
+DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=$SUPERVISORD_WEBINTERFACE_PORT
 
 EOF
 }
@@ -251,7 +274,7 @@ function install_packages {
 
         # Install system packages we need
         echo Installing python and supporting packages
-        [ -e /usr/local/bin/python ] || brew install python
+        [ -e /usr/local/bin/python3 ] || brew install python
         [ -e /usr/local/bin/socat ]  || brew install socat
         [ -e /usr/local/bin/ssh ]    || brew install openssh
         [ -e /usr/local/bin/nginx ]  || brew install nginx
@@ -326,14 +349,14 @@ function install_packages {
 ###########################################################################
 function install_mysql_macos {
     echo "#####################################################################"
-    echo Installing and enabling MySQL...
+    echo "Installing and enabling MySQL..."
     [ -e /usr/local/bin/mysql ]  || brew install mysql
     brew upgrade mysql || echo Upgraded database package
     brew tap homebrew/services
     brew services restart mysql
 
     echo "#####################################################################"
-    echo Setting up database tables and permissions
+    echo "Setting up database tables and permissions"
     # Verify current root password for mysql
     while true; do
         # Check whether they're right about the current password; need
@@ -369,7 +392,7 @@ FLUSH PRIVILEGES;
 EOF
 
     echo "#####################################################################"
-    echo Setting up database users
+    echo "Setting up database users"
     mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
@@ -394,14 +417,14 @@ EOF
 ###########################################################################
 function install_mysql_centos {
     echo "#####################################################################"
-    echo Installing and enabling Mariadb \(MySQL replacement in CentOS 7\)...
+    echo "Installing and enabling Mariadb (MySQL replacement in CentOS 7)..."
 
     yum install -y  mariadb-server mariadb-devel mariadb-libs
     systemctl restart mariadb              # to manually start db server
     systemctl enable mariadb               # to make it start on boot
 
     echo "#####################################################################"
-    echo Setting up database tables and permissions
+    echo "Setting up database tables and permissions"
     # Verify current root password for mysql
     while true; do
         # Check whether they're right about the current password; need
@@ -438,7 +461,7 @@ EOF
 
     # Try creating databases. Command will fail if they exist, so we need
     # to do one at a time and trap any possible errors.
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo table \"data\" appears to already exist - no problem
+    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo "table \"data\" appears to already exist - no problem"
 create database data character set utf8;
 EOF
 
@@ -449,21 +472,21 @@ GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DA
 GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY 'test' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
-    echo Done setting up MariaDB
+    echo "Done setting up MariaDB"
 }
 
 ###########################################################################
 ###########################################################################
 function install_mysql_ubuntu {
     echo "#####################################################################"
-    echo Installing and enabling MySQL...
+    echo "Installing and enabling MySQL..."
 
     apt install -y mysql-server mysql-common mysql-client libmysqlclient-dev
     systemctl restart mysql    # to manually start db server
     systemctl enable mysql     # to make it start on boot
 
     echo "#####################################################################"
-    echo Setting up database tables and permissions
+    echo "Setting up database tables and permissions"
     # Verify current root password for mysql
     while true; do
         # Check whether they're right about the current password; need
@@ -502,7 +525,7 @@ EOF
     update-rc.d mysql defaults
 
     echo "#####################################################################"
-    echo Setting up database users
+    echo "Setting up database users"
     mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
 drop user if exists 'test'@'localhost';
 create user 'test'@'localhost' identified by 'test';
@@ -520,7 +543,7 @@ GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
 flush privileges;
 \q
 EOF
-    echo Done setting up MySQL
+    echo "Done setting up MySQL"
 
 }
 
@@ -559,14 +582,14 @@ function install_openrvdas {
     # OPENRVDAS_BRANCH - branch of rep to install
 
     if [ ! -d $INSTALL_ROOT ]; then
-      echo Making install directory "$INSTALL_ROOT"
+      echo "Making install directory \"$INSTALL_ROOT\""
       sudo mkdir -p $INSTALL_ROOT
       sudo chown ${RVDAS_USER} $INSTALL_ROOT
     fi
 
     cd $INSTALL_ROOT
     if [ ! -e openrvdas ]; then
-      echo Making openrvdas directory.
+      echo "Making openrvdas directory."
       sudo mkdir openrvdas
       sudo chown ${RVDAS_USER} openrvdas
     fi
@@ -587,8 +610,9 @@ function install_openrvdas {
     # Copy widget settings into place and customize for this machine
     cp display/js/widgets/settings.js.dist \
        display/js/widgets/settings.js
+    sed -i -e "s/= 'ws'/= '${WEBSOCKET_PROTOCOL}'/g" display/js/widgets/settings.js
     sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
-    sed -i -e "s/:8000/:${SERVER_PORT}/g" display/js/widgets/settings.js
+    sed -i -e "s/ = 80/ = ${SERVER_PORT}/g" display/js/widgets/settings.js
 
     # Copy the database settings.py.dist into place so that other
     # routines can make the modifications they need to it.
@@ -629,45 +653,124 @@ function setup_python_packages {
 # Set up NGINX
 function setup_nginx {
 
-      # MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-        [ -e /usr/local/etc/nginx/sites-available ] || mkdir /usr/local/etc/nginx/sites-available
-        [ -e /usr/local/etc/nginx/sites-enabled ] || mkdir /usr/local/etc/nginx/sites-enabled
-
-        # We need to add a couple of lines to not quite the end of nginx.conf,
-        # so do a bit of hackery: chop off the closing "}" with head, append
-        # the lines we need and a new closing "}" into a temp file, then copy back.
-        if grep -q "/usr/local/etc/nginx/sites-enabled/" /usr/local/etc/nginx/nginx.conf; then
-            echo NGINX sites-available already registered. Skipping...
-        else
-            sed -i.bak 's/include servers\/\*;/include \/usr\/local\/etc\/nginx\/sites-enabled\/\*.conf\;\
-                        server_names_hash_bucket_size 64\;/' /usr/local/etc/nginx/nginx.conf
-        fi
-
     # CentOS/RHEL or Debian/Ubuntu
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+    if [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         # Disable because we're going to run it via supervisor
         systemctl stop nginx
         systemctl disable nginx # NGINX seems to be enabled by default?
-
-        [ -e /etc/nginx/sites-available ] || mkdir /etc/nginx/sites-available
-        [ -e /etc/nginx/sites-enabled ] || mkdir /etc/nginx/sites-enabled
-
-        # We need to add a couple of lines to not quite the end of nginx.conf,
-        # so do a bit of hackery: chop off the closing "}" with head, append
-        # the lines we need and a new closing "}" into a temp file, then copy back.
-        if grep -q "/etc/nginx/sites-enabled/" /etc/nginx/nginx.conf; then
-            echo NGINX sites-available already registered. Skipping...
-        else
-            head --lines=-2 /etc/nginx/nginx.conf > /tmp/nginx.conf
-            cat >> /tmp/nginx.conf <<EOF
-       include /etc/nginx/sites-enabled/*.conf;
-       server_names_hash_bucket_size 64;
-    }
-EOF
-          mv -f /tmp/nginx.conf /etc/nginx/nginx.conf
-        fi
     fi
+
+    if [ "$USE_SSL" == "yes" ]; then
+        SERVER_PROTOCOL='ssl'
+        SSL_COMMENT=''   # don't comment out SSL stuff
+    else
+        SERVER_PROTOCOL='default_server'
+        SSL_COMMENT='#'   # do comment out SSL stuff
+
+    fi
+
+    # Put the nginx conf file in place and link it up
+    cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
+# openrvdas_nginx.conf
+
+worker_processes  auto;
+events {
+    worker_connections  1024;
+}
+
+http {
+    #include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+    keepalive_timeout  65;
+
+    # the upstream component nginx needs to connect to
+    upstream django {
+        server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
+    }
+
+    # OpenRVDAS HTTPS server
+    server {
+        # the port your site will be served on; typically 443
+        listen      *:${SERVER_PORT} ${SERVER_PROTOCOL};
+        server_name _; # accept any host name
+        charset     utf-8;
+
+        # Section will be commented out if we're not using SSL
+        ${SSL_COMMENT}ssl_certificate     $SSL_CRT_LOCATION;
+        ${SSL_COMMENT}ssl_certificate_key $SSL_KEY_LOCATION;
+        ${SSL_COMMENT}ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+        ${SSL_COMMENT}ssl_ciphers         HIGH:!aNULL:!MD5;
+
+        # max upload size
+        client_max_body_size 75M;   # adjust to taste
+
+        # Django media
+        location /media  {
+            alias ${INSTALL_ROOT}/openrvdas/media;  # project media files
+        }
+
+        location /display {
+            alias ${INSTALL_ROOT}/openrvdas/display/html; # display pages
+            autoindex on;
+        }
+        location /js {
+            alias /${INSTALL_ROOT}/openrvdas/display/js; # display pages
+        }
+        location /css {
+            alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
+        }
+
+        location /static {
+            alias ${INSTALL_ROOT}/openrvdas/static; # project static files
+            autoindex on;
+        }
+
+        location /docs {
+            alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
+            autoindex on;
+        }
+
+        # Internally, Cached Data Server operates on port 8766; we proxy
+        # it externally, serve cached data server at $SERVER_PORT/cds-ws
+        location /cds-ws {
+            proxy_pass http://localhost:8766;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host \$host;
+        }
+
+        # Finally, send all non-CDS, non-media requests to the Django server.
+        location / {
+            uwsgi_pass  django;
+            include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
+        }
+    }
+}
+EOF
+
+}
+
+###########################################################################
+###########################################################################
+# Set up certificate files, if requested
+function setup_ssl_certificate {
+    echo "Certificate will be placed in ${SSL_CRT_LOCATION}"
+    echo "Key will be placed in ${SSL_KEY_LOCATION}"
+    echo "Please answer the following prompts to continue:"
+    echo
+    openssl req \
+       -newkey rsa:2048 -nodes -keyout ${SSL_KEY_LOCATION} \
+       -x509 -days 365 -out ${SSL_CRT_LOCATION}
 }
 
 ###########################################################################
@@ -680,7 +783,8 @@ function setup_django {
 
     cd ${INSTALL_ROOT}/openrvdas
     cp django_gui/settings.py.dist django_gui/settings.py
-    sed -i -e "s/SERVER_PORT = 8000/SERVER_PORT = ${SERVER_PORT}/g" django_gui/settings.py
+    sed -i -e "s/WEBSOCKET_PROTOCOL = 'ws'/WEBSOCKET_PROTOCOL = '${WEBSOCKET_PROTOCOL}'/g" django_gui/settings.py
+    sed -i -e "s/WEBSOCKET_PORT = 80/WEBSOCKET_PORT = ${SERVER_PORT}/g" django_gui/settings.py
     sed -i -e "s/'USER': 'rvdas'/'USER': '${RVDAS_USER}'/g" django_gui/settings.py
     sed -i -e "s/'PASSWORD': 'rvdas'/'PASSWORD': '${RVDAS_DATABASE_PASSWORD}'/g" django_gui/settings.py
 
@@ -727,73 +831,7 @@ function setup_uwsgi {
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         ETC_HOME=/etc
     fi
-
     cp $ETC_HOME/nginx/uwsgi_params $INSTALL_ROOT/openrvdas/django_gui
-
-    cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
-# openrvdas_nginx.conf
-
-# the upstream component nginx needs to connect to
-upstream django {
-    server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
-}
-
-# configuration of the server
-server {
-    # the port your site will be served on
-    listen      ${SERVER_PORT};
-    # the domain name it will serve for
-    server_name ${HOSTNAME}; # substitute machine's IP address or FQDN
-    charset     utf-8;
-
-    # max upload size
-    client_max_body_size 75M;   # adjust to taste
-
-    # Django media
-    location /media  {
-        alias ${INSTALL_ROOT}/openrvdas/media;  # project media files
-    }
-
-    location /display {
-        alias ${INSTALL_ROOT}/openrvdas/display/html; # display pages
-        autoindex on;
-    }
-    location /js {
-        alias /${INSTALL_ROOT}/openrvdas/display/js; # display pages
-    }
-    location /css {
-        alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
-    }
-
-    location /static {
-        alias ${INSTALL_ROOT}/openrvdas/static; # project static files
-        autoindex on;
-    }
-
-    location /docs {
-        alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
-        autoindex on;
-    }
-
-    # Externally, serve cached data server at $SERVER_PORT/cds-ws
-    location /cds-ws {
-        proxy_pass http://localhost:8766;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "Upgrade";
-        proxy_set_header Host \$host;
-    }
-
-    # Finally, send all non-media requests to the Django server.
-    location / {
-        uwsgi_pass  django;
-        include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
-    }
-}
-EOF
-
-    # Make symlink to nginx dir
-    ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf $ETC_HOME/nginx/sites-enabled
 
     cat > ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini <<EOF
 # openrvdas_uwsgi.ini file
@@ -883,21 +921,33 @@ function setup_supervisor {
 file=$SUPERVISOR_SOCK   ; (the path to the socket file)
 chmod=0770              ; socket file mode (default 0700)
 ${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_USER}
+EOF
+
+    if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
+        cat >> /tmp/openrvdas.ini <<EOF
 
 [inet_http_server]
-port=${HTTP_HOST}:9001
-username=${RVDAS_USER}
-password=${RVDAS_USER}
+port=${SUPERVISORD_WEBINTERFACE_PORT}
+EOF
+        if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
+            SUPERVISORD_WEBINTERFACE_HASH=`echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{printf("{SHA}%s",$1)}'`
+            cat >> /tmp/openrvdas.ini <<EOF
+username=${SUPERVISORD_WEBINTERFACE_USER}
+password=${SUPERVISORD_WEBINTERFACE_HASH} ; echo -n "<password>" | sha1sum | awk '{printf("{SHA}%s",\$1)}'
+EOF
+        fi
+    fi
+
+    cat >> /tmp/openrvdas.ini <<EOF
 
 ; The scripts we're going to run
 [program:nginx]
-command=${NGINX_BIN} -g 'daemon off;'
+command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/nginx.stderr
-;stdout_logfile=/var/log/openrvdas/nginx.stdout
 ;user=$RVDAS_USER
 
 [program:uwsgi]
@@ -908,7 +958,6 @@ autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-;stdout_logfile=/var/log/openrvdas/uwsgi.stdout
 user=$RVDAS_USER
 
 [program:cached_data_server]
@@ -918,18 +967,16 @@ autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
-;stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v -V
+command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :8766 -v -V --no-console
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/logger_manager.stderr
-;stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=$RVDAS_USER
 
 [program:simulate_nbp]
@@ -939,7 +986,6 @@ autostart=false
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
-;stdout_logfile=/var/log/openrvdas/simulate_nbp.stdout
 user=$RVDAS_USER
 
 [group:web]
@@ -962,15 +1008,15 @@ EOF
 # CentOS/RHEL ONLY - Set up firewall daemon and open relevant ports
 function setup_firewall {
     if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        echo No firewall setup on $OS_TYPE
+        echo "No firewall setup on $OS_TYPE"
         return
     fi
 
     # All this is CentOS/RHEL only
     yum install -y firewalld
     echo "#####################################################################"
-    echo Setting SELINUX permissions and firewall ports
-    echo This could take a while...
+    echo "Setting SELINUX permissions and firewall ports"
+    echo "This could take a while..."
 
     # The old way of enabling things...
     # (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
@@ -987,6 +1033,10 @@ function setup_firewall {
 
     firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
+
+    if [ "$SUPERVISORD_WEBINTERFACE" == 'yes' ]; then
+        firewall-cmd -q --permanent --add-port=${SUPERVISORD_WEBINTERFACE_PORT}/tcp > /dev/null
+    fi
 
     if [ ! -z "$TCP_PORTS_TO_OPEN" ]; then
         for PORT in "${TCP_PORTS_TO_OPEN[@]}"
@@ -1028,7 +1078,7 @@ function setup_firewall {
     #firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
     #firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
     firewall-cmd -q --reload > /dev/null
-    echo Done setting SELINUX permissions
+    echo "Done setting SELINUX permissions"
 }
 
 ###########################################################################
@@ -1058,10 +1108,9 @@ fi
 umask 022
 
 echo "#####################################################################"
-echo OpenRVDAS configuration script
+echo "OpenRVDAS configuration script"
 
 echo "#####################################################################"
-
 # We don't set hostname on MacOS
 if [ $OS_TYPE != 'MacOS' ]; then
     read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
@@ -1081,9 +1130,6 @@ OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
 read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
 OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 
-read -p "Port on which to serve web console? ($DEFAULT_SERVER_PORT) " SERVER_PORT
-SERVER_PORT=${SERVER_PORT:-$DEFAULT_SERVER_PORT}
-
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
@@ -1091,13 +1137,14 @@ HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 [ -z $HTTP_PROXY ] || export http_proxy=$HTTP_PROXY
 [ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
 
-echo Will install from github.com
+echo
+echo "Will install from github.com"
 echo "Repository: '$OPENRVDAS_REPO'"
 echo "Branch: '$OPENRVDAS_BRANCH'"
-echo "Serving on port $SERVER_PORT"
 
 # Create user if they don't exist yet on Linux, but MacOS needs to
 # user a pre-existing user, because creating a user is a pain.
+echo
 echo "#####################################################################"
 if [ $OS_TYPE == 'MacOS' ]; then
     read -p "Existing user to set system up for? ($DEFAULT_RVDAS_USER) " RVDAS_USER
@@ -1115,34 +1162,96 @@ else
     RVDAS_GROUP=$RVDAS_USER
 fi
 
-echo
 read -p "Django/database password to use for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
 RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
 #########################################################################
 #########################################################################
-# Do they want to install/configure MySQL for use by DatabaseWriter, etc?
+echo
 echo "#####################################################################"
-echo MySQL or MariaDB, the CentOS replacement for MySQL, can be installed and
-echo configured so that DatabaseWriter and DatabaseReader have something to
-echo write to and read from.
+echo "OpenRVDAS can use SSL via secure websockets for off-server access to web"
+echo "console and display widgets. If you enable SSL, you will need to either"
+echo "have or create SSL .key and .crt files."
+echo
+echo "If you create a self-signed certificate, users may need to take additional"
+echo "steps to connect to the web console and display widgets from their machines'"
+echo "browsers. For guidance on this, please see the secure_websockets.md doc in"
+echo "this project's docs subdirectory."
+echo
+yes_no "Use SSL and secure websockets? " $DEFAULT_USE_SSL
+USE_SSL=$YES_NO_RESULT
+
+if [ "$USE_SSL" == "yes" ]; then
+    echo
+    read -p "Port on which to serve web console? ($DEFAULT_SSL_SERVER_PORT) " $SSL_SERVER_PORT
+    SSL_SERVER_PORT=${SSL_SERVER_PORT:-$DEFAULT_SSL_SERVER_PORT}
+    SERVER_PORT=$SSL_SERVER_PORT
+    WEBSOCKET_PROTOCOL='wss'
+
+    # Propagate unused variables so they're saved in defaults
+    NONSSL_SERVER_PORT=$DEFAULT_NONSSL_SERVER_PORT
+
+    # Get or create SSL keys
+    echo
+    echo "#####################################################################"
+    echo "The OpenRVDAS console, cached data server and display widgets use HTTPS"
+    echo "and WSS \(secure websockets\) for communication and require an SSL"
+    echo "certificate in the form of .key and .crt files. If you already have such"
+    echo "keys on your machine that you wish to use, answer "yes" to the question"
+    echo "below, and you will be prompted for their locations. Otherwise answer \"no\""
+    echo "and you will be prompted to create a self-signed certificate."
+    echo
+    yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
+    HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
+    if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
+        read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+    else
+        read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+    fi
+    SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
+    SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
+else
+    echo
+    read -p "Port on which to serve web console? ($DEFAULT_NONSSL_SERVER_PORT) " $NONSSL_SERVER_PORT
+    NONSSL_SERVER_PORT=${NONSSL_SERVER_PORT:-$DEFAULT_NONSSL_SERVER_PORT}
+    SERVER_PORT=$NONSSL_SERVER_PORT
+    WEBSOCKET_PROTOCOL='ws'
+
+    # Propagate unused variables so they're saved in defaults
+    SSL_SERVER_PORT=$DEFAULT_SSL_SERVER_PORT
+    HAVE_SSL_CERTIFICATE=$DEFAULT_HAVE_SSL_CERTIFICATE
+    SSL_CRT_LOCATION=$DEFAULT_SSL_CRT_LOCATION
+    SSL_KEY_LOCATION=$DEFAULT_SSL_KEY_LOCATION
+fi
+
+#########################################################################
+#########################################################################
+# Do they want to install/configure MySQL for use by DatabaseWriter, etc?
+echo
+echo "#####################################################################"
+echo "MySQL or MariaDB, the CentOS replacement for MySQL, can be installed and"
+echo "configured so that DatabaseWriter and DatabaseReader have something to"
+echo "write to and read from."
+echo
 yes_no "Install and configure MySQL database? " $DEFAULT_INSTALL_MYSQL
 INSTALL_MYSQL=$YES_NO_RESULT
 
 if [ $INSTALL_MYSQL == 'yes' ]; then
     echo Will install/configure MySQL
     # Get current and new passwords for database
-    echo Root database password will be empty on initial installation. If this
-    echo is the initial installation, hit "return" when prompted for root
-    echo database password, otherwise enter the password you used during the
-    echo initial installation.
+    echo "Root database password will be empty on initial installation. If this"
+    echo "is the initial installation, hit "return" when prompted for root"
+    echo "database password, otherwise enter the password you used during the"
+    echo "initial installation."
     echo
-    echo Current database password for root \(hit return if this is the
+    echo "Current database password for root \(hit return if this is the"
     read -p "initial installation)? " CURRENT_ROOT_DATABASE_PASSWORD
     read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
     NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
 else
-    echo Skipping MySQL installation/configuration
+    echo "Skipping MySQL installation/configuration"
 fi
 
 #########################################################################
@@ -1150,35 +1259,69 @@ fi
 # CentOS/RHEL only: do they want to install/configure firewalld?
 INSTALL_FIREWALLD=no
 if [ $OS_TYPE == 'CentOS' ]; then
+    echo
     echo "#####################################################################"
-    echo The firewalld daemon can be installed and configured to only allow access
-    echo to ports used by OpenRVDAS.
+    echo "The firewalld daemon can be installed and configured to only allow access"
+    echo "to ports used by OpenRVDAS."
+    echo
     yes_no "Install and configure firewalld?" $DEFAULT_INSTALL_FIREWALLD
     INSTALL_FIREWALLD=$YES_NO_RESULT
 
     if [ $INSTALL_FIREWALLD == 'yes' ]; then
-        echo The installation script will open port $SERVER_PORT for TCP console access.
-        echo What other ports should be opened for TCP or UDP? \(enter comma-separated
-        echo list of numbers, or hit return to open no additional ports.\)
-        IFS=',' read -p "TCP ports to open? " -a TCP_PORTS_TO_OPEN
-        IFS=',' read -p "UDP ports to open? " -a UDP_PORTS_TO_OPEN
+        echo "The installation script will open port $SERVER_PORT for TCP console access."
+        echo "What other ports should be opened for TCP or UDP? (enter comma-separated"
+        echo "list of numbers, or hit return to open no additional ports.)"
+        echo
+        IFS=',' read -p "Additional TCP ports to open? " -a TCP_PORTS_TO_OPEN
+        IFS=',' read -p "Additional UDP ports to open? " -a UDP_PORTS_TO_OPEN
     fi
 fi
 
 #########################################################################
 #########################################################################
 # Start OpenRVDAS as a service?
-echo "#####################################################################"
-echo The OpenRVDAS server can be configured to start on boot. If you wish this
-echo to happen, it will be run/monitored by the supervisord service using the
-echo configuration file in /etc/supervisord.d/openrvdas.ini.
 echo
-echo If you do not wish it to start automatically, it may still be run manually
-echo from the command line or started via supervisor by running supervisorctl
-echo and starting processes logger_manager and cached_data_server.
+echo "#####################################################################"
+echo "The OpenRVDAS server can be configured to start on boot. If you wish this"
+echo "to happen, it will be run/monitored by the supervisord service using the"
+echo "configuration file in /etc/supervisord.d/openrvdas.ini."
+echo
+echo "If you do not wish it to start automatically, it may still be run manually"
+echo "from the command line or started via supervisor by running supervisorctl"
+echo "and starting processes logger_manager and cached_data_server."
 echo
 yes_no "Start the OpenRVDAS server on boot? " $DEFAULT_OPENRVDAS_AUTOSTART
 OPENRVDAS_AUTOSTART=$YES_NO_RESULT
+
+#########################################################################
+# Enable Supervisor web-interface?
+echo
+echo "#####################################################################"
+echo "The supervisord service provides an optional web-interface that enables"
+echo "operators to start/stop/restart the OpenRVDAS main processes from a web-"
+echo "browser."
+echo
+yes_no "Enable Supervisor Web-interface? " $DEFAULT_SUPERVISORD_WEBINTERFACE
+SUPERVISORD_WEBINTERFACE=$YES_NO_RESULT
+
+if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
+
+    read -p "Port on which to serve web interface? ($DEFAULT_SUPERVISORD_WEBINTERFACE_PORT) " SUPERVISORD_WEBINTERFACE_PORT
+    SUPERVISORD_WEBINTERFACE_PORT=${SUPERVISORD_WEBINTERFACE_PORT:-$DEFAULT_SUPERVISORD_WEBINTERFACE_PORT}
+
+    echo "Would you like to enable a password on the supervisord web-interface?"
+    echo
+    yes_no "Enable Supervisor Web-interface user/pass? " $DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH
+    SUPERVISORD_WEBINTERFACE_AUTH=$YES_NO_RESULT
+
+    if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
+        read -p "Username? ($RVDAS_USER) " SUPERVISORD_WEBINTERFACE_USER
+        SUPERVISORD_WEBINTERFACE_USER=${SUPERVISORD_WEBINTERFACE_USER:-$RVDAS_USER}
+
+        read -p "Password? ($RVDAS_USER) " SUPERVISORD_WEBINTERFACE_PASS
+        SUPERVISORD_WEBINTERFACE_PASS=${SUPERVISORD_WEBINTERFACE_PASS:-$RVDAS_USER}
+    fi
+fi
 
 #########################################################################
 #########################################################################
@@ -1189,7 +1332,7 @@ save_default_variables
 #########################################################################
 # Install packages
 echo "#####################################################################"
-echo Installing required packages from repository...
+echo "Installing required packages from repository..."
 install_packages
 
 #########################################################################
@@ -1197,7 +1340,7 @@ install_packages
 # If we're installing MySQL/MariaDB
 echo "#####################################################################"
 if [ $INSTALL_MYSQL == 'yes' ]; then
-    echo Installing/configuring database
+    echo "Installing/configuring database"
     # Expect the following shell variables to be appropriately set:
     # RVDAS_USER - valid userid
     # RVDAS_DATABASE_PASSWORD - current rvdas user MySQL database password
@@ -1205,14 +1348,14 @@ if [ $INSTALL_MYSQL == 'yes' ]; then
     # CURRENT_ROOT_DATABASE_PASSWORD - current root password for MySQL
     install_mysql
 else
-    echo Skipping database setup
+    echo "Skipping database setup"
 fi
 
 #########################################################################
 #########################################################################
 # Set up OpenRVDAS
 echo "#####################################################################"
-echo Fetching and setting up OpenRVDAS code...
+echo "Fetching and setting up OpenRVDAS code..."
 # Expect the following shell variables to be appropriately set:
 # INSTALL_ROOT - path where openrvdas/ is
 # RVDAS_USER - valid userid
@@ -1224,7 +1367,7 @@ install_openrvdas
 #########################################################################
 # Set up virtual env and python-dependent code (Django and uWSGI, etc)
 echo "#####################################################################"
-echo Installing virtual environment for Django, uWSGI and other Python-dependent packages.
+echo "Installing virtual environment for Django, uWSGI and other Python-dependent packages."
 # Expect the following shell variables to be appropriately set:
 # INSTALL_ROOT - path where openrvdas/ is
 # INSTALL_MYSQL - set if MySQL is to be installed, unset otherwise
@@ -1234,14 +1377,25 @@ setup_python_packages
 #########################################################################
 # Set up nginx
 echo "#####################################################################"
-echo Setting up NGINX
+echo "Setting up NGINX"
 setup_nginx
 
 #########################################################################
 #########################################################################
+# Create new self-signed SSL certificate, if that's what they want
+if [ $USE_SSL == "yes" ] && [ $HAVE_SSL_CERTIFICATE == 'no' ]; then
+    echo
+    echo "#####################################################################"
+    echo "Ready to set up new self-signed SSL certificate."
+    setup_ssl_certificate
+fi
+
+#########################################################################
+#########################################################################
 # Set up uwsgi
+echo
 echo "#####################################################################"
-echo Setting up UWSGI
+echo "Setting up UWSGI"
 # Expect the following shell variables to be appropriately set:
 # HOSTNAME - name of host
 # INSTALL_ROOT - path where openrvdas/ is
@@ -1250,16 +1404,18 @@ setup_uwsgi
 #########################################################################
 #########################################################################
 # Set up Django database
+echo
 echo "#########################################################################"
-echo Initializing Django database...
+echo "Initializing Django database..."
 # Expect the following shell variables to be appropriately set:
 # RVDAS_USER - valid userid
 # RVDAS_DATABASE_PASSWORD - string to use for Django password
 setup_django
 
 # Connect uWSGI with our project installation
+echo
 echo "#####################################################################"
-echo Creating OpenRVDAS-specific uWSGI files
+echo "Creating OpenRVDAS-specific uWSGI files"
 
 # Make everything accessible to nginx
 chmod 755 ${INSTALL_ROOT}/openrvdas
@@ -1271,8 +1427,9 @@ sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
 sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
 sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
 
+echo
 echo "#####################################################################"
-echo Setting up openrvdas service with supervisord
+echo "Setting up openrvdas service with supervisord"
 # Expect the following shell variables to be appropriately set:
 # RVDAS_USER - valid username
 # INSTALL_ROOT - path where openrvdas/ is found
@@ -1286,8 +1443,9 @@ if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
 fi
 
+echo
 echo "#########################################################################"
-echo Restarting services: supervisor
+echo "Restarting services: supervisor"
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         sudo mkdir -p /usr/local/var/run/
@@ -1313,10 +1471,10 @@ echo Restarting services: supervisor
         # Previous installations used nginx and uwsgi as a service. We need to
         # disable them if they're running.
         echo Disabling legacy services
-        systemctl stop nginx 2> /dev/null || echo nginx not running
-        systemctl disable nginx 2> /dev/null || echo nginx disabled
-        systemctl stop uwsgi 2> /dev/null || echo uwsgi not running
-        systemctl disable uwsgi 2> /dev/null || echo uwsgi disabled
+        systemctl stop nginx 2> /dev/null || echo "nginx not running"
+        systemctl disable nginx 2> /dev/null || echo "nginx disabled"
+        systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
+        systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
     fi
 
 
@@ -1324,6 +1482,7 @@ echo Restarting services: supervisor
 # binaries using their venv paths, so don't need it.
 deactivate
 
+echo
 echo "#########################################################################"
-echo Installation complete - happy logging!
+echo "Installation complete - happy logging!"
 echo

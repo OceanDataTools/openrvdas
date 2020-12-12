@@ -70,12 +70,6 @@ else:  # if we got 127.0.1.1, try an expensive way of getting HOST_IP
     except OSError:
         pass  # failed to get interface
 
-# What port Django will serve on. Default is 8000 but can be changed
-# during installation by utils/install_openrvdas.sh. NOTE: do not
-# simply edit this value in settings.py without also modifying the
-# value in django_gui/openrvdas_nginx.conf and display/js/widgets/settings.js
-SERVER_PORT = 8000
-
 # Websocket we'll connect to for logger data updates. By default,
 # we'll pass in an empty host, which will tell the client that it
 # should figure things out for itself. In the case of a local Python
@@ -85,7 +79,16 @@ SERVER_PORT = 8000
 #
 # If, on the other hand, our data server is running somewhere else,
 # specify it here.
-WEBSOCKET_DATA_SERVER = ':%d/cds-ws' % SERVER_PORT
+WEBSOCKET_HOST = ''
+
+# What port Django will serve on. Default is 8000 but can be changed
+# during installation by utils/install_openrvdas.sh. NOTE: do not
+# simply edit this value in settings.py without also modifying the
+# value in django_gui/openrvdas_nginx.conf and display/js/widgets/settings.js
+WEBSOCKET_PROTOCOL = 'ws'
+WEBSOCKET_PORT = 80
+WEBSOCKET_PATH = '/cds-ws'
+WEBSOCKET_DATA_SERVER = f'{WEBSOCKET_PROTOCOL}://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}{WEBSOCKET_PATH}'
 
 # We'll allow the user to load cruise definition files from the
 # server-side system, but restrict them to loading from these

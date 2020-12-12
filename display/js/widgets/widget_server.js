@@ -39,9 +39,8 @@ function WidgetServer(widget_list, websocket_server) {
   // Attempt to open the websocket connection; if we succeed, send
   // the data request we've prepared.
   this.serve = function() {
-    var ws_url = 'ws://' + this.websocket_server;
-    console.log('Trying to reconnect to websocket server at ' + ws_url);
-    this.ws = new WebSocket(ws_url);
+    console.log('Trying to reconnect to websocket server at ' + this.websocket_server);
+    this.ws = new WebSocket(this.websocket_server);
 
     ////////////////
     this.ws.onopen = function() {

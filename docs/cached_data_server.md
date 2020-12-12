@@ -14,7 +14,7 @@
 ## Overview
 
 This document describes configuration, operation and use of the
-[CachedDataServer](../server/cached_data_server.md) code that is used
+[CachedDataServer](../server/cached_data_server.py) code that is used
 to feed display widgets and provide intermediate caching for derived
 data transforms and others.
 

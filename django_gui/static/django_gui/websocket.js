@@ -23,12 +23,11 @@
 // in the calling page.
 
 ////////////////////////////////////////////////////////////////////////////////
-var [ws_hostname, ws_port] = WEBSOCKET_SERVER.split(':');
-if (ws_hostname.length == 0) {
-  // If we have no hostname, get it from our containing page
-  ws_hostname = window.location.hostname;
+var websocket_server = WEBSOCKET_SERVER;
+// It's possible that we get an empty hostname, e.g. 'wss://:8000/cds-ws
+if (websocket_server.indexOf('//:') > 0) {
+  websocket_server = websocket_server.replace('//:', '//' + location.hostname + ':');
 }
-var websocket_server = "ws://" + ws_hostname + ':' + ws_port + "/";
 
 //////////////////////////////////////////////////////////////
 if (! "WebSocket" in window) {

@@ -33,14 +33,20 @@ $HEHDT,087.1,T*21
 $HEHDT,087.1,T*21
 ```
 
-If the flag `--timestamp` is specified, the records will have a
-timestamp prepended to them; if `--prefix gyr1` is specified, they will
-have 'gyr1' prepended:
-
+By default, the reader assumes that the log file record format is `{timestamp:ti} {record}`, 
+but if, for example, the timestamp has a different format, or a different
+separator is used between the timestamp and record, the default may be
+overridden with the --record_format argument. E.g. if a comma is used
+as the delimiter between timestamp and record:
 ```
-gyr1 2019-11-28T01:01:38.762221Z $HEHDT,087.1,T*21
-gyr1 2019-11-28T01:01:38.837441Z $HEHDT,087.1,T*21
-gyr1 2019-11-28T01:01:38.953182Z $HEHDT,087.1,T*21
+2019-11-28T01:01:38.762221Z,$HEHDT,087.1,T*21
+2019-11-28T01:01:38.953182Z,$HEHDT,087.1,T*21
+```
+you may specify
+```
+   simulate_data.py --udp 6224 \
+     --filebase test/NBP1406/gyr1/raw/NBP1406_gyr1-2014-08-01 \
+     --record_format '{timestamp:ti},{record}'
 ```
 
 Unless `--no-loop` is specified on the command line, the system will
