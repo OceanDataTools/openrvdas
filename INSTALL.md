@@ -1,5 +1,5 @@
 # OpenRVDAS Installation Guide
-At the time of this writing OpenRVDAS has been built and tested against MacOS X, CentOS 7, Ubuntu 18 and Raspbian
+At the time of this writing OpenRVDAS has been built and tested against MacOS X, CentOS 7, CentOS 8, Ubuntu 18, Ubuntu 20 and Raspbian
 operating systems. It may be possible to build against other Linux-based operating systems, and guides will be added
 here as they are verified and documented.
 

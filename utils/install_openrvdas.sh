@@ -97,10 +97,26 @@ function get_os_type {
     elif [[ `uname -s` == 'Linux' ]];then
         if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]];then
             OS_TYPE=Ubuntu
+            if [[ ! -z `grep "VERSION_ID=\"18" /etc/os-release` ]];then
+                OS_VERSION=18
+            elif [[ ! -z `grep "VERSION_ID=\"20" /etc/os-release` ]];then
+                OS_VERSION=20
+            else
+                echo "Sorry - unknown OS Version! - exiting."
+                exit_gracefully
+            fi
         elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
+            if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
+                OS_VERSION=7
+            elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
+                OS_VERSION=8
+            else
+                echo "Sorry - unknown OS Version! - exiting."
+                exit_gracefully
+            fi
         else
-            echo Unknown Linux variant!
+            echo "Unknown Linux variant!"
             exit_gracefully
         fi
     else
@@ -285,7 +301,9 @@ function install_packages {
 
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
-        yum install -y deltarpm
+        if [ $OS_VERSION == '7' ]; then
+            yum install -y deltarpm
+        fi
         yum install -y epel-release
         yum -y update
 
@@ -318,22 +336,29 @@ function install_packages {
             make && make install
         fi
 
-        # Build Python, too, if we don't have right version
-        PYTHON_VERSION='3.8.3'
-        if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
-            echo Already have appropriate version of Python3
-        else
-            cd /tmp
-            PYTHON_BASE=Python-${PYTHON_VERSION}
-            PYTHON_TGZ=${PYTHON_BASE}.tgz
-            [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
-            tar xvf ${PYTHON_TGZ}
-            cd ${PYTHON_BASE}
-            ./configure # --enable-optimizations
-            make altinstall
+        if [ $OS_VERSION == '7' ]; then
+            # Build Python, too, if we don't have right version
+            PYTHON_VERSION='3.8.3'
+            if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
+                echo Already have appropriate version of Python3
+            else
+                cd /tmp
+                PYTHON_BASE=Python-${PYTHON_VERSION}
+                PYTHON_TGZ=${PYTHON_BASE}.tgz
+                [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
+                tar xvf ${PYTHON_TGZ}
+                cd ${PYTHON_BASE}
+                ./configure # --enable-optimizations
+                make altinstall
 
-            ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
-            ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+                ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
+                ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+            fi
+        elif [ $OS_VERSION == '8' ]; then
+            yum install -y python3 python3-devel
+        else
+            echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
+            exit_gracefully
         fi
 
     # Ubuntu/Debian
@@ -419,7 +444,10 @@ function install_mysql_centos {
     echo "#####################################################################"
     echo "Installing and enabling Mariadb (MySQL replacement in CentOS 7)..."
 
-    yum install -y  mariadb-server mariadb-devel mariadb-libs
+    yum install -y  mariadb-server mariadb-devel
+    if [ $OS_VERSION == '7' ]; then
+        yum install -y mariadb-libs
+    fi
     systemctl restart mariadb              # to manually start db server
     systemctl enable mariadb               # to make it start on boot
 
