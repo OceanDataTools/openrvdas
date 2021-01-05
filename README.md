@@ -65,7 +65,9 @@ Most OpenRVDAS documentation is gathered in the [docs/](docs/) subdirectory of t
 
 ## Installation
 
-OpenRVDAS is written primarily in Python 3.[^1] There are currently installation scripts for CentOS 7, Ubuntu 16 and Ubuntu 18, but it may be manually installed on other systems. Please refer to [INSTALL.md](./INSTALL.md) for details.
+OpenRVDAS is written primarily in Python 3.[^1] The installation script at [utils/install_openrvdas.sh](utils/install_openrvrdas.sh)
+has been tested on CentOS 7 and 8, Ubuntu 18 and 20, Raspbian and MacOS, but it may also work on other systems.
+Please refer to [INSTALL.md](./INSTALL.md) for details.
 
 ## Ship/Organization-Dependent Code
 
@@ -141,4 +143,6 @@ Creative Commons (CC) Attribution-NonCommercial licence.
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   ```
 
-[^1]: Recommended version of Python is 3.6 or higher, but most listener     code has been verified to run on 3.5 and higher. Server code such as     logger\_runner.py and logger\_manager.py may experience problems on     3.5 due to changes in the async module.
+[^1]: Recommended version of Python is 3.6 or higher, but most listener code has been verified
+to run on 3.5 and higher. Server code such as `logger_manager.py` may experience problems on 
+3.5 due to changes in the async module.
