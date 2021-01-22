@@ -57,6 +57,7 @@ from logger.readers.database_reader import DatabaseReader  # noqa: E402
 from logger.readers.composed_reader import ComposedReader  # noqa:E402,F401
 
 from logger.transforms.extract_field_transform import ExtractFieldTransform  # noqa: E402
+from logger.transforms.nmea_transform import NMEATransform  # noqa: E402
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
 from logger.transforms.regex_filter_transform import RegexFilterTransform  # noqa: E402
 from logger.transforms.qc_filter_transform import QCFilterTransform  # noqa: E402
@@ -348,6 +349,10 @@ if __name__ == '__main__':
     # Transforms
     parser.add_argument('--transform_prefix', dest='prefix', default='',
                         help='Prefix each record with this string')
+
+    parser.add_argument('--transform_nmea', dest='nmea', action='store_true',
+                        default=False, help='Build NMEA-formatted sentence from '
+                        'data fields')
 
     parser.add_argument('--transform_timestamp', dest='timestamp',
                         action='store_true', default=False,
@@ -718,6 +723,8 @@ if __name__ == '__main__':
             if new_args.slice:
                 transforms.append(SliceTransform(new_args.slice,
                                                  all_args.slice_separator))
+            if new_args.nmea:
+                transforms.append(NMEATransform(new_args.nmea))
             if new_args.timestamp:
                 transforms.append(TimestampTransform(time_format=all_args.time_format))
             if new_args.prefix:
