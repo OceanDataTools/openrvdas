@@ -321,25 +321,26 @@ class RecordCache:
         if not disk_cache:
             logging.info('load_from_disk called, but no disk_cache defined')
             return
+        try:
+            if not os.path.exists(disk_cache):
+                logging.info('load_from_disk: no cache found at "%s"', disk_cache)
+                return
 
-        if not os.path.exists(disk_cache):
-            logging.info('load_from_disk: no cache found at "%s"', disk_cache)
-            return
+            field_files = [f for f in os.listdir(disk_cache)
+                           if os.path.isfile(os.path.join(disk_cache, f))]
+            logging.debug('Got cached fields: %s', field_files)
+            for field in field_files:
+                if field not in self.locks:
+                    self.locks[field] = threading.Lock()
+                try:
+                    with self.locks[field]:
+                        with open(disk_cache + '/' + field, 'r') as cache_file:
+                            self.data[field] = json.load(cache_file)
 
-        field_files = [f for f in os.listdir(disk_cache)
-                       if os.path.isfile(os.path.join(disk_cache, f))]
-        logging.debug('Got cached fields: %s', field_files)
-        for field in field_files:
-            if field not in self.locks:
-                self.locks[field] = threading.Lock()
-            try:
-                with self.locks[field]:
-                    with open(disk_cache + '/' + field, 'r') as cache_file:
-                        self.data[field] = json.load(cache_file)
-
-            except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-                logging.warning('Failed to parse cache for %s', field)
-
+                except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                    logging.warning('Failed to parse cache for %s', field)
+        except OSError as e:
+            logging.error('Unable to access disk cache at %s: %s', disk_cache, e)
 
 ############################
 class WebSocketConnection:
