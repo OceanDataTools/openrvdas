@@ -91,6 +91,9 @@ class RecordCache:
         self.metadata = {}
         self.metadata_lock = threading.Lock()
 
+        # Disk files we've tried to write to but failed.
+        self.failed_files = set()
+
         # Create a lock for each key so threads don't step on each other
         self.locks = {key: threading.Lock() for key in self.keys()}
 
@@ -282,15 +285,33 @@ class RecordCache:
             return
 
         if not os.path.exists(disk_cache):
-            os.makedirs(disk_cache)
+            try:
+                os.makedirs(disk_cache)
+            except OSError as e:
+                logging.error('Unable to create disk cache directory "%s": %s', disk_cache, e)
+                return
 
         fields = self.keys()
         for field in fields:
+            disk_filename = disk_cache + '/' + field
+            if disk_filename in self.failed_files:
+                continue
             if field not in self.locks:
                 self.locks[field] = threading.Lock()
             with self.locks[field]:
-                with open(disk_cache + '/' + field, 'w') as cache_file:
-                    json.dump(self.data[field], cache_file)
+                try:
+                    with open(disk_filename, 'w') as cache_file:
+                        json.dump(self.data[field], cache_file)
+                except (PermissionError, IOError, OSError) as e:
+                    logging.warning('Unable to write disk cache file %s: %s', disk_filename, e)
+                    self.failed_files.add(disk_filename)
+
+                # This is BAD practice; but use it to figure out what else might go wrong
+                # so we can add it to specific exceptions above.s
+                except Exception as e:
+                    logging.warning('Unanticipated exception writing disk cache file %s: %s',
+                                    disk_filename, e)
+                    self.failed_files.add(disk_filename)
 
     ############################
     def load_from_disk(self, disk_cache):
@@ -300,25 +321,26 @@ class RecordCache:
         if not disk_cache:
             logging.info('load_from_disk called, but no disk_cache defined')
             return
+        try:
+            if not os.path.exists(disk_cache):
+                logging.info('load_from_disk: no cache found at "%s"', disk_cache)
+                return
 
-        if not os.path.exists(disk_cache):
-            logging.info('load_from_disk: no cache found at "%s"', disk_cache)
-            return
+            field_files = [f for f in os.listdir(disk_cache)
+                           if os.path.isfile(os.path.join(disk_cache, f))]
+            logging.debug('Got cached fields: %s', field_files)
+            for field in field_files:
+                if field not in self.locks:
+                    self.locks[field] = threading.Lock()
+                try:
+                    with self.locks[field]:
+                        with open(disk_cache + '/' + field, 'r') as cache_file:
+                            self.data[field] = json.load(cache_file)
 
-        field_files = [f for f in os.listdir(disk_cache)
-                       if os.path.isfile(os.path.join(disk_cache, f))]
-        logging.debug('Got cached fields: %s', field_files)
-        for field in field_files:
-            if field not in self.locks:
-                self.locks[field] = threading.Lock()
-            try:
-                with self.locks[field]:
-                    with open(disk_cache + '/' + field, 'r') as cache_file:
-                        self.data[field] = json.load(cache_file)
-
-            except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-                logging.warning('Failed to parse cache for %s', field)
-
+                except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                    logging.warning('Failed to parse cache for %s', field)
+        except OSError as e:
+            logging.error('Unable to access disk cache at %s: %s', disk_cache, e)
 
 ############################
 class WebSocketConnection:
