@@ -10,16 +10,17 @@ CNAV3050:
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    - "$GPGGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
-    - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
-    - "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
-    - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+    GGA: "$GPGGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    VTG: "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
+    ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+    RMC:
     #$GPRMC,180503.00,A,2745.713859,N,08237.912750,W,0.02,0.0,010519,0.0,E,D*10
     - "$GPRMC,{GPSTime:f},{GPSStatus:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:f},{MagneticVarEorW:w},{Mode:w}*{Checksum:x}"
-    - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{UTCTime:f},{GPSStatus:w},{ChecksumChar:w}*{CheckSum:x}"
-    - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
-    - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+    GLL: "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{UTCTime:f},{GPSStatus:w},{ChecksumChar:w}*{CheckSum:x}"
+    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+    PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.

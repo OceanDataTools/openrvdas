@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.transforms.interpolation_transform API documentation</title>
 <meta name="description" content="Compute subsamples of input data." />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -29,301 +31,321 @@
 &#34;&#34;&#34;Compute subsamples of input data.
 &#34;&#34;&#34;
 
-import json
 import logging
-import pprint
 import sys
-import threading
 import time
-import websockets
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from math import degrees, radians, sin, cos, atan2
+from statistics import mean
 
-from logger.writers.text_file_writer import TextFileWriter
-from logger.utils.das_record import DASRecord
-from logger.transforms.derived_data_transform import DerivedDataTransform
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.transforms.derived_data_transform import DerivedDataTransform  # noqa: E402
+
 
 ################################################################################
 class InterpolationTransform(DerivedDataTransform):
-  &#34;&#34;&#34;Transform that computes interpolations of the specified variables.
-  &#34;&#34;&#34;
-  def __init__(self, field_spec, interval, window, metadata_interval=None):
+    &#34;&#34;&#34;Transform that computes interpolations of the specified variables.
     &#34;&#34;&#34;
-    ```
-    field_spec - a dict of interpolated variables that are to be created,
-            where the key is the new variable&#39;s name, and the value is a dict
-            specifying the source field name and the algorithm that is to be
-            used to do the interpolation. E.g.:
 
-           {
-             &#39;AvgCNAVCourseTrue&#39;: {
-               &#39;source&#39;: &#39;CNAVCourseTrue&#39;,
-               &#39;algorithm&#39;: {
-                 &#39;type&#39;: &#39;boxcar_average&#39;,
-                 &#39;window&#39;: 30
-               },
-             },
-             &#39;AvgCNAVGPSDay&#39;: {
-               &#39;source&#39;: &#39;CNAVGPSDay&#39;,
-               &#39;algorithm&#39;: { &#39;type&#39;: &#39;nearest&#39; },
-             },
+    def __init__(self, field_spec, interval, window, metadata_interval=None):
+        &#34;&#34;&#34;
+        ```
+        field_spec - a dict of interpolated variables that are to be created,
+                where the key is the new variable&#39;s name, and the value is a dict
+                specifying the source field name and the algorithm that is to be
+                used to do the interpolation. E.g.:
+
+               {
+                 &#39;AvgCNAVCourseTrue&#39;: {
+                   &#39;source&#39;: &#39;CNAVCourseTrue&#39;,
+                   &#39;algorithm&#39;: {
+                     &#39;type&#39;: &#39;boxcar_average&#39;,
+                     &#39;window&#39;: 30
+                   },
+                 },
+                 &#39;AvgCNAVGPSDay&#39;: {
+                   &#39;source&#39;: &#39;CNAVGPSDay&#39;,
+                   &#39;algorithm&#39;: { &#39;type&#39;: &#39;nearest&#39; },
+                 },
+                 ...
+               }
+
+        interval - At what intervals (in seconds) should the subsampling
+               be computed?
+
+        window - Time window (in seconds) of data we should maintain
+               around the computation we&#39;re going to make.
+
+        metadata_interval - how many seconds between when we attach field metadata
+               to a record we send out.
+        ```
+
+        &#34;&#34;&#34;
+        self.field_spec = {}
+        self.source_fields = set()
+        for result_field, entry in field_spec.items():
+            if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
+                self.field_spec[result_field] = entry
+                self.source_fields.add(entry.get(&#39;source&#39;))
+            else:
+                logging.warning(&#39;InterpolationTransform field definition for %s &#39;
+                                &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
+                                result_field, entry)
+        self.interval = interval
+        self.window = window
+        self.metadata_interval = metadata_interval
+
+        # A dict of the cached values we&#39;re hanging onto
+        self.cached_values = {f: [] for f in self.source_fields}
+
+        # The next timestamp we&#39;d like to emit. Is set the first time we
+        # call transform().
+        self.next_timestamp = 0
+        self.last_metadata_send = 0  # last time we&#39;ve sent metadata
+
+    ############################
+    def fields(self):
+        &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
+        return list(self.result_fields)
+
+    ############################
+    def _metadata(self):
+        &#34;&#34;&#34;Return a dict of metadata for our derived fields.&#34;&#34;&#34;
+        metadata_fields = {
+            &#39;field&#39;: {
+                &#39;description&#39;:
+                &#39;Subsampled values of %s via %s&#39; %
+                (entry[&#39;source&#39;], entry[&#39;algorithm&#39;]),
+                &#39;device&#39;: &#39;InterpolationTransform&#39;,
+                &#39;device_type&#39;: &#39;DerivedDataTransform&#39;,
+                &#39;device_type_field&#39;: result_field
+            }
+            for result_field, entry in self.field_spec.items()
+        }
+        return metadata_fields
+
+    ############################
+    def _add_record(self, record):
+        &#34;&#34;&#34;Cached the values contained in a new record.&#34;&#34;&#34;
+        if type(record) not in [DASRecord, dict]:
+            logging.error(&#39;SubsampleTransform records must be dict or &#39;
+                          &#39;DASRecord. Received type %s: %s&#39;, type(record), record)
+            return
+
+        if type(record) is DASRecord:
+            timestamp = record.timestamp
+            fields = record.fields
+        else:
+            timestamp = record.get(&#39;timestamp&#39;, None)
+            fields = record.get(&#39;fields&#39;, None)
+
+        if not fields:
+            logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
+            return
+
+        # First, copy the new data into our cache.  NOTE: It&#39;s a judgment
+        # call whether it&#39;s more efficient to iterate over the fields
+        # we&#39;re looking for or the fields in the record.
+        for field, new_value in fields.items():
+            if field not in self.source_fields:
+                continue
+
+            # Examine the value we&#39;ve gotten. If list, we assume it&#39;s [(ts,
+            # value), (ts, value),...]
+            if type(new_value) is list:
+                for ts, val in new_value.items():
+                    self.cached_values[field].append((ts, val))
+            # If not list, assume DASRecord or simple field dict; add tuple
+            elif timestamp:
+                self.cached_values[field].append((timestamp, new_value))
+            else:
+                logging.error(&#39;SubsampleTransform found no timestamp in &#39;
+                              &#39;record: %s&#39;, record)
+
+    ############################
+    def _clean_cache(self):
+        &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
+        for field in self.source_fields:
+            # Iterate forward through field cache until we find a timestamp
+            # that is recent enough to keep
+            cache = self.cached_values[field]
+            lower_limit = self.next_timestamp - self.window/2
+            keep_index = 0
+            while keep_index &lt; len(cache) and cache[keep_index][0] &lt; lower_limit:
+                keep_index += 1
+
+            # Throw away everything before that index
+            self.cached_values[field] = cache[keep_index:]
+
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
+        us any new subsampled values, aggregate and return them as a list of
+        dicts of the form:
+
+        [
+          {&#39;timestamp&#39;: timestamp,
+           &#39;fields&#39;: {
+             fieldname: value,
+             fieldname: value,
              ...
-           }
+            }
+          },
+          {&#39;timestamp&#39;: timestamp,
+           &#39;fields&#39;: ...
+          }
+        ]
 
-    interval - At what intervals (in seconds) should the subsampling
-           be computed?
+        If there are insufficient data in the window to compute any
+        subsampling, return an empty list.
+        &#34;&#34;&#34;
+        # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
+        # them all.
+        if type(record) is list:
+            for single_record in record:
+                self._add_record(single_record)
+        # If it&#39;s a dict, hope it&#39;s a single record.
+        elif type(record) is dict:
+            self._add_record(record)
+        else:
+            logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
+                            &#39;record to interpolate: %s&#39;, record)
+            return None
 
-    window - Time window (in seconds) of data we should maintain
-           around the computation we&#39;re going to make.
+        # Figure out what timestamp we&#39;d like to compute next. First time
+        # we&#39;re called, next_timestamp will be 0; set it to be the
+        # earliest timestamp we&#39;ve got in our cache.
+        if not self.next_timestamp:
+            lowest_timestamp = min([values[0][0]
+                                    for field, values in self.cached_values.items()
+                                    if values])
+            self.next_timestamp = lowest_timestamp
 
-    metadata_interval - how many seconds between when we attach field metadata
-           to a record we send out.
-    ```
+        non_empty = {}
+        for dest, spec in self.field_spec.items():
+            source = spec.get(&#39;source&#39;, None)
+            if source:
+                values = self.cached_values.get(source, [])
+                if len(values):
+                    non_empty[dest] = [source, len(values)]
+        # logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
 
-    &#34;&#34;&#34;
-    self.field_spec = {}
-    self.source_fields = set()
-    for result_field, entry in field_spec.items():
-      if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
-        self.field_spec[result_field] = entry
-        self.source_fields.add(entry.get(&#39;source&#39;))
-      else:
-        logging.warning(&#39;InterpolationTransform field definition for %s &#39;
-                        &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
-                        result_field, entry)
-    self.interval = interval
-    self.window = window
-    self.metadata_interval = metadata_interval
+        # Iterate through all timestamps up to the edge of what we can fit
+        # in our window without running into the edge of &#39;now&#39;.
+        results = []
+        now = time.time()
+        while self.next_timestamp &lt; now - self.window/2:
+            # Clean out old data
+            self._clean_cache()
 
-    # A dict of the cached values we&#39;re hanging onto
-    self.cached_values = {f:[] for f in self.source_fields}
+            result = {}
+            for result_field, entry in self.field_spec.items():
+                source = entry[&#39;source&#39;]
+                source_values = self.cached_values[source]
+                algorithm = entry[&#39;algorithm&#39;]
+                # logging.warning(&#39;%s-&gt;%s: %d values&#39;,
+                #                source, result_field, len(source_values))
+                value = interpolate(algorithm, source_values, self.next_timestamp, now)
+                if value is not None:
+                    result[result_field] = value
+            if result:
+                results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
+            self.next_timestamp += self.interval
 
-    # The next timestamp we&#39;d like to emit. Is set the first time we
-    # call transform().
-    self.next_timestamp = 0
-    self.last_metadata_send = 0  # last time we&#39;ve sent metadata
+        return results
 
-  ############################
-  def fields(self):
-    &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
-    return list(self.result_fields)
-
-  ############################
-  def _metadata(self):
-    &#34;&#34;&#34;Return a dict of metadata for our derived fields.&#34;&#34;&#34;
-    metadata_fields = {
-      field:{
-        &#39;description&#39;:
-        &#39;Subsampled values of %s via %s&#39; % \
-          (entry[&#39;source&#39;], entry[&#39;algorithm&#39;]),
-        &#39;device&#39;: &#39;InterpolationTransform&#39;,
-        &#39;device_type&#39;: &#39;DerivedDataTransform&#39;,
-        &#39;device_type_field&#39;: result_field
-        }
-      for result_field, entry in self.field_spec.items()
-    }
-    return metadata_fields
-
-  ############################
-  def _add_record(self, record):
-    &#34;&#34;&#34;Cached the values contained in a new record.&#34;&#34;&#34;
-    if type(record) not in [DASRecord, dict]:
-      logging.error(&#39;SubsampleTransform records must be dict or &#39;
-                    &#39;DASRecord. Received type %s: %s&#39;, type(record), record)
-      return
-
-    if type(record) is DASRecord:
-      timestamp = record.timestamp
-      fields = record.fields
-    else:
-      timestamp = record.get(&#39;timestamp&#39;, None)
-      fields = record.get(&#39;fields&#39;, None)
-
-    if not fields:
-      logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
-      return
-
-    # First, copy the new data into our cache.  NOTE: It&#39;s a judgment
-    # call whether it&#39;s more efficient to iterate over the fields
-    # we&#39;re looking for or the fields in the record.
-    for field, new_value in fields.items():
-      if not field in self.source_fields:
-        continue
-      
-      # Examine the value we&#39;ve gotten. If list, we assume it&#39;s [(ts,
-      # value), (ts, value),...]
-      if type(new_value) is list:
-        for ts, val in new_value.items():
-          self.cached_values[field].append((ts, val))
-       # If not list, assume DASRecord or simple field dict; add tuple
-      elif timestamp:
-        self.cached_values[field].append((timestamp, new_value))
-      else:
-        logging.error(&#39;SubsampleTransform found no timestamp in &#39;
-                      &#39;record: %s&#39;, record)
-
-  ############################
-  def _clean_cache(self):
-    &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
-    now = time.time()
-    for field in self.source_fields:
-      # Iterate forward through field cache until we find a timestamp
-      # that is recent enough to keep
-      cache = self.cached_values[field]
-      lower_limit = self.next_timestamp - self.window/2
-      keep_index = 0
-      while keep_index &lt; len(cache) and cache[keep_index][0] &lt; lower_limit:
-        keep_index += 1
-
-      # Throw away everything before that index
-      self.cached_values[field] = cache[keep_index:]
-
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
-    us any new subsampled values, aggregate and return them as a list of
-    dicts of the form:
-
-    [
-      {&#39;timestamp&#39;: timestamp,
-       &#39;fields&#39;: {
-         fieldname: value,
-         fieldname: value,
-         ...
-        }
-      },
-      {&#39;timestamp&#39;: timestamp,
-       &#39;fields&#39;: ...
-      }
-    ]
-
-    If there are insufficient data in the window to compute any
-    subsampling, return an empty list.
-    &#34;&#34;&#34;
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
-    # them all.
-    if type(record) is list:
-      for single_record in record:
-        self._add_record(single_record)
-    # If it&#39;s a dict, hope it&#39;s a single record.
-    elif type(record) is dict:
-      self._add_record(record)
-    else:
-      logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
-                      &#39;record to interpolate: %s&#39;, record)
-      return None
-
-    # Figure out what timestamp we&#39;d like to compute next. First time
-    # we&#39;re called, next_timestamp will be 0; set it to be the
-    # earliest timestamp we&#39;ve got in our cache.
-    if not self.next_timestamp:
-      lowest_timestamp = min([values[0][0]
-                              for field, values in self.cached_values.items()
-                              if values])
-      self.next_timestamp = lowest_timestamp
-
-    non_empty = {}
-    for dest, spec in self.field_spec.items():
-      source = spec.get(&#39;source&#39;, None)
-      if source:
-        values = self.cached_values.get(source, [])
-        if len(values):
-          non_empty[dest] = [source, len(values)]
-    #logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
-              
-    # Iterate through all timestamps up to the edge of what we can fit
-    # in our window without running into the edge of &#39;now&#39;.
-    results = []
-    now = time.time()
-    while self.next_timestamp &lt; now - self.window/2:
-      # Clean out old data
-      self._clean_cache()
-
-      result = {}
-      for result_field, entry in self.field_spec.items():
-        source = entry[&#39;source&#39;]
-        source_values = self.cached_values[source]
-        algorithm = entry[&#39;algorithm&#39;]
-        #logging.warning(&#39;%s-&gt;%s: %d values&#39;,
-        #                source, result_field, len(source_values))
-        value = interpolate(algorithm, source_values, self.next_timestamp, now)
-        if value is not None:
-          result[result_field] = value
-      if result:
-        results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
-      self.next_timestamp += self.interval
-
-    return results
 
 ############################
-
-from statistics import mean
-
 def interpolate(algorithm, values, timestamp, now):
-  &#34;&#34;&#34;An omnibus routine for taking a list of timestamped values, a
-  specification of an averaging algorithm, and returning a value
-  computed at the specified timestamp. Returns None if there aren&#39;t
-  enough data to compute a value.
+    &#34;&#34;&#34;An omnibus routine for taking a list of timestamped values, a
+    specification of an averaging algorithm, and returning a value
+    computed at the specified timestamp. Returns None if there aren&#39;t
+    enough data to compute a value.
 
-  algorithm    The name of the algorithm to be used
+    algorithm    The name of the algorithm to be used
 
-  values       A list of [(timestamp, value),...] pairs
+    values       A list of [(timestamp, value),...] pairs
 
-  timestamp    The timestamp for which subsampling should be computed
+    timestamp    The timestamp for which subsampling should be computed
 
-  now          Timestamp now. This should be used to determine whether
-               we&#39;re far enough beyond our timestamp to compute a value.
-  &#34;&#34;&#34;
-  if not type(algorithm) is dict:
-    logging.warning(&#39;Function subsample() handed non-dict algorithm &#39;
-                    &#39;specification: %s&#39;, algorithm)
-    return None
-  if not values:
-    logging.info(&#39;Function subsample() handed empty values list&#39;)
-    return None
+    now          Timestamp now. This should be used to determine whether
+                 we&#39;re far enough beyond our timestamp to compute a value.
+    &#34;&#34;&#34;
+    if not type(algorithm) is dict:
+        logging.warning(&#39;Function subsample() handed non-dict algorithm &#39;
+                        &#39;specification: %s&#39;, algorithm)
+        return None
+    if not values:
+        logging.info(&#39;Function subsample() handed empty values list&#39;)
+        return None
 
-  ##################
-  # Select algorithm
-  alg_type = algorithm.get(&#39;type&#39;, None)
+    ##################
+    # Select algorithm
+    alg_type = algorithm.get(&#39;type&#39;, None)
 
-  # boxcar_average: all values within symmetric interval window get
-  # same weight.
-  if alg_type == &#39;boxcar_average&#39;:
-    window = algorithm.get(&#39;window&#39;, 10)  # How far back/forward to average
-    lower_limit = timestamp - window/2
-    upper_limit = timestamp + window/2
-    vals_to_average = [val for ts, val in values
-                       if ts &gt;= lower_limit and ts &lt;= upper_limit]
-    if not vals_to_average:
-      return None
+    # boxcar_average: all values within symmetric interval window get
+    # same weight.
+    if alg_type == &#39;boxcar_average&#39;:
+        window = algorithm.get(&#39;window&#39;, 10)  # How far back/forward to average
+        lower_limit = timestamp - window/2
+        upper_limit = timestamp + window/2
+        vals_to_average = [val for ts, val in values
+                           if ts &gt;= lower_limit and ts &lt;= upper_limit]
+        if not vals_to_average:
+            return None
 
-    try:
-      return mean(vals_to_average)
-    except TypeError:
-      logging.error(&#39;Non-numeric value in subsample list: %s&#39;, vals_to_average)
-      return None
+        try:
+            return mean(vals_to_average)
+        except TypeError:
+            logging.error(&#39;Non-numeric value in subsample list: %s&#39;, vals_to_average)
+            return None
 
-  # nearest: return value of nearest timestamp. Note that we assume
-  # timestamps are in order, so once distance starts going up, we&#39;re
-  # done.
-  if alg_type == &#39;nearest&#39;:
-    best_distance = float(&#39;inf&#39;)
-    value = None
-    for i in range(len(values)):
-      ts, ts_value = values[i]
-      distance = abs(ts - timestamp)
-      if distance &lt;= best_distance:
-        best_distance = distance
-        value = ts_value
-      else:
-        break
-    return value
+    # nearest: return value of nearest timestamp. Note that we assume
+    # timestamps are in order, so once distance starts going up, we&#39;re
+    # done.
+    if alg_type == &#39;nearest&#39;:
+        best_distance = float(&#39;inf&#39;)
+        value = None
+        for i in range(len(values)):
+            ts, ts_value = values[i]
+            distance = abs(ts - timestamp)
+            if distance &lt;= best_distance:
+                best_distance = distance
+                value = ts_value
+            else:
+                break
+        return value
 
-  # Not an algorithm we recognize
-  else:
-    logging.warning(&#39;Function subsample() received unrecognized algorithm &#39;
-                    &#39;type: %s&#39;, alg_type)
-    return None</code></pre>
+    # polar_average: interpret as an angle in degrees. Convert to points
+    # on a unit circle and return the angle of their centroid from the origin.
+    if alg_type == &#39;polar_average&#39;:
+        window = algorithm.get(&#39;window&#39;, 10)  # How far back/forward to average
+        lower_limit = timestamp - window/2
+        upper_limit = timestamp + window/2
+        vals_to_average = [val for ts, val in values
+                           if ts &gt;= lower_limit and ts &lt;= upper_limit]
+        if not vals_to_average:
+            return None
+
+        try:
+            val_radians = [radians(val) for val in vals_to_average]
+            x_mean = mean([sin(val) for val in val_radians])
+            y_mean = mean([cos(val) for val in val_radians])
+            angle = degrees(atan2(x_mean, y_mean))
+            if angle &lt; 0:
+                angle += 360
+            return angle
+        except TypeError:
+            logging.error(&#39;Non-numeric value in subsample list: %s&#39;, vals_to_average)
+            return None
+
+    # Not an algorithm we recognize
+    else:
+        logging.warning(&#39;Function subsample() received unrecognized algorithm &#39;
+                        &#39;type: %s&#39;, alg_type)
+        return None</code></pre>
 </details>
 </section>
 <section>
@@ -337,7 +359,7 @@ def interpolate(algorithm, values, timestamp, now):
 <span>def <span class="ident">interpolate</span></span>(<span>algorithm, values, timestamp, now)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An omnibus routine for taking a list of timestamped values, a
+<div class="desc"><p>An omnibus routine for taking a list of timestamped values, a
 specification of an averaging algorithm, and returning a value
 computed at the specified timestamp. Returns None if there aren't
 enough data to compute a value.</p>
@@ -349,76 +371,99 @@ A list of [(timestamp, value),&hellip;] pairs</p>
 The timestamp for which subsampling should be computed</p>
 <p>now
 Timestamp now. This should be used to determine whether
-we're far enough beyond our timestamp to compute a value.</p></section>
+we're far enough beyond our timestamp to compute a value.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def interpolate(algorithm, values, timestamp, now):
-  &#34;&#34;&#34;An omnibus routine for taking a list of timestamped values, a
-  specification of an averaging algorithm, and returning a value
-  computed at the specified timestamp. Returns None if there aren&#39;t
-  enough data to compute a value.
+    &#34;&#34;&#34;An omnibus routine for taking a list of timestamped values, a
+    specification of an averaging algorithm, and returning a value
+    computed at the specified timestamp. Returns None if there aren&#39;t
+    enough data to compute a value.
 
-  algorithm    The name of the algorithm to be used
+    algorithm    The name of the algorithm to be used
 
-  values       A list of [(timestamp, value),...] pairs
+    values       A list of [(timestamp, value),...] pairs
 
-  timestamp    The timestamp for which subsampling should be computed
+    timestamp    The timestamp for which subsampling should be computed
 
-  now          Timestamp now. This should be used to determine whether
-               we&#39;re far enough beyond our timestamp to compute a value.
-  &#34;&#34;&#34;
-  if not type(algorithm) is dict:
-    logging.warning(&#39;Function subsample() handed non-dict algorithm &#39;
-                    &#39;specification: %s&#39;, algorithm)
-    return None
-  if not values:
-    logging.info(&#39;Function subsample() handed empty values list&#39;)
-    return None
+    now          Timestamp now. This should be used to determine whether
+                 we&#39;re far enough beyond our timestamp to compute a value.
+    &#34;&#34;&#34;
+    if not type(algorithm) is dict:
+        logging.warning(&#39;Function subsample() handed non-dict algorithm &#39;
+                        &#39;specification: %s&#39;, algorithm)
+        return None
+    if not values:
+        logging.info(&#39;Function subsample() handed empty values list&#39;)
+        return None
 
-  ##################
-  # Select algorithm
-  alg_type = algorithm.get(&#39;type&#39;, None)
+    ##################
+    # Select algorithm
+    alg_type = algorithm.get(&#39;type&#39;, None)
 
-  # boxcar_average: all values within symmetric interval window get
-  # same weight.
-  if alg_type == &#39;boxcar_average&#39;:
-    window = algorithm.get(&#39;window&#39;, 10)  # How far back/forward to average
-    lower_limit = timestamp - window/2
-    upper_limit = timestamp + window/2
-    vals_to_average = [val for ts, val in values
-                       if ts &gt;= lower_limit and ts &lt;= upper_limit]
-    if not vals_to_average:
-      return None
+    # boxcar_average: all values within symmetric interval window get
+    # same weight.
+    if alg_type == &#39;boxcar_average&#39;:
+        window = algorithm.get(&#39;window&#39;, 10)  # How far back/forward to average
+        lower_limit = timestamp - window/2
+        upper_limit = timestamp + window/2
+        vals_to_average = [val for ts, val in values
+                           if ts &gt;= lower_limit and ts &lt;= upper_limit]
+        if not vals_to_average:
+            return None
 
-    try:
-      return mean(vals_to_average)
-    except TypeError:
-      logging.error(&#39;Non-numeric value in subsample list: %s&#39;, vals_to_average)
-      return None
+        try:
+            return mean(vals_to_average)
+        except TypeError:
+            logging.error(&#39;Non-numeric value in subsample list: %s&#39;, vals_to_average)
+            return None
 
-  # nearest: return value of nearest timestamp. Note that we assume
-  # timestamps are in order, so once distance starts going up, we&#39;re
-  # done.
-  if alg_type == &#39;nearest&#39;:
-    best_distance = float(&#39;inf&#39;)
-    value = None
-    for i in range(len(values)):
-      ts, ts_value = values[i]
-      distance = abs(ts - timestamp)
-      if distance &lt;= best_distance:
-        best_distance = distance
-        value = ts_value
-      else:
-        break
-    return value
+    # nearest: return value of nearest timestamp. Note that we assume
+    # timestamps are in order, so once distance starts going up, we&#39;re
+    # done.
+    if alg_type == &#39;nearest&#39;:
+        best_distance = float(&#39;inf&#39;)
+        value = None
+        for i in range(len(values)):
+            ts, ts_value = values[i]
+            distance = abs(ts - timestamp)
+            if distance &lt;= best_distance:
+                best_distance = distance
+                value = ts_value
+            else:
+                break
+        return value
 
-  # Not an algorithm we recognize
-  else:
-    logging.warning(&#39;Function subsample() received unrecognized algorithm &#39;
-                    &#39;type: %s&#39;, alg_type)
-    return None</code></pre>
+    # polar_average: interpret as an angle in degrees. Convert to points
+    # on a unit circle and return the angle of their centroid from the origin.
+    if alg_type == &#39;polar_average&#39;:
+        window = algorithm.get(&#39;window&#39;, 10)  # How far back/forward to average
+        lower_limit = timestamp - window/2
+        upper_limit = timestamp + window/2
+        vals_to_average = [val for ts, val in values
+                           if ts &gt;= lower_limit and ts &lt;= upper_limit]
+        if not vals_to_average:
+            return None
+
+        try:
+            val_radians = [radians(val) for val in vals_to_average]
+            x_mean = mean([sin(val) for val in val_radians])
+            y_mean = mean([cos(val) for val in val_radians])
+            angle = degrees(atan2(x_mean, y_mean))
+            if angle &lt; 0:
+                angle += 360
+            return angle
+        except TypeError:
+            logging.error(&#39;Non-numeric value in subsample list: %s&#39;, vals_to_average)
+            return None
+
+    # Not an algorithm we recognize
+    else:
+        logging.warning(&#39;Function subsample() received unrecognized algorithm &#39;
+                        &#39;type: %s&#39;, alg_type)
+        return None</code></pre>
 </details>
 </dd>
 </dl>
@@ -431,7 +476,7 @@ we're far enough beyond our timestamp to compute a value.</p></section>
 <span>(</span><span>field_spec, interval, window, metadata_interval=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Transform that computes interpolations of the specified variables.</p>
+<div class="desc"><p>Transform that computes interpolations of the specified variables.</p>
 <pre><code>field_spec - a dict of interpolated variables that are to be created,
         where the key is the new variable's name, and the value is a dict
         specifying the source field name and the algorithm that is to be
@@ -460,147 +505,269 @@ window - Time window (in seconds) of data we should maintain
 
 metadata_interval - how many seconds between when we attach field metadata
        to a record we send out.
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class InterpolationTransform(DerivedDataTransform):
-  &#34;&#34;&#34;Transform that computes interpolations of the specified variables.
-  &#34;&#34;&#34;
-  def __init__(self, field_spec, interval, window, metadata_interval=None):
+    &#34;&#34;&#34;Transform that computes interpolations of the specified variables.
     &#34;&#34;&#34;
-    ```
-    field_spec - a dict of interpolated variables that are to be created,
-            where the key is the new variable&#39;s name, and the value is a dict
-            specifying the source field name and the algorithm that is to be
-            used to do the interpolation. E.g.:
 
-           {
-             &#39;AvgCNAVCourseTrue&#39;: {
-               &#39;source&#39;: &#39;CNAVCourseTrue&#39;,
-               &#39;algorithm&#39;: {
-                 &#39;type&#39;: &#39;boxcar_average&#39;,
-                 &#39;window&#39;: 30
-               },
-             },
-             &#39;AvgCNAVGPSDay&#39;: {
-               &#39;source&#39;: &#39;CNAVGPSDay&#39;,
-               &#39;algorithm&#39;: { &#39;type&#39;: &#39;nearest&#39; },
-             },
-             ...
-           }
+    def __init__(self, field_spec, interval, window, metadata_interval=None):
+        &#34;&#34;&#34;
+        ```
+        field_spec - a dict of interpolated variables that are to be created,
+                where the key is the new variable&#39;s name, and the value is a dict
+                specifying the source field name and the algorithm that is to be
+                used to do the interpolation. E.g.:
 
-    interval - At what intervals (in seconds) should the subsampling
-           be computed?
+               {
+                 &#39;AvgCNAVCourseTrue&#39;: {
+                   &#39;source&#39;: &#39;CNAVCourseTrue&#39;,
+                   &#39;algorithm&#39;: {
+                     &#39;type&#39;: &#39;boxcar_average&#39;,
+                     &#39;window&#39;: 30
+                   },
+                 },
+                 &#39;AvgCNAVGPSDay&#39;: {
+                   &#39;source&#39;: &#39;CNAVGPSDay&#39;,
+                   &#39;algorithm&#39;: { &#39;type&#39;: &#39;nearest&#39; },
+                 },
+                 ...
+               }
 
-    window - Time window (in seconds) of data we should maintain
-           around the computation we&#39;re going to make.
+        interval - At what intervals (in seconds) should the subsampling
+               be computed?
 
-    metadata_interval - how many seconds between when we attach field metadata
-           to a record we send out.
-    ```
+        window - Time window (in seconds) of data we should maintain
+               around the computation we&#39;re going to make.
 
-    &#34;&#34;&#34;
-    self.field_spec = {}
-    self.source_fields = set()
-    for result_field, entry in field_spec.items():
-      if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
-        self.field_spec[result_field] = entry
-        self.source_fields.add(entry.get(&#39;source&#39;))
-      else:
-        logging.warning(&#39;InterpolationTransform field definition for %s &#39;
-                        &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
-                        result_field, entry)
-    self.interval = interval
-    self.window = window
-    self.metadata_interval = metadata_interval
+        metadata_interval - how many seconds between when we attach field metadata
+               to a record we send out.
+        ```
 
-    # A dict of the cached values we&#39;re hanging onto
-    self.cached_values = {f:[] for f in self.source_fields}
+        &#34;&#34;&#34;
+        self.field_spec = {}
+        self.source_fields = set()
+        for result_field, entry in field_spec.items():
+            if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
+                self.field_spec[result_field] = entry
+                self.source_fields.add(entry.get(&#39;source&#39;))
+            else:
+                logging.warning(&#39;InterpolationTransform field definition for %s &#39;
+                                &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
+                                result_field, entry)
+        self.interval = interval
+        self.window = window
+        self.metadata_interval = metadata_interval
 
-    # The next timestamp we&#39;d like to emit. Is set the first time we
-    # call transform().
-    self.next_timestamp = 0
-    self.last_metadata_send = 0  # last time we&#39;ve sent metadata
+        # A dict of the cached values we&#39;re hanging onto
+        self.cached_values = {f: [] for f in self.source_fields}
 
-  ############################
-  def fields(self):
-    &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
-    return list(self.result_fields)
+        # The next timestamp we&#39;d like to emit. Is set the first time we
+        # call transform().
+        self.next_timestamp = 0
+        self.last_metadata_send = 0  # last time we&#39;ve sent metadata
 
-  ############################
-  def _metadata(self):
-    &#34;&#34;&#34;Return a dict of metadata for our derived fields.&#34;&#34;&#34;
-    metadata_fields = {
-      field:{
-        &#39;description&#39;:
-        &#39;Subsampled values of %s via %s&#39; % \
-          (entry[&#39;source&#39;], entry[&#39;algorithm&#39;]),
-        &#39;device&#39;: &#39;InterpolationTransform&#39;,
-        &#39;device_type&#39;: &#39;DerivedDataTransform&#39;,
-        &#39;device_type_field&#39;: result_field
+    ############################
+    def fields(self):
+        &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
+        return list(self.result_fields)
+
+    ############################
+    def _metadata(self):
+        &#34;&#34;&#34;Return a dict of metadata for our derived fields.&#34;&#34;&#34;
+        metadata_fields = {
+            &#39;field&#39;: {
+                &#39;description&#39;:
+                &#39;Subsampled values of %s via %s&#39; %
+                (entry[&#39;source&#39;], entry[&#39;algorithm&#39;]),
+                &#39;device&#39;: &#39;InterpolationTransform&#39;,
+                &#39;device_type&#39;: &#39;DerivedDataTransform&#39;,
+                &#39;device_type_field&#39;: result_field
+            }
+            for result_field, entry in self.field_spec.items()
         }
-      for result_field, entry in self.field_spec.items()
-    }
-    return metadata_fields
+        return metadata_fields
 
-  ############################
-  def _add_record(self, record):
-    &#34;&#34;&#34;Cached the values contained in a new record.&#34;&#34;&#34;
-    if type(record) not in [DASRecord, dict]:
-      logging.error(&#39;SubsampleTransform records must be dict or &#39;
-                    &#39;DASRecord. Received type %s: %s&#39;, type(record), record)
-      return
+    ############################
+    def _add_record(self, record):
+        &#34;&#34;&#34;Cached the values contained in a new record.&#34;&#34;&#34;
+        if type(record) not in [DASRecord, dict]:
+            logging.error(&#39;SubsampleTransform records must be dict or &#39;
+                          &#39;DASRecord. Received type %s: %s&#39;, type(record), record)
+            return
 
-    if type(record) is DASRecord:
-      timestamp = record.timestamp
-      fields = record.fields
-    else:
-      timestamp = record.get(&#39;timestamp&#39;, None)
-      fields = record.get(&#39;fields&#39;, None)
+        if type(record) is DASRecord:
+            timestamp = record.timestamp
+            fields = record.fields
+        else:
+            timestamp = record.get(&#39;timestamp&#39;, None)
+            fields = record.get(&#39;fields&#39;, None)
 
-    if not fields:
-      logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
-      return
+        if not fields:
+            logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
+            return
 
-    # First, copy the new data into our cache.  NOTE: It&#39;s a judgment
-    # call whether it&#39;s more efficient to iterate over the fields
-    # we&#39;re looking for or the fields in the record.
-    for field, new_value in fields.items():
-      if not field in self.source_fields:
-        continue
-      
-      # Examine the value we&#39;ve gotten. If list, we assume it&#39;s [(ts,
-      # value), (ts, value),...]
-      if type(new_value) is list:
-        for ts, val in new_value.items():
-          self.cached_values[field].append((ts, val))
-       # If not list, assume DASRecord or simple field dict; add tuple
-      elif timestamp:
-        self.cached_values[field].append((timestamp, new_value))
-      else:
-        logging.error(&#39;SubsampleTransform found no timestamp in &#39;
-                      &#39;record: %s&#39;, record)
+        # First, copy the new data into our cache.  NOTE: It&#39;s a judgment
+        # call whether it&#39;s more efficient to iterate over the fields
+        # we&#39;re looking for or the fields in the record.
+        for field, new_value in fields.items():
+            if field not in self.source_fields:
+                continue
 
-  ############################
-  def _clean_cache(self):
+            # Examine the value we&#39;ve gotten. If list, we assume it&#39;s [(ts,
+            # value), (ts, value),...]
+            if type(new_value) is list:
+                for ts, val in new_value.items():
+                    self.cached_values[field].append((ts, val))
+            # If not list, assume DASRecord or simple field dict; add tuple
+            elif timestamp:
+                self.cached_values[field].append((timestamp, new_value))
+            else:
+                logging.error(&#39;SubsampleTransform found no timestamp in &#39;
+                              &#39;record: %s&#39;, record)
+
+    ############################
+    def _clean_cache(self):
+        &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
+        for field in self.source_fields:
+            # Iterate forward through field cache until we find a timestamp
+            # that is recent enough to keep
+            cache = self.cached_values[field]
+            lower_limit = self.next_timestamp - self.window/2
+            keep_index = 0
+            while keep_index &lt; len(cache) and cache[keep_index][0] &lt; lower_limit:
+                keep_index += 1
+
+            # Throw away everything before that index
+            self.cached_values[field] = cache[keep_index:]
+
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
+        us any new subsampled values, aggregate and return them as a list of
+        dicts of the form:
+
+        [
+          {&#39;timestamp&#39;: timestamp,
+           &#39;fields&#39;: {
+             fieldname: value,
+             fieldname: value,
+             ...
+            }
+          },
+          {&#39;timestamp&#39;: timestamp,
+           &#39;fields&#39;: ...
+          }
+        ]
+
+        If there are insufficient data in the window to compute any
+        subsampling, return an empty list.
+        &#34;&#34;&#34;
+        # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
+        # them all.
+        if type(record) is list:
+            for single_record in record:
+                self._add_record(single_record)
+        # If it&#39;s a dict, hope it&#39;s a single record.
+        elif type(record) is dict:
+            self._add_record(record)
+        else:
+            logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
+                            &#39;record to interpolate: %s&#39;, record)
+            return None
+
+        # Figure out what timestamp we&#39;d like to compute next. First time
+        # we&#39;re called, next_timestamp will be 0; set it to be the
+        # earliest timestamp we&#39;ve got in our cache.
+        if not self.next_timestamp:
+            lowest_timestamp = min([values[0][0]
+                                    for field, values in self.cached_values.items()
+                                    if values])
+            self.next_timestamp = lowest_timestamp
+
+        non_empty = {}
+        for dest, spec in self.field_spec.items():
+            source = spec.get(&#39;source&#39;, None)
+            if source:
+                values = self.cached_values.get(source, [])
+                if len(values):
+                    non_empty[dest] = [source, len(values)]
+        # logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
+
+        # Iterate through all timestamps up to the edge of what we can fit
+        # in our window without running into the edge of &#39;now&#39;.
+        results = []
+        now = time.time()
+        while self.next_timestamp &lt; now - self.window/2:
+            # Clean out old data
+            self._clean_cache()
+
+            result = {}
+            for result_field, entry in self.field_spec.items():
+                source = entry[&#39;source&#39;]
+                source_values = self.cached_values[source]
+                algorithm = entry[&#39;algorithm&#39;]
+                # logging.warning(&#39;%s-&gt;%s: %d values&#39;,
+                #                source, result_field, len(source_values))
+                value = interpolate(algorithm, source_values, self.next_timestamp, now)
+                if value is not None:
+                    result[result_field] = value
+            if result:
+                results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
+            self.next_timestamp += self.interval
+
+        return results</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></li>
+<li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="logger.transforms.interpolation_transform.InterpolationTransform.fields"><code class="name flex">
+<span>def <span class="ident">fields</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Which fields are we interested in to produce transformed data?</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fields(self):
     &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
-    now = time.time()
-    for field in self.source_fields:
-      # Iterate forward through field cache until we find a timestamp
-      # that is recent enough to keep
-      cache = self.cached_values[field]
-      lower_limit = self.next_timestamp - self.window/2
-      keep_index = 0
-      while keep_index &lt; len(cache) and cache[keep_index][0] &lt; lower_limit:
-        keep_index += 1
-
-      # Throw away everything before that index
-      self.cached_values[field] = cache[keep_index:]
-
-  ############################
-  def transform(self, record):
+    return list(self.result_fields)</code></pre>
+</details>
+</dd>
+<dt id="logger.transforms.interpolation_transform.InterpolationTransform.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Incorporate any useable fields in this record, and if it gives
+us any new subsampled values, aggregate and return them as a list of
+dicts of the form:</p>
+<p>[
+{'timestamp': timestamp,
+'fields': {
+fieldname: value,
+fieldname: value,
+&hellip;
+}
+},
+{'timestamp': timestamp,
+'fields': &hellip;
+}
+]</p>
+<p>If there are insufficient data in the window to compute any
+subsampling, return an empty list.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, record):
     &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
     us any new subsampled values, aggregate and return them as a list of
     dicts of the form:
@@ -624,179 +791,57 @@ metadata_interval - how many seconds between when we attach field metadata
     # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
     # them all.
     if type(record) is list:
-      for single_record in record:
-        self._add_record(single_record)
+        for single_record in record:
+            self._add_record(single_record)
     # If it&#39;s a dict, hope it&#39;s a single record.
     elif type(record) is dict:
-      self._add_record(record)
+        self._add_record(record)
     else:
-      logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
-                      &#39;record to interpolate: %s&#39;, record)
-      return None
+        logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
+                        &#39;record to interpolate: %s&#39;, record)
+        return None
 
     # Figure out what timestamp we&#39;d like to compute next. First time
     # we&#39;re called, next_timestamp will be 0; set it to be the
     # earliest timestamp we&#39;ve got in our cache.
     if not self.next_timestamp:
-      lowest_timestamp = min([values[0][0]
-                              for field, values in self.cached_values.items()
-                              if values])
-      self.next_timestamp = lowest_timestamp
+        lowest_timestamp = min([values[0][0]
+                                for field, values in self.cached_values.items()
+                                if values])
+        self.next_timestamp = lowest_timestamp
 
     non_empty = {}
     for dest, spec in self.field_spec.items():
-      source = spec.get(&#39;source&#39;, None)
-      if source:
-        values = self.cached_values.get(source, [])
-        if len(values):
-          non_empty[dest] = [source, len(values)]
-    #logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
-              
+        source = spec.get(&#39;source&#39;, None)
+        if source:
+            values = self.cached_values.get(source, [])
+            if len(values):
+                non_empty[dest] = [source, len(values)]
+    # logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
+
     # Iterate through all timestamps up to the edge of what we can fit
     # in our window without running into the edge of &#39;now&#39;.
     results = []
     now = time.time()
     while self.next_timestamp &lt; now - self.window/2:
-      # Clean out old data
-      self._clean_cache()
+        # Clean out old data
+        self._clean_cache()
 
-      result = {}
-      for result_field, entry in self.field_spec.items():
-        source = entry[&#39;source&#39;]
-        source_values = self.cached_values[source]
-        algorithm = entry[&#39;algorithm&#39;]
-        #logging.warning(&#39;%s-&gt;%s: %d values&#39;,
-        #                source, result_field, len(source_values))
-        value = interpolate(algorithm, source_values, self.next_timestamp, now)
-        if value is not None:
-          result[result_field] = value
-      if result:
-        results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
-      self.next_timestamp += self.interval
+        result = {}
+        for result_field, entry in self.field_spec.items():
+            source = entry[&#39;source&#39;]
+            source_values = self.cached_values[source]
+            algorithm = entry[&#39;algorithm&#39;]
+            # logging.warning(&#39;%s-&gt;%s: %d values&#39;,
+            #                source, result_field, len(source_values))
+            value = interpolate(algorithm, source_values, self.next_timestamp, now)
+            if value is not None:
+                result[result_field] = value
+        if result:
+            results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
+        self.next_timestamp += self.interval
 
     return results</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></li>
-<li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="logger.transforms.interpolation_transform.InterpolationTransform.fields"><code class="name flex">
-<span>def <span class="ident">fields</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Which fields are we interested in to produce transformed data?</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def fields(self):
-  &#34;&#34;&#34;Which fields are we interested in to produce transformed data?&#34;&#34;&#34;
-  return list(self.result_fields)</code></pre>
-</details>
-</dd>
-<dt id="logger.transforms.interpolation_transform.InterpolationTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Incorporate any useable fields in this record, and if it gives
-us any new subsampled values, aggregate and return them as a list of
-dicts of the form:</p>
-<p>[
-{'timestamp': timestamp,
-'fields': {
-fieldname: value,
-fieldname: value,
-&hellip;
-}
-},
-{'timestamp': timestamp,
-'fields': &hellip;
-}
-]</p>
-<p>If there are insufficient data in the window to compute any
-subsampling, return an empty list.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def transform(self, record):
-  &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
-  us any new subsampled values, aggregate and return them as a list of
-  dicts of the form:
-
-  [
-    {&#39;timestamp&#39;: timestamp,
-     &#39;fields&#39;: {
-       fieldname: value,
-       fieldname: value,
-       ...
-      }
-    },
-    {&#39;timestamp&#39;: timestamp,
-     &#39;fields&#39;: ...
-    }
-  ]
-
-  If there are insufficient data in the window to compute any
-  subsampling, return an empty list.
-  &#34;&#34;&#34;
-  # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
-  # them all.
-  if type(record) is list:
-    for single_record in record:
-      self._add_record(single_record)
-  # If it&#39;s a dict, hope it&#39;s a single record.
-  elif type(record) is dict:
-    self._add_record(record)
-  else:
-    logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
-                    &#39;record to interpolate: %s&#39;, record)
-    return None
-
-  # Figure out what timestamp we&#39;d like to compute next. First time
-  # we&#39;re called, next_timestamp will be 0; set it to be the
-  # earliest timestamp we&#39;ve got in our cache.
-  if not self.next_timestamp:
-    lowest_timestamp = min([values[0][0]
-                            for field, values in self.cached_values.items()
-                            if values])
-    self.next_timestamp = lowest_timestamp
-
-  non_empty = {}
-  for dest, spec in self.field_spec.items():
-    source = spec.get(&#39;source&#39;, None)
-    if source:
-      values = self.cached_values.get(source, [])
-      if len(values):
-        non_empty[dest] = [source, len(values)]
-  #logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
-            
-  # Iterate through all timestamps up to the edge of what we can fit
-  # in our window without running into the edge of &#39;now&#39;.
-  results = []
-  now = time.time()
-  while self.next_timestamp &lt; now - self.window/2:
-    # Clean out old data
-    self._clean_cache()
-
-    result = {}
-    for result_field, entry in self.field_spec.items():
-      source = entry[&#39;source&#39;]
-      source_values = self.cached_values[source]
-      algorithm = entry[&#39;algorithm&#39;]
-      #logging.warning(&#39;%s-&gt;%s: %d values&#39;,
-      #                source, result_field, len(source_values))
-      value = interpolate(algorithm, source_values, self.next_timestamp, now)
-      if value is not None:
-        result[result_field] = value
-    if result:
-      results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
-    self.next_timestamp += self.interval
-
-  return results</code></pre>
 </details>
 </dd>
 </dl>
@@ -844,9 +889,7 @@ subsampling, return an empty list.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

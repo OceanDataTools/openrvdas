@@ -17,7 +17,7 @@ Other relevant documents are:
 * [OpenRVDAS Components](components.md) - what components exist and what they do
 * [Simulating Live Data](simulating_live_data.md) - using the simulate_data.py script to simulate a live system using stored data for development and testing
 * [OpenRVDAS Django Web User Interface](django_interface.md) - an introduction to the web-based GUI
-* [Data Display Widgets](display_widgets.md) - an introduction to widgets for data display
+* [Grafana/InfluxDB-based Displays](grafana_displays.md) - an introduction to using InfluxDB and Grafana for displaying data
 * [Parsing](parsing.md) - how to work with the included RecordParser to turn raw text records into structured data fields
 * [Security assumptions](security.md) - the (rather naive) security assumptions made about the environment in which OpenRVDAS runs.
 

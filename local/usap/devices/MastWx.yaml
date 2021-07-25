@@ -18,10 +18,11 @@ MastWx:
   # PUS,^BA,336,009.41,M,+344.63,+021.71,60,^C01
   # SUS,^BA,327,009.72,M,+344.09,+020.79,60,^C04
   format:
+    MET:
     - "MET,{PowerVolt:g},{EncRelHumid:g},{AirTemp:g},{AirRelHumid:g},{PAR:g},{PSP:g},{PIRThermo:g},{PIRCaseTemp:g},{PIRDomeTemp:g},{Barometer:g}"
     - "MET,{PowerVolt:g},{EncRelHumid:g},{AirTemp:g},{AirRelHumid:g},{PAR:g},{PSP:g},{PIRThermo:g},{PIRCaseTemp:g},{PIRDomeTemp:g},{Barometer:g},{Unknown1:g},{Unknown2:g}"
-    - "PUS,{:nc},{PortRelWindDir:g},{PortRelWindSpeed:g},M,{PortSoundSpeed:g},{PortSonicTemp:g},{PortStatus:d},{Checksum:nc}"
-    - "SUS,{:nc},{StbdRelWindDir:g},{StbdRelWindSpeed:g},M,{StbdSoundSpeed:g},{StbdSonicTemp:g},{StbdStatus:d},{Checksum:nc}"
+    PUS: "PUS,{:nc},{PortRelWindDir:g},{PortRelWindSpeed:g},M,{PortSoundSpeed:g},{PortSonicTemp:g},{PortStatus:d},{Checksum:nc}"
+    SUS: "SUS,{:nc},{StbdRelWindDir:g},{StbdRelWindSpeed:g},M,{StbdSoundSpeed:g},{StbdSonicTemp:g},{StbdStatus:d},{Checksum:nc}"
 
   fields:
     PowerVolt:

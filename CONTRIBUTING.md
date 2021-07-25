@@ -119,18 +119,18 @@ Unsure where to begin contributing to OpenRVDAS? You can start by looking throug
 
 Both issue lists are sorted by total number of comments. While not perfect, number of comments is a reasonable proxy for impact a given change will have.
 
-Once you have selected an issue to work on, say 'issue 57', check out the ``dev`` branch and create from it a new branch with the name of the issue you've selected:
+Once you have selected an issue to work on, say 'issue 57', create a fork of the repository into your own GitHub account. Check out the ``dev`` branch and create from it a new branch with the name of the issue you've selected:
 
 ```
 git branch issue_57
 git checkout issue_57
 ```
 
-The expectation will be that when your contribution is ready, it will be merged back into the ``dev`` branch. The ``dev`` branch will be merged into the ``master`` branch when new numbered versions are released.
+When your contribution is ready, submit a pull request, requesting that it be merged back into the OpenRVDAS ``dev`` branch. The ``dev`` branch will be merged into the ``master`` branch when new numbered versions are released.
 
 ### Git Commits and Pull Requests
 
-Prior to performing any commit or submitting any pull request, please ensure that the code passes all unit tests. 
+Prior to submitting any pull request, please ensure that the code passes all unit tests. 
 You can run the battery of unit tests via:
 
 ```
@@ -147,7 +147,7 @@ should look like this:
     > 
     > A paragraph describing what changed and its impact."
     
-Please send a [GitHub Pull Request to opengovernment](https://github.com/oceandatatools/openrvdas/pull/new/master) with
+Please send a [GitHub Pull Request to oceandatatools/openrvdas/dev](https://github.com/oceandatatools/openrvdas/pull/new/dev) with
 a clear list of what you've done (read more about [pull requests](http://help.github.com/pull-requests/)). When you send
 a pull request, we will love you forever if you include examples. We can always use more test coverage. Please follow
 our coding conventions (below) and make sure all of your commits are atomic (one feature per commit).
@@ -156,10 +156,16 @@ our coding conventions (below) and make sure all of your commits are atomic (one
 
 ### Python Styleguide
 
-* With few exceptions, we try to adhere to the [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html)
-* Exceptions include:
-  * We prefer two-space indentation to four-space indentation.
-  * All unqualified imports (``import foo``) are clustered alphabetically before qualified imports (``from foo import bar``).
+* With few exceptions, we try to adhere to PEP8 and the [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html)
+* The primary exceptions are
+   * We (grudgingly) allow a maximum line length of 100 characters
+   * All unqualified imports (``import foo``) are clustered alphabetically before qualified imports (``from foo import bar``).
+* We test code compliance with PEP8 with `flake8`
+  * Install flake8 with `pip install flake8`
+  * Run from project root with `flake8 [subdir path]`
+  * Add pragma comments to disable warnings on a line-by-line basis, e.g.
+  
+      ```from foo import bar  # noqa: E401, F502```
 * Do not mix styles: when editing a pre-existing file, strive for consistency with the file's style over adherence with the Style Guide.
  
 ### JavaScript Styleguide

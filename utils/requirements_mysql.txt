@@ -1,0 +1,10 @@
+# Python/pip requirements for MySQL functionality in OpenRVDAS. Invoked on
+# installation by the script utils/install_openrvdas.sh. See also requirements.txt.
+
+# Flags
+--trusted-host pypi.org
+--trusted-host files.pythonhosted.org
+
+# Packages
+mysqlclient
+mysql-connector

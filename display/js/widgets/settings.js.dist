@@ -2,11 +2,16 @@
 Site-specific settings for display widgets.
 
 THIS FILE MUST BE COPIED OVER TO settings.js (and have the correct server
-name copied in) FOR WIDGETS TO BE OPERATIONAL.
+name and port copied in) FOR WIDGETS TO BE OPERATIONAL.
 
 *******************************************************************************/
 
 // Location of data server - unless otherwise specified, assume that the
-// data server is on the same host as is serving the page, but on port 8766.
+// data server is on the same host as is serving the page, on path /cds-ws.
+// Locally, the path is localhost:8766, but this is served externally by
+// Nginx as WEBSOCKET_HOST:SERVER_PORT/cds-ws
+var WEBSOCKET_PROTOCOL = 'ws';
 var WEBSOCKET_HOST = window.location.hostname || 'localhost';
-var WEBSOCKET_DATA_SERVER = WEBSOCKET_HOST + ":8766";
+var WEBSOCKET_PORT = 80;
+var WEBSOCKET_PATH = '/cds-ws';
+var WEBSOCKET_DATA_SERVER = WEBSOCKET_PROTOCOL + '://' + WEBSOCKET_HOST + ':' + WEBSOCKET_PORT + WEBSOCKET_PATH;

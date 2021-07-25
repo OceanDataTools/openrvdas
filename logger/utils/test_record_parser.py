@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
+# flake8: noqa E501 - ignore long lines
+
 import json
 import logging
 import pprint
 import sys
 import tempfile
-import threading
 import time
 import unittest
 import warnings
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.utils.record_parser import RecordParser
-from logger.utils.das_record import DASRecord
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.record_parser import RecordParser  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
 
 DEFINITIONS = """
 ######################################
@@ -175,20 +176,20 @@ Seapath200:
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-    - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
-    - "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
-    - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
-    - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
-    - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+    GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+    HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    VTG: "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+    ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
+    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+    PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
 
     # Additional Formats with missing fields to pick up slack for
     # devices that don't emit all fields. TODO: tweak parser to allow
     # for missing values.
-    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
-    - "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
-    - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
+    GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
+    VTG: "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
+    ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -395,20 +396,20 @@ device_types:
     # If device type can output multiple formats, include them as a
     # list. Parser will use the first one that matches the whole line.
     format:
-      - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-      - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
-      - "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
-      - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
-      - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
-      - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-      - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+      GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+      HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+      VTG: "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+      ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
+      PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+      PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+      PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
 
       # Additional Formats with missing fields to pick up slack for
       # devices that don't emit all fields. TODO: tweak parser to allow
       # for missing values.
-      - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
-      - "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
-      - "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
+      GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,,M,,*{CheckSum:x}"
+      VTG: "$GPVTG,{CourseTrue:f},T,,M,{SpeedKt:f},N,,K,{Mode:w}*{CheckSum:x}"
+      ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},,*{CheckSum:x}"
 
 """
 
@@ -460,259 +461,277 @@ seap 2017-11-04T07:00:41.845780Z $GPZDA,002711.69,07,08,2014,,*64""".split('\n')
 
 BAD_RECORD = "seap 2017-11-04T07:00:39.291859Z $PSXN,20,1,0,0XXX,0*3A"
 
+
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
-  time.sleep(pre_sleep_interval)
-  logging.info('creating file "%s"', filename)
-  f = open(filename, 'w')
-  for line in lines:
-    time.sleep(interval)
-    f.write(line + '\n')
-    f.flush()
-  f.close()
+    time.sleep(pre_sleep_interval)
+    logging.info('creating file "%s"', filename)
+    f = open(filename, 'w')
+    for line in lines:
+        time.sleep(interval)
+        f.write(line + '\n')
+        f.flush()
+    f.close()
+
 
 class TestRecordParser(unittest.TestCase):
 
-  ############################
-  def setUp(self):
-    # To suppress resource warnings about unclosed files
-    warnings.simplefilter("ignore", ResourceWarning)
+    ############################
+    def setUp(self):
+        # To suppress resource warnings about unclosed files
+        warnings.simplefilter("ignore", ResourceWarning)
 
-    # Set up config file and logfile simulated serial port will read from
-    self.tmpdir = tempfile.TemporaryDirectory()
-    self.tmpdir_name = self.tmpdir.name
-    logging.info('created temporary directory "%s"', self.tmpdir_name)
+        # Set up config file and logfile simulated serial port will read from
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdir_name = self.tmpdir.name
+        logging.info('created temporary directory "%s"', self.tmpdir_name)
 
-    self.device_filename = self.tmpdir_name + '/devices.yaml'
-    with open(self.device_filename, 'w') as f:
-      f.write(DEFINITIONS)
+        self.device_filename = self.tmpdir_name + '/devices.yaml'
+        with open(self.device_filename, 'w') as f:
+            f.write(DEFINITIONS)
 
-    self.included_filename = self.tmpdir_name + '/included.yaml'
-    with open(self.included_filename, 'w') as f:
-      f.write(INCLUDED_DEFINITIONS)
+        self.included_filename = self.tmpdir_name + '/included.yaml'
+        with open(self.included_filename, 'w') as f:
+            f.write(INCLUDED_DEFINITIONS)
 
-    new_definitions = NEW_DEFINITIONS
-    new_definitions = new_definitions.replace('%INCLUDED_DEFINITIONS%',
-                                              self.included_filename)
-    self.new_device_filename = self.tmpdir_name + '/new_devices.yaml'
-    with open(self.new_device_filename, 'w') as f:
-      f.write(new_definitions)
+        new_definitions = NEW_DEFINITIONS
+        new_definitions = new_definitions.replace('%INCLUDED_DEFINITIONS%',
+                                                  self.included_filename)
+        self.new_device_filename = self.tmpdir_name + '/new_devices.yaml'
+        with open(self.new_device_filename, 'w') as f:
+            f.write(new_definitions)
 
-  ############################
-  def test_default_parser(self):
+    ############################
+    def test_default_parser(self):
 
-    p = RecordParser(definition_path=self.device_filename)
+        p = RecordParser(definition_path=self.device_filename)
 
-    for records in [
-        GRV1_RECORDS,
-        KNUD_RECORDS,
-        SEAP_RECORDS,
+        for records in [
+            GRV1_RECORDS,
+            KNUD_RECORDS,
+            SEAP_RECORDS,
         ]:
-      for line in records:
-        logging.info('line:\n%s', line)
-        record = p.parse_record(line)
-        logging.info('record:\n%s', pprint.pformat(record))
+            for line in records:
+                logging.info('line:\n%s', line)
+                record = p.parse_record(line)
+                logging.info('record:\n%s', pprint.pformat(record))
 
-  ############################
-  def test_parse_records(self):
-    p = RecordParser(definition_path=self.device_filename)
+    ############################
+    def test_parse_records(self):
+        p = RecordParser(definition_path=self.device_filename)
 
-    r = p.parse_record(GRV1_RECORDS[0])
-    self.assertDictEqual(r, {'data_id': 'grv1', 'timestamp': 1510275606.572,
-                             'fields':{'Grv1Error': 0,
-                                       'Grv1Value': 24557}})
-    r = p.parse_record(SEAP_RECORDS[0])
-    self.assertDictEqual(r, {'data_id': 'seap',
-                             'timestamp': 1509778839.291859,
-                             'fields':{'Seap200HeightQual': 0,
-                                       'Seap200RollPitchQual': 0,
-                                       'Seap200HorizQual': 1,
-                                       'Seap200HeadingQual': 0}})
-    r = p.parse_record(SEAP_RECORDS[1])
-    self.assertDictEqual(r, {'data_id': 'seap',
-                             'timestamp': 1509778839.547251,
-                             'fields':{'Seap200GyroOffset': 0.74,
-                                       'Seap200GyroCal': 0.44}})
+        r = p.parse_record(GRV1_RECORDS[0])
+        self.assertDictEqual(r, {'data_id': 'grv1', 'timestamp': 1510275606.572,
+                                 'fields': {'Grv1Error': 0,
+                                            'Grv1Value': 24557}})
+        r = p.parse_record(SEAP_RECORDS[0])
+        self.assertDictEqual(r, {'data_id': 'seap',
+                                 'timestamp': 1509778839.291859,
+                                 'message_type': 'PSXN20',
+                                 'fields': {'Seap200HeightQual': 0,
+                                            'Seap200RollPitchQual': 0,
+                                            'Seap200HorizQual': 1,
+                                            'Seap200HeadingQual': 0}})
+        r = p.parse_record(SEAP_RECORDS[1])
+        self.assertDictEqual(r, {'data_id': 'seap',
+                                 'timestamp': 1509778839.547251,
+                                 'message_type': 'PSXN22',
+                                 'fields': {'Seap200GyroOffset': 0.74,
+                                            'Seap200GyroCal': 0.44}})
 
-    r = p.parse_record(SEAP_RECORDS[2])
-    self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
-                             'fields':{'Seap200Roll': -1.47,
-                                       'Seap200Heave': -0.38,
-                                       'Seap200HeadingTrue': 235.77,
-                                       'Seap200Pitch': 0.01}})
+        r = p.parse_record(SEAP_RECORDS[2])
+        self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
+                                 'message_type': 'PSXN23',
+                                 'fields': {'Seap200Roll': -1.47,
+                                            'Seap200Heave': -0.38,
+                                            'Seap200HeadingTrue': 235.77,
+                                            'Seap200Pitch': 0.01}})
 
-  ############################
-  def test_inline_definitions(self):
-    p = RecordParser(record_format='{timestamp:ti} {field_string}',
-                     field_patterns=[
-                       '{CounterUnits:d}:{GravityValue:d} {GravityError:d}'])
-    r = p.parse_record('2017-11-10T01:00:06.572Z 01:024557 00')
-    self.assertDictEqual(r, {'timestamp': 1510275606.572,
-                             'fields':{'CounterUnits': 1,
-                                       'GravityValue': 24557,
-                                       'GravityError': 0}})
+    ############################
+    def test_inline_definitions(self):
+        p = RecordParser(record_format='{timestamp:ti} {field_string}',
+                         field_patterns=[
+                             '{CounterUnits:d}:{GravityValue:d} {GravityError:d}'])
+        r = p.parse_record('2017-11-10T01:00:06.572Z 01:024557 00')
+        self.assertDictEqual(r, {'timestamp': 1510275606.572,
+                                 'fields': {'CounterUnits': 1,
+                                            'GravityValue': 24557,
+                                            'GravityError': 0}})
 
-    p = RecordParser(record_format='{timestamp:ti} {field_string}',
-                     field_patterns=[
-                       '$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{:x}',
-                       '$PSXN,22,{GyroCal:f},{GyroOffset:f}*{:x}',
-                       '$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{:x}',
-                     ])
+        p = RecordParser(
+            record_format='{timestamp:ti} {field_string}',
+            field_patterns=[
+                '$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{:x}',
+                '$PSXN,22,{GyroCal:f},{GyroOffset:f}*{:x}',
+                '$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{:x}',
+            ])
 
-    r = p.parse_record('2017-11-04T07:00:39.291859Z $PSXN,20,1,0,0,0*3A')
-    self.assertDictEqual(r, {'timestamp': 1509778839.291859,
-                             'fields':{'HeightQual': 0,
-                                       'RollPitchQual': 0,
-                                       'HorizQual': 1,
-                                       'HeadingQual': 0}})
-    r = p.parse_record('2017-11-04T07:00:39.547251Z $PSXN,22,0.44,0.74*3A')
-    self.assertDictEqual(r, {'timestamp': 1509778839.547251,
-                             'fields':{'GyroOffset': 0.74,
-                                       'GyroCal': 0.44}})
+        r = p.parse_record('2017-11-04T07:00:39.291859Z $PSXN,20,1,0,0,0*3A')
+        self.assertDictEqual(r, {'timestamp': 1509778839.291859,
+                                 'fields': {'HeightQual': 0,
+                                            'RollPitchQual': 0,
+                                            'HorizQual': 1,
+                                            'HeadingQual': 0}})
+        r = p.parse_record('2017-11-04T07:00:39.547251Z $PSXN,22,0.44,0.74*3A')
+        self.assertDictEqual(r, {'timestamp': 1509778839.547251,
+                                 'fields': {'GyroOffset': 0.74,
+                                            'GyroCal': 0.44}})
 
-    r = p.parse_record('2017-11-04T07:00:39.802690Z $PSXN,23,-1.47,0.01,235.77,-0.38*34')
-    self.assertDictEqual(r, {'timestamp': 1509778839.802690,
-                             'fields':{'Roll': -1.47,
-                                       'Heave': -0.38,
-                                       'HeadingTrue': 235.77,
-                                       'Pitch': 0.01}})
+        r = p.parse_record('2017-11-04T07:00:39.802690Z $PSXN,23,-1.47,0.01,235.77,-0.38*34')
+        self.assertDictEqual(r, {'timestamp': 1509778839.802690,
+                                 'fields': {'Roll': -1.47,
+                                            'Heave': -0.38,
+                                            'HeadingTrue': 235.77,
+                                            'Pitch': 0.01}})
 
-  ############################
-  def test_inline_definitions_with_metadata(self):
-    metadata={'CounterUnits':{'CounterUnitsMetadata'},
-              'GravityValue':{'GravityValueMetadata'},
-              'GravityError':{'GravityErrorMetadata'}
-    }
-    p = RecordParser(record_format='{timestamp:ti} {field_string}',
-                     field_patterns=[
-                       '{:d}:{GravityValue:d} {GravityError:d}'],
-                     metadata=metadata,
-                     metadata_interval=1)
-    r = p.parse_record('2017-11-10T01:00:06.572Z 01:024557 00')
-    self.assertDictEqual(r,
-                         {
-                           'timestamp': 1510275606.572,
-                             'fields':{'GravityValue': 24557,
-                                       'GravityError': 0},
-                             'metadata': {
-                               'fields': {
-                                 'GravityError': {'GravityErrorMetadata'},
-                                 'GravityValue': {'GravityValueMetadata'}
-                               }
-                             }
-                         })
-  ############################
-  def test_new_parse_records(self):
-    """Test the "new" style of device/device_type definitions, where files
-    are YAML dicts with top-level devices/device_types/includes keys.
-    """
-    p = RecordParser(definition_path=self.new_device_filename)
+    ############################
+    def test_inline_definitions_with_metadata(self):
+        metadata = {'CounterUnits': {'CounterUnitsMetadata'},
+                    'GravityValue': {'GravityValueMetadata'},
+                    'GravityError': {'GravityErrorMetadata'}
+                    }
+        p = RecordParser(record_format='{timestamp:ti} {field_string}',
+                         field_patterns=[
+                             '{:d}:{GravityValue:d} {GravityError:d}'],
+                         metadata=metadata,
+                         metadata_interval=1)
+        r = p.parse_record('2017-11-10T01:00:06.572Z 01:024557 00')
+        self.assertDictEqual(r,
+                             {
+                                 'timestamp': 1510275606.572,
+                                 'fields': {'GravityValue': 24557,
+                                            'GravityError': 0},
+                                 'metadata': {
+                                     'fields': {
+                                         'GravityError': {'GravityErrorMetadata'},
+                                         'GravityValue': {'GravityValueMetadata'}
+                                     }
+                                 }
+                             })
+    ############################
 
-    r = p.parse_record(GRV1_RECORDS[0])
-    self.assertDictEqual(r, {'data_id': 'grv1', 'timestamp': 1510275606.572,
-                             'fields':{'Grv1Error': 0, 'Grv1Value': 24557}})
-    r = p.parse_record(SEAP_RECORDS[0])
-    self.assertDictEqual(r, {'data_id': 'seap',
-                             'timestamp': 1509778839.291859,
-                             'fields':{'Seap200HeightQual': 0,
-                                       'Seap200RollPitchQual': 0,
-                                       'Seap200HorizQual': 1,
-                                       'Seap200HeadingQual': 0}})
-    r = p.parse_record(SEAP_RECORDS[1])
-    self.assertDictEqual(r, {'data_id': 'seap',
-                             'timestamp': 1509778839.547251,
-                             'fields':{'Seap200GyroOffset': 0.74,
-                                       'Seap200GyroCal': 0.44}})
+    def test_new_parse_records(self):
+        """Test the "new" style of device/device_type definitions, where files
+        are YAML dicts with top-level devices/device_types/includes keys.
+        """
+        p = RecordParser(definition_path=self.new_device_filename)
 
-    r = p.parse_record(SEAP_RECORDS[2])
-    self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
-                             'fields':{'Seap200Roll': -1.47,
-                                       'Seap200Heave': -0.38,
-                                       'Seap200HeadingTrue': 235.77,
-                                       'Seap200Pitch': 0.01}})
-  ############################
-  def test_parse_bad_record(self):
+        r = p.parse_record(GRV1_RECORDS[0])
+        self.assertDictEqual(r, {'data_id': 'grv1', 'timestamp': 1510275606.572,
+                                 'fields': {'Grv1Error': 0, 'Grv1Value': 24557}})
+        r = p.parse_record(SEAP_RECORDS[0])
+        self.assertDictEqual(r, {'data_id': 'seap',
+                                 'timestamp': 1509778839.291859,
+                                 'message_type': 'PSXN20',
+                                 'fields': {'Seap200HeightQual': 0,
+                                            'Seap200RollPitchQual': 0,
+                                            'Seap200HorizQual': 1,
+                                            'Seap200HeadingQual': 0}})
+        r = p.parse_record(SEAP_RECORDS[1])
+        self.assertDictEqual(r, {'data_id': 'seap',
+                                 'timestamp': 1509778839.547251,
+                                 'message_type': 'PSXN22',
+                                 'fields': {'Seap200GyroOffset': 0.74,
+                                            'Seap200GyroCal': 0.44}})
 
-    # Should log a warning on a bad record...
-    p = RecordParser(definition_path=self.device_filename)
-    with self.assertLogs(logging.getLogger(), logging.WARNING):
-      r = p.parse_record(BAD_RECORD)
+        r = p.parse_record(SEAP_RECORDS[2])
+        self.assertDictEqual(r, {'data_id': 'seap', 'timestamp': 1509778839.802690,
+                                 'message_type': 'PSXN23',
+                                 'fields': {'Seap200Roll': -1.47,
+                                            'Seap200Heave': -0.38,
+                                            'Seap200HeadingTrue': 235.77,
+                                            'Seap200Pitch': 0.01}})
+    ############################
 
-    # But shouldn't log anything if we're in quiet mode
-    p = RecordParser(definition_path=self.device_filename, quiet=True)
-    with self.assertRaises(AssertionError):
-      with self.assertLogs(logging.getLogger(), logging.WARNING):
-        r = p.parse_record(BAD_RECORD)
+    def test_parse_bad_record(self):
 
-  ############################
-  def test_parse_records_json(self):
-    p = RecordParser(definition_path=self.device_filename, return_json=True)
+        # Should log a warning on a bad record...
+        p = RecordParser(definition_path=self.device_filename)
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            r = p.parse_record(BAD_RECORD)
 
-    r = p.parse_record(GRV1_RECORDS[0])
-    self.assertDictEqual(json.loads(r),
-                         {'data_id': 'grv1', 'timestamp': 1510275606.572,
-                          'fields':{'Grv1Error': 0, 'Grv1Value': 24557}})
-    r = p.parse_record(SEAP_RECORDS[0])
-    self.assertDictEqual(json.loads(r),
-                         {'data_id': 'seap',
-                          'timestamp': 1509778839.291859,
-                          'fields':{'Seap200HeightQual': 0,
-                                    'Seap200RollPitchQual': 0,
-                                    'Seap200HorizQual': 1,
-                                    'Seap200HeadingQual': 0}})
-    r = p.parse_record(SEAP_RECORDS[1])
-    self.assertDictEqual(json.loads(r),
-                         {'data_id': 'seap',
-                          'timestamp': 1509778839.547251,
-                          'fields':{'Seap200GyroOffset': 0.74,
-                                    'Seap200GyroCal': 0.44}})
-    r = p.parse_record(SEAP_RECORDS[2])
-    self.assertDictEqual(json.loads(r),
-                         {'data_id': 'seap', 'timestamp': 1509778839.802690,
-                          'fields':{'Seap200Roll': -1.47,
-                                    'Seap200Heave': -0.38,
-                                    'Seap200HeadingTrue': 235.77,
-                                    'Seap200Pitch': 0.01}})
+        # But shouldn't log anything if we're in quiet mode
+        p = RecordParser(definition_path=self.device_filename, quiet=True)
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(logging.getLogger(), logging.WARNING):
+                r = p.parse_record(BAD_RECORD)
 
-  ############################
-  def test_parse_records_das_record(self):
-    p = RecordParser(definition_path=self.device_filename,
-                     return_das_record=True)
+    ############################
+    def test_parse_records_json(self):
+        p = RecordParser(definition_path=self.device_filename, return_json=True)
 
-    r = p.parse_record(GRV1_RECORDS[0])
-    self.assertEqual(r, DASRecord(data_id='grv1', timestamp=1510275606.572,
-                                  fields={'Grv1Error': 0, 'Grv1Value': 24557}))
-    r = p.parse_record(SEAP_RECORDS[0])
-    self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.291859,
-                                  fields={'Seap200HeightQual': 0,
-                                          'Seap200RollPitchQual': 0,
-                                          'Seap200HorizQual': 1,
-                                          'Seap200HeadingQual': 0}))
-    r = p.parse_record(SEAP_RECORDS[1])
-    self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.547251,
-                                  fields={'Seap200GyroOffset': 0.74,
-                                          'Seap200GyroCal': 0.44}))
-    r = p.parse_record(SEAP_RECORDS[2])
-    self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.802690,
-                                  fields={'Seap200Roll': -1.47,
-                                          'Seap200Heave': -0.38,
-                                          'Seap200HeadingTrue': 235.77,
-                                          'Seap200Pitch': 0.01}))
+        r = p.parse_record(GRV1_RECORDS[0])
+        self.assertDictEqual(json.loads(r),
+                             {'data_id': 'grv1', 'timestamp': 1510275606.572,
+                              'fields': {'Grv1Error': 0, 'Grv1Value': 24557}})
+        r = p.parse_record(SEAP_RECORDS[0])
+        self.assertDictEqual(json.loads(r),
+                             {'data_id': 'seap',
+                              'timestamp': 1509778839.291859,
+                              'message_type': 'PSXN20',
+                              'fields': {'Seap200HeightQual': 0,
+                                         'Seap200RollPitchQual': 0,
+                                         'Seap200HorizQual': 1,
+                                         'Seap200HeadingQual': 0}})
+        r = p.parse_record(SEAP_RECORDS[1])
+        self.assertDictEqual(json.loads(r),
+                             {'data_id': 'seap',
+                              'timestamp': 1509778839.547251,
+                              'message_type': 'PSXN22',
+                              'fields': {'Seap200GyroOffset': 0.74,
+                                         'Seap200GyroCal': 0.44}})
+        r = p.parse_record(SEAP_RECORDS[2])
+        self.assertDictEqual(json.loads(r),
+                             {'data_id': 'seap', 'timestamp': 1509778839.802690,
+                              'message_type': 'PSXN23',
+                              'fields': {'Seap200Roll': -1.47,
+                                         'Seap200Heave': -0.38,
+                                         'Seap200HeadingTrue': 235.77,
+                                         'Seap200Pitch': 0.01}})
+
+    ############################
+    def test_parse_records_das_record(self):
+        p = RecordParser(definition_path=self.device_filename,
+                         return_das_record=True)
+
+        r = p.parse_record(GRV1_RECORDS[0])
+        self.assertEqual(r, DASRecord(data_id='grv1', timestamp=1510275606.572,
+                                      fields={'Grv1Error': 0, 'Grv1Value': 24557}))
+        r = p.parse_record(SEAP_RECORDS[0])
+        self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.291859,
+                                      message_type='PSXN20',
+                                      fields={'Seap200HeightQual': 0,
+                                              'Seap200RollPitchQual': 0,
+                                              'Seap200HorizQual': 1,
+                                              'Seap200HeadingQual': 0}))
+        r = p.parse_record(SEAP_RECORDS[1])
+        self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.547251,
+                                      message_type='PSXN22',
+                                      fields={'Seap200GyroOffset': 0.74,
+                                              'Seap200GyroCal': 0.44}))
+        r = p.parse_record(SEAP_RECORDS[2])
+        self.assertEqual(r, DASRecord(data_id='seap', timestamp=1509778839.802690,
+                                      message_type='PSXN23',
+                                      fields={'Seap200Roll': -1.47,
+                                              'Seap200Heave': -0.38,
+                                              'Seap200HeadingTrue': 235.77,
+                                              'Seap200Pitch': 0.01}))
+
 
 ################################################################################
 if __name__ == '__main__':
-  import argparse
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbosity', dest='verbosity',
-                      default=0, action='count',
-                      help='Increase output verbosity')
-  args = parser.parse_args()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', dest='verbosity',
+                        default=0, action='count',
+                        help='Increase output verbosity')
+    args = parser.parse_args()
 
-  LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-  logging.basicConfig(format=LOGGING_FORMAT)
+    LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+    logging.basicConfig(format=LOGGING_FORMAT)
 
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-  #logging.getLogger().setLevel(logging.DEBUG)
-  unittest.main(warnings='ignore')
+    # logging.getLogger().setLevel(logging.DEBUG)
+    unittest.main(warnings='ignore')

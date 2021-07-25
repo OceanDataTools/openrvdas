@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>logger.writers.influxdb_writer API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>logger.writers.influxdb_writer</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+import time
+import logging
+import sys
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils.formats import Text  # noqa: E402
+from logger.writers.writer import Writer  # noqa: E402
+
+INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
+try:
+    from database.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL  # noqa: E402
+    INFLUXDB_SETTINGS_FOUND = True
+except (ModuleNotFoundError, ImportError):
+    INFLUXDB_SETTINGS_FOUND = False
+
+try:
+    from influxdb_client import InfluxDBClient  # noqa: E402
+    from influxdb_client.client.write_api import ASYNCHRONOUS  # noqa: E402
+    INFLUXDB_CLIENT_FOUND = True
+except (ModuleNotFoundError, ImportError):
+    INFLUXDB_CLIENT_FOUND = False
+
+
+class InfluxDBWriter(Writer):
+    &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
+
+    def __init__(self, bucket_name, measurement_name=None,
+                 auth_token=INFLUXDB_AUTH_TOKEN,
+                 org=INFLUXDB_ORG, url=INFLUXDB_URL):
+        &#34;&#34;&#34;Write data records to the InfluxDB.
+        ```
+        bucket_name - the name of the bucket in InfluxDB.  If the bucket does
+                  not exists then this writer will try to create it.
+
+        measurement_name - optional measurement name to use. If not provided,
+                  writer will use the record&#39;s data_id.
+
+        auth_token - The auth token required by the InfluxDB instance. If omitted,
+                  will look for value in imported INFLUXDB_AUTH_TOKEN and throw
+                  an exception if it is not found.
+
+        org - The organization to associate with in the InfluxDB
+                  instance. If omitted, will look for value in imported
+                  INFLUXDB_ORG and throw an exception if it is not found.
+
+        url - The URL at which to connect with the InfluxDB instance. If
+                  omitted, will look for value in imported INFLUXDB_ORG
+                  and throw an exception if it is not found.
+        ```
+        &#34;&#34;&#34;
+        super().__init__(input_format=Text)
+        if not auth_token:
+            raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
+                               &#39;none found in database/settings.py. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+        if not org:
+            raise RuntimeError(&#39;No organization specified in InfluxDBWriter and &#39;
+                               &#39;none found in database/settings.py. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+        if not url:
+            raise RuntimeError(&#39;No URL specified in InfluxDBWriter and &#39;
+                               &#39;none found in database/settings.py. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+
+        if not INFLUXDB_SETTINGS_FOUND:
+            raise RuntimeError(&#39;File database/settings.py not found. &#39;
+                               &#39;InfluxDB functionality is not available. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+        if not INFLUXDB_CLIENT_FOUND:
+            raise RuntimeError(&#39;Python module influxdb_client not found. Please &#39;
+                               &#39;install using &#34;pip install influxdb_client&#34; prior &#39;
+                               &#39;to using InfluxDBWriter.&#39;)
+
+        self.auth_token = auth_token
+        self.org = org
+        self.url = url
+        self.bucket_name = bucket_name
+        self.measurement_name = measurement_name
+        self.write_api = None
+
+        # TODO: retry connecting if connection dies while writing.
+        self._connect()
+
+    ############################
+    def _connect(self):
+
+        while not self.write_api:
+            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org)
+
+            # get the orgID from the name:
+            try:
+                organizations_api = client.organizations_api()
+                orgs = organizations_api.find_organizations()
+            except BaseException:
+                self.client = None
+                logging.warning(&#39;Error connecting to the InfluxDB API. &#39;
+                                &#39;Please confirm that InfluxDB is running and &#39;
+                                &#39;that the authentication token is correct.&#39;
+                                &#39;Sleeping before trying again.&#39;)
+                time.sleep(5)
+                continue
+
+            # Look up the organization id for our org
+            our_org = next((org for org in orgs if org.name == self.org), None)
+            if not our_org:
+                logging.fatal(&#39;Can not find org &#34;%s&#34; in InfluxDB&#39;, self.org)
+                raise RuntimeError(&#39;Can not find org &#34;%s&#34; in InfluxDB&#39; % self.org)
+            self.org_id = our_org.id
+
+            # get the bucketID from the name:
+            bucket_api = client.buckets_api()
+            bucket = bucket_api.find_bucket_by_name(self.bucket_name)
+
+            # if the bucket does not exist then try to create it
+            if bucket:
+                self.bucket_id = bucket.id
+            else:
+                try:
+                    logging.info(&#39;Creating new bucket for: %s&#39;, self.bucket_name)
+                    new_bucket = bucket_api.create_bucket(bucket_name=self.bucket_name,
+                                                          org_id=self.org_id)
+                    self.bucket_id = new_bucket.id
+                except BaseException:
+                    logging.fatal(&#39;Can not create InfluxDB bucket &#34;%s&#34;&#39;, self.bucket_name)
+                    raise RuntimeError(&#39;Can not create InfluxDB bucket &#34;%s&#34;&#39;
+                                       % self.bucket_name)
+
+            self.write_api = client.write_api(write_options=ASYNCHRONOUS)
+
+    ############################
+    def write(self, record):
+        &#34;&#34;&#34;Note: Assume record is a dict or DASRecord or list of
+        dict/DASRecord. In each record look for &#39;fields&#39;, &#39;data_id&#39; and
+        &#39;timestamp&#39; (UTC epoch seconds). If data_id is missing, use the
+        bucket_name we were initialized with.
+        &#34;&#34;&#34;
+
+        def record_to_influx(record):
+            &#34;&#34;&#34;Put a single record into the format that InfluxDB wants.&#34;&#34;&#34;
+            if isinstance(record, DASRecord):
+                data_id = record.data_id
+                fields = record.fields
+                timestamp = record.timestamp
+            else:
+                data_id = record.get(&#39;data_id&#39;, None)
+                fields = record.get(&#39;fields&#39;, {})
+                timestamp = record.get(&#39;timestamp&#39;, None) or time.time()
+            influxDB_record = {
+                &#39;measurement&#39;: self.measurement_name or data_id,
+                &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
+                &#39;fields&#39;: fields,
+                &#39;time&#39;: int(timestamp * 1000000000)
+            }
+            return influxDB_record
+
+        if not record:
+            return
+
+        logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
+
+        if not type(record) in [dict, list, DASRecord]:
+            logging.warning(&#39;InfluxDBWriter received record that was not dict, &#39;
+                            &#39;list or DASRecord format. Type %s: %s&#39;,
+                            type(record), str(record))
+        try:
+            if type(record) in [list, DASRecord]:
+                influxDB_record = [record_to_influx(r) for r in record]
+            else:
+                influxDB_record = record_to_influx(record)
+            # logging.info(&#39;influxdb\n bucket: %s\nrecord: %s&#39;,
+            #             self.bucket_name, pprint.pformat(influxDB_record))
+            self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
+
+        except Exception as e:
+            logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
+            logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
+                            &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="logger.writers.influxdb_writer.InfluxDBWriter"><code class="flex name class">
+<span>class <span class="ident">InfluxDBWriter</span></span>
+<span>(</span><span>bucket_name, measurement_name=None, auth_token='O7bNK5S2FKIrGuO_VENEzBn4wWnOJBzSbQQeMKaECaCqyGYpt7wF6b4Mu8XUd7Uo7fL8TA2uDx99idXwSboUOg==', org='openrvdas', url='http://localhost:8086')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
+<p>Write data records to the InfluxDB.</p>
+<pre><code>bucket_name - the name of the bucket in InfluxDB.  If the bucket does
+          not exists then this writer will try to create it.
+
+measurement_name - optional measurement name to use. If not provided,
+          writer will use the record's data_id.
+
+auth_token - The auth token required by the InfluxDB instance. If omitted,
+          will look for value in imported INFLUXDB_AUTH_TOKEN and throw
+          an exception if it is not found.
+
+org - The organization to associate with in the InfluxDB
+          instance. If omitted, will look for value in imported
+          INFLUXDB_ORG and throw an exception if it is not found.
+
+url - The URL at which to connect with the InfluxDB instance. If
+          omitted, will look for value in imported INFLUXDB_ORG
+          and throw an exception if it is not found.
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InfluxDBWriter(Writer):
+    &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
+
+    def __init__(self, bucket_name, measurement_name=None,
+                 auth_token=INFLUXDB_AUTH_TOKEN,
+                 org=INFLUXDB_ORG, url=INFLUXDB_URL):
+        &#34;&#34;&#34;Write data records to the InfluxDB.
+        ```
+        bucket_name - the name of the bucket in InfluxDB.  If the bucket does
+                  not exists then this writer will try to create it.
+
+        measurement_name - optional measurement name to use. If not provided,
+                  writer will use the record&#39;s data_id.
+
+        auth_token - The auth token required by the InfluxDB instance. If omitted,
+                  will look for value in imported INFLUXDB_AUTH_TOKEN and throw
+                  an exception if it is not found.
+
+        org - The organization to associate with in the InfluxDB
+                  instance. If omitted, will look for value in imported
+                  INFLUXDB_ORG and throw an exception if it is not found.
+
+        url - The URL at which to connect with the InfluxDB instance. If
+                  omitted, will look for value in imported INFLUXDB_ORG
+                  and throw an exception if it is not found.
+        ```
+        &#34;&#34;&#34;
+        super().__init__(input_format=Text)
+        if not auth_token:
+            raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
+                               &#39;none found in database/settings.py. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+        if not org:
+            raise RuntimeError(&#39;No organization specified in InfluxDBWriter and &#39;
+                               &#39;none found in database/settings.py. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+        if not url:
+            raise RuntimeError(&#39;No URL specified in InfluxDBWriter and &#39;
+                               &#39;none found in database/settings.py. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+
+        if not INFLUXDB_SETTINGS_FOUND:
+            raise RuntimeError(&#39;File database/settings.py not found. &#39;
+                               &#39;InfluxDB functionality is not available. Have &#39;
+                               &#39;you copied over database/settings.py.dist &#39;
+                               &#39;to database/settings.py and followed the &#39;
+                               &#39;configuration instructions in it?&#39;)
+        if not INFLUXDB_CLIENT_FOUND:
+            raise RuntimeError(&#39;Python module influxdb_client not found. Please &#39;
+                               &#39;install using &#34;pip install influxdb_client&#34; prior &#39;
+                               &#39;to using InfluxDBWriter.&#39;)
+
+        self.auth_token = auth_token
+        self.org = org
+        self.url = url
+        self.bucket_name = bucket_name
+        self.measurement_name = measurement_name
+        self.write_api = None
+
+        # TODO: retry connecting if connection dies while writing.
+        self._connect()
+
+    ############################
+    def _connect(self):
+
+        while not self.write_api:
+            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org)
+
+            # get the orgID from the name:
+            try:
+                organizations_api = client.organizations_api()
+                orgs = organizations_api.find_organizations()
+            except BaseException:
+                self.client = None
+                logging.warning(&#39;Error connecting to the InfluxDB API. &#39;
+                                &#39;Please confirm that InfluxDB is running and &#39;
+                                &#39;that the authentication token is correct.&#39;
+                                &#39;Sleeping before trying again.&#39;)
+                time.sleep(5)
+                continue
+
+            # Look up the organization id for our org
+            our_org = next((org for org in orgs if org.name == self.org), None)
+            if not our_org:
+                logging.fatal(&#39;Can not find org &#34;%s&#34; in InfluxDB&#39;, self.org)
+                raise RuntimeError(&#39;Can not find org &#34;%s&#34; in InfluxDB&#39; % self.org)
+            self.org_id = our_org.id
+
+            # get the bucketID from the name:
+            bucket_api = client.buckets_api()
+            bucket = bucket_api.find_bucket_by_name(self.bucket_name)
+
+            # if the bucket does not exist then try to create it
+            if bucket:
+                self.bucket_id = bucket.id
+            else:
+                try:
+                    logging.info(&#39;Creating new bucket for: %s&#39;, self.bucket_name)
+                    new_bucket = bucket_api.create_bucket(bucket_name=self.bucket_name,
+                                                          org_id=self.org_id)
+                    self.bucket_id = new_bucket.id
+                except BaseException:
+                    logging.fatal(&#39;Can not create InfluxDB bucket &#34;%s&#34;&#39;, self.bucket_name)
+                    raise RuntimeError(&#39;Can not create InfluxDB bucket &#34;%s&#34;&#39;
+                                       % self.bucket_name)
+
+            self.write_api = client.write_api(write_options=ASYNCHRONOUS)
+
+    ############################
+    def write(self, record):
+        &#34;&#34;&#34;Note: Assume record is a dict or DASRecord or list of
+        dict/DASRecord. In each record look for &#39;fields&#39;, &#39;data_id&#39; and
+        &#39;timestamp&#39; (UTC epoch seconds). If data_id is missing, use the
+        bucket_name we were initialized with.
+        &#34;&#34;&#34;
+
+        def record_to_influx(record):
+            &#34;&#34;&#34;Put a single record into the format that InfluxDB wants.&#34;&#34;&#34;
+            if isinstance(record, DASRecord):
+                data_id = record.data_id
+                fields = record.fields
+                timestamp = record.timestamp
+            else:
+                data_id = record.get(&#39;data_id&#39;, None)
+                fields = record.get(&#39;fields&#39;, {})
+                timestamp = record.get(&#39;timestamp&#39;, None) or time.time()
+            influxDB_record = {
+                &#39;measurement&#39;: self.measurement_name or data_id,
+                &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
+                &#39;fields&#39;: fields,
+                &#39;time&#39;: int(timestamp * 1000000000)
+            }
+            return influxDB_record
+
+        if not record:
+            return
+
+        logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
+
+        if not type(record) in [dict, list, DASRecord]:
+            logging.warning(&#39;InfluxDBWriter received record that was not dict, &#39;
+                            &#39;list or DASRecord format. Type %s: %s&#39;,
+                            type(record), str(record))
+        try:
+            if type(record) in [list, DASRecord]:
+                influxDB_record = [record_to_influx(r) for r in record]
+            else:
+                influxDB_record = record_to_influx(record)
+            # logging.info(&#39;influxdb\n bucket: %s\nrecord: %s&#39;,
+            #             self.bucket_name, pprint.pformat(influxDB_record))
+            self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
+
+        except Exception as e:
+            logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
+            logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
+                            &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="logger.writers.influxdb_writer.InfluxDBWriter.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Note: Assume record is a dict or DASRecord or list of
+dict/DASRecord. In each record look for 'fields', 'data_id' and
+'timestamp' (UTC epoch seconds). If data_id is missing, use the
+bucket_name we were initialized with.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write(self, record):
+    &#34;&#34;&#34;Note: Assume record is a dict or DASRecord or list of
+    dict/DASRecord. In each record look for &#39;fields&#39;, &#39;data_id&#39; and
+    &#39;timestamp&#39; (UTC epoch seconds). If data_id is missing, use the
+    bucket_name we were initialized with.
+    &#34;&#34;&#34;
+
+    def record_to_influx(record):
+        &#34;&#34;&#34;Put a single record into the format that InfluxDB wants.&#34;&#34;&#34;
+        if isinstance(record, DASRecord):
+            data_id = record.data_id
+            fields = record.fields
+            timestamp = record.timestamp
+        else:
+            data_id = record.get(&#39;data_id&#39;, None)
+            fields = record.get(&#39;fields&#39;, {})
+            timestamp = record.get(&#39;timestamp&#39;, None) or time.time()
+        influxDB_record = {
+            &#39;measurement&#39;: self.measurement_name or data_id,
+            &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
+            &#39;fields&#39;: fields,
+            &#39;time&#39;: int(timestamp * 1000000000)
+        }
+        return influxDB_record
+
+    if not record:
+        return
+
+    logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
+
+    if not type(record) in [dict, list, DASRecord]:
+        logging.warning(&#39;InfluxDBWriter received record that was not dict, &#39;
+                        &#39;list or DASRecord format. Type %s: %s&#39;,
+                        type(record), str(record))
+    try:
+        if type(record) in [list, DASRecord]:
+            influxDB_record = [record_to_influx(r) for r in record]
+        else:
+            influxDB_record = record_to_influx(record)
+        # logging.info(&#39;influxdb\n bucket: %s\nrecord: %s&#39;,
+        #             self.bucket_name, pprint.pformat(influxDB_record))
+        self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
+
+    except Exception as e:
+        logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
+        logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
+                        &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="logger.writers" href="index.html">logger.writers</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="logger.writers.influxdb_writer.InfluxDBWriter" href="#logger.writers.influxdb_writer.InfluxDBWriter">InfluxDBWriter</a></code></h4>
+<ul class="">
+<li><code><a title="logger.writers.influxdb_writer.InfluxDBWriter.write" href="#logger.writers.influxdb_writer.InfluxDBWriter.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

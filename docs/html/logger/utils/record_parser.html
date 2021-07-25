@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.utils.record_parser API documentation</title>
 <meta name="description" content="Tools for parsing NMEA and other text records …" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -21,7 +23,10 @@
 </header>
 <section id="section-intro">
 <p>Tools for parsing NMEA and other text records.</p>
-<p>TODO: text to describe device and device_type formats</p>
+<p>By default, will load device and device_type definitions from files in
+local/devices/*.yaml. Please see documentation in
+local/devices/README.md for a description of the format these
+definitions should take.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -30,11 +35,11 @@
 
 &#34;&#34;&#34;Tools for parsing NMEA and other text records.
 
-TODO: text to describe device and device_type formats
+By default, will load device and device_type definitions from files in
+local/devices/*.yaml. Please see documentation in
+local/devices/README.md for a description of the format these
+definitions should take.
 &#34;&#34;&#34;
-
-import pprint
-
 import datetime
 import glob
 import json
@@ -44,1170 +49,1287 @@ import pprint
 import sys
 
 # Append openrvdas root to syspath prior to importing openrvdas modules
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils import read_config  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
 
-from logger.utils import read_config
-from logger.utils.das_record import DASRecord
+# Dict of format types that extend the default formats recognized by the
+# parse module.
+from logger.utils.record_parser_formats import extra_format_types  # noqa: E402
 
 DEFAULT_DEFINITION_PATH = &#39;local/devices/*.yaml&#39;
-DEFAULT_RECORD_FORMAT = &#39;{data_id:w} {timestamp:ti} {message}&#39;
+DEFAULT_RECORD_FORMAT = &#39;{data_id:w} {timestamp:ti} {field_string}&#39;
 
-############################
-&#34;&#34;&#34;We want to expand the default repertoire of the parse() function to
-be able to handle ints/floats/strings that *might* be omitted. To do
-that, we define some additional named types for it that we can use in
-format definitions.
 
-These might be used, for example, in the following pattern where we
-might have either, both or neither of speed in knots and/or km/hour.
-
-  &#34;{SpeedKt:of},N,{SpeedKm:of},K&#34;
-
-The recognized format types we add are:
-  od = optional integer
-  of = optional generalized float
-  og = optional generalized number
-  ow = optional sequence of letters, numbers, underscores
-  nc = any ASCII text that is not a comma
-
-See &#39;Custom Type Conversions&#39; in https://pypi.org/project/parse/ for a
-discussion of how format types work.
-
-TODO: allow device_type definitions to hand in their own format types.
-&#34;&#34;&#34;
-
-def optional_d(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; integer.&#34;&#34;&#34;
-  if text:
-    return int(text)
-  else:
-    return None
-optional_d.pattern = r&#39;\s*\d*&#39;
-
-def optional_f(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; generalized float.&#34;&#34;&#34;
-  if text:
-    return float(text)
-  else:
-    return None
-optional_f.pattern = r&#39;(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)&#39;
-
-def optional_g(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; generalized number.&#34;&#34;&#34;
-  if text:
-    return float(text)
-  else:
-    return None
-optional_g.pattern = r&#39;(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)&#39;
-
-def optional_w(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; letters/numbers/underscore
-  string.&#34;&#34;&#34;
-  if text:
-    return text
-  else:
-    return None
-optional_w.pattern = r&#39;\w*&#39;
-
-def not_comma(text):
-  &#34;&#34;&#34;Method for parsing a string (or anything) between commas
-  string.&#34;&#34;&#34;
-  if text:
-    return text
-  else:
-    return None
-not_comma.pattern = r&#39;[^,]*&#39;
-
-parser_dict = dict(od=optional_d, of=optional_f, og=optional_g,
-                   ow=optional_w, nc=not_comma)
-
-################################################################################
 class RecordParser:
-  ############################
-  def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
-               definition_path=DEFAULT_DEFINITION_PATH,
-               return_das_record=False, return_json=False,
-               metadata_interval=None, quiet=False):
-    &#34;&#34;&#34;Create a parser that will parse field values out of a text record
-    and return either a Python dict of data_id, timestamp and fields,
-    a JSON encoding of that dict, or a binary DASRecord.
+    ############################
+    def __init__(self, record_format=None,
+                 field_patterns=None, metadata=None,
+                 definition_path=DEFAULT_DEFINITION_PATH,
+                 return_das_record=False, return_json=False,
+                 metadata_interval=None, quiet=False,
+                 prepend_data_id=False, delimiter=&#39;:&#39;):
+        &#34;&#34;&#34;Create a parser that will parse field values out of a text record
+        and return either a Python dict of data_id, timestamp and fields,
+        a JSON encoding of that dict, or a binary DASRecord.
+        ```
+        record_format - string for parse.parse() to use to break out data_id
+            and timestamp from the rest of the message. By default this will
+            look for &#39;data_id timestamp field_string&#39;, where &#39;field_string&#39;
+            is a str containing the fields to be parsed.
 
-    record_format - string for parse.parse() to use to break out data_id
-        and timestamp from the rest of the message. By default this will
-        look for &#39;data_id timestamp device_message&#39;.
+        field_patterns
+            If not None, a list of parse patterns to be tried instead
+            of looking for device definitions along the definition path,
+            or a dict of message_type:[parse_pattern, parse_pattern].
 
-    definition_path - a comma-separated set of file globs in which to look
-        for device and device_type definitions with which to parse message.
+        metadata
+            If field_patterns is not None, the metadata to send along with
+            data records.
 
-    return_json - return the parsed fields as a JSON encoded dict
+        definition_path - a comma-separated set of file globs in which to look
+            for device and device_type definitions with which to parse message.
 
-    return_das_record - return the parsed fields as a DASRecord object
+        return_json - return the parsed fields as a JSON encoded dict
 
-    metadata_interval - if not None, include the description, units
-        and other metadata pertaining to each field in the returned
-        record if those data haven&#39;t been returned in the last
-        metadata_interval seconds.
+        return_das_record - return the parsed fields as a DASRecord object
 
-    quiet - if not False, don&#39;t complain when unable to parse a record.
-    &#34;&#34;&#34;
-    self.quiet = quiet
-    self.record_format = record_format
-    self.compiled_record_format = parse.compile(format=record_format,
-                                                extra_types=parser_dict)
-    self.return_das_record = return_das_record
-    self.return_json = return_json
-    if return_das_record and return_json:
-      raise ValueError(&#39;Only one of return_json and return_das_record &#39;
-                       &#39;may be true.&#39;)
+        metadata_interval - if not None, include the description, units
+            and other metadata pertaining to each field in the returned
+            record if those data haven&#39;t been returned in the last
+            metadata_interval seconds.
 
-    # Fill in the devices and device_types
-    definitions = self._new_read_definitions(definition_path)
-    self.devices = definitions.get(&#39;devices&#39;, {})
-    self.device_types = definitions.get(&#39;device_types&#39;, {})
+        quiet - if not False, don&#39;t complain when unable to parse a record.
 
-    # If we&#39;re to be sending field metadata on occasion, compile it
-    # now. It&#39;s a map from variable name to the device and device type
-    # it came from, along with device type variable and its units and
-    # description, if provided in the device type definition. Compiling
-    # this information is kind of excruciating and voluminous.
-    self.metadata_interval = metadata_interval
-    self.field_metadata = {}
-    self.field_metadata_last_sent = {}
-    if metadata_interval is not None:
-      for device, device_def in self.devices.items(): # e.g. s330
-        device_type_name = device_def.get(&#39;device_type&#39;, None) # Seapath330
-        if not device_type_name:
-          raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
-                           &#39;its device_type.&#39; % device)
-        device_type_def = self.device_types.get(device_type_name, None)
-        if not device_type_def:
-          raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
-                           &#39;is undefined.&#39; % (device_type_name, device))
-        device_type_fields = device_type_def.get(&#39;fields&#39;, None)
-        if not device_type_fields:
-          raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39; % device_type_name)
+        prepend_data_id - If true prepend the instrument data_id to field_names
+            in the record.
 
-        fields = device_def.get(&#39;fields&#39;, None)
-        if not fields:
-          raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
+        delimiter
+            The string to insert between data_id and field_name when prepend_data_id is true.
+            Defaults to &#39;:&#39;.
+            Not used if prepend_data_id is false.
+        ```
+        &#34;&#34;&#34;
+        self.quiet = quiet
+        self.field_patterns = field_patterns
+        self.metadata = metadata or {}
+        self.record_format = record_format or DEFAULT_RECORD_FORMAT
+        self.compiled_record_format = parse.compile(format=self.record_format,
+                                                    extra_types=extra_format_types)
+        self.return_das_record = return_das_record
+        self.return_json = return_json
+        if return_das_record and return_json:
+            raise ValueError(&#39;Only one of return_json and return_das_record &#39;
+                             &#39;may be true.&#39;)
 
-        # e.g. device_type_field = GPSTime, device_field = S330GPSTime
-        for device_type_field, device_field in fields.items():
-          # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
-          field_desc = device_type_fields.get(device_type_field, None)
-          if not field_desc:
-            logging.warning(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
-                            &#39;device field &#34;%s&#34;&#39; % (device_type_name,
-                                                   device_type_field))
-            continue
-          self.field_metadata_last_sent[device_field] = 0
-          self.field_metadata[device_field] = {
-            &#39;device&#39;: device,
-            &#39;device_type&#39;: device_type_name,
-            &#39;device_type_field&#39;: device_type_field,
-          }
-          self.field_metadata[device_field].update(field_desc)
+        self.metadata_interval = metadata_interval
+        self.metadata_last_sent = {}
+        self.prepend_data_id = prepend_data_id
+        self.delimiter = delimiter
 
-    # Some limited error checking: make sure that all devices have a
-    # defined device_type.
-    for device, device_def in self.devices.items():
-      device_type = device_def.get(&#39;device_type&#39;, None)
-      if not device_type:
-        raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
-                         &#39;its device_type.&#39; % device)
-      if not device_type in self.device_types:
-        raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
-                         &#39;is undefined.&#39; % (device_type, device))
+        # If we&#39;ve been explicitly given the field_patterns we&#39;re to use for
+        # parsing, compile them now. Patterns may either be a list of strings,
+        # a dict of strings or a dict of lists of strings.
+        if field_patterns:
+            self.compiled_field_patterns = self._compile_formats_from_patterns(field_patterns)
+            self.metadata = metadata
 
-    # Compile format definitions so that we can run them more
-    # quickly. If format is a single string, normalize it into a list
-    # to simplify later code.
-    for device_type, device_type_def in self.device_types.items():
-      format = device_type_def.get(&#39;format&#39;, None)
-      if format is None:
-        raise ValueError(&#39;Device type %s has no format definition&#39; %device_type)
-      if type(format) is str:
+        # If we&#39;ve not been given field_patterns to use for parsing, read in all
+        # the devices and device types to compile them.
+        else:
+            # Fill in the devices and device_types - NOTE: we won&#39;t be using
+            # these if &#39;field_patterns&#39; is provided as an argument.
+            definitions = self._new_read_definitions(definition_path)
+            self.devices = definitions.get(&#39;devices&#39;, {})
+            self.device_types = definitions.get(&#39;device_types&#39;, {})
+
+            # Some limited error checking: make sure that all devices have a
+            # defined device_type.
+            for device, device_def in self.devices.items():
+                device_type = device_def.get(&#39;device_type&#39;, None)
+                if not device_type:
+                    raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
+                                     &#39;its device_type.&#39; % device)
+                if device_type not in self.device_types:
+                    raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
+                                     &#39;is undefined.&#39; % (device_type, device))
+
+            # Compile format definitions so that we can run them more
+            # quickly. If format is a single string, normalize it into a list
+            # to simplify later code.
+            for device_type, device_type_def in self.device_types.items():
+                format = device_type_def.get(&#39;format&#39;, None)
+                if format is None:
+                    raise ValueError(&#39;Device type %s has no format definition&#39;
+                                     % device_type)
+                compiled_format = self._compile_formats_from_patterns(format)
+                self.device_types[device_type][&#39;compiled_format&#39;] = compiled_format
+
+            # Metadata: If we haven&#39;t been handed a dict of metadata, compile it from
+            # the devices we&#39;ve read.
+            #
+            # It&#39;s a map from variable name to the device and device type it
+            # came from, along with device type variable and its units and
+            # description, if provided in the device type
+            # definition. Compiling this information is kind of excruciating
+            # and voluminous.
+            if not metadata and metadata_interval is not None:
+                for device, device_def in self.devices.items():  # e.g. s330
+                    device_type_name = device_def.get(&#39;device_type&#39;, None)  # Seapath330
+                    if not device_type_name:
+                        raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
+                                         &#39;its device_type.&#39; % device)
+                    device_type_def = self.device_types.get(device_type_name, None)
+                    if not device_type_def:
+                        raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;)&#39;
+                                         &#39; is undefined.&#39; % (device_type_name, device))
+                    device_type_fields = device_type_def.get(&#39;fields&#39;, None)
+                    if not device_type_fields:
+                        raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39;
+                                         % device_type_name)
+
+                    fields = device_def.get(&#39;fields&#39;, None)
+                    if not fields:
+                        raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
+
+                    # e.g. device_type_field = GPSTime, device_field = S330GPSTime
+                    for device_type_field, device_field in fields.items():
+                        # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
+                        field_desc = device_type_fields.get(device_type_field, None)
+                        if not field_desc:
+                            logging.warning(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
+                                            &#39;device field &#34;%s&#34;&#39; % (device_type_name,
+                                                                   device_type_field))
+                            continue
+                        self.metadata[device_field] = {
+                            &#39;device&#39;: device,
+                            &#39;device_type&#39;: device_type_name,
+                            &#39;device_type_field&#39;: device_type_field,
+                        }
+                        self.metadata[device_field].update(field_desc)
+
+    ############################
+    def parse_record(self, record):
+        &#34;&#34;&#34;Parse an id-prefixed text record into a Python dict of data_id,
+        timestamp and fields.
+        &#34;&#34;&#34;
+        if not record:
+            return None
+        if not isinstance(record, str):
+            logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
+            return None
         try:
-          compiled_format = [parse.compile(format=format,
-                                           extra_types=parser_dict)]
-        except ValueError as e:
-          raise ValueError(&#39;Bad parser format: &#34;%s&#34;: %s&#39; % (format, e))
-      else:
-        compiled_format = [parse.compile(format=f, extra_types=parser_dict)
-                           for f in format]
-      self.device_types[device_type][&#39;compiled_format&#39;] = compiled_format
+            # Break record into (by default) data_id, timestamp and field_string
+            parsed_record = self.compiled_record_format.parse(record).named
+        except (ValueError, AttributeError):
+            if not self.quiet:
+                logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
+                logging.warning(&#39;Record: %s&#39;, record)
+            return None
 
-  ############################
-  def parse_record(self, record):
-    &#34;&#34;&#34;Parse an id-prefixed text record into a Python dict of data_id,
-    timestamp and fields.
-    &#34;&#34;&#34;
-    if not record:
-      return None
-    if not type(record) is str:
-      logging.info(&#39;Record is not string: &#34;%s&#34;&#39;, record)
-      return None
-    try:
-      parsed_record = self.compiled_record_format.parse(record).named
-    except (ValueError, AttributeError):
-      if not self.quiet:
-        logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-        logging.warning(&#39;Record: %s&#39;, record)
-      return None
+        # Convert timestamp to numeric, if it&#39;s there
+        timestamp = parsed_record.get(&#39;timestamp&#39;, None)
+        if timestamp is not None and isinstance(timestamp, datetime.datetime):
+            timestamp = timestamp.timestamp()
+            parsed_record[&#39;timestamp&#39;] = timestamp
 
-    # Convert timestamp to numeric, if it&#39;s there
-    timestamp = parsed_record.get(&#39;timestamp&#39;, None)
-    if timestamp is not None and type(timestamp) is datetime.datetime:
-      timestamp = timestamp.timestamp()
-      parsed_record[&#39;timestamp&#39;] = timestamp
+        # Extract the field string we&#39;re going to parse; remove trailing
+        # whitespace.
+        field_string = parsed_record.get(&#39;field_string&#39;, None)
 
-    # Figure out what kind of message we&#39;re expecting, based on data_id
-    data_id = parsed_record.get(&#39;data_id&#39;, None)
-    if data_id is None:
-      if not self.quiet:
-        logging.warning(&#39;No data id found in record: %s&#39;, record)
-      return None
+        # If we don&#39;t have fields, there&#39;s nothing to parse
+        if field_string is None:
+            return None
+        field_string = field_string.strip()
+        if not field_string:
+            return None
 
-    # Get device and device_type definitions for data_id
-    device = self.devices.get(data_id, None)
-    if not device:
-      if not self.quiet:
-        logging.warning(&#39;Unrecognized data id &#34;%s&#34;, record: %s&#39;, data_id,record)
-        logging.warning(&#39;Devices are: %s&#39;, &#39;, &#39;.join(self.devices.keys()))
-      return None
+        fields = {}
 
-    device_type = device.get(&#39;device_type&#39;, None)
-    if not device_type:
-      if not self.quiet:
-        logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
-      return None
+        # If we&#39;ve been given a set of field_patterns to apply, use the
+        # first that matches.
+        if self.field_patterns:
+            fields, message_type = self._parse_field_string(field_string,
+                                                            self.compiled_field_patterns)
+        # If we were given no explicit field_patterns to use, we need to
+        # count on the record having a data_id that lets us figure out
+        # which device, and therefore which field_patterns to try.
+        else:
+            data_id = parsed_record.get(&#39;data_id&#39;, None)
+            if data_id is None:
+                if not self.quiet:
+                    logging.warning(&#39;No data id found in record: %s&#39;, record)
+                return None
+            fields, message_type = self.parse_for_data_id(data_id, field_string)
 
-    # Extract the message we&#39;re going to parse; remove trailing whitespace
-    message = parsed_record.get(&#39;message&#39;, &#39;&#39;).rstrip()
-    if not message:
-      if not self.quiet:
-        logging.warning(&#39;No message found in record: %s&#39;, record)
-      return None
-    del parsed_record[&#39;message&#39;]
+        # We should now have a dictionary of fields. If not, go home
+        if not fields:
+            if not self.quiet:
+                logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+            return None
 
-    # Now parse the message, based on device type. If something goes
-    # wrong during parsing, expect a ValueError.
-    try:
-      parsed_fields = self.parse(device_type=device_type, message=message)
-      logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
-    except ValueError as e:
-      logging.error(str(e))
-      return None
+        # Some folks want the data_id prepended
+        if self.prepend_data_id:
+            # This conditional dictates whether fields are stored with just the
+            # field_name key, or &lt;data_id&gt;&lt;delimiter&gt;&lt;field_name&gt;
+            # Doing some work directly on the fields dict, so we&#39;ll take a copy
+            # to loop over.
+            fields_copy = fields.copy()
+            # Reset the fields dict
+            fields = {}
+            for field in fields_copy:
+                # Determine the new &#34;field_name&#34;
+                key = &#39;&#39; + data_id + self.delimiter + field
+                # Set the value
+                fields[key] = fields_copy[field]
 
-    # Finally, convert field values to variable names specific to device
-    device_fields = device.get(&#39;fields&#39;, None)
-    if not device_fields:
-      if not self.quiet:
-        logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
-      return None
+        # Remove raw &#39;field_string&#39; and add parsed &#39;fields&#39; to parsed_record
+        del parsed_record[&#39;field_string&#39;]
+        parsed_record[&#39;fields&#39;] = fields
+        if message_type:
+            parsed_record[&#39;message_type&#39;] = message_type
 
-    # Assign field values to the appropriate named variable.
-    fields = {}
-    metadata_fields = {}
-    for field_name, value in parsed_fields.items():
-      variable_name = device_fields.get(field_name, None)
-      # None means we&#39;re not supposed to report it.
-      if variable_name is None:
-        continue
-      # None means we didn&#39;t have a value for this field; omit it.
-      if value is None:
-        continue
-      # If it&#39;s a datetime, convert to numeric timestamp
-      if type(value) is datetime.datetime:
-        value = value.timestamp()
+        # If we have parsed fields, see if we also have metadata. Are we
+        # supposed to occasionally send it for our variables? Is it time
+        # to send it again?
+        metadata_fields = {}
+        if self.metadata and self.metadata_interval:
+            for field_name in fields:
+                last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
+                time_since_send = timestamp - last_metadata_sent
+                if time_since_send &gt; self.metadata_interval:
+                    field_metadata = self.metadata.get(field_name, None)
+                    if field_metadata:
+                        metadata_fields[field_name] = field_metadata
+                        self.metadata_last_sent[field_name] = timestamp
+        if metadata_fields:
+            metadata = {&#39;fields&#39;: metadata_fields}
+        else:
+            metadata = None
 
-      fields[variable_name] = value
+        if metadata:
+            parsed_record[&#39;metadata&#39;] = metadata
 
-      # Are we supposed to occasionally send metadata on our
-      # variables? Is it time to send it again?
-      if self.metadata_interval:
-        last_metadata_sent = self.field_metadata_last_sent[variable_name]
-        time_since_send = timestamp - last_metadata_sent
-        if time_since_send &gt; self.metadata_interval:
-          metadata_fields[variable_name] =self.field_metadata.get(variable_name)
-          self.field_metadata_last_sent[variable_name] = timestamp
+        logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
 
-    parsed_record[&#39;fields&#39;] = fields
+        # What are we going to do with the result we&#39;ve created?
+        if self.return_das_record:
+            try:
+                return DASRecord(data_id=data_id, timestamp=timestamp,
+                                 message_type=message_type, fields=fields,
+                                 metadata=metadata)
+            except KeyError:
+                return None
 
-    # Are we sending metadata on any fields? If so, add the &#39;metadata&#39;
-    # key into our parsed_record.
-    if metadata_fields:
-      metadata = {&#39;fields&#39;: metadata_fields}
-      parsed_record[&#39;metadata&#39;] = metadata
-    else:
-      metadata = None
+        elif self.return_json:
+            return json.dumps(parsed_record)
+        else:
+            return parsed_record
 
-    logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
+    ############################
+    def _parse_field_string(self, field_string, compiled_field_patterns):
+        # Default if we don&#39;t match anything
+        fields = {}
+        message_type = None
 
-    # What are we going to do with the parsed_record we&#39;ve created?
-    if self.return_das_record:
-      try:
-        return DASRecord(data_id=data_id, timestamp=timestamp,
-                         fields=fields, metadata=metadata)
-      except KeyError:
-        return None
+        # If our pattern(s) are just a single compiled parser, try parsing and
+        # return with no message type.
+        if isinstance(compiled_field_patterns, parse.Parser):
+            result = compiled_field_patterns.parse(field_string)
+            if result:
+                fields = result.named
 
-    elif self.return_json:
-      return json.dumps(parsed_record)
-    else:
-      return parsed_record
+        # Else, if it&#39;s a list, try it out on all the elements.
+        elif isinstance(compiled_field_patterns, list):
+            for pattern in compiled_field_patterns:
+                fields, message_type = self._parse_field_string(field_string, pattern)
+                if fields:
+                    break
 
-  ############################
-  def parse(self, device_type, message):
-    &#34;&#34;&#34;Parse a text message of device_type into a flat Python dict; raise
-    ValueError if there are problems, return empty dict if there is no
-    match to the provided formats.
-    &#34;&#34;&#34;
-    device_definition = self.device_types.get(device_type, None)
-    if not device_definition:
-      raise ValueError(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
+        # If it&#39;s a dict, try out on all values, using the key as message type.
+        # It&#39;s syntactically possible for the internal set of patterns to have
+        # their own message types. Not sure why someone would ever create patterns
+        # that did this, but if they do, let that override our base one.
+        elif isinstance(compiled_field_patterns, dict):
+            for message_type, pattern in compiled_field_patterns.items():
+                fields, int_message_type = self._parse_field_string(field_string, pattern)
+                message_type = int_message_type or message_type
+                if fields:
+                    break
+        else:
+            raise ValueError(&#39;Unexpected pattern type in parser: %s&#39;
+                             % type(compiled_field_patterns))
 
-    &#34;&#34;&#34;
-    logging.warning(&#39;#########&#39;)
-    format = device_definition.get(&#39;format&#39;, None)
-    if type(format) is str:
-      format = [format]
-    for trial_format in format:
-      logging.warning(&#39;trying parse.parse(&#34;%s&#34;, &#34;%s&#34;)&#39;, trial_format, message)
-      fields = parse.parse(trial_format, message)
-      if fields:
-        logging.warning(&#39;Matched!&#39;)
-        return fields.named
-    logging.warning(&#39;No match!&#39;)
-    &#34;&#34;&#34;
-    compiled_format = device_definition.get(&#39;compiled_format&#39;, None)
-    for trial_format in compiled_format:
-      fields = trial_format.parse(message)
-      if fields:
-        return fields.named
+        return fields, message_type
 
-    # Nothing matched, go home empty-handed
-    if not self.quiet:
-      logging.warning(&#39;No formats for %s matched message &#34;%s&#34;&#39;,
-                      device_type, message)
-    return {}
+    ############################
+    def parse_for_data_id(self, data_id, field_string):
+        &#34;&#34;&#34;Look up the device and device type for a data_id. Parse the field_string
+        according to those formats, returning a dict of {field_name:
+        field_value} or None if unable to match a format pattern.
+        &#34;&#34;&#34;
+        if not self.devices:
+            logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
+            return None
 
-  ############################
-  def _read_definitions(self, filespec_paths):
-    &#34;&#34;&#34;Read the files on the filespec_paths and return dictinary of
-    accumulated definitions.
-    &#34;&#34;&#34;
-    definitions = {}
-    for filespec in filespec_paths.split(&#39;,&#39;):
-      filenames = glob.glob(filespec)
-      if not filenames:
-        logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+        # Get device and device_type definitions for data_id
+        device = self.devices.get(data_id, None)
+        if not device:
+            if not self.quiet:
+                logging.warning(&#39;Unrecognized data id &#34;%s&#34;, field string: %s&#39;,
+                                data_id, field_string)
+                logging.warning(&#39;Known data ids are: &#34;%s&#34;&#39;,
+                                &#39;, &#39;.join(self.devices.keys()))
+            return None
 
-      for filename in filenames:
-        file_definitions = read_config.read_config(filename)
+        device_type = device.get(&#39;device_type&#39;, None)
+        if not device_type:
+            if not self.quiet:
+                logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
+            return None
 
-        for new_def_name, new_def in file_definitions.items():
-          if new_def_name in definitions:
-            logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                            new_def_name, filename)
-          definitions[new_def_name] = new_def
-    return definitions
+        device_definition = self.device_types.get(device_type, None)
+        if not device_definition:
+            if not self.quiet:
+                logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
+            return None
 
-  ############################
-  def _new_read_definitions(self, filespec_paths, definitions=None):
-    &#34;&#34;&#34;Read the files on the filespec_paths and return dictinary of
-    accumulated definitions.
+        compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
+        parsed_fields, message_type = \
+            self._parse_field_string(field_string, compiled_format_patterns)
 
-    filespec_paths - a list of possibly-globbed filespecs to be read
+        # Did we get anything?
+        if not parsed_fields and not self.quiet:
+            logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
 
-    definitions - optional dict of pre-existing definitions that will
-                  be added to. Typically this will be omitted on a base call,
-                  but may be added to when recursing. Passing it in allows
-                  flagging when items are defined more than once.
-    &#34;&#34;&#34;
-    # If nothing was passed in, start with base case.
-    definitions = definitions or {&#39;devices&#39;: {}, &#39;device_types&#39;: {}}
+        logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
-    for filespec in filespec_paths.split(&#39;,&#39;):
-      filenames = glob.glob(filespec)
-      if not filenames:
-        logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+        # Finally, convert field values to variable names specific to device
+        device_fields = device.get(&#39;fields&#39;, None)
+        if not device_fields:
+            if not self.quiet:
+                logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
+            return None
 
-      for filename in filenames:
-        file_definitions = read_config.read_config(filename)
+        # Assign field values to the appropriate named variable.
+        fields = {}
+        for field_name, value in parsed_fields.items():
+            variable_name = device_fields.get(field_name, None)
+            # None means we&#39;re not supposed to report it.
+            if variable_name is None:
+                continue
+            # None means we didn&#39;t have a value for this field; omit it.
+            if value is None:
+                continue
+            # If it&#39;s a datetime, convert to numeric timestamp
+            if isinstance(value, datetime.datetime):
+                value = value.timestamp()
+            fields[variable_name] = value
 
-        for key, val in file_definitions.items():
-          # If we have a dict of device definitions, copy them into the
-          # &#39;devices&#39; key of our definitions.
-          if key == &#39;devices&#39;:
-            if not type(val) is dict:
-              logging.error(&#39;&#34;devices&#34; values in file %s must be dict. &#39;
-                            &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
-              return None
-          
-            for device_name, device_def in val.items():
-              if device_name in definitions[&#39;devices&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                device_name, filename)
-              definitions[&#39;devices&#39;][device_name] = device_def
-          
-          # If we have a dict of device_type definitions, copy them into the
-          # &#39;device_types&#39; key of our definitions.
-          elif key == &#39;device_types&#39;:
-            if not type(val) is dict:
-              logging.error(&#39;&#34;device_typess&#34; values in file %s must be dict. &#39;
-                            &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
-              return None
-          
-            for device_type_name, device_type_def in val.items():
-              if device_type_name in definitions[&#39;device_types&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                device_type_name, filename)
-              definitions[&#39;device_types&#39;][device_type_name] = device_type_def
+        logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(fields))
+        return fields, message_type
 
-          # If we&#39;re including other files, recurse inelegantly
-          elif key == &#39;includes&#39;:
-            if not type(val) in [str, list]:
-              logging.error(&#39;&#34;includes&#34; values in file %s must be either &#39;
-                            &#39;a list or a simple string. Found type &#34;%s&#34;&#39;,
-                            filename, type(val))
-              return None
+    ############################
+    def _compile_formats_from_patterns(self, field_patterns):
+        &#34;&#34;&#34;Return a list/dict of patterns compiled from the
+        str/list/dict of passed field_patterns.
+        &#34;&#34;&#34;
+        if isinstance(field_patterns, str):
+            return [parse.compile(format=field_patterns,
+                                  extra_types=extra_format_types)]
+        elif isinstance(field_patterns, list):
+            return [parse.compile(format=p, extra_types=extra_format_types)
+                    for p in field_patterns]
+        elif isinstance(field_patterns, dict):
+            compiled_field_patterns = {}
+            for message_type, message_pattern in field_patterns.items():
+                compiled_patterns = self._compile_formats_from_patterns(message_pattern)
+                compiled_field_patterns[message_type] = compiled_patterns
+            return compiled_field_patterns
 
-            if type(val) is str: val = [val]
-            for filespec in val:
-              new_defs = self._new_read_definitions(filespec, definitions)
-              definitions[&#39;devices&#39;].update(new_defs.get(&#39;devices&#39;, {}))
-              definitions[&#39;device_types&#39;].update(new_defs.get(&#39;device_types&#39;, {}))
-          
-          # If it&#39;s not an includes/devices/device_types def, assume
-          # it&#39;s a (deprecated) top-level device or device_type
-          # definition. Try adding it to the right place.
-          else:
-            category = val.get(&#39;category&#39;, None)
-            if not category in [&#39;device&#39;, &#39;device_type&#39;]:
-              logging.warning(&#39;Top-level definition &#34;%s&#34; in file %s is not &#39;
-                              &#39;category &#34;device&#34; or &#34;device_type&#34;. &#39;
-                              &#39;Category is &#34;%s&#34; - ignoring&#39;, category)
-              continue
-            if category == &#39;device&#39;:
-              if key in definitions[&#39;devices&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                key, filename)
-              definitions[&#39;devices&#39;][key] = val
-            else:
-              if key in definitions[&#39;device_types&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                key, filename)
-              definitions[&#39;device_types&#39;][key] = val
+        else:
+            raise ValueError(&#39;Passed field_patterns must be str, list or dict. Found %s: %s&#39;
+                             % (type(field_patterns), str(field_patterns)))
 
-    # Finally, return the accumulated definitions
-    return definitions</code></pre>
+    ############################
+    def _read_definitions(self, filespec_paths):
+        &#34;&#34;&#34;Read the files on the filespec_paths and return dictionary of
+        accumulated definitions.
+        &#34;&#34;&#34;
+        definitions = {}
+        for filespec in filespec_paths.split(&#39;,&#39;):
+            filenames = glob.glob(filespec)
+            if not filenames:
+                logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+
+            for filename in filenames:
+                file_definitions = read_config.read_config(filename)
+
+                for new_def_name, new_def in file_definitions.items():
+                    if new_def_name in definitions:
+                        logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                        new_def_name, filename)
+                    definitions[new_def_name] = new_def
+        return definitions
+
+    ############################
+    def _new_read_definitions(self, filespec_paths, definitions=None):
+        &#34;&#34;&#34;Read the files on the filespec_paths and return dictionary of
+        accumulated definitions.
+
+        filespec_paths - a list of possibly-globbed filespecs to be read
+
+        definitions - optional dict of pre-existing definitions that will
+                      be added to. Typically this will be omitted on a base call,
+                      but may be added to when recursing. Passing it in allows
+                      flagging when items are defined more than once.
+        &#34;&#34;&#34;
+        # If nothing was passed in, start with base case.
+        definitions = definitions or {&#39;devices&#39;: {}, &#39;device_types&#39;: {}}
+
+        for filespec in filespec_paths.split(&#39;,&#39;):
+            filenames = glob.glob(filespec)
+            if not filenames:
+                logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+
+            for filename in filenames:
+                file_definitions = read_config.read_config(filename)
+
+                for key, val in file_definitions.items():
+                    # If we have a dict of device definitions, copy them into the
+                    # &#39;devices&#39; key of our definitions.
+                    if key == &#39;devices&#39;:
+                        if not isinstance(val, dict):
+                            logging.error(&#39;&#34;devices&#34; values in file %s must be dict. &#39;
+                                          &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
+                            return None
+
+                        for device_name, device_def in val.items():
+                            if device_name in definitions[&#39;devices&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                device_name, filename)
+                            definitions[&#39;devices&#39;][device_name] = device_def
+
+                    # If we have a dict of device_type definitions, copy them into the
+                    # &#39;device_types&#39; key of our definitions.
+                    elif key == &#39;device_types&#39;:
+                        if not isinstance(val, dict):
+                            logging.error(&#39;&#34;device_typess&#34; values in file %s must be dict. &#39;
+                                          &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
+                            return None
+
+                        for device_type_name, device_type_def in val.items():
+                            if device_type_name in definitions[&#39;device_types&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                device_type_name, filename)
+                            definitions[&#39;device_types&#39;][device_type_name] = device_type_def
+
+                    # If we&#39;re including other files, recurse inelegantly
+                    elif key == &#39;includes&#39;:
+                        if not type(val) in [str, list]:
+                            logging.error(&#39;&#34;includes&#34; values in file %s must be either &#39;
+                                          &#39;a list or a simple string. Found type &#34;%s&#34;&#39;,
+                                          filename, type(val))
+                            return None
+
+                        if isinstance(val, str):
+                            val = [val]
+                        for filespec in val:
+                            new_defs = self._new_read_definitions(filespec, definitions)
+                            definitions[&#39;devices&#39;].update(new_defs.get(&#39;devices&#39;, {}))
+                            definitions[&#39;device_types&#39;].update(new_defs.get(&#39;device_types&#39;, {}))
+
+                    # If it&#39;s not an includes/devices/device_types def, assume
+                    # it&#39;s a (deprecated) top-level device or device_type
+                    # definition. Try adding it to the right place.
+                    else:
+                        category = val.get(&#39;category&#39;, None)
+                        if category not in [&#39;device&#39;, &#39;device_type&#39;]:
+                            logging.warning(&#39;Top-level definition &#34;%s&#34; in file %s is not &#39;
+                                            &#39;category &#34;device&#34; or &#34;device_type&#34;. &#39;
+                                            &#39;Category is &#34;%s&#34; - ignoring&#39;, category)
+                            continue
+                        if category == &#39;device&#39;:
+                            if key in definitions[&#39;devices&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                key, filename)
+                            definitions[&#39;devices&#39;][key] = val
+                        else:
+                            if key in definitions[&#39;device_types&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                key, filename)
+                            definitions[&#39;device_types&#39;][key] = val
+
+        # Finally, return the accumulated definitions
+        return definitions</code></pre>
 </details>
 </section>
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-variables">Global variables</h2>
-<dl>
-<dt id="logger.utils.record_parser.DEFAULT_RECORD_FORMAT"><code class="name">var <span class="ident">DEFAULT_RECORD_FORMAT</span></code></dt>
-<dd>
-<section class="desc"><p>We want to expand the default repertoire of the parse() function to
-be able to handle ints/floats/strings that <em>might</em> be omitted. To do
-that, we define some additional named types for it that we can use in
-format definitions.</p>
-<p>These might be used, for example, in the following pattern where we
-might have either, both or neither of speed in knots and/or km/hour.</p>
-<p>"{SpeedKt:of},N,{SpeedKm:of},K"</p>
-<p>The recognized format types we add are:
-od = optional integer
-of = optional generalized float
-og = optional generalized number
-ow = optional sequence of letters, numbers, underscores
-nc = any ASCII text that is not a comma</p>
-<p>See 'Custom Type Conversions' in <a href="https://pypi.org/project/parse/">https://pypi.org/project/parse/</a> for a
-discussion of how format types work.</p>
-<p>TODO: allow device_type definitions to hand in their own format types.</p></section>
-</dd>
-</dl>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="logger.utils.record_parser.not_comma"><code class="name flex">
-<span>def <span class="ident">not_comma</span></span>(<span>text)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Method for parsing a string (or anything) between commas
-string.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def not_comma(text):
-  &#34;&#34;&#34;Method for parsing a string (or anything) between commas
-  string.&#34;&#34;&#34;
-  if text:
-    return text
-  else:
-    return None</code></pre>
-</details>
-</dd>
-<dt id="logger.utils.record_parser.optional_d"><code class="name flex">
-<span>def <span class="ident">optional_d</span></span>(<span>text)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Method for parsing an 'optional' integer.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def optional_d(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; integer.&#34;&#34;&#34;
-  if text:
-    return int(text)
-  else:
-    return None</code></pre>
-</details>
-</dd>
-<dt id="logger.utils.record_parser.optional_f"><code class="name flex">
-<span>def <span class="ident">optional_f</span></span>(<span>text)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Method for parsing an 'optional' generalized float.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def optional_f(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; generalized float.&#34;&#34;&#34;
-  if text:
-    return float(text)
-  else:
-    return None</code></pre>
-</details>
-</dd>
-<dt id="logger.utils.record_parser.optional_g"><code class="name flex">
-<span>def <span class="ident">optional_g</span></span>(<span>text)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Method for parsing an 'optional' generalized number.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def optional_g(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; generalized number.&#34;&#34;&#34;
-  if text:
-    return float(text)
-  else:
-    return None</code></pre>
-</details>
-</dd>
-<dt id="logger.utils.record_parser.optional_w"><code class="name flex">
-<span>def <span class="ident">optional_w</span></span>(<span>text)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Method for parsing an 'optional' letters/numbers/underscore
-string.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def optional_w(text):
-  &#34;&#34;&#34;Method for parsing an &#39;optional&#39; letters/numbers/underscore
-  string.&#34;&#34;&#34;
-  if text:
-    return text
-  else:
-    return None</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="logger.utils.record_parser.RecordParser"><code class="flex name class">
 <span>class <span class="ident">RecordParser</span></span>
-<span>(</span><span>record_format='{data_id:w} {timestamp:ti} {message}', definition_path='local/devices/*.yaml', return_das_record=False, return_json=False, metadata_interval=None, quiet=False)</span>
+<span>(</span><span>record_format=None, field_patterns=None, metadata=None, definition_path='local/devices/*.yaml', return_das_record=False, return_json=False, metadata_interval=None, quiet=False, prepend_data_id=False, delimiter=':')</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Create a parser that will parse field values out of a text record
+<div class="desc"><p>Create a parser that will parse field values out of a text record
 and return either a Python dict of data_id, timestamp and fields,
 a JSON encoding of that dict, or a binary DASRecord.</p>
-<p>record_format - string for parse.parse() to use to break out data_id
-and timestamp from the rest of the message. By default this will
-look for 'data_id timestamp device_message'.</p>
-<p>definition_path - a comma-separated set of file globs in which to look
-for device and device_type definitions with which to parse message.</p>
-<p>return_json - return the parsed fields as a JSON encoded dict</p>
-<p>return_das_record - return the parsed fields as a DASRecord object</p>
-<p>metadata_interval - if not None, include the description, units
-and other metadata pertaining to each field in the returned
-record if those data haven't been returned in the last
-metadata_interval seconds.</p>
-<p>quiet - if not False, don't complain when unable to parse a record.</p></section>
+<pre><code>record_format - string for parse.parse() to use to break out data_id
+    and timestamp from the rest of the message. By default this will
+    look for 'data_id timestamp field_string', where 'field_string'
+    is a str containing the fields to be parsed.
+
+field_patterns
+    If not None, a list of parse patterns to be tried instead
+    of looking for device definitions along the definition path,
+    or a dict of message_type:[parse_pattern, parse_pattern].
+
+metadata
+    If field_patterns is not None, the metadata to send along with
+    data records.
+
+definition_path - a comma-separated set of file globs in which to look
+    for device and device_type definitions with which to parse message.
+
+return_json - return the parsed fields as a JSON encoded dict
+
+return_das_record - return the parsed fields as a DASRecord object
+
+metadata_interval - if not None, include the description, units
+    and other metadata pertaining to each field in the returned
+    record if those data haven't been returned in the last
+    metadata_interval seconds.
+
+quiet - if not False, don't complain when unable to parse a record.
+
+prepend_data_id - If true prepend the instrument data_id to field_names
+    in the record.
+
+delimiter
+    The string to insert between data_id and field_name when prepend_data_id is true.
+    Defaults to ':'.
+    Not used if prepend_data_id is false.
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RecordParser:
-  ############################
-  def __init__(self, record_format=DEFAULT_RECORD_FORMAT,
-               definition_path=DEFAULT_DEFINITION_PATH,
-               return_das_record=False, return_json=False,
-               metadata_interval=None, quiet=False):
-    &#34;&#34;&#34;Create a parser that will parse field values out of a text record
-    and return either a Python dict of data_id, timestamp and fields,
-    a JSON encoding of that dict, or a binary DASRecord.
+    ############################
+    def __init__(self, record_format=None,
+                 field_patterns=None, metadata=None,
+                 definition_path=DEFAULT_DEFINITION_PATH,
+                 return_das_record=False, return_json=False,
+                 metadata_interval=None, quiet=False,
+                 prepend_data_id=False, delimiter=&#39;:&#39;):
+        &#34;&#34;&#34;Create a parser that will parse field values out of a text record
+        and return either a Python dict of data_id, timestamp and fields,
+        a JSON encoding of that dict, or a binary DASRecord.
+        ```
+        record_format - string for parse.parse() to use to break out data_id
+            and timestamp from the rest of the message. By default this will
+            look for &#39;data_id timestamp field_string&#39;, where &#39;field_string&#39;
+            is a str containing the fields to be parsed.
 
-    record_format - string for parse.parse() to use to break out data_id
-        and timestamp from the rest of the message. By default this will
-        look for &#39;data_id timestamp device_message&#39;.
+        field_patterns
+            If not None, a list of parse patterns to be tried instead
+            of looking for device definitions along the definition path,
+            or a dict of message_type:[parse_pattern, parse_pattern].
 
-    definition_path - a comma-separated set of file globs in which to look
-        for device and device_type definitions with which to parse message.
+        metadata
+            If field_patterns is not None, the metadata to send along with
+            data records.
 
-    return_json - return the parsed fields as a JSON encoded dict
+        definition_path - a comma-separated set of file globs in which to look
+            for device and device_type definitions with which to parse message.
 
-    return_das_record - return the parsed fields as a DASRecord object
+        return_json - return the parsed fields as a JSON encoded dict
 
-    metadata_interval - if not None, include the description, units
-        and other metadata pertaining to each field in the returned
-        record if those data haven&#39;t been returned in the last
-        metadata_interval seconds.
+        return_das_record - return the parsed fields as a DASRecord object
 
-    quiet - if not False, don&#39;t complain when unable to parse a record.
-    &#34;&#34;&#34;
-    self.quiet = quiet
-    self.record_format = record_format
-    self.compiled_record_format = parse.compile(format=record_format,
-                                                extra_types=parser_dict)
-    self.return_das_record = return_das_record
-    self.return_json = return_json
-    if return_das_record and return_json:
-      raise ValueError(&#39;Only one of return_json and return_das_record &#39;
-                       &#39;may be true.&#39;)
+        metadata_interval - if not None, include the description, units
+            and other metadata pertaining to each field in the returned
+            record if those data haven&#39;t been returned in the last
+            metadata_interval seconds.
 
-    # Fill in the devices and device_types
-    definitions = self._new_read_definitions(definition_path)
-    self.devices = definitions.get(&#39;devices&#39;, {})
-    self.device_types = definitions.get(&#39;device_types&#39;, {})
+        quiet - if not False, don&#39;t complain when unable to parse a record.
 
-    # If we&#39;re to be sending field metadata on occasion, compile it
-    # now. It&#39;s a map from variable name to the device and device type
-    # it came from, along with device type variable and its units and
-    # description, if provided in the device type definition. Compiling
-    # this information is kind of excruciating and voluminous.
-    self.metadata_interval = metadata_interval
-    self.field_metadata = {}
-    self.field_metadata_last_sent = {}
-    if metadata_interval is not None:
-      for device, device_def in self.devices.items(): # e.g. s330
-        device_type_name = device_def.get(&#39;device_type&#39;, None) # Seapath330
-        if not device_type_name:
-          raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
-                           &#39;its device_type.&#39; % device)
-        device_type_def = self.device_types.get(device_type_name, None)
-        if not device_type_def:
-          raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
-                           &#39;is undefined.&#39; % (device_type_name, device))
-        device_type_fields = device_type_def.get(&#39;fields&#39;, None)
-        if not device_type_fields:
-          raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39; % device_type_name)
+        prepend_data_id - If true prepend the instrument data_id to field_names
+            in the record.
 
-        fields = device_def.get(&#39;fields&#39;, None)
-        if not fields:
-          raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
+        delimiter
+            The string to insert between data_id and field_name when prepend_data_id is true.
+            Defaults to &#39;:&#39;.
+            Not used if prepend_data_id is false.
+        ```
+        &#34;&#34;&#34;
+        self.quiet = quiet
+        self.field_patterns = field_patterns
+        self.metadata = metadata or {}
+        self.record_format = record_format or DEFAULT_RECORD_FORMAT
+        self.compiled_record_format = parse.compile(format=self.record_format,
+                                                    extra_types=extra_format_types)
+        self.return_das_record = return_das_record
+        self.return_json = return_json
+        if return_das_record and return_json:
+            raise ValueError(&#39;Only one of return_json and return_das_record &#39;
+                             &#39;may be true.&#39;)
 
-        # e.g. device_type_field = GPSTime, device_field = S330GPSTime
-        for device_type_field, device_field in fields.items():
-          # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
-          field_desc = device_type_fields.get(device_type_field, None)
-          if not field_desc:
-            logging.warning(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
-                            &#39;device field &#34;%s&#34;&#39; % (device_type_name,
-                                                   device_type_field))
-            continue
-          self.field_metadata_last_sent[device_field] = 0
-          self.field_metadata[device_field] = {
-            &#39;device&#39;: device,
-            &#39;device_type&#39;: device_type_name,
-            &#39;device_type_field&#39;: device_type_field,
-          }
-          self.field_metadata[device_field].update(field_desc)
+        self.metadata_interval = metadata_interval
+        self.metadata_last_sent = {}
+        self.prepend_data_id = prepend_data_id
+        self.delimiter = delimiter
 
-    # Some limited error checking: make sure that all devices have a
-    # defined device_type.
-    for device, device_def in self.devices.items():
-      device_type = device_def.get(&#39;device_type&#39;, None)
-      if not device_type:
-        raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
-                         &#39;its device_type.&#39; % device)
-      if not device_type in self.device_types:
-        raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
-                         &#39;is undefined.&#39; % (device_type, device))
+        # If we&#39;ve been explicitly given the field_patterns we&#39;re to use for
+        # parsing, compile them now. Patterns may either be a list of strings,
+        # a dict of strings or a dict of lists of strings.
+        if field_patterns:
+            self.compiled_field_patterns = self._compile_formats_from_patterns(field_patterns)
+            self.metadata = metadata
 
-    # Compile format definitions so that we can run them more
-    # quickly. If format is a single string, normalize it into a list
-    # to simplify later code.
-    for device_type, device_type_def in self.device_types.items():
-      format = device_type_def.get(&#39;format&#39;, None)
-      if format is None:
-        raise ValueError(&#39;Device type %s has no format definition&#39; %device_type)
-      if type(format) is str:
+        # If we&#39;ve not been given field_patterns to use for parsing, read in all
+        # the devices and device types to compile them.
+        else:
+            # Fill in the devices and device_types - NOTE: we won&#39;t be using
+            # these if &#39;field_patterns&#39; is provided as an argument.
+            definitions = self._new_read_definitions(definition_path)
+            self.devices = definitions.get(&#39;devices&#39;, {})
+            self.device_types = definitions.get(&#39;device_types&#39;, {})
+
+            # Some limited error checking: make sure that all devices have a
+            # defined device_type.
+            for device, device_def in self.devices.items():
+                device_type = device_def.get(&#39;device_type&#39;, None)
+                if not device_type:
+                    raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
+                                     &#39;its device_type.&#39; % device)
+                if device_type not in self.device_types:
+                    raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;) &#39;
+                                     &#39;is undefined.&#39; % (device_type, device))
+
+            # Compile format definitions so that we can run them more
+            # quickly. If format is a single string, normalize it into a list
+            # to simplify later code.
+            for device_type, device_type_def in self.device_types.items():
+                format = device_type_def.get(&#39;format&#39;, None)
+                if format is None:
+                    raise ValueError(&#39;Device type %s has no format definition&#39;
+                                     % device_type)
+                compiled_format = self._compile_formats_from_patterns(format)
+                self.device_types[device_type][&#39;compiled_format&#39;] = compiled_format
+
+            # Metadata: If we haven&#39;t been handed a dict of metadata, compile it from
+            # the devices we&#39;ve read.
+            #
+            # It&#39;s a map from variable name to the device and device type it
+            # came from, along with device type variable and its units and
+            # description, if provided in the device type
+            # definition. Compiling this information is kind of excruciating
+            # and voluminous.
+            if not metadata and metadata_interval is not None:
+                for device, device_def in self.devices.items():  # e.g. s330
+                    device_type_name = device_def.get(&#39;device_type&#39;, None)  # Seapath330
+                    if not device_type_name:
+                        raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
+                                         &#39;its device_type.&#39; % device)
+                    device_type_def = self.device_types.get(device_type_name, None)
+                    if not device_type_def:
+                        raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;)&#39;
+                                         &#39; is undefined.&#39; % (device_type_name, device))
+                    device_type_fields = device_type_def.get(&#39;fields&#39;, None)
+                    if not device_type_fields:
+                        raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39;
+                                         % device_type_name)
+
+                    fields = device_def.get(&#39;fields&#39;, None)
+                    if not fields:
+                        raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
+
+                    # e.g. device_type_field = GPSTime, device_field = S330GPSTime
+                    for device_type_field, device_field in fields.items():
+                        # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
+                        field_desc = device_type_fields.get(device_type_field, None)
+                        if not field_desc:
+                            logging.warning(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
+                                            &#39;device field &#34;%s&#34;&#39; % (device_type_name,
+                                                                   device_type_field))
+                            continue
+                        self.metadata[device_field] = {
+                            &#39;device&#39;: device,
+                            &#39;device_type&#39;: device_type_name,
+                            &#39;device_type_field&#39;: device_type_field,
+                        }
+                        self.metadata[device_field].update(field_desc)
+
+    ############################
+    def parse_record(self, record):
+        &#34;&#34;&#34;Parse an id-prefixed text record into a Python dict of data_id,
+        timestamp and fields.
+        &#34;&#34;&#34;
+        if not record:
+            return None
+        if not isinstance(record, str):
+            logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
+            return None
         try:
-          compiled_format = [parse.compile(format=format,
-                                           extra_types=parser_dict)]
-        except ValueError as e:
-          raise ValueError(&#39;Bad parser format: &#34;%s&#34;: %s&#39; % (format, e))
-      else:
-        compiled_format = [parse.compile(format=f, extra_types=parser_dict)
-                           for f in format]
-      self.device_types[device_type][&#39;compiled_format&#39;] = compiled_format
+            # Break record into (by default) data_id, timestamp and field_string
+            parsed_record = self.compiled_record_format.parse(record).named
+        except (ValueError, AttributeError):
+            if not self.quiet:
+                logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
+                logging.warning(&#39;Record: %s&#39;, record)
+            return None
 
-  ############################
-  def parse_record(self, record):
-    &#34;&#34;&#34;Parse an id-prefixed text record into a Python dict of data_id,
-    timestamp and fields.
-    &#34;&#34;&#34;
-    if not record:
-      return None
-    if not type(record) is str:
-      logging.info(&#39;Record is not string: &#34;%s&#34;&#39;, record)
-      return None
-    try:
-      parsed_record = self.compiled_record_format.parse(record).named
-    except (ValueError, AttributeError):
-      if not self.quiet:
-        logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-        logging.warning(&#39;Record: %s&#39;, record)
-      return None
+        # Convert timestamp to numeric, if it&#39;s there
+        timestamp = parsed_record.get(&#39;timestamp&#39;, None)
+        if timestamp is not None and isinstance(timestamp, datetime.datetime):
+            timestamp = timestamp.timestamp()
+            parsed_record[&#39;timestamp&#39;] = timestamp
 
-    # Convert timestamp to numeric, if it&#39;s there
-    timestamp = parsed_record.get(&#39;timestamp&#39;, None)
-    if timestamp is not None and type(timestamp) is datetime.datetime:
-      timestamp = timestamp.timestamp()
-      parsed_record[&#39;timestamp&#39;] = timestamp
+        # Extract the field string we&#39;re going to parse; remove trailing
+        # whitespace.
+        field_string = parsed_record.get(&#39;field_string&#39;, None)
 
-    # Figure out what kind of message we&#39;re expecting, based on data_id
-    data_id = parsed_record.get(&#39;data_id&#39;, None)
-    if data_id is None:
-      if not self.quiet:
-        logging.warning(&#39;No data id found in record: %s&#39;, record)
-      return None
+        # If we don&#39;t have fields, there&#39;s nothing to parse
+        if field_string is None:
+            return None
+        field_string = field_string.strip()
+        if not field_string:
+            return None
 
-    # Get device and device_type definitions for data_id
-    device = self.devices.get(data_id, None)
-    if not device:
-      if not self.quiet:
-        logging.warning(&#39;Unrecognized data id &#34;%s&#34;, record: %s&#39;, data_id,record)
-        logging.warning(&#39;Devices are: %s&#39;, &#39;, &#39;.join(self.devices.keys()))
-      return None
+        fields = {}
 
-    device_type = device.get(&#39;device_type&#39;, None)
-    if not device_type:
-      if not self.quiet:
-        logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
-      return None
+        # If we&#39;ve been given a set of field_patterns to apply, use the
+        # first that matches.
+        if self.field_patterns:
+            fields, message_type = self._parse_field_string(field_string,
+                                                            self.compiled_field_patterns)
+        # If we were given no explicit field_patterns to use, we need to
+        # count on the record having a data_id that lets us figure out
+        # which device, and therefore which field_patterns to try.
+        else:
+            data_id = parsed_record.get(&#39;data_id&#39;, None)
+            if data_id is None:
+                if not self.quiet:
+                    logging.warning(&#39;No data id found in record: %s&#39;, record)
+                return None
+            fields, message_type = self.parse_for_data_id(data_id, field_string)
 
-    # Extract the message we&#39;re going to parse; remove trailing whitespace
-    message = parsed_record.get(&#39;message&#39;, &#39;&#39;).rstrip()
-    if not message:
-      if not self.quiet:
-        logging.warning(&#39;No message found in record: %s&#39;, record)
-      return None
-    del parsed_record[&#39;message&#39;]
+        # We should now have a dictionary of fields. If not, go home
+        if not fields:
+            if not self.quiet:
+                logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+            return None
 
-    # Now parse the message, based on device type. If something goes
-    # wrong during parsing, expect a ValueError.
-    try:
-      parsed_fields = self.parse(device_type=device_type, message=message)
-      logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
-    except ValueError as e:
-      logging.error(str(e))
-      return None
+        # Some folks want the data_id prepended
+        if self.prepend_data_id:
+            # This conditional dictates whether fields are stored with just the
+            # field_name key, or &lt;data_id&gt;&lt;delimiter&gt;&lt;field_name&gt;
+            # Doing some work directly on the fields dict, so we&#39;ll take a copy
+            # to loop over.
+            fields_copy = fields.copy()
+            # Reset the fields dict
+            fields = {}
+            for field in fields_copy:
+                # Determine the new &#34;field_name&#34;
+                key = &#39;&#39; + data_id + self.delimiter + field
+                # Set the value
+                fields[key] = fields_copy[field]
 
-    # Finally, convert field values to variable names specific to device
-    device_fields = device.get(&#39;fields&#39;, None)
-    if not device_fields:
-      if not self.quiet:
-        logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
-      return None
+        # Remove raw &#39;field_string&#39; and add parsed &#39;fields&#39; to parsed_record
+        del parsed_record[&#39;field_string&#39;]
+        parsed_record[&#39;fields&#39;] = fields
+        if message_type:
+            parsed_record[&#39;message_type&#39;] = message_type
 
-    # Assign field values to the appropriate named variable.
-    fields = {}
-    metadata_fields = {}
-    for field_name, value in parsed_fields.items():
-      variable_name = device_fields.get(field_name, None)
-      # None means we&#39;re not supposed to report it.
-      if variable_name is None:
-        continue
-      # None means we didn&#39;t have a value for this field; omit it.
-      if value is None:
-        continue
-      # If it&#39;s a datetime, convert to numeric timestamp
-      if type(value) is datetime.datetime:
-        value = value.timestamp()
+        # If we have parsed fields, see if we also have metadata. Are we
+        # supposed to occasionally send it for our variables? Is it time
+        # to send it again?
+        metadata_fields = {}
+        if self.metadata and self.metadata_interval:
+            for field_name in fields:
+                last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
+                time_since_send = timestamp - last_metadata_sent
+                if time_since_send &gt; self.metadata_interval:
+                    field_metadata = self.metadata.get(field_name, None)
+                    if field_metadata:
+                        metadata_fields[field_name] = field_metadata
+                        self.metadata_last_sent[field_name] = timestamp
+        if metadata_fields:
+            metadata = {&#39;fields&#39;: metadata_fields}
+        else:
+            metadata = None
 
-      fields[variable_name] = value
+        if metadata:
+            parsed_record[&#39;metadata&#39;] = metadata
 
-      # Are we supposed to occasionally send metadata on our
-      # variables? Is it time to send it again?
-      if self.metadata_interval:
-        last_metadata_sent = self.field_metadata_last_sent[variable_name]
-        time_since_send = timestamp - last_metadata_sent
-        if time_since_send &gt; self.metadata_interval:
-          metadata_fields[variable_name] =self.field_metadata.get(variable_name)
-          self.field_metadata_last_sent[variable_name] = timestamp
+        logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
 
-    parsed_record[&#39;fields&#39;] = fields
+        # What are we going to do with the result we&#39;ve created?
+        if self.return_das_record:
+            try:
+                return DASRecord(data_id=data_id, timestamp=timestamp,
+                                 message_type=message_type, fields=fields,
+                                 metadata=metadata)
+            except KeyError:
+                return None
 
-    # Are we sending metadata on any fields? If so, add the &#39;metadata&#39;
-    # key into our parsed_record.
-    if metadata_fields:
-      metadata = {&#39;fields&#39;: metadata_fields}
-      parsed_record[&#39;metadata&#39;] = metadata
-    else:
-      metadata = None
+        elif self.return_json:
+            return json.dumps(parsed_record)
+        else:
+            return parsed_record
 
-    logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
+    ############################
+    def _parse_field_string(self, field_string, compiled_field_patterns):
+        # Default if we don&#39;t match anything
+        fields = {}
+        message_type = None
 
-    # What are we going to do with the parsed_record we&#39;ve created?
-    if self.return_das_record:
-      try:
-        return DASRecord(data_id=data_id, timestamp=timestamp,
-                         fields=fields, metadata=metadata)
-      except KeyError:
-        return None
+        # If our pattern(s) are just a single compiled parser, try parsing and
+        # return with no message type.
+        if isinstance(compiled_field_patterns, parse.Parser):
+            result = compiled_field_patterns.parse(field_string)
+            if result:
+                fields = result.named
 
-    elif self.return_json:
-      return json.dumps(parsed_record)
-    else:
-      return parsed_record
+        # Else, if it&#39;s a list, try it out on all the elements.
+        elif isinstance(compiled_field_patterns, list):
+            for pattern in compiled_field_patterns:
+                fields, message_type = self._parse_field_string(field_string, pattern)
+                if fields:
+                    break
 
-  ############################
-  def parse(self, device_type, message):
-    &#34;&#34;&#34;Parse a text message of device_type into a flat Python dict; raise
-    ValueError if there are problems, return empty dict if there is no
-    match to the provided formats.
-    &#34;&#34;&#34;
-    device_definition = self.device_types.get(device_type, None)
-    if not device_definition:
-      raise ValueError(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
+        # If it&#39;s a dict, try out on all values, using the key as message type.
+        # It&#39;s syntactically possible for the internal set of patterns to have
+        # their own message types. Not sure why someone would ever create patterns
+        # that did this, but if they do, let that override our base one.
+        elif isinstance(compiled_field_patterns, dict):
+            for message_type, pattern in compiled_field_patterns.items():
+                fields, int_message_type = self._parse_field_string(field_string, pattern)
+                message_type = int_message_type or message_type
+                if fields:
+                    break
+        else:
+            raise ValueError(&#39;Unexpected pattern type in parser: %s&#39;
+                             % type(compiled_field_patterns))
 
-    &#34;&#34;&#34;
-    logging.warning(&#39;#########&#39;)
-    format = device_definition.get(&#39;format&#39;, None)
-    if type(format) is str:
-      format = [format]
-    for trial_format in format:
-      logging.warning(&#39;trying parse.parse(&#34;%s&#34;, &#34;%s&#34;)&#39;, trial_format, message)
-      fields = parse.parse(trial_format, message)
-      if fields:
-        logging.warning(&#39;Matched!&#39;)
-        return fields.named
-    logging.warning(&#39;No match!&#39;)
-    &#34;&#34;&#34;
-    compiled_format = device_definition.get(&#39;compiled_format&#39;, None)
-    for trial_format in compiled_format:
-      fields = trial_format.parse(message)
-      if fields:
-        return fields.named
+        return fields, message_type
 
-    # Nothing matched, go home empty-handed
-    if not self.quiet:
-      logging.warning(&#39;No formats for %s matched message &#34;%s&#34;&#39;,
-                      device_type, message)
-    return {}
+    ############################
+    def parse_for_data_id(self, data_id, field_string):
+        &#34;&#34;&#34;Look up the device and device type for a data_id. Parse the field_string
+        according to those formats, returning a dict of {field_name:
+        field_value} or None if unable to match a format pattern.
+        &#34;&#34;&#34;
+        if not self.devices:
+            logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
+            return None
 
-  ############################
-  def _read_definitions(self, filespec_paths):
-    &#34;&#34;&#34;Read the files on the filespec_paths and return dictinary of
-    accumulated definitions.
-    &#34;&#34;&#34;
-    definitions = {}
-    for filespec in filespec_paths.split(&#39;,&#39;):
-      filenames = glob.glob(filespec)
-      if not filenames:
-        logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+        # Get device and device_type definitions for data_id
+        device = self.devices.get(data_id, None)
+        if not device:
+            if not self.quiet:
+                logging.warning(&#39;Unrecognized data id &#34;%s&#34;, field string: %s&#39;,
+                                data_id, field_string)
+                logging.warning(&#39;Known data ids are: &#34;%s&#34;&#39;,
+                                &#39;, &#39;.join(self.devices.keys()))
+            return None
 
-      for filename in filenames:
-        file_definitions = read_config.read_config(filename)
+        device_type = device.get(&#39;device_type&#39;, None)
+        if not device_type:
+            if not self.quiet:
+                logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
+            return None
 
-        for new_def_name, new_def in file_definitions.items():
-          if new_def_name in definitions:
-            logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                            new_def_name, filename)
-          definitions[new_def_name] = new_def
-    return definitions
+        device_definition = self.device_types.get(device_type, None)
+        if not device_definition:
+            if not self.quiet:
+                logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
+            return None
 
-  ############################
-  def _new_read_definitions(self, filespec_paths, definitions=None):
-    &#34;&#34;&#34;Read the files on the filespec_paths and return dictinary of
-    accumulated definitions.
+        compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
+        parsed_fields, message_type = \
+            self._parse_field_string(field_string, compiled_format_patterns)
 
-    filespec_paths - a list of possibly-globbed filespecs to be read
+        # Did we get anything?
+        if not parsed_fields and not self.quiet:
+            logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
 
-    definitions - optional dict of pre-existing definitions that will
-                  be added to. Typically this will be omitted on a base call,
-                  but may be added to when recursing. Passing it in allows
-                  flagging when items are defined more than once.
-    &#34;&#34;&#34;
-    # If nothing was passed in, start with base case.
-    definitions = definitions or {&#39;devices&#39;: {}, &#39;device_types&#39;: {}}
+        logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
-    for filespec in filespec_paths.split(&#39;,&#39;):
-      filenames = glob.glob(filespec)
-      if not filenames:
-        logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+        # Finally, convert field values to variable names specific to device
+        device_fields = device.get(&#39;fields&#39;, None)
+        if not device_fields:
+            if not self.quiet:
+                logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
+            return None
 
-      for filename in filenames:
-        file_definitions = read_config.read_config(filename)
+        # Assign field values to the appropriate named variable.
+        fields = {}
+        for field_name, value in parsed_fields.items():
+            variable_name = device_fields.get(field_name, None)
+            # None means we&#39;re not supposed to report it.
+            if variable_name is None:
+                continue
+            # None means we didn&#39;t have a value for this field; omit it.
+            if value is None:
+                continue
+            # If it&#39;s a datetime, convert to numeric timestamp
+            if isinstance(value, datetime.datetime):
+                value = value.timestamp()
+            fields[variable_name] = value
 
-        for key, val in file_definitions.items():
-          # If we have a dict of device definitions, copy them into the
-          # &#39;devices&#39; key of our definitions.
-          if key == &#39;devices&#39;:
-            if not type(val) is dict:
-              logging.error(&#39;&#34;devices&#34; values in file %s must be dict. &#39;
-                            &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
-              return None
-          
-            for device_name, device_def in val.items():
-              if device_name in definitions[&#39;devices&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                device_name, filename)
-              definitions[&#39;devices&#39;][device_name] = device_def
-          
-          # If we have a dict of device_type definitions, copy them into the
-          # &#39;device_types&#39; key of our definitions.
-          elif key == &#39;device_types&#39;:
-            if not type(val) is dict:
-              logging.error(&#39;&#34;device_typess&#34; values in file %s must be dict. &#39;
-                            &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
-              return None
-          
-            for device_type_name, device_type_def in val.items():
-              if device_type_name in definitions[&#39;device_types&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                device_type_name, filename)
-              definitions[&#39;device_types&#39;][device_type_name] = device_type_def
+        logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(fields))
+        return fields, message_type
 
-          # If we&#39;re including other files, recurse inelegantly
-          elif key == &#39;includes&#39;:
-            if not type(val) in [str, list]:
-              logging.error(&#39;&#34;includes&#34; values in file %s must be either &#39;
-                            &#39;a list or a simple string. Found type &#34;%s&#34;&#39;,
-                            filename, type(val))
-              return None
+    ############################
+    def _compile_formats_from_patterns(self, field_patterns):
+        &#34;&#34;&#34;Return a list/dict of patterns compiled from the
+        str/list/dict of passed field_patterns.
+        &#34;&#34;&#34;
+        if isinstance(field_patterns, str):
+            return [parse.compile(format=field_patterns,
+                                  extra_types=extra_format_types)]
+        elif isinstance(field_patterns, list):
+            return [parse.compile(format=p, extra_types=extra_format_types)
+                    for p in field_patterns]
+        elif isinstance(field_patterns, dict):
+            compiled_field_patterns = {}
+            for message_type, message_pattern in field_patterns.items():
+                compiled_patterns = self._compile_formats_from_patterns(message_pattern)
+                compiled_field_patterns[message_type] = compiled_patterns
+            return compiled_field_patterns
 
-            if type(val) is str: val = [val]
-            for filespec in val:
-              new_defs = self._new_read_definitions(filespec, definitions)
-              definitions[&#39;devices&#39;].update(new_defs.get(&#39;devices&#39;, {}))
-              definitions[&#39;device_types&#39;].update(new_defs.get(&#39;device_types&#39;, {}))
-          
-          # If it&#39;s not an includes/devices/device_types def, assume
-          # it&#39;s a (deprecated) top-level device or device_type
-          # definition. Try adding it to the right place.
-          else:
-            category = val.get(&#39;category&#39;, None)
-            if not category in [&#39;device&#39;, &#39;device_type&#39;]:
-              logging.warning(&#39;Top-level definition &#34;%s&#34; in file %s is not &#39;
-                              &#39;category &#34;device&#34; or &#34;device_type&#34;. &#39;
-                              &#39;Category is &#34;%s&#34; - ignoring&#39;, category)
-              continue
-            if category == &#39;device&#39;:
-              if key in definitions[&#39;devices&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                key, filename)
-              definitions[&#39;devices&#39;][key] = val
-            else:
-              if key in definitions[&#39;device_types&#39;]:
-                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
-                                key, filename)
-              definitions[&#39;device_types&#39;][key] = val
+        else:
+            raise ValueError(&#39;Passed field_patterns must be str, list or dict. Found %s: %s&#39;
+                             % (type(field_patterns), str(field_patterns)))
 
-    # Finally, return the accumulated definitions
-    return definitions</code></pre>
+    ############################
+    def _read_definitions(self, filespec_paths):
+        &#34;&#34;&#34;Read the files on the filespec_paths and return dictionary of
+        accumulated definitions.
+        &#34;&#34;&#34;
+        definitions = {}
+        for filespec in filespec_paths.split(&#39;,&#39;):
+            filenames = glob.glob(filespec)
+            if not filenames:
+                logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+
+            for filename in filenames:
+                file_definitions = read_config.read_config(filename)
+
+                for new_def_name, new_def in file_definitions.items():
+                    if new_def_name in definitions:
+                        logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                        new_def_name, filename)
+                    definitions[new_def_name] = new_def
+        return definitions
+
+    ############################
+    def _new_read_definitions(self, filespec_paths, definitions=None):
+        &#34;&#34;&#34;Read the files on the filespec_paths and return dictionary of
+        accumulated definitions.
+
+        filespec_paths - a list of possibly-globbed filespecs to be read
+
+        definitions - optional dict of pre-existing definitions that will
+                      be added to. Typically this will be omitted on a base call,
+                      but may be added to when recursing. Passing it in allows
+                      flagging when items are defined more than once.
+        &#34;&#34;&#34;
+        # If nothing was passed in, start with base case.
+        definitions = definitions or {&#39;devices&#39;: {}, &#39;device_types&#39;: {}}
+
+        for filespec in filespec_paths.split(&#39;,&#39;):
+            filenames = glob.glob(filespec)
+            if not filenames:
+                logging.warning(&#39;No files match definition file spec &#34;%s&#34;&#39;, filespec)
+
+            for filename in filenames:
+                file_definitions = read_config.read_config(filename)
+
+                for key, val in file_definitions.items():
+                    # If we have a dict of device definitions, copy them into the
+                    # &#39;devices&#39; key of our definitions.
+                    if key == &#39;devices&#39;:
+                        if not isinstance(val, dict):
+                            logging.error(&#39;&#34;devices&#34; values in file %s must be dict. &#39;
+                                          &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
+                            return None
+
+                        for device_name, device_def in val.items():
+                            if device_name in definitions[&#39;devices&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                device_name, filename)
+                            definitions[&#39;devices&#39;][device_name] = device_def
+
+                    # If we have a dict of device_type definitions, copy them into the
+                    # &#39;device_types&#39; key of our definitions.
+                    elif key == &#39;device_types&#39;:
+                        if not isinstance(val, dict):
+                            logging.error(&#39;&#34;device_typess&#34; values in file %s must be dict. &#39;
+                                          &#39;Found type &#34;%s&#34;&#39;, filename, type(val))
+                            return None
+
+                        for device_type_name, device_type_def in val.items():
+                            if device_type_name in definitions[&#39;device_types&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                device_type_name, filename)
+                            definitions[&#39;device_types&#39;][device_type_name] = device_type_def
+
+                    # If we&#39;re including other files, recurse inelegantly
+                    elif key == &#39;includes&#39;:
+                        if not type(val) in [str, list]:
+                            logging.error(&#39;&#34;includes&#34; values in file %s must be either &#39;
+                                          &#39;a list or a simple string. Found type &#34;%s&#34;&#39;,
+                                          filename, type(val))
+                            return None
+
+                        if isinstance(val, str):
+                            val = [val]
+                        for filespec in val:
+                            new_defs = self._new_read_definitions(filespec, definitions)
+                            definitions[&#39;devices&#39;].update(new_defs.get(&#39;devices&#39;, {}))
+                            definitions[&#39;device_types&#39;].update(new_defs.get(&#39;device_types&#39;, {}))
+
+                    # If it&#39;s not an includes/devices/device_types def, assume
+                    # it&#39;s a (deprecated) top-level device or device_type
+                    # definition. Try adding it to the right place.
+                    else:
+                        category = val.get(&#39;category&#39;, None)
+                        if category not in [&#39;device&#39;, &#39;device_type&#39;]:
+                            logging.warning(&#39;Top-level definition &#34;%s&#34; in file %s is not &#39;
+                                            &#39;category &#34;device&#34; or &#34;device_type&#34;. &#39;
+                                            &#39;Category is &#34;%s&#34; - ignoring&#39;, category)
+                            continue
+                        if category == &#39;device&#39;:
+                            if key in definitions[&#39;devices&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                key, filename)
+                            definitions[&#39;devices&#39;][key] = val
+                        else:
+                            if key in definitions[&#39;device_types&#39;]:
+                                logging.warning(&#39;Duplicate definition for &#34;%s&#34; found in %s&#39;,
+                                                key, filename)
+                            definitions[&#39;device_types&#39;][key] = val
+
+        # Finally, return the accumulated definitions
+        return definitions</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="logger.utils.record_parser.RecordParser.parse"><code class="name flex">
-<span>def <span class="ident">parse</span></span>(<span>self, device_type, message)</span>
+<dt id="logger.utils.record_parser.RecordParser.parse_for_data_id"><code class="name flex">
+<span>def <span class="ident">parse_for_data_id</span></span>(<span>self, data_id, field_string)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Parse a text message of device_type into a flat Python dict; raise
-ValueError if there are problems, return empty dict if there is no
-match to the provided formats.</p></section>
+<div class="desc"><p>Look up the device and device type for a data_id. Parse the field_string
+according to those formats, returning a dict of {field_name:
+field_value} or None if unable to match a format pattern.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def parse(self, device_type, message):
-  &#34;&#34;&#34;Parse a text message of device_type into a flat Python dict; raise
-  ValueError if there are problems, return empty dict if there is no
-  match to the provided formats.
-  &#34;&#34;&#34;
-  device_definition = self.device_types.get(device_type, None)
-  if not device_definition:
-    raise ValueError(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
+<pre><code class="python">def parse_for_data_id(self, data_id, field_string):
+    &#34;&#34;&#34;Look up the device and device type for a data_id. Parse the field_string
+    according to those formats, returning a dict of {field_name:
+    field_value} or None if unable to match a format pattern.
+    &#34;&#34;&#34;
+    if not self.devices:
+        logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
+        return None
 
-  &#34;&#34;&#34;
-  logging.warning(&#39;#########&#39;)
-  format = device_definition.get(&#39;format&#39;, None)
-  if type(format) is str:
-    format = [format]
-  for trial_format in format:
-    logging.warning(&#39;trying parse.parse(&#34;%s&#34;, &#34;%s&#34;)&#39;, trial_format, message)
-    fields = parse.parse(trial_format, message)
-    if fields:
-      logging.warning(&#39;Matched!&#39;)
-      return fields.named
-  logging.warning(&#39;No match!&#39;)
-  &#34;&#34;&#34;
-  compiled_format = device_definition.get(&#39;compiled_format&#39;, None)
-  for trial_format in compiled_format:
-    fields = trial_format.parse(message)
-    if fields:
-      return fields.named
+    # Get device and device_type definitions for data_id
+    device = self.devices.get(data_id, None)
+    if not device:
+        if not self.quiet:
+            logging.warning(&#39;Unrecognized data id &#34;%s&#34;, field string: %s&#39;,
+                            data_id, field_string)
+            logging.warning(&#39;Known data ids are: &#34;%s&#34;&#39;,
+                            &#39;, &#39;.join(self.devices.keys()))
+        return None
 
-  # Nothing matched, go home empty-handed
-  if not self.quiet:
-    logging.warning(&#39;No formats for %s matched message &#34;%s&#34;&#39;,
-                    device_type, message)
-  return {}</code></pre>
+    device_type = device.get(&#39;device_type&#39;, None)
+    if not device_type:
+        if not self.quiet:
+            logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
+        return None
+
+    device_definition = self.device_types.get(device_type, None)
+    if not device_definition:
+        if not self.quiet:
+            logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
+        return None
+
+    compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
+    parsed_fields, message_type = \
+        self._parse_field_string(field_string, compiled_format_patterns)
+
+    # Did we get anything?
+    if not parsed_fields and not self.quiet:
+        logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+
+    logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
+
+    # Finally, convert field values to variable names specific to device
+    device_fields = device.get(&#39;fields&#39;, None)
+    if not device_fields:
+        if not self.quiet:
+            logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
+        return None
+
+    # Assign field values to the appropriate named variable.
+    fields = {}
+    for field_name, value in parsed_fields.items():
+        variable_name = device_fields.get(field_name, None)
+        # None means we&#39;re not supposed to report it.
+        if variable_name is None:
+            continue
+        # None means we didn&#39;t have a value for this field; omit it.
+        if value is None:
+            continue
+        # If it&#39;s a datetime, convert to numeric timestamp
+        if isinstance(value, datetime.datetime):
+            value = value.timestamp()
+        fields[variable_name] = value
+
+    logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(fields))
+    return fields, message_type</code></pre>
 </details>
 </dd>
 <dt id="logger.utils.record_parser.RecordParser.parse_record"><code class="name flex">
 <span>def <span class="ident">parse_record</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Parse an id-prefixed text record into a Python dict of data_id,
-timestamp and fields.</p></section>
+<div class="desc"><p>Parse an id-prefixed text record into a Python dict of data_id,
+timestamp and fields.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def parse_record(self, record):
-  &#34;&#34;&#34;Parse an id-prefixed text record into a Python dict of data_id,
-  timestamp and fields.
-  &#34;&#34;&#34;
-  if not record:
-    return None
-  if not type(record) is str:
-    logging.info(&#39;Record is not string: &#34;%s&#34;&#39;, record)
-    return None
-  try:
-    parsed_record = self.compiled_record_format.parse(record).named
-  except (ValueError, AttributeError):
-    if not self.quiet:
-      logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-      logging.warning(&#39;Record: %s&#39;, record)
-    return None
-
-  # Convert timestamp to numeric, if it&#39;s there
-  timestamp = parsed_record.get(&#39;timestamp&#39;, None)
-  if timestamp is not None and type(timestamp) is datetime.datetime:
-    timestamp = timestamp.timestamp()
-    parsed_record[&#39;timestamp&#39;] = timestamp
-
-  # Figure out what kind of message we&#39;re expecting, based on data_id
-  data_id = parsed_record.get(&#39;data_id&#39;, None)
-  if data_id is None:
-    if not self.quiet:
-      logging.warning(&#39;No data id found in record: %s&#39;, record)
-    return None
-
-  # Get device and device_type definitions for data_id
-  device = self.devices.get(data_id, None)
-  if not device:
-    if not self.quiet:
-      logging.warning(&#39;Unrecognized data id &#34;%s&#34;, record: %s&#39;, data_id,record)
-      logging.warning(&#39;Devices are: %s&#39;, &#39;, &#39;.join(self.devices.keys()))
-    return None
-
-  device_type = device.get(&#39;device_type&#39;, None)
-  if not device_type:
-    if not self.quiet:
-      logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
-    return None
-
-  # Extract the message we&#39;re going to parse; remove trailing whitespace
-  message = parsed_record.get(&#39;message&#39;, &#39;&#39;).rstrip()
-  if not message:
-    if not self.quiet:
-      logging.warning(&#39;No message found in record: %s&#39;, record)
-    return None
-  del parsed_record[&#39;message&#39;]
-
-  # Now parse the message, based on device type. If something goes
-  # wrong during parsing, expect a ValueError.
-  try:
-    parsed_fields = self.parse(device_type=device_type, message=message)
-    logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
-  except ValueError as e:
-    logging.error(str(e))
-    return None
-
-  # Finally, convert field values to variable names specific to device
-  device_fields = device.get(&#39;fields&#39;, None)
-  if not device_fields:
-    if not self.quiet:
-      logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
-    return None
-
-  # Assign field values to the appropriate named variable.
-  fields = {}
-  metadata_fields = {}
-  for field_name, value in parsed_fields.items():
-    variable_name = device_fields.get(field_name, None)
-    # None means we&#39;re not supposed to report it.
-    if variable_name is None:
-      continue
-    # None means we didn&#39;t have a value for this field; omit it.
-    if value is None:
-      continue
-    # If it&#39;s a datetime, convert to numeric timestamp
-    if type(value) is datetime.datetime:
-      value = value.timestamp()
-
-    fields[variable_name] = value
-
-    # Are we supposed to occasionally send metadata on our
-    # variables? Is it time to send it again?
-    if self.metadata_interval:
-      last_metadata_sent = self.field_metadata_last_sent[variable_name]
-      time_since_send = timestamp - last_metadata_sent
-      if time_since_send &gt; self.metadata_interval:
-        metadata_fields[variable_name] =self.field_metadata.get(variable_name)
-        self.field_metadata_last_sent[variable_name] = timestamp
-
-  parsed_record[&#39;fields&#39;] = fields
-
-  # Are we sending metadata on any fields? If so, add the &#39;metadata&#39;
-  # key into our parsed_record.
-  if metadata_fields:
-    metadata = {&#39;fields&#39;: metadata_fields}
-    parsed_record[&#39;metadata&#39;] = metadata
-  else:
-    metadata = None
-
-  logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
-
-  # What are we going to do with the parsed_record we&#39;ve created?
-  if self.return_das_record:
+    &#34;&#34;&#34;Parse an id-prefixed text record into a Python dict of data_id,
+    timestamp and fields.
+    &#34;&#34;&#34;
+    if not record:
+        return None
+    if not isinstance(record, str):
+        logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
+        return None
     try:
-      return DASRecord(data_id=data_id, timestamp=timestamp,
-                       fields=fields, metadata=metadata)
-    except KeyError:
-      return None
+        # Break record into (by default) data_id, timestamp and field_string
+        parsed_record = self.compiled_record_format.parse(record).named
+    except (ValueError, AttributeError):
+        if not self.quiet:
+            logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
+            logging.warning(&#39;Record: %s&#39;, record)
+        return None
 
-  elif self.return_json:
-    return json.dumps(parsed_record)
-  else:
-    return parsed_record</code></pre>
+    # Convert timestamp to numeric, if it&#39;s there
+    timestamp = parsed_record.get(&#39;timestamp&#39;, None)
+    if timestamp is not None and isinstance(timestamp, datetime.datetime):
+        timestamp = timestamp.timestamp()
+        parsed_record[&#39;timestamp&#39;] = timestamp
+
+    # Extract the field string we&#39;re going to parse; remove trailing
+    # whitespace.
+    field_string = parsed_record.get(&#39;field_string&#39;, None)
+
+    # If we don&#39;t have fields, there&#39;s nothing to parse
+    if field_string is None:
+        return None
+    field_string = field_string.strip()
+    if not field_string:
+        return None
+
+    fields = {}
+
+    # If we&#39;ve been given a set of field_patterns to apply, use the
+    # first that matches.
+    if self.field_patterns:
+        fields, message_type = self._parse_field_string(field_string,
+                                                        self.compiled_field_patterns)
+    # If we were given no explicit field_patterns to use, we need to
+    # count on the record having a data_id that lets us figure out
+    # which device, and therefore which field_patterns to try.
+    else:
+        data_id = parsed_record.get(&#39;data_id&#39;, None)
+        if data_id is None:
+            if not self.quiet:
+                logging.warning(&#39;No data id found in record: %s&#39;, record)
+            return None
+        fields, message_type = self.parse_for_data_id(data_id, field_string)
+
+    # We should now have a dictionary of fields. If not, go home
+    if not fields:
+        if not self.quiet:
+            logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+        return None
+
+    # Some folks want the data_id prepended
+    if self.prepend_data_id:
+        # This conditional dictates whether fields are stored with just the
+        # field_name key, or &lt;data_id&gt;&lt;delimiter&gt;&lt;field_name&gt;
+        # Doing some work directly on the fields dict, so we&#39;ll take a copy
+        # to loop over.
+        fields_copy = fields.copy()
+        # Reset the fields dict
+        fields = {}
+        for field in fields_copy:
+            # Determine the new &#34;field_name&#34;
+            key = &#39;&#39; + data_id + self.delimiter + field
+            # Set the value
+            fields[key] = fields_copy[field]
+
+    # Remove raw &#39;field_string&#39; and add parsed &#39;fields&#39; to parsed_record
+    del parsed_record[&#39;field_string&#39;]
+    parsed_record[&#39;fields&#39;] = fields
+    if message_type:
+        parsed_record[&#39;message_type&#39;] = message_type
+
+    # If we have parsed fields, see if we also have metadata. Are we
+    # supposed to occasionally send it for our variables? Is it time
+    # to send it again?
+    metadata_fields = {}
+    if self.metadata and self.metadata_interval:
+        for field_name in fields:
+            last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
+            time_since_send = timestamp - last_metadata_sent
+            if time_since_send &gt; self.metadata_interval:
+                field_metadata = self.metadata.get(field_name, None)
+                if field_metadata:
+                    metadata_fields[field_name] = field_metadata
+                    self.metadata_last_sent[field_name] = timestamp
+    if metadata_fields:
+        metadata = {&#39;fields&#39;: metadata_fields}
+    else:
+        metadata = None
+
+    if metadata:
+        parsed_record[&#39;metadata&#39;] = metadata
+
+    logging.debug(&#39;Created parsed record: %s&#39;, pprint.pformat(parsed_record))
+
+    # What are we going to do with the result we&#39;ve created?
+    if self.return_das_record:
+        try:
+            return DASRecord(data_id=data_id, timestamp=timestamp,
+                             message_type=message_type, fields=fields,
+                             metadata=metadata)
+        except KeyError:
+            return None
+
+    elif self.return_json:
+        return json.dumps(parsed_record)
+    else:
+        return parsed_record</code></pre>
 </details>
 </dd>
 </dl>
@@ -1226,26 +1348,12 @@ timestamp and fields.</p></section>
 <li><code><a title="logger.utils" href="index.html">logger.utils</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-variables">Global variables</a></h3>
-<ul class="">
-<li><code><a title="logger.utils.record_parser.DEFAULT_RECORD_FORMAT" href="#logger.utils.record_parser.DEFAULT_RECORD_FORMAT">DEFAULT_RECORD_FORMAT</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="logger.utils.record_parser.not_comma" href="#logger.utils.record_parser.not_comma">not_comma</a></code></li>
-<li><code><a title="logger.utils.record_parser.optional_d" href="#logger.utils.record_parser.optional_d">optional_d</a></code></li>
-<li><code><a title="logger.utils.record_parser.optional_f" href="#logger.utils.record_parser.optional_f">optional_f</a></code></li>
-<li><code><a title="logger.utils.record_parser.optional_g" href="#logger.utils.record_parser.optional_g">optional_g</a></code></li>
-<li><code><a title="logger.utils.record_parser.optional_w" href="#logger.utils.record_parser.optional_w">optional_w</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="logger.utils.record_parser.RecordParser" href="#logger.utils.record_parser.RecordParser">RecordParser</a></code></h4>
 <ul class="">
-<li><code><a title="logger.utils.record_parser.RecordParser.parse" href="#logger.utils.record_parser.RecordParser.parse">parse</a></code></li>
+<li><code><a title="logger.utils.record_parser.RecordParser.parse_for_data_id" href="#logger.utils.record_parser.RecordParser.parse_for_data_id">parse_for_data_id</a></code></li>
 <li><code><a title="logger.utils.record_parser.RecordParser.parse_record" href="#logger.utils.record_parser.RecordParser.parse_record">parse_record</a></code></li>
 </ul>
 </li>
@@ -1255,9 +1363,7 @@ timestamp and fields.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

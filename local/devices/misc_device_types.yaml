@@ -9,8 +9,8 @@ ADCP_OS75:
   description: "RD Industries OS-75 Acoustic Doppler Current Profiler"
   
   format:
-  - "$PUHAW,UVH,{VelocityE:f},{VelocityN:f},{HeadingT:f}"
-  - "$VDVBW,{LongWaterSpeed:f},{TransWaterSpeed:f},{WaterSpeedStatus:ow},{LongGroundSpeed:of},{TransGroundSpeed:of},{GroundSpeedStatus:ow}*{Checksum:x}"
+    PUHAW: "$PUHAW,UVH,{VelocityE:f},{VelocityN:f},{HeadingT:f}"
+    VDVBW: "$VDVBW,{LongWaterSpeed:f},{TransWaterSpeed:f},{WaterSpeedStatus:ow},{LongGroundSpeed:of},{TransGroundSpeed:of},{GroundSpeedStatus:ow}*{Checksum:x}"
 
   fields:
     VelocityE:
@@ -61,8 +61,8 @@ Gyrocompass:
   description: "Gyrocompass"
 
   format:
-    - "$HEHDT,{HeadingTrue:g},T*{Checksum:x}"
-    - "$HEROT,{RateOfTurn:g},A*{Checksum:x}"
+   HEHDT: "$HEHDT,{HeadingTrue:g},T*{Checksum:x}"
+   HEROT: "$HEROT,{RateOfTurn:g},A*{Checksum:x}"
 
   fields:
     HeadingTrue:

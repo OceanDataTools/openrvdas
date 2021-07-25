@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.writers.network_writer API documentation</title>
 <meta name="description" content="" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -31,123 +33,125 @@ import logging
 import socket
 import sys
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.formats import Text  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.writers.writer import Writer  # noqa: E402
 
-from logger.utils.formats import Text
-from logger.utils.das_record import DASRecord
-from logger.writers.writer import Writer
 
-################################################################################
 class NetworkWriter(Writer):
-  &#34;&#34;&#34;Write to network.&#34;&#34;&#34;
-  def __init__(self, network, num_retry=2, eol=&#39;&#39;):
-    &#34;&#34;&#34;
-    Write text records to a network socket.
+    &#34;&#34;&#34;Write to network.&#34;&#34;&#34;
 
-    NOTE: tcp is nominally implemented, but DOES NOT WORK!
-    ```
-    network      Network address to write, in host:port format (e.g.
-                 &#39;rvdas:6202&#39;). If host is omitted (e.g. &#39;:6202&#39;),
-                 broadcast via UDP on specified port.
+    def __init__(self, network, num_retry=2, eol=&#39;&#39;):
+        &#34;&#34;&#34;
+        Write text records to a network socket.
 
-    num_retry    Number of times to retry if write fails.
+        NOTE: tcp is nominally implemented, but DOES NOT WORK!
+        ```
+        network      Network address to write, in host:port format (e.g.
+                     &#39;rvdas:6202&#39;). If host is omitted (e.g. &#39;:6202&#39;),
+                     broadcast via UDP on specified port.
 
-    eol          If specified, an end of line string to append to record
-                 before sending
-    ```
-    &#34;&#34;&#34;
+        num_retry    Number of times to retry if write fails.
 
-    super().__init__(input_format=Text)
+        eol          If specified, an end of line string to append to record
+                     before sending
+        ```
+        &#34;&#34;&#34;
 
-    if network.find(&#39;:&#39;) == -1:
-      raise ValueError(&#39;NetworkWriter network argument must be in \&#39;host:port\&#39;&#39;
-                       &#39; or \&#39;:port\&#39; format. Found &#34;%s&#34;&#39; % network)
-    self.network = network
-    self.num_retry = num_retry
-    self.eol = eol
-    
-    # Try opening the socket
-    self.socket = self._open_socket()
+        super().__init__(input_format=Text)
 
-  ############################
-  def _open_socket(self):
-    &#34;&#34;&#34;Try to open and return the network socket.
-    &#34;&#34;&#34;
-    # TCP if host is specified
-    (host, port) = self.network.split(&#39;:&#39;)
-    port = int(port)
-    if host:
-      this_socket = socket.socket(family=socket.AF_INET,
-                                  type=socket.SOCK_STREAM,
-                                  proto=socket.IPPROTO_TCP)
+        if network.find(&#39;:&#39;) == -1:
+            raise ValueError(&#39;NetworkWriter network argument must be in \&#39;host:port\&#39;&#39;
+                             &#39; or \&#39;:port\&#39; format. Found &#34;%s&#34;&#39; % network)
+        self.network = network
+        self.num_retry = num_retry
+        self.eol = eol
 
-    # UDP broadcast if no host specified. Note that there&#39;s some
-    # dodginess I don&#39;t understand about networks: if &#39;&lt;broadcast&gt;&#39; is
-    # specified, socket tries to send on *all* interfaces. if &#39;&#39; is
-    # specified, it tries to send on *any* interface.
-    else:
-      this_socket = socket.socket(family=socket.AF_INET,
-                                  type=socket.SOCK_DGRAM,
-                                  proto=socket.IPPROTO_UDP)
-      this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-      try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
-        this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-      except AttributeError:
-        logging.warning(&#39;Unable to set socket REUSEPORT; system may not support it.&#39;)
+        # Try opening the socket
+        self.socket = self._open_socket()
 
-    # Try connecting
-    try:
-      this_socket.connect((host, port)) # should this be bind()?
-      return this_socket
-    except OSError as e:
-      logging.warning(&#39;Unable to connect to %s&#39;, self.network)
-      return None
+    ############################
+    def _open_socket(self):
+        &#34;&#34;&#34;Try to open and return the network socket.
+        &#34;&#34;&#34;
+        # TCP if host is specified
+        (host, port) = self.network.split(&#39;:&#39;)
+        port = int(port)
+        if host:
+            this_socket = socket.socket(family=socket.AF_INET,
+                                        type=socket.SOCK_STREAM,
+                                        proto=socket.IPPROTO_TCP)
 
-  ############################
-  def write(self, record):
-    &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-    # If we don&#39;t have a record, there&#39;s nothing to do
-    if not record: return
+        # UDP broadcast if no host specified. Note that there&#39;s some
+        # dodginess I don&#39;t understand about networks: if &#39;&lt;broadcast&gt;&#39; is
+        # specified, socket tries to send on *all* interfaces. if &#39;&#39; is
+        # specified, it tries to send on *any* interface.
+        else:
+            this_socket = socket.socket(family=socket.AF_INET,
+                                        type=socket.SOCK_DGRAM,
+                                        proto=socket.IPPROTO_UDP)
+            this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+            try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
+                this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning(&#39;Unable to set socket REUSEPORT; system may not support it.&#39;)
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if type(record) is list:
-      for single_record in record:
-        self.write(single_record)
-      return
+        # Try connecting
+        try:
+            this_socket.connect((host, port))  # should this be bind()?
+            return this_socket
+        except OSError as e:
+            logging.warning(&#39;Unable to connect to %s: %s&#39;, self.network, e)
+            return None
 
-    # If record is not a string, try converting to JSON. If we don&#39;t know
-    # how, throw a hail Mary and force it into str format
-    if not type(record) is str:
-      if type(record) in [int, float, bool, list, dict]:
-        record = json.dumps(record)
-      elif type(record) is DASRecord:
-        record = record.as_json()
-      else:
-        record = str(record)
-    if self.eol:
-      record += self.eol
+    ############################
+    def write(self, record):
+        &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
+        # If we don&#39;t have a record, there&#39;s nothing to do
+        if not record:
+            return
 
-    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
-    # reconnect, complain and return without writing.
-    if not self.socket:
-      self.socket = self._open_socket()
-    if not self.socket:
-      logging.error(&#39;Unable to write record to %s:%d&#39;,
-                      self.destination, self.port)
-      return
-      
-    num_tries = bytes_sent = 0
-    rec_len = len(record)
-    while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
-      try:
-        bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
-      except OSError as e:
-        logging.warning(&#39;Error while writing &#34;%s&#34;: %s&#39;, record, str(e))
-      num_tries += 1
+        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+        # calling write() on each of the list elements in order.
+        if isinstance(record, list):
+            for single_record in record:
+                self.write(single_record)
+            return
 
-    logging.debug(&#39;NetworkWriter.write() wrote %d/%d bytes after %d tries&#39;,
-                    bytes_sent, rec_len, num_tries)</code></pre>
+        # If record is not a string, try converting to JSON. If we don&#39;t know
+        # how, throw a hail Mary and force it into str format
+        if not isinstance(record, str):
+            if type(record) in [int, float, bool, list, dict]:
+                record = json.dumps(record)
+            elif isinstance(record, DASRecord):
+                record = record.as_json()
+            else:
+                record = str(record)
+        if self.eol:
+            record += self.eol
+
+        # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+        # reconnect, complain and return without writing.
+        if not self.socket:
+            self.socket = self._open_socket()
+        if not self.socket:
+            logging.error(&#39;Unable to write record to %s:%d&#39;,
+                          self.destination, self.port)
+            return
+
+        num_tries = bytes_sent = 0
+        rec_len = len(record)
+        while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
+            try:
+                bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+            except OSError as e:
+                logging.warning(&#39;Error while writing &#34;%s&#34;: %s&#39;, record, str(e))
+            num_tries += 1
+
+        logging.debug(&#39;NetworkWriter.write() wrote %d/%d bytes after %d tries&#39;,
+                      bytes_sent, rec_len, num_tries)</code></pre>
 </details>
 </section>
 <section>
@@ -164,7 +168,7 @@ class NetworkWriter(Writer):
 <span>(</span><span>network, num_retry=2, eol='')</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Write to network.</p>
+<div class="desc"><p>Write to network.</p>
 <p>Write text records to a network socket.</p>
 <p>NOTE: tcp is nominally implemented, but DOES NOT WORK!</p>
 <pre><code>network      Network address to write, in host:port format (e.g.
@@ -175,121 +179,123 @@ num_retry    Number of times to retry if write fails.
 
 eol          If specified, an end of line string to append to record
              before sending
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NetworkWriter(Writer):
-  &#34;&#34;&#34;Write to network.&#34;&#34;&#34;
-  def __init__(self, network, num_retry=2, eol=&#39;&#39;):
-    &#34;&#34;&#34;
-    Write text records to a network socket.
+    &#34;&#34;&#34;Write to network.&#34;&#34;&#34;
 
-    NOTE: tcp is nominally implemented, but DOES NOT WORK!
-    ```
-    network      Network address to write, in host:port format (e.g.
-                 &#39;rvdas:6202&#39;). If host is omitted (e.g. &#39;:6202&#39;),
-                 broadcast via UDP on specified port.
+    def __init__(self, network, num_retry=2, eol=&#39;&#39;):
+        &#34;&#34;&#34;
+        Write text records to a network socket.
 
-    num_retry    Number of times to retry if write fails.
+        NOTE: tcp is nominally implemented, but DOES NOT WORK!
+        ```
+        network      Network address to write, in host:port format (e.g.
+                     &#39;rvdas:6202&#39;). If host is omitted (e.g. &#39;:6202&#39;),
+                     broadcast via UDP on specified port.
 
-    eol          If specified, an end of line string to append to record
-                 before sending
-    ```
-    &#34;&#34;&#34;
+        num_retry    Number of times to retry if write fails.
 
-    super().__init__(input_format=Text)
+        eol          If specified, an end of line string to append to record
+                     before sending
+        ```
+        &#34;&#34;&#34;
 
-    if network.find(&#39;:&#39;) == -1:
-      raise ValueError(&#39;NetworkWriter network argument must be in \&#39;host:port\&#39;&#39;
-                       &#39; or \&#39;:port\&#39; format. Found &#34;%s&#34;&#39; % network)
-    self.network = network
-    self.num_retry = num_retry
-    self.eol = eol
-    
-    # Try opening the socket
-    self.socket = self._open_socket()
+        super().__init__(input_format=Text)
 
-  ############################
-  def _open_socket(self):
-    &#34;&#34;&#34;Try to open and return the network socket.
-    &#34;&#34;&#34;
-    # TCP if host is specified
-    (host, port) = self.network.split(&#39;:&#39;)
-    port = int(port)
-    if host:
-      this_socket = socket.socket(family=socket.AF_INET,
-                                  type=socket.SOCK_STREAM,
-                                  proto=socket.IPPROTO_TCP)
+        if network.find(&#39;:&#39;) == -1:
+            raise ValueError(&#39;NetworkWriter network argument must be in \&#39;host:port\&#39;&#39;
+                             &#39; or \&#39;:port\&#39; format. Found &#34;%s&#34;&#39; % network)
+        self.network = network
+        self.num_retry = num_retry
+        self.eol = eol
 
-    # UDP broadcast if no host specified. Note that there&#39;s some
-    # dodginess I don&#39;t understand about networks: if &#39;&lt;broadcast&gt;&#39; is
-    # specified, socket tries to send on *all* interfaces. if &#39;&#39; is
-    # specified, it tries to send on *any* interface.
-    else:
-      this_socket = socket.socket(family=socket.AF_INET,
-                                  type=socket.SOCK_DGRAM,
-                                  proto=socket.IPPROTO_UDP)
-      this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-      try: # Raspbian doesn&#39;t recognize SO_REUSEPORT
-        this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-      except AttributeError:
-        logging.warning(&#39;Unable to set socket REUSEPORT; system may not support it.&#39;)
+        # Try opening the socket
+        self.socket = self._open_socket()
 
-    # Try connecting
-    try:
-      this_socket.connect((host, port)) # should this be bind()?
-      return this_socket
-    except OSError as e:
-      logging.warning(&#39;Unable to connect to %s&#39;, self.network)
-      return None
+    ############################
+    def _open_socket(self):
+        &#34;&#34;&#34;Try to open and return the network socket.
+        &#34;&#34;&#34;
+        # TCP if host is specified
+        (host, port) = self.network.split(&#39;:&#39;)
+        port = int(port)
+        if host:
+            this_socket = socket.socket(family=socket.AF_INET,
+                                        type=socket.SOCK_STREAM,
+                                        proto=socket.IPPROTO_TCP)
 
-  ############################
-  def write(self, record):
-    &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-    # If we don&#39;t have a record, there&#39;s nothing to do
-    if not record: return
+        # UDP broadcast if no host specified. Note that there&#39;s some
+        # dodginess I don&#39;t understand about networks: if &#39;&lt;broadcast&gt;&#39; is
+        # specified, socket tries to send on *all* interfaces. if &#39;&#39; is
+        # specified, it tries to send on *any* interface.
+        else:
+            this_socket = socket.socket(family=socket.AF_INET,
+                                        type=socket.SOCK_DGRAM,
+                                        proto=socket.IPPROTO_UDP)
+            this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+            try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
+                this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning(&#39;Unable to set socket REUSEPORT; system may not support it.&#39;)
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if type(record) is list:
-      for single_record in record:
-        self.write(single_record)
-      return
+        # Try connecting
+        try:
+            this_socket.connect((host, port))  # should this be bind()?
+            return this_socket
+        except OSError as e:
+            logging.warning(&#39;Unable to connect to %s: %s&#39;, self.network, e)
+            return None
 
-    # If record is not a string, try converting to JSON. If we don&#39;t know
-    # how, throw a hail Mary and force it into str format
-    if not type(record) is str:
-      if type(record) in [int, float, bool, list, dict]:
-        record = json.dumps(record)
-      elif type(record) is DASRecord:
-        record = record.as_json()
-      else:
-        record = str(record)
-    if self.eol:
-      record += self.eol
+    ############################
+    def write(self, record):
+        &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
+        # If we don&#39;t have a record, there&#39;s nothing to do
+        if not record:
+            return
 
-    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
-    # reconnect, complain and return without writing.
-    if not self.socket:
-      self.socket = self._open_socket()
-    if not self.socket:
-      logging.error(&#39;Unable to write record to %s:%d&#39;,
-                      self.destination, self.port)
-      return
-      
-    num_tries = bytes_sent = 0
-    rec_len = len(record)
-    while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
-      try:
-        bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
-      except OSError as e:
-        logging.warning(&#39;Error while writing &#34;%s&#34;: %s&#39;, record, str(e))
-      num_tries += 1
+        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+        # calling write() on each of the list elements in order.
+        if isinstance(record, list):
+            for single_record in record:
+                self.write(single_record)
+            return
 
-    logging.debug(&#39;NetworkWriter.write() wrote %d/%d bytes after %d tries&#39;,
-                    bytes_sent, rec_len, num_tries)</code></pre>
+        # If record is not a string, try converting to JSON. If we don&#39;t know
+        # how, throw a hail Mary and force it into str format
+        if not isinstance(record, str):
+            if type(record) in [int, float, bool, list, dict]:
+                record = json.dumps(record)
+            elif isinstance(record, DASRecord):
+                record = record.as_json()
+            else:
+                record = str(record)
+        if self.eol:
+            record += self.eol
+
+        # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+        # reconnect, complain and return without writing.
+        if not self.socket:
+            self.socket = self._open_socket()
+        if not self.socket:
+            logging.error(&#39;Unable to write record to %s:%d&#39;,
+                          self.destination, self.port)
+            return
+
+        num_tries = bytes_sent = 0
+        rec_len = len(record)
+        while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
+            try:
+                bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+            except OSError as e:
+                logging.warning(&#39;Error while writing &#34;%s&#34;: %s&#39;, record, str(e))
+            num_tries += 1
+
+        logging.debug(&#39;NetworkWriter.write() wrote %d/%d bytes after %d tries&#39;,
+                      bytes_sent, rec_len, num_tries)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -305,54 +311,55 @@ eol          If specified, an end of line string to append to record
 <span>def <span class="ident">write</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Write the record to the network.</p></section>
+<div class="desc"><p>Write the record to the network.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def write(self, record):
-  &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-  # If we don&#39;t have a record, there&#39;s nothing to do
-  if not record: return
+    &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
+    # If we don&#39;t have a record, there&#39;s nothing to do
+    if not record:
+        return
 
-  # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-  # calling write() on each of the list elements in order.
-  if type(record) is list:
-    for single_record in record:
-      self.write(single_record)
-    return
+    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if isinstance(record, list):
+        for single_record in record:
+            self.write(single_record)
+        return
 
-  # If record is not a string, try converting to JSON. If we don&#39;t know
-  # how, throw a hail Mary and force it into str format
-  if not type(record) is str:
-    if type(record) in [int, float, bool, list, dict]:
-      record = json.dumps(record)
-    elif type(record) is DASRecord:
-      record = record.as_json()
-    else:
-      record = str(record)
-  if self.eol:
-    record += self.eol
+    # If record is not a string, try converting to JSON. If we don&#39;t know
+    # how, throw a hail Mary and force it into str format
+    if not isinstance(record, str):
+        if type(record) in [int, float, bool, list, dict]:
+            record = json.dumps(record)
+        elif isinstance(record, DASRecord):
+            record = record.as_json()
+        else:
+            record = str(record)
+    if self.eol:
+        record += self.eol
 
-  # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
-  # reconnect, complain and return without writing.
-  if not self.socket:
-    self.socket = self._open_socket()
-  if not self.socket:
-    logging.error(&#39;Unable to write record to %s:%d&#39;,
-                    self.destination, self.port)
-    return
-    
-  num_tries = bytes_sent = 0
-  rec_len = len(record)
-  while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
-    try:
-      bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
-    except OSError as e:
-      logging.warning(&#39;Error while writing &#34;%s&#34;: %s&#39;, record, str(e))
-    num_tries += 1
+    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+    # reconnect, complain and return without writing.
+    if not self.socket:
+        self.socket = self._open_socket()
+    if not self.socket:
+        logging.error(&#39;Unable to write record to %s:%d&#39;,
+                      self.destination, self.port)
+        return
 
-  logging.debug(&#39;NetworkWriter.write() wrote %d/%d bytes after %d tries&#39;,
+    num_tries = bytes_sent = 0
+    rec_len = len(record)
+    while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
+        try:
+            bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+        except OSError as e:
+            logging.warning(&#39;Error while writing &#34;%s&#34;: %s&#39;, record, str(e))
+        num_tries += 1
+
+    logging.debug(&#39;NetworkWriter.write() wrote %d/%d bytes after %d tries&#39;,
                   bytes_sent, rec_len, num_tries)</code></pre>
 </details>
 </dd>
@@ -395,9 +402,7 @@ eol          If specified, an end of line string to append to record
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

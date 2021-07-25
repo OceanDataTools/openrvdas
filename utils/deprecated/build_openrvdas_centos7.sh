@@ -57,7 +57,6 @@ function set_default_variables {
     DEFAULT_OPENRVDAS_BRANCH=master
 
     DEFAULT_RVDAS_USER=rvdas
-    DEFAULT_INFLUXDB_PASSWORD=rvdasrvdas
 
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
@@ -110,6 +109,7 @@ function create_user {
         adduser $RVDAS_USER
         passwd $RVDAS_USER
         usermod -a -G tty $RVDAS_USER
+        usermod -a -G wheel $RVDAS_USER
     fi
 }
 
@@ -121,10 +121,44 @@ function install_packages {
     yum install -y epel-release
     yum -y update
 
-    yum install -y socat git nginx sqlite-devel readline-devel \
-        wget gcc zlib-devel openssl-devel \
-        python3 python36-devel python36-pip supervisor
-        echo Installing required packages
+    echo Installing required packages
+    yum install -y wget socat git nginx gcc supervisor \
+        zlib-devel openssl-devel readline-devel libffi-devel
+
+        #sqlite-devel \
+        #python3 python3-devel python3-pip
+
+    # Django 3+ requires a more recent version of sqlite3 than is
+    # included in CentOS 7. So instead of yum installing python3 and
+    # sqlite3, we build them from scratch. Painfully slow, but hey -
+    # isn't that par for CentOS builds?
+    export LD_LIBRARY_PATH=/usr/local/lib
+    export LD_RUN_PATH=/usr/local/lib
+
+    # Fetch and build SQLite3
+    cd /tmp
+    SQLITE_VERSION=3320300
+    SQLITE_BASE=sqlite-autoconf-${SQLITE_VERSION}
+    SQLITE_TGZ=${SQLITE_BASE}.tar.gz
+    [ -e $SQLITE_TGZ ] || wget https://www.sqlite.org/2020/${SQLITE_TGZ}
+    tar xzf ${SQLITE_TGZ}
+    cd ${SQLITE_BASE}
+    ./configure
+    make && make install
+
+    # Build Python, too
+    cd /tmp
+    PYTHON_VERSION=3.8.3
+    PYTHON_BASE=Python-${PYTHON_VERSION}
+    PYTHON_TGZ=${PYTHON_BASE}.tgz
+    [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
+    tar xvf ${PYTHON_TGZ}
+    cd ${PYTHON_BASE}
+    ./configure # --enable-optimizations
+    make altinstall
+
+    ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
+    ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
 }
 
 ###########################################################################
@@ -198,129 +232,6 @@ EOF
 
 ###########################################################################
 ###########################################################################
-# Install and configure InfluxDB - to be run *after* OpenRVDAS is in place!
-function install_influxdb {
-    # Expect the following shell variables to be appropriately set:
-    # INSTALL_ROOT - where openrvdas/ may be found
-    # RVDAS_USER - valid userid
-    # INFLUXDB_PASSWORD - password to use for InfluxDB
-
-    if [ `uname -s` = 'Darwin' ]; then
-        INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_darwin_amd64 # for MacOS
-    elif [ `uname -s` = 'Linux' ]; then
-        INFLUXDB_RELEASE=influxdb_2.0.0-beta.6_linux_amd64 # for Linux
-    else
-        echo "ERROR: No appropriate InfluxDB binary found for architecture \"`uname -s`\"."
-        echo Exiting.
-        return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
-    fi
-
-
-    INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
-    INFLUXDB_URL=http://$INFLUXDB_REPO/${INFLUXDB_RELEASE}.tar.gz
-
-    # Check that OpenRVDAS code is in place already
-    if [ ! -e  $INSTALL_ROOT/openrvdas/database ]; then
-        echo SCRIPT ERROR: install_influxdb must be called *after* OpenRVDAS
-        echo code is in place. Exiting.
-        return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
-    fi
-
-    echo "#####################################################################"
-    echo Installing InfluxDB...
-    cd /tmp
-    if [ -e ${INFLUXDB_RELEASE}.tar.gz ]; then
-        echo Already have archive locally: /tmp/${INFLUXDB_RELEASE}.tar.gz
-    else
-        echo Fetching binaries
-        wget $INFLUXDB_URL
-    fi
-    if [ -d ${INFLUXDB_RELEASE} ]; then
-        echo Already have uncompressed release locally: /tmp/${INFLUXDB_RELEASE}
-    else
-        echo Uncompressing...
-        tar xzf ${INFLUXDB_RELEASE}.tar.gz
-    fi
-    mkdir -p $INSTALL_ROOT/openrvdas/database/influxdb
-    echo Copying into place...
-    cp -f  ${INFLUXDB_RELEASE}/influx ${INFLUXDB_RELEASE}/influxd /usr/local/bin
-    #cp -f  ${INFLUXDB_RELEASE}/*  $INSTALL_ROOT/openrvdas/database/influxdb/
-    cd $INSTALL_ROOT/openrvdas
-
-    # Install the python client
-    echo Installing Python client
-    pip install \
-      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-      influxdb_client
-
-    # Now create credentials for the server
-    if [ `uname -s` = 'Darwin' ]; then
-        echo "#################################################################"
-        echo If you are running MacOS Catalina
-        echo
-        echo MacOS Catalina requires downloaded binaries to be signed by
-        echo registered Apple developers. Currently, when you first attempt to
-        echo run influxd or influx, macOS will prevent it from running.
-        echo
-        echo If you are running MacOS Catalina, prior to continuing, please
-        echo follow these steps to manually authorize the InfluxDB binaries:
-        echo
-        echo 1. Attempt to run /usr/local/bin/influx in a separate
-        echo    window.
-        echo 2. Open System Preferences and click "Security & Privacy."
-        echo 3. Under the General tab, there is a message about influx being
-        echo    blocked. Click Open Anyway.
-        echo 4. Repeat this with /usr/local/bin/influxd
-        echo
-        echo Please hit return when you have completed these steps, or if you
-        read -p "are not using Catalina. " DONE
-    fi
-
-    # Clear out old setup
-    rm -rf ~/.influxdb/ ~/.influxdbv2
-
-    # Make sure no copies are already running
-    while [ ! -z `pgrep influxd` ]; do
-        echo
-        echo "A copy of influxd appears to already be running with pid `pgrep influxd`."
-        read -p "Please terminate it, then hit return to continue. " DONE
-    done
-
-    # Start server in background
-    echo
-    echo Starting background InfluxDB server and waiting for it to spin up.
-    echo This may take 10-20 seconds...
-    /usr/local/bin/influxd --reporting-disabled &> /dev/null &
-    INFLUXDB_PID=$!
-    sleep 20
-
-    echo
-    /usr/local/bin/influx setup \
-        --username $RVDAS_USER --password $INFLUXDB_PASSWORD \
-        --org openrvdas --bucket openrvdas --retention 0 --force > /dev/null
-
-    # The InfluxDB folks aren't making it easy to get the token. The
-    # last beta changed where it's stored, and the command line docs
-    # for retrieving it don't match the new binary.
-    INFLUXDB_AUTH_TOKEN=`/usr/local/bin/influx auth list | grep 'active' | cut -f2`
-    #INFLUXDB_AUTH_TOKEN=`grep '^  token' ~/.influxdbv2/configs | sed -e 's/  token = "//' | sed -e 's/"$//'`
-
-    # Previous way of reading token:
-    #INFLUXDB_CREDENTIALS=`eval echo "~/.influxdbv2/configs"`
-    #read -r INFLUXDB_AUTH_TOKEN < $INFLUXDB_CREDENTIALS
-
-    # Copy the auth token into database settings
-    sed -i -e "s/DEFAULT_INFLUXDB_AUTH_TOKEN/${INFLUXDB_AUTH_TOKEN}/g" database/settings.py
-
-    # Shut down the background copy of InfluxDB we started
-    echo Killing background copy of InfluxDB server
-    kill -9 $INFLUXDB_PID
-
-    echo Done setting up InfluxDB!
-}
-
-###########################################################################
-###########################################################################
 # Install OpenRVDAS
 function install_openrvdas {
     # Expect the following shell variables to be appropriately set:
@@ -385,7 +296,7 @@ function setup_python_packages {
       --upgrade pip
     pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-      Django==2.1.5 \
+      Django==3 \
       pyserial \
       uwsgi \
       websockets \
@@ -567,17 +478,6 @@ function setup_supervisor {
     # RVDAS_USER - valid username
     # INSTALL_ROOT - path where openrvdas/ is found
     # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
-    # INSTALL_INFLUXDB - set if InfluxDB is installed
-    # INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false'
-
-    # Comment out InfluxDB section if it's not installed
-    if [ ! -z $INSTALL_INFLUXDB ]; then
-        # InfluxDB is installed
-        IDB_COMMENT=''
-    else
-        # InfluxDB not installed; comment out section
-        IDB_COMMENT=';'
-    fi
 
     VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
 
@@ -601,8 +501,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/nginx.err.log
-stdout_logfile=/var/log/openrvdas/nginx.out.log
+stderr_logfile=/var/log/openrvdas/nginx.stderr
+stdout_logfile=/var/log/openrvdas/nginx.stdout
 ;user=$RVDAS_USER
 
 [program:uwsgi]
@@ -612,8 +512,8 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/uwsgi.err.log
-stdout_logfile=/var/log/openrvdas/uwsgi.out.log
+stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+stdout_logfile=/var/log/openrvdas/uwsgi.stdout
 user=$RVDAS_USER
 
 [program:cached_data_server]
@@ -622,19 +522,19 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/cached_data_server.err.log
-stdout_logfile=/var/log/openrvdas/cached_data_server.out.log
+stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
+stdout_logfile=/var/log/openrvdas/cached_data_server.stdout
 user=$RVDAS_USER
 
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766  --start_supervisor_in /var/tmp/openrvdas/supervisor -v
+command=${VENV_BIN}/python server/logger_manager.py --database django --no-console --data_server_websocket :8766 -v -V
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$OPENRVDAS_AUTOSTART
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/logger_manager.err.log
-stdout_logfile=/var/log/openrvdas/logger_manager.out.log
+stderr_logfile=/var/log/openrvdas/logger_manager.stderr
+stdout_logfile=/var/log/openrvdas/logger_manager.stdout
 user=$RVDAS_USER
 
 [program:simulate_nbp]
@@ -643,21 +543,9 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
-stderr_logfile=/var/log/openrvdas/simulate_nbp.err.log
-stdout_logfile=/var/log/openrvdas/simulate_nbp.out.log
+stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
+stdout_logfile=/var/log/openrvdas/simulate_nbp.stdout
 user=$RVDAS_USER
-
-; Uncomment the following command block if you've installed InfluxDB
-; and want it to run as a service.
-${IDB_COMMENT}[program:influxdb]
-${IDB_COMMENT}command=/usr/local/bin/influxd --reporting-disabled
-${IDB_COMMENT}directory=${INSTALL_ROOT}/openrvdas
-${IDB_COMMENT}autostart=$INFLUXDB_AUTOSTART
-${IDB_COMMENT}autorestart=true
-${IDB_COMMENT}startretries=3
-${IDB_COMMENT}stderr_logfile=/var/log/openrvdas/influxdb.err.log
-${IDB_COMMENT}stdout_logfile=/var/log/openrvdas/influxdb.out.log
-${IDB_COMMENT};user=$RVDAS_USER
 
 [group:web]
 programs=nginx,uwsgi
@@ -703,8 +591,9 @@ function setup_firewall {
     firewall-cmd -q --permanent --add-port=9001/tcp > /dev/null
     firewall-cmd -q --permanent --add-port=9002/tcp > /dev/null
 
-    # InfluxDB port, in case it's used
+    # InfluxDB and Grafana ports, in case it's used
     firewall-cmd -q --permanent --add-port=9999/tcp > /dev/null
+    firewall-cmd -q --permanent --add-port=3000/tcp > /dev/null
 
     # Websocket ports
     firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
@@ -850,55 +739,6 @@ echo
 
 #########################################################################
 #########################################################################
-# Do they want to install/configure InfluxDB server?
-echo "#####################################################################"
-# InfluxDB already installed
-unset INSTALL_INFLUXDB
-while true; do
-    read -p "Install and configure InfluxDB? (no) " yn
-    case $yn in
-        [Yy]* )
-            INSTALL_INFLUXDB=True
-            break;;
-        [Nn]* )
-            break;;
-        "" )
-            break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
-# Don't ask about running InfluxDB automatically unless it's going to
-# be installed in the first place.
-INFLUXDB_AUTOSTART=false
-if [ ! -z $INSTALL_INFLUXDB ]; then
-    # InfluxDB is already or is going to be installed.
-    echo
-    echo "InfluxDB password to use for user $RVDAS_USER?"
-    read -p "Must be at least eight characters ($DEFAULT_INFLUXDB_PASSWORD): " INFLUXDB_PASSWORD
-    INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD:-$DEFAULT_INFLUXDB_PASSWORD}
-    echo
-    echo InfluxDB can be configured to run automatically so that
-    echo InfluxDBDatabaseWriter can write to it, and Grafana-based
-    echo displays can read their data from it.
-    while true; do
-        read -p "Do you wish to automatically run InfluxDB? (no) " yn
-        case $yn in
-            [Yy]* )
-                INFLUXDB_AUTOSTART=true
-                break;;
-            [Nn]* )
-                break;;
-            "" )
-                break;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
-fi
-echo
-
-#########################################################################
-#########################################################################
 # Start OpenRVDAS as a service?
 echo "#####################################################################"
 echo The OpenRVDAS server can be configured to start on boot. If you wish this
@@ -979,21 +819,6 @@ setup_python_packages
 
 #########################################################################
 #########################################################################
-# Set up InfluxDB if they've asked for it
-if [ -n "$INSTALL_INFLUXDB" ]; then
-    echo "#####################################################################"
-    echo Installing and configuring InfluxDB
-    # Expect the following shell variables to be appropriately set:
-    # INSTALL_ROOT - where openrvdas/ may be found
-    # RVDAS_USER - valid userid
-    # INFLUXDB_PASSWORD - password to use for InfluxDB
-    install_influxdb
-else
-    echo Skipping InfluxDB setup
-fi
-
-#########################################################################
-#########################################################################
 # Set up nginx
 echo "#####################################################################"
 echo Setting up NGINX
@@ -1043,8 +868,6 @@ echo Setting up openrvdas service with supervisord
 # RVDAS_USER - valid username
 # INSTALL_ROOT - path where openrvdas/ is found
 # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
-# INSTALL_INFLUXDB - set if InfluxDB is installed
-# INFLUXDB_AUTOSTART - 'true' if we're to autostart, else 'false'
 setup_supervisor
 
 #########################################################################

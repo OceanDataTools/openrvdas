@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.utils.simulate_network API documentation</title>
 <meta name="description" content="Read stored logger data and serve at realistic intervals over network ports …" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -52,151 +54,151 @@ for wind_mast_stbd (see test/sikuliaq/skq_ports.txt for a table of the
 instrument to port mappings active during cruise SKQ201822.
 &#34;&#34;&#34;
 import logging
-import subprocess
 import sys
 import threading
-import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.readers.logfile_reader import LogfileReader  # noqa: E402
+from logger.transforms.slice_transform import SliceTransform  # noqa: E402
+from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402
+from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
+from logger.writers.udp_writer import UDPWriter  # noqa: E402
 
-from logger.readers.logfile_reader import LogfileReader
-from logger.transforms.slice_transform import SliceTransform
-from logger.transforms.timestamp_transform import TimestampTransform
-from logger.transforms.prefix_transform import PrefixTransform
-from logger.writers.udp_writer import UDPWriter
+from logger.utils.read_config import read_config  # noqa: E402
 
-from logger.utils.read_config import read_config
 
-################################################################################
 class SimNetwork:
-  &#34;&#34;&#34;Open a network port and feed stored logfile data to it.&#34;&#34;&#34;
-  ############################
-  def __init__(self, port, filebase, instrument):
-    &#34;&#34;&#34;
-    ```
-    port -  UDP port on which to write records.
+    &#34;&#34;&#34;Open a network port and feed stored logfile data to it.&#34;&#34;&#34;
+    ############################
 
-    filebase - Prefix string to be matched (with a following &#34;*&#34;) to fine
-               files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
+    def __init__(self, port, filebase, instrument):
+        &#34;&#34;&#34;
+        ```
+        port -  UDP port on which to write records.
 
-    instrument - Instrument name prefix to add before sendind out on wire
-    ```
-    &#34;&#34;&#34;
-    self.filebase = filebase
-    self.reader = LogfileReader(filebase=filebase, use_timestamps=True)
-    self.slice_n = SliceTransform(fields=&#39;1:&#39;) # grab 2nd and subsequent fields
-    self.timestamp = TimestampTransform()
-    self.prefix = PrefixTransform(instrument)
-    self.writer = UDPWriter(port=port)
-    self.instrument = instrument
-    self.first_time = True
-    self.quit_flag = False
-    
-  ############################
-  def run(self, loop=False):
-    &#34;&#34;&#34;Start reading and writing data. If loop==True, loop when reaching
-    end of input.
-    &#34;&#34;&#34;
-    logging.info(&#39;Starting %s&#39;, self.instrument)
-    try:
-      while not self.quit_flag:
-        record = self.reader.read()
+        filebase - Prefix string to be matched (with a following &#34;*&#34;) to fine
+                   files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
 
-        # If we don&#39;t have a record, we&#39;re (probably) at the end of
-        # the file. If it&#39;s the first time we&#39;ve tried reading, it
-        # means we probably didn&#39;t get a usable file. Either break out
-        # (if we&#39;re not looping, or if we don&#39;t have a usable file),
-        # or start reading from the beginning (if we are looping and
-        # have a usable file).
-        if not record:
-          if not loop or self.first_time:
-            break
-          logging.info(&#39;Looping instrument %s&#39;, self.instrument)
-          self.reader = LogfileReader(filebase=self.filebase,
-                                      use_timestamps=True)
-          continue
+        instrument - Instrument name prefix to add before sendind out on wire
+        ```
+        &#34;&#34;&#34;
+        self.filebase = filebase
+        self.reader = LogfileReader(filebase=filebase, use_timestamps=True)
+        self.slice_n = SliceTransform(fields=&#39;1:&#39;)  # grab 2nd and subsequent fields
+        self.timestamp = TimestampTransform()
+        self.prefix = PrefixTransform(instrument)
+        self.writer = UDPWriter(port=port)
+        self.instrument = instrument
+        self.first_time = True
+        self.quit_flag = False
 
-        # Strip off timestamp and tack on a new one
-        record =  self.slice_n.transform(record)
-        record = self.timestamp.transform(record)
+    ############################
+    def run(self, loop=False):
+        &#34;&#34;&#34;Start reading and writing data. If loop==True, loop when reaching
+        end of input.
+        &#34;&#34;&#34;
+        logging.info(&#39;Starting %s&#39;, self.instrument)
+        try:
+            while not self.quit_flag:
+                record = self.reader.read()
 
-        # Add instrument name back on, and write to specified network
-        record = self.prefix.transform(record)
-        self.writer.write(record)
-        self.first_time = False
+                # If we don&#39;t have a record, we&#39;re (probably) at the end of
+                # the file. If it&#39;s the first time we&#39;ve tried reading, it
+                # means we probably didn&#39;t get a usable file. Either break out
+                # (if we&#39;re not looping, or if we don&#39;t have a usable file),
+                # or start reading from the beginning (if we are looping and
+                # have a usable file).
+                if not record:
+                    if not loop or self.first_time:
+                        break
+                    logging.info(&#39;Looping instrument %s&#39;, self.instrument)
+                    self.reader = LogfileReader(filebase=self.filebase,
+                                                use_timestamps=True)
+                    continue
 
-    except (OSError, KeyboardInterrupt):
-      self.quit_flag = True
+                # Strip off timestamp and tack on a new one
+                record = self.slice_n.transform(record)
+                record = self.timestamp.transform(record)
 
-    logging.info(&#39;Finished %s&#39;, self.instrument)
+                # Add instrument name back on, and write to specified network
+                record = self.prefix.transform(record)
+                self.writer.write(record)
+                self.first_time = False
+
+        except (OSError, KeyboardInterrupt):
+            self.quit_flag = True
+
+        logging.info(&#39;Finished %s&#39;, self.instrument)
+
 
 ################################################################################
 if __name__ == &#39;__main__&#39;:
-  import argparse
-  parser = argparse.ArgumentParser()
+    import argparse
+    parser = argparse.ArgumentParser()
 
-  parser.add_argument(&#39;--config&#39;, dest=&#39;config&#39;, default=None,
-                      help=&#39;Config file of JSON specs for port-file mappings.&#39;)
+    parser.add_argument(&#39;--config&#39;, dest=&#39;config&#39;, default=None,
+                        help=&#39;Config file of JSON specs for port-file mappings.&#39;)
 
-  parser.add_argument(&#39;--port&#39;, dest=&#39;port&#39;, default=None, type=int,
-                      help=&#39;UDP port to write to. E.g. 6224.&#39;)
+    parser.add_argument(&#39;--port&#39;, dest=&#39;port&#39;, default=None, type=int,
+                        help=&#39;UDP port to write to. E.g. 6224.&#39;)
 
-  parser.add_argument(&#39;--filebase&#39;, dest=&#39;filebase&#39;, default=None,
-                      help=&#39;Base string of log file to be read from (with &#39;
-                      &#39;a following &#34;*&#34; for match). E.g. &#39;
-                      &#39;/tmp/log/NBP1406/knud/raw/NBP1406_knud&#39;)
-  
-  parser.add_argument(&#39;--instrument&#39;, dest=&#39;instrument&#39;, help=&#39;Prefix to add, &#39;
-                      &#39;if file *doesn\&#39;t* have instrument prefix&#39;)
+    parser.add_argument(&#39;--filebase&#39;, dest=&#39;filebase&#39;, default=None,
+                        help=&#39;Base string of log file to be read from (with &#39;
+                        &#39;a following &#34;*&#34; for match). E.g. &#39;
+                        &#39;/tmp/log/NBP1406/knud/raw/NBP1406_knud&#39;)
 
-  parser.add_argument(&#39;--loop&#39;, dest=&#39;loop&#39;, action=&#39;store_true&#39;,
-                      help=&#39;If True, loop when reaching end of sample data&#39;)
+    parser.add_argument(&#39;--instrument&#39;, dest=&#39;instrument&#39;, help=&#39;Prefix to add, &#39;
+                        &#39;if file *doesn\&#39;t* have instrument prefix&#39;)
 
-  parser.add_argument(&#39;-v&#39;, &#39;--verbosity&#39;, dest=&#39;verbosity&#39;,
-                      default=0, action=&#39;count&#39;,
-                      help=&#39;Increase output verbosity&#39;)
-  args = parser.parse_args()
+    parser.add_argument(&#39;--loop&#39;, dest=&#39;loop&#39;, action=&#39;store_true&#39;,
+                        help=&#39;If True, loop when reaching end of sample data&#39;)
 
-  LOGGING_FORMAT = &#39;%(asctime)-15s %(message)s&#39;
-  logging.basicConfig(format=LOGGING_FORMAT)
+    parser.add_argument(&#39;-v&#39;, &#39;--verbosity&#39;, dest=&#39;verbosity&#39;,
+                        default=0, action=&#39;count&#39;,
+                        help=&#39;Increase output verbosity&#39;)
+    args = parser.parse_args()
 
-  LOG_LEVELS ={0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
-  args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-  logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+    LOGGING_FORMAT = &#39;%(asctime)-15s %(message)s&#39;
+    logging.basicConfig(format=LOGGING_FORMAT)
 
-  # Okay - get to work here
-  if args.config:
-    configs = read_config(args.config)
-    logging.info(&#39;Read configs: %s&#39;, configs)
-    thread_list = []
-    writer_list = []
-    for instrument, config in configs.items():
-      port = config[&#39;port&#39;]
-      filebase = config[&#39;filebase&#39;]
-      writer = SimNetwork(port=port, filebase=filebase, instrument=instrument)
-      writer_thread = threading.Thread(target=writer.run,
-                                       kwargs={&#39;loop&#39;: args.loop},
-                                       daemon=True)
-      writer_thread.start()
-      thread_list.append(writer_thread)
-      writer_list.append(&#39;%s %d, %s&#39; % (instrument, port, filebase))
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-    logging.warning(&#39;Running simulated ports for:\n%s&#39;, &#39;\n&#39;.join(writer_list))
+    # Okay - get to work here
+    if args.config:
+        configs = read_config(args.config)
+        logging.info(&#39;Read configs: %s&#39;, configs)
+        thread_list = []
+        writer_list = []
+        for instrument, config in configs.items():
+            port = config[&#39;port&#39;]
+            filebase = config[&#39;filebase&#39;]
+            writer = SimNetwork(port=port, filebase=filebase, instrument=instrument)
+            writer_thread = threading.Thread(target=writer.run,
+                                             kwargs={&#39;loop&#39;: args.loop},
+                                             daemon=True)
+            writer_thread.start()
+            thread_list.append(writer_thread)
+            writer_list.append(&#39;%s %d, %s&#39; % (instrument, port, filebase))
 
-    # Wait for all the threads to end
-    for thread in thread_list:
-      thread.join()
+        logging.warning(&#39;Running simulated ports for:\n%s&#39;, &#39;\n&#39;.join(writer_list))
 
-  # If no config file, just a simple, single network writer
-  elif args.port and args.filebase:
-    sim_network = SimNetwork(network=args.port, filebase=args.filebase,
-                             instrument=args.instrument)
-    sim_network.run(args.loop)
+        # Wait for all the threads to end
+        for thread in thread_list:
+            thread.join()
 
-  # Otherwise, we don&#39;t have enough information to run
-  else:
-    parser.error(&#39;Either --config or --port, --filebase and --instrument &#39;
-                 &#39;must be specified&#39;)</code></pre>
+    # If no config file, just a simple, single network writer
+    elif args.port and args.filebase:
+        sim_network = SimNetwork(network=args.port, filebase=args.filebase,
+                                 instrument=args.instrument)
+        sim_network.run(args.loop)
+
+    # Otherwise, we don&#39;t have enough information to run
+    else:
+        parser.error(&#39;Either --config or --port, --filebase and --instrument &#39;
+                     &#39;must be specified&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -213,79 +215,80 @@ if __name__ == &#39;__main__&#39;:
 <span>(</span><span>port, filebase, instrument)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Open a network port and feed stored logfile data to it.</p>
+<div class="desc"><p>Open a network port and feed stored logfile data to it.</p>
 <pre><code>port -  UDP port on which to write records.
 
 filebase - Prefix string to be matched (with a following &quot;*&quot;) to fine
            files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
 
 instrument - Instrument name prefix to add before sendind out on wire
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SimNetwork:
-  &#34;&#34;&#34;Open a network port and feed stored logfile data to it.&#34;&#34;&#34;
-  ############################
-  def __init__(self, port, filebase, instrument):
-    &#34;&#34;&#34;
-    ```
-    port -  UDP port on which to write records.
+    &#34;&#34;&#34;Open a network port and feed stored logfile data to it.&#34;&#34;&#34;
+    ############################
 
-    filebase - Prefix string to be matched (with a following &#34;*&#34;) to fine
-               files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
+    def __init__(self, port, filebase, instrument):
+        &#34;&#34;&#34;
+        ```
+        port -  UDP port on which to write records.
 
-    instrument - Instrument name prefix to add before sendind out on wire
-    ```
-    &#34;&#34;&#34;
-    self.filebase = filebase
-    self.reader = LogfileReader(filebase=filebase, use_timestamps=True)
-    self.slice_n = SliceTransform(fields=&#39;1:&#39;) # grab 2nd and subsequent fields
-    self.timestamp = TimestampTransform()
-    self.prefix = PrefixTransform(instrument)
-    self.writer = UDPWriter(port=port)
-    self.instrument = instrument
-    self.first_time = True
-    self.quit_flag = False
-    
-  ############################
-  def run(self, loop=False):
-    &#34;&#34;&#34;Start reading and writing data. If loop==True, loop when reaching
-    end of input.
-    &#34;&#34;&#34;
-    logging.info(&#39;Starting %s&#39;, self.instrument)
-    try:
-      while not self.quit_flag:
-        record = self.reader.read()
+        filebase - Prefix string to be matched (with a following &#34;*&#34;) to fine
+                   files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
 
-        # If we don&#39;t have a record, we&#39;re (probably) at the end of
-        # the file. If it&#39;s the first time we&#39;ve tried reading, it
-        # means we probably didn&#39;t get a usable file. Either break out
-        # (if we&#39;re not looping, or if we don&#39;t have a usable file),
-        # or start reading from the beginning (if we are looping and
-        # have a usable file).
-        if not record:
-          if not loop or self.first_time:
-            break
-          logging.info(&#39;Looping instrument %s&#39;, self.instrument)
-          self.reader = LogfileReader(filebase=self.filebase,
-                                      use_timestamps=True)
-          continue
+        instrument - Instrument name prefix to add before sendind out on wire
+        ```
+        &#34;&#34;&#34;
+        self.filebase = filebase
+        self.reader = LogfileReader(filebase=filebase, use_timestamps=True)
+        self.slice_n = SliceTransform(fields=&#39;1:&#39;)  # grab 2nd and subsequent fields
+        self.timestamp = TimestampTransform()
+        self.prefix = PrefixTransform(instrument)
+        self.writer = UDPWriter(port=port)
+        self.instrument = instrument
+        self.first_time = True
+        self.quit_flag = False
 
-        # Strip off timestamp and tack on a new one
-        record =  self.slice_n.transform(record)
-        record = self.timestamp.transform(record)
+    ############################
+    def run(self, loop=False):
+        &#34;&#34;&#34;Start reading and writing data. If loop==True, loop when reaching
+        end of input.
+        &#34;&#34;&#34;
+        logging.info(&#39;Starting %s&#39;, self.instrument)
+        try:
+            while not self.quit_flag:
+                record = self.reader.read()
 
-        # Add instrument name back on, and write to specified network
-        record = self.prefix.transform(record)
-        self.writer.write(record)
-        self.first_time = False
+                # If we don&#39;t have a record, we&#39;re (probably) at the end of
+                # the file. If it&#39;s the first time we&#39;ve tried reading, it
+                # means we probably didn&#39;t get a usable file. Either break out
+                # (if we&#39;re not looping, or if we don&#39;t have a usable file),
+                # or start reading from the beginning (if we are looping and
+                # have a usable file).
+                if not record:
+                    if not loop or self.first_time:
+                        break
+                    logging.info(&#39;Looping instrument %s&#39;, self.instrument)
+                    self.reader = LogfileReader(filebase=self.filebase,
+                                                use_timestamps=True)
+                    continue
 
-    except (OSError, KeyboardInterrupt):
-      self.quit_flag = True
+                # Strip off timestamp and tack on a new one
+                record = self.slice_n.transform(record)
+                record = self.timestamp.transform(record)
 
-    logging.info(&#39;Finished %s&#39;, self.instrument)</code></pre>
+                # Add instrument name back on, and write to specified network
+                record = self.prefix.transform(record)
+                self.writer.write(record)
+                self.first_time = False
+
+        except (OSError, KeyboardInterrupt):
+            self.quit_flag = True
+
+        logging.info(&#39;Finished %s&#39;, self.instrument)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -293,48 +296,48 @@ instrument - Instrument name prefix to add before sendind out on wire
 <span>def <span class="ident">run</span></span>(<span>self, loop=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Start reading and writing data. If loop==True, loop when reaching
-end of input.</p></section>
+<div class="desc"><p>Start reading and writing data. If loop==True, loop when reaching
+end of input.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def run(self, loop=False):
-  &#34;&#34;&#34;Start reading and writing data. If loop==True, loop when reaching
-  end of input.
-  &#34;&#34;&#34;
-  logging.info(&#39;Starting %s&#39;, self.instrument)
-  try:
-    while not self.quit_flag:
-      record = self.reader.read()
+    &#34;&#34;&#34;Start reading and writing data. If loop==True, loop when reaching
+    end of input.
+    &#34;&#34;&#34;
+    logging.info(&#39;Starting %s&#39;, self.instrument)
+    try:
+        while not self.quit_flag:
+            record = self.reader.read()
 
-      # If we don&#39;t have a record, we&#39;re (probably) at the end of
-      # the file. If it&#39;s the first time we&#39;ve tried reading, it
-      # means we probably didn&#39;t get a usable file. Either break out
-      # (if we&#39;re not looping, or if we don&#39;t have a usable file),
-      # or start reading from the beginning (if we are looping and
-      # have a usable file).
-      if not record:
-        if not loop or self.first_time:
-          break
-        logging.info(&#39;Looping instrument %s&#39;, self.instrument)
-        self.reader = LogfileReader(filebase=self.filebase,
-                                    use_timestamps=True)
-        continue
+            # If we don&#39;t have a record, we&#39;re (probably) at the end of
+            # the file. If it&#39;s the first time we&#39;ve tried reading, it
+            # means we probably didn&#39;t get a usable file. Either break out
+            # (if we&#39;re not looping, or if we don&#39;t have a usable file),
+            # or start reading from the beginning (if we are looping and
+            # have a usable file).
+            if not record:
+                if not loop or self.first_time:
+                    break
+                logging.info(&#39;Looping instrument %s&#39;, self.instrument)
+                self.reader = LogfileReader(filebase=self.filebase,
+                                            use_timestamps=True)
+                continue
 
-      # Strip off timestamp and tack on a new one
-      record =  self.slice_n.transform(record)
-      record = self.timestamp.transform(record)
+            # Strip off timestamp and tack on a new one
+            record = self.slice_n.transform(record)
+            record = self.timestamp.transform(record)
 
-      # Add instrument name back on, and write to specified network
-      record = self.prefix.transform(record)
-      self.writer.write(record)
-      self.first_time = False
+            # Add instrument name back on, and write to specified network
+            record = self.prefix.transform(record)
+            self.writer.write(record)
+            self.first_time = False
 
-  except (OSError, KeyboardInterrupt):
-    self.quit_flag = True
+    except (OSError, KeyboardInterrupt):
+        self.quit_flag = True
 
-  logging.info(&#39;Finished %s&#39;, self.instrument)</code></pre>
+    logging.info(&#39;Finished %s&#39;, self.instrument)</code></pre>
 </details>
 </dd>
 </dl>
@@ -367,9 +370,7 @@ end of input.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

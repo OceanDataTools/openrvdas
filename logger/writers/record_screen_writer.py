@@ -4,67 +4,68 @@ import logging
 import shutil
 import sys
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.formats import Python_Record  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.writers.writer import Writer  # noqa: E402
 
-from logger.utils.formats import Python_Record
-from logger.utils.das_record import DASRecord
-from logger.writers.writer import Writer
 
-################################################################################
 class RecordScreenWriter(Writer):
-  """Write DASRecords to terminal screen in some survivable
-  format. Mostly intended for debugging."""
-  def __init__(self):
-    super().__init__(input_format=Python_Record)
+    """Write DASRecords to terminal screen in some survivable
+    format. Mostly intended for debugging."""
 
-    self.values = {}
-    self.timestamps = {}
-    self.latest = 0
+    def __init__(self):
+        super().__init__(input_format=Python_Record)
 
-  ############################
-  def move_cursor(self, x, y):
-    print('\033[{};{}f'.format(str(x), str(y)))
+        self.values = {}
+        self.timestamps = {}
+        self.latest = 0
 
-  ############################
-  # receives a DASRecord
-  def write(self, record):
-    if not record:
-      return
+    ############################
+    def move_cursor(self, x, y):
+        print('\033[{};{}f'.format(str(x), str(y)))
 
-    # If we've got a list, hope it's a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if type(record) is list:
-      for single_record in record:
-        self.write(single_record)
-      return
+    ############################
+    # receives a DASRecord
+    def write(self, record):
+        if not record:
+            return
 
-    if not type(record) is DASRecord:
-      logging.error('ScreenWriter got non-DASRecord: %s', str(type(record)))
-      return
+        # If we've got a list, hope it's a list of records. Recurse,
+        # calling write() on each of the list elements in order.
+        if isinstance(record, list):
+            for single_record in record:
+                self.write(single_record)
+            return
 
-    # Incorporate the values from the record
-    self.latest = record.timestamp
-    for field in record.fields:
-      self.values[field] = record.fields[field]
-      self.timestamps[field] = self.latest
+        if not isinstance(record, DASRecord):
+            logging.error('ScreenWriter got non-DASRecord: %s', str(type(record)))
+            return
 
-    # Get term size, in case it's been resized
-    (cols, rows) = shutil.get_terminal_size()
-    self.move_cursor(0,0)
-    # Redraw stuff
-    keys =  sorted(self.values.keys())
-    for i in range(rows):
-      # Go through keys in alpha order
-      if i < len(keys):
-        key = keys[i]
-        line = '{} : {}'.format(key, self.values[key])
+        # Incorporate the values from the record
+        self.latest = record.timestamp
+        for field in record.fields:
+            self.values[field] = record.fields[field]
+            self.timestamps[field] = self.latest
 
-      # Fill the rest of the screen with blank lines
-      else:
-        line = ''
+        # Get term size, in case it's been resized
+        (cols, rows) = shutil.get_terminal_size()
+        self.move_cursor(0, 0)
+        # Redraw stuff
+        keys = sorted(self.values.keys())
+        for i in range(rows):
+            # Go through keys in alpha order
+            if i < len(keys):
+                key = keys[i]
+                line = '{} : {}'.format(key, self.values[key])
 
-      # Pad the lines out to screen width to overwrite old stuff
-      pad_size = cols - len(line)
-      line += ' ' * pad_size
+            # Fill the rest of the screen with blank lines
+            else:
+                line = ''
 
-      print(line)
+            # Pad the lines out to screen width to overwrite old stuff
+            pad_size = cols - len(line)
+            line += ' ' * pad_size
+
+            print(line)

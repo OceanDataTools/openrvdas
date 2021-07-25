@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.writers.database_writer API documentation</title>
 <meta name="description" content="" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -31,187 +33,188 @@ import pprint
 import sys
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.formats import Python_Record
-from logger.utils.das_record import DASRecord
-from logger.writers.writer import Writer
+from logger.utils.formats import Python_Record  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.writers.writer import Writer  # noqa: E402
 
 # Don&#39;t freak out if we can&#39;t find database settings - unless they actually
 # try to instantiate a DatabaseWriter.
 try:
-  from database.settings import DATABASE_ENABLED, Connector
-  from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST
-  from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD
-  DATABASE_SETTINGS_FOUND = True
+    from database.settings import DATABASE_ENABLED, Connector  # noqa: E402
+    from database.settings import DEFAULT_DATABASE, DEFAULT_DATABASE_HOST  # noqa: E402
+    from database.settings import DEFAULT_DATABASE_USER, DEFAULT_DATABASE_PASSWORD  # noqa: E402
+    DATABASE_SETTINGS_FOUND = True
 except ModuleNotFoundError:
-  DATABASE_SETTINGS_FOUND = False
-  DEFAULT_DATABASE = DEFAULT_DATABASE_HOST = None
-  DEFAULT_DATABASE_USER = DEFAULT_DATABASE_PASSWORD = None
+    DATABASE_SETTINGS_FOUND = False
+    DEFAULT_DATABASE = DEFAULT_DATABASE_HOST = None
+    DEFAULT_DATABASE_USER = DEFAULT_DATABASE_PASSWORD = None
 
-################################################################################
+
 class DatabaseWriter(Writer):
-  def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
-               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-               save_source=True):
-    &#34;&#34;&#34;Write to the passed record to a database table. With connectors
-    written so far (MySQL and Mongo), writes values in the records as
-    timestamped field-value pairs. If save_source=True, also save the
-    source record we are passed.
+    def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
+                 user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
+                 save_source=True):
+        &#34;&#34;&#34;Write to the passed record to a database table. With connectors
+        written so far (MySQL and Mongo), writes values in the records as
+        timestamped field-value pairs. If save_source=True, also save the
+        source record we are passed.
 
-    Expects passed source records to be in one of two formats:
+        Expects passed source records to be in one of two formats:
 
-    1) DASRecord
+        1) DASRecord
 
-    2) A dict encoding optionally a source data_id and timestamp and a
-       mandatory &#39;fields&#39; key of field_name: value pairs. This is the format
-       emitted by default by ParseTransform:
-    ```
-       {
-         &#39;data_id&#39;: ...,
-         &#39;timestamp&#39;: ...,
-         &#39;fields&#39;: {
-           field_name: value,    # use default timestamp of &#39;now&#39;
-           field_name: value,
-           ...
-         }
-       }
-    ```
-    A twist on format (2) is that the values may either be a singleton
-    (int, float, string, etc) or a list. If the value is a singleton,
-    it is taken at face value. If it is a list, it is assumed to be a
-    list of (value, timestamp) tuples, in which case the top-level
-    timestamp, if any, is ignored.
-    ```
-       {
-         &#39;data_id&#39;: ...,
-         &#39;timestamp&#39;: ...,
-         &#39;fields&#39;: {
-            field_name: [(timestamp, value), (timestamp, value),...],
-            field_name: [(timestamp, value), (timestamp, value),...],
-            ...
-         }
-       }
-    ```
-    &#34;&#34;&#34;
-    super().__init__(input_format=Python_Record)
+        2) A dict encoding optionally a source data_id and timestamp and a
+           mandatory &#39;fields&#39; key of field_name: value pairs. This is the format
+           emitted by default by ParseTransform:
+        ```
+           {
+             &#39;data_id&#39;: ...,
+             &#39;timestamp&#39;: ...,
+             &#39;fields&#39;: {
+               field_name: value,    # use default timestamp of &#39;now&#39;
+               field_name: value,
+               ...
+             }
+           }
+        ```
+        A twist on format (2) is that the values may either be a singleton
+        (int, float, string, etc) or a list. If the value is a singleton,
+        it is taken at face value. If it is a list, it is assumed to be a
+        list of (value, timestamp) tuples, in which case the top-level
+        timestamp, if any, is ignored.
+        ```
+           {
+             &#39;data_id&#39;: ...,
+             &#39;timestamp&#39;: ...,
+             &#39;fields&#39;: {
+                field_name: [(timestamp, value), (timestamp, value),...],
+                field_name: [(timestamp, value), (timestamp, value),...],
+                ...
+             }
+           }
+        ```
+        &#34;&#34;&#34;
+        super().__init__(input_format=Python_Record)
 
-    if not DATABASE_SETTINGS_FOUND:
-      raise RuntimeError(&#39;File database/settings.py not found. Database &#39;
-                         &#39;functionality is not available. Have you copied &#39;
-                         &#39;over database/settings.py.dist to settings.py?&#39;)
-    if not DATABASE_ENABLED:
-      raise RuntimeError(&#39;Database not configured in database/settings.py; &#39;
-                         &#39;DatabaseWriter unavailable.&#39;)
+        if not DATABASE_SETTINGS_FOUND:
+            raise RuntimeError(&#39;File database/settings.py not found. Database &#39;
+                               &#39;functionality is not available. Have you copied &#39;
+                               &#39;over database/settings.py.dist to settings.py?&#39;)
+        if not DATABASE_ENABLED:
+            raise RuntimeError(&#39;Database not configured in database/settings.py; &#39;
+                               &#39;DatabaseWriter unavailable.&#39;)
 
-    self.db = Connector(database=database, host=host,
-                        user=user, password=password,
-                        save_source=save_source)
+        self.db = Connector(database=database, host=host,
+                            user=user, password=password,
+                            save_source=save_source)
 
-  ############################
-  def _table_exists(self, table_name):
-    &#34;&#34;&#34;Does the specified table exist in the database?&#34;&#34;&#34;
-    return self.db.table_exists(table_name)
+    ############################
+    def _table_exists(self, table_name):
+        &#34;&#34;&#34;Does the specified table exist in the database?&#34;&#34;&#34;
+        return self.db.table_exists(table_name)
 
-  ############################
-  def _write_record(self, record):
-    &#34;&#34;&#34;Write record to table. Connectors assume we&#39;ve got a DASRecord, but
-    check; if we don&#39;t see if it&#39;s a suitably-formatted dict that we can
-    convert into a DASRecord.
-    &#34;&#34;&#34;
-    if type(record) is dict:
-      try:
-        data_id = record.get(&#39;data_id&#39;, &#39;no_data_id&#39;)
-        timestamp = record.get(&#39;timestamp&#39;, None)
-        fields = record[&#39;fields&#39;]
-        record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
-      except KeyError:
-        logging.error(&#39;Unable to create DASRecord from dict: %s&#39;,
-                      pprint.pformat(record))
-    self.db.write_record(record)
+    ############################
+    def _write_record(self, record):
+        &#34;&#34;&#34;Write record to table. Connectors assume we&#39;ve got a DASRecord, but
+        check; if we don&#39;t see if it&#39;s a suitably-formatted dict that we can
+        convert into a DASRecord.
+        &#34;&#34;&#34;
+        if isinstance(record, dict):
+            try:
+                data_id = record.get(&#39;data_id&#39;, &#39;no_data_id&#39;)
+                timestamp = record.get(&#39;timestamp&#39;, None)
+                fields = record[&#39;fields&#39;]
+                record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+            except KeyError:
+                logging.error(&#39;Unable to create DASRecord from dict: %s&#39;,
+                              pprint.pformat(record))
+        self.db.write_record(record)
 
-  ############################
-  def _delete_table(self,  table_name):
-    &#34;&#34;&#34;Delete a table.&#34;&#34;&#34;
-    self.db.delete_table(table_name)
+    ############################
+    def _delete_table(self, table_name):
+        &#34;&#34;&#34;Delete a table.&#34;&#34;&#34;
+        self.db.delete_table(table_name)
 
-  ############################
-  def write(self, record):
-    &#34;&#34;&#34;Write out record. Connectors assume we&#39;ve got a DASRecord, so check
-    what we&#39;ve got and convert as necessary.
-    &#34;&#34;&#34;
-    if not record:
-      return
+    ############################
+    def write(self, record):
+        &#34;&#34;&#34;Write out record. Connectors assume we&#39;ve got a DASRecord, so check
+        what we&#39;ve got and convert as necessary.
+        &#34;&#34;&#34;
+        if not record:
+            return
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if type(record) is list:
-      for single_record in record:
-        self.write(single_record)
-      return
+        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+        # calling write() on each of the list elements in order.
+        if isinstance(record, list):
+            for single_record in record:
+                self.write(single_record)
+            return
 
-    # If we&#39;ve been passed a DASRecord, things are easy: write it and return.
-    if type(record) is DASRecord:
-      self._write_record(record)
-      return
-    
-    if not type(record) is dict:
-      logging.error(&#39;Record passed to DatabaseWriter is not of type &#39;
-                    &#39;&#34;DASRecord&#34; or dict; is type &#34;%s&#34;&#39;, type(record))
-      return
+        # If we&#39;ve been passed a DASRecord, things are easy: write it and return.
+        if isinstance(record, DASRecord):
+            self._write_record(record)
+            return
 
-    # If here, our record is a dict, figure out whether it is a top-level
-    # field dict or not.
-    data_id = record.get(&#39;data_id&#39;, None)
-    timestamp = record.get(&#39;timestamp&#39;, time.time())
-    fields = record.get(&#39;fields&#39;, None)
-    if fields is None:
-      logging.error(&#39;Dict record passed to DatabaseWriter has no &#34;fields&#34; &#39;
-                    &#39;key, which either means it\&#39;s not a dict you should be &#39;
-                    &#39;passing, or it is in the old &#34;field_dict&#34; format that &#39;
-                    &#39;assumes key:value pairs are at the top level.&#39;)
-      logging.error(&#39;The record in question: %s&#39;, str(record))
-      return
+        if not isinstance(record, dict):
+            logging.error(&#39;Record passed to DatabaseWriter is not of type &#39;
+                          &#39;&#34;DASRecord&#34; or dict; is type &#34;%s&#34;&#39;, type(record))
+            return
 
-    # Now check whether our &#39;values&#39; are singletons (in which case
-    # we&#39;ve got a single record) or lists of tuples. Shortcut by
-    # checking only the first value in our &#39;fields&#39; dict.
-    try:
-      first_key, first_value = next(iter(fields.items()))
-    except StopIteration:
-      # Empty fields
-      logging.debug(&#39;Empty &#34;fields&#34; dict in record: %s&#39;, str(record))
-      return
+        # If here, our record is a dict, figure out whether it is a top-level
+        # field dict or not.
+        data_id = record.get(&#39;data_id&#39;, None)
+        timestamp = record.get(&#39;timestamp&#39;, time.time())
+        fields = record.get(&#39;fields&#39;, None)
+        if fields is None:
+            logging.error(&#39;Dict record passed to DatabaseWriter has no &#34;fields&#34; &#39;
+                          &#39;key, which either means it\&#39;s not a dict you should be &#39;
+                          &#39;passing, or it is in the old &#34;field_dict&#34; format that &#39;
+                          &#39;assumes key:value pairs are at the top level.&#39;)
+            logging.error(&#39;The record in question: %s&#39;, str(record))
+            return
 
-    # If we&#39;ve got a singleton, it&#39;s a single record. Convert to
-    # DASRecord and write it out.
-    if not type(first_value) is list:
-      das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
-      self._write_record(das_record)
-      return
+        # Now check whether our &#39;values&#39; are singletons (in which case
+        # we&#39;ve got a single record) or lists of tuples. Shortcut by
+        # checking only the first value in our &#39;fields&#39; dict.
+        try:
+            first_key, first_value = next(iter(fields.items()))
+        except StopIteration:
+            # Empty fields
+            logging.debug(&#39;Empty &#34;fields&#34; dict in record: %s&#39;, str(record))
+            return
 
-    # If we&#39;re here, our values (or at least our first one) are lists
-    # of (value, timestamp) pairs. First thing we do is
-    # reformat the data into a map of
-    #
-    #        {timestamp: {field:value, field:value],...}}
-    values_by_timestamp = {}
-    try:
-      for field, ts_value_list in fields.items():
-        for (timestamp, value) in ts_value_list:
-          if not timestamp in values_by_timestamp:
-            values_by_timestamp[timestamp] = {}
-          values_by_timestamp[timestamp][field] = value
-    except ValueError:
-      logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
-                    field, pprint.pformat(ts_value_list))
+        # If we&#39;ve got a singleton, it&#39;s a single record. Convert to
+        # DASRecord and write it out.
+        if not isinstance(first_value, list):
+            das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+            self._write_record(das_record)
+            return
 
-    # Now go through each timestamp, generate a DASRecord from its
-    # values, and write them.
-    for timestamp in sorted(values_by_timestamp):
-      das_record = DASRecord(data_id=data_id, timestamp=timestamp,
-                             fields=values_by_timestamp[timestamp])
-      self._write_record(das_record)</code></pre>
+        # If we&#39;re here, our values (or at least our first one) are lists
+        # of (value, timestamp) pairs. First thing we do is
+        # reformat the data into a map of
+        #
+        #        {timestamp: {field:value, field:value],...}}
+        values_by_timestamp = {}
+        try:
+            for field, ts_value_list in fields.items():
+                for (timestamp, value) in ts_value_list:
+                    if timestamp not in values_by_timestamp:
+                        values_by_timestamp[timestamp] = {}
+                    values_by_timestamp[timestamp][field] = value
+        except ValueError:
+            logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
+                          field, pprint.pformat(ts_value_list))
+
+        # Now go through each timestamp, generate a DASRecord from its
+        # values, and write them.
+        for timestamp in sorted(values_by_timestamp):
+            das_record = DASRecord(data_id=data_id, timestamp=timestamp,
+                                   fields=values_by_timestamp[timestamp])
+            self._write_record(das_record)</code></pre>
 </details>
 </section>
 <section>
@@ -228,7 +231,7 @@ class DatabaseWriter(Writer):
 <span>(</span><span>database='data', host='localhost', user='pablo', password='rvdas', save_source=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base class Writer about which we know nothing else. By default the
+<div class="desc"><p>Base class Writer about which we know nothing else. By default the
 input format is Unknown unless overridden.</p>
 <p>Write to the passed record to a database table. With connectors
 written so far (MySQL and Mongo), writes values in the records as
@@ -263,173 +266,173 @@ timestamp, if any, is ignored.</p>
         ...
      }
    }
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DatabaseWriter(Writer):
-  def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
-               user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-               save_source=True):
-    &#34;&#34;&#34;Write to the passed record to a database table. With connectors
-    written so far (MySQL and Mongo), writes values in the records as
-    timestamped field-value pairs. If save_source=True, also save the
-    source record we are passed.
+    def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
+                 user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
+                 save_source=True):
+        &#34;&#34;&#34;Write to the passed record to a database table. With connectors
+        written so far (MySQL and Mongo), writes values in the records as
+        timestamped field-value pairs. If save_source=True, also save the
+        source record we are passed.
 
-    Expects passed source records to be in one of two formats:
+        Expects passed source records to be in one of two formats:
 
-    1) DASRecord
+        1) DASRecord
 
-    2) A dict encoding optionally a source data_id and timestamp and a
-       mandatory &#39;fields&#39; key of field_name: value pairs. This is the format
-       emitted by default by ParseTransform:
-    ```
-       {
-         &#39;data_id&#39;: ...,
-         &#39;timestamp&#39;: ...,
-         &#39;fields&#39;: {
-           field_name: value,    # use default timestamp of &#39;now&#39;
-           field_name: value,
-           ...
-         }
-       }
-    ```
-    A twist on format (2) is that the values may either be a singleton
-    (int, float, string, etc) or a list. If the value is a singleton,
-    it is taken at face value. If it is a list, it is assumed to be a
-    list of (value, timestamp) tuples, in which case the top-level
-    timestamp, if any, is ignored.
-    ```
-       {
-         &#39;data_id&#39;: ...,
-         &#39;timestamp&#39;: ...,
-         &#39;fields&#39;: {
-            field_name: [(timestamp, value), (timestamp, value),...],
-            field_name: [(timestamp, value), (timestamp, value),...],
-            ...
-         }
-       }
-    ```
-    &#34;&#34;&#34;
-    super().__init__(input_format=Python_Record)
+        2) A dict encoding optionally a source data_id and timestamp and a
+           mandatory &#39;fields&#39; key of field_name: value pairs. This is the format
+           emitted by default by ParseTransform:
+        ```
+           {
+             &#39;data_id&#39;: ...,
+             &#39;timestamp&#39;: ...,
+             &#39;fields&#39;: {
+               field_name: value,    # use default timestamp of &#39;now&#39;
+               field_name: value,
+               ...
+             }
+           }
+        ```
+        A twist on format (2) is that the values may either be a singleton
+        (int, float, string, etc) or a list. If the value is a singleton,
+        it is taken at face value. If it is a list, it is assumed to be a
+        list of (value, timestamp) tuples, in which case the top-level
+        timestamp, if any, is ignored.
+        ```
+           {
+             &#39;data_id&#39;: ...,
+             &#39;timestamp&#39;: ...,
+             &#39;fields&#39;: {
+                field_name: [(timestamp, value), (timestamp, value),...],
+                field_name: [(timestamp, value), (timestamp, value),...],
+                ...
+             }
+           }
+        ```
+        &#34;&#34;&#34;
+        super().__init__(input_format=Python_Record)
 
-    if not DATABASE_SETTINGS_FOUND:
-      raise RuntimeError(&#39;File database/settings.py not found. Database &#39;
-                         &#39;functionality is not available. Have you copied &#39;
-                         &#39;over database/settings.py.dist to settings.py?&#39;)
-    if not DATABASE_ENABLED:
-      raise RuntimeError(&#39;Database not configured in database/settings.py; &#39;
-                         &#39;DatabaseWriter unavailable.&#39;)
+        if not DATABASE_SETTINGS_FOUND:
+            raise RuntimeError(&#39;File database/settings.py not found. Database &#39;
+                               &#39;functionality is not available. Have you copied &#39;
+                               &#39;over database/settings.py.dist to settings.py?&#39;)
+        if not DATABASE_ENABLED:
+            raise RuntimeError(&#39;Database not configured in database/settings.py; &#39;
+                               &#39;DatabaseWriter unavailable.&#39;)
 
-    self.db = Connector(database=database, host=host,
-                        user=user, password=password,
-                        save_source=save_source)
+        self.db = Connector(database=database, host=host,
+                            user=user, password=password,
+                            save_source=save_source)
 
-  ############################
-  def _table_exists(self, table_name):
-    &#34;&#34;&#34;Does the specified table exist in the database?&#34;&#34;&#34;
-    return self.db.table_exists(table_name)
+    ############################
+    def _table_exists(self, table_name):
+        &#34;&#34;&#34;Does the specified table exist in the database?&#34;&#34;&#34;
+        return self.db.table_exists(table_name)
 
-  ############################
-  def _write_record(self, record):
-    &#34;&#34;&#34;Write record to table. Connectors assume we&#39;ve got a DASRecord, but
-    check; if we don&#39;t see if it&#39;s a suitably-formatted dict that we can
-    convert into a DASRecord.
-    &#34;&#34;&#34;
-    if type(record) is dict:
-      try:
-        data_id = record.get(&#39;data_id&#39;, &#39;no_data_id&#39;)
-        timestamp = record.get(&#39;timestamp&#39;, None)
-        fields = record[&#39;fields&#39;]
-        record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
-      except KeyError:
-        logging.error(&#39;Unable to create DASRecord from dict: %s&#39;,
-                      pprint.pformat(record))
-    self.db.write_record(record)
+    ############################
+    def _write_record(self, record):
+        &#34;&#34;&#34;Write record to table. Connectors assume we&#39;ve got a DASRecord, but
+        check; if we don&#39;t see if it&#39;s a suitably-formatted dict that we can
+        convert into a DASRecord.
+        &#34;&#34;&#34;
+        if isinstance(record, dict):
+            try:
+                data_id = record.get(&#39;data_id&#39;, &#39;no_data_id&#39;)
+                timestamp = record.get(&#39;timestamp&#39;, None)
+                fields = record[&#39;fields&#39;]
+                record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+            except KeyError:
+                logging.error(&#39;Unable to create DASRecord from dict: %s&#39;,
+                              pprint.pformat(record))
+        self.db.write_record(record)
 
-  ############################
-  def _delete_table(self,  table_name):
-    &#34;&#34;&#34;Delete a table.&#34;&#34;&#34;
-    self.db.delete_table(table_name)
+    ############################
+    def _delete_table(self, table_name):
+        &#34;&#34;&#34;Delete a table.&#34;&#34;&#34;
+        self.db.delete_table(table_name)
 
-  ############################
-  def write(self, record):
-    &#34;&#34;&#34;Write out record. Connectors assume we&#39;ve got a DASRecord, so check
-    what we&#39;ve got and convert as necessary.
-    &#34;&#34;&#34;
-    if not record:
-      return
+    ############################
+    def write(self, record):
+        &#34;&#34;&#34;Write out record. Connectors assume we&#39;ve got a DASRecord, so check
+        what we&#39;ve got and convert as necessary.
+        &#34;&#34;&#34;
+        if not record:
+            return
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if type(record) is list:
-      for single_record in record:
-        self.write(single_record)
-      return
+        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+        # calling write() on each of the list elements in order.
+        if isinstance(record, list):
+            for single_record in record:
+                self.write(single_record)
+            return
 
-    # If we&#39;ve been passed a DASRecord, things are easy: write it and return.
-    if type(record) is DASRecord:
-      self._write_record(record)
-      return
-    
-    if not type(record) is dict:
-      logging.error(&#39;Record passed to DatabaseWriter is not of type &#39;
-                    &#39;&#34;DASRecord&#34; or dict; is type &#34;%s&#34;&#39;, type(record))
-      return
+        # If we&#39;ve been passed a DASRecord, things are easy: write it and return.
+        if isinstance(record, DASRecord):
+            self._write_record(record)
+            return
 
-    # If here, our record is a dict, figure out whether it is a top-level
-    # field dict or not.
-    data_id = record.get(&#39;data_id&#39;, None)
-    timestamp = record.get(&#39;timestamp&#39;, time.time())
-    fields = record.get(&#39;fields&#39;, None)
-    if fields is None:
-      logging.error(&#39;Dict record passed to DatabaseWriter has no &#34;fields&#34; &#39;
-                    &#39;key, which either means it\&#39;s not a dict you should be &#39;
-                    &#39;passing, or it is in the old &#34;field_dict&#34; format that &#39;
-                    &#39;assumes key:value pairs are at the top level.&#39;)
-      logging.error(&#39;The record in question: %s&#39;, str(record))
-      return
+        if not isinstance(record, dict):
+            logging.error(&#39;Record passed to DatabaseWriter is not of type &#39;
+                          &#39;&#34;DASRecord&#34; or dict; is type &#34;%s&#34;&#39;, type(record))
+            return
 
-    # Now check whether our &#39;values&#39; are singletons (in which case
-    # we&#39;ve got a single record) or lists of tuples. Shortcut by
-    # checking only the first value in our &#39;fields&#39; dict.
-    try:
-      first_key, first_value = next(iter(fields.items()))
-    except StopIteration:
-      # Empty fields
-      logging.debug(&#39;Empty &#34;fields&#34; dict in record: %s&#39;, str(record))
-      return
+        # If here, our record is a dict, figure out whether it is a top-level
+        # field dict or not.
+        data_id = record.get(&#39;data_id&#39;, None)
+        timestamp = record.get(&#39;timestamp&#39;, time.time())
+        fields = record.get(&#39;fields&#39;, None)
+        if fields is None:
+            logging.error(&#39;Dict record passed to DatabaseWriter has no &#34;fields&#34; &#39;
+                          &#39;key, which either means it\&#39;s not a dict you should be &#39;
+                          &#39;passing, or it is in the old &#34;field_dict&#34; format that &#39;
+                          &#39;assumes key:value pairs are at the top level.&#39;)
+            logging.error(&#39;The record in question: %s&#39;, str(record))
+            return
 
-    # If we&#39;ve got a singleton, it&#39;s a single record. Convert to
-    # DASRecord and write it out.
-    if not type(first_value) is list:
-      das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
-      self._write_record(das_record)
-      return
+        # Now check whether our &#39;values&#39; are singletons (in which case
+        # we&#39;ve got a single record) or lists of tuples. Shortcut by
+        # checking only the first value in our &#39;fields&#39; dict.
+        try:
+            first_key, first_value = next(iter(fields.items()))
+        except StopIteration:
+            # Empty fields
+            logging.debug(&#39;Empty &#34;fields&#34; dict in record: %s&#39;, str(record))
+            return
 
-    # If we&#39;re here, our values (or at least our first one) are lists
-    # of (value, timestamp) pairs. First thing we do is
-    # reformat the data into a map of
-    #
-    #        {timestamp: {field:value, field:value],...}}
-    values_by_timestamp = {}
-    try:
-      for field, ts_value_list in fields.items():
-        for (timestamp, value) in ts_value_list:
-          if not timestamp in values_by_timestamp:
-            values_by_timestamp[timestamp] = {}
-          values_by_timestamp[timestamp][field] = value
-    except ValueError:
-      logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
-                    field, pprint.pformat(ts_value_list))
+        # If we&#39;ve got a singleton, it&#39;s a single record. Convert to
+        # DASRecord and write it out.
+        if not isinstance(first_value, list):
+            das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+            self._write_record(das_record)
+            return
 
-    # Now go through each timestamp, generate a DASRecord from its
-    # values, and write them.
-    for timestamp in sorted(values_by_timestamp):
-      das_record = DASRecord(data_id=data_id, timestamp=timestamp,
-                             fields=values_by_timestamp[timestamp])
-      self._write_record(das_record)</code></pre>
+        # If we&#39;re here, our values (or at least our first one) are lists
+        # of (value, timestamp) pairs. First thing we do is
+        # reformat the data into a map of
+        #
+        #        {timestamp: {field:value, field:value],...}}
+        values_by_timestamp = {}
+        try:
+            for field, ts_value_list in fields.items():
+                for (timestamp, value) in ts_value_list:
+                    if timestamp not in values_by_timestamp:
+                        values_by_timestamp[timestamp] = {}
+                    values_by_timestamp[timestamp][field] = value
+        except ValueError:
+            logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
+                          field, pprint.pformat(ts_value_list))
+
+        # Now go through each timestamp, generate a DASRecord from its
+        # values, and write them.
+        for timestamp in sorted(values_by_timestamp):
+            das_record = DASRecord(data_id=data_id, timestamp=timestamp,
+                                   fields=values_by_timestamp[timestamp])
+            self._write_record(das_record)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -441,88 +444,88 @@ timestamp, if any, is ignored.</p>
 <span>def <span class="ident">write</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Write out record. Connectors assume we've got a DASRecord, so check
-what we've got and convert as necessary.</p></section>
+<div class="desc"><p>Write out record. Connectors assume we've got a DASRecord, so check
+what we've got and convert as necessary.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def write(self, record):
-  &#34;&#34;&#34;Write out record. Connectors assume we&#39;ve got a DASRecord, so check
-  what we&#39;ve got and convert as necessary.
-  &#34;&#34;&#34;
-  if not record:
-    return
+    &#34;&#34;&#34;Write out record. Connectors assume we&#39;ve got a DASRecord, so check
+    what we&#39;ve got and convert as necessary.
+    &#34;&#34;&#34;
+    if not record:
+        return
 
-  # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-  # calling write() on each of the list elements in order.
-  if type(record) is list:
-    for single_record in record:
-      self.write(single_record)
-    return
+    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if isinstance(record, list):
+        for single_record in record:
+            self.write(single_record)
+        return
 
-  # If we&#39;ve been passed a DASRecord, things are easy: write it and return.
-  if type(record) is DASRecord:
-    self._write_record(record)
-    return
-  
-  if not type(record) is dict:
-    logging.error(&#39;Record passed to DatabaseWriter is not of type &#39;
-                  &#39;&#34;DASRecord&#34; or dict; is type &#34;%s&#34;&#39;, type(record))
-    return
+    # If we&#39;ve been passed a DASRecord, things are easy: write it and return.
+    if isinstance(record, DASRecord):
+        self._write_record(record)
+        return
 
-  # If here, our record is a dict, figure out whether it is a top-level
-  # field dict or not.
-  data_id = record.get(&#39;data_id&#39;, None)
-  timestamp = record.get(&#39;timestamp&#39;, time.time())
-  fields = record.get(&#39;fields&#39;, None)
-  if fields is None:
-    logging.error(&#39;Dict record passed to DatabaseWriter has no &#34;fields&#34; &#39;
-                  &#39;key, which either means it\&#39;s not a dict you should be &#39;
-                  &#39;passing, or it is in the old &#34;field_dict&#34; format that &#39;
-                  &#39;assumes key:value pairs are at the top level.&#39;)
-    logging.error(&#39;The record in question: %s&#39;, str(record))
-    return
+    if not isinstance(record, dict):
+        logging.error(&#39;Record passed to DatabaseWriter is not of type &#39;
+                      &#39;&#34;DASRecord&#34; or dict; is type &#34;%s&#34;&#39;, type(record))
+        return
 
-  # Now check whether our &#39;values&#39; are singletons (in which case
-  # we&#39;ve got a single record) or lists of tuples. Shortcut by
-  # checking only the first value in our &#39;fields&#39; dict.
-  try:
-    first_key, first_value = next(iter(fields.items()))
-  except StopIteration:
-    # Empty fields
-    logging.debug(&#39;Empty &#34;fields&#34; dict in record: %s&#39;, str(record))
-    return
+    # If here, our record is a dict, figure out whether it is a top-level
+    # field dict or not.
+    data_id = record.get(&#39;data_id&#39;, None)
+    timestamp = record.get(&#39;timestamp&#39;, time.time())
+    fields = record.get(&#39;fields&#39;, None)
+    if fields is None:
+        logging.error(&#39;Dict record passed to DatabaseWriter has no &#34;fields&#34; &#39;
+                      &#39;key, which either means it\&#39;s not a dict you should be &#39;
+                      &#39;passing, or it is in the old &#34;field_dict&#34; format that &#39;
+                      &#39;assumes key:value pairs are at the top level.&#39;)
+        logging.error(&#39;The record in question: %s&#39;, str(record))
+        return
 
-  # If we&#39;ve got a singleton, it&#39;s a single record. Convert to
-  # DASRecord and write it out.
-  if not type(first_value) is list:
-    das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
-    self._write_record(das_record)
-    return
+    # Now check whether our &#39;values&#39; are singletons (in which case
+    # we&#39;ve got a single record) or lists of tuples. Shortcut by
+    # checking only the first value in our &#39;fields&#39; dict.
+    try:
+        first_key, first_value = next(iter(fields.items()))
+    except StopIteration:
+        # Empty fields
+        logging.debug(&#39;Empty &#34;fields&#34; dict in record: %s&#39;, str(record))
+        return
 
-  # If we&#39;re here, our values (or at least our first one) are lists
-  # of (value, timestamp) pairs. First thing we do is
-  # reformat the data into a map of
-  #
-  #        {timestamp: {field:value, field:value],...}}
-  values_by_timestamp = {}
-  try:
-    for field, ts_value_list in fields.items():
-      for (timestamp, value) in ts_value_list:
-        if not timestamp in values_by_timestamp:
-          values_by_timestamp[timestamp] = {}
-        values_by_timestamp[timestamp][field] = value
-  except ValueError:
-    logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
-                  field, pprint.pformat(ts_value_list))
+    # If we&#39;ve got a singleton, it&#39;s a single record. Convert to
+    # DASRecord and write it out.
+    if not isinstance(first_value, list):
+        das_record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+        self._write_record(das_record)
+        return
 
-  # Now go through each timestamp, generate a DASRecord from its
-  # values, and write them.
-  for timestamp in sorted(values_by_timestamp):
-    das_record = DASRecord(data_id=data_id, timestamp=timestamp,
-                           fields=values_by_timestamp[timestamp])
-    self._write_record(das_record)</code></pre>
+    # If we&#39;re here, our values (or at least our first one) are lists
+    # of (value, timestamp) pairs. First thing we do is
+    # reformat the data into a map of
+    #
+    #        {timestamp: {field:value, field:value],...}}
+    values_by_timestamp = {}
+    try:
+        for field, ts_value_list in fields.items():
+            for (timestamp, value) in ts_value_list:
+                if timestamp not in values_by_timestamp:
+                    values_by_timestamp[timestamp] = {}
+                values_by_timestamp[timestamp][field] = value
+    except ValueError:
+        logging.error(&#39;Badly-structured field dictionary: %s: %s&#39;,
+                      field, pprint.pformat(ts_value_list))
+
+    # Now go through each timestamp, generate a DASRecord from its
+    # values, and write them.
+    for timestamp in sorted(values_by_timestamp):
+        das_record = DASRecord(data_id=data_id, timestamp=timestamp,
+                               fields=values_by_timestamp[timestamp])
+        self._write_record(das_record)</code></pre>
 </details>
 </dd>
 </dl>
@@ -564,9 +567,7 @@ what we've got and convert as necessary.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

@@ -10,10 +10,10 @@ Garmin02: # Don't really know what this device type is - it's gp02 on the NBP
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w}"
-    - "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K"
-    - "$GPZDA,{Time:d},{Day:d},{Month:d},{Year:d},{LocalHours:od}"
-    - "$GPRMC,{Time:f},{Status:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{Date:w},{MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}"
+    GLL: "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w}"
+    VTG: "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K"
+    ZDA: "$GPZDA,{Time:d},{Day:d},{Month:d},{Year:d},{LocalHours:od}"
+    RMC: "$GPRMC,{Time:f},{Status:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{Date:w},{MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -70,18 +70,19 @@ Garmin19: # A Garmin 19, as on the LMG
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    - "$GPGGA,{Time:d},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
-    - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w}*{CheckSum:x}"
-    - "$GPRMC,{Time:d},{Status:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{Date:d},{MagneticVar:of},{MagneticVarEorW:ow}*{Checksum:x}"
-    - "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
-    - "$GPZDA,{Time:d},{Day:d},{Month:d},{Year:d},{LocalHours:od}*{CheckSum:x}"
-    - "$GPGSA,{ManualAutoMode:w},{DimensionMode:d},{Sat1ID:od},{Sat2ID:od},{Sat3ID:od},{Sat4ID:od},{Sat5ID:od},{Sat6ID:od},{Sat7ID:od},{Sat8ID:od},{Sat9ID:od},{Sat10ID:od},{Sat11ID:od},{Sat12ID:od},{PDOP:g},{HDOP:g},{VDOP:g}*{Checksum:x}"
+    GGA: "$GPGGA,{Time:d},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GLL: "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w}*{CheckSum:x}"
+    RMC: "$GPRMC,{Time:d},{Status:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{Date:d},{MagneticVar:of},{MagneticVarEorW:ow}*{Checksum:x}"
+    VTG: "$GPVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
+    ZDA: "$GPZDA,{Time:d},{Day:d},{Month:d},{Year:d},{LocalHours:od}*{CheckSum:x}"
+    GSA: "$GPGSA,{ManualAutoMode:w},{DimensionMode:d},{Sat1ID:od},{Sat2ID:od},{Sat3ID:od},{Sat4ID:od},{Sat5ID:od},{Sat6ID:od},{Sat7ID:od},{Sat8ID:od},{Sat9ID:od},{Sat10ID:od},{Sat11ID:od},{Sat12ID:od},{PDOP:g},{HDOP:g},{VDOP:g}*{Checksum:x}"
+    GSV:
     - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d}*{CheckSum:x}"
     - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d}*{CheckSum:x}"
     - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d},{Sat3PRN:d},{Sat3Elevation:d},{Sat3Azimuth:d},{Sat3SignalToNoise:d}*{CheckSum:x}"
     - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d},{Sat3PRN:d},{Sat3Elevation:d},{Sat3Azimuth:d},{Sat3SignalToNoise:d},{Sat4PRN:d},{Sat4Elevation:d},{Sat4Azimuth:d},{Sat4SignalToNoise:d}*{CheckSum:x}"
-    - "$PGRMT,{Product:nc},{RomChecksumTest:ow},{ReceiverTest:ow},{StoredDataLost:ow},{RealtimeClockLost:ow},{OscillatorDrift:ow},{DataCollection:ow},{BoardTemp:og},{BoardConfigData:ow}*{Checksum:x}"
-    - "$PGRMF,{WeekNum:d},{SecondsInWeek:d},{Date:d},{Time:d},{LeapSecondCount:d},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{ManualAutoMode:w},{DimensionMode:d},{SpeedKm:g},{CourseTrue:g},{PDOP:g},{TDOP:g}*{Checksum:x}"
+    RMT: "$PGRMT,{Product:nc},{RomChecksumTest:ow},{ReceiverTest:ow},{StoredDataLost:ow},{RealtimeClockLost:ow},{OscillatorDrift:ow},{DataCollection:ow},{BoardTemp:og},{BoardConfigData:ow}*{Checksum:x}"
+    RMF: "$PGRMF,{WeekNum:d},{SecondsInWeek:d},{Date:d},{Time:d},{LeapSecondCount:d},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{ManualAutoMode:w},{DimensionMode:d},{SpeedKm:g},{CourseTrue:g},{PDOP:g},{TDOP:g}*{Checksum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.

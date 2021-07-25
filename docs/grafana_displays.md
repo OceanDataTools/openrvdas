@@ -1,18 +1,13 @@
 # Grafana/InfluxDB-based Displays with OpenRVDAS
-© 2020 David Pablo Cohn - DRAFT 2020-08-12
+© 2020 David Pablo Cohn - DRAFT 2020-12-01
 
 ## Table of Contents
 
 * [Overview](#overview)
 * [Installation](#installation)
-   * [InfluxDB](#influxdb)
-   * [Grafana](#grafana)
-   * [Telegraf](#telegraf)
-* [Configuration](#configuration)
-   * [InfluxDB](#influxdb-1)
-   * [Grafana](#grafana-1)
-   * [Telegraf](#telegraf-1)
-* [Running InfluxDB, Grafana and Telegraf as services](#running-influxdb-grafana-and-telegraf-as-services)
+* [Running](#running)
+* [Configuing Grafana](#configuring-grafana)
+* [Writing data to InfluxDB](#writing-data-to-influxdb)
 * [Creating Grafana Dashboards](#creating-grafana-dashboards)
 
 ## Overview
@@ -34,80 +29,21 @@ and Telegraf 1.15.
 
 ## Installation
 
-The versions of InfluxDB and Grafana that come with CentOS/Red Hat 7
-and Ubuntu 18 are somewhat out of date, so we recommend manual
-installation of more current versions.
+There is now an installation script ``utils/install_influxdb.sh`` that
+will walk you through the installation and configuration of InfluxDB,
+Grafana and Telegraf.
 
-### InfluxDB
+If you are upgrading an existing installation and had already installed
+InfluxDB, you will need to disable the old invocation of InfluxDB. You can
+do this either by re-running the main installation script, or manually
+editing the OpenRVDAS supervisor file, which is in either `/etc/supervisord.d/openrvdas.ini`,
+`/usr/local/etc/supervisor.d/openrvdas.ini`, or `/etc/supervisor/conf.d/openrvdas.conf`
+depending on operating system.
 
-You can install and configure InfluxDB as part of the OpenRVDAS
-installation script. If you have not done so, you can
-install/configure it manually, as below.
-
-```
-INFLUXDB_RELEASE=influxdb_2.0.0-beta.16_linux_amd64  # CentOS/Red Hat/Ubuntu
-#INFLUXDB_RELEASE=influxdb_2.0.0-beta.16_darwin_amd64  # MacOS
-
-INFLUXDB_URL=dl.influxdata.com/influxdb/releases
-
-cd /tmp
-wget http://$INFLUXDB_URL/${INFLUXDB_RELEASE}.tar.gz
-tar zxf ${INFLUXDB_RELEASE}.tar.gz
-sudo cp ${INFLUXDB_RELEASE}/influx ${INFLUXDB_RELEASE}/influxd /usr/local/bin
-```
-
-### Grafana
-
-For Grafana, please follow the instructions on the Grafana download page at [https://grafana.com/grafana/download](https://grafana.com/grafana/download)
-
-Then install two plug-ins we'll want access to:
-
-```
-sudo grafana-cli plugins install grafana-influxdb-flux-datasource
-sudo grafana-cli plugins install briangann-gauge-panel
-​
-sudo chown -R grafana /var/lib/grafana/plugins/
-sudo chgrp -R grafana /var/lib/grafana/plugins/
-```
-
-### Telegraf
-
-```
-# CentOS/Red Hat
-wget https://dl.influxdata.com/telegraf/releases/telegraf-1.15.2-1.x86_64.rpm
-sudo yum localinstall telegraf-1.15.2-1.x86_64.rpm
-
-# Ubuntu
-wget https://dl.influxdata.com/telegraf/releases/telegraf_1.15.2-1_amd64.deb
-sudo dpkg -i telegraf_1.15.2-1_amd64.deb
-
-# MacOS
-brew update
-brew install telegraf
-brew update telegraf
-```
-
-## Configuration
-
-### InfluxDB
-
-* Start a copy of InfluxDB in one window
-
-  ```
-  /usr/local/bin/influxd --reporting-disabled
-  ```
-
-* Run the setup script in a separate terminal:
-
-  ```
-  /usr/local/bin/influx setup
-  ```
-
-  We use 'rvdas' when prompted for a user name, 'openrvdas' as the
-  organization and 'openrvdas' as the primary bucket.
-  
-Note that If you are running MacOS Catalina, prior to continuing,
-please follow these steps to manually authorize the InfluxDB binaries:
+There is one more hitch if installing with MacOS Catalina, due to its
+reluctance to run unfamiliar packages. If you are running under
+Catalina, the system will balk when the script first tries to run
+``influx`` and ``influxd``. If that happens:
 
 1. Attempt to run /usr/local/bin/influxd from a terminal window.
 2. If it balks, open System Preferences and click "Security & Privacy."
@@ -115,33 +51,83 @@ please follow these steps to manually authorize the InfluxDB binaries:
    blocked. Click Open Anyway.
 4. Repeat this with /usr/local/bin/influx
 
+Then re-run the installation script, and it should pick up where it
+left off.
 
-### Grafana
+## Running
 
-Grafana is connected to InfluxDB by adding InfluxDB as a Grafana data
-source. To do that, Grafana needs an AUTH_TOKEN from InfluxDB. When
-you ran ``influx setup``, the script told you where it was storing its
-configuration details (probably in ``/root/.influxdbv2/configs``); you
-can find the 'token' string there, or retrieve it via a browser as follows.
+You shouldn't need to, but after the installation script has
+completed, you can run InfluxDB, Grafana and Telegraf from the command
+line:
 
-* Start up the InfluxDB server again if you've stopped it since the
-  previous section
+```
+/usr/local/bin/influxd --reporting-disabled
 
-  ```
-  /usr/local/bin/influxd --reporting-disabled
-  ```
+/usr/local/bin/grafana-server --homepath /usr/local/etc/grafana
 
-* Start Grafana using systemctl/brew services:
+/usr/local/bin/telegraf --config=/usr/local/etc/telegraf/etc/telegraf/telegraf.conf
+```
 
-  ```
-  # CentOS/Ubuntu
-  systemctl start grafana-server
+Instead of doing this, you should start/stop them using `supervisord`.
 
-  # MacOS
-  brew services start grafana-server
-  ```
+In addition to putting links to the relevant binaries in
+/usr/local/bin, the script also creates a config file that can be read
+by `supervisord` instructing it how to run each of the programs. The
+location of this script depends on the system - MacOS, CentOS and
+Ubuntu all hide their supervisord config files in different places.
 
-* Point a browser window ``<machine name>:9999``; log into InfluxDB using
+```
+MacOS    - /usr/local/etc/supervisor.d/influx.ini
+CentOS   - /etc/supervisord.d/influx.ini
+Ubuntu   - /etc/supervisor/conf.d/influx.conf
+```
+
+You will need to tell supervisor to reload its configuration files to
+have this new file read in the first time:
+
+```
+> supervisorctl reload
+```
+
+After this, you should be able to see the new scripts in the
+supervisorctl pages:
+
+```
+> supervisorctl status
+influx:grafana                   STOPPED   Sep 13 10:32 PM
+influx:influxdb                  STOPPED   Sep 13 10:32 PM
+influx:telegraf                  STOPPED   Sep 13 10:32 PM
+openrvdas:cached_data_server     RUNNING   pid 28136, uptime 2:59:52
+openrvdas:logger_manager         RUNNING   pid 28137, uptime 2:59:52
+simulate:simulate_nbp            RUNNING   pid 28164, uptime 2:59:37
+web:nginx                        RUNNING   pid 28134, uptime 2:59:52
+web:uwsgi                        RUNNING   pid 28135, uptime 2:59:52
+>
+```
+
+If you specified "Run on boot" when you ran the installation script,
+the influx-related scripts should all start running now, and whenever
+you reboot the machine or restart supervisord.
+
+To manually start all the scripts, run
+
+```
+> supervisorctl start influx:*
+influx:telegraf: started
+influx:influxdb: started
+influx:grafana: started
+>
+```
+
+If anything is going wrong with one of the scripts run by
+`supervisord`, you can examine its stderr in
+`/var/log/openrvdas/[influxdb,grafana,telegraf].stderr`.
+
+## Configuring Grafana
+
+Once the packages are loaded and running, you will need to connect Grafana to InfluxDB.
+
+* Point a browser window ``<machine name>:8086``; log into InfluxDB using
   the username and password you set in the previous step.
 
 * Select the "Load Data" menu on the far left (shaped like an
@@ -158,7 +144,7 @@ can find the 'token' string there, or retrieve it via a browser as follows.
   "Add data source". Select “Flux (InfluxDB) [BETA]”. Set
 
   * Default data source as true
-  * URL: ``http://machine name>:9999`` # machine where InfluxDB is running
+  * URL: ``http://machine name>:8086`` # machine where InfluxDB is running
   * Organization: openrvdas
   * Token: Paste this in from your browser clipboard
 
@@ -168,85 +154,27 @@ NOTE: If you reinstall InfluxDB, e.g. by re-running the OpenRVDAS
 installation script, the InfluxDB AUTH_TOKEN will change, and you will
 need to supply the new one to Grafana and Telegraf.
 
-### Telegraf
-
-When Telegraf was installed, it should have created a configuration
-file in ``/etc/telegraf/telegraf.conf`` (or
-``/usr/local/etc/telegraf/telegraf.conf`` under MacOS). You will need
-to edit this file.
-
-1. Comment out the line ``[[outputs.influxdb]]` by adding a "#" to the
-   beginning.
-
-1. Uncomment the line ``[[outputs.influxdb_v2]]``; in the section
-   below, uncomment the following lines and set their values as follows
-
-    * urls = ["http://127.0.0.1:9999"] 
-    * token = "_copy token here_"
-    * organization = "openrvdas"
-    * bucket = "_monitoring"
-
-The 127.0.0.1:9999 URL assumes that you're running Grafana on the same
-machine as InfluxDB. It does not need to be, nor does InfluxDB need to
-be running on the same machine as OpenRVDAS. In fact, in production,
-it is recommended that InfluxDB run on a separate machine so as to let
-the OpenRVDAS machine do nothing but log.
-
-## Running InfluxDB, Grafana and Telegraf as services
-
-Grafana and Telegraf may be started as system services using systemctl
-(or `brew services` on MacOS):
-
-```
-systemctl start grafana
-systemctl start telegraf
-
-brew services start grafana  # MacOS
-brew services start telegraf
-```
-
-To have them start at machine boot, run
-
-```
-systemctl enable grafana
-systemctl enable telegraf
-
-brew services enable grafana  # MacOS
-brew services enable telegraf
-```
-
-InfluxDB requires a bit more work to run as a service. If you
-installed InfluxDB as part of the OpenRVDAS installation script, then
-it will have an entry in the supervisord configuration file and you
-can start it with:
-
-```
-supervisorctl start influxdb
-```
-
-Otherwise you will need to start it manually:
-
-```
-/usr/local/bin/influxd --reporting-disabled
-```
-
 ## Writing data to InfluxDB
 
-If installation of InfluxDB was selected when the OpenRVDAS
-installation script was run, the relevant variables should already be set in ``database/settings.py``; otherwise you will need to edit the file to manually add them:
+To write to InfluxDB, OpenRVAS needs to have the AUTH_TOKEN of an
+authorized InfluxDB user. If all went well, the installation script
+copied that into ``database/settings.py`` automatically. You can
+verify this by looking at the end of ``database/settings.py`` for
+something like:
 
 ```
 ################################################################################
 # InfluxDB settings
-INFLUXDB_URL = 'http://localhost:9999'
+INFLUXDB_URL = 'http://localhost:8086'
 INFLUXDB_ORG = 'openrvdas'
 INFLUXDB_AUTH_TOKEN = '4_e-eyx0h8i0UzVkC5jlRy6s4LQM8UXgJAE5xT2a7izbH2_PwyxKY--lQ7FTGvKj5rh9vg04MeksHUL017SNwQ=='  # your InfluxDB token here
 ```
 
-Once this is set, you should be able to specify and InfluxDBWriter in
-your logger configurations, and the data will get to where it needs to
-go. Much like a CachedDataWriter, the InfluxDBWriter expects either a
-DASRecord or a dict containing 'timestamp' and 'fields' dicts:
+Assuming there is a URL, ORG and AUTH_TOKEN set, you should be able to
+specify an InfluxDBWriter in your logger configurations, and the data
+will get to where it needs to go. Much like a CachedDataWriter, the
+InfluxDBWriter expects either a DASRecord or a dict containing
+'timestamp' and 'fields' dicts:
 
 ```
   gyr1->net:
@@ -275,6 +203,14 @@ DASRecord or a dict containing 'timestamp' and 'fields' dicts:
         measurement_name: gyr1
 ```
 
+NOTE: If the InfluxDBWriter is unable to connect to InfluxDB, it is
+possible that your AUTH_TOKEN has been updated. If so, you'll need to
+manually look it up (see the initial steps in [Configuring
+Grafana](#configuring-grafana)), and copy it into the appropriate
+place in ``database/settings.py``. You may also need to copy the new
+token back into Grafana, as described in rest of the steps of that
+section.
+
 ## Creating Grafana Dashboards
 
 * To start a new dashboard, select the “+” at the left menu, then
@@ -283,15 +219,15 @@ DASRecord or a dict containing 'timestamp' and 'fields' dicts:
 
 * You’ll be able to select a “Visualization” to choose between graphs,
   numerical stats, dials, etc. 360 degree dials are created using a
-  “D3 Gauge” which was the “briangann-gauge-panel” we loaded above
-  from Grafana labs.
+  “D3 Gauge” which was the “briangann-gauge-panel” the installation
+  script loaded from Grafana labs.
 
 * To get the data into the visualization, you’ll need to create a
   query in the Flux query language. I haven’t attempted to learn
   it. Instead, I generate the query using the InfluxDB server:
 
   * Open a browser on the machine serving InfluxDB, e.g
-    http://nbp-odas-t:9999
+    http://nbp-odas-t:8086
 
   * Select “Data Explorer (the zigzag) from the left panel. This will
     show you what fields are available. Select the sensors and field
@@ -313,9 +249,5 @@ DASRecord or a dict containing 'timestamp' and 'fields' dicts:
 
 * Panels may be dragged around and resized. Don’t forget to hit “Save”
   (the floppy icon) prior to leaving your dashboard page.
-
-Note: If things behave badly after installing a plug-in, check the
-file permissions insides /var/lib/grafana/plugins - it seems that they
-sometimes get wonked by installations.
 
 ![Sample Grafana Dashboard](images/grafana_dashboard.png)

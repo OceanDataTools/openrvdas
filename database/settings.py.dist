@@ -7,6 +7,8 @@ operational.
 See below for additional database-specific install requirements
 
 """
+# flake8: noqa E502
+
 import logging
 import sys
 
@@ -27,47 +29,47 @@ MYSQL_ENABLED = False
 POSTGRES_ENABLED = False
 
 try:
-  # Specify/uncomment the database you're using here
+    # Specify/uncomment the database you're using here
 
-  # To set up MySQL connectivity, install, configure and start
-  # MySQL server, and set up appropriate mysql user:
-  #   apt-get install mysql-server libmysqlclient-dev # ubuntu
-  #
-  #   pip3 install mysqlclient, mysql-connector-python
-  #
-  #   # Create 'data' and 'test' databases and mysql_user
-  #   database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
-  #
-  from database.mysql_connector import MYSQL_ENABLED, MySQLConnector as Connector
-  #from database.mysql_record_connector import MYSQL_ENABLED, MySQLRecordConnector as Connector
-  if MYSQL_ENABLED:
-      DATABASE_ENABLED = True
+    # To set up MySQL connectivity, install, configure and start
+    # MySQL server, and set up appropriate mysql user:
+    #   apt-get install mysql-server libmysqlclient-dev # ubuntu
+    #
+    #   pip3 install mysqlclient, mysql-connector-python
+    #
+    #   # Create 'data' and 'test' databases and mysql_user
+    #   database/setup_mysql_connector.sh <root_pwd> <mysql_user> <mysql_user_pwd>
+    #
+    from database.mysql_connector import MYSQL_ENABLED, MySQLConnector as Connector
+    #from database.mysql_record_connector import MYSQL_ENABLED, MySQLRecordConnector as Connector
+    if MYSQL_ENABLED:
+        DATABASE_ENABLED = True
 
-  # To set up PostgreSQL connectivity, install, configure and start
-  # PostgreSQL server, and set up appropriate postgres user:
-  #   apt-get install postgresql-12 postgresql-client-12 # ubuntu
-  #
-  #   pip3 install psycopg2-binary
-  #
-  #   # Create 'data' and 'test' databases and mysql_user
-  #   database/setup_postgres_connector.sh <root_pwd> <postgres_user> <postgres_user_pwd>
-  #
-  from database.postgresql_connector import POSTGRES_ENABLED, PostgreSQLConnector as Connector
-  #from database.postgresql_record_connector import POSTGRES_ENABLED, PostgreSQLRecordConnector as Connector
-  if POSTGRES_ENABLED:
-      DATABASE_ENABLED = True
+    # To set up PostgreSQL connectivity, install, configure and start
+    # PostgreSQL server, and set up appropriate postgres user:
+    #   apt-get install postgresql-12 postgresql-client-12 # ubuntu
+    #
+    #   pip3 install psycopg2-binary
+    #
+    #   # Create 'data' and 'test' databases and mysql_user
+    #   database/setup_postgres_connector.sh <root_pwd> <postgres_user> <postgres_user_pwd>
+    #
+    # from database.postgresql_connector import POSTGRES_ENABLED, PostgreSQLConnector as Connector
+    # from database.postgresql_record_connector import POSTGRES_ENABLED, PostgreSQLRecordConnector as Connector
+    # if POSTGRES_ENABLED:
+    #    DATABASE_ENABLED = True
 
-  # Put instructions and imports for other databases here
+    # Put instructions and imports for other databases here
 
 except ImportError:
-  pass
+    pass
 
 if not DATABASE_ENABLED:
-  logging.info('Settings in database/settings.py not configured; database '
-               'functionality may not be available.')
+    logging.info('Settings in database/settings.py not configured; database '
+                 'functionality may not be available.')
 
 ################################################################################
 # InfluxDB settings
-INFLUXDB_URL = 'http://localhost:9999'
+INFLUXDB_URL = 'http://localhost:8086'
 INFLUXDB_ORG = 'openrvdas'
 INFLUXDB_AUTH_TOKEN = 'DEFAULT_INFLUXDB_AUTH_TOKEN'

@@ -21,8 +21,6 @@ import sys
 import time
 import yaml
 
-from collections import OrderedDict
-
 HEADER_TEMPLATE = """###########################################################
 ###########################################################
 # YAML cruise definition file for OpenRVDAS.
@@ -207,12 +205,12 @@ SNAPSHOT_TEMPLATE = """
         data_server: %DATA_SERVER%
 """
 
-OFF_TEMPLATE="""
+OFF_TEMPLATE = """
   %LOGGER%->off:
     name: %LOGGER%->off
 """
 
-NET_WRITER_TEMPLATE="""
+NET_WRITER_TEMPLATE = """
   %LOGGER%->net:
     name: %LOGGER%->net
     readers:                    # Read from simulated serial port
@@ -243,7 +241,7 @@ NET_WRITER_TEMPLATE="""
             data_server: %DATA_SERVER%
 """
 
-FILE_NET_WRITER_TEMPLATE="""
+FILE_NET_WRITER_TEMPLATE = """
   %LOGGER%->file/net:
     name: %LOGGER%->file/net
     readers:                    # Read from simulated serial port
@@ -284,7 +282,7 @@ FILE_NET_WRITER_TEMPLATE="""
             data_server: %DATA_SERVER%
 """
 
-FULL_WRITER_TEMPLATE="""
+FULL_WRITER_TEMPLATE = """
   %LOGGER%->file/net/db:
     name: %LOGGER%->file/net/db
     readers:                    # Read from simulated serial port
@@ -338,14 +336,17 @@ FULL_WRITER_TEMPLATE="""
 """
 
 ####################
+
+
 def fill_substitutions(template, substitutions):
-  output = template
-  for src, dest in substitutions.items():
-    output = output.replace(str(src), str(dest))
-  return output
+    output = template
+    for src, dest in substitutions.items():
+        output = output.replace(str(src), str(dest))
+    return output
 
 ################################################################################
 ################################################################################
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('def_filename', metavar='def_filename', type=str,
@@ -353,33 +354,33 @@ parser.add_argument('def_filename', metavar='def_filename', type=str,
 args = parser.parse_args()
 
 with open(args.def_filename, 'r') as fp:
-  try:
-    port_def = yaml.load(fp, Loader=yaml.FullLoader)
-  except AttributeError:
-    # If they've got an older yaml, it may not have FullLoader)
-    port_def = yaml.load(fp)
+    try:
+        port_def = yaml.load(fp, Loader=yaml.FullLoader)
+    except AttributeError:
+        # If they've got an older yaml, it may not have FullLoader)
+        port_def = yaml.load(fp)
 
 # Create dict of variables we're going to substitute into the templates
 substitutions = {
-  '%CRUISE%': port_def.get('cruise', {}).get('id'),
-  '%CRUISE_START%': port_def.get('cruise', {}).get('start'),
-  '%CRUISE_END%': port_def.get('cruise', {}).get('end'),
+    '%CRUISE%': port_def.get('cruise', {}).get('id'),
+    '%CRUISE_START%': port_def.get('cruise', {}).get('start'),
+    '%CRUISE_END%': port_def.get('cruise', {}).get('end'),
 
-  '%UDP_DESTINATION%': port_def.get('network', {}).get('destination', '255.255.255.255'),
-  '%RAW_UDP_PORT%': port_def.get('network', {}).get('raw_udp_port'),
-  '%PARSED_UDP_PORT%': port_def.get('network', {}).get('parsed_udp_port'),
-  '%DATA_SERVER%': port_def.get('network', {}).get('data_server'),
+    '%UDP_DESTINATION%': port_def.get('network', {}).get('destination', '255.255.255.255'),
+    '%RAW_UDP_PORT%': port_def.get('network', {}).get('raw_udp_port'),
+    '%PARSED_UDP_PORT%': port_def.get('network', {}).get('parsed_udp_port'),
+    '%DATA_SERVER%': port_def.get('network', {}).get('data_server'),
 
-  '%FILE_ROOT%': port_def.get('file_root', '/var/tmp/log'),
+    '%FILE_ROOT%': port_def.get('file_root', '/var/tmp/log'),
 
-  '%PARSE_DEFINITION_PATH%':  port_def.get('parse_definition_path', ''),
+    '%PARSE_DEFINITION_PATH%':  port_def.get('parse_definition_path', ''),
 
-  '%COMMAND_LINE%': ' '.join(sys.argv),
-  '%DATE_TIME%': time.asctime(time.gmtime()),
-  '%USER%': getpass.getuser(),
+    '%COMMAND_LINE%': ' '.join(sys.argv),
+    '%DATE_TIME%': time.asctime(time.gmtime()),
+    '%USER%': getpass.getuser(),
 }
 
-loggers =  port_def.get('ports').keys()
+loggers = port_def.get('ports').keys()
 
 ################################################################################
 # Start with header template
@@ -400,7 +401,7 @@ LOGGER_DEF = """  %LOGGER%:
     - %LOGGER%->file/net/db
 """
 for logger in loggers:
-  output += fill_substitutions(LOGGER_DEF, substitutions).replace('%LOGGER%', logger)
+    output += fill_substitutions(LOGGER_DEF, substitutions).replace('%LOGGER%', logger)
 output += """  true_wind:
     configs:
     - true_wind->off
@@ -420,34 +421,34 @@ modes:
   'off':
 """
 for logger in loggers:
-  output += '    %LOGGER%: %LOGGER%->off\n'.replace('%LOGGER%', logger)
+    output += '    %LOGGER%: %LOGGER%->off\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->off\n'
 output += '    snapshot: snapshot->off\n'
 
-#### monitor
+# monitor
 output += """
   monitor:
 """
 for logger in loggers:
-  output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
+    output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
 output += '    snapshot: snapshot->on\n'
 
-#### log
+# log
 output += """
   log:
 """
 for logger in loggers:
-  output += '    %LOGGER%: %LOGGER%->file/net\n'.replace('%LOGGER%', logger)
+    output += '    %LOGGER%: %LOGGER%->file/net\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
 output += '    snapshot: snapshot->on\n'
 
-#### log+db
+# log+db
 output += """
   'log+db':
 """
 for logger in loggers:
-  output += '    %LOGGER%: %LOGGER%->file/net/db\n'.replace('%LOGGER%', logger)
+    output += '    %LOGGER%: %LOGGER%->file/net/db\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
 output += '    snapshot: snapshot->on\n'
 
@@ -463,38 +464,38 @@ output += """
 configs:
 """
 for logger in loggers:
-  output += """  ########"""
-  output += fill_substitutions(OFF_TEMPLATE, substitutions).replace('%LOGGER%', logger)
-  # Special case for true winds, which is a derived logger
+    output += """  ########"""
+    output += fill_substitutions(OFF_TEMPLATE, substitutions).replace('%LOGGER%', logger)
+    # Special case for true winds, which is a derived logger
 
-  # Look up port.tab values for this logger
-  if not logger in loggers:
-    logging.warning('No port.tab entry found for %s; skipping...', logger)
-    continue
+    # Look up port.tab values for this logger
+    if logger not in loggers:
+        logging.warning('No port.tab entry found for %s; skipping...', logger)
+        continue
 
-  logger_port_def = port_def.get('ports').get(logger).get('port_tab')
-  if not logger_port_def:
-    logging.warning('No port def for %s', logger)
+    logger_port_def = port_def.get('ports').get(logger).get('port_tab')
+    if not logger_port_def:
+        logging.warning('No port def for %s', logger)
 
-  (inst, tty, baud, datab, stopb, parity, igncr, icrnl, eol, onlcr,
-   ocrnl, icanon, vmin, vtime, vintr, vquit, opost) = logger_port_def.split()
-  net_writer = fill_substitutions(NET_WRITER_TEMPLATE, substitutions)
-  net_writer = net_writer.replace('%LOGGER%', logger)
-  net_writer = net_writer.replace('%TTY%', tty)
-  net_writer = net_writer.replace('%BAUD%', baud)
-  output += net_writer
+    (inst, tty, baud, datab, stopb, parity, igncr, icrnl, eol, onlcr,
+     ocrnl, icanon, vmin, vtime, vintr, vquit, opost) = logger_port_def.split()
+    net_writer = fill_substitutions(NET_WRITER_TEMPLATE, substitutions)
+    net_writer = net_writer.replace('%LOGGER%', logger)
+    net_writer = net_writer.replace('%TTY%', tty)
+    net_writer = net_writer.replace('%BAUD%', baud)
+    output += net_writer
 
-  file_net_writer = fill_substitutions(FILE_NET_WRITER_TEMPLATE, substitutions)
-  file_net_writer = file_net_writer.replace('%LOGGER%', logger)
-  file_net_writer = file_net_writer.replace('%TTY%', tty)
-  file_net_writer = file_net_writer.replace('%BAUD%', baud)
-  output += file_net_writer
+    file_net_writer = fill_substitutions(FILE_NET_WRITER_TEMPLATE, substitutions)
+    file_net_writer = file_net_writer.replace('%LOGGER%', logger)
+    file_net_writer = file_net_writer.replace('%TTY%', tty)
+    file_net_writer = file_net_writer.replace('%BAUD%', baud)
+    output += file_net_writer
 
-  full_writer = fill_substitutions(FULL_WRITER_TEMPLATE, substitutions)
-  full_writer = full_writer.replace('%LOGGER%', logger)
-  full_writer = full_writer.replace('%TTY%', tty)
-  full_writer = full_writer.replace('%BAUD%', baud)
-  output += full_writer
+    full_writer = fill_substitutions(FULL_WRITER_TEMPLATE, substitutions)
+    full_writer = full_writer.replace('%LOGGER%', logger)
+    full_writer = full_writer.replace('%TTY%', tty)
+    full_writer = full_writer.replace('%BAUD%', baud)
+    output += full_writer
 
 # Add in the true wind configurations
 output += fill_substitutions(TRUE_WIND_TEMPLATE, substitutions)

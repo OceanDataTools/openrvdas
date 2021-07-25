@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.readers.composed_reader API documentation</title>
 <meta name="description" content="" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -29,289 +31,289 @@
 import logging
 import sys
 import threading
-import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.readers.reader import Reader
-from logger.transforms.transform import Transform
-from logger.utils import formats
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils import formats  # noqa: E402
+from logger.readers.reader import Reader  # noqa: E402
 
 # How long to a reader thread should lie dormant before shutting down
 # and counting on getting restarted again if/when needed. We need this
 # so that our readers eventually terminate.
 READER_TIMEOUT_WAIT = 0.25
 
+
 ################################################################################
 class ComposedReader(Reader):
-  &#34;&#34;&#34;
-  Read lines from one or more Readers (in parallel) and process their
-  responses through zero or more Transforms (in series).
-
-  NOTE: we make the rash assumption that transforms are thread-safe,
-  that is, that no mischief or corrupted internal state will result if
-  more than one thread calls a transform at the same time. To be
-  thread-safe, a transform must protect any changes to its internal
-  state with a non-re-entrant thread lock, as described in the threading
-  module.
-
-  Also NOTE: Most of the messy logic in this class comes from the desire
-  to only call read() on our component readers when we actually need new
-  records (NOTE: this desire may be misplaced!).
-
-  So when we get a request, we fire up threads and ask each of our
-  readers for a record. We return the first one we get, and let the
-  others pile up in a queue that we&#39;ll feed from the next time we&#39;re
-  asked.
-
-  But we don&#39;t want to fire up a new thread for each reader every time
-  the queue is empty, so we have threads (in run_reader()) hang out for
-  a little while, waiting for another queue_needs_record event. If they
-  get one, the call their own read() methods again. If they haven&#39;t been
-  called on in READER_TIMEOUT_WAIT seconds, they exit, but will get
-  fired up again by read() if/when the queue is empty and we&#39;re is asked
-  for another record.
-
-  It&#39;s important to have the run_reader threads time out, or any process
-  using a ComposedReader will never naturally terminate.
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, readers, transforms=[], check_format=False):
     &#34;&#34;&#34;
-    Instantiation:
-    ```
-    reader = ComposedReader(readers, transforms=[], check_format=True)
+    Read lines from one or more Readers (in parallel) and process their
+    responses through zero or more Transforms (in series).
 
-    readers        A single Reader or a list of Readers.
+    NOTE: we make the rash assumption that transforms are thread-safe,
+    that is, that no mischief or corrupted internal state will result if
+    more than one thread calls a transform at the same time. To be
+    thread-safe, a transform must protect any changes to its internal
+    state with a non-re-entrant thread lock, as described in the threading
+    module.
 
-    transforms     A single Transform or list of zero or more Transforms.
+    Also NOTE: Most of the messy logic in this class comes from the desire
+    to only call read() on our component readers when we actually need new
+    records (NOTE: this desire may be misplaced!).
 
-    check_format   If True, attempt to check that Reader/Transform formats
-                   are compatible, and throw a ValueError if they are not.
-                   If check_format is False (the default) the output_format()
-                   of the whole reader will be formats.Unknown.
-    ```
-    Use:
-    ```
-    record = reader.read()
-    ```
-    Sample:
-    ```
-    reader = ComposedReader(readers=[NetworkReader(&#39;:6221&#39;),
-                                     NetworkReader(&#39;:6223&#39;)],
-                            transforms=[TimestampTransform()])
-    ```
+    So when we get a request, we fire up threads and ask each of our
+    readers for a record. We return the first one we get, and let the
+    others pile up in a queue that we&#39;ll feed from the next time we&#39;re
+    asked.
+
+    But we don&#39;t want to fire up a new thread for each reader every time
+    the queue is empty, so we have threads (in run_reader()) hang out for
+    a little while, waiting for another queue_needs_record event. If they
+    get one, the call their own read() methods again. If they haven&#39;t been
+    called on in READER_TIMEOUT_WAIT seconds, they exit, but will get
+    fired up again by read() if/when the queue is empty and we&#39;re is asked
+    for another record.
+
+    It&#39;s important to have the run_reader threads time out, or any process
+    using a ComposedReader will never naturally terminate.
     &#34;&#34;&#34;
-    # Make readers a list, even if it&#39;s only a single reader.
-    self.readers = readers if type(readers) == type([]) else [readers]
-    self.num_readers = len(self.readers)
+    ############################
 
-    # Transforms can be empty. But if not empty, make it a list, even
-    # if it&#39;s only a single transform.
-    if not type(transforms) == type([]):
-      self.transforms = [transforms]
-    else:
-      self.transforms = transforms
+    def __init__(self, readers, transforms=[], check_format=False):
+        &#34;&#34;&#34;
+        Instantiation:
+        ```
+        reader = ComposedReader(readers, transforms=[], check_format=True)
 
-    # If they want, check that our readers and transforms have
-    # compatible input/output formats.
-    output_format = formats.Unknown
-    if check_format:
-      output_format = self._check_reader_formats()
-      if not output_format:
-        raise ValueError(&#39;ComposedReader: No common output format found &#39;
-                         &#39;for passed readers: %s&#39; % [r.output_format()
-                                                     for r in self.readers])
-    super().__init__(output_format=output_format)
+        readers        A single Reader or a list of Readers.
 
-    # List where we&#39;re going to store reader threads
-    self.reader_threads = [None] *  self.num_readers
+        transforms     A single Transform or list of zero or more Transforms.
 
-    # Whether reader[i] has returned EOF since we&#39;ve last asked it
-    self.reader_returned_eof = [False] * self.num_readers
+        check_format   If True, attempt to check that Reader/Transform formats
+                       are compatible, and throw a ValueError if they are not.
+                       If check_format is False (the default) the output_format()
+                       of the whole reader will be formats.Unknown.
+        ```
+        Use:
+        ```
+        record = reader.read()
+        ```
+        Sample:
+        ```
+        reader = ComposedReader(readers=[NetworkReader(&#39;:6221&#39;),
+                                         NetworkReader(&#39;:6223&#39;)],
+                                transforms=[TimestampTransform()])
+        ```
+        &#34;&#34;&#34;
+        # Make readers a list, even if it&#39;s only a single reader.
+        self.readers = readers if type(readers) is list else [readers]
+        self.num_readers = len(self.readers)
 
-    # One lock per reader, to save us from accidental re-entry
-    self.reader_locks = [threading.Lock() for i in range(self.num_readers)]
-
-    # Queue where we&#39;ll store extra records, and lock so only one
-    # thread can touch queue at a time
-    self.queue = []
-    self.queue_lock = threading.Lock()
-
-    # The two events, queue_has_record and queue_needs_record interact
-    # in a sort of a dance:
-    #
-    #  has = False, need = False: Everything is quiescent
-    #  has = False, need = True:  A request has been made, call readers
-    #  has = True,  need = True:  Momentary condition when we get needed rec
-    #  has = True,  need = False: We&#39;ve got spare records in the queue
-    #
-    # Set when the queue is empty and we need a record
-    self.queue_needs_record = threading.Event()
-
-    # Set when a reader adds something to the queue
-    self.queue_has_record = threading.Event()
-
-  ############################
-  def read(self):
-    &#34;&#34;&#34;
-    Get the next record from queue or readers.
-    &#34;&#34;&#34;
-    # If we only have one reader, there&#39;s no point making things
-    # complicated. Just read, transform, return.
-    if len(self.readers) == 1:
-      return self._apply_transforms(self.readers[0].read())
-
-    # Do we have anything in the queue? Note: safe to check outside of
-    # lock, because we&#39;re the only method that actually *removes*
-    # anything. So if tests True here, we&#39;re assured that there&#39;s
-    # something there, and we lock before retrieving it. Advantage of
-    # doing it this way is that we don&#39;t tie up queue lock while
-    # processing transforms.
-    if self.queue:
-      logging.debug(&#39;read() - read requested; queue len is %d&#39;,
-                    len(self.queue))
-      with self.queue_lock:
-        record = self.queue.pop(0)
-        return self._apply_transforms(record)
-
-    # If here, nothing&#39;s in the queue. Note that, if we wanted to be
-    # careful to never unnecessarily ask for more records, we should
-    # put a lock around this, but the failure mode is somewhat benign:
-    # we ask for more records when some are already on the way.
-    logging.debug(&#39;read() - read requested and nothing in the queue.&#39;)
-
-    # Some threads may have timed out while waiting to be called to
-    # action; restart them.
-    for i in range(len(self.readers)):
-      if not self.reader_threads[i] \
-         or not self.reader_threads[i].is_alive() \
-         and not self.reader_returned_eof[i]:
-        logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
-        self.reader_returned_eof[i] = False
-        thread = threading.Thread(target=self._run_reader, args=(i,),
-                                  daemon=True)
-        self.reader_threads[i] = thread
-        thread.start()
-
-    # Now notify all threads that we do in fact need a record.
-    self.queue_needs_record.set()
-
-    # Keep checking/sleeping until we&#39;ve either got a record in the
-    # queue or all readers have given us an EOF.
-    while False in self.reader_returned_eof:
-      logging.debug(&#39;read() - waiting for queue lock&#39;)
-      with self.queue_lock:
-        logging.debug(&#39;read() - acquired queue lock, queue length is %d&#39;,
-                      len(self.queue))
-        if self.queue:
-          record = self.queue.pop(0)
-          if not self.queue:
-            self.queue_has_record.clear() # only set/clear inside queue_lock
-
-          logging.debug(&#39;read() - got record&#39;)
-          return self._apply_transforms(record)
+        # Transforms can be empty. But if not empty, make it a list, even
+        # if it&#39;s only a single transform.
+        if not type(transforms) == list:
+            self.transforms = [transforms]
         else:
-          self.queue_has_record.clear()
+            self.transforms = transforms
 
-      # If here, nothing in queue yet. Wait
-      logging.debug(&#39;read() - clear of queue lock, waiting for record&#39;)
-      self.queue_has_record.wait(READER_TIMEOUT_WAIT)
+        # If they want, check that our readers and transforms have
+        # compatible input/output formats.
+        output_format = formats.Unknown
+        if check_format:
+            output_format = self._check_reader_formats()
+            if not output_format:
+                raise ValueError(&#39;ComposedReader: No common output format found &#39;
+                                 &#39;for passed readers: %s&#39; % [r.output_format()
+                                                             for r in self.readers])
+        super().__init__(output_format=output_format)
 
-      if not self.queue_has_record.is_set():
-        logging.debug(&#39;read() - timed out waiting for record. Looping&#39;)
-      logging.debug(&#39;read() - readers returned EOF: %s&#39;,
-                    self.reader_returned_eof)
+        # List where we&#39;re going to store reader threads
+        self.reader_threads = [None] * self.num_readers
 
-    # All readers have given us an EOF
-    logging.debug(&#39;read() - all threads returned None; returning None&#39;)
-    return None
+        # Whether reader[i] has returned EOF since we&#39;ve last asked it
+        self.reader_returned_eof = [False] * self.num_readers
 
-  ############################
-  def _run_reader(self, index):
-    &#34;&#34;&#34;
-    Cycle through reading records from a readers[i] and putting them in queue.
-    &#34;&#34;&#34;
-    while True:
-      logging.debug(&#39;    Reader #%d waiting until record needed.&#39;, index)
-      self.queue_needs_record.wait(READER_TIMEOUT_WAIT)
+        # One lock per reader, to save us from accidental re-entry
+        self.reader_locks = [threading.Lock() for i in range(self.num_readers)]
 
-      # If we timed out waiting for someone to need a record, go
-      # home. We&#39;ll get started up again if needed.
-      if not self.queue_needs_record.is_set():
-        logging.debug(&#39;    Reader #%d timed out - exiting.&#39;, index)
-        return
+        # Queue where we&#39;ll store extra records, and lock so only one
+        # thread can touch queue at a time
+        self.queue = []
+        self.queue_lock = threading.Lock()
 
-      # Else someone needs a record - leap into action
-      logging.debug(&#39;    Reader #%d waking up - record needed!&#39;, index)
+        # The two events, queue_has_record and queue_needs_record interact
+        # in a sort of a dance:
+        #
+        #  has = False, need = False: Everything is quiescent
+        #  has = False, need = True:  A request has been made, call readers
+        #  has = True,  need = True:  Momentary condition when we get needed rec
+        #  has = True,  need = False: We&#39;ve got spare records in the queue
+        #
+        # Set when the queue is empty and we need a record
+        self.queue_needs_record = threading.Event()
 
-      # Guard against re-entry
-      with self.reader_locks[index]:
-        record = self.readers[index].read()
+        # Set when a reader adds something to the queue
+        self.queue_has_record = threading.Event()
 
-        # If reader returns None, it&#39;s done and has no more data for
-        # us. Note that it&#39;s given us an EOF and exit.
-        if record is None:
-          logging.info(&#39;    Reader #%d returned None, is done&#39;, index)
-          self.reader_returned_eof[index] = True
-          return
+    ############################
+    def read(self):
+        &#34;&#34;&#34;
+        Get the next record from queue or readers.
+        &#34;&#34;&#34;
+        # If we only have one reader, there&#39;s no point making things
+        # complicated. Just read, transform, return.
+        if len(self.readers) == 1:
+            return self._apply_transforms(self.readers[0].read())
 
-      logging.debug(&#39;    Reader #%d has record, released reader_lock.&#39;, index)
+        # Do we have anything in the queue? Note: safe to check outside of
+        # lock, because we&#39;re the only method that actually *removes*
+        # anything. So if tests True here, we&#39;re assured that there&#39;s
+        # something there, and we lock before retrieving it. Advantage of
+        # doing it this way is that we don&#39;t tie up queue lock while
+        # processing transforms.
+        if self.queue:
+            logging.debug(&#39;read() - read requested; queue len is %d&#39;,
+                          len(self.queue))
+            with self.queue_lock:
+                record = self.queue.pop(0)
+                return self._apply_transforms(record)
 
-      # Add record to queue and note that an append event has
-      # happened.
-      with self.queue_lock:
-        # No one else can mess with queue while we add record. Once we&#39;ve
-        # added it, set flag to say there&#39;s something in the queue.
-        logging.debug(&#39;    Reader #%d has queue lock - adding and notifying.&#39;,
-                      index)
-        self.queue.append(record)
-        self.queue_has_record.set()
-        self.queue_needs_record.clear()
+        # If here, nothing&#39;s in the queue. Note that, if we wanted to be
+        # careful to never unnecessarily ask for more records, we should
+        # put a lock around this, but the failure mode is somewhat benign:
+        # we ask for more records when some are already on the way.
+        logging.debug(&#39;read() - read requested and nothing in the queue.&#39;)
 
-      # Now clear of queue_lock
-      logging.debug(&#39;    Reader #%d released queue_lock - looping&#39;, index)
+        # Some threads may have timed out while waiting to be called to
+        # action; restart them.
+        for i in range(len(self.readers)):
+            if not self.reader_threads[i] \
+               or not self.reader_threads[i].is_alive() \
+               and not self.reader_returned_eof[i]:
+                logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
+                self.reader_returned_eof[i] = False
+                thread = threading.Thread(target=self._run_reader, args=(i,),
+                                          daemon=True)
+                self.reader_threads[i] = thread
+                thread.start()
 
-  ############################
-  def _apply_transforms(self, record):
-    &#34;&#34;&#34;
-    Apply the transforms in series.
-    &#34;&#34;&#34;
-    if record:
-      for t in self.transforms:
-        record = t.transform(record)
-        if not record:
-          break
-    return record
+        # Now notify all threads that we do in fact need a record.
+        self.queue_needs_record.set()
 
-  ############################
-  def _check_reader_formats(self):
-    &#34;&#34;&#34;
-    Check that Reader outputs are compatible with each other and with
-    Transform inputs. Return None if not.
-    &#34;&#34;&#34;
-    # Find the lowest common format among readers
-    lowest_common = self.readers[0].output_format()
-    for reader in self.readers:
-       lowest_common = reader.output_format().common(lowest_common)
-       if not lowest_common:
-         return None
+        # Keep checking/sleeping until we&#39;ve either got a record in the
+        # queue or all readers have given us an EOF.
+        while False in self.reader_returned_eof:
+            logging.debug(&#39;read() - waiting for queue lock&#39;)
+            with self.queue_lock:
+                logging.debug(&#39;read() - acquired queue lock, queue length is %d&#39;,
+                              len(self.queue))
+                if self.queue:
+                    record = self.queue.pop(0)
+                    if not self.queue:
+                        self.queue_has_record.clear()  # only set/clear inside queue_lock
 
-    logging.debug(&#39;Lowest common format for readers is &#34;%s&#34;&#39;, lowest_common)
-    if not self.transforms:
-      return lowest_common
+                    logging.debug(&#39;read() - got record&#39;)
+                    return self._apply_transforms(record)
+                else:
+                    self.queue_has_record.clear()
 
-    # Now check the transforms in series - output of each is input of
-    # next one.
-    for transform in self.transforms:
-      if not transform.input_format().can_accept(lowest_common):
-        logging.error(&#39;Transform %s can not accept input format %s&#39;,
-                      transform, lowest_common)
+            # If here, nothing in queue yet. Wait
+            logging.debug(&#39;read() - clear of queue lock, waiting for record&#39;)
+            self.queue_has_record.wait(READER_TIMEOUT_WAIT)
+
+            if not self.queue_has_record.is_set():
+                logging.debug(&#39;read() - timed out waiting for record. Looping&#39;)
+            logging.debug(&#39;read() - readers returned EOF: %s&#39;,
+                          self.reader_returned_eof)
+
+        # All readers have given us an EOF
+        logging.debug(&#39;read() - all threads returned None; returning None&#39;)
         return None
-      lowest_common = transform.output_format()
 
-    # Our final format is the lowest common format from last transform
-    return lowest_common</code></pre>
+    ############################
+    def _run_reader(self, index):
+        &#34;&#34;&#34;
+        Cycle through reading records from a readers[i] and putting them in queue.
+        &#34;&#34;&#34;
+        while True:
+            logging.debug(&#39;    Reader #%d waiting until record needed.&#39;, index)
+            self.queue_needs_record.wait(READER_TIMEOUT_WAIT)
+
+            # If we timed out waiting for someone to need a record, go
+            # home. We&#39;ll get started up again if needed.
+            if not self.queue_needs_record.is_set():
+                logging.debug(&#39;    Reader #%d timed out - exiting.&#39;, index)
+                return
+
+            # Else someone needs a record - leap into action
+            logging.debug(&#39;    Reader #%d waking up - record needed!&#39;, index)
+
+            # Guard against re-entry
+            with self.reader_locks[index]:
+                record = self.readers[index].read()
+
+                # If reader returns None, it&#39;s done and has no more data for
+                # us. Note that it&#39;s given us an EOF and exit.
+                if record is None:
+                    logging.info(&#39;    Reader #%d returned None, is done&#39;, index)
+                    self.reader_returned_eof[index] = True
+                    return
+
+            logging.debug(&#39;    Reader #%d has record, released reader_lock.&#39;, index)
+
+            # Add record to queue and note that an append event has
+            # happened.
+            with self.queue_lock:
+                # No one else can mess with queue while we add record. Once we&#39;ve
+                # added it, set flag to say there&#39;s something in the queue.
+                logging.debug(&#39;    Reader #%d has queue lock - adding and notifying.&#39;,
+                              index)
+                self.queue.append(record)
+                self.queue_has_record.set()
+                self.queue_needs_record.clear()
+
+            # Now clear of queue_lock
+            logging.debug(&#39;    Reader #%d released queue_lock - looping&#39;, index)
+
+    ############################
+    def _apply_transforms(self, record):
+        &#34;&#34;&#34;
+        Apply the transforms in series.
+        &#34;&#34;&#34;
+        if record:
+            for t in self.transforms:
+                record = t.transform(record)
+                if not record:
+                    break
+        return record
+
+    ############################
+    def _check_reader_formats(self):
+        &#34;&#34;&#34;
+        Check that Reader outputs are compatible with each other and with
+        Transform inputs. Return None if not.
+        &#34;&#34;&#34;
+        # Find the lowest common format among readers
+        lowest_common = self.readers[0].output_format()
+        for reader in self.readers:
+            lowest_common = reader.output_format().common(lowest_common)
+            if not lowest_common:
+                return None
+
+        logging.debug(&#39;Lowest common format for readers is &#34;%s&#34;&#39;, lowest_common)
+        if not self.transforms:
+            return lowest_common
+
+        # Now check the transforms in series - output of each is input of
+        # next one.
+        for transform in self.transforms:
+            if not transform.input_format().can_accept(lowest_common):
+                logging.error(&#39;Transform %s can not accept input format %s&#39;,
+                              transform, lowest_common)
+                return None
+            lowest_common = transform.output_format()
+
+        # Our final format is the lowest common format from last transform
+        return lowest_common</code></pre>
 </details>
 </section>
 <section>
@@ -328,7 +330,7 @@ class ComposedReader(Reader):
 <span>(</span><span>readers, transforms=[], check_format=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Read lines from one or more Readers (in parallel) and process their
+<div class="desc"><p>Read lines from one or more Readers (in parallel) and process their
 responses through zero or more Transforms (in series).</p>
 <p>NOTE: we make the rash assumption that transforms are thread-safe,
 that is, that no mischief or corrupted internal state will result if
@@ -371,280 +373,281 @@ check_format   If True, attempt to check that Reader/Transform formats
 <pre><code>reader = ComposedReader(readers=[NetworkReader(':6221'),
                                  NetworkReader(':6223')],
                         transforms=[TimestampTransform()])
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ComposedReader(Reader):
-  &#34;&#34;&#34;
-  Read lines from one or more Readers (in parallel) and process their
-  responses through zero or more Transforms (in series).
-
-  NOTE: we make the rash assumption that transforms are thread-safe,
-  that is, that no mischief or corrupted internal state will result if
-  more than one thread calls a transform at the same time. To be
-  thread-safe, a transform must protect any changes to its internal
-  state with a non-re-entrant thread lock, as described in the threading
-  module.
-
-  Also NOTE: Most of the messy logic in this class comes from the desire
-  to only call read() on our component readers when we actually need new
-  records (NOTE: this desire may be misplaced!).
-
-  So when we get a request, we fire up threads and ask each of our
-  readers for a record. We return the first one we get, and let the
-  others pile up in a queue that we&#39;ll feed from the next time we&#39;re
-  asked.
-
-  But we don&#39;t want to fire up a new thread for each reader every time
-  the queue is empty, so we have threads (in run_reader()) hang out for
-  a little while, waiting for another queue_needs_record event. If they
-  get one, the call their own read() methods again. If they haven&#39;t been
-  called on in READER_TIMEOUT_WAIT seconds, they exit, but will get
-  fired up again by read() if/when the queue is empty and we&#39;re is asked
-  for another record.
-
-  It&#39;s important to have the run_reader threads time out, or any process
-  using a ComposedReader will never naturally terminate.
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, readers, transforms=[], check_format=False):
     &#34;&#34;&#34;
-    Instantiation:
-    ```
-    reader = ComposedReader(readers, transforms=[], check_format=True)
+    Read lines from one or more Readers (in parallel) and process their
+    responses through zero or more Transforms (in series).
 
-    readers        A single Reader or a list of Readers.
+    NOTE: we make the rash assumption that transforms are thread-safe,
+    that is, that no mischief or corrupted internal state will result if
+    more than one thread calls a transform at the same time. To be
+    thread-safe, a transform must protect any changes to its internal
+    state with a non-re-entrant thread lock, as described in the threading
+    module.
 
-    transforms     A single Transform or list of zero or more Transforms.
+    Also NOTE: Most of the messy logic in this class comes from the desire
+    to only call read() on our component readers when we actually need new
+    records (NOTE: this desire may be misplaced!).
 
-    check_format   If True, attempt to check that Reader/Transform formats
-                   are compatible, and throw a ValueError if they are not.
-                   If check_format is False (the default) the output_format()
-                   of the whole reader will be formats.Unknown.
-    ```
-    Use:
-    ```
-    record = reader.read()
-    ```
-    Sample:
-    ```
-    reader = ComposedReader(readers=[NetworkReader(&#39;:6221&#39;),
-                                     NetworkReader(&#39;:6223&#39;)],
-                            transforms=[TimestampTransform()])
-    ```
+    So when we get a request, we fire up threads and ask each of our
+    readers for a record. We return the first one we get, and let the
+    others pile up in a queue that we&#39;ll feed from the next time we&#39;re
+    asked.
+
+    But we don&#39;t want to fire up a new thread for each reader every time
+    the queue is empty, so we have threads (in run_reader()) hang out for
+    a little while, waiting for another queue_needs_record event. If they
+    get one, the call their own read() methods again. If they haven&#39;t been
+    called on in READER_TIMEOUT_WAIT seconds, they exit, but will get
+    fired up again by read() if/when the queue is empty and we&#39;re is asked
+    for another record.
+
+    It&#39;s important to have the run_reader threads time out, or any process
+    using a ComposedReader will never naturally terminate.
     &#34;&#34;&#34;
-    # Make readers a list, even if it&#39;s only a single reader.
-    self.readers = readers if type(readers) == type([]) else [readers]
-    self.num_readers = len(self.readers)
+    ############################
 
-    # Transforms can be empty. But if not empty, make it a list, even
-    # if it&#39;s only a single transform.
-    if not type(transforms) == type([]):
-      self.transforms = [transforms]
-    else:
-      self.transforms = transforms
+    def __init__(self, readers, transforms=[], check_format=False):
+        &#34;&#34;&#34;
+        Instantiation:
+        ```
+        reader = ComposedReader(readers, transforms=[], check_format=True)
 
-    # If they want, check that our readers and transforms have
-    # compatible input/output formats.
-    output_format = formats.Unknown
-    if check_format:
-      output_format = self._check_reader_formats()
-      if not output_format:
-        raise ValueError(&#39;ComposedReader: No common output format found &#39;
-                         &#39;for passed readers: %s&#39; % [r.output_format()
-                                                     for r in self.readers])
-    super().__init__(output_format=output_format)
+        readers        A single Reader or a list of Readers.
 
-    # List where we&#39;re going to store reader threads
-    self.reader_threads = [None] *  self.num_readers
+        transforms     A single Transform or list of zero or more Transforms.
 
-    # Whether reader[i] has returned EOF since we&#39;ve last asked it
-    self.reader_returned_eof = [False] * self.num_readers
+        check_format   If True, attempt to check that Reader/Transform formats
+                       are compatible, and throw a ValueError if they are not.
+                       If check_format is False (the default) the output_format()
+                       of the whole reader will be formats.Unknown.
+        ```
+        Use:
+        ```
+        record = reader.read()
+        ```
+        Sample:
+        ```
+        reader = ComposedReader(readers=[NetworkReader(&#39;:6221&#39;),
+                                         NetworkReader(&#39;:6223&#39;)],
+                                transforms=[TimestampTransform()])
+        ```
+        &#34;&#34;&#34;
+        # Make readers a list, even if it&#39;s only a single reader.
+        self.readers = readers if type(readers) is list else [readers]
+        self.num_readers = len(self.readers)
 
-    # One lock per reader, to save us from accidental re-entry
-    self.reader_locks = [threading.Lock() for i in range(self.num_readers)]
-
-    # Queue where we&#39;ll store extra records, and lock so only one
-    # thread can touch queue at a time
-    self.queue = []
-    self.queue_lock = threading.Lock()
-
-    # The two events, queue_has_record and queue_needs_record interact
-    # in a sort of a dance:
-    #
-    #  has = False, need = False: Everything is quiescent
-    #  has = False, need = True:  A request has been made, call readers
-    #  has = True,  need = True:  Momentary condition when we get needed rec
-    #  has = True,  need = False: We&#39;ve got spare records in the queue
-    #
-    # Set when the queue is empty and we need a record
-    self.queue_needs_record = threading.Event()
-
-    # Set when a reader adds something to the queue
-    self.queue_has_record = threading.Event()
-
-  ############################
-  def read(self):
-    &#34;&#34;&#34;
-    Get the next record from queue or readers.
-    &#34;&#34;&#34;
-    # If we only have one reader, there&#39;s no point making things
-    # complicated. Just read, transform, return.
-    if len(self.readers) == 1:
-      return self._apply_transforms(self.readers[0].read())
-
-    # Do we have anything in the queue? Note: safe to check outside of
-    # lock, because we&#39;re the only method that actually *removes*
-    # anything. So if tests True here, we&#39;re assured that there&#39;s
-    # something there, and we lock before retrieving it. Advantage of
-    # doing it this way is that we don&#39;t tie up queue lock while
-    # processing transforms.
-    if self.queue:
-      logging.debug(&#39;read() - read requested; queue len is %d&#39;,
-                    len(self.queue))
-      with self.queue_lock:
-        record = self.queue.pop(0)
-        return self._apply_transforms(record)
-
-    # If here, nothing&#39;s in the queue. Note that, if we wanted to be
-    # careful to never unnecessarily ask for more records, we should
-    # put a lock around this, but the failure mode is somewhat benign:
-    # we ask for more records when some are already on the way.
-    logging.debug(&#39;read() - read requested and nothing in the queue.&#39;)
-
-    # Some threads may have timed out while waiting to be called to
-    # action; restart them.
-    for i in range(len(self.readers)):
-      if not self.reader_threads[i] \
-         or not self.reader_threads[i].is_alive() \
-         and not self.reader_returned_eof[i]:
-        logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
-        self.reader_returned_eof[i] = False
-        thread = threading.Thread(target=self._run_reader, args=(i,),
-                                  daemon=True)
-        self.reader_threads[i] = thread
-        thread.start()
-
-    # Now notify all threads that we do in fact need a record.
-    self.queue_needs_record.set()
-
-    # Keep checking/sleeping until we&#39;ve either got a record in the
-    # queue or all readers have given us an EOF.
-    while False in self.reader_returned_eof:
-      logging.debug(&#39;read() - waiting for queue lock&#39;)
-      with self.queue_lock:
-        logging.debug(&#39;read() - acquired queue lock, queue length is %d&#39;,
-                      len(self.queue))
-        if self.queue:
-          record = self.queue.pop(0)
-          if not self.queue:
-            self.queue_has_record.clear() # only set/clear inside queue_lock
-
-          logging.debug(&#39;read() - got record&#39;)
-          return self._apply_transforms(record)
+        # Transforms can be empty. But if not empty, make it a list, even
+        # if it&#39;s only a single transform.
+        if not type(transforms) == list:
+            self.transforms = [transforms]
         else:
-          self.queue_has_record.clear()
+            self.transforms = transforms
 
-      # If here, nothing in queue yet. Wait
-      logging.debug(&#39;read() - clear of queue lock, waiting for record&#39;)
-      self.queue_has_record.wait(READER_TIMEOUT_WAIT)
+        # If they want, check that our readers and transforms have
+        # compatible input/output formats.
+        output_format = formats.Unknown
+        if check_format:
+            output_format = self._check_reader_formats()
+            if not output_format:
+                raise ValueError(&#39;ComposedReader: No common output format found &#39;
+                                 &#39;for passed readers: %s&#39; % [r.output_format()
+                                                             for r in self.readers])
+        super().__init__(output_format=output_format)
 
-      if not self.queue_has_record.is_set():
-        logging.debug(&#39;read() - timed out waiting for record. Looping&#39;)
-      logging.debug(&#39;read() - readers returned EOF: %s&#39;,
-                    self.reader_returned_eof)
+        # List where we&#39;re going to store reader threads
+        self.reader_threads = [None] * self.num_readers
 
-    # All readers have given us an EOF
-    logging.debug(&#39;read() - all threads returned None; returning None&#39;)
-    return None
+        # Whether reader[i] has returned EOF since we&#39;ve last asked it
+        self.reader_returned_eof = [False] * self.num_readers
 
-  ############################
-  def _run_reader(self, index):
-    &#34;&#34;&#34;
-    Cycle through reading records from a readers[i] and putting them in queue.
-    &#34;&#34;&#34;
-    while True:
-      logging.debug(&#39;    Reader #%d waiting until record needed.&#39;, index)
-      self.queue_needs_record.wait(READER_TIMEOUT_WAIT)
+        # One lock per reader, to save us from accidental re-entry
+        self.reader_locks = [threading.Lock() for i in range(self.num_readers)]
 
-      # If we timed out waiting for someone to need a record, go
-      # home. We&#39;ll get started up again if needed.
-      if not self.queue_needs_record.is_set():
-        logging.debug(&#39;    Reader #%d timed out - exiting.&#39;, index)
-        return
+        # Queue where we&#39;ll store extra records, and lock so only one
+        # thread can touch queue at a time
+        self.queue = []
+        self.queue_lock = threading.Lock()
 
-      # Else someone needs a record - leap into action
-      logging.debug(&#39;    Reader #%d waking up - record needed!&#39;, index)
+        # The two events, queue_has_record and queue_needs_record interact
+        # in a sort of a dance:
+        #
+        #  has = False, need = False: Everything is quiescent
+        #  has = False, need = True:  A request has been made, call readers
+        #  has = True,  need = True:  Momentary condition when we get needed rec
+        #  has = True,  need = False: We&#39;ve got spare records in the queue
+        #
+        # Set when the queue is empty and we need a record
+        self.queue_needs_record = threading.Event()
 
-      # Guard against re-entry
-      with self.reader_locks[index]:
-        record = self.readers[index].read()
+        # Set when a reader adds something to the queue
+        self.queue_has_record = threading.Event()
 
-        # If reader returns None, it&#39;s done and has no more data for
-        # us. Note that it&#39;s given us an EOF and exit.
-        if record is None:
-          logging.info(&#39;    Reader #%d returned None, is done&#39;, index)
-          self.reader_returned_eof[index] = True
-          return
+    ############################
+    def read(self):
+        &#34;&#34;&#34;
+        Get the next record from queue or readers.
+        &#34;&#34;&#34;
+        # If we only have one reader, there&#39;s no point making things
+        # complicated. Just read, transform, return.
+        if len(self.readers) == 1:
+            return self._apply_transforms(self.readers[0].read())
 
-      logging.debug(&#39;    Reader #%d has record, released reader_lock.&#39;, index)
+        # Do we have anything in the queue? Note: safe to check outside of
+        # lock, because we&#39;re the only method that actually *removes*
+        # anything. So if tests True here, we&#39;re assured that there&#39;s
+        # something there, and we lock before retrieving it. Advantage of
+        # doing it this way is that we don&#39;t tie up queue lock while
+        # processing transforms.
+        if self.queue:
+            logging.debug(&#39;read() - read requested; queue len is %d&#39;,
+                          len(self.queue))
+            with self.queue_lock:
+                record = self.queue.pop(0)
+                return self._apply_transforms(record)
 
-      # Add record to queue and note that an append event has
-      # happened.
-      with self.queue_lock:
-        # No one else can mess with queue while we add record. Once we&#39;ve
-        # added it, set flag to say there&#39;s something in the queue.
-        logging.debug(&#39;    Reader #%d has queue lock - adding and notifying.&#39;,
-                      index)
-        self.queue.append(record)
-        self.queue_has_record.set()
-        self.queue_needs_record.clear()
+        # If here, nothing&#39;s in the queue. Note that, if we wanted to be
+        # careful to never unnecessarily ask for more records, we should
+        # put a lock around this, but the failure mode is somewhat benign:
+        # we ask for more records when some are already on the way.
+        logging.debug(&#39;read() - read requested and nothing in the queue.&#39;)
 
-      # Now clear of queue_lock
-      logging.debug(&#39;    Reader #%d released queue_lock - looping&#39;, index)
+        # Some threads may have timed out while waiting to be called to
+        # action; restart them.
+        for i in range(len(self.readers)):
+            if not self.reader_threads[i] \
+               or not self.reader_threads[i].is_alive() \
+               and not self.reader_returned_eof[i]:
+                logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
+                self.reader_returned_eof[i] = False
+                thread = threading.Thread(target=self._run_reader, args=(i,),
+                                          daemon=True)
+                self.reader_threads[i] = thread
+                thread.start()
 
-  ############################
-  def _apply_transforms(self, record):
-    &#34;&#34;&#34;
-    Apply the transforms in series.
-    &#34;&#34;&#34;
-    if record:
-      for t in self.transforms:
-        record = t.transform(record)
-        if not record:
-          break
-    return record
+        # Now notify all threads that we do in fact need a record.
+        self.queue_needs_record.set()
 
-  ############################
-  def _check_reader_formats(self):
-    &#34;&#34;&#34;
-    Check that Reader outputs are compatible with each other and with
-    Transform inputs. Return None if not.
-    &#34;&#34;&#34;
-    # Find the lowest common format among readers
-    lowest_common = self.readers[0].output_format()
-    for reader in self.readers:
-       lowest_common = reader.output_format().common(lowest_common)
-       if not lowest_common:
-         return None
+        # Keep checking/sleeping until we&#39;ve either got a record in the
+        # queue or all readers have given us an EOF.
+        while False in self.reader_returned_eof:
+            logging.debug(&#39;read() - waiting for queue lock&#39;)
+            with self.queue_lock:
+                logging.debug(&#39;read() - acquired queue lock, queue length is %d&#39;,
+                              len(self.queue))
+                if self.queue:
+                    record = self.queue.pop(0)
+                    if not self.queue:
+                        self.queue_has_record.clear()  # only set/clear inside queue_lock
 
-    logging.debug(&#39;Lowest common format for readers is &#34;%s&#34;&#39;, lowest_common)
-    if not self.transforms:
-      return lowest_common
+                    logging.debug(&#39;read() - got record&#39;)
+                    return self._apply_transforms(record)
+                else:
+                    self.queue_has_record.clear()
 
-    # Now check the transforms in series - output of each is input of
-    # next one.
-    for transform in self.transforms:
-      if not transform.input_format().can_accept(lowest_common):
-        logging.error(&#39;Transform %s can not accept input format %s&#39;,
-                      transform, lowest_common)
+            # If here, nothing in queue yet. Wait
+            logging.debug(&#39;read() - clear of queue lock, waiting for record&#39;)
+            self.queue_has_record.wait(READER_TIMEOUT_WAIT)
+
+            if not self.queue_has_record.is_set():
+                logging.debug(&#39;read() - timed out waiting for record. Looping&#39;)
+            logging.debug(&#39;read() - readers returned EOF: %s&#39;,
+                          self.reader_returned_eof)
+
+        # All readers have given us an EOF
+        logging.debug(&#39;read() - all threads returned None; returning None&#39;)
         return None
-      lowest_common = transform.output_format()
 
-    # Our final format is the lowest common format from last transform
-    return lowest_common</code></pre>
+    ############################
+    def _run_reader(self, index):
+        &#34;&#34;&#34;
+        Cycle through reading records from a readers[i] and putting them in queue.
+        &#34;&#34;&#34;
+        while True:
+            logging.debug(&#39;    Reader #%d waiting until record needed.&#39;, index)
+            self.queue_needs_record.wait(READER_TIMEOUT_WAIT)
+
+            # If we timed out waiting for someone to need a record, go
+            # home. We&#39;ll get started up again if needed.
+            if not self.queue_needs_record.is_set():
+                logging.debug(&#39;    Reader #%d timed out - exiting.&#39;, index)
+                return
+
+            # Else someone needs a record - leap into action
+            logging.debug(&#39;    Reader #%d waking up - record needed!&#39;, index)
+
+            # Guard against re-entry
+            with self.reader_locks[index]:
+                record = self.readers[index].read()
+
+                # If reader returns None, it&#39;s done and has no more data for
+                # us. Note that it&#39;s given us an EOF and exit.
+                if record is None:
+                    logging.info(&#39;    Reader #%d returned None, is done&#39;, index)
+                    self.reader_returned_eof[index] = True
+                    return
+
+            logging.debug(&#39;    Reader #%d has record, released reader_lock.&#39;, index)
+
+            # Add record to queue and note that an append event has
+            # happened.
+            with self.queue_lock:
+                # No one else can mess with queue while we add record. Once we&#39;ve
+                # added it, set flag to say there&#39;s something in the queue.
+                logging.debug(&#39;    Reader #%d has queue lock - adding and notifying.&#39;,
+                              index)
+                self.queue.append(record)
+                self.queue_has_record.set()
+                self.queue_needs_record.clear()
+
+            # Now clear of queue_lock
+            logging.debug(&#39;    Reader #%d released queue_lock - looping&#39;, index)
+
+    ############################
+    def _apply_transforms(self, record):
+        &#34;&#34;&#34;
+        Apply the transforms in series.
+        &#34;&#34;&#34;
+        if record:
+            for t in self.transforms:
+                record = t.transform(record)
+                if not record:
+                    break
+        return record
+
+    ############################
+    def _check_reader_formats(self):
+        &#34;&#34;&#34;
+        Check that Reader outputs are compatible with each other and with
+        Transform inputs. Return None if not.
+        &#34;&#34;&#34;
+        # Find the lowest common format among readers
+        lowest_common = self.readers[0].output_format()
+        for reader in self.readers:
+            lowest_common = reader.output_format().common(lowest_common)
+            if not lowest_common:
+                return None
+
+        logging.debug(&#39;Lowest common format for readers is &#34;%s&#34;&#39;, lowest_common)
+        if not self.transforms:
+            return lowest_common
+
+        # Now check the transforms in series - output of each is input of
+        # next one.
+        for transform in self.transforms:
+            if not transform.input_format().can_accept(lowest_common):
+                logging.error(&#39;Transform %s can not accept input format %s&#39;,
+                              transform, lowest_common)
+                return None
+            lowest_common = transform.output_format()
+
+        # Our final format is the lowest common format from last transform
+        return lowest_common</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -656,84 +659,84 @@ check_format   If True, attempt to check that Reader/Transform formats
 <span>def <span class="ident">read</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get the next record from queue or readers.</p></section>
+<div class="desc"><p>Get the next record from queue or readers.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read(self):
-  &#34;&#34;&#34;
-  Get the next record from queue or readers.
-  &#34;&#34;&#34;
-  # If we only have one reader, there&#39;s no point making things
-  # complicated. Just read, transform, return.
-  if len(self.readers) == 1:
-    return self._apply_transforms(self.readers[0].read())
+    &#34;&#34;&#34;
+    Get the next record from queue or readers.
+    &#34;&#34;&#34;
+    # If we only have one reader, there&#39;s no point making things
+    # complicated. Just read, transform, return.
+    if len(self.readers) == 1:
+        return self._apply_transforms(self.readers[0].read())
 
-  # Do we have anything in the queue? Note: safe to check outside of
-  # lock, because we&#39;re the only method that actually *removes*
-  # anything. So if tests True here, we&#39;re assured that there&#39;s
-  # something there, and we lock before retrieving it. Advantage of
-  # doing it this way is that we don&#39;t tie up queue lock while
-  # processing transforms.
-  if self.queue:
-    logging.debug(&#39;read() - read requested; queue len is %d&#39;,
-                  len(self.queue))
-    with self.queue_lock:
-      record = self.queue.pop(0)
-      return self._apply_transforms(record)
+    # Do we have anything in the queue? Note: safe to check outside of
+    # lock, because we&#39;re the only method that actually *removes*
+    # anything. So if tests True here, we&#39;re assured that there&#39;s
+    # something there, and we lock before retrieving it. Advantage of
+    # doing it this way is that we don&#39;t tie up queue lock while
+    # processing transforms.
+    if self.queue:
+        logging.debug(&#39;read() - read requested; queue len is %d&#39;,
+                      len(self.queue))
+        with self.queue_lock:
+            record = self.queue.pop(0)
+            return self._apply_transforms(record)
 
-  # If here, nothing&#39;s in the queue. Note that, if we wanted to be
-  # careful to never unnecessarily ask for more records, we should
-  # put a lock around this, but the failure mode is somewhat benign:
-  # we ask for more records when some are already on the way.
-  logging.debug(&#39;read() - read requested and nothing in the queue.&#39;)
+    # If here, nothing&#39;s in the queue. Note that, if we wanted to be
+    # careful to never unnecessarily ask for more records, we should
+    # put a lock around this, but the failure mode is somewhat benign:
+    # we ask for more records when some are already on the way.
+    logging.debug(&#39;read() - read requested and nothing in the queue.&#39;)
 
-  # Some threads may have timed out while waiting to be called to
-  # action; restart them.
-  for i in range(len(self.readers)):
-    if not self.reader_threads[i] \
-       or not self.reader_threads[i].is_alive() \
-       and not self.reader_returned_eof[i]:
-      logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
-      self.reader_returned_eof[i] = False
-      thread = threading.Thread(target=self._run_reader, args=(i,),
-                                daemon=True)
-      self.reader_threads[i] = thread
-      thread.start()
+    # Some threads may have timed out while waiting to be called to
+    # action; restart them.
+    for i in range(len(self.readers)):
+        if not self.reader_threads[i] \
+           or not self.reader_threads[i].is_alive() \
+           and not self.reader_returned_eof[i]:
+            logging.info(&#39;read() - starting thread for Reader #%d&#39;, i)
+            self.reader_returned_eof[i] = False
+            thread = threading.Thread(target=self._run_reader, args=(i,),
+                                      daemon=True)
+            self.reader_threads[i] = thread
+            thread.start()
 
-  # Now notify all threads that we do in fact need a record.
-  self.queue_needs_record.set()
+    # Now notify all threads that we do in fact need a record.
+    self.queue_needs_record.set()
 
-  # Keep checking/sleeping until we&#39;ve either got a record in the
-  # queue or all readers have given us an EOF.
-  while False in self.reader_returned_eof:
-    logging.debug(&#39;read() - waiting for queue lock&#39;)
-    with self.queue_lock:
-      logging.debug(&#39;read() - acquired queue lock, queue length is %d&#39;,
-                    len(self.queue))
-      if self.queue:
-        record = self.queue.pop(0)
-        if not self.queue:
-          self.queue_has_record.clear() # only set/clear inside queue_lock
+    # Keep checking/sleeping until we&#39;ve either got a record in the
+    # queue or all readers have given us an EOF.
+    while False in self.reader_returned_eof:
+        logging.debug(&#39;read() - waiting for queue lock&#39;)
+        with self.queue_lock:
+            logging.debug(&#39;read() - acquired queue lock, queue length is %d&#39;,
+                          len(self.queue))
+            if self.queue:
+                record = self.queue.pop(0)
+                if not self.queue:
+                    self.queue_has_record.clear()  # only set/clear inside queue_lock
 
-        logging.debug(&#39;read() - got record&#39;)
-        return self._apply_transforms(record)
-      else:
-        self.queue_has_record.clear()
+                logging.debug(&#39;read() - got record&#39;)
+                return self._apply_transforms(record)
+            else:
+                self.queue_has_record.clear()
 
-    # If here, nothing in queue yet. Wait
-    logging.debug(&#39;read() - clear of queue lock, waiting for record&#39;)
-    self.queue_has_record.wait(READER_TIMEOUT_WAIT)
+        # If here, nothing in queue yet. Wait
+        logging.debug(&#39;read() - clear of queue lock, waiting for record&#39;)
+        self.queue_has_record.wait(READER_TIMEOUT_WAIT)
 
-    if not self.queue_has_record.is_set():
-      logging.debug(&#39;read() - timed out waiting for record. Looping&#39;)
-    logging.debug(&#39;read() - readers returned EOF: %s&#39;,
-                  self.reader_returned_eof)
+        if not self.queue_has_record.is_set():
+            logging.debug(&#39;read() - timed out waiting for record. Looping&#39;)
+        logging.debug(&#39;read() - readers returned EOF: %s&#39;,
+                      self.reader_returned_eof)
 
-  # All readers have given us an EOF
-  logging.debug(&#39;read() - all threads returned None; returning None&#39;)
-  return None</code></pre>
+    # All readers have given us an EOF
+    logging.debug(&#39;read() - all threads returned None; returning None&#39;)
+    return None</code></pre>
 </details>
 </dd>
 </dl>
@@ -774,9 +777,7 @@ check_format   If True, attempt to check that Reader/Transform formats
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

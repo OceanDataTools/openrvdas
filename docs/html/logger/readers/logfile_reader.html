@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.readers.logfile_reader API documentation</title>
 <meta name="description" content="" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -26,301 +28,322 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
-import glob
 import logging
+import parse
 import sys
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils import timestamp  # noqa: E402
+from logger.utils.formats import Text  # noqa: E402
+from logger.readers.text_file_reader import TextFileReader  # noqa: E402
+from logger.readers.reader import TimestampedReader  # noqa: E402
 
-from logger.readers.reader import TimestampedReader
-from logger.readers.text_file_reader import TextFileReader
-from logger.utils.formats import Text
-from logger.utils import timestamp
 
 ################################################################################
 # Open and read single-line records from one or more text files.
 class LogfileReader(TimestampedReader):
-  &#34;&#34;&#34;
-  Read lines from one or more text files. Sequentially open all
-  files that match the file_spec.
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
-               retry_interval=0.1, interval=0, use_timestamps=False,
-               time_format=timestamp.TIME_FORMAT,
-               date_format=timestamp.DATE_FORMAT):
     &#34;&#34;&#34;
-    ```
-    filebase     Possibly wildcarded string specifying files to be opened.
-                 Special case: if file_spec is None, read from stdin.
-
-    tail         If False, return None upon reaching end of last file; if
-                 True, block upon reaching EOF of last file and wait for
-                 more records.
-
-    refresh_file_spec
-                 If True, refresh the search for matching filenames when
-                 reaching last EOF to see if any new matching files have
-                 appeared in the interim.
-
-    retry_interval
-                 If tail and/or refresh_file_spec are True, how long to
-                 wait before looking to see if any new records or files
-                 have shown up.
-
-    interval
-                 How long to sleep between returning records. In general
-                 this should be zero except for debugging purposes.
-    ```
-    Note that the order in which files are opened will probably be in
-    alphanumeric by filename, but this is not strictly enforced and
-    depends on how glob returns them.
+    Read lines from one or more text files. Sequentially open all
+    files that match the file_spec.
     &#34;&#34;&#34;
-    super().__init__(output_format=Text)
+    ############################
 
-    if interval and use_timestamps:
-      raise ValueError(&#39;Can not specify both &#34;interval&#34; and &#34;use_timestamps&#34;&#39;)
+    def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
+                 retry_interval=0.1, interval=0, use_timestamps=False,
+                 record_format=None,
+                 time_format=timestamp.TIME_FORMAT,
+                 date_format=timestamp.DATE_FORMAT,
+                 quiet=False):
+        &#34;&#34;&#34;
+        ```
+        filebase     Possibly wildcarded string specifying files to be opened.
+                     Special case: if file_spec is None, read from stdin.
 
-    self.filebase = filebase
-    self.use_timestamps = use_timestamps
-    self.date_format = date_format
-    self.time_format = time_format
-    self.tail = tail
-    self.refresh_file_spec = refresh_file_spec
+        tail         If False, return None upon reaching end of last file; if
+                     True, block upon reaching EOF of last file and wait for
+                     more records.
 
+        refresh_file_spec
+                     If True, refresh the search for matching filenames when
+                     reaching last EOF to see if any new matching files have
+                     appeared in the interim.
 
-    # If use_timestamps, we need to keep track of our last_read to
-    # know how long to sleep
-    self.last_timestamp = 0
-    self.last_read = 0
+        retry_interval
+                     If tail and/or refresh_file_spec are True, how long to
+                     wait before looking to see if any new records or files
+                     have shown up.
 
-    self._first_msec_timestamp = None
-    self.prev_record = None
+        interval
+                     How long to sleep between returning records. In general
+                     this should be zero except for debugging purposes.
 
-    # If they give us a filebase, add wildcard to match its suffixes;
-    # otherwise, we&#39;ll pass on the empty string to TextFileReader so
-    # that it uses stdin. NOTE: we should really use a pattern that
-    # echoes timestamp.DATE_FORMAT, e.g.
-    # DATE_FORMAT_WILDCARD = &#39;????-??-??&#39;
-    self.file_spec = filebase + &#39;*&#39; if filebase else None
-    self.reader = TextFileReader(file_spec=self.file_spec,
-                                 tail=tail,
-                                 refresh_file_spec=refresh_file_spec,
-                                 retry_interval=retry_interval,
-                                 interval=interval)
+        use_timestamps
+                     If True, use the timestamps from the log file to determine
+                     at what interval each record should be emitted.
 
-  ############################
-  def read(self):
-    &#34;&#34;&#34;
-    Return the next line in the file(s), or None if there are no more
-    records (as opposed to &#39;&#39; if the next record is a blank line). To test
-    EOF you&#39;ll need to test
+        record_format
+                     If specified, a custom record format to use for extracting
+                     timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;.
 
-      if record is None:
-        no more records...
+        quiet - if not False, don&#39;t complain when unable to parse a record.
 
-    rather than simply
+        ```
+        Note that the order in which files are opened will probably be in
+        alphanumeric by filename, but this is not strictly enforced and
+        depends on how glob returns them.
+        &#34;&#34;&#34;
+        super().__init__(output_format=Text)
 
-      if not record:
-        could be EOF or simply an empty next line
-    &#34;&#34;&#34;
+        if interval and use_timestamps:
+            raise ValueError(&#39;Can not specify both &#34;interval&#34; and &#34;use_timestamps&#34;&#39;)
 
-    # NOTE: It feels like we should check here that the reader&#39;s
-    # current file really does match our logfile name format...
-    while True:
-      record = self.reader.read()
-      if not record:  # None means we&#39;re out of records
-        return None
+        self.filebase = filebase
+        self.use_timestamps = use_timestamps
+        self.record_format = record_format or &#39;{timestamp:ti} {record}&#39;
+        self.compiled_record_format = parse.compile(self.record_format)
+        self.date_format = date_format
+        self.time_format = time_format
+        self.tail = tail
+        self.refresh_file_spec = refresh_file_spec
+        self.quiet = quiet
 
-      # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
-      # done - just return it.
-      if not self.use_timestamps:
+        # If use_timestamps, we need to keep track of our last_read to
+        # know how long to sleep
+        self.last_timestamp = 0
+        self.last_read = 0
+
+        self._first_msec_timestamp = None
+        self.prev_record = None
+
+        # If they give us a filebase, add wildcard to match its suffixes;
+        # otherwise, we&#39;ll pass on the empty string to TextFileReader so
+        # that it uses stdin. NOTE: we should really use a pattern that
+        # echoes timestamp.DATE_FORMAT, e.g.
+        # DATE_FORMAT_WILDCARD = &#39;????-??-??&#39;
+        self.file_spec = filebase + &#39;*&#39; if filebase else None
+        self.reader = TextFileReader(file_spec=self.file_spec,
+                                     tail=tail,
+                                     refresh_file_spec=refresh_file_spec,
+                                     retry_interval=retry_interval,
+                                     interval=interval)
+
+    ############################
+    def read(self):
+        &#34;&#34;&#34;
+        Return the next line in the file(s), or None if there are no more
+        records (as opposed to &#39;&#39; if the next record is a blank line). To test
+        EOF you&#39;ll need to test
+
+          if record is None:
+            no more records...
+
+        rather than simply
+
+          if not record:
+            could be EOF or simply an empty next line
+        &#34;&#34;&#34;
+
+        # NOTE: It feels like we should check here that the reader&#39;s
+        # current file really does match our logfile name format...
+        while True:
+            record = self.reader.read()
+            if not record:  # None means we&#39;re out of records
+                return None
+
+            # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
+            # done - just return it.
+            if not self.use_timestamps:
+                self.prev_record = record
+                # We need this in case the next call is seek_time() or
+                # read_time_range(). This is less expensive than parsing every
+                # timestamp and keeping self.last_timestamp, but an
+                # alternative might be to implement read_previous(), which
+                # would be expensive but which could be called only when
+                # actually needed.
+                return record
+
+            # If we are using timestamps, make sure we can parse the
+            # timestamp off the front. If we can&#39;t, complain and try getting
+            # the next record.
+            try:
+                parsed_record = self.compiled_record_format.parse(record).named
+                ts = parsed_record[&#39;timestamp&#39;].timestamp()
+                break
+
+            # We had a problem parsing. Discard record and try reading next one.
+            # Complain if appropriate.
+            except (KeyError, ValueError, AttributeError):
+                if not self.quiet:
+                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
+                    logging.warning(&#39;Record: %s&#39;, record)
+                continue
+
+        # If here, we&#39;ve got a record and a timestamp and are intending to
+        # use it. Figure out how long we should sleep before returning it.
+        desired_interval = ts - self.last_timestamp
+        now = timestamp.timestamp()
+        actual_interval = now - self.last_read
+        logging.debug(&#39;Desired interval %f, actual %f; sleeping %f&#39;,
+                      desired_interval, actual_interval,
+                      max(0, desired_interval-actual_interval))
+        time.sleep(max(0, desired_interval - actual_interval))
+
+        self.last_timestamp = ts
+        self.last_read = timestamp.timestamp()
+
         self.prev_record = record
-        # We need this in case the next call is seek_time() or
-        # read_time_range(). This is less expensive than parsing every
-        # timestamp and keeping self.last_timestamp, but an
-        # alternative might be to implement read_previous(), which
-        # would be expensive but which could be called only when
-        # actually needed.
         return record
 
-      # If we are using timestamps, make sure we can parse the
-      # timestamp off the front. If we can&#39;t, complain and try getting
-      # the next record.
-      try:
+    ############################
+    def _read_until(self, desired_time_msec):
+        while True:
+            record = self.reader.read()
+            if record is None:
+                return
+            self.prev_record = record
+            if self._get_msec_timestamp(record) &gt;= desired_time_msec:
+                self.reader.seek(-1, &#39;current&#39;)
+                return
+
+    ############################
+    def _reset(self):
+        self.reader.seek(0, &#39;start&#39;)
+
+    ############################
+    def _get_msec_timestamp(self, record):
         time_str = record.split(&#39; &#39;, 1)[0]
-        ts = timestamp.timestamp(time_str, time_format=self.time_format)
-        break
-      except ValueError:
-        # If, for some reason, the record is malformed, complain and
-        # loop to try fetching the next record
-        logging.warning(&#39;Unable to parse time string from record: %s&#39;, record)
+        return timestamp.timestamp(time_str, time_format=self.time_format) * 1000
 
-    # If here, we&#39;ve got a record and a timestamp and are intending to
-    # use it. Figure out how long we should sleep before returning it.
-    desired_interval = ts - self.last_timestamp
-    now = timestamp.timestamp()
-    actual_interval = now - self.last_read
-    logging.debug(&#39;Desired interval %f, actual %f; sleeping %f&#39;,
-                  desired_interval, actual_interval,
-                  max(0, desired_interval-actual_interval))
-    time.sleep(max(0, desired_interval - actual_interval))
-
-    self.last_timestamp = ts
-    self.last_read = timestamp.timestamp()
-
-    self.prev_record = record
-    return record
-
-  ############################
-  def _read_until(self, desired_time_msec):
-    while True:
-      record = self.reader.read()
-      if record is None:
-        return
-      self.prev_record = record
-      if self._get_msec_timestamp(record) &gt;= desired_time_msec:
+    ############################
+    def _peek_msec(self):
+        record = self.reader.read()
+        if record is None:
+            return None
         self.reader.seek(-1, &#39;current&#39;)
-        return
+        return self._get_msec_timestamp(record)
 
-  ############################
-  def _reset(self):
-    self.reader.seek(0, &#39;start&#39;)
+    ############################
+    # Note: this will change the file position if necessary, and should not be used
+    # except where that behavior is appropriate.
+    def _get_first_msec_timestamp(self):
+        if self._first_msec_timestamp is None:
+            self._reset()
+            record = self.reader.read()
+            if record is None:
+                return None
+            self._first_msec_timestamp = self._get_msec_timestamp(record)
+        return self._first_msec_timestamp
 
-  ############################
-  def _get_msec_timestamp(self, record):
-    time_str = record.split(&#39; &#39;, 1)[0]
-    return timestamp.timestamp(time_str, time_format=self.time_format) * 1000
+    ############################
+    def seek_time(self, offset=0, origin=&#39;current&#39;):
+        &#34;&#34;&#34;
+        Behavior is intended to mimic file seek() behavior but with
+        respect to timestamps.
+        After calling this, the next record read will be the first record
+        whose timestamp is the same as or later than the requested time;
+        if no such record is found, it will read to the end.
+        Exception: if the records are not in exact chronological order,
+        records appearing before the current record but with a later
+        timestamp might be missed.
 
-  ############################
-  def _peek_msec(self):
-    record = self.reader.read()
-    if record is None:
-      return None
-    self.reader.seek(-1, &#39;current&#39;)
-    return self._get_msec_timestamp(record)
+        Args:
+          offset: offset in msec relative to origin
+          origin: &#39;start&#39;, &#39;current&#39; or &#39;end&#39;
 
-  ############################
-  # Note: this will change the file position if necessary, and should not be used
-  # except where that behavior is appropriate.
-  def _get_first_msec_timestamp(self):
-    if self._first_msec_timestamp is None:
-      self._reset()
-      record = self.reader.read()
-      if record is None:
-        return None
-      self._first_msec_timestamp = self._get_msec_timestamp(record)
-    return self._first_msec_timestamp
+        Returns:
+          Requested time in msec, i.e. timestamp of (T0 + offset),
+          where T0 = timestamp(first record) if origin = &#39;start&#39;
+                   = timestamp(next record) if origin = &#39;current&#39; and next record is not None
+                   = timestamp(last record) if origin = &#39;current&#39; and next record is None
+                   = timestamp(last record) if origin = &#39;end&#39;
+          Returns None if no timestamps were found
+        &#34;&#34;&#34;
+        if self.filebase is None:
+            raise ValueError(&#39;seek_time() not allowed on stdin&#39;)
 
-  ############################
-  def seek_time(self, offset=0, origin=&#39;current&#39;):
-    &#34;&#34;&#34;
-    Behavior is intended to mimic file seek() behavior but with
-    respect to timestamps.
-    After calling this, the next record read will be the first record
-    whose timestamp is the same as or later than the requested time;
-    if no such record is found, it will read to the end.
-    Exception: if the records are not in exact chronological order,
-    records appearing before the current record but with a later
-    timestamp might be missed.
+        # TODO: Maybe these are OK, as long as &#39;end&#39; is defined as the point where
+        # read() returns None for the first time.
+        if self.tail and origin == &#39;end&#39;:
+            raise ValueError(&#39;tail=True incompatible with origin == &#34;end&#34;&#39;)
+        if self.refresh_file_spec and origin == &#39;end&#39;:
+            raise ValueError(&#39;refresh_file_spec=True incompatible with origin == &#34;end&#34;&#39;)
 
-    Args:
-      offset: offset in msec relative to origin
-      origin: &#39;start&#39;, &#39;current&#39; or &#39;end&#39;
+        if origin == &#39;start&#39;:
+            if offset &lt; 0:
+                raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+            first_timestamp = self._get_first_msec_timestamp()
+            if first_timestamp is None:
+                return None
+            desired_time = first_timestamp + offset
+            if self.prev_record is None:
+                self._reset()
+            else:
+                prev_timestamp = self._get_msec_timestamp(self.prev_record)
+                if prev_timestamp &gt;= desired_time:
+                    self._reset()
+            self._read_until(desired_time)
+            return desired_time
 
-    Returns:
-      Requested time in msec, i.e. timestamp of (T0 + offset),
-      where T0 = timestamp(first record) if origin = &#39;start&#39;
-               = timestamp(next record) if origin = &#39;current&#39; and next record is not None
-               = timestamp(last record) if origin = &#39;current&#39; and next record is None
-               = timestamp(last record) if origin = &#39;end&#39;
-      Returns None if no timestamps were found
-    &#34;&#34;&#34;
-    if self.filebase is None:
-      raise ValueError(&#39;seek_time() not allowed on stdin&#39;)
+        elif origin == &#39;current&#39;:
+            next_timestamp = self._peek_msec()
+            curr_timestamp = next_timestamp or self._get_msec_timestamp(self.prev_record)
+            if curr_timestamp is None:
+                return None
+            desired_time = curr_timestamp + offset
+            if offset == 0:
+                return desired_time
+            if offset &lt; 0:
+                self._reset()
+            self._read_until(desired_time)
+            return desired_time
 
-    # TODO: Maybe these are OK, as long as &#39;end&#39; is defined as the point where
-    # read() returns None for the first time.
-    if self.tail and origin == &#39;end&#39;:
-      raise ValueError(&#39;tail=True incompatible with origin == &#34;end&#34;&#39;)
-    if self.refresh_file_spec and origin == &#39;end&#39;:
-      raise ValueError(&#39;refresh_file_spec=True incompatible with origin == &#34;end&#34;&#39;)
+        elif origin == &#39;end&#39;:
+            while self.read() is not None:
+                pass
+            if self.prev_record is None:
+                return None
+            end_timestamp = self._get_msec_timestamp(self.prev_record)
+            desired_time = end_timestamp + offset
+            if offset &lt; 0:
+                self._reset()
+                self._read_until(desired_time)
+            return desired_time
 
-    if origin == &#39;start&#39;:
-      if offset &lt; 0:
-        raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-      first_timestamp = self._get_first_msec_timestamp()
-      if first_timestamp is None:
-        return None
-      desired_time = first_timestamp + offset
-      if self.prev_record is None:
-        self._reset()
-      else:
-        prev_timestamp = self._get_msec_timestamp(self.prev_record)
-        if prev_timestamp &gt;= desired_time:
-          self._reset()
-      self._read_until(desired_time)
-      return desired_time
+        else:
+            raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
 
-    elif origin == &#39;current&#39;:
-      next_timestamp = self._peek_msec()
-      curr_timestamp = next_timestamp or self._get_msec_timestamp(self.prev_record)
-      if curr_timestamp is None:
-        return None
-      desired_time = curr_timestamp + offset
-      if offset == 0:
-        return desired_time
-      if offset &lt; 0:
-        self._reset()
-      self._read_until(desired_time)
-      return desired_time
+    ############################
+    # Read a range of records beginning with timestamp start
+    # milliseconds, and ending *before* timestamp stop milliseconds.
+    def read_time_range(self, start=None, stop=None):
+        if self.filebase is None:
+            raise ValueError(&#39;read_time_range() not allowed on stdin&#39;)
 
-    elif origin == &#39;end&#39;:
-      while self.read() is not None:
-        pass
-      if self.prev_record is None:
-        return None
-      end_timestamp = self._get_msec_timestamp(self.prev_record)
-      desired_time = end_timestamp + offset
-      if offset &lt; 0:
-        self._reset()
-        self._read_until(desired_time)
-      return desired_time
+        # TODO: Is this needed? stop=None would be OK unless records are
+        # being written faster than they&#39;re being read.
+        if stop is None:
+            if self.tail:
+                raise ValueError(&#39;tail=True incompatible with stop=None&#39;)
+            if self.refresh_file_spec:
+                raise ValueError(&#39;refresh_file_spec=True incompatible with stop=None&#39;)
 
-    else:
-      raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
+        if start is None:
+            starting_offset = 0
+        else:
+            starting_offset = start - self._get_first_msec_timestamp()
 
-  ############################
-  # Read a range of records beginning with timestamp start
-  # milliseconds, and ending *before* timestamp stop milliseconds.
-  def read_time_range(self, start=None, stop=None):
-    if self.filebase is None:
-      raise ValueError(&#39;read_time_range() not allowed on stdin&#39;)
-
-    # TODO: Is this needed? stop=None would be OK unless records are
-    # being written faster than they&#39;re being read.
-    if stop is None:
-      if self.tail:
-        raise ValueError(&#39;tail=True incompatible with stop=None&#39;)
-      if self.refresh_file_spec:
-        raise ValueError(&#39;refresh_file_spec=True incompatible with stop=None&#39;)
-
-    if start is None:
-      starting_offset = 0
-    else:
-      starting_offset = start - self._get_first_msec_timestamp()
-
-    self.seek_time(starting_offset, &#39;start&#39;)
-    records = []
-    while True:
-      record = self.read()
-      if record is None:
-        break
-      if stop and self._get_msec_timestamp(record) &gt;= stop:
-        break
-      records.append(record)
-    return records</code></pre>
+        self.seek_time(starting_offset, &#39;start&#39;)
+        records = []
+        while True:
+            record = self.read()
+            if record is None:
+                break
+            if stop and self._get_msec_timestamp(record) &gt;= stop:
+                break
+            records.append(record)
+        return records</code></pre>
 </details>
 </section>
 <section>
@@ -334,10 +357,10 @@ class LogfileReader(TimestampedReader):
 <dl>
 <dt id="logger.readers.logfile_reader.LogfileReader"><code class="flex name class">
 <span>class <span class="ident">LogfileReader</span></span>
-<span>(</span><span>filebase=None, tail=False, refresh_file_spec=False, retry_interval=0.1, interval=0, use_timestamps=False, time_format='%Y-%m-%dT%H:%M:%S.%fZ', date_format='%Y-%m-%d')</span>
+<span>(</span><span>filebase=None, tail=False, refresh_file_spec=False, retry_interval=0.1, interval=0, use_timestamps=False, record_format=None, time_format='%Y-%m-%dT%H:%M:%S.%fZ', date_format='%Y-%m-%d', quiet=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Read lines from one or more text files. Sequentially open all
+<div class="desc"><p>Read lines from one or more text files. Sequentially open all
 files that match the file_spec.</p>
 <pre><code>filebase     Possibly wildcarded string specifying files to be opened.
              Special case: if file_spec is None, read from stdin.
@@ -359,86 +382,352 @@ retry_interval
 interval
              How long to sleep between returning records. In general
              this should be zero except for debugging purposes.
+
+use_timestamps
+             If True, use the timestamps from the log file to determine
+             at what interval each record should be emitted.
+
+record_format
+             If specified, a custom record format to use for extracting
+             timestamp and record. The default is '{timestamp:ti} {record}'.
+
+quiet - if not False, don't complain when unable to parse a record.
+
 </code></pre>
 <p>Note that the order in which files are opened will probably be in
 alphanumeric by filename, but this is not strictly enforced and
-depends on how glob returns them.</p></section>
+depends on how glob returns them.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LogfileReader(TimestampedReader):
-  &#34;&#34;&#34;
-  Read lines from one or more text files. Sequentially open all
-  files that match the file_spec.
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
-               retry_interval=0.1, interval=0, use_timestamps=False,
-               time_format=timestamp.TIME_FORMAT,
-               date_format=timestamp.DATE_FORMAT):
     &#34;&#34;&#34;
-    ```
-    filebase     Possibly wildcarded string specifying files to be opened.
-                 Special case: if file_spec is None, read from stdin.
-
-    tail         If False, return None upon reaching end of last file; if
-                 True, block upon reaching EOF of last file and wait for
-                 more records.
-
-    refresh_file_spec
-                 If True, refresh the search for matching filenames when
-                 reaching last EOF to see if any new matching files have
-                 appeared in the interim.
-
-    retry_interval
-                 If tail and/or refresh_file_spec are True, how long to
-                 wait before looking to see if any new records or files
-                 have shown up.
-
-    interval
-                 How long to sleep between returning records. In general
-                 this should be zero except for debugging purposes.
-    ```
-    Note that the order in which files are opened will probably be in
-    alphanumeric by filename, but this is not strictly enforced and
-    depends on how glob returns them.
+    Read lines from one or more text files. Sequentially open all
+    files that match the file_spec.
     &#34;&#34;&#34;
-    super().__init__(output_format=Text)
+    ############################
 
-    if interval and use_timestamps:
-      raise ValueError(&#39;Can not specify both &#34;interval&#34; and &#34;use_timestamps&#34;&#39;)
+    def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
+                 retry_interval=0.1, interval=0, use_timestamps=False,
+                 record_format=None,
+                 time_format=timestamp.TIME_FORMAT,
+                 date_format=timestamp.DATE_FORMAT,
+                 quiet=False):
+        &#34;&#34;&#34;
+        ```
+        filebase     Possibly wildcarded string specifying files to be opened.
+                     Special case: if file_spec is None, read from stdin.
 
-    self.filebase = filebase
-    self.use_timestamps = use_timestamps
-    self.date_format = date_format
-    self.time_format = time_format
-    self.tail = tail
-    self.refresh_file_spec = refresh_file_spec
+        tail         If False, return None upon reaching end of last file; if
+                     True, block upon reaching EOF of last file and wait for
+                     more records.
 
+        refresh_file_spec
+                     If True, refresh the search for matching filenames when
+                     reaching last EOF to see if any new matching files have
+                     appeared in the interim.
 
-    # If use_timestamps, we need to keep track of our last_read to
-    # know how long to sleep
-    self.last_timestamp = 0
-    self.last_read = 0
+        retry_interval
+                     If tail and/or refresh_file_spec are True, how long to
+                     wait before looking to see if any new records or files
+                     have shown up.
 
-    self._first_msec_timestamp = None
-    self.prev_record = None
+        interval
+                     How long to sleep between returning records. In general
+                     this should be zero except for debugging purposes.
 
-    # If they give us a filebase, add wildcard to match its suffixes;
-    # otherwise, we&#39;ll pass on the empty string to TextFileReader so
-    # that it uses stdin. NOTE: we should really use a pattern that
-    # echoes timestamp.DATE_FORMAT, e.g.
-    # DATE_FORMAT_WILDCARD = &#39;????-??-??&#39;
-    self.file_spec = filebase + &#39;*&#39; if filebase else None
-    self.reader = TextFileReader(file_spec=self.file_spec,
-                                 tail=tail,
-                                 refresh_file_spec=refresh_file_spec,
-                                 retry_interval=retry_interval,
-                                 interval=interval)
+        use_timestamps
+                     If True, use the timestamps from the log file to determine
+                     at what interval each record should be emitted.
 
-  ############################
-  def read(self):
+        record_format
+                     If specified, a custom record format to use for extracting
+                     timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;.
+
+        quiet - if not False, don&#39;t complain when unable to parse a record.
+
+        ```
+        Note that the order in which files are opened will probably be in
+        alphanumeric by filename, but this is not strictly enforced and
+        depends on how glob returns them.
+        &#34;&#34;&#34;
+        super().__init__(output_format=Text)
+
+        if interval and use_timestamps:
+            raise ValueError(&#39;Can not specify both &#34;interval&#34; and &#34;use_timestamps&#34;&#39;)
+
+        self.filebase = filebase
+        self.use_timestamps = use_timestamps
+        self.record_format = record_format or &#39;{timestamp:ti} {record}&#39;
+        self.compiled_record_format = parse.compile(self.record_format)
+        self.date_format = date_format
+        self.time_format = time_format
+        self.tail = tail
+        self.refresh_file_spec = refresh_file_spec
+        self.quiet = quiet
+
+        # If use_timestamps, we need to keep track of our last_read to
+        # know how long to sleep
+        self.last_timestamp = 0
+        self.last_read = 0
+
+        self._first_msec_timestamp = None
+        self.prev_record = None
+
+        # If they give us a filebase, add wildcard to match its suffixes;
+        # otherwise, we&#39;ll pass on the empty string to TextFileReader so
+        # that it uses stdin. NOTE: we should really use a pattern that
+        # echoes timestamp.DATE_FORMAT, e.g.
+        # DATE_FORMAT_WILDCARD = &#39;????-??-??&#39;
+        self.file_spec = filebase + &#39;*&#39; if filebase else None
+        self.reader = TextFileReader(file_spec=self.file_spec,
+                                     tail=tail,
+                                     refresh_file_spec=refresh_file_spec,
+                                     retry_interval=retry_interval,
+                                     interval=interval)
+
+    ############################
+    def read(self):
+        &#34;&#34;&#34;
+        Return the next line in the file(s), or None if there are no more
+        records (as opposed to &#39;&#39; if the next record is a blank line). To test
+        EOF you&#39;ll need to test
+
+          if record is None:
+            no more records...
+
+        rather than simply
+
+          if not record:
+            could be EOF or simply an empty next line
+        &#34;&#34;&#34;
+
+        # NOTE: It feels like we should check here that the reader&#39;s
+        # current file really does match our logfile name format...
+        while True:
+            record = self.reader.read()
+            if not record:  # None means we&#39;re out of records
+                return None
+
+            # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
+            # done - just return it.
+            if not self.use_timestamps:
+                self.prev_record = record
+                # We need this in case the next call is seek_time() or
+                # read_time_range(). This is less expensive than parsing every
+                # timestamp and keeping self.last_timestamp, but an
+                # alternative might be to implement read_previous(), which
+                # would be expensive but which could be called only when
+                # actually needed.
+                return record
+
+            # If we are using timestamps, make sure we can parse the
+            # timestamp off the front. If we can&#39;t, complain and try getting
+            # the next record.
+            try:
+                parsed_record = self.compiled_record_format.parse(record).named
+                ts = parsed_record[&#39;timestamp&#39;].timestamp()
+                break
+
+            # We had a problem parsing. Discard record and try reading next one.
+            # Complain if appropriate.
+            except (KeyError, ValueError, AttributeError):
+                if not self.quiet:
+                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
+                    logging.warning(&#39;Record: %s&#39;, record)
+                continue
+
+        # If here, we&#39;ve got a record and a timestamp and are intending to
+        # use it. Figure out how long we should sleep before returning it.
+        desired_interval = ts - self.last_timestamp
+        now = timestamp.timestamp()
+        actual_interval = now - self.last_read
+        logging.debug(&#39;Desired interval %f, actual %f; sleeping %f&#39;,
+                      desired_interval, actual_interval,
+                      max(0, desired_interval-actual_interval))
+        time.sleep(max(0, desired_interval - actual_interval))
+
+        self.last_timestamp = ts
+        self.last_read = timestamp.timestamp()
+
+        self.prev_record = record
+        return record
+
+    ############################
+    def _read_until(self, desired_time_msec):
+        while True:
+            record = self.reader.read()
+            if record is None:
+                return
+            self.prev_record = record
+            if self._get_msec_timestamp(record) &gt;= desired_time_msec:
+                self.reader.seek(-1, &#39;current&#39;)
+                return
+
+    ############################
+    def _reset(self):
+        self.reader.seek(0, &#39;start&#39;)
+
+    ############################
+    def _get_msec_timestamp(self, record):
+        time_str = record.split(&#39; &#39;, 1)[0]
+        return timestamp.timestamp(time_str, time_format=self.time_format) * 1000
+
+    ############################
+    def _peek_msec(self):
+        record = self.reader.read()
+        if record is None:
+            return None
+        self.reader.seek(-1, &#39;current&#39;)
+        return self._get_msec_timestamp(record)
+
+    ############################
+    # Note: this will change the file position if necessary, and should not be used
+    # except where that behavior is appropriate.
+    def _get_first_msec_timestamp(self):
+        if self._first_msec_timestamp is None:
+            self._reset()
+            record = self.reader.read()
+            if record is None:
+                return None
+            self._first_msec_timestamp = self._get_msec_timestamp(record)
+        return self._first_msec_timestamp
+
+    ############################
+    def seek_time(self, offset=0, origin=&#39;current&#39;):
+        &#34;&#34;&#34;
+        Behavior is intended to mimic file seek() behavior but with
+        respect to timestamps.
+        After calling this, the next record read will be the first record
+        whose timestamp is the same as or later than the requested time;
+        if no such record is found, it will read to the end.
+        Exception: if the records are not in exact chronological order,
+        records appearing before the current record but with a later
+        timestamp might be missed.
+
+        Args:
+          offset: offset in msec relative to origin
+          origin: &#39;start&#39;, &#39;current&#39; or &#39;end&#39;
+
+        Returns:
+          Requested time in msec, i.e. timestamp of (T0 + offset),
+          where T0 = timestamp(first record) if origin = &#39;start&#39;
+                   = timestamp(next record) if origin = &#39;current&#39; and next record is not None
+                   = timestamp(last record) if origin = &#39;current&#39; and next record is None
+                   = timestamp(last record) if origin = &#39;end&#39;
+          Returns None if no timestamps were found
+        &#34;&#34;&#34;
+        if self.filebase is None:
+            raise ValueError(&#39;seek_time() not allowed on stdin&#39;)
+
+        # TODO: Maybe these are OK, as long as &#39;end&#39; is defined as the point where
+        # read() returns None for the first time.
+        if self.tail and origin == &#39;end&#39;:
+            raise ValueError(&#39;tail=True incompatible with origin == &#34;end&#34;&#39;)
+        if self.refresh_file_spec and origin == &#39;end&#39;:
+            raise ValueError(&#39;refresh_file_spec=True incompatible with origin == &#34;end&#34;&#39;)
+
+        if origin == &#39;start&#39;:
+            if offset &lt; 0:
+                raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+            first_timestamp = self._get_first_msec_timestamp()
+            if first_timestamp is None:
+                return None
+            desired_time = first_timestamp + offset
+            if self.prev_record is None:
+                self._reset()
+            else:
+                prev_timestamp = self._get_msec_timestamp(self.prev_record)
+                if prev_timestamp &gt;= desired_time:
+                    self._reset()
+            self._read_until(desired_time)
+            return desired_time
+
+        elif origin == &#39;current&#39;:
+            next_timestamp = self._peek_msec()
+            curr_timestamp = next_timestamp or self._get_msec_timestamp(self.prev_record)
+            if curr_timestamp is None:
+                return None
+            desired_time = curr_timestamp + offset
+            if offset == 0:
+                return desired_time
+            if offset &lt; 0:
+                self._reset()
+            self._read_until(desired_time)
+            return desired_time
+
+        elif origin == &#39;end&#39;:
+            while self.read() is not None:
+                pass
+            if self.prev_record is None:
+                return None
+            end_timestamp = self._get_msec_timestamp(self.prev_record)
+            desired_time = end_timestamp + offset
+            if offset &lt; 0:
+                self._reset()
+                self._read_until(desired_time)
+            return desired_time
+
+        else:
+            raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
+
+    ############################
+    # Read a range of records beginning with timestamp start
+    # milliseconds, and ending *before* timestamp stop milliseconds.
+    def read_time_range(self, start=None, stop=None):
+        if self.filebase is None:
+            raise ValueError(&#39;read_time_range() not allowed on stdin&#39;)
+
+        # TODO: Is this needed? stop=None would be OK unless records are
+        # being written faster than they&#39;re being read.
+        if stop is None:
+            if self.tail:
+                raise ValueError(&#39;tail=True incompatible with stop=None&#39;)
+            if self.refresh_file_spec:
+                raise ValueError(&#39;refresh_file_spec=True incompatible with stop=None&#39;)
+
+        if start is None:
+            starting_offset = 0
+        else:
+            starting_offset = start - self._get_first_msec_timestamp()
+
+        self.seek_time(starting_offset, &#39;start&#39;)
+        records = []
+        while True:
+            record = self.read()
+            if record is None:
+                break
+            if stop and self._get_msec_timestamp(record) &gt;= stop:
+                break
+            records.append(record)
+        return records</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="logger.readers.reader.TimestampedReader" href="reader.html#logger.readers.reader.TimestampedReader">TimestampedReader</a></li>
+<li><a title="logger.readers.reader.StorageReader" href="reader.html#logger.readers.reader.StorageReader">StorageReader</a></li>
+<li><a title="logger.readers.reader.Reader" href="reader.html#logger.readers.reader.Reader">Reader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="logger.readers.logfile_reader.LogfileReader.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the next line in the file(s), or None if there are no more
+records (as opposed to '' if the next record is a blank line). To test
+EOF you'll need to test</p>
+<p>if record is None:
+no more records&hellip;</p>
+<p>rather than simply</p>
+<p>if not record:
+could be EOF or simply an empty next line</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self):
     &#34;&#34;&#34;
     Return the next line in the file(s), or None if there are no more
     records (as opposed to &#39;&#39; if the next record is a blank line). To test
@@ -456,33 +745,37 @@ depends on how glob returns them.</p></section>
     # NOTE: It feels like we should check here that the reader&#39;s
     # current file really does match our logfile name format...
     while True:
-      record = self.reader.read()
-      if not record:  # None means we&#39;re out of records
-        return None
+        record = self.reader.read()
+        if not record:  # None means we&#39;re out of records
+            return None
 
-      # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
-      # done - just return it.
-      if not self.use_timestamps:
-        self.prev_record = record
-        # We need this in case the next call is seek_time() or
-        # read_time_range(). This is less expensive than parsing every
-        # timestamp and keeping self.last_timestamp, but an
-        # alternative might be to implement read_previous(), which
-        # would be expensive but which could be called only when
-        # actually needed.
-        return record
+        # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
+        # done - just return it.
+        if not self.use_timestamps:
+            self.prev_record = record
+            # We need this in case the next call is seek_time() or
+            # read_time_range(). This is less expensive than parsing every
+            # timestamp and keeping self.last_timestamp, but an
+            # alternative might be to implement read_previous(), which
+            # would be expensive but which could be called only when
+            # actually needed.
+            return record
 
-      # If we are using timestamps, make sure we can parse the
-      # timestamp off the front. If we can&#39;t, complain and try getting
-      # the next record.
-      try:
-        time_str = record.split(&#39; &#39;, 1)[0]
-        ts = timestamp.timestamp(time_str, time_format=self.time_format)
-        break
-      except ValueError:
-        # If, for some reason, the record is malformed, complain and
-        # loop to try fetching the next record
-        logging.warning(&#39;Unable to parse time string from record: %s&#39;, record)
+        # If we are using timestamps, make sure we can parse the
+        # timestamp off the front. If we can&#39;t, complain and try getting
+        # the next record.
+        try:
+            parsed_record = self.compiled_record_format.parse(record).named
+            ts = parsed_record[&#39;timestamp&#39;].timestamp()
+            break
+
+        # We had a problem parsing. Discard record and try reading next one.
+        # Complain if appropriate.
+        except (KeyError, ValueError, AttributeError):
+            if not self.quiet:
+                logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
+                logging.warning(&#39;Record: %s&#39;, record)
+            continue
 
     # If here, we&#39;ve got a record and a timestamp and are intending to
     # use it. Figure out how long we should sleep before returning it.
@@ -498,50 +791,78 @@ depends on how glob returns them.</p></section>
     self.last_read = timestamp.timestamp()
 
     self.prev_record = record
-    return record
+    return record</code></pre>
+</details>
+</dd>
+<dt id="logger.readers.logfile_reader.LogfileReader.read_time_range"><code class="name flex">
+<span>def <span class="ident">read_time_range</span></span>(<span>self, start=None, stop=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_time_range(self, start=None, stop=None):
+    if self.filebase is None:
+        raise ValueError(&#39;read_time_range() not allowed on stdin&#39;)
 
-  ############################
-  def _read_until(self, desired_time_msec):
+    # TODO: Is this needed? stop=None would be OK unless records are
+    # being written faster than they&#39;re being read.
+    if stop is None:
+        if self.tail:
+            raise ValueError(&#39;tail=True incompatible with stop=None&#39;)
+        if self.refresh_file_spec:
+            raise ValueError(&#39;refresh_file_spec=True incompatible with stop=None&#39;)
+
+    if start is None:
+        starting_offset = 0
+    else:
+        starting_offset = start - self._get_first_msec_timestamp()
+
+    self.seek_time(starting_offset, &#39;start&#39;)
+    records = []
     while True:
-      record = self.reader.read()
-      if record is None:
-        return
-      self.prev_record = record
-      if self._get_msec_timestamp(record) &gt;= desired_time_msec:
-        self.reader.seek(-1, &#39;current&#39;)
-        return
-
-  ############################
-  def _reset(self):
-    self.reader.seek(0, &#39;start&#39;)
-
-  ############################
-  def _get_msec_timestamp(self, record):
-    time_str = record.split(&#39; &#39;, 1)[0]
-    return timestamp.timestamp(time_str, time_format=self.time_format) * 1000
-
-  ############################
-  def _peek_msec(self):
-    record = self.reader.read()
-    if record is None:
-      return None
-    self.reader.seek(-1, &#39;current&#39;)
-    return self._get_msec_timestamp(record)
-
-  ############################
-  # Note: this will change the file position if necessary, and should not be used
-  # except where that behavior is appropriate.
-  def _get_first_msec_timestamp(self):
-    if self._first_msec_timestamp is None:
-      self._reset()
-      record = self.reader.read()
-      if record is None:
-        return None
-      self._first_msec_timestamp = self._get_msec_timestamp(record)
-    return self._first_msec_timestamp
-
-  ############################
-  def seek_time(self, offset=0, origin=&#39;current&#39;):
+        record = self.read()
+        if record is None:
+            break
+        if stop and self._get_msec_timestamp(record) &gt;= stop:
+            break
+        records.append(record)
+    return records</code></pre>
+</details>
+</dd>
+<dt id="logger.readers.logfile_reader.LogfileReader.seek_time"><code class="name flex">
+<span>def <span class="ident">seek_time</span></span>(<span>self, offset=0, origin='current')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Behavior is intended to mimic file seek() behavior but with
+respect to timestamps.
+After calling this, the next record read will be the first record
+whose timestamp is the same as or later than the requested time;
+if no such record is found, it will read to the end.
+Exception: if the records are not in exact chronological order,
+records appearing before the current record but with a later
+timestamp might be missed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>offset</code></strong></dt>
+<dd>offset in msec relative to origin</dd>
+<dt><strong><code>origin</code></strong></dt>
+<dd>'start', 'current' or 'end'</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Requested time in msec, i.e. timestamp of (T0 + offset),
+where T0 = timestamp(first record) if origin = 'start'
+= timestamp(next record) if origin = 'current' and next record is not None
+= timestamp(last record) if origin = 'current' and next record is None
+= timestamp(last record) if origin = 'end'
+Returns None if no timestamps were found</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def seek_time(self, offset=0, origin=&#39;current&#39;):
     &#34;&#34;&#34;
     Behavior is intended to mimic file seek() behavior but with
     respect to timestamps.
@@ -565,325 +886,58 @@ depends on how glob returns them.</p></section>
       Returns None if no timestamps were found
     &#34;&#34;&#34;
     if self.filebase is None:
-      raise ValueError(&#39;seek_time() not allowed on stdin&#39;)
+        raise ValueError(&#39;seek_time() not allowed on stdin&#39;)
 
     # TODO: Maybe these are OK, as long as &#39;end&#39; is defined as the point where
     # read() returns None for the first time.
     if self.tail and origin == &#39;end&#39;:
-      raise ValueError(&#39;tail=True incompatible with origin == &#34;end&#34;&#39;)
+        raise ValueError(&#39;tail=True incompatible with origin == &#34;end&#34;&#39;)
     if self.refresh_file_spec and origin == &#39;end&#39;:
-      raise ValueError(&#39;refresh_file_spec=True incompatible with origin == &#34;end&#34;&#39;)
+        raise ValueError(&#39;refresh_file_spec=True incompatible with origin == &#34;end&#34;&#39;)
 
     if origin == &#39;start&#39;:
-      if offset &lt; 0:
-        raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-      first_timestamp = self._get_first_msec_timestamp()
-      if first_timestamp is None:
-        return None
-      desired_time = first_timestamp + offset
-      if self.prev_record is None:
-        self._reset()
-      else:
-        prev_timestamp = self._get_msec_timestamp(self.prev_record)
-        if prev_timestamp &gt;= desired_time:
-          self._reset()
-      self._read_until(desired_time)
-      return desired_time
+        if offset &lt; 0:
+            raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+        first_timestamp = self._get_first_msec_timestamp()
+        if first_timestamp is None:
+            return None
+        desired_time = first_timestamp + offset
+        if self.prev_record is None:
+            self._reset()
+        else:
+            prev_timestamp = self._get_msec_timestamp(self.prev_record)
+            if prev_timestamp &gt;= desired_time:
+                self._reset()
+        self._read_until(desired_time)
+        return desired_time
 
     elif origin == &#39;current&#39;:
-      next_timestamp = self._peek_msec()
-      curr_timestamp = next_timestamp or self._get_msec_timestamp(self.prev_record)
-      if curr_timestamp is None:
-        return None
-      desired_time = curr_timestamp + offset
-      if offset == 0:
+        next_timestamp = self._peek_msec()
+        curr_timestamp = next_timestamp or self._get_msec_timestamp(self.prev_record)
+        if curr_timestamp is None:
+            return None
+        desired_time = curr_timestamp + offset
+        if offset == 0:
+            return desired_time
+        if offset &lt; 0:
+            self._reset()
+        self._read_until(desired_time)
         return desired_time
-      if offset &lt; 0:
-        self._reset()
-      self._read_until(desired_time)
-      return desired_time
 
     elif origin == &#39;end&#39;:
-      while self.read() is not None:
-        pass
-      if self.prev_record is None:
-        return None
-      end_timestamp = self._get_msec_timestamp(self.prev_record)
-      desired_time = end_timestamp + offset
-      if offset &lt; 0:
-        self._reset()
-        self._read_until(desired_time)
-      return desired_time
+        while self.read() is not None:
+            pass
+        if self.prev_record is None:
+            return None
+        end_timestamp = self._get_msec_timestamp(self.prev_record)
+        desired_time = end_timestamp + offset
+        if offset &lt; 0:
+            self._reset()
+            self._read_until(desired_time)
+        return desired_time
 
     else:
-      raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
-
-  ############################
-  # Read a range of records beginning with timestamp start
-  # milliseconds, and ending *before* timestamp stop milliseconds.
-  def read_time_range(self, start=None, stop=None):
-    if self.filebase is None:
-      raise ValueError(&#39;read_time_range() not allowed on stdin&#39;)
-
-    # TODO: Is this needed? stop=None would be OK unless records are
-    # being written faster than they&#39;re being read.
-    if stop is None:
-      if self.tail:
-        raise ValueError(&#39;tail=True incompatible with stop=None&#39;)
-      if self.refresh_file_spec:
-        raise ValueError(&#39;refresh_file_spec=True incompatible with stop=None&#39;)
-
-    if start is None:
-      starting_offset = 0
-    else:
-      starting_offset = start - self._get_first_msec_timestamp()
-
-    self.seek_time(starting_offset, &#39;start&#39;)
-    records = []
-    while True:
-      record = self.read()
-      if record is None:
-        break
-      if stop and self._get_msec_timestamp(record) &gt;= stop:
-        break
-      records.append(record)
-    return records</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="logger.readers.reader.TimestampedReader" href="reader.html#logger.readers.reader.TimestampedReader">TimestampedReader</a></li>
-<li><a title="logger.readers.reader.StorageReader" href="reader.html#logger.readers.reader.StorageReader">StorageReader</a></li>
-<li><a title="logger.readers.reader.Reader" href="reader.html#logger.readers.reader.Reader">Reader</a></li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="logger.readers.logfile_reader.LogfileReader.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Return the next line in the file(s), or None if there are no more
-records (as opposed to '' if the next record is a blank line). To test
-EOF you'll need to test</p>
-<p>if record is None:
-no more records&hellip;</p>
-<p>rather than simply</p>
-<p>if not record:
-could be EOF or simply an empty next line</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self):
-  &#34;&#34;&#34;
-  Return the next line in the file(s), or None if there are no more
-  records (as opposed to &#39;&#39; if the next record is a blank line). To test
-  EOF you&#39;ll need to test
-
-    if record is None:
-      no more records...
-
-  rather than simply
-
-    if not record:
-      could be EOF or simply an empty next line
-  &#34;&#34;&#34;
-
-  # NOTE: It feels like we should check here that the reader&#39;s
-  # current file really does match our logfile name format...
-  while True:
-    record = self.reader.read()
-    if not record:  # None means we&#39;re out of records
-      return None
-
-    # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
-    # done - just return it.
-    if not self.use_timestamps:
-      self.prev_record = record
-      # We need this in case the next call is seek_time() or
-      # read_time_range(). This is less expensive than parsing every
-      # timestamp and keeping self.last_timestamp, but an
-      # alternative might be to implement read_previous(), which
-      # would be expensive but which could be called only when
-      # actually needed.
-      return record
-
-    # If we are using timestamps, make sure we can parse the
-    # timestamp off the front. If we can&#39;t, complain and try getting
-    # the next record.
-    try:
-      time_str = record.split(&#39; &#39;, 1)[0]
-      ts = timestamp.timestamp(time_str, time_format=self.time_format)
-      break
-    except ValueError:
-      # If, for some reason, the record is malformed, complain and
-      # loop to try fetching the next record
-      logging.warning(&#39;Unable to parse time string from record: %s&#39;, record)
-
-  # If here, we&#39;ve got a record and a timestamp and are intending to
-  # use it. Figure out how long we should sleep before returning it.
-  desired_interval = ts - self.last_timestamp
-  now = timestamp.timestamp()
-  actual_interval = now - self.last_read
-  logging.debug(&#39;Desired interval %f, actual %f; sleeping %f&#39;,
-                desired_interval, actual_interval,
-                max(0, desired_interval-actual_interval))
-  time.sleep(max(0, desired_interval - actual_interval))
-
-  self.last_timestamp = ts
-  self.last_read = timestamp.timestamp()
-
-  self.prev_record = record
-  return record</code></pre>
-</details>
-</dd>
-<dt id="logger.readers.logfile_reader.LogfileReader.read_time_range"><code class="name flex">
-<span>def <span class="ident">read_time_range</span></span>(<span>self, start=None, stop=None)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_time_range(self, start=None, stop=None):
-  if self.filebase is None:
-    raise ValueError(&#39;read_time_range() not allowed on stdin&#39;)
-
-  # TODO: Is this needed? stop=None would be OK unless records are
-  # being written faster than they&#39;re being read.
-  if stop is None:
-    if self.tail:
-      raise ValueError(&#39;tail=True incompatible with stop=None&#39;)
-    if self.refresh_file_spec:
-      raise ValueError(&#39;refresh_file_spec=True incompatible with stop=None&#39;)
-
-  if start is None:
-    starting_offset = 0
-  else:
-    starting_offset = start - self._get_first_msec_timestamp()
-
-  self.seek_time(starting_offset, &#39;start&#39;)
-  records = []
-  while True:
-    record = self.read()
-    if record is None:
-      break
-    if stop and self._get_msec_timestamp(record) &gt;= stop:
-      break
-    records.append(record)
-  return records</code></pre>
-</details>
-</dd>
-<dt id="logger.readers.logfile_reader.LogfileReader.seek_time"><code class="name flex">
-<span>def <span class="ident">seek_time</span></span>(<span>self, offset=0, origin='current')</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Behavior is intended to mimic file seek() behavior but with
-respect to timestamps.
-After calling this, the next record read will be the first record
-whose timestamp is the same as or later than the requested time;
-if no such record is found, it will read to the end.
-Exception: if the records are not in exact chronological order,
-records appearing before the current record but with a later
-timestamp might be missed.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>offset</code></strong></dt>
-<dd>offset in msec relative to origin</dd>
-<dt><strong><code>origin</code></strong></dt>
-<dd>'start', 'current' or 'end'</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Requested</code> <code>time</code> <code>in</code> <code>msec</code>, <code>i.e.</code> <code>timestamp</code> of (<code>T0</code> + <code>offset</code>),</dt>
-<dd>&nbsp;</dd>
-<dt><code>where</code> <code>T0</code> = <code>timestamp</code>(<code>first</code> <code>record</code>) <code>if</code> <code>origin</code> = <code>'start'</code></dt>
-<dd>= timestamp(next record) if origin = 'current' and next record is not None
-= timestamp(last record) if origin = 'current' and next record is None
-= timestamp(last record) if origin = 'end'</dd>
-<dt><code>Returns</code> <code>None</code> <code>if</code> <code>no</code> <code>timestamps</code> <code>were</code> <code>found</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def seek_time(self, offset=0, origin=&#39;current&#39;):
-  &#34;&#34;&#34;
-  Behavior is intended to mimic file seek() behavior but with
-  respect to timestamps.
-  After calling this, the next record read will be the first record
-  whose timestamp is the same as or later than the requested time;
-  if no such record is found, it will read to the end.
-  Exception: if the records are not in exact chronological order,
-  records appearing before the current record but with a later
-  timestamp might be missed.
-
-  Args:
-    offset: offset in msec relative to origin
-    origin: &#39;start&#39;, &#39;current&#39; or &#39;end&#39;
-
-  Returns:
-    Requested time in msec, i.e. timestamp of (T0 + offset),
-    where T0 = timestamp(first record) if origin = &#39;start&#39;
-             = timestamp(next record) if origin = &#39;current&#39; and next record is not None
-             = timestamp(last record) if origin = &#39;current&#39; and next record is None
-             = timestamp(last record) if origin = &#39;end&#39;
-    Returns None if no timestamps were found
-  &#34;&#34;&#34;
-  if self.filebase is None:
-    raise ValueError(&#39;seek_time() not allowed on stdin&#39;)
-
-  # TODO: Maybe these are OK, as long as &#39;end&#39; is defined as the point where
-  # read() returns None for the first time.
-  if self.tail and origin == &#39;end&#39;:
-    raise ValueError(&#39;tail=True incompatible with origin == &#34;end&#34;&#39;)
-  if self.refresh_file_spec and origin == &#39;end&#39;:
-    raise ValueError(&#39;refresh_file_spec=True incompatible with origin == &#34;end&#34;&#39;)
-
-  if origin == &#39;start&#39;:
-    if offset &lt; 0:
-      raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-    first_timestamp = self._get_first_msec_timestamp()
-    if first_timestamp is None:
-      return None
-    desired_time = first_timestamp + offset
-    if self.prev_record is None:
-      self._reset()
-    else:
-      prev_timestamp = self._get_msec_timestamp(self.prev_record)
-      if prev_timestamp &gt;= desired_time:
-        self._reset()
-    self._read_until(desired_time)
-    return desired_time
-
-  elif origin == &#39;current&#39;:
-    next_timestamp = self._peek_msec()
-    curr_timestamp = next_timestamp or self._get_msec_timestamp(self.prev_record)
-    if curr_timestamp is None:
-      return None
-    desired_time = curr_timestamp + offset
-    if offset == 0:
-      return desired_time
-    if offset &lt; 0:
-      self._reset()
-    self._read_until(desired_time)
-    return desired_time
-
-  elif origin == &#39;end&#39;:
-    while self.read() is not None:
-      pass
-    if self.prev_record is None:
-      return None
-    end_timestamp = self._get_msec_timestamp(self.prev_record)
-    desired_time = end_timestamp + offset
-    if offset &lt; 0:
-      self._reset()
-      self._read_until(desired_time)
-    return desired_time
-
-  else:
-    raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)</code></pre>
+        raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)</code></pre>
 </details>
 </dd>
 </dl>
@@ -927,9 +981,7 @@ timestamp might be missed.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

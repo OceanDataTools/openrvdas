@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>server.logger_supervisor API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>server.logger_supervisor</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+&#34;&#34;&#34;
+&#34;&#34;&#34;
+import logging
+import sys
+import time
+import threading
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(realpath(__file__))))
+from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
+from logger.utils.read_config import read_config  # noqa: E402
+
+from server.logger_runner import LoggerRunner  # noqa: E402
+
+
+################################################################################
+class LoggerSupervisor:
+    &#34;&#34;&#34;Given a map of {logger:config}, start the configs and make sure
+   they keep running.
+    &#34;&#34;&#34;
+
+    def __init__(self, configs=None, stderr_file_pattern=None,
+                 max_tries=3, min_uptime=10, interval=1,
+                 logger_log_level=logging.WARNING):
+        &#34;&#34;&#34;
+        ```
+        configs   - dict of {logger_name: config} that are to be run
+
+        stderr_file_pattern - Pattern into which logger name will be interpolated
+                   to create the file path/name to which the logger&#39;s stderr
+                   will be written. E.g. &#39;/var/log/openrvdas/{logger}.stderr&#39;
+
+        max_tries - number of times to try a dead logger config. If zero, then
+                    never stop retrying.
+
+        min_uptime - How many seconds a logger must be up to count as having been
+                     successfully started and reset max_tries.
+
+        interval - How many seconds between checks that a logger is still running.
+
+        logger_log_level - at what system log level the logger should log (if
+                    it were a woodchuck chucking wood)
+        ```
+        &#34;&#34;&#34;
+        self.configs = configs or {}
+        self.stderr_file_pattern = stderr_file_pattern
+        self.max_tries = max_tries
+        self.min_uptime = min_uptime
+        self.interval = interval
+        self.logger_log_level = logger_log_level
+
+        # Where we store the map from logger name to config actually  # noqa: E402
+        # running. Also map from logger name to LoggerRunner that&#39;s doing  # noqa: E402
+        # the actual work.
+        self.logger_config_map = {}
+        self.logger_runner_map = {}
+        self.logger_map_lock = threading.Lock()
+
+        # When each logger was last restarted, and how many times it has
+        # failed shortly after start so we know when to give up.
+        self.logger_last_started = {}
+        self.logger_restart_counts = {}
+
+        self.quit_flag = False
+
+    ###################
+    def run(self):
+        if self.configs:
+            self.update_configs()
+
+        while not self.quit_flag:
+            self._check_loggers()
+            time.sleep(self.interval)
+
+    ###################
+    def quit(self):
+        self.quit_flag = True
+
+        with self.logger_map_lock:
+            loggers = set(self.logger_runner_map)
+            for logger in loggers:
+                self._delete_logger(logger)
+
+    ###################
+    def _check_loggers(self):
+        logging.info(&#39;Checking loggers...&#39;)
+        with self.logger_map_lock:
+            for logger, runner in self.logger_runner_map.items():
+                if not runner.is_runnable():
+                    logging.info(&#39;%s - okay; not runnable&#39;, logger)
+                    continue
+
+                if runner.is_alive():
+                    logging.info(&#39;%s - okay; running&#39;, logger)
+                    continue
+
+                if runner.is_failed():
+                    logging.info(&#39;%s - failed&#39;, logger)
+                    continue
+
+                # If we&#39;re here, runner is runnable is not running, and hasn&#39;t
+                # yet been labeled as a failed logger.
+                logging.warning(&#39;%s unexpectedly dead.&#39;, logger)
+
+                # How long has it been since we&#39;ve restarted? If a long enough
+                # time has passed, give it a clean slate.
+                last_started = self.logger_last_started.get(logger, 0)
+                restart_count = self.logger_restart_counts.get(logger, 0)
+                if time.time() - last_started &lt; self.min_uptime:
+                    restart_count += 1
+                else:
+                    restart_count = 0
+                self.logger_restart_counts[logger] = restart_count
+
+                # If we&#39;ve restarted too many times recently, declare the
+                # logger failed and move on.
+                if restart_count &gt;= self.max_tries:
+                    runner.failed = True
+                    logging.warning(&#39;%s has failed %s times; not restarting&#39;,
+                                    logger, restart_count)
+                    continue
+
+                # If here, we&#39;re going to try restarting.
+                logging.info(&#39;%s - restarting&#39;, logger)
+                self.logger_last_started[logger] = time.time()
+                runner.start()
+
+    ###################
+    def _start_logger(self, logger, config):
+        &#34;&#34;&#34;ONLY CALL THIS FROM WITHIN update_configs for thread safety.&#34;&#34;&#34;
+        config_name = config.get(&#39;name&#39;, logger + &#39;_config&#39;)
+        logging.info(&#39;Called start_logger for %s: %s&#39;, logger, config_name)
+
+        self.logger_config_map[logger] = config
+        stderr_file = self.stderr_file_pattern.format(logger=logger)
+
+        runner = LoggerRunner(config=config, name=logger,
+                              stderr_file=stderr_file,
+                              logger_log_level=self.logger_log_level)
+        self.logger_runner_map[logger] = runner
+        self.logger_runner_map[logger].start()
+
+    ###################
+
+    def _delete_logger(self, logger):
+        &#34;&#34;&#34;ONLY CALL THIS FROM WITHIN update_configs for thread safety.&#34;&#34;&#34;
+        runner = self.logger_runner_map.get(logger)
+        if not runner:
+            logging.warning(&#39;Stale logger %s not found?!?&#39;, logger)
+            return
+        logging.info(&#39;Waiting for logger %s to complete&#39;, logger)
+        runner.quit()
+
+        del self.logger_config_map[logger]
+        del self.logger_runner_map[logger]
+
+    ###################
+    def update_configs(self, configs=None):
+        &#34;&#34;&#34;Receive a new map of logger:config and start/stop loggers as
+        necessary.
+        &#34;&#34;&#34;
+        configs = configs or self.configs
+        if not configs:
+            logging.warning(&#39;No logger configs to run!&#39;)
+
+        with self.logger_map_lock:
+            stale_loggers = set(self.logger_config_map) - set(configs)
+            new_loggers = set(configs) - set(self.logger_config_map)
+            other_loggers = set(self.logger_config_map) - stale_loggers - new_loggers
+
+            logging.debug(&#39;Stale: %s&#39;, stale_loggers)
+            logging.debug(&#39;New: %s&#39;, new_loggers)
+            logging.debug(&#39;Other: %s&#39;, other_loggers)
+
+            # Find and shut down loggers that don&#39;t exist in our new configs
+            for logger in stale_loggers:
+                logging.info(&#39;Shutting down logger %s.&#39;, logger)
+                self._delete_logger(logger)
+
+            # Add new loggers that have first appeared in our new config and
+            # start them up.
+            for new_logger in new_loggers:
+                new_config = configs[new_logger]
+                logging.info(&#39;Starting new logger %s with %s.&#39;, new_logger,
+                             new_config.get(&#39;name&#39;, &#39;no_name&#39;))
+                self._start_logger(new_logger, new_config)
+
+            # For existing loggers, see whether their configs have
+            # changed. If so stop and restart with new config.  start them
+            # up.
+            for logger in other_loggers:
+                new_config = configs[logger]
+                old_config = self.logger_config_map[logger]
+                if new_config == old_config:
+                    logging.debug(&#39;Config for %s unchanged.&#39;, logger)
+                    continue
+
+                logging.info(&#39;Updating %s from %s to %s&#39;, logger,
+                             old_config.get(&#39;name&#39;, &#39;no_name&#39;),
+                             new_config.get(&#39;name&#39;, &#39;no_name&#39;))
+                self._delete_logger(logger)
+                self._start_logger(logger, new_config)
+
+    ###################
+
+    def get_status(self):
+        &#34;&#34;&#34;Return a dict of the current config name and current run status of
+        each logger in the form, e.g.:
+
+        {&#39;s330&#39;: {&#39;config&#39;:&#39;s330-&gt;net&#39;, &#39;status&#39;:&#39;RUNNING&#39;},
+         &#39;gyr1&#39;: {&#39;config&#39;:&#39;gyr1-&gt;file&#39;, &#39;status&#39;:&#39;FAILED&#39;},
+        }
+
+        Possible status are EXITED, RUNNING, FAILED and STARTING. EXITED
+        is the status when a logger is not &#39;runnable&#39; - e.g. the &#39;off&#39;
+        config.  STARTING is used when a runner is runnable but is not
+        running and is not FAILED - i.e. we haven&#39;t given up on it.
+        &#34;&#34;&#34;
+        logger_status = {}
+        with self.logger_map_lock:
+            for logger, runner in self.logger_runner_map.items():
+
+                logger_config = self.logger_config_map[logger]
+                config_name = logger_config.get(&#39;name&#39;, &#39;no name&#39;)
+
+                if not runner.is_runnable():
+                    status = &#39;EXITED&#39;
+                elif runner.is_alive():
+                    status = &#39;RUNNING&#39;
+                elif runner.is_failed():
+                    status = &#39;FAILED&#39;
+                else:
+                    status = &#39;STARTING&#39;
+                logger_status[logger] = {&#39;config&#39;: config_name, &#39;status&#39;: status}
+        return logger_status
+
+
+################################################################################
+if __name__ == &#39;__main__&#39;:
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(&#39;--config&#39;, dest=&#39;config&#39;, action=&#39;store&#39;, required=True,
+                        help=&#39;Initial set of configs to run.&#39;)
+
+    parser.add_argument(&#39;--stderr_file_pattern&#39;, dest=&#39;stderr_file_pattern&#39;,
+                        default=&#39;/var/log/openrvdas/{logger}.stderr&#39;,
+                        help=&#39;Pattern into which logger name will be &#39;
+                        &#39;interpolated to create the file path/name to which &#39;
+                        &#39;the logger\&#39;s stderr will be written. E.g. &#39;
+                        &#39;\&#39;/var/log/openrvdas/{logger}.stderr\&#39;&#39;)
+
+    parser.add_argument(&#39;--max_tries&#39;, dest=&#39;max_tries&#39;, action=&#39;store&#39;,
+                        type=int, default=3, help=&#39;How many times to try a &#39;
+                        &#39;crashing config before giving up on it as failed. If &#39;
+                        &#39;zero, then never stop retrying.&#39;)
+
+    parser.add_argument(&#39;--min_uptime&#39;, dest=&#39;min_uptime&#39;, action=&#39;store&#39;,
+                        type=float, default=60, help=&#39;How many seconds a logger &#39;
+                        &#39;must be up to count as having been successfully &#39;
+                        &#39;started and reset max_tries.&#39;)
+
+    parser.add_argument(&#39;--interval&#39;, dest=&#39;interval&#39;, action=&#39;store&#39;,
+                        type=float, default=1, help=&#39;How many seconds between &#39;
+                        &#39;checks that a logger is still running.&#39;)
+
+    parser.add_argument(&#39;-v&#39;, &#39;--verbosity&#39;, dest=&#39;verbosity&#39;,
+                        default=0, action=&#39;count&#39;,
+                        help=&#39;Increase output verbosity&#39;)
+
+    parser.add_argument(&#39;-V&#39;, &#39;--logger_verbosity&#39;, dest=&#39;logger_verbosity&#39;,
+                        default=0, action=&#39;count&#39;,
+                        help=&#39;Increase output verbosity of component loggers&#39;)
+
+    parser.add_argument(&#39;--mode&#39;, dest=&#39;mode&#39;, required=True,
+                        help=&#39;Cruise mode to select&#39;)
+
+    args = parser.parse_args()
+
+    # Set up logging first of all
+
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
+    logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, level=log_level)
+
+    # What level do we want our component loggers to write?
+    logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
+
+    config = read_config(args.config)
+
+    mode_config_names = config.get(&#39;modes&#39;).get(args.mode)
+    all_configs = config.get(&#39;configs&#39;)
+    mode_configs = {logger: all_configs.get(mode_config_names[logger])
+                    for logger in mode_config_names}
+    sup = LoggerSupervisor(configs=mode_configs,
+                           stderr_file_pattern=args.stderr_file_pattern,
+                           max_tries=args.max_tries,
+                           min_uptime=args.min_uptime,
+                           interval=args.interval,
+                           logger_log_level=logger_log_level
+                           )
+    sup.run()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="server.logger_supervisor.LoggerSupervisor"><code class="flex name class">
+<span>class <span class="ident">LoggerSupervisor</span></span>
+<span>(</span><span>configs=None, stderr_file_pattern=None, max_tries=3, min_uptime=10, interval=1, logger_log_level=30)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given a map of {logger:config}, start the configs and make sure
+they keep running.</p>
+<pre><code>configs   - dict of {logger_name: config} that are to be run
+
+stderr_file_pattern - Pattern into which logger name will be interpolated
+           to create the file path/name to which the logger's stderr
+           will be written. E.g. '/var/log/openrvdas/{logger}.stderr'
+
+max_tries - number of times to try a dead logger config. If zero, then
+            never stop retrying.
+
+min_uptime - How many seconds a logger must be up to count as having been
+             successfully started and reset max_tries.
+
+interval - How many seconds between checks that a logger is still running.
+
+logger_log_level - at what system log level the logger should log (if
+            it were a woodchuck chucking wood)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LoggerSupervisor:
+    &#34;&#34;&#34;Given a map of {logger:config}, start the configs and make sure
+   they keep running.
+    &#34;&#34;&#34;
+
+    def __init__(self, configs=None, stderr_file_pattern=None,
+                 max_tries=3, min_uptime=10, interval=1,
+                 logger_log_level=logging.WARNING):
+        &#34;&#34;&#34;
+        ```
+        configs   - dict of {logger_name: config} that are to be run
+
+        stderr_file_pattern - Pattern into which logger name will be interpolated
+                   to create the file path/name to which the logger&#39;s stderr
+                   will be written. E.g. &#39;/var/log/openrvdas/{logger}.stderr&#39;
+
+        max_tries - number of times to try a dead logger config. If zero, then
+                    never stop retrying.
+
+        min_uptime - How many seconds a logger must be up to count as having been
+                     successfully started and reset max_tries.
+
+        interval - How many seconds between checks that a logger is still running.
+
+        logger_log_level - at what system log level the logger should log (if
+                    it were a woodchuck chucking wood)
+        ```
+        &#34;&#34;&#34;
+        self.configs = configs or {}
+        self.stderr_file_pattern = stderr_file_pattern
+        self.max_tries = max_tries
+        self.min_uptime = min_uptime
+        self.interval = interval
+        self.logger_log_level = logger_log_level
+
+        # Where we store the map from logger name to config actually  # noqa: E402
+        # running. Also map from logger name to LoggerRunner that&#39;s doing  # noqa: E402
+        # the actual work.
+        self.logger_config_map = {}
+        self.logger_runner_map = {}
+        self.logger_map_lock = threading.Lock()
+
+        # When each logger was last restarted, and how many times it has
+        # failed shortly after start so we know when to give up.
+        self.logger_last_started = {}
+        self.logger_restart_counts = {}
+
+        self.quit_flag = False
+
+    ###################
+    def run(self):
+        if self.configs:
+            self.update_configs()
+
+        while not self.quit_flag:
+            self._check_loggers()
+            time.sleep(self.interval)
+
+    ###################
+    def quit(self):
+        self.quit_flag = True
+
+        with self.logger_map_lock:
+            loggers = set(self.logger_runner_map)
+            for logger in loggers:
+                self._delete_logger(logger)
+
+    ###################
+    def _check_loggers(self):
+        logging.info(&#39;Checking loggers...&#39;)
+        with self.logger_map_lock:
+            for logger, runner in self.logger_runner_map.items():
+                if not runner.is_runnable():
+                    logging.info(&#39;%s - okay; not runnable&#39;, logger)
+                    continue
+
+                if runner.is_alive():
+                    logging.info(&#39;%s - okay; running&#39;, logger)
+                    continue
+
+                if runner.is_failed():
+                    logging.info(&#39;%s - failed&#39;, logger)
+                    continue
+
+                # If we&#39;re here, runner is runnable is not running, and hasn&#39;t
+                # yet been labeled as a failed logger.
+                logging.warning(&#39;%s unexpectedly dead.&#39;, logger)
+
+                # How long has it been since we&#39;ve restarted? If a long enough
+                # time has passed, give it a clean slate.
+                last_started = self.logger_last_started.get(logger, 0)
+                restart_count = self.logger_restart_counts.get(logger, 0)
+                if time.time() - last_started &lt; self.min_uptime:
+                    restart_count += 1
+                else:
+                    restart_count = 0
+                self.logger_restart_counts[logger] = restart_count
+
+                # If we&#39;ve restarted too many times recently, declare the
+                # logger failed and move on.
+                if restart_count &gt;= self.max_tries:
+                    runner.failed = True
+                    logging.warning(&#39;%s has failed %s times; not restarting&#39;,
+                                    logger, restart_count)
+                    continue
+
+                # If here, we&#39;re going to try restarting.
+                logging.info(&#39;%s - restarting&#39;, logger)
+                self.logger_last_started[logger] = time.time()
+                runner.start()
+
+    ###################
+    def _start_logger(self, logger, config):
+        &#34;&#34;&#34;ONLY CALL THIS FROM WITHIN update_configs for thread safety.&#34;&#34;&#34;
+        config_name = config.get(&#39;name&#39;, logger + &#39;_config&#39;)
+        logging.info(&#39;Called start_logger for %s: %s&#39;, logger, config_name)
+
+        self.logger_config_map[logger] = config
+        stderr_file = self.stderr_file_pattern.format(logger=logger)
+
+        runner = LoggerRunner(config=config, name=logger,
+                              stderr_file=stderr_file,
+                              logger_log_level=self.logger_log_level)
+        self.logger_runner_map[logger] = runner
+        self.logger_runner_map[logger].start()
+
+    ###################
+
+    def _delete_logger(self, logger):
+        &#34;&#34;&#34;ONLY CALL THIS FROM WITHIN update_configs for thread safety.&#34;&#34;&#34;
+        runner = self.logger_runner_map.get(logger)
+        if not runner:
+            logging.warning(&#39;Stale logger %s not found?!?&#39;, logger)
+            return
+        logging.info(&#39;Waiting for logger %s to complete&#39;, logger)
+        runner.quit()
+
+        del self.logger_config_map[logger]
+        del self.logger_runner_map[logger]
+
+    ###################
+    def update_configs(self, configs=None):
+        &#34;&#34;&#34;Receive a new map of logger:config and start/stop loggers as
+        necessary.
+        &#34;&#34;&#34;
+        configs = configs or self.configs
+        if not configs:
+            logging.warning(&#39;No logger configs to run!&#39;)
+
+        with self.logger_map_lock:
+            stale_loggers = set(self.logger_config_map) - set(configs)
+            new_loggers = set(configs) - set(self.logger_config_map)
+            other_loggers = set(self.logger_config_map) - stale_loggers - new_loggers
+
+            logging.debug(&#39;Stale: %s&#39;, stale_loggers)
+            logging.debug(&#39;New: %s&#39;, new_loggers)
+            logging.debug(&#39;Other: %s&#39;, other_loggers)
+
+            # Find and shut down loggers that don&#39;t exist in our new configs
+            for logger in stale_loggers:
+                logging.info(&#39;Shutting down logger %s.&#39;, logger)
+                self._delete_logger(logger)
+
+            # Add new loggers that have first appeared in our new config and
+            # start them up.
+            for new_logger in new_loggers:
+                new_config = configs[new_logger]
+                logging.info(&#39;Starting new logger %s with %s.&#39;, new_logger,
+                             new_config.get(&#39;name&#39;, &#39;no_name&#39;))
+                self._start_logger(new_logger, new_config)
+
+            # For existing loggers, see whether their configs have
+            # changed. If so stop and restart with new config.  start them
+            # up.
+            for logger in other_loggers:
+                new_config = configs[logger]
+                old_config = self.logger_config_map[logger]
+                if new_config == old_config:
+                    logging.debug(&#39;Config for %s unchanged.&#39;, logger)
+                    continue
+
+                logging.info(&#39;Updating %s from %s to %s&#39;, logger,
+                             old_config.get(&#39;name&#39;, &#39;no_name&#39;),
+                             new_config.get(&#39;name&#39;, &#39;no_name&#39;))
+                self._delete_logger(logger)
+                self._start_logger(logger, new_config)
+
+    ###################
+
+    def get_status(self):
+        &#34;&#34;&#34;Return a dict of the current config name and current run status of
+        each logger in the form, e.g.:
+
+        {&#39;s330&#39;: {&#39;config&#39;:&#39;s330-&gt;net&#39;, &#39;status&#39;:&#39;RUNNING&#39;},
+         &#39;gyr1&#39;: {&#39;config&#39;:&#39;gyr1-&gt;file&#39;, &#39;status&#39;:&#39;FAILED&#39;},
+        }
+
+        Possible status are EXITED, RUNNING, FAILED and STARTING. EXITED
+        is the status when a logger is not &#39;runnable&#39; - e.g. the &#39;off&#39;
+        config.  STARTING is used when a runner is runnable but is not
+        running and is not FAILED - i.e. we haven&#39;t given up on it.
+        &#34;&#34;&#34;
+        logger_status = {}
+        with self.logger_map_lock:
+            for logger, runner in self.logger_runner_map.items():
+
+                logger_config = self.logger_config_map[logger]
+                config_name = logger_config.get(&#39;name&#39;, &#39;no name&#39;)
+
+                if not runner.is_runnable():
+                    status = &#39;EXITED&#39;
+                elif runner.is_alive():
+                    status = &#39;RUNNING&#39;
+                elif runner.is_failed():
+                    status = &#39;FAILED&#39;
+                else:
+                    status = &#39;STARTING&#39;
+                logger_status[logger] = {&#39;config&#39;: config_name, &#39;status&#39;: status}
+        return logger_status</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="server.logger_supervisor.LoggerSupervisor.get_status"><code class="name flex">
+<span>def <span class="ident">get_status</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a dict of the current config name and current run status of
+each logger in the form, e.g.:</p>
+<p>{'s330': {'config':'s330-&gt;net', 'status':'RUNNING'},
+'gyr1': {'config':'gyr1-&gt;file', 'status':'FAILED'},
+}</p>
+<p>Possible status are EXITED, RUNNING, FAILED and STARTING. EXITED
+is the status when a logger is not 'runnable' - e.g. the 'off'
+config.
+STARTING is used when a runner is runnable but is not
+running and is not FAILED - i.e. we haven't given up on it.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_status(self):
+    &#34;&#34;&#34;Return a dict of the current config name and current run status of
+    each logger in the form, e.g.:
+
+    {&#39;s330&#39;: {&#39;config&#39;:&#39;s330-&gt;net&#39;, &#39;status&#39;:&#39;RUNNING&#39;},
+     &#39;gyr1&#39;: {&#39;config&#39;:&#39;gyr1-&gt;file&#39;, &#39;status&#39;:&#39;FAILED&#39;},
+    }
+
+    Possible status are EXITED, RUNNING, FAILED and STARTING. EXITED
+    is the status when a logger is not &#39;runnable&#39; - e.g. the &#39;off&#39;
+    config.  STARTING is used when a runner is runnable but is not
+    running and is not FAILED - i.e. we haven&#39;t given up on it.
+    &#34;&#34;&#34;
+    logger_status = {}
+    with self.logger_map_lock:
+        for logger, runner in self.logger_runner_map.items():
+
+            logger_config = self.logger_config_map[logger]
+            config_name = logger_config.get(&#39;name&#39;, &#39;no name&#39;)
+
+            if not runner.is_runnable():
+                status = &#39;EXITED&#39;
+            elif runner.is_alive():
+                status = &#39;RUNNING&#39;
+            elif runner.is_failed():
+                status = &#39;FAILED&#39;
+            else:
+                status = &#39;STARTING&#39;
+            logger_status[logger] = {&#39;config&#39;: config_name, &#39;status&#39;: status}
+    return logger_status</code></pre>
+</details>
+</dd>
+<dt id="server.logger_supervisor.LoggerSupervisor.quit"><code class="name flex">
+<span>def <span class="ident">quit</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def quit(self):
+    self.quit_flag = True
+
+    with self.logger_map_lock:
+        loggers = set(self.logger_runner_map)
+        for logger in loggers:
+            self._delete_logger(logger)</code></pre>
+</details>
+</dd>
+<dt id="server.logger_supervisor.LoggerSupervisor.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(self):
+    if self.configs:
+        self.update_configs()
+
+    while not self.quit_flag:
+        self._check_loggers()
+        time.sleep(self.interval)</code></pre>
+</details>
+</dd>
+<dt id="server.logger_supervisor.LoggerSupervisor.update_configs"><code class="name flex">
+<span>def <span class="ident">update_configs</span></span>(<span>self, configs=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Receive a new map of logger:config and start/stop loggers as
+necessary.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_configs(self, configs=None):
+    &#34;&#34;&#34;Receive a new map of logger:config and start/stop loggers as
+    necessary.
+    &#34;&#34;&#34;
+    configs = configs or self.configs
+    if not configs:
+        logging.warning(&#39;No logger configs to run!&#39;)
+
+    with self.logger_map_lock:
+        stale_loggers = set(self.logger_config_map) - set(configs)
+        new_loggers = set(configs) - set(self.logger_config_map)
+        other_loggers = set(self.logger_config_map) - stale_loggers - new_loggers
+
+        logging.debug(&#39;Stale: %s&#39;, stale_loggers)
+        logging.debug(&#39;New: %s&#39;, new_loggers)
+        logging.debug(&#39;Other: %s&#39;, other_loggers)
+
+        # Find and shut down loggers that don&#39;t exist in our new configs
+        for logger in stale_loggers:
+            logging.info(&#39;Shutting down logger %s.&#39;, logger)
+            self._delete_logger(logger)
+
+        # Add new loggers that have first appeared in our new config and
+        # start them up.
+        for new_logger in new_loggers:
+            new_config = configs[new_logger]
+            logging.info(&#39;Starting new logger %s with %s.&#39;, new_logger,
+                         new_config.get(&#39;name&#39;, &#39;no_name&#39;))
+            self._start_logger(new_logger, new_config)
+
+        # For existing loggers, see whether their configs have
+        # changed. If so stop and restart with new config.  start them
+        # up.
+        for logger in other_loggers:
+            new_config = configs[logger]
+            old_config = self.logger_config_map[logger]
+            if new_config == old_config:
+                logging.debug(&#39;Config for %s unchanged.&#39;, logger)
+                continue
+
+            logging.info(&#39;Updating %s from %s to %s&#39;, logger,
+                         old_config.get(&#39;name&#39;, &#39;no_name&#39;),
+                         new_config.get(&#39;name&#39;, &#39;no_name&#39;))
+            self._delete_logger(logger)
+            self._start_logger(logger, new_config)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="server" href="index.html">server</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="server.logger_supervisor.LoggerSupervisor" href="#server.logger_supervisor.LoggerSupervisor">LoggerSupervisor</a></code></h4>
+<ul class="">
+<li><code><a title="server.logger_supervisor.LoggerSupervisor.get_status" href="#server.logger_supervisor.LoggerSupervisor.get_status">get_status</a></code></li>
+<li><code><a title="server.logger_supervisor.LoggerSupervisor.quit" href="#server.logger_supervisor.LoggerSupervisor.quit">quit</a></code></li>
+<li><code><a title="server.logger_supervisor.LoggerSupervisor.run" href="#server.logger_supervisor.LoggerSupervisor.run">run</a></code></li>
+<li><code><a title="server.logger_supervisor.LoggerSupervisor.update_configs" href="#server.logger_supervisor.LoggerSupervisor.update_configs">update_configs</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

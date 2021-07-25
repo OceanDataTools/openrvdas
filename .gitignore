@@ -13,16 +13,22 @@ __pycache__
 db.sqlite3
 django_gui/migrations
 
+# Files copied from their respective .dist sources
+# by utils/install_openrvdas.sh
 django_gui/settings.py
+django_gui/settings.py-e
 database/settings.py
+database/settings.py-e
 logger/settings.py
 hapi/settings.py
 display/js/widgets/settings.js
-static/
 
+# Files created by utils/install_openrvdas.sh
 django_gui/openrvdas_nginx.conf
 django_gui/openrvdas_uwsgi.ini
 django_gui/uwsgi_params
+
+static/
 
 # PyCharm
 .idea/
@@ -41,11 +47,24 @@ local/rcrv/settings.py
 local/rcrv/config_template.yaml
 local/rcrv/.coriolix_preferences
 
+# local for Scripps Institution of Oceanography
+#
+# SIO is testing this software out and wants the ability to make rapid
+# changes for a while.  Once stable, we can more define what we
+# want to share with better granularity.
+local/sio/
+
 # Created by build scripts
-.build_openrvdas_preferences
+.install_influxdb_preferences
+.install_openrvdas_preferences
 
 # Symlink for legacy widget paths
 widgets
 
 # For optional doc server
 mkdocs.yml
+
+# Contrib logger creation tool
+contrib/utils/JSON_YAML_Creator/node_modules
+contrib/utils/JSON_YAML_Creator/package-lock.json
+contrib/utils/JSON_YAML_Creator/yarn.lock

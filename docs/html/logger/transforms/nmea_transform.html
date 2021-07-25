@@ -3,17 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.transforms.nmea_transform API documentation</title>
 <meta name="description" content="Take in a dict of various values and emit NMEA strings appropriate
 for them. NMEATransform is a thin wrapper around a set of individual
 NMEA …" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -24,7 +26,7 @@ NMEA …" />
 <section id="section-intro">
 <p>Take in a dict of various values and emit NMEA strings appropriate
 for them. NMEATransform is a thin wrapper around a set of individual
-NMEA message-generating transforms. </p>
+NMEA message-generating transforms.</p>
 <p>Each transform's <strong>init</strong>(self) method should expect a single 'kwargs'
 dict as its initialization argument, in which it will search for the
 keyword args it needs in order to function. If it does not find the
@@ -44,7 +46,7 @@ used elsewhere.</p>
 <pre><code class="python">#!/usr/bin/env python3
 &#34;&#34;&#34;Take in a dict of various values and emit NMEA strings appropriate
 for them. NMEATransform is a thin wrapper around a set of individual
-NMEA message-generating transforms. 
+NMEA message-generating transforms.
 
 Each transform&#39;s __init__(self) method should expect a single &#39;kwargs&#39;
 dict as its initialization argument, in which it will search for the
@@ -62,66 +64,64 @@ Each transform should return a (possibly empty) list of NMEA strings.
 If they&#39;re not too terribly ugly, the NMEA transforms should be placed
 in this file so as to minimize the risk that they may be inadvertently
 used elsewhere.
-
 &#34;&#34;&#34;
+# flake8: noqa E501  - ignore long comment lines that describe formats
 
 import logging
-import sys
 
 # For efficient checksum code
 from functools import reduce
 from operator import xor
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.utils.timestamp import time_str
-from logger.transforms.derived_data_transform import DerivedDataTransform
 
 ############################
 def checksum(source):
-  &#34;&#34;&#34;Return hex checksum for source string.&#34;&#34;&#34;
-  return &#39;%02X&#39; % reduce(xor, (ord(c) for c in source))
+    &#34;&#34;&#34;Return hex checksum for source string.&#34;&#34;&#34;
+    return &#39;%02X&#39; % reduce(xor, (ord(c) for c in source))
+
 
 ################################################################################
 class NMEATransform:
-  &#34;&#34;&#34;Call our various component transforms and generate NMEA strings from them.
-  &#34;&#34;&#34;
-  def __init__(self, **kwargs):
-    self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+    &#34;&#34;&#34;Call our various component transforms and generate NMEA strings from them.
+    &#34;&#34;&#34;
 
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Expect a record dict (with &#39;timestamp&#39; and &#39;fields&#39; keys.&#34;&#34;&#34;
-    results = []
+    def __init__(self, **kwargs):
+        self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
 
-    # Do we have more than one record here? Normalize so that
-    # following code assumes a list of records.
-    if not type(record) is list:
-      record = [record]
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Expect a record dict (with &#39;timestamp&#39; and &#39;fields&#39; keys.&#34;&#34;&#34;
+        results = []
 
-    for single_record in record:
-      for t in self.transforms:
-        result = t.transform(single_record)
-        logging.debug(&#39;transform %s: %s&#39;, t, result)
+        # Do we have more than one record here? Normalize so that
+        # following code assumes a list of records.
+        if not type(record) is list:
+            record = [record]
 
-        # Transforms may return zero, one or more results
-        if not result:
-          continue
-        elif type(result) is list:
-          results.extend(result)
+        for single_record in record:
+            for t in self.transforms:
+                result = t.transform(single_record)
+                logging.debug(&#39;transform %s: %s&#39;, t, result)
+
+                # Transforms may return zero, one or more results
+                if not result:
+                    continue
+                elif type(result) is list:
+                    results.extend(result)
+                else:
+                    results.append(result)
+
+        # Just keep the results that are non-empty
+        pruned_results = [r for r in results if r]
+
+        # Return None, a single result or a list of results
+        if len(pruned_results) == 0:
+            return None
+        elif len(pruned_results) == 1:
+            return pruned_results[0]
         else:
-          results.append(result)
+            return pruned_results
 
-    # Just keep the results that are non-empty
-    pruned_results = [r for r in results if r]
-
-    # Return None, a single result or a list of results
-    if len(pruned_results) == 0:
-      return None
-    elif len(pruned_results) == 1:
-      return pruned_results[0]
-    else:
-      return pruned_results
 
 ################################################################################
 &#34;&#34;&#34;MWD - Wind Direction &amp; Speed
@@ -140,102 +140,106 @@ vessel&#39;s magnetic variation, we can&#39;t generate the magnetic wind
 direction, so omit if not available.
 &#34;&#34;&#34;
 ################################################################################
+
+
 class MWDTransform:
-  &#34;&#34;&#34;Output a NMEA MWD string, given true wind and (when available)
-  magnetic variation.
-  &#34;&#34;&#34;
-  def __init__(self, kwargs):
+    &#34;&#34;&#34;Output a NMEA MWD string, given true wind and (when available)
+    magnetic variation.
     &#34;&#34;&#34;
-    Look for these keys in the kwargs dict:
-    ```
-    true_wind_dir_field
-             Field name to look for true wind direction
-    true_wind_speed_kt_field
-             Field name to look for wind speed in knots. Either this
-             or true_wind_speed_ms_field must be non-empty.
-    true_wind_speed_ms_field
-             Field name to look for wind speed in meters per second.
-             Either this or true_wind_speed_kt_field must be non-empty.
-    magnetic_variation_field
-             Vessel magnetic variation. If omitted, only true winds
-             will be emitted.
-    mwd_talker_id
-             Should be format &#39;--MWD&#39; to identify the instrument
-             that&#39;s creating the message.
-    ```
-    &#34;&#34;&#34;
-    self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;, None)
-    self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;, None)
-    self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;, None)
-    self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;, None)
-    self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;, None)
 
-    self.true_wind_dir = None
-    self.true_wind_speed_kt = None
-    self.true_wind_speed_ms = None
-    self.magnetic_variation = None
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        true_wind_dir_field
+                 Field name to look for true wind direction
+        true_wind_speed_kt_field
+                 Field name to look for wind speed in knots. Either this
+                 or true_wind_speed_ms_field must be non-empty.
+        true_wind_speed_ms_field
+                 Field name to look for wind speed in meters per second.
+                 Either this or true_wind_speed_kt_field must be non-empty.
+        magnetic_variation_field
+                 Vessel magnetic variation. If omitted, only true winds
+                 will be emitted.
+        mwd_talker_id
+                 Should be format &#39;--MWD&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+        self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;, None)
+        self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;, None)
+        self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;, None)
+        self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;, None)
+        self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;, None)
 
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Incorporate any useable fields in this record. If it gives us a
-    new MWD record, return it.
-    &#34;&#34;&#34;
-    # Check that we&#39;ve got the right record type - it should be a
-    # single record.
-    if not record or type(record) is not dict:
-      logging.warning(&#39;Improper type for record: %s&#39;, type(record))
-      return None
-    fields = record.get(&#39;fields&#39;, None)
-    if not fields:
-      logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
-      return None
-    
-    # Grab any relevant values
-    self.true_wind_dir = fields.get(self.true_wind_dir_field,
-                                    self.true_wind_dir)
-    if self.true_wind_speed_kt_field:
-      self.true_wind_speed_kt = fields.get(self.true_wind_speed_kt_field,
-                                           self.true_wind_speed_kt)
-    if self.true_wind_speed_ms_field:
-      self.true_wind_speed_ms = fields.get(self.true_wind_speed_ms_field,
-                                           self.true_wind_speed_ms)
-    if self.magnetic_variation_field:
-      self.magnetic_variation = fields.get(self.magnetic_variation_field,
-                                           self.magnetic_variation)
+        self.true_wind_dir = None
+        self.true_wind_speed_kt = None
+        self.true_wind_speed_ms = None
+        self.magnetic_variation = None
 
-    # Do we have enough values to emit a record? If not, go home.
-    if self.true_wind_dir is None:
-      logging.debug(&#39;Not all required values present - skipping&#39;)
-      return None
-    if self.true_wind_speed_kt is None and self.true_wind_speed_ms is None:
-      logging.debug(&#39;Not all required values present - skipping&#39;)
-      return None
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record. If it gives us a
+        new MWD record, return it.
+        &#34;&#34;&#34;
+        # Check that we&#39;ve got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+            return None
 
-    # Are we filling in meters per second from knots?
-    if self.true_wind_speed_ms_field is None and \
-       self.true_wind_speed_kt_field and \
-       self.true_wind_speed_kt is not None:
-      self.true_wind_speed_ms = self.true_wind_speed_kt * 0.514444
+        # Grab any relevant values
+        self.true_wind_dir = fields.get(self.true_wind_dir_field,
+                                        self.true_wind_dir)
+        if self.true_wind_speed_kt_field:
+            self.true_wind_speed_kt = fields.get(self.true_wind_speed_kt_field,
+                                                 self.true_wind_speed_kt)
+        if self.true_wind_speed_ms_field:
+            self.true_wind_speed_ms = fields.get(self.true_wind_speed_ms_field,
+                                                 self.true_wind_speed_ms)
+        if self.magnetic_variation_field:
+            self.magnetic_variation = fields.get(self.magnetic_variation_field,
+                                                 self.magnetic_variation)
 
-    # Are we filling in knots from meters per second from?
-    if self.true_wind_speed_kt_field is None and \
-       self.true_wind_speed_ms_field and \
-       self.true_wind_speed_ms is not None:
-      self.true_wind_speed_kt = self.true_wind_speed_kt * 1.94384
+        # Do we have enough values to emit a record? If not, go home.
+        if self.true_wind_dir is None:
+            logging.debug(&#39;Not all required values present - skipping&#39;)
+            return None
+        if self.true_wind_speed_kt is None and self.true_wind_speed_ms is None:
+            logging.debug(&#39;Not all required values present - skipping&#39;)
+            return None
 
-    # Do we have a magnetic variation? If so, provide mag winds,
-    # otherwise use an empty string.
-    if self.magnetic_variation is not None:
-      mag_winds = &#39;%3.1f&#39; % (self.true_wind_dir - self.magnetic_variation)
-    else:
-      mag_winds = &#39;&#39;
+        # Are we filling in meters per second from knots?
+        if self.true_wind_speed_ms_field is None and \
+           self.true_wind_speed_kt_field and \
+           self.true_wind_speed_kt is not None:
+            self.true_wind_speed_ms = self.true_wind_speed_kt * 0.514444
 
-    # Assemble string, compute checksum, and return it.
-    result_str = &#39;%s,%3.1f,T,%s,M,%3.1f,N,%3.1f,M&#39; % \
-                 (self.mwd_talker_id, self.true_wind_dir, mag_winds,
-                   self.true_wind_speed_kt, self.true_wind_speed_ms)
-    checksum = reduce(xor, (ord(c) for c in result_str))
-    return &#39;$%s*%02X&#39; % (result_str, checksum)
+        # Are we filling in knots from meters per second from?
+        if self.true_wind_speed_kt_field is None and \
+           self.true_wind_speed_ms_field and \
+           self.true_wind_speed_ms is not None:
+            self.true_wind_speed_kt = self.true_wind_speed_kt * 1.94384
+
+        # Do we have a magnetic variation? If so, provide mag winds,
+        # otherwise use an empty string.
+        if self.magnetic_variation is not None:
+            mag_winds = &#39;%3.1f&#39; % (self.true_wind_dir - self.magnetic_variation)
+        else:
+            mag_winds = &#39;&#39;
+
+        # Assemble string, compute checksum, and return it.
+        result_str = &#39;%s,%3.1f,T,%s,M,%3.1f,N,%3.1f,M&#39; % \
+                     (self.mwd_talker_id, self.true_wind_dir, mag_winds,
+                      self.true_wind_speed_kt, self.true_wind_speed_ms)
+        checksum = reduce(xor, (ord(c) for c in result_str))
+        return &#39;$%s*%02X&#39; % (result_str, checksum)
+
 
 #################################################################################
 &#34;&#34;&#34;Take in records and emit a NMEA XDR string, as per format:
@@ -267,83 +271,86 @@ single record and count on whatever gets them next (UDPWriter or
 TextFileWriter, for example) acting appropriately.
 &#34;&#34;&#34;
 ################################################################################
+
+
 class XDRTransform:
-  &#34;&#34;&#34;Output a NMEA XDR string, given whatever variables we can find.
-  &#34;&#34;&#34;
-  def __init__(self, kwargs):
+    &#34;&#34;&#34;Output a NMEA XDR string, given whatever variables we can find.
     &#34;&#34;&#34;
-    Look for these keys in the kwargs dict:
-    ```
-    barometer_field
-             Name of field that contains barometric pressure.
-    barometer_output_field
-             Transducer name of that should be output with barometer data.
-             Defaults to barometer_field.
-    air_temp_field
-             Name of field that contains air temperature
-    air_temp_output_field
-             Transducer name of that should be output with air temp data.
-             Defaults to air_temp_field.
-    sea_temp_field
-             Name of field that contains water temperature
-    sea_temp_output_field
-             Transducer name of that should be output with sea temp data.
-             Defaults to sea_temp_field.
-    talker_id
-             Should be format &#39;--XDR&#39; to identify the instrument
-             that&#39;s creating the message.
-    ```
-    &#34;&#34;&#34;
-    self.barometer_field = kwargs.get(&#39;barometer_field&#39;, None)
-    self.barometer_output_field = kwargs.get(&#39;barometer_output_field&#39;,
-                                             self.barometer_field)
-    self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;, None)
-    self.air_temp_output_field = kwargs.get(&#39;air_temp_output_field&#39;,
-                                            self.air_temp_field)
-    self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;, None)
-    self.sea_temp_output_field = kwargs.get(&#39;sea_temp_output_field&#39;,
-                                            self.sea_temp_field)
-    self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;, None)
 
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
-    new true wind value, return the results.
-    &#34;&#34;&#34;
-    # Assume we have a single record; check that we&#39;ve got the right
-    # record type.
-    if not record or type(record) is not dict:
-      logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
-      return None
-    fields = record.get(&#39;fields&#39;, None)
-    if not fields:
-      logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
-      return None
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        barometer_field
+                 Name of field that contains barometric pressure.
+        barometer_output_field
+                 Transducer name of that should be output with barometer data.
+                 Defaults to barometer_field.
+        air_temp_field
+                 Name of field that contains air temperature
+        air_temp_output_field
+                 Transducer name of that should be output with air temp data.
+                 Defaults to air_temp_field.
+        sea_temp_field
+                 Name of field that contains water temperature
+        sea_temp_output_field
+                 Transducer name of that should be output with sea temp data.
+                 Defaults to sea_temp_field.
+        talker_id
+                 Should be format &#39;--XDR&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+        self.barometer_field = kwargs.get(&#39;barometer_field&#39;, None)
+        self.barometer_output_field = kwargs.get(&#39;barometer_output_field&#39;,
+                                                 self.barometer_field)
+        self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;, None)
+        self.air_temp_output_field = kwargs.get(&#39;air_temp_output_field&#39;,
+                                                self.air_temp_field)
+        self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;, None)
+        self.sea_temp_output_field = kwargs.get(&#39;sea_temp_output_field&#39;,
+                                                self.sea_temp_field)
+        self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;, None)
 
-    # Grab any relevant values
-    results = []
-    if self.barometer_field in fields:
-      barometer = fields.get(self.barometer_field)
-      barometer_data = &#39;%s,P,%s,B,%s&#39; % (self.xdr_talker_id, barometer,
-                                         self.barometer_output_field)
-      barometer_str = &#39;$%s*%s&#39; % (barometer_data, checksum(barometer_data))
-      results.append(barometer_str)
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
+        new true wind value, return the results.
+        &#34;&#34;&#34;
+        # Assume we have a single record; check that we&#39;ve got the right
+        # record type.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
+            return None
 
-    if self.air_temp_field in fields:
-      air_temp = fields.get(self.air_temp_field)
-      air_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(air_temp),
-                                           self.air_temp_output_field)
-      air_temp_str = &#39;$%s*%s&#39; % (air_temp_data, checksum(air_temp_data))
-      results.append(air_temp_str)
+        # Grab any relevant values
+        results = []
+        if self.barometer_field in fields:
+            barometer = fields.get(self.barometer_field)
+            barometer_data = &#39;%s,P,%s,B,%s&#39; % (self.xdr_talker_id, barometer,
+                                               self.barometer_output_field)
+            barometer_str = &#39;$%s*%s&#39; % (barometer_data, checksum(barometer_data))
+            results.append(barometer_str)
 
-    if self.sea_temp_field in fields:
-      sea_temp = fields.get(self.sea_temp_field)
-      sea_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(sea_temp),
-                                           self.sea_temp_output_field)
-      sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
-      results.append(sea_temp_str)
+        if self.air_temp_field in fields:
+            air_temp = fields.get(self.air_temp_field)
+            air_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(air_temp),
+                                                 self.air_temp_output_field)
+            air_temp_str = &#39;$%s*%s&#39; % (air_temp_data, checksum(air_temp_data))
+            results.append(air_temp_str)
 
-    return results</code></pre>
+        if self.sea_temp_field in fields:
+            sea_temp = fields.get(self.sea_temp_field)
+            sea_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(sea_temp),
+                                                 self.sea_temp_output_field)
+            sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
+            results.append(sea_temp_str)
+
+        return results</code></pre>
 </details>
 </section>
 <section>
@@ -357,14 +364,14 @@ class XDRTransform:
 <span>def <span class="ident">checksum</span></span>(<span>source)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return hex checksum for source string.</p></section>
+<div class="desc"><p>Return hex checksum for source string.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def checksum(source):
-  &#34;&#34;&#34;Return hex checksum for source string.&#34;&#34;&#34;
-  return &#39;%02X&#39; % reduce(xor, (ord(c) for c in source))</code></pre>
+    &#34;&#34;&#34;Return hex checksum for source string.&#34;&#34;&#34;
+    return &#39;%02X&#39; % reduce(xor, (ord(c) for c in source))</code></pre>
 </details>
 </dd>
 </dl>
@@ -377,7 +384,7 @@ class XDRTransform:
 <span>(</span><span>kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Output a NMEA MWD string, given true wind and (when available)
+<div class="desc"><p>Output a NMEA MWD string, given true wind and (when available)
 magnetic variation.</p>
 <p>Look for these keys in the kwargs dict:</p>
 <pre><code>true_wind_dir_field
@@ -394,107 +401,108 @@ magnetic_variation_field
 mwd_talker_id
          Should be format '--MWD' to identify the instrument
          that's creating the message.
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MWDTransform:
-  &#34;&#34;&#34;Output a NMEA MWD string, given true wind and (when available)
-  magnetic variation.
-  &#34;&#34;&#34;
-  def __init__(self, kwargs):
+    &#34;&#34;&#34;Output a NMEA MWD string, given true wind and (when available)
+    magnetic variation.
     &#34;&#34;&#34;
-    Look for these keys in the kwargs dict:
-    ```
-    true_wind_dir_field
-             Field name to look for true wind direction
-    true_wind_speed_kt_field
-             Field name to look for wind speed in knots. Either this
-             or true_wind_speed_ms_field must be non-empty.
-    true_wind_speed_ms_field
-             Field name to look for wind speed in meters per second.
-             Either this or true_wind_speed_kt_field must be non-empty.
-    magnetic_variation_field
-             Vessel magnetic variation. If omitted, only true winds
-             will be emitted.
-    mwd_talker_id
-             Should be format &#39;--MWD&#39; to identify the instrument
-             that&#39;s creating the message.
-    ```
-    &#34;&#34;&#34;
-    self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;, None)
-    self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;, None)
-    self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;, None)
-    self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;, None)
-    self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;, None)
 
-    self.true_wind_dir = None
-    self.true_wind_speed_kt = None
-    self.true_wind_speed_ms = None
-    self.magnetic_variation = None
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        true_wind_dir_field
+                 Field name to look for true wind direction
+        true_wind_speed_kt_field
+                 Field name to look for wind speed in knots. Either this
+                 or true_wind_speed_ms_field must be non-empty.
+        true_wind_speed_ms_field
+                 Field name to look for wind speed in meters per second.
+                 Either this or true_wind_speed_kt_field must be non-empty.
+        magnetic_variation_field
+                 Vessel magnetic variation. If omitted, only true winds
+                 will be emitted.
+        mwd_talker_id
+                 Should be format &#39;--MWD&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+        self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;, None)
+        self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;, None)
+        self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;, None)
+        self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;, None)
+        self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;, None)
 
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Incorporate any useable fields in this record. If it gives us a
-    new MWD record, return it.
-    &#34;&#34;&#34;
-    # Check that we&#39;ve got the right record type - it should be a
-    # single record.
-    if not record or type(record) is not dict:
-      logging.warning(&#39;Improper type for record: %s&#39;, type(record))
-      return None
-    fields = record.get(&#39;fields&#39;, None)
-    if not fields:
-      logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
-      return None
-    
-    # Grab any relevant values
-    self.true_wind_dir = fields.get(self.true_wind_dir_field,
-                                    self.true_wind_dir)
-    if self.true_wind_speed_kt_field:
-      self.true_wind_speed_kt = fields.get(self.true_wind_speed_kt_field,
-                                           self.true_wind_speed_kt)
-    if self.true_wind_speed_ms_field:
-      self.true_wind_speed_ms = fields.get(self.true_wind_speed_ms_field,
-                                           self.true_wind_speed_ms)
-    if self.magnetic_variation_field:
-      self.magnetic_variation = fields.get(self.magnetic_variation_field,
-                                           self.magnetic_variation)
+        self.true_wind_dir = None
+        self.true_wind_speed_kt = None
+        self.true_wind_speed_ms = None
+        self.magnetic_variation = None
 
-    # Do we have enough values to emit a record? If not, go home.
-    if self.true_wind_dir is None:
-      logging.debug(&#39;Not all required values present - skipping&#39;)
-      return None
-    if self.true_wind_speed_kt is None and self.true_wind_speed_ms is None:
-      logging.debug(&#39;Not all required values present - skipping&#39;)
-      return None
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record. If it gives us a
+        new MWD record, return it.
+        &#34;&#34;&#34;
+        # Check that we&#39;ve got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+            return None
 
-    # Are we filling in meters per second from knots?
-    if self.true_wind_speed_ms_field is None and \
-       self.true_wind_speed_kt_field and \
-       self.true_wind_speed_kt is not None:
-      self.true_wind_speed_ms = self.true_wind_speed_kt * 0.514444
+        # Grab any relevant values
+        self.true_wind_dir = fields.get(self.true_wind_dir_field,
+                                        self.true_wind_dir)
+        if self.true_wind_speed_kt_field:
+            self.true_wind_speed_kt = fields.get(self.true_wind_speed_kt_field,
+                                                 self.true_wind_speed_kt)
+        if self.true_wind_speed_ms_field:
+            self.true_wind_speed_ms = fields.get(self.true_wind_speed_ms_field,
+                                                 self.true_wind_speed_ms)
+        if self.magnetic_variation_field:
+            self.magnetic_variation = fields.get(self.magnetic_variation_field,
+                                                 self.magnetic_variation)
 
-    # Are we filling in knots from meters per second from?
-    if self.true_wind_speed_kt_field is None and \
-       self.true_wind_speed_ms_field and \
-       self.true_wind_speed_ms is not None:
-      self.true_wind_speed_kt = self.true_wind_speed_kt * 1.94384
+        # Do we have enough values to emit a record? If not, go home.
+        if self.true_wind_dir is None:
+            logging.debug(&#39;Not all required values present - skipping&#39;)
+            return None
+        if self.true_wind_speed_kt is None and self.true_wind_speed_ms is None:
+            logging.debug(&#39;Not all required values present - skipping&#39;)
+            return None
 
-    # Do we have a magnetic variation? If so, provide mag winds,
-    # otherwise use an empty string.
-    if self.magnetic_variation is not None:
-      mag_winds = &#39;%3.1f&#39; % (self.true_wind_dir - self.magnetic_variation)
-    else:
-      mag_winds = &#39;&#39;
+        # Are we filling in meters per second from knots?
+        if self.true_wind_speed_ms_field is None and \
+           self.true_wind_speed_kt_field and \
+           self.true_wind_speed_kt is not None:
+            self.true_wind_speed_ms = self.true_wind_speed_kt * 0.514444
 
-    # Assemble string, compute checksum, and return it.
-    result_str = &#39;%s,%3.1f,T,%s,M,%3.1f,N,%3.1f,M&#39; % \
-                 (self.mwd_talker_id, self.true_wind_dir, mag_winds,
-                   self.true_wind_speed_kt, self.true_wind_speed_ms)
-    checksum = reduce(xor, (ord(c) for c in result_str))
-    return &#39;$%s*%02X&#39; % (result_str, checksum)</code></pre>
+        # Are we filling in knots from meters per second from?
+        if self.true_wind_speed_kt_field is None and \
+           self.true_wind_speed_ms_field and \
+           self.true_wind_speed_ms is not None:
+            self.true_wind_speed_kt = self.true_wind_speed_kt * 1.94384
+
+        # Do we have a magnetic variation? If so, provide mag winds,
+        # otherwise use an empty string.
+        if self.magnetic_variation is not None:
+            mag_winds = &#39;%3.1f&#39; % (self.true_wind_dir - self.magnetic_variation)
+        else:
+            mag_winds = &#39;&#39;
+
+        # Assemble string, compute checksum, and return it.
+        result_str = &#39;%s,%3.1f,T,%s,M,%3.1f,N,%3.1f,M&#39; % \
+                     (self.mwd_talker_id, self.true_wind_dir, mag_winds,
+                      self.true_wind_speed_kt, self.true_wind_speed_ms)
+        checksum = reduce(xor, (ord(c) for c in result_str))
+        return &#39;$%s*%02X&#39; % (result_str, checksum)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -502,72 +510,72 @@ mwd_talker_id
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Incorporate any useable fields in this record. If it gives us a
-new MWD record, return it.</p></section>
+<div class="desc"><p>Incorporate any useable fields in this record. If it gives us a
+new MWD record, return it.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def transform(self, record):
-  &#34;&#34;&#34;Incorporate any useable fields in this record. If it gives us a
-  new MWD record, return it.
-  &#34;&#34;&#34;
-  # Check that we&#39;ve got the right record type - it should be a
-  # single record.
-  if not record or type(record) is not dict:
-    logging.warning(&#39;Improper type for record: %s&#39;, type(record))
-    return None
-  fields = record.get(&#39;fields&#39;, None)
-  if not fields:
-    logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
-    return None
-  
-  # Grab any relevant values
-  self.true_wind_dir = fields.get(self.true_wind_dir_field,
-                                  self.true_wind_dir)
-  if self.true_wind_speed_kt_field:
-    self.true_wind_speed_kt = fields.get(self.true_wind_speed_kt_field,
-                                         self.true_wind_speed_kt)
-  if self.true_wind_speed_ms_field:
-    self.true_wind_speed_ms = fields.get(self.true_wind_speed_ms_field,
-                                         self.true_wind_speed_ms)
-  if self.magnetic_variation_field:
-    self.magnetic_variation = fields.get(self.magnetic_variation_field,
-                                         self.magnetic_variation)
+    &#34;&#34;&#34;Incorporate any useable fields in this record. If it gives us a
+    new MWD record, return it.
+    &#34;&#34;&#34;
+    # Check that we&#39;ve got the right record type - it should be a
+    # single record.
+    if not record or type(record) is not dict:
+        logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+        return None
+    fields = record.get(&#39;fields&#39;, None)
+    if not fields:
+        logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+        return None
 
-  # Do we have enough values to emit a record? If not, go home.
-  if self.true_wind_dir is None:
-    logging.debug(&#39;Not all required values present - skipping&#39;)
-    return None
-  if self.true_wind_speed_kt is None and self.true_wind_speed_ms is None:
-    logging.debug(&#39;Not all required values present - skipping&#39;)
-    return None
+    # Grab any relevant values
+    self.true_wind_dir = fields.get(self.true_wind_dir_field,
+                                    self.true_wind_dir)
+    if self.true_wind_speed_kt_field:
+        self.true_wind_speed_kt = fields.get(self.true_wind_speed_kt_field,
+                                             self.true_wind_speed_kt)
+    if self.true_wind_speed_ms_field:
+        self.true_wind_speed_ms = fields.get(self.true_wind_speed_ms_field,
+                                             self.true_wind_speed_ms)
+    if self.magnetic_variation_field:
+        self.magnetic_variation = fields.get(self.magnetic_variation_field,
+                                             self.magnetic_variation)
 
-  # Are we filling in meters per second from knots?
-  if self.true_wind_speed_ms_field is None and \
-     self.true_wind_speed_kt_field and \
-     self.true_wind_speed_kt is not None:
-    self.true_wind_speed_ms = self.true_wind_speed_kt * 0.514444
+    # Do we have enough values to emit a record? If not, go home.
+    if self.true_wind_dir is None:
+        logging.debug(&#39;Not all required values present - skipping&#39;)
+        return None
+    if self.true_wind_speed_kt is None and self.true_wind_speed_ms is None:
+        logging.debug(&#39;Not all required values present - skipping&#39;)
+        return None
 
-  # Are we filling in knots from meters per second from?
-  if self.true_wind_speed_kt_field is None and \
-     self.true_wind_speed_ms_field and \
-     self.true_wind_speed_ms is not None:
-    self.true_wind_speed_kt = self.true_wind_speed_kt * 1.94384
+    # Are we filling in meters per second from knots?
+    if self.true_wind_speed_ms_field is None and \
+       self.true_wind_speed_kt_field and \
+       self.true_wind_speed_kt is not None:
+        self.true_wind_speed_ms = self.true_wind_speed_kt * 0.514444
 
-  # Do we have a magnetic variation? If so, provide mag winds,
-  # otherwise use an empty string.
-  if self.magnetic_variation is not None:
-    mag_winds = &#39;%3.1f&#39; % (self.true_wind_dir - self.magnetic_variation)
-  else:
-    mag_winds = &#39;&#39;
+    # Are we filling in knots from meters per second from?
+    if self.true_wind_speed_kt_field is None and \
+       self.true_wind_speed_ms_field and \
+       self.true_wind_speed_ms is not None:
+        self.true_wind_speed_kt = self.true_wind_speed_kt * 1.94384
 
-  # Assemble string, compute checksum, and return it.
-  result_str = &#39;%s,%3.1f,T,%s,M,%3.1f,N,%3.1f,M&#39; % \
-               (self.mwd_talker_id, self.true_wind_dir, mag_winds,
-                 self.true_wind_speed_kt, self.true_wind_speed_ms)
-  checksum = reduce(xor, (ord(c) for c in result_str))
-  return &#39;$%s*%02X&#39; % (result_str, checksum)</code></pre>
+    # Do we have a magnetic variation? If so, provide mag winds,
+    # otherwise use an empty string.
+    if self.magnetic_variation is not None:
+        mag_winds = &#39;%3.1f&#39; % (self.true_wind_dir - self.magnetic_variation)
+    else:
+        mag_winds = &#39;&#39;
+
+    # Assemble string, compute checksum, and return it.
+    result_str = &#39;%s,%3.1f,T,%s,M,%3.1f,N,%3.1f,M&#39; % \
+                 (self.mwd_talker_id, self.true_wind_dir, mag_winds,
+                  self.true_wind_speed_kt, self.true_wind_speed_ms)
+    checksum = reduce(xor, (ord(c) for c in result_str))
+    return &#39;$%s*%02X&#39; % (result_str, checksum)</code></pre>
 </details>
 </dd>
 </dl>
@@ -577,50 +585,51 @@ new MWD record, return it.</p></section>
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Call our various component transforms and generate NMEA strings from them.</p></section>
+<div class="desc"><p>Call our various component transforms and generate NMEA strings from them.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NMEATransform:
-  &#34;&#34;&#34;Call our various component transforms and generate NMEA strings from them.
-  &#34;&#34;&#34;
-  def __init__(self, **kwargs):
-    self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+    &#34;&#34;&#34;Call our various component transforms and generate NMEA strings from them.
+    &#34;&#34;&#34;
 
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Expect a record dict (with &#39;timestamp&#39; and &#39;fields&#39; keys.&#34;&#34;&#34;
-    results = []
+    def __init__(self, **kwargs):
+        self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
 
-    # Do we have more than one record here? Normalize so that
-    # following code assumes a list of records.
-    if not type(record) is list:
-      record = [record]
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Expect a record dict (with &#39;timestamp&#39; and &#39;fields&#39; keys.&#34;&#34;&#34;
+        results = []
 
-    for single_record in record:
-      for t in self.transforms:
-        result = t.transform(single_record)
-        logging.debug(&#39;transform %s: %s&#39;, t, result)
+        # Do we have more than one record here? Normalize so that
+        # following code assumes a list of records.
+        if not type(record) is list:
+            record = [record]
 
-        # Transforms may return zero, one or more results
-        if not result:
-          continue
-        elif type(result) is list:
-          results.extend(result)
+        for single_record in record:
+            for t in self.transforms:
+                result = t.transform(single_record)
+                logging.debug(&#39;transform %s: %s&#39;, t, result)
+
+                # Transforms may return zero, one or more results
+                if not result:
+                    continue
+                elif type(result) is list:
+                    results.extend(result)
+                else:
+                    results.append(result)
+
+        # Just keep the results that are non-empty
+        pruned_results = [r for r in results if r]
+
+        # Return None, a single result or a list of results
+        if len(pruned_results) == 0:
+            return None
+        elif len(pruned_results) == 1:
+            return pruned_results[0]
         else:
-          results.append(result)
-
-    # Just keep the results that are non-empty
-    pruned_results = [r for r in results if r]
-
-    # Return None, a single result or a list of results
-    if len(pruned_results) == 0:
-      return None
-    elif len(pruned_results) == 1:
-      return pruned_results[0]
-    else:
-      return pruned_results</code></pre>
+            return pruned_results</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -628,43 +637,43 @@ new MWD record, return it.</p></section>
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Expect a record dict (with 'timestamp' and 'fields' keys.</p></section>
+<div class="desc"><p>Expect a record dict (with 'timestamp' and 'fields' keys.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def transform(self, record):
-  &#34;&#34;&#34;Expect a record dict (with &#39;timestamp&#39; and &#39;fields&#39; keys.&#34;&#34;&#34;
-  results = []
+    &#34;&#34;&#34;Expect a record dict (with &#39;timestamp&#39; and &#39;fields&#39; keys.&#34;&#34;&#34;
+    results = []
 
-  # Do we have more than one record here? Normalize so that
-  # following code assumes a list of records.
-  if not type(record) is list:
-    record = [record]
+    # Do we have more than one record here? Normalize so that
+    # following code assumes a list of records.
+    if not type(record) is list:
+        record = [record]
 
-  for single_record in record:
-    for t in self.transforms:
-      result = t.transform(single_record)
-      logging.debug(&#39;transform %s: %s&#39;, t, result)
+    for single_record in record:
+        for t in self.transforms:
+            result = t.transform(single_record)
+            logging.debug(&#39;transform %s: %s&#39;, t, result)
 
-      # Transforms may return zero, one or more results
-      if not result:
-        continue
-      elif type(result) is list:
-        results.extend(result)
-      else:
-        results.append(result)
+            # Transforms may return zero, one or more results
+            if not result:
+                continue
+            elif type(result) is list:
+                results.extend(result)
+            else:
+                results.append(result)
 
-  # Just keep the results that are non-empty
-  pruned_results = [r for r in results if r]
+    # Just keep the results that are non-empty
+    pruned_results = [r for r in results if r]
 
-  # Return None, a single result or a list of results
-  if len(pruned_results) == 0:
-    return None
-  elif len(pruned_results) == 1:
-    return pruned_results[0]
-  else:
-    return pruned_results</code></pre>
+    # Return None, a single result or a list of results
+    if len(pruned_results) == 0:
+        return None
+    elif len(pruned_results) == 1:
+        return pruned_results[0]
+    else:
+        return pruned_results</code></pre>
 </details>
 </dd>
 </dl>
@@ -674,7 +683,7 @@ new MWD record, return it.</p></section>
 <span>(</span><span>kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Output a NMEA XDR string, given whatever variables we can find.</p>
+<div class="desc"><p>Output a NMEA XDR string, given whatever variables we can find.</p>
 <p>Look for these keys in the kwargs dict:</p>
 <pre><code>barometer_field
          Name of field that contains barometric pressure.
@@ -694,88 +703,89 @@ sea_temp_output_field
 talker_id
          Should be format '--XDR' to identify the instrument
          that's creating the message.
-</code></pre></section>
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class XDRTransform:
-  &#34;&#34;&#34;Output a NMEA XDR string, given whatever variables we can find.
-  &#34;&#34;&#34;
-  def __init__(self, kwargs):
+    &#34;&#34;&#34;Output a NMEA XDR string, given whatever variables we can find.
     &#34;&#34;&#34;
-    Look for these keys in the kwargs dict:
-    ```
-    barometer_field
-             Name of field that contains barometric pressure.
-    barometer_output_field
-             Transducer name of that should be output with barometer data.
-             Defaults to barometer_field.
-    air_temp_field
-             Name of field that contains air temperature
-    air_temp_output_field
-             Transducer name of that should be output with air temp data.
-             Defaults to air_temp_field.
-    sea_temp_field
-             Name of field that contains water temperature
-    sea_temp_output_field
-             Transducer name of that should be output with sea temp data.
-             Defaults to sea_temp_field.
-    talker_id
-             Should be format &#39;--XDR&#39; to identify the instrument
-             that&#39;s creating the message.
-    ```
-    &#34;&#34;&#34;
-    self.barometer_field = kwargs.get(&#39;barometer_field&#39;, None)
-    self.barometer_output_field = kwargs.get(&#39;barometer_output_field&#39;,
-                                             self.barometer_field)
-    self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;, None)
-    self.air_temp_output_field = kwargs.get(&#39;air_temp_output_field&#39;,
-                                            self.air_temp_field)
-    self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;, None)
-    self.sea_temp_output_field = kwargs.get(&#39;sea_temp_output_field&#39;,
-                                            self.sea_temp_field)
-    self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;, None)
 
-  ############################
-  def transform(self, record):
-    &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
-    new true wind value, return the results.
-    &#34;&#34;&#34;
-    # Assume we have a single record; check that we&#39;ve got the right
-    # record type.
-    if not record or type(record) is not dict:
-      logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
-      return None
-    fields = record.get(&#39;fields&#39;, None)
-    if not fields:
-      logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
-      return None
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        barometer_field
+                 Name of field that contains barometric pressure.
+        barometer_output_field
+                 Transducer name of that should be output with barometer data.
+                 Defaults to barometer_field.
+        air_temp_field
+                 Name of field that contains air temperature
+        air_temp_output_field
+                 Transducer name of that should be output with air temp data.
+                 Defaults to air_temp_field.
+        sea_temp_field
+                 Name of field that contains water temperature
+        sea_temp_output_field
+                 Transducer name of that should be output with sea temp data.
+                 Defaults to sea_temp_field.
+        talker_id
+                 Should be format &#39;--XDR&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+        self.barometer_field = kwargs.get(&#39;barometer_field&#39;, None)
+        self.barometer_output_field = kwargs.get(&#39;barometer_output_field&#39;,
+                                                 self.barometer_field)
+        self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;, None)
+        self.air_temp_output_field = kwargs.get(&#39;air_temp_output_field&#39;,
+                                                self.air_temp_field)
+        self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;, None)
+        self.sea_temp_output_field = kwargs.get(&#39;sea_temp_output_field&#39;,
+                                                self.sea_temp_field)
+        self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;, None)
 
-    # Grab any relevant values
-    results = []
-    if self.barometer_field in fields:
-      barometer = fields.get(self.barometer_field)
-      barometer_data = &#39;%s,P,%s,B,%s&#39; % (self.xdr_talker_id, barometer,
-                                         self.barometer_output_field)
-      barometer_str = &#39;$%s*%s&#39; % (barometer_data, checksum(barometer_data))
-      results.append(barometer_str)
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
+        new true wind value, return the results.
+        &#34;&#34;&#34;
+        # Assume we have a single record; check that we&#39;ve got the right
+        # record type.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
+            return None
 
-    if self.air_temp_field in fields:
-      air_temp = fields.get(self.air_temp_field)
-      air_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(air_temp),
-                                           self.air_temp_output_field)
-      air_temp_str = &#39;$%s*%s&#39; % (air_temp_data, checksum(air_temp_data))
-      results.append(air_temp_str)
+        # Grab any relevant values
+        results = []
+        if self.barometer_field in fields:
+            barometer = fields.get(self.barometer_field)
+            barometer_data = &#39;%s,P,%s,B,%s&#39; % (self.xdr_talker_id, barometer,
+                                               self.barometer_output_field)
+            barometer_str = &#39;$%s*%s&#39; % (barometer_data, checksum(barometer_data))
+            results.append(barometer_str)
 
-    if self.sea_temp_field in fields:
-      sea_temp = fields.get(self.sea_temp_field)
-      sea_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(sea_temp),
-                                           self.sea_temp_output_field)
-      sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
-      results.append(sea_temp_str)
+        if self.air_temp_field in fields:
+            air_temp = fields.get(self.air_temp_field)
+            air_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(air_temp),
+                                                 self.air_temp_output_field)
+            air_temp_str = &#39;$%s*%s&#39; % (air_temp_data, checksum(air_temp_data))
+            results.append(air_temp_str)
 
-    return results</code></pre>
+        if self.sea_temp_field in fields:
+            sea_temp = fields.get(self.sea_temp_field)
+            sea_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(sea_temp),
+                                                 self.sea_temp_output_field)
+            sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
+            results.append(sea_temp_str)
+
+        return results</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -783,50 +793,50 @@ talker_id
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Incorporate any useable fields in this record, and if it gives us a
-new true wind value, return the results.</p></section>
+<div class="desc"><p>Incorporate any useable fields in this record, and if it gives us a
+new true wind value, return the results.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def transform(self, record):
-  &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
-  new true wind value, return the results.
-  &#34;&#34;&#34;
-  # Assume we have a single record; check that we&#39;ve got the right
-  # record type.
-  if not record or type(record) is not dict:
-    logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
-    return None
-  fields = record.get(&#39;fields&#39;, None)
-  if not fields:
-    logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
-    return None
+    &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
+    new true wind value, return the results.
+    &#34;&#34;&#34;
+    # Assume we have a single record; check that we&#39;ve got the right
+    # record type.
+    if not record or type(record) is not dict:
+        logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
+        return None
+    fields = record.get(&#39;fields&#39;, None)
+    if not fields:
+        logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
+        return None
 
-  # Grab any relevant values
-  results = []
-  if self.barometer_field in fields:
-    barometer = fields.get(self.barometer_field)
-    barometer_data = &#39;%s,P,%s,B,%s&#39; % (self.xdr_talker_id, barometer,
-                                       self.barometer_output_field)
-    barometer_str = &#39;$%s*%s&#39; % (barometer_data, checksum(barometer_data))
-    results.append(barometer_str)
+    # Grab any relevant values
+    results = []
+    if self.barometer_field in fields:
+        barometer = fields.get(self.barometer_field)
+        barometer_data = &#39;%s,P,%s,B,%s&#39; % (self.xdr_talker_id, barometer,
+                                           self.barometer_output_field)
+        barometer_str = &#39;$%s*%s&#39; % (barometer_data, checksum(barometer_data))
+        results.append(barometer_str)
 
-  if self.air_temp_field in fields:
-    air_temp = fields.get(self.air_temp_field)
-    air_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(air_temp),
-                                         self.air_temp_output_field)
-    air_temp_str = &#39;$%s*%s&#39; % (air_temp_data, checksum(air_temp_data))
-    results.append(air_temp_str)
+    if self.air_temp_field in fields:
+        air_temp = fields.get(self.air_temp_field)
+        air_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(air_temp),
+                                             self.air_temp_output_field)
+        air_temp_str = &#39;$%s*%s&#39; % (air_temp_data, checksum(air_temp_data))
+        results.append(air_temp_str)
 
-  if self.sea_temp_field in fields:
-    sea_temp = fields.get(self.sea_temp_field)
-    sea_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(sea_temp),
-                                         self.sea_temp_output_field)
-    sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
-    results.append(sea_temp_str)
+    if self.sea_temp_field in fields:
+        sea_temp = fields.get(self.sea_temp_field)
+        sea_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(sea_temp),
+                                             self.sea_temp_output_field)
+        sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
+        results.append(sea_temp_str)
 
-  return results</code></pre>
+    return results</code></pre>
 </details>
 </dd>
 </dl>
@@ -876,9 +886,7 @@ new true wind value, return the results.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

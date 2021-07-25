@@ -204,16 +204,27 @@ Gravimeter_BGM3:
       description: "unknown semantics"
 ```
 
-In the case of the SeaPath GPS, which can output many different types
-of messages, we provide a list of formats instead of a single string:
+Some sensors can output many different types of messages. To accommodate
+this, the definition may specify a list of formats to try matching. The 
+The parser will use the first one that matches the whole line.
+
+Each element in the list may be either a single format string or a dict,
+where the dict key is the message type of the corresponding value. As indicated
+below, the value may either be a single string (matching that message type)
+or a list of strings that match that message type:
 
 ```
 Seapath330:
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
+    # GGA message has several formats
+    GGA:
+    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     - "$INGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
-    - "$INHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    # For illustration, HDT message has only single format
+    HDT: "$INHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    # For illustration, INVTG and INZDA are given no message type
     - "$INVTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
     - "$INZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{L
     ...

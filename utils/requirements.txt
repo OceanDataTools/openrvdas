@@ -1,0 +1,18 @@
+# Python/pip requirements for OpenRVDAS. Invoked on installation by the
+# script utils/install_openrvdas.sh. See also requirements_mysql.txt for
+# files required to enable MySQL functionality with OpenRVDAS
+
+# Flags
+--trusted-host pypi.org
+--trusted-host files.pythonhosted.org
+
+# Packages
+pyserial
+uwsgi
+websockets
+PyYAML
+parse
+psutil
+
+# Version-restricted packages
+Django==3.1.8

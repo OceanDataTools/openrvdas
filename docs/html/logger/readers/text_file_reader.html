@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>logger.readers.text_file_reader API documentation</title>
 <meta name="description" content="" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -31,314 +33,316 @@ import logging
 import sys
 import time
 
-from os.path import dirname, realpath; sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.formats import Text  # noqa: E402
+from logger.readers.reader import StorageReader  # noqa: E402
 
-from logger.readers.reader import StorageReader
-from logger.utils.formats import Text
 
 ################################################################################
 # Open and read single-line records from one or more text files.
 class TextFileReader(StorageReader):
-  &#34;&#34;&#34;Read lines from one or more text files. Sequentially open all
-  files that match the file_spec.
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-               retry_interval=0.1, interval=0):
+    &#34;&#34;&#34;Read lines from one or more text files. Sequentially open all
+    files that match the file_spec.
     &#34;&#34;&#34;
-    ```
-    file_spec    Possibly wildcarded string speficying files to be opened.
-                 Special case: if file_spec is None, read from stdin.
+    ############################
 
-    tail         If False, return None upon reaching end of last file; if
-                 True, block upon reaching EOF of last file and wait for
-                 more records.
+    def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
+                 retry_interval=0.1, interval=0):
+        &#34;&#34;&#34;
+        ```
+        file_spec    Possibly wildcarded string speficying files to be opened.
+                     Special case: if file_spec is None, read from stdin.
 
-    refresh_file_spec
-                 If True, refresh the search for matching filenames when
-                 reaching last EOF to see if any new matching files have
-                 appeared in the interim.
+        tail         If False, return None upon reaching end of last file; if
+                     True, block upon reaching EOF of last file and wait for
+                     more records.
 
-    retry_interval
-                 If tail and/or refresh_file_spec are True, how long to
-                 wait before looking to see if any new records or files
-                 have shown up.
+        refresh_file_spec
+                     If True, refresh the search for matching filenames when
+                     reaching last EOF to see if any new matching files have
+                     appeared in the interim.
 
-    interval
-                 How long to sleep between returning records. In general
-                 this should be zero except for debugging purposes.
-    ```
-    Note that the order in which files are opened will probably be in
-    alphanumeric by filename, but this is not strictly enforced and
-    depends on how glob returns them.
-    &#34;&#34;&#34;
+        retry_interval
+                     If tail and/or refresh_file_spec are True, how long to
+                     wait before looking to see if any new records or files
+                     have shown up.
 
-    super().__init__(output_format=Text)
+        interval
+                     How long to sleep between returning records. In general
+                     this should be zero except for debugging purposes.
+        ```
+        Note that the order in which files are opened will probably be in
+        alphanumeric by filename, but this is not strictly enforced and
+        depends on how glob returns them.
+        &#34;&#34;&#34;
 
-    self.file_spec = file_spec
-    self.tail = tail
-    self.refresh_file_spec = refresh_file_spec
-    self.retry_interval = retry_interval
-    self.interval = interval
+        super().__init__(output_format=Text)
 
-    # If interval != 0, we need to keep track of our last_read to know
-    # how long to sleep
-    self.last_read = 0
+        self.file_spec = file_spec
+        self.tail = tail
+        self.refresh_file_spec = refresh_file_spec
+        self.retry_interval = retry_interval
+        self.interval = interval
 
-    # The file we&#39;re currently using
-    self.current_file = None
+        # If interval != 0, we need to keep track of our last_read to know
+        # how long to sleep
+        self.last_read = 0
 
-    self.pos = 0
-    self.start_pos = {}
-    self.end_pos = {}
-
-    # Special case if file_spec is None
-    if file_spec is None:
-      self.current_file = sys.stdin
-      self.used_file_list = []
-      self.unused_file_list = []
-      self.tail = True
-      return
-
-    # Which files will we use, which haven&#39;t we used yet?
-    self.unused_file_list = sorted(glob.glob(file_spec))
-    if not self.unused_file_list:
-      logging.warning(&#39;TextFileReader: file_spec &#34;%s&#34; matches no files&#39;,
-                      file_spec)
-    self.used_file_list = []
-
-
-  ############################
-  def _get_next_file(self):
-    &#34;&#34;&#34;Internal - Open and assign the next unused file to
-    self.current_file if we can find one. Return None (and don&#39;t mess
-    with current_file) if we can&#39;t find a next one.
-    &#34;&#34;&#34;
-    # If no more unused files, but refresh_file_spec is specified, see
-    # if more files have shown up
-    if not self.unused_file_list and self.refresh_file_spec:
-      matching_files = sorted(glob.glob(self.file_spec))
-      self.unused_file_list = [f for f in matching_files
-                               if not f in self.used_file_list]
-      logging.info(&#39;TextFileReader found %d new files matching spec &#34;%s&#34;: %s&#39;,
-                   len(self.unused_file_list), self.file_spec,
-                   self.unused_file_list)
-
-    # Are there any more files? If so, get the next one and open it
-    if self.unused_file_list:
-      # First, save the record count for the file we&#39;re about to close.
-      if self.used_file_list:
-        prev_filename = self.used_file_list[-1]
-        self.end_pos[prev_filename] = self.pos
-
-      next_filename = self.unused_file_list.pop(0)
-      logging.info(&#39;TextFileReader opening next file &#34;%s&#34;&#39;, next_filename)
-      self.start_pos[next_filename] = self.pos
-      self.current_file = open(next_filename, &#39;r&#39;)
-      self.used_file_list.append(next_filename)
-      return self.current_file
-
-    # If here, we&#39;ve found no unused next file. Give up
-    return None
-
-  ############################
-  def read(self):
-    &#34;&#34;&#34;Get the next line of text. Return None if there are no more
-    records.  To test EOF you&#39;ll need to test
-
-      if record is None:
-        no more records...
-
-    rather than simply
-
-      if not record:
-        could be EOF or simply an empty next line
-    &#34;&#34;&#34;
-    if self.interval:
-      now = time.time()
-      sleep_time = max(0, self.interval - (now - self.last_read))
-      logging.debug(&#39;Sleeping %f seconds&#39;, sleep_time)
-      if sleep_time:
-        time.sleep(sleep_time)
-
-    record = None
-    while not record:
-      # If we&#39;ve got a current file, or if _get_next_file() gets one
-      # for us, try to read a record.
-      if self.current_file or self._get_next_file():
-        record = self.current_file.readline()
-        if record:
-          self.last_read = time.time()
-          record = record.rstrip(&#39;\n&#39;)
-          logging.debug(&#39;TextFileReader got record &#34;%s&#34;&#39;, record)
-          self.pos += 1
-          return record
-
-        # No record: our current_file has reached EOF. See if more
-        # files we should try to read.
-        if self._get_next_file():
-          # Found a new file to read - loop again right away
-          continue
-
-      # EOF when we&#39;re reading from stdin means we&#39;re done
-      if not self.file_spec:
-        return None
-
-      # No record, no new files, no tail or refresh directive -
-      # there&#39;s nothing left for us to try. Go home empty-handed.
-      if not self.refresh_file_spec and not self.tail:
-        return None
-
-      # User wants refresh or tail, so sleep and try again.
-      logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
-                    &#39;%f seconds before trying again&#39;, self.retry_interval)
-      time.sleep(self.retry_interval)
-
-  ############################
-  # Current behavior is to just go to the end if we run out of records,
-  # as io.IOBase.seek() does.
-  # QUESTION: To really behave like seek(), we&#39;d have to keep track of self.pos
-  # beyond the end of the file, e.g. seek(100, &#39;start&#39;) would always return
-  # 100, even if there are &lt; 100 records. Is this what we want?
-  def _seek_forward_from_current(self, offset=0):
-    if offset == 0:
-      return
-    if offset &lt; 0:
-      return self._seek_back_from_current(offset)
-    i = 0
-    while i &lt; offset:
-      if self.current_file or self._get_next_file():
-        if self.current_file.readline():
-          i += 1
-          self.pos += 1
-        else:
-          if self._get_next_file() is None:
-            break
-    # TODO: take advantage of self.start_pos and self.end_pos if we&#39;ve
-    # already processed later files.
-
-  ############################
-  def _seek_back_from_current(self, offset=0):
-    if offset == 0:
-      return
-    if offset &gt; 0:
-      return self._seek_forward_from_current(offset)
-    target = self.pos + offset
-    if target &lt; 0:
-      raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-
-    # Find the right file.
-    current_filename = self.used_file_list[-1]
-    while target &lt; self.start_pos[current_filename]:
-      self.unused_file_list.insert(0, current_filename)
-      self.used_file_list.pop()
-      current_filename = self.used_file_list[-1]
-
-    self.current_file = open(current_filename, &#39;r&#39;)
-
-    # TODO: implement backwards search within the file
-    for _ in range(target - self.start_pos[current_filename]):
-      self.current_file.readline()
-    self.pos = target
-
-  ############################
-  def _save_state(self):
-    state = {
-      &#39;used_file_list&#39;: self.used_file_list[:],
-      &#39;unused_file_list&#39;: self.unused_file_list[:],
-      &#39;pos&#39;: self.pos
-    }
-    if self.current_file:
-      state[&#39;current_filename&#39;] = self.used_file_list[-1]
-      state[&#39;current_file_pos&#39;] = self.current_file.tell()
-    return state
-
-  ############################
-  def _restore_state(self, state):
-    self.used_file_list = state[&#39;used_file_list&#39;]
-    self.unused_file_list = state[&#39;unused_file_list&#39;]
-    if &#39;current_filename&#39; in state:
-      self.current_file = open(state[&#39;current_filename&#39;], &#39;r&#39;)
-      self.current_file.seek(state[&#39;current_file_pos&#39;])
-    else:
-      self.current_file = None
-    self.pos = state[&#39;pos&#39;]
-
-  ############################
-  # Behavior is intended to mimic file seek() behavior but with
-  # respect to records: &#39;offset&#39; means number of records, and origin
-  # is either &#39;start&#39;, &#39;current&#39; or &#39;end&#39;.
-  def seek(self, offset=0, origin=&#39;current&#39;):
-    original_state = self._save_state()
-
-    try:
-      if origin == &#39;start&#39;:
-        if offset &lt; 0:
-          raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-        self.used_file_list = []
-        self.unused_file_list = sorted(glob.glob(self.file_spec))
+        # The file we&#39;re currently using
         self.current_file = None
+
         self.pos = 0
-        self._seek_forward_from_current(offset)
+        self.start_pos = {}
+        self.end_pos = {}
 
-      elif origin == &#39;current&#39;:
-        if offset &gt;= 0:
-          self._seek_forward_from_current(offset)
+        # Special case if file_spec is None
+        if file_spec is None:
+            self.current_file = sys.stdin
+            self.used_file_list = []
+            self.unused_file_list = []
+            self.tail = True
+            return
+
+        # Which files will we use, which haven&#39;t we used yet?
+        self.unused_file_list = sorted(glob.glob(file_spec))
+        if not self.unused_file_list:
+            logging.warning(&#39;TextFileReader: file_spec &#34;%s&#34; matches no files&#39;,
+                            file_spec)
+        self.used_file_list = []
+
+    ############################
+
+    def _get_next_file(self):
+        &#34;&#34;&#34;Internal - Open and assign the next unused file to
+        self.current_file if we can find one. Return None (and don&#39;t mess
+        with current_file) if we can&#39;t find a next one.
+        &#34;&#34;&#34;
+        # If no more unused files, but refresh_file_spec is specified, see
+        # if more files have shown up
+        if not self.unused_file_list and self.refresh_file_spec:
+            matching_files = sorted(glob.glob(self.file_spec))
+            self.unused_file_list = [f for f in matching_files
+                                     if f not in self.used_file_list]
+            logging.info(&#39;TextFileReader found %d new files matching spec &#34;%s&#34;: %s&#39;,
+                         len(self.unused_file_list), self.file_spec,
+                         self.unused_file_list)
+
+        # Are there any more files? If so, get the next one and open it
+        if self.unused_file_list:
+            # First, save the record count for the file we&#39;re about to close.
+            if self.used_file_list:
+                prev_filename = self.used_file_list[-1]
+                self.end_pos[prev_filename] = self.pos
+
+            next_filename = self.unused_file_list.pop(0)
+            logging.info(&#39;TextFileReader opening next file &#34;%s&#34;&#39;, next_filename)
+            self.start_pos[next_filename] = self.pos
+            self.current_file = open(next_filename, &#39;r&#39;)
+            self.used_file_list.append(next_filename)
+            return self.current_file
+
+        # If here, we&#39;ve found no unused next file. Give up
+        return None
+
+    ############################
+    def read(self):
+        &#34;&#34;&#34;Get the next line of text. Return None if there are no more
+        records.  To test EOF you&#39;ll need to test
+
+          if record is None:
+            no more records...
+
+        rather than simply
+
+          if not record:
+            could be EOF or simply an empty next line
+        &#34;&#34;&#34;
+        if self.interval:
+            now = time.time()
+            sleep_time = max(0, self.interval - (now - self.last_read))
+            logging.debug(&#39;Sleeping %f seconds&#39;, sleep_time)
+            if sleep_time:
+                time.sleep(sleep_time)
+
+        record = None
+        while not record:
+            # If we&#39;ve got a current file, or if _get_next_file() gets one
+            # for us, try to read a record.
+            if self.current_file or self._get_next_file():
+                record = self.current_file.readline()
+                if record:
+                    self.last_read = time.time()
+                    record = record.rstrip(&#39;\n&#39;)
+                    logging.debug(&#39;TextFileReader got record &#34;%s&#34;&#39;, record)
+                    self.pos += 1
+                    return record
+
+                # No record: our current_file has reached EOF. See if more
+                # files we should try to read.
+                if self._get_next_file():
+                    # Found a new file to read - loop again right away
+                    continue
+
+            # EOF when we&#39;re reading from stdin means we&#39;re done
+            if not self.file_spec:
+                return None
+
+            # No record, no new files, no tail or refresh directive -
+            # there&#39;s nothing left for us to try. Go home empty-handed.
+            if not self.refresh_file_spec and not self.tail:
+                return None
+
+            # User wants refresh or tail, so sleep and try again.
+            logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
+                          &#39;%f seconds before trying again&#39;, self.retry_interval)
+            time.sleep(self.retry_interval)
+
+    ############################
+    # Current behavior is to just go to the end if we run out of records,
+    # as io.IOBase.seek() does.
+    # QUESTION: To really behave like seek(), we&#39;d have to keep track of self.pos
+    # beyond the end of the file, e.g. seek(100, &#39;start&#39;) would always return
+    # 100, even if there are &lt; 100 records. Is this what we want?
+    def _seek_forward_from_current(self, offset=0):
+        if offset == 0:
+            return
+        if offset &lt; 0:
+            return self._seek_back_from_current(offset)
+        i = 0
+        while i &lt; offset:
+            if self.current_file or self._get_next_file():
+                if self.current_file.readline():
+                    i += 1
+                    self.pos += 1
+                else:
+                    if self._get_next_file() is None:
+                        break
+        # TODO: take advantage of self.start_pos and self.end_pos if we&#39;ve
+        # already processed later files.
+
+    ############################
+    def _seek_back_from_current(self, offset=0):
+        if offset == 0:
+            return
+        if offset &gt; 0:
+            return self._seek_forward_from_current(offset)
+        target = self.pos + offset
+        if target &lt; 0:
+            raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+
+        # Find the right file.
+        current_filename = self.used_file_list[-1]
+        while target &lt; self.start_pos[current_filename]:
+            self.unused_file_list.insert(0, current_filename)
+            self.used_file_list.pop()
+            current_filename = self.used_file_list[-1]
+
+        self.current_file = open(current_filename, &#39;r&#39;)
+
+        # TODO: implement backwards search within the file
+        for _ in range(target - self.start_pos[current_filename]):
+            self.current_file.readline()
+        self.pos = target
+
+    ############################
+    def _save_state(self):
+        state = {
+            &#39;used_file_list&#39;: self.used_file_list[:],
+            &#39;unused_file_list&#39;: self.unused_file_list[:],
+            &#39;pos&#39;: self.pos
+        }
+        if self.current_file:
+            state[&#39;current_filename&#39;] = self.used_file_list[-1]
+            state[&#39;current_file_pos&#39;] = self.current_file.tell()
+        return state
+
+    ############################
+    def _restore_state(self, state):
+        self.used_file_list = state[&#39;used_file_list&#39;]
+        self.unused_file_list = state[&#39;unused_file_list&#39;]
+        if &#39;current_filename&#39; in state:
+            self.current_file = open(state[&#39;current_filename&#39;], &#39;r&#39;)
+            self.current_file.seek(state[&#39;current_file_pos&#39;])
         else:
-          self._seek_back_from_current(offset)
+            self.current_file = None
+        self.pos = state[&#39;pos&#39;]
 
-      elif origin == &#39;end&#39;:
-        # Have to count lines in all files that haven&#39;t been processed yet.
-        # TODO: take self.refresh_file_spec into account
-        file_list = sorted(glob.glob(self.file_spec))
-        pos = 0
-        for filename in file_list:
-          if filename in self.end_pos:
-            pos = self.end_pos[filename]
-          else:
-            self.start_pos[filename] = pos
+    ############################
+    # Behavior is intended to mimic file seek() behavior but with
+    # respect to records: &#39;offset&#39; means number of records, and origin
+    # is either &#39;start&#39;, &#39;current&#39; or &#39;end&#39;.
+    def seek(self, offset=0, origin=&#39;current&#39;):
+        original_state = self._save_state()
 
-            # TODO: this can be made faster, if needed
-            with open(filename) as f:
-              for n, _ in enumerate(f, 1):
-                pass
+        try:
+            if origin == &#39;start&#39;:
+                if offset &lt; 0:
+                    raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+                self.used_file_list = []
+                self.unused_file_list = sorted(glob.glob(self.file_spec))
+                self.current_file = None
+                self.pos = 0
+                self._seek_forward_from_current(offset)
 
-            pos += n
-            self.end_pos[filename] = pos
+            elif origin == &#39;current&#39;:
+                if offset &gt;= 0:
+                    self._seek_forward_from_current(offset)
+                else:
+                    self._seek_back_from_current(offset)
 
-        self.used_file_list = file_list
-        self.unused_file_list = []
-        self.current_file = None
-        self.pos = pos
-        self._seek_back_from_current(offset)
+            elif origin == &#39;end&#39;:
+                # Have to count lines in all files that haven&#39;t been processed yet.
+                # TODO: take self.refresh_file_spec into account
+                file_list = sorted(glob.glob(self.file_spec))
+                pos = 0
+                for filename in file_list:
+                    if filename in self.end_pos:
+                        pos = self.end_pos[filename]
+                    else:
+                        self.start_pos[filename] = pos
 
-      else:
-        raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
+                        # TODO: this can be made faster, if needed
+                        with open(filename) as f:
+                            for n, _ in enumerate(f, 1):
+                                pass
 
-    except:
-      self._restore_state(original_state)
-      raise
+                        pos += n
+                        self.end_pos[filename] = pos
 
-    return self.pos
+                self.used_file_list = file_list
+                self.unused_file_list = []
+                self.current_file = None
+                self.pos = pos
+                self._seek_back_from_current(offset)
 
-  ############################
-  def read_range(self, start=None, stop=None):
-    &#34;&#34;&#34;
-    Read a range of records beginning with record number start, and ending
-    *before* record number stop.
-    &#34;&#34;&#34;
-    if start is None:
-      start = 0
-    if stop is None:
-      stop = sys.maxsize
-    self.seek(start, &#39;start&#39;)
-    records = []
-    for _ in range(stop - start):
-      record = self.read()
-      if record is None:
-        break
-      records.append(record)
-    return records</code></pre>
+            else:
+                raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
+
+        except:  # noqa: E722
+            self._restore_state(original_state)
+            raise
+
+        return self.pos
+
+    ############################
+    def read_range(self, start=None, stop=None):
+        &#34;&#34;&#34;
+        Read a range of records beginning with record number start, and ending
+        *before* record number stop.
+        &#34;&#34;&#34;
+        if start is None:
+            start = 0
+        if stop is None:
+            stop = sys.maxsize
+        self.seek(start, &#39;start&#39;)
+        records = []
+        for _ in range(stop - start):
+            record = self.read()
+            if record is None:
+                break
+            records.append(record)
+        return records</code></pre>
 </details>
 </section>
 <section>
@@ -355,7 +359,7 @@ class TextFileReader(StorageReader):
 <span>(</span><span>file_spec=None, tail=False, refresh_file_spec=False, retry_interval=0.1, interval=0)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Read lines from one or more text files. Sequentially open all
+<div class="desc"><p>Read lines from one or more text files. Sequentially open all
 files that match the file_spec.</p>
 <pre><code>file_spec    Possibly wildcarded string speficying files to be opened.
              Special case: if file_spec is None, read from stdin.
@@ -380,312 +384,313 @@ interval
 </code></pre>
 <p>Note that the order in which files are opened will probably be in
 alphanumeric by filename, but this is not strictly enforced and
-depends on how glob returns them.</p></section>
+depends on how glob returns them.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TextFileReader(StorageReader):
-  &#34;&#34;&#34;Read lines from one or more text files. Sequentially open all
-  files that match the file_spec.
-  &#34;&#34;&#34;
-  ############################
-  def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-               retry_interval=0.1, interval=0):
+    &#34;&#34;&#34;Read lines from one or more text files. Sequentially open all
+    files that match the file_spec.
     &#34;&#34;&#34;
-    ```
-    file_spec    Possibly wildcarded string speficying files to be opened.
-                 Special case: if file_spec is None, read from stdin.
+    ############################
 
-    tail         If False, return None upon reaching end of last file; if
-                 True, block upon reaching EOF of last file and wait for
-                 more records.
+    def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
+                 retry_interval=0.1, interval=0):
+        &#34;&#34;&#34;
+        ```
+        file_spec    Possibly wildcarded string speficying files to be opened.
+                     Special case: if file_spec is None, read from stdin.
 
-    refresh_file_spec
-                 If True, refresh the search for matching filenames when
-                 reaching last EOF to see if any new matching files have
-                 appeared in the interim.
+        tail         If False, return None upon reaching end of last file; if
+                     True, block upon reaching EOF of last file and wait for
+                     more records.
 
-    retry_interval
-                 If tail and/or refresh_file_spec are True, how long to
-                 wait before looking to see if any new records or files
-                 have shown up.
+        refresh_file_spec
+                     If True, refresh the search for matching filenames when
+                     reaching last EOF to see if any new matching files have
+                     appeared in the interim.
 
-    interval
-                 How long to sleep between returning records. In general
-                 this should be zero except for debugging purposes.
-    ```
-    Note that the order in which files are opened will probably be in
-    alphanumeric by filename, but this is not strictly enforced and
-    depends on how glob returns them.
-    &#34;&#34;&#34;
+        retry_interval
+                     If tail and/or refresh_file_spec are True, how long to
+                     wait before looking to see if any new records or files
+                     have shown up.
 
-    super().__init__(output_format=Text)
+        interval
+                     How long to sleep between returning records. In general
+                     this should be zero except for debugging purposes.
+        ```
+        Note that the order in which files are opened will probably be in
+        alphanumeric by filename, but this is not strictly enforced and
+        depends on how glob returns them.
+        &#34;&#34;&#34;
 
-    self.file_spec = file_spec
-    self.tail = tail
-    self.refresh_file_spec = refresh_file_spec
-    self.retry_interval = retry_interval
-    self.interval = interval
+        super().__init__(output_format=Text)
 
-    # If interval != 0, we need to keep track of our last_read to know
-    # how long to sleep
-    self.last_read = 0
+        self.file_spec = file_spec
+        self.tail = tail
+        self.refresh_file_spec = refresh_file_spec
+        self.retry_interval = retry_interval
+        self.interval = interval
 
-    # The file we&#39;re currently using
-    self.current_file = None
+        # If interval != 0, we need to keep track of our last_read to know
+        # how long to sleep
+        self.last_read = 0
 
-    self.pos = 0
-    self.start_pos = {}
-    self.end_pos = {}
-
-    # Special case if file_spec is None
-    if file_spec is None:
-      self.current_file = sys.stdin
-      self.used_file_list = []
-      self.unused_file_list = []
-      self.tail = True
-      return
-
-    # Which files will we use, which haven&#39;t we used yet?
-    self.unused_file_list = sorted(glob.glob(file_spec))
-    if not self.unused_file_list:
-      logging.warning(&#39;TextFileReader: file_spec &#34;%s&#34; matches no files&#39;,
-                      file_spec)
-    self.used_file_list = []
-
-
-  ############################
-  def _get_next_file(self):
-    &#34;&#34;&#34;Internal - Open and assign the next unused file to
-    self.current_file if we can find one. Return None (and don&#39;t mess
-    with current_file) if we can&#39;t find a next one.
-    &#34;&#34;&#34;
-    # If no more unused files, but refresh_file_spec is specified, see
-    # if more files have shown up
-    if not self.unused_file_list and self.refresh_file_spec:
-      matching_files = sorted(glob.glob(self.file_spec))
-      self.unused_file_list = [f for f in matching_files
-                               if not f in self.used_file_list]
-      logging.info(&#39;TextFileReader found %d new files matching spec &#34;%s&#34;: %s&#39;,
-                   len(self.unused_file_list), self.file_spec,
-                   self.unused_file_list)
-
-    # Are there any more files? If so, get the next one and open it
-    if self.unused_file_list:
-      # First, save the record count for the file we&#39;re about to close.
-      if self.used_file_list:
-        prev_filename = self.used_file_list[-1]
-        self.end_pos[prev_filename] = self.pos
-
-      next_filename = self.unused_file_list.pop(0)
-      logging.info(&#39;TextFileReader opening next file &#34;%s&#34;&#39;, next_filename)
-      self.start_pos[next_filename] = self.pos
-      self.current_file = open(next_filename, &#39;r&#39;)
-      self.used_file_list.append(next_filename)
-      return self.current_file
-
-    # If here, we&#39;ve found no unused next file. Give up
-    return None
-
-  ############################
-  def read(self):
-    &#34;&#34;&#34;Get the next line of text. Return None if there are no more
-    records.  To test EOF you&#39;ll need to test
-
-      if record is None:
-        no more records...
-
-    rather than simply
-
-      if not record:
-        could be EOF or simply an empty next line
-    &#34;&#34;&#34;
-    if self.interval:
-      now = time.time()
-      sleep_time = max(0, self.interval - (now - self.last_read))
-      logging.debug(&#39;Sleeping %f seconds&#39;, sleep_time)
-      if sleep_time:
-        time.sleep(sleep_time)
-
-    record = None
-    while not record:
-      # If we&#39;ve got a current file, or if _get_next_file() gets one
-      # for us, try to read a record.
-      if self.current_file or self._get_next_file():
-        record = self.current_file.readline()
-        if record:
-          self.last_read = time.time()
-          record = record.rstrip(&#39;\n&#39;)
-          logging.debug(&#39;TextFileReader got record &#34;%s&#34;&#39;, record)
-          self.pos += 1
-          return record
-
-        # No record: our current_file has reached EOF. See if more
-        # files we should try to read.
-        if self._get_next_file():
-          # Found a new file to read - loop again right away
-          continue
-
-      # EOF when we&#39;re reading from stdin means we&#39;re done
-      if not self.file_spec:
-        return None
-
-      # No record, no new files, no tail or refresh directive -
-      # there&#39;s nothing left for us to try. Go home empty-handed.
-      if not self.refresh_file_spec and not self.tail:
-        return None
-
-      # User wants refresh or tail, so sleep and try again.
-      logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
-                    &#39;%f seconds before trying again&#39;, self.retry_interval)
-      time.sleep(self.retry_interval)
-
-  ############################
-  # Current behavior is to just go to the end if we run out of records,
-  # as io.IOBase.seek() does.
-  # QUESTION: To really behave like seek(), we&#39;d have to keep track of self.pos
-  # beyond the end of the file, e.g. seek(100, &#39;start&#39;) would always return
-  # 100, even if there are &lt; 100 records. Is this what we want?
-  def _seek_forward_from_current(self, offset=0):
-    if offset == 0:
-      return
-    if offset &lt; 0:
-      return self._seek_back_from_current(offset)
-    i = 0
-    while i &lt; offset:
-      if self.current_file or self._get_next_file():
-        if self.current_file.readline():
-          i += 1
-          self.pos += 1
-        else:
-          if self._get_next_file() is None:
-            break
-    # TODO: take advantage of self.start_pos and self.end_pos if we&#39;ve
-    # already processed later files.
-
-  ############################
-  def _seek_back_from_current(self, offset=0):
-    if offset == 0:
-      return
-    if offset &gt; 0:
-      return self._seek_forward_from_current(offset)
-    target = self.pos + offset
-    if target &lt; 0:
-      raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-
-    # Find the right file.
-    current_filename = self.used_file_list[-1]
-    while target &lt; self.start_pos[current_filename]:
-      self.unused_file_list.insert(0, current_filename)
-      self.used_file_list.pop()
-      current_filename = self.used_file_list[-1]
-
-    self.current_file = open(current_filename, &#39;r&#39;)
-
-    # TODO: implement backwards search within the file
-    for _ in range(target - self.start_pos[current_filename]):
-      self.current_file.readline()
-    self.pos = target
-
-  ############################
-  def _save_state(self):
-    state = {
-      &#39;used_file_list&#39;: self.used_file_list[:],
-      &#39;unused_file_list&#39;: self.unused_file_list[:],
-      &#39;pos&#39;: self.pos
-    }
-    if self.current_file:
-      state[&#39;current_filename&#39;] = self.used_file_list[-1]
-      state[&#39;current_file_pos&#39;] = self.current_file.tell()
-    return state
-
-  ############################
-  def _restore_state(self, state):
-    self.used_file_list = state[&#39;used_file_list&#39;]
-    self.unused_file_list = state[&#39;unused_file_list&#39;]
-    if &#39;current_filename&#39; in state:
-      self.current_file = open(state[&#39;current_filename&#39;], &#39;r&#39;)
-      self.current_file.seek(state[&#39;current_file_pos&#39;])
-    else:
-      self.current_file = None
-    self.pos = state[&#39;pos&#39;]
-
-  ############################
-  # Behavior is intended to mimic file seek() behavior but with
-  # respect to records: &#39;offset&#39; means number of records, and origin
-  # is either &#39;start&#39;, &#39;current&#39; or &#39;end&#39;.
-  def seek(self, offset=0, origin=&#39;current&#39;):
-    original_state = self._save_state()
-
-    try:
-      if origin == &#39;start&#39;:
-        if offset &lt; 0:
-          raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-        self.used_file_list = []
-        self.unused_file_list = sorted(glob.glob(self.file_spec))
+        # The file we&#39;re currently using
         self.current_file = None
+
         self.pos = 0
-        self._seek_forward_from_current(offset)
+        self.start_pos = {}
+        self.end_pos = {}
 
-      elif origin == &#39;current&#39;:
-        if offset &gt;= 0:
-          self._seek_forward_from_current(offset)
+        # Special case if file_spec is None
+        if file_spec is None:
+            self.current_file = sys.stdin
+            self.used_file_list = []
+            self.unused_file_list = []
+            self.tail = True
+            return
+
+        # Which files will we use, which haven&#39;t we used yet?
+        self.unused_file_list = sorted(glob.glob(file_spec))
+        if not self.unused_file_list:
+            logging.warning(&#39;TextFileReader: file_spec &#34;%s&#34; matches no files&#39;,
+                            file_spec)
+        self.used_file_list = []
+
+    ############################
+
+    def _get_next_file(self):
+        &#34;&#34;&#34;Internal - Open and assign the next unused file to
+        self.current_file if we can find one. Return None (and don&#39;t mess
+        with current_file) if we can&#39;t find a next one.
+        &#34;&#34;&#34;
+        # If no more unused files, but refresh_file_spec is specified, see
+        # if more files have shown up
+        if not self.unused_file_list and self.refresh_file_spec:
+            matching_files = sorted(glob.glob(self.file_spec))
+            self.unused_file_list = [f for f in matching_files
+                                     if f not in self.used_file_list]
+            logging.info(&#39;TextFileReader found %d new files matching spec &#34;%s&#34;: %s&#39;,
+                         len(self.unused_file_list), self.file_spec,
+                         self.unused_file_list)
+
+        # Are there any more files? If so, get the next one and open it
+        if self.unused_file_list:
+            # First, save the record count for the file we&#39;re about to close.
+            if self.used_file_list:
+                prev_filename = self.used_file_list[-1]
+                self.end_pos[prev_filename] = self.pos
+
+            next_filename = self.unused_file_list.pop(0)
+            logging.info(&#39;TextFileReader opening next file &#34;%s&#34;&#39;, next_filename)
+            self.start_pos[next_filename] = self.pos
+            self.current_file = open(next_filename, &#39;r&#39;)
+            self.used_file_list.append(next_filename)
+            return self.current_file
+
+        # If here, we&#39;ve found no unused next file. Give up
+        return None
+
+    ############################
+    def read(self):
+        &#34;&#34;&#34;Get the next line of text. Return None if there are no more
+        records.  To test EOF you&#39;ll need to test
+
+          if record is None:
+            no more records...
+
+        rather than simply
+
+          if not record:
+            could be EOF or simply an empty next line
+        &#34;&#34;&#34;
+        if self.interval:
+            now = time.time()
+            sleep_time = max(0, self.interval - (now - self.last_read))
+            logging.debug(&#39;Sleeping %f seconds&#39;, sleep_time)
+            if sleep_time:
+                time.sleep(sleep_time)
+
+        record = None
+        while not record:
+            # If we&#39;ve got a current file, or if _get_next_file() gets one
+            # for us, try to read a record.
+            if self.current_file or self._get_next_file():
+                record = self.current_file.readline()
+                if record:
+                    self.last_read = time.time()
+                    record = record.rstrip(&#39;\n&#39;)
+                    logging.debug(&#39;TextFileReader got record &#34;%s&#34;&#39;, record)
+                    self.pos += 1
+                    return record
+
+                # No record: our current_file has reached EOF. See if more
+                # files we should try to read.
+                if self._get_next_file():
+                    # Found a new file to read - loop again right away
+                    continue
+
+            # EOF when we&#39;re reading from stdin means we&#39;re done
+            if not self.file_spec:
+                return None
+
+            # No record, no new files, no tail or refresh directive -
+            # there&#39;s nothing left for us to try. Go home empty-handed.
+            if not self.refresh_file_spec and not self.tail:
+                return None
+
+            # User wants refresh or tail, so sleep and try again.
+            logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
+                          &#39;%f seconds before trying again&#39;, self.retry_interval)
+            time.sleep(self.retry_interval)
+
+    ############################
+    # Current behavior is to just go to the end if we run out of records,
+    # as io.IOBase.seek() does.
+    # QUESTION: To really behave like seek(), we&#39;d have to keep track of self.pos
+    # beyond the end of the file, e.g. seek(100, &#39;start&#39;) would always return
+    # 100, even if there are &lt; 100 records. Is this what we want?
+    def _seek_forward_from_current(self, offset=0):
+        if offset == 0:
+            return
+        if offset &lt; 0:
+            return self._seek_back_from_current(offset)
+        i = 0
+        while i &lt; offset:
+            if self.current_file or self._get_next_file():
+                if self.current_file.readline():
+                    i += 1
+                    self.pos += 1
+                else:
+                    if self._get_next_file() is None:
+                        break
+        # TODO: take advantage of self.start_pos and self.end_pos if we&#39;ve
+        # already processed later files.
+
+    ############################
+    def _seek_back_from_current(self, offset=0):
+        if offset == 0:
+            return
+        if offset &gt; 0:
+            return self._seek_forward_from_current(offset)
+        target = self.pos + offset
+        if target &lt; 0:
+            raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+
+        # Find the right file.
+        current_filename = self.used_file_list[-1]
+        while target &lt; self.start_pos[current_filename]:
+            self.unused_file_list.insert(0, current_filename)
+            self.used_file_list.pop()
+            current_filename = self.used_file_list[-1]
+
+        self.current_file = open(current_filename, &#39;r&#39;)
+
+        # TODO: implement backwards search within the file
+        for _ in range(target - self.start_pos[current_filename]):
+            self.current_file.readline()
+        self.pos = target
+
+    ############################
+    def _save_state(self):
+        state = {
+            &#39;used_file_list&#39;: self.used_file_list[:],
+            &#39;unused_file_list&#39;: self.unused_file_list[:],
+            &#39;pos&#39;: self.pos
+        }
+        if self.current_file:
+            state[&#39;current_filename&#39;] = self.used_file_list[-1]
+            state[&#39;current_file_pos&#39;] = self.current_file.tell()
+        return state
+
+    ############################
+    def _restore_state(self, state):
+        self.used_file_list = state[&#39;used_file_list&#39;]
+        self.unused_file_list = state[&#39;unused_file_list&#39;]
+        if &#39;current_filename&#39; in state:
+            self.current_file = open(state[&#39;current_filename&#39;], &#39;r&#39;)
+            self.current_file.seek(state[&#39;current_file_pos&#39;])
         else:
-          self._seek_back_from_current(offset)
+            self.current_file = None
+        self.pos = state[&#39;pos&#39;]
 
-      elif origin == &#39;end&#39;:
-        # Have to count lines in all files that haven&#39;t been processed yet.
-        # TODO: take self.refresh_file_spec into account
-        file_list = sorted(glob.glob(self.file_spec))
-        pos = 0
-        for filename in file_list:
-          if filename in self.end_pos:
-            pos = self.end_pos[filename]
-          else:
-            self.start_pos[filename] = pos
+    ############################
+    # Behavior is intended to mimic file seek() behavior but with
+    # respect to records: &#39;offset&#39; means number of records, and origin
+    # is either &#39;start&#39;, &#39;current&#39; or &#39;end&#39;.
+    def seek(self, offset=0, origin=&#39;current&#39;):
+        original_state = self._save_state()
 
-            # TODO: this can be made faster, if needed
-            with open(filename) as f:
-              for n, _ in enumerate(f, 1):
-                pass
+        try:
+            if origin == &#39;start&#39;:
+                if offset &lt; 0:
+                    raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+                self.used_file_list = []
+                self.unused_file_list = sorted(glob.glob(self.file_spec))
+                self.current_file = None
+                self.pos = 0
+                self._seek_forward_from_current(offset)
 
-            pos += n
-            self.end_pos[filename] = pos
+            elif origin == &#39;current&#39;:
+                if offset &gt;= 0:
+                    self._seek_forward_from_current(offset)
+                else:
+                    self._seek_back_from_current(offset)
 
-        self.used_file_list = file_list
-        self.unused_file_list = []
-        self.current_file = None
-        self.pos = pos
-        self._seek_back_from_current(offset)
+            elif origin == &#39;end&#39;:
+                # Have to count lines in all files that haven&#39;t been processed yet.
+                # TODO: take self.refresh_file_spec into account
+                file_list = sorted(glob.glob(self.file_spec))
+                pos = 0
+                for filename in file_list:
+                    if filename in self.end_pos:
+                        pos = self.end_pos[filename]
+                    else:
+                        self.start_pos[filename] = pos
 
-      else:
-        raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
+                        # TODO: this can be made faster, if needed
+                        with open(filename) as f:
+                            for n, _ in enumerate(f, 1):
+                                pass
 
-    except:
-      self._restore_state(original_state)
-      raise
+                        pos += n
+                        self.end_pos[filename] = pos
 
-    return self.pos
+                self.used_file_list = file_list
+                self.unused_file_list = []
+                self.current_file = None
+                self.pos = pos
+                self._seek_back_from_current(offset)
 
-  ############################
-  def read_range(self, start=None, stop=None):
-    &#34;&#34;&#34;
-    Read a range of records beginning with record number start, and ending
-    *before* record number stop.
-    &#34;&#34;&#34;
-    if start is None:
-      start = 0
-    if stop is None:
-      stop = sys.maxsize
-    self.seek(start, &#39;start&#39;)
-    records = []
-    for _ in range(stop - start):
-      record = self.read()
-      if record is None:
-        break
-      records.append(record)
-    return records</code></pre>
+            else:
+                raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
+
+        except:  # noqa: E722
+            self._restore_state(original_state)
+            raise
+
+        return self.pos
+
+    ############################
+    def read_range(self, start=None, stop=None):
+        &#34;&#34;&#34;
+        Read a range of records beginning with record number start, and ending
+        *before* record number stop.
+        &#34;&#34;&#34;
+        if start is None:
+            start = 0
+        if stop is None:
+            stop = sys.maxsize
+        self.seek(start, &#39;start&#39;)
+        records = []
+        for _ in range(stop - start):
+            record = self.read()
+            if record is None:
+                break
+            records.append(record)
+        return records</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -698,132 +703,132 @@ depends on how glob returns them.</p></section>
 <span>def <span class="ident">read</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get the next line of text. Return None if there are no more
+<div class="desc"><p>Get the next line of text. Return None if there are no more
 records.
 To test EOF you'll need to test</p>
 <p>if record is None:
 no more records&hellip;</p>
 <p>rather than simply</p>
 <p>if not record:
-could be EOF or simply an empty next line</p></section>
+could be EOF or simply an empty next line</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read(self):
-  &#34;&#34;&#34;Get the next line of text. Return None if there are no more
-  records.  To test EOF you&#39;ll need to test
+    &#34;&#34;&#34;Get the next line of text. Return None if there are no more
+    records.  To test EOF you&#39;ll need to test
 
-    if record is None:
-      no more records...
+      if record is None:
+        no more records...
 
-  rather than simply
+    rather than simply
 
-    if not record:
-      could be EOF or simply an empty next line
-  &#34;&#34;&#34;
-  if self.interval:
-    now = time.time()
-    sleep_time = max(0, self.interval - (now - self.last_read))
-    logging.debug(&#39;Sleeping %f seconds&#39;, sleep_time)
-    if sleep_time:
-      time.sleep(sleep_time)
+      if not record:
+        could be EOF or simply an empty next line
+    &#34;&#34;&#34;
+    if self.interval:
+        now = time.time()
+        sleep_time = max(0, self.interval - (now - self.last_read))
+        logging.debug(&#39;Sleeping %f seconds&#39;, sleep_time)
+        if sleep_time:
+            time.sleep(sleep_time)
 
-  record = None
-  while not record:
-    # If we&#39;ve got a current file, or if _get_next_file() gets one
-    # for us, try to read a record.
-    if self.current_file or self._get_next_file():
-      record = self.current_file.readline()
-      if record:
-        self.last_read = time.time()
-        record = record.rstrip(&#39;\n&#39;)
-        logging.debug(&#39;TextFileReader got record &#34;%s&#34;&#39;, record)
-        self.pos += 1
-        return record
+    record = None
+    while not record:
+        # If we&#39;ve got a current file, or if _get_next_file() gets one
+        # for us, try to read a record.
+        if self.current_file or self._get_next_file():
+            record = self.current_file.readline()
+            if record:
+                self.last_read = time.time()
+                record = record.rstrip(&#39;\n&#39;)
+                logging.debug(&#39;TextFileReader got record &#34;%s&#34;&#39;, record)
+                self.pos += 1
+                return record
 
-      # No record: our current_file has reached EOF. See if more
-      # files we should try to read.
-      if self._get_next_file():
-        # Found a new file to read - loop again right away
-        continue
+            # No record: our current_file has reached EOF. See if more
+            # files we should try to read.
+            if self._get_next_file():
+                # Found a new file to read - loop again right away
+                continue
 
-    # EOF when we&#39;re reading from stdin means we&#39;re done
-    if not self.file_spec:
-      return None
+        # EOF when we&#39;re reading from stdin means we&#39;re done
+        if not self.file_spec:
+            return None
 
-    # No record, no new files, no tail or refresh directive -
-    # there&#39;s nothing left for us to try. Go home empty-handed.
-    if not self.refresh_file_spec and not self.tail:
-      return None
+        # No record, no new files, no tail or refresh directive -
+        # there&#39;s nothing left for us to try. Go home empty-handed.
+        if not self.refresh_file_spec and not self.tail:
+            return None
 
-    # User wants refresh or tail, so sleep and try again.
-    logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
-                  &#39;%f seconds before trying again&#39;, self.retry_interval)
-    time.sleep(self.retry_interval)</code></pre>
+        # User wants refresh or tail, so sleep and try again.
+        logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
+                      &#39;%f seconds before trying again&#39;, self.retry_interval)
+        time.sleep(self.retry_interval)</code></pre>
 </details>
 </dd>
 <dt id="logger.readers.text_file_reader.TextFileReader.seek"><code class="name flex">
 <span>def <span class="ident">seek</span></span>(<span>self, offset=0, origin='current')</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def seek(self, offset=0, origin=&#39;current&#39;):
-  original_state = self._save_state()
+    original_state = self._save_state()
 
-  try:
-    if origin == &#39;start&#39;:
-      if offset &lt; 0:
-        raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
-      self.used_file_list = []
-      self.unused_file_list = sorted(glob.glob(self.file_spec))
-      self.current_file = None
-      self.pos = 0
-      self._seek_forward_from_current(offset)
+    try:
+        if origin == &#39;start&#39;:
+            if offset &lt; 0:
+                raise ValueError(&#34;Can&#39;t back up past earliest record&#34;)
+            self.used_file_list = []
+            self.unused_file_list = sorted(glob.glob(self.file_spec))
+            self.current_file = None
+            self.pos = 0
+            self._seek_forward_from_current(offset)
 
-    elif origin == &#39;current&#39;:
-      if offset &gt;= 0:
-        self._seek_forward_from_current(offset)
-      else:
-        self._seek_back_from_current(offset)
+        elif origin == &#39;current&#39;:
+            if offset &gt;= 0:
+                self._seek_forward_from_current(offset)
+            else:
+                self._seek_back_from_current(offset)
 
-    elif origin == &#39;end&#39;:
-      # Have to count lines in all files that haven&#39;t been processed yet.
-      # TODO: take self.refresh_file_spec into account
-      file_list = sorted(glob.glob(self.file_spec))
-      pos = 0
-      for filename in file_list:
-        if filename in self.end_pos:
-          pos = self.end_pos[filename]
+        elif origin == &#39;end&#39;:
+            # Have to count lines in all files that haven&#39;t been processed yet.
+            # TODO: take self.refresh_file_spec into account
+            file_list = sorted(glob.glob(self.file_spec))
+            pos = 0
+            for filename in file_list:
+                if filename in self.end_pos:
+                    pos = self.end_pos[filename]
+                else:
+                    self.start_pos[filename] = pos
+
+                    # TODO: this can be made faster, if needed
+                    with open(filename) as f:
+                        for n, _ in enumerate(f, 1):
+                            pass
+
+                    pos += n
+                    self.end_pos[filename] = pos
+
+            self.used_file_list = file_list
+            self.unused_file_list = []
+            self.current_file = None
+            self.pos = pos
+            self._seek_back_from_current(offset)
+
         else:
-          self.start_pos[filename] = pos
+            raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
 
-          # TODO: this can be made faster, if needed
-          with open(filename) as f:
-            for n, _ in enumerate(f, 1):
-              pass
+    except:  # noqa: E722
+        self._restore_state(original_state)
+        raise
 
-          pos += n
-          self.end_pos[filename] = pos
-
-      self.used_file_list = file_list
-      self.unused_file_list = []
-      self.current_file = None
-      self.pos = pos
-      self._seek_back_from_current(offset)
-
-    else:
-      raise ValueError(&#39;Unknown origin value: &#34;%s&#34;&#39; % origin)
-
-  except:
-    self._restore_state(original_state)
-    raise
-
-  return self.pos</code></pre>
+    return self.pos</code></pre>
 </details>
 </dd>
 </dl>
@@ -866,9 +871,7 @@ could be EOF or simply an empty next line</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>
