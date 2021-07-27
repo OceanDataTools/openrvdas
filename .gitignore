@@ -54,6 +54,13 @@ local/rcrv/.coriolix_preferences
 # want to share with better granularity.
 local/sio/
 
+# local for STARC (USCGC Healy)
+#
+# STARC is testing this software out and wants the ability to make rapid
+# changes for a while.  Once stable, we can more define what we
+# want to share with better granularity.
+local/starc/
+
 # Created by build scripts
 .install_influxdb_preferences
 .install_openrvdas_preferences
