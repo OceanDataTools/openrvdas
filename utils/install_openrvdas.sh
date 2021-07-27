@@ -105,7 +105,7 @@ function get_os_type {
                 echo "Sorry - unknown OS Version! - exiting."
                 exit_gracefully
             fi
-        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
@@ -332,7 +332,7 @@ function install_packages {
             [ -e $SQLITE_TGZ ] || wget https://www.sqlite.org/2020/${SQLITE_TGZ}
             tar xzf ${SQLITE_TGZ}
             cd ${SQLITE_BASE}
-            ./configure
+            sh ./configure
             make && make install
         fi
 
@@ -348,7 +348,7 @@ function install_packages {
                 [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
                 tar xvf ${PYTHON_TGZ}
                 cd ${PYTHON_BASE}
-                ./configure # --enable-optimizations
+                sh ./configure # --enable-optimizations
                 make altinstall
 
                 ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
