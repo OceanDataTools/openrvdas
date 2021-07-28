@@ -326,7 +326,7 @@ function install_packages {
         if [ `/usr/local/bin/sqlite3 --version |  cut -f1 -d' '` == '3.32.3' ]; then
             echo Already have appropriate version of sqlite3
         else
-            cd /tmp
+            cd /var/tmp
             SQLITE_BASE=sqlite-autoconf-${SQLITE_VERSION}
             SQLITE_TGZ=${SQLITE_BASE}.tar.gz
             [ -e $SQLITE_TGZ ] || wget https://www.sqlite.org/2020/${SQLITE_TGZ}
@@ -342,7 +342,7 @@ function install_packages {
             if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
                 echo Already have appropriate version of Python3
             else
-                cd /tmp
+                cd /var/tmp
                 PYTHON_BASE=Python-${PYTHON_VERSION}
                 PYTHON_TGZ=${PYTHON_BASE}.tgz
                 [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
