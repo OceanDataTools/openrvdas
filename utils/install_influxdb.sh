@@ -105,7 +105,7 @@ function get_os_type {
     elif [[ `uname -s` == 'Linux' ]];then
         if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]];then
             OS_TYPE=Ubuntu
-        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
         else
             echo Unknown Linux variant!
