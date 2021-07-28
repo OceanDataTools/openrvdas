@@ -1,0 +1,499 @@
+################################################################################
+# Device definitions for the Nathaniel B. Palmer
+#
+# See README.md in this directory
+
+includes:
+  - test/NBP1406/devices/HydroDasNBP.yaml
+  - test/NBP1406/devices/MastWx.yaml
+  - local/devices/*.yaml
+
+devices:
+  ######################################
+  adcp:
+    category: "device"
+    device_type: "ADCP_OS75"
+    serial_number: "unknown"
+    description: "RD Industries OS-75"
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      VelocityE: "AdcpVelocityE"
+      VelocityN: "AdcpVelocityN"
+      HeadingT: "AdcpHeadingTrue"
+  
+  ######################################
+  gp02:
+    category: "device"
+    device_type: "Garmin02"
+    serial_number: "unknown"
+    description: "Garmin GPS of unknown type."
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      CourseTrue: "Gp02CourseTrue"
+      CourseMag: "Gp02CourseMag"
+      SpeedKt: "Gp02SpeedKt"
+      SpeedKm: "Gp02SpeedKm"
+      GPSTime: "Gp02GPSTime"
+      GPSDay: "Gp02GPSDay"
+      GPSMonth: "Gp02GPSMonth"
+      GPSYear: "Gp02GPSYear"
+      GPSDate: "Gp02GPSDate"
+      LocalHours: "Gp02GPSLocalHours"
+      Latitude: "Gp02Latitude"
+      NorS: "Gp02NorS"
+      Longitude: "Gp02Longitude"
+      EorW: "Gp02EorW"
+  
+  ######################################
+  eng1:
+    category: "device"
+    device_type: "EngineeringNBP"
+  
+    fields:
+      Voltage: "EngPowerVoltage"
+      CaseTemp: "EngCaseTemp"
+      Pump1Flow: "EngPump1Flow"
+      Pump2Flow: "EngPump2Flow"
+      Pump3Flow: "EngPump3Flow"
+      SeismicPressure: "EngSeismicPressure"
+      PIRCaseRes: "EngPIRCaseRes"
+      PIRCaseMv: "EngPIRCaseMv"
+      Freezer1Temp: "EngFreezer1Temp"
+      Freezer2Temp: "EngFreezer2Temp"
+  
+  ######################################
+  grv1:
+    category: "device"
+    device_type: "Gravimeter_BGM3"
+    
+    serial_number: "unknown"
+    description: "Bell Aerospace BGM-3; mounted???"
+  
+    # Map from device type field names to names specific for this
+    # specific device. Device type fields that are not mapped are
+    # ignored.
+    fields:
+      GravityValue: "Grv1Value"
+      GravityError: "Grv1Error"
+  
+  ######################################
+  gyr1:
+    category: "device"
+    device_type: "Gyrocompass"
+    serial_number: "unknown"
+    description: "Teledyne (Meridian) MK2 Standard"
+  
+    fields:
+      HeadingTrue: "Gyr1HeadingTrue"
+      RateOfTurn: "Gyr1RateOfTurn"
+  
+  ######################################
+  hdas:
+    category: "device"
+    device_type: "HydroDasNBP"
+    serial_number: "unknown"
+    description: "Aggregator of Hydro-DAS data"
+  
+    fields:
+      Voltage: "HDASVoltage"
+      CaseTemp: "HDASCaseTemp"
+      Fluorometer: "HDASFluorometer"
+      Transmissometer: "HDASTransmissometer"
+      SeawaterValve: "HDASSeawaterValve"
+      Flow1Freq: "HDASFlow1Freq"
+      Flow2Freq: "HDASFlow2Freq"
+      Flow3Freq: "HDASFlow3Freq"
+      Flow4Freq: "HDASFlow4Freq"
+  
+  ######################################
+  knud:
+    category: "device"
+    device_type: "Knudsen3260"
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      LFDepth: "KnudDepthLF"
+      LFValid: "KnudValidLF"
+      HFDepth: "KnudDepthHF"
+      HFValid: "KnudValidHF"
+      SoundSpeed: "KnudSoundSpeed"
+      Latitude: "KnudLatitude"
+      Longitude: "KnudLongitude"
+  
+    ########
+    serial_number: "0001AXK"
+    description: "Forward depth sonar. Mounted under Bosun's mattress. Allergic to cheese."
+  
+  ######################################
+  mbdp:
+    category: "device"
+    device_type: "MultibeamEM122"
+    serial_number: "unknown"
+    description: "Simrad EM122 Multibeam"
+  
+    fields:
+      Depth: "MBDPDepth"
+      WaterlineDist: "MBDPWaterlineDist"
+      MaxRange: "MBDPMaxRange"
+  
+  ######################################
+  mwx1:
+    category: "device"
+    device_type: "MastWx"
+    description: "Aggregator of mast weather data"
+  
+    fields:
+      PowerVolt: "MwxPowerVolt"
+      EncRelHumid: "MwxEncRelHumid"
+      AirTemp: "MwxAirTemp"
+      AirRelHumid: "MwxAirRelHumid"
+      PAR: "MwxPAR"
+      PSP: "MwxPSP"
+      PIRThermo: "MwxPIRThermo"
+      PIRCaseTemp: "MwxPIRCaseTemp"
+      PIRDomeTemp: "MwxPIRDomeTemp"
+      Barometer: "MwxBarometer"
+      PortRelWindDir: "MwxPortRelWindDir"
+      PortRelWindSpeed: "MwxPortRelWindSpeed"
+      PortSoundSpeed: "MwxPortSoundSpeed"
+      PortSonicTemp: "MwxPortSonicTemp"
+      PortStatus: "MwxPortStatus"
+      StbdRelWindDir: "MwxStbdRelWindDir"
+      StbdRelWindSpeed: "MwxStbdRelWindSpeed"
+      StbdSoundSpeed: "MwxStbeSoundSpeed"
+      StbdSonicTemp: "MwxStbdSonicTemp"
+      StbdStatus: "MwxStbdStatus"
+  
+  ######################################
+  pco2:
+    category: "device"
+    device_type: "PCO2_LDEO"
+    description: "LDEO pCO2 Equilibration System"
+  
+    fields:
+      TimeTag: "PCO2TimeTag"
+      Voltage: "PCO2Voltage"
+      CellTemp: "PCO2CellTemp"
+      EquilPressure: "PCO2EquiPressure"
+      FlowRate: "PCO2FlowRate"
+      PCO2Pressure: "PCO2Pressure"
+      VCO2Concentration: "PCO2VCO2Concentration"
+      EquilTempRTD: "PCO2EquilTempRTD"
+      EquilTempSBE38: "PCO2EquilTempSBE38"
+      ValvePosition: "PCO2ValvePosition"
+      Source: "PCO2Source"
+  
+  ######################################
+  pguv:
+    category: "device"
+    device_type: "PGUV"
+    description: "Biospherical Instruments GUV-2511"
+  
+    fields:
+      Date: "GUVDate"
+      Time: "GUVTime"
+      GroundVoltage: "GUVGroundVoltage"
+      Irradiance320: "GUVIrradiance320"
+      Irradiance340: "GUVIrradiance340"
+      Irradiance313: "GUVIrradiance313"
+      Irradiance305: "GUVIrradiance305"
+      Irradiance380: "GUVIrradiance380"
+      Irradiance400: "GUVIrradiance400"
+      Irradiance395: "GUVIrradiance395"
+      Temp: "GUVTemp"
+      InputVoltage: "GUVInputVoltage"
+  
+  ######################################
+  rtmp:
+    category: "device"
+    device_type: "SBE38"
+    description: "Seawater intake temperature"
+  
+    fields:
+      Temp: "RTMPTemp"
+  
+  ######################################
+  svp1:
+    category: "device"
+    device_type: "SVP"
+    description: "Sound Velocity, from ADCP sonar well"
+  
+    fields:
+      Velocity: "SVPVelocity"
+  
+  ######################################
+  tsg1:
+    category: "device"
+    device_type: "TSG_SBE45"
+    description: "Thermosalinograph Sea-Bird SBE-45"
+  
+    fields:
+      Temp: "TSG1Temp"
+      Conductivity: "TSG1Conductivity"
+      Salinity: "TSG1Salinity"
+      SoundVelocity: "TSG1SoundVelocity"
+  
+  ######################################
+  tsg2:
+    category: "device"
+    device_type: "TSG_SBE45"
+    description: "Thermosalinograph Sea-Bird SBE-45"
+  
+    fields:
+      Temp: "TSG2Temp"
+      Conductivity: "TSG2Conductivity"
+      Salinity: "TSG2Salinity"
+      SoundVelocity: "TSG2SoundVelocity"
+  
+  ######################################
+  seap:
+    category: "device"
+    device_type: "Seapath200"
+    serial_number: "unknown"
+    description: "Just another device description."
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      GPSTime: "SeapGPSTime"
+      FixQuality: "SeapFixQuality"
+      NumSats: "SeapNumSats"
+      HDOP: "SeapHDOP"
+      AntennaHeight: "SeapAntennaHeight"
+      GeoidHeight: "SeapGeoidHeight"
+      LastDGPSUpdate: "SeapLastDGPSUpdate"
+      DGPSStationID: "SeapDGPSStationID"
+      CourseTrue: "SeapCourseTrue"
+      CourseMag: "SeapCourseMag"
+      SpeedKt: "SeapSpeedKt"
+      SpeedKm: "SeapSpeedKm"
+      Mode: "SeapMode"
+      GPSTime: "SeapGPSTime"
+      GPSDay: "SeapGPSDay"
+      GPSMonth: "SeapGPSMonth"
+      GPSYear: "SeapGPSYear"
+      LocalHours: "SeapLocalHours"
+      LocalZone: "SeapLocalZone"
+      HorizQual: "SeapHorizQual"
+      HeightQual: "SeapHeightQual"
+      HeadingQual: "SeapHeadingQual"
+      RollPitchQual: "SeapRollPitchQual"
+      GyroCal: "SeapGyroCal"
+      GyroOffset: "SeapGyroOffset"
+      Roll: "SeapRoll"
+      Pitch: "SeapPitch"
+      HeadingTrue: "SeapHeadingTrue"
+      Heave: "SeapHeave"
+      Latitude: "SeapLatitude"
+      NorS: "SeapNorS"
+      Longitude: "SeapLongitude"
+      EorW: "SeapEorW"
+  
+  ######################################
+  s330:
+    category: "device"
+    device_type: "Seapath330"
+    serial_number: "unknown"
+    description: "Just another device description."
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      GPSTime: "S330GPSTime"
+      FixQuality: "S330FixQuality"
+      NumSats: "S330NumSats"
+      HDOP: "S330HDOP"
+      AntennaHeight: "S330AntennaHeight"
+      GeoidHeight: "S330GeoidHeight"
+      LastDGPSUpdate: "S330LastDGPSUpdate"
+      DGPSStationID: "S330DGPSStationID"
+      CourseTrue: "S330CourseTrue"
+      CourseMag: "S330CourseMag"
+      SpeedKt: "S330SpeedKt"
+      SpeedKm: "S330SpeedKm"
+      Mode: "S330Mode"
+      GPSTime: "S330GPSTime"
+      GPSDay: "S330GPSDay"
+      GPSMonth: "S330GPSMonth"
+      GPSYear: "S330GPSYear"
+      GPSDate: "S330GPSDate"
+      LocalHours: "S330LocalHours"
+      LocalZone: "S330LocalZone"
+      HorizQual: "S330HorizQual"
+      HeightQual: "S330HeightQual"
+      HeadingQual: "S330HeadingQual"
+      RollPitchQual: "S330RollPitchQual"
+      GyroCal: "S330GyroCal"
+      GyroOffset: "S330GyroOffset"
+      Roll: "S330Roll"
+      Pitch: "S330Pitch"
+      HeadingTrue: "S330HeadingTrue"
+      Heave: "S330Heave"
+      Latitude: "S330Latitude"
+      NorS: "S330NorS"
+      Longitude: "S330Longitude"
+      EorW: "S330EorW"
+      MagneticVar: "S330MagVar"
+      MagneticVarEorW: "S330MagVarEorW"
+  
+  ######################################
+  sp1b:
+    category: "device"
+    device_type: "Seapath330"
+    serial_number: "unknown"
+    description: "Really a Seapath 1B, but we don't have a def for that yet."
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      GPSTime: "SP1BGPSTime"
+      FixQuality: "SP1BFixQuality"
+      NumSats: "SP1BNumSats"
+      HDOP: "SP1BHDOP"
+      AntennaHeight: "SP1BAntennaHeight"
+      GeoidHeight: "SP1BGeoidHeight"
+      LastDGPSUpdate: "SP1BLastDGPSUpdate"
+      DGPSStationID: "SP1BDGPSStationID"
+      CourseTrue: "SP1BCourseTrue"
+      CourseMag: "SP1BCourseMag"
+      SpeedKt: "SP1BSpeedKt"
+      SpeedKm: "SP1BSpeedKm"
+      Mode: "SP1BMode"
+      GPSTime: "SP1BGPSTime"
+      GPSDay: "SP1BGPSDay"
+      GPSMonth: "SP1BGPSMonth"
+      GPSYear: "SP1BGPSYear"
+      GPSDate: "SP1BGPSDate"
+      LocalHours: "SP1BLocalHours"
+      LocalZone: "SP1BLocalZone"
+      HorizQual: "SP1BHorizQual"
+      HeightQual: "SP1BHeightQual"
+      HeadingQual: "SP1BHeadingQual"
+      RollPitchQual: "SP1BRollPitchQual"
+      GyroCal: "SP1BGyroCal"
+      GyroOffset: "SP1BGyroOffset"
+      Roll: "SP1BRoll"
+      Pitch: "SP1BPitch"
+      HeadingTrue: "SP1BHeadingTrue"
+      Heave: "SP1BHeave"
+      Latitude: "SP1BLatitude"
+      NorS: "SP1BNorS"
+      Longitude: "SP1BLongitude"
+      EorW: "SP1BEorW"
+      MagneticVar: "SP1BMagVar"
+      MagneticVarEorW: "SP1BMagVarEorW"
+  
+  ######################################
+  PCOD:
+    category: "device"
+    device_type: "TrimbleGPS"
+    serial_number: "unknown"
+    description: "Just another device description."
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      GPSTime: "PcodGPSTime"
+      FixQuality: "PcodFixQuality"
+      FixTime: "PcodFixTime"
+      NumSats: "PcodNumSats"
+      HDOP: "PcodHDOP"
+      AntennaHeight: "PcodAntennaHeight"
+      GeoidHeight: "PcodGeoidHeight"
+      LastDGPSUpdate: "PcodLastDGPSUpdate"
+      DGPSStationID: "PcodDGPSStationID"
+      CourseTrue: "PcodCourseTrue"
+      CourseMag: "PcodCourseMag"
+      SpeedKt: "PcodSpeedKt"
+      SpeedKm: "PcodSpeedKm"
+      Mode: "PcodMode"
+      GPSTime: "PcodGPSTime"
+      GPSDay: "PcodGPSDay"
+      GPSMonth: "PcodGPSMonth"
+      GPSYear: "PcodGPSYear"
+      GPSDate: "PcodGPSDate"
+      LocalHours: "PcodLocalHours"
+      LocalZone: "PcodLocalZone"
+      HorizQual: "PcodHorizQual"
+      HeightQual: "PcodHeightQual"
+      HeadingQual: "PcodHeadingQual"
+      RollPitchQual: "PcodRollPitchQual"
+      GyroCal: "PcodGyroCal"
+      GyroOffset: "PcodGyroOffset"
+      Roll: "PcodRoll"
+      Pitch: "PcodPitch"
+      HeadingTrue: "PcodHeadingTrue"
+      Heave: "PcodHeave"
+      Latitude: "PcodLatitude"
+      NorS: "PcodNorS"
+      Longitude: "PcodLongitude"
+      EorW: "PcodEorW"
+      MagneticVar: "PcodMagVar"
+      MagneticVarEorW: "PcodMagVarEorW"
+      DataValid: "PcodDataValid"
+      Mode: "PcodMode"
+      LocalDatum: "PcodLocalDatum"
+      LocalDatumSubCode: "PcodLocalDatumSubCode"
+      LatitudeOffsetMinutes: "PcodLatitudeOffsetMinutes"
+      LatitudeOffsetNorS: "PcodLatitudeOffsetNorS"
+      LongitudeOffsetMinutes: "PcodLongitudeOffsetMinutes"
+      LongitudeOffsetEorW: "PcodLongitudeOffsetEorW"
+      AltitudeOffset: "PcodAltitudeOffset"
+      Datum: "PcodDatum"
+
+  ######################################
+  bwnc:
+    category: "device"
+    device_type: "Winch"
+    serial_number: "unknown"
+    description: "Baltic winch"
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      LANID: "BalticLANID"
+      WinchTime: "BalticWinchTime"
+      Name: "BalticName"
+      Tension: "BalticTension"
+      Speed: "BalticSpeed"
+      Payout: "BalticPayout"
+      
+  ######################################
+  cwnc:
+    category: "device"
+    device_type: "Winch"
+    serial_number: "unknown"
+    description: "Waterfall winch"
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      LANID: "WaterfallLANID"
+      WinchTime: "WaterfallWinchTime"
+      Name: "WaterfallName"
+      Tension: "WaterfallTension"
+      Speed: "WaterfallSpeed"
+      Payout: "WaterfallPayout"
+  
+  ######################################
+  twnc:
+    category: "device"
+    device_type: "Winch"
+    serial_number: "unknown"
+    description: "Trawl winch"
+  
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      LANID: "TrawlLANID"
+      WinchTime: "TrawlWinchTime"
+      Name: "TrawlName"
+      Tension: "TrawlTension"
+      Speed: "TrawlSpeed"
+      Payout: "TrawlPayout"
+  

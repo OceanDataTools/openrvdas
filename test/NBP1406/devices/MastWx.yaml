@@ -1,0 +1,87 @@
+################################################################################
+# NBP-Specific Mast Weather Device Type Definitions
+#
+# See local/README.md
+
+######################################
+MastWx:
+  category: "device_type"
+  description: "Aggregator of mast weather data"
+
+  # Note: there's a weirdness about these records in that SUS and PUS
+  # both contain a non-printable ^B in front of the "A" and a
+  # non-printable ^C in front of the checksum. We get around this by
+  # just having both be "non-comma" fields.
+  #
+  # MET,12.1,22,4.89,78.2,3.398632,-0.126934,-0.4755421,279.9002,279.3687,1006.409,5.00,76.1
+  # MET,12.1,22,19.15,63.5,7.138004,-0.0766031,-0.404655
+  # PUS,^BA,336,009.41,M,+344.63,+021.71,60,^C01
+  # SUS,^BA,327,009.72,M,+344.09,+020.79,60,^C04
+  format:
+    MET:
+    - "MET,{PowerVolt:g},{EncRelHumid:g},{AirTemp:g},{AirRelHumid:g},{PAR:g},{PSP:g},{PIRThermo:g},{PIRCaseTemp:g},{PIRDomeTemp:g},{Barometer:g}"
+    - "MET,{PowerVolt:g},{EncRelHumid:g},{AirTemp:g},{AirRelHumid:g},{PAR:g},{PSP:g},{PIRThermo:g},{PIRCaseTemp:g},{PIRDomeTemp:g},{Barometer:g},{Unknown1:g},{Unknown2:g}"
+    PUS: "PUS,{:nc},{PortRelWindDir:g},{PortRelWindSpeed:g},M,{PortSoundSpeed:g},{PortSonicTemp:g},{PortStatus:d},{Checksum:nc}"
+    SUS: "SUS,{:nc},{StbdRelWindDir:g},{StbdRelWindSpeed:g},M,{StbdSoundSpeed:g},{StbdSonicTemp:g},{StbdStatus:d},{Checksum:nc}"
+
+  fields:
+    PowerVolt:
+      units: "V"
+      description: "Power supply voltage"
+    EncRelHumid:
+      units: "%"
+      description: "Enclosure relative humidity (not implemented)"
+    AirTemp:
+      units: "C"
+      description: "Air temperature"
+    AirRelHumid:
+      units: "%"
+      description: "Air relative humidity"
+    PAR:
+      units: "mV"
+      description: "PAR (Photosynthetically Available Radiation)"
+    PSP:
+      units: "PSP (Shortwave Radiation)"
+      description: "mV"
+    PIRThermo:
+      units: "mV"
+      description: "PIR Thermopile (Longwave Radiation)"
+    PIRCaseTemp:
+      units: "K"
+      description: "PIR case temperature"
+    PIRDomeTemp:
+      units: "K"
+      description: "PIR dome temperature"
+    Barometer:
+      units: "mBar"
+      description: "Barometric pressure"
+    PortRelWindDir:
+      units: "degrees"
+      description: "Port relative wind direction"
+    PortRelWindSpeed:
+      units: "m/s"
+      description: "Port relative wind speed"
+    PortSoundSpeed:
+      units: "m/s"
+      description: "Sound speed"
+    PortSonicTemp:
+      units: "C"
+      description: "Sonic temperature"
+    PortStatus:
+      units: ""
+      description: "Unit status: 00 = Good, 60 = Good. Any other value indicates fault"
+    StbdRelWindDir:
+      units: "degrees"
+      description: "Stbd relative wind direction"
+    StbdRelWindSpeed:
+      units: "m/s"
+      description: "Stbd relative wind speed"
+    StbdSoundSpeed:
+      units: "m/s"
+      description: "Sound speed"
+    StbdSonicTemp:
+      units: "C"
+      description: "Sonic temperature"
+    StbdStatus:
+      units: ""
+      description: "Unit status: 00 = Good, 60 = Good. Any other value indicates fault"

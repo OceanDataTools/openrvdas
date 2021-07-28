@@ -274,7 +274,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -317,7 +317,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -360,7 +360,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -378,7 +378,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -408,7 +408,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -451,7 +451,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -494,7 +494,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -512,7 +512,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -542,7 +542,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -585,7 +585,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -628,7 +628,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -646,7 +646,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -676,7 +676,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -719,7 +719,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -762,7 +762,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -780,7 +780,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -810,7 +810,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -853,7 +853,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -896,7 +896,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -914,7 +914,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -944,7 +944,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -987,7 +987,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1030,7 +1030,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1048,7 +1048,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1078,7 +1078,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1121,7 +1121,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1164,7 +1164,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1182,7 +1182,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1212,7 +1212,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1255,7 +1255,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1298,7 +1298,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1316,7 +1316,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1346,7 +1346,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1389,7 +1389,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1432,7 +1432,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1450,7 +1450,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1480,7 +1480,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1523,7 +1523,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1566,7 +1566,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1584,7 +1584,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1614,7 +1614,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1657,7 +1657,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1700,7 +1700,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1718,7 +1718,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1748,7 +1748,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1791,7 +1791,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1834,7 +1834,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1852,7 +1852,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1882,7 +1882,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1925,7 +1925,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1968,7 +1968,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1986,7 +1986,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2016,7 +2016,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2059,7 +2059,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2102,7 +2102,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2120,7 +2120,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2150,7 +2150,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2193,7 +2193,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2236,7 +2236,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2254,7 +2254,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2284,7 +2284,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2327,7 +2327,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2370,7 +2370,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2388,7 +2388,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2418,7 +2418,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2461,7 +2461,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2504,7 +2504,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2522,7 +2522,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2552,7 +2552,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2595,7 +2595,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2638,7 +2638,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2656,7 +2656,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2686,7 +2686,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2729,7 +2729,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2772,7 +2772,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2790,7 +2790,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2820,7 +2820,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2863,7 +2863,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2906,7 +2906,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2924,7 +2924,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/usap/nbp/devices/nbp_devices.yaml
+            definition_path: test/NBP1406/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
 
