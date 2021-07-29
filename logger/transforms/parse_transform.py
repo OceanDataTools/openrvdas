@@ -50,7 +50,8 @@ class ParseTransform(Transform):
                 haven't been returned in the last metadata_interval seconds.
 
         quiet - if not False, don't complain when unable to parse a record.
-                prepend_data_id
+
+        prepend_data_id
                 If true prepend the instrument data_id to field_names in the record.
 
         delimiter

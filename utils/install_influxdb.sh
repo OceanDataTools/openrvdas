@@ -248,6 +248,11 @@ function install_influxdb {
         echo "from all Grafana and Telegraf servers."
         yes_no "Overwrite existing installation?" no
         if [ $YES_NO_RESULT == 'no' ];then
+
+            # They may have run install_openrvdas.sh again, which will have overwritten our
+            # settings in database/settings.py. So even if we're not updating the installation,
+            # grab the latest auth token and stuff it back in.
+            fix_database_settings
             return 0
         fi
     fi
