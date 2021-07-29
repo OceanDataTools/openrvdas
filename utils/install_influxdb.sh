@@ -250,8 +250,12 @@ function install_influxdb {
         if [ $YES_NO_RESULT == 'no' ];then
 
             # They may have run install_openrvdas.sh again, which will have overwritten our
-            # settings in database/settings.py. So even if we're not updating the installation,
+            # virtual environment and any settings in database/settings.py. So even if we're
+            # not updating the installation, make sure we've still got influxdb_client and
             # grab the latest auth token and stuff it back in.
+            pip install \
+                --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+                influxdb_client
             fix_database_settings
             return 0
         fi
