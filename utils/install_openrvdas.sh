@@ -659,6 +659,12 @@ function setup_python_packages {
 
     # Set up virtual environment
     VENV_PATH=$INSTALL_ROOT/openrvdas/venv
+
+    # We'll rebuild the virtual environment each time to avoid version skew
+    if [ -d $VENV_PATH ];then
+        mv $VENV_PATH ${VENV_PATH}.bak.$$
+    fi
+
     python3 -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
 
