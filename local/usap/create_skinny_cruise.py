@@ -313,11 +313,11 @@ def get_file_reader_definition(loggers):
             prefix: %LOGGER%
 """
   WRITER_TEMPLATE = """
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: %RAW_UDP_PORT%
-            destination: %UDP_DESTINATION%
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: %RAW_UDP_PORT%
+        destination: %UDP_DESTINATION%
 """
 
   output = WRITER_HEADER_TEMPLATE
