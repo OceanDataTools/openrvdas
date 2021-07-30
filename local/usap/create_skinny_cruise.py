@@ -292,27 +292,28 @@ SNAPSHOT_TEMPLATE = """  ########
 # Create file_reader definition
 def get_file_reader_definition(loggers):
   WRITER_HEADER_TEMPLATE = """  ########
-      file_reader->off:
-        name: file_reader->off
+  file_reader->off:
+    name: file_reader->off
 
-      file_reader->net:
-        name: file_reader->net
-        readers:                    # Read from all the logfiles
+  file_reader->net:
+    name: file_reader->net
+    readers:                    # Read from all the logfiles
 """
-  LOGFILE_READ_TEMPLATE = """          - class: ComposedReader
-            kwargs:
-              readers:
-              - class: LogfileReader
-                kwargs:
-                  filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
-                  tail: true
-                  refresh_file_spec: true
-              transforms:
-              - class: PrefixTransform
-                kwargs:
-                  prefix: %LOGGER%
+  LOGFILE_READ_TEMPLATE = """    - class: ComposedReader
+      kwargs:
+        readers:
+        - class: LogfileReader
+          kwargs:
+           filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
+            tail: true
+            refresh_file_spec: true
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
 """
-  WRITER_TEMPLATE = """      writers:
+  WRITER_TEMPLATE = """
+        writers:
         - class: UDPWriter
           kwargs:
             port: %RAW_UDP_PORT%
