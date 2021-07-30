@@ -159,10 +159,6 @@
     return val.toFixed(4);
   }
 
-  function num_to_lat_lon(val) {
-    return ((val/100).toFixed(4)).padStart(9);
-  }
-
   /////////////////////////
   // Start of widgets
 
@@ -171,7 +167,7 @@
                                   {S330Latitude:
                                     {
                                       name: "Latitude",
-                                      transform: num_to_lat_lon,
+                                      transform: round_4,
                                       timeout_css: {
                                         5: "background-color:yellow",
                                        15: "background-color:red"
@@ -184,7 +180,7 @@
                                   {S330Longitude:
                                     {
                                       name: "Longitude",
-                                      transform: num_to_lat_lon,
+                                      transform: round_4,
                                       timeout_css: {
                                         5: "background-color:yellow",
                                        15: "background-color:red"
