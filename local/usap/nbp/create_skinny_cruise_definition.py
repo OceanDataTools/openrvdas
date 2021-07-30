@@ -11,9 +11,8 @@ import logging
 from collections import OrderedDict
 
 VARS = {
-  '%UDP_INTERFACE%': '157.132.129.255', # broadcast for nbp-dast-02-t
+  '%UDP_INTERFACE%': '157.132.129.255', # broadcast for nbp-odas-p
   '%RAW_UDP%': '6224',
-  '%CACHE_UDP%': '6225',
   '%WEBSOCKET%': '8766',
   '%BACK_SECONDS%': '640',
   '%FILEBASE%': '/data/logger'
