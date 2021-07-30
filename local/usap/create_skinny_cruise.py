@@ -304,7 +304,7 @@ def get_file_reader_definition(loggers):
         readers:
         - class: LogfileReader
           kwargs:
-           filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
+            filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
             tail: true
             refresh_file_spec: true
         transforms:
