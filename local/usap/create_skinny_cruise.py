@@ -390,6 +390,15 @@ LOGGER_DEF = """  %LOGGER%:
 for logger in loggers:
   output += fill_substitutions(LOGGER_DEF, substitutions).replace('%LOGGER%', logger)
 
+output += """  file_reader:
+    configs:
+    - file_reader->off
+    - file_reader->net
+  net_reader:
+    configs:
+    - net_reader->off
+    - net_reader->on
+"""
 output += """  true_wind:
     configs:
     - true_wind->off
