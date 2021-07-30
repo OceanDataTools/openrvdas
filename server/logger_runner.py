@@ -44,6 +44,7 @@ import signal
 import sys
 
 from importlib import reload
+from setproctitle import setproctitle
 
 # Add the openrvdas/ directory to module search path
 from os.path import dirname, realpath
@@ -121,7 +122,9 @@ def run_logger(logger, config, stderr_file=None, log_level=logging.INFO):
                         filename=stderr_file,
                         level=log_level)
 
+    # Set the name of the process for ps
     config_name = config.get('name', 'no_name')
+    setproctitle('openrvdas/server/logger_runner.py:' + config_name)
     logging.info('Starting logger %s config %s', logger, config_name)
 
     if config_is_runnable(config):
