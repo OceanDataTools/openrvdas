@@ -60,7 +60,7 @@ Once you have logged back on, open two terminal windows.
   logger/listener/listen.py --serial port=/tmp/tty_s330 --transform_timestamp --write_file /tmp/s330.log
 ```
 
-4. Open a web browser and direct it to http://openrvdas:8000 (assuming you named your openrvdas machine 'openrvdas'). You may need to edit your local host machine's ``/etc/host`` to include the name and IP address of your openrvdas machine for this to work.
+4. Open a web browser and direct it to http://openrvdas (assuming you named your openrvdas machine 'openrvdas'). You may need to edit your local host machine's ``/etc/host`` to include the name and IP address of your openrvdas machine for this to work.
 
  If all has gone well, you will see a cruise management startup page like the one below:
 
@@ -80,7 +80,7 @@ Once you have logged back on, open two terminal windows.
 
  You can change the active configuration of individual loggers by clicking on the button bearing the name of the current configuration.
 
-4. Open a second browser window and direct it to http://openrvdas:8000/display/nbp_basic.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
+4. Open a second browser window and direct it to http://openrvdas/display/nbp_basic.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
 
  ![NBP Widget Demo](images/nbp_display.png)
  
