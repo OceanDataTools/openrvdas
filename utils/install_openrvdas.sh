@@ -105,7 +105,7 @@ function get_os_type {
                 echo "Sorry - unknown OS Version! - exiting."
                 exit_gracefully
             fi
-        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
@@ -660,10 +660,15 @@ function setup_python_packages {
     # Set up virtual environment
     VENV_PATH=$INSTALL_ROOT/openrvdas/venv
 
+    ## Bit of a challenge here - if our new install has a newer version of
+    ## Python or something, reusing the existing venv can cause subtle
+    ## havoc. But deleting and rebuilding it each time is a mess. Commenting
+    ## out the delete for now...
+    ##
     # We'll rebuild the virtual environment each time to avoid version skew
-    if [ -d $VENV_PATH ];then
-        mv $VENV_PATH ${VENV_PATH}.bak.$$
-    fi
+    #if [ -d $VENV_PATH ];then
+    #    mv $VENV_PATH ${VENV_PATH}.bak.$$
+    #fi
 
     python3 -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
