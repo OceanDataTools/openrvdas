@@ -42,6 +42,11 @@ database/influxdb/README.md
 database/influxdb/influx
 database/influxdb/influxd
 
+# SSH
+*.pem
+*.crt
+*.key
+
 # CORIOLIX
 local/rcrv/settings.py
 local/rcrv/config_template.yaml
