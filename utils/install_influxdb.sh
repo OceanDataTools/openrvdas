@@ -197,12 +197,13 @@ function get_influxdb_auth_token {
 }
 
 ###########################################################################
-# Tweak the database/settings.py file to use new token
+# Create database/influxdb/settings.py and set up our new token
 function fix_database_settings {
-    SETTINGS=$INSTALL_ROOT/openrvdas/database/settings.py
-
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
+
+    SETTINGS=$INSTALL_ROOT/openrvdas/database/influxdb/settings.py
+    cp ${SETTINGS}.dist $SETTINGS
 
     sed -i -e "s/INFLUXDB_ORG = '.*'/INFLUXDB_ORG = '$ORGANIZATION'/" $SETTINGS
     sed -i -e "s/INFLUXDB_AUTH_TOKEN = '.*'/INFLUXDB_AUTH_TOKEN = '$INFLUXDB_AUTH_TOKEN'/" $SETTINGS
@@ -210,7 +211,6 @@ function fix_database_settings {
     # If they've run this with an old installation of OpenRVDAS,
     # database/settings.py may have the old/wrong port number for InfluxDB
     sed -i -e "s/INFLUXDB_URL = 'http:\/\/localhost:9999'/INFLUXDB_URL = 'http:\/\/localhost:8086'/" $SETTINGS
-
 }
 
 ###########################################################################
@@ -248,15 +248,6 @@ function install_influxdb {
         echo "from all Grafana and Telegraf servers."
         yes_no "Overwrite existing installation?" no
         if [ $YES_NO_RESULT == 'no' ];then
-
-            # They may have run install_openrvdas.sh again, which will have overwritten our
-            # virtual environment and any settings in database/settings.py. So even if we're
-            # not updating the installation, make sure we've still got influxdb_client and
-            # grab the latest auth token and stuff it back in.
-            pip install \
-                --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-                influxdb_client
-            fix_database_settings
             return 0
         fi
     fi
