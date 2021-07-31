@@ -85,7 +85,7 @@ class CachedDataWriter(Writer):
             and cleanups.
             """
             while True:
-                logging.warning('CachedDataWriter trying to connect to '
+                logging.info('CachedDataWriter trying to connect to '
                                 + self.data_server)
                 try:
                     if self.use_wss:
@@ -106,7 +106,7 @@ class CachedDataWriter(Writer):
                         ws_data_server = 'ws://' + self.data_server
                         ssl_context = None
 
-                    logging.warning(f'CachedDataWriter connecting to {ws_data_server}')
+                    logging.info(f'CachedDataWriter connecting to {ws_data_server}')
                     async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
                         logging.info(f'Connected to data server {ws_data_server}')
                         while True:
