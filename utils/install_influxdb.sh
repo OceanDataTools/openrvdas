@@ -219,8 +219,9 @@ function fix_database_settings {
 # need to have available.
 function open_required_ports {
     if [ $OS_TYPE == 'CentOS' ] && [ `systemctl is-active firewalld` == 'active' ]; then
-        echo Opening ports 9999 \(InfluxDB\) and 3000 \(Grafana\)
+        echo Opening ports 8086 \(InfluxDB\) and 3000 \(Grafana\)
         sudo firewall-cmd -q --permanent --add-port=9999/tcp > /dev/null  # InfluxDB
+        sudo firewall-cmd -q --permanent --add-port=8086/tcp > /dev/null  # InfluxDB
         sudo firewall-cmd -q --permanent --add-port=3000/tcp > /dev/null  # Grafana
         sudo firewall-cmd -q --reload > /dev/null
     fi
