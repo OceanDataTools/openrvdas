@@ -158,8 +158,8 @@ need to supply the new one to Grafana and Telegraf.
 
 To write to InfluxDB, OpenRVAS needs to have the AUTH_TOKEN of an
 authorized InfluxDB user. If all went well, the installation script
-copied that into ``database/settings.py`` automatically. You can
-verify this by looking at the end of ``database/settings.py`` for
+copied that into ``database/influxdb/settings.py`` automatically. You can
+verify this by looking at the end of ``database/influxdb/settings.py`` for
 something like:
 
 ```
