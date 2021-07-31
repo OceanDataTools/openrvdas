@@ -333,12 +333,14 @@ class RecordParser:
     ############################
     def parse_for_data_id(self, data_id, field_string):
         """Look up the device and device type for a data_id. Parse the field_string
-        according to those formats, returning a dict of {field_name:
-        field_value} or None if unable to match a format pattern.
+        according to those formats. If successful, return a tuple of
+        (field_dict, message_type), where field_dict is a dict of
+        {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
         """
+        failure_values = ({}, None)
         if not self.devices:
             logging.warning('RecordParser has no device definitions; unable to parse!')
-            return None
+            return failure_values
 
         # Get device and device_type definitions for data_id
         device = self.devices.get(data_id, None)
@@ -348,19 +350,19 @@ class RecordParser:
                                 data_id, field_string)
                 logging.warning('Known data ids are: "%s"',
                                 ', '.join(self.devices.keys()))
-            return None
+            return failure_values
 
         device_type = device.get('device_type', None)
         if not device_type:
             if not self.quiet:
                 logging.error('Internal error: No "device_type" for device %s!', device)
-            return None
+            return failure_values
 
         device_definition = self.device_types.get(device_type, None)
         if not device_definition:
             if not self.quiet:
                 logging.error('No definition found for device_type "%s"', device_type)
-            return None
+            return failure_values
 
         compiled_format_patterns = device_definition.get('compiled_format', None)
         parsed_fields, message_type = \
@@ -377,7 +379,7 @@ class RecordParser:
         if not device_fields:
             if not self.quiet:
                 logging.error('No "fields" definition found for device %s', data_id)
-            return None
+            return failure_values
 
         # Assign field values to the appropriate named variable.
         fields = {}
