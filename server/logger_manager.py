@@ -298,9 +298,8 @@ class LoggerManager:
                           'message': parsed_fields['message']
                           }
                 das_record = DASRecord(fields={field_name: json.dumps(fields)})
-                # logging.warning('Message: %s', fields)
                 self.data_server_writer.write(das_record)
-            except KeyError:
+            except (KeyError, TypeError):
                 logging.warning('Couldn\'t parse stderr message: %s', record)
 
     ############################
