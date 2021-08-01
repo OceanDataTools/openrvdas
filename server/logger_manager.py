@@ -300,7 +300,8 @@ class LoggerManager:
                 das_record = DASRecord(fields={field_name: json.dumps(fields)})
                 self.data_server_writer.write(das_record)
             except (KeyError, TypeError):
-                logging.warning('Couldn\'t parse stderr message: %s', record)
+                logging.warning('Couldn\'t parse stderr message from logger %s: %s',
+                                logger, record)
 
     ############################
     def _check_logger_status_loop(self):

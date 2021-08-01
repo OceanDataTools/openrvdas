@@ -56,28 +56,28 @@ class InfluxDBWriter(Writer):
         super().__init__(input_format=Text)
         if not auth_token:
             raise RuntimeError('No auth token specified in InfluxDBWriter and '
-                               'none found in database/settings.py. Have '
-                               'you copied over database/settings.py.dist '
-                               'to database/settings.py and followed the '
+                               'none found in database/influxdb/settings.py. Have '
+                               'you copied over database/influxdb/settings.py.dist '
+                               'to database/influxdb/settings.py and followed the '
                                'configuration instructions in it?')
         if not org:
             raise RuntimeError('No organization specified in InfluxDBWriter and '
-                               'none found in database/settings.py. Have '
-                               'you copied over database/settings.py.dist '
-                               'to database/settings.py and followed the '
+                               'none found in database/influxdb/settings.py. Have '
+                               'you copied over database/influxdb/settings.py.dist '
+                               'to database/influxdb/settings.py and followed the '
                                'configuration instructions in it?')
         if not url:
             raise RuntimeError('No URL specified in InfluxDBWriter and '
-                               'none found in database/settings.py. Have '
-                               'you copied over database/settings.py.dist '
-                               'to database/settings.py and followed the '
+                               'none found in database/influxdb/settings.py. Have '
+                               'you copied over database/influxdb/settings.py.dist '
+                               'to database/influxdb/settings.py and followed the '
                                'configuration instructions in it?')
 
         if not INFLUXDB_SETTINGS_FOUND:
-            raise RuntimeError('File database/settings.py not found. '
+            raise RuntimeError('File database/influxdb/settings.py not found. '
                                'InfluxDB functionality is not available. Have '
-                               'you copied over database/settings.py.dist '
-                               'to database/settings.py and followed the '
+                               'you copied over database/influxdb/settings.py.dist '
+                               'to database/influxdb/settings.py and followed the '
                                'configuration instructions in it?')
         if not INFLUXDB_CLIENT_FOUND:
             raise RuntimeError('Python module influxdb_client not found. Please '
