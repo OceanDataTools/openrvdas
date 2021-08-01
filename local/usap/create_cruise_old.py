@@ -1,24 +1,22 @@
 #! /usr/bin/env python3
-"""This script creates a fairly simple "skinny" cruise definition
+"""This script creates a fairly simple "standard" cruise definition
 file from a port_def.yaml specification that, in addition to other
 destinations, also writes parsed data to InfluxDB. A typical
 invocation would be
 
-  local/usap/create_skinny_cruise.py \
-    test/NBP1406/NBP1406_port_defs.yaml > test/NBP1406/NBP1406_skinny_cruise.yaml
+  local/usap/create_influx_cruise.py \
+    test/NBP1406/NBP1406_port_defs.yaml > test/NBP1406/NBP1406_cruise.yaml
 
 It creates four modes:
   off      - nothing running
-  port     - like no_write (below), but only run subset of loggers
-  no_write - run all loggers, but don't write to disk
-  write    - as above, but also write raw to file
+  monitor  - write raw UDP to network and parsed to cached data server
+  log      - as above, but also write raw to file
+  log+db   - as above, but also write parsed to database
 
-All modes (except 'off') also write to InfluxDB and the cached data server.
+All modes (except 'off') also write to InfluxDB.
 
-Two derived data loggers are also included: true_wind and snapshot; these
-are written to InfluxDB and the cached data server , but not disk.
-
-There is no timeout checking of any loggers.
+It also includes a true_wind derived data logger that writes to the
+cached data server. There is no timeout checking of any loggers.
 """
 import argparse
 import getpass
@@ -45,87 +43,14 @@ cruise:
   end: '%CRUISE_END%'
 """
 
-LOGGER_TEMPLATE = """  ########
-  %LOGGER%->off:
-    name: %LOGGER%->off
-
-  %LOGGER%->net:
-    name: %LOGGER%->net
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: %BAUD%
-        port: %TTY%
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: %LOGGER%
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: %RAW_UDP_PORT%
-        destination: %UDP_DESTINATION%
-
-  %LOGGER%->net/file:
-    name: %LOGGER%->net/file
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: %BAUD%
-        port: %TTY%
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: %LOGGER%
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: %RAW_UDP_PORT%
-            destination: %UDP_DESTINATION%
-"""
-
-# Read raw records from UDP, parse them and distribute to CDS and InfluxDB
-NET_READER_TEMPLATE = """  ########
-  net_reader->off:
-    name: net_reader->off
-
-  net_reader->on:
-    name: net_reader->on
-    readers:                    # Read from simulated serial port
-    - class: UDPReader
-      kwargs:
-        port: %RAW_UDP_PORT%
-    transforms:                 # Add timestamp and logger label
-    - class: ParseTransform
-      kwargs:
-        metadata_interval: 10
-        definition_path: %PARSE_DEFINITION_PATH%
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: %DATA_SERVER%
-    - class: InfluxDBWriter
-      kwargs:
-        bucket_name: openrvdas
-"""
-
-TRUE_WIND_TEMPLATE = """  ########
+TRUE_WIND_TEMPLATE = """
   true_wind->off:
     name: true_wind->off
 
   true_wind->on:
     name: true_wind->on
     readers:
-    - class: CachedDataReader
+      class: CachedDataReader
       kwargs:
         data_server: %DATA_SERVER%
         subscription:
@@ -197,7 +122,7 @@ TRUE_WIND_TEMPLATE = """  ########
             measurement_name: true_wind
 
 """
-SNAPSHOT_TEMPLATE = """  ########
+SNAPSHOT_TEMPLATE = """
   # Derived data subsampling logger
   snapshot->off:
     name: snapshot->off
@@ -205,7 +130,7 @@ SNAPSHOT_TEMPLATE = """  ########
   snapshot->on:
     name: snapshot->on
     readers:
-    - class: CachedDataReader
+      class: CachedDataReader
       kwargs:
         data_server: %DATA_SERVER%
         subscription:
@@ -230,6 +155,7 @@ SNAPSHOT_TEMPLATE = """  ########
               seconds: 0
             Grv1Value:
               seconds: 0
+
     transforms:
     - class: InterpolationTransform
       module: logger.transforms.interpolation_transform
@@ -299,6 +225,148 @@ SNAPSHOT_TEMPLATE = """  ########
 
 """
 
+OFF_TEMPLATE="""
+  %LOGGER%->off:
+    name: %LOGGER%->off
+"""
+
+NET_WRITER_TEMPLATE="""
+  %LOGGER%->net:
+    name: %LOGGER%->net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: %BAUD%
+        port: %TTY%
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: %LOGGER%
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: %RAW_UDP_PORT%
+        destination: %UDP_DESTINATION%
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: ParseTransform
+          kwargs:
+            metadata_interval: 10
+            definition_path: %PARSE_DEFINITION_PATH%
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: openrvdas
+            measurement_name: %LOGGER%
+"""
+
+FILE_NET_WRITER_TEMPLATE="""
+  %LOGGER%->file/net:
+    name: %LOGGER%->file/net
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: %BAUD%
+        port: %TTY%
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: %RAW_UDP_PORT%
+            destination: %UDP_DESTINATION%
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
+        - class: ParseTransform
+          kwargs:
+            metadata_interval: 10
+            definition_path: %PARSE_DEFINITION_PATH%
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: openrvdas
+            measurement_name: %LOGGER%
+"""
+
+FULL_WRITER_TEMPLATE="""
+  %LOGGER%->file/net/db:
+    name: %LOGGER%->file/net/db
+    readers:                    # Read from simulated serial port
+      class: SerialReader
+      kwargs:
+        baudrate: %BAUD%
+        port: %TTY%
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: %FILE_ROOT%/%LOGGER%/raw/%CRUISE%_%LOGGER%
+    - class: ComposedWriter     # Also prefix with logger name and broadcast
+      kwargs:                   # raw NMEA on UDP
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: %RAW_UDP_PORT%
+            destination: %UDP_DESTINATION%
+    - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
+      kwargs:                   # port for CachedDataServer to pick up
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
+        - class: ParseTransform
+          kwargs:
+            metadata_interval: 10
+            definition_path: %PARSE_DEFINITION_PATH%
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: openrvdas
+            measurement_name: %LOGGER%
+    - class: ComposedWriter     # Also write parsed data to database
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: %LOGGER%
+        - class: ParseTransform
+          kwargs:
+            metadata_interval: 10
+            definition_path: %PARSE_DEFINITION_PATH%
+        writers:
+        - class: DatabaseWriter
+"""
+
 ####################
 def fill_substitutions(template, substitutions):
   output = template
@@ -358,16 +426,11 @@ LOGGER_DEF = """  %LOGGER%:
     configs:
     - %LOGGER%->off
     - %LOGGER%->net
-    - %LOGGER%->net/file
+    - %LOGGER%->file/net
+    - %LOGGER%->file/net/db
 """
 for logger in loggers:
   output += fill_substitutions(LOGGER_DEF, substitutions).replace('%LOGGER%', logger)
-
-output += """  net_reader:
-    configs:
-    - net_reader->off
-    - net_reader->on
-"""
 output += """  true_wind:
     configs:
     - true_wind->off
@@ -388,27 +451,33 @@ modes:
 """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->off\n'.replace('%LOGGER%', logger)
-output += '    net_reader: net_reader->off\n'
 output += '    true_wind: true_wind->off\n'
 output += '    snapshot: snapshot->off\n'
 
-#### no_write
+#### monitor
 output += """
-  no_write:
+  monitor:
 """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
-output += '    net_reader: net_reader->on\n'
 output += '    true_wind: true_wind->on\n'
 output += '    snapshot: snapshot->on\n'
 
-#### write
+#### log
 output += """
-  write:
+  log:
 """
 for logger in loggers:
-  output += '    %LOGGER%: %LOGGER%->net/file\n'.replace('%LOGGER%', logger)
-output += '    net_reader: net_reader->on\n'
+  output += '    %LOGGER%: %LOGGER%->file/net\n'.replace('%LOGGER%', logger)
+output += '    true_wind: true_wind->on\n'
+output += '    snapshot: snapshot->on\n'
+
+#### log+db
+output += """
+  'log+db':
+"""
+for logger in loggers:
+  output += '    %LOGGER%: %LOGGER%->file/net/db\n'.replace('%LOGGER%', logger)
 output += '    true_wind: true_wind->on\n'
 output += '    snapshot: snapshot->on\n'
 
@@ -424,6 +493,14 @@ output += """
 configs:
 """
 for logger in loggers:
+  output += """  ########"""
+  output += fill_substitutions(OFF_TEMPLATE, substitutions).replace('%LOGGER%', logger)
+  # Special case for true winds, which is a derived logger
+
+  # Look up port.tab values for this logger
+  if not logger in loggers:
+    logging.warning('No port.tab entry found for %s; skipping...', logger)
+    continue
 
   logger_port_def = port_def.get('ports').get(logger).get('port_tab')
   if not logger_port_def:
@@ -431,15 +508,25 @@ for logger in loggers:
 
   (inst, tty, baud, datab, stopb, parity, igncr, icrnl, eol, onlcr,
    ocrnl, icanon, vmin, vtime, vintr, vquit, opost) = logger_port_def.split()
-  logger_def = fill_substitutions(LOGGER_TEMPLATE, substitutions)
-  logger_def = logger_def.replace('%LOGGER%', logger)
-  logger_def = logger_def.replace('%TTY%', tty)
-  logger_def = logger_def.replace('%BAUD%', baud)
-  output += logger_def
+  net_writer = fill_substitutions(NET_WRITER_TEMPLATE, substitutions)
+  net_writer = net_writer.replace('%LOGGER%', logger)
+  net_writer = net_writer.replace('%TTY%', tty)
+  net_writer = net_writer.replace('%BAUD%', baud)
+  output += net_writer
 
-output += fill_substitutions(NET_READER_TEMPLATE, substitutions)
+  file_net_writer = fill_substitutions(FILE_NET_WRITER_TEMPLATE, substitutions)
+  file_net_writer = file_net_writer.replace('%LOGGER%', logger)
+  file_net_writer = file_net_writer.replace('%TTY%', tty)
+  file_net_writer = file_net_writer.replace('%BAUD%', baud)
+  output += file_net_writer
 
-# Add in the true wind and snapshot configurations
+  full_writer = fill_substitutions(FULL_WRITER_TEMPLATE, substitutions)
+  full_writer = full_writer.replace('%LOGGER%', logger)
+  full_writer = full_writer.replace('%TTY%', tty)
+  full_writer = full_writer.replace('%BAUD%', baud)
+  output += full_writer
+
+# Add in the true wind configurations
 output += fill_substitutions(TRUE_WIND_TEMPLATE, substitutions)
 output += fill_substitutions(SNAPSHOT_TEMPLATE, substitutions)
 
