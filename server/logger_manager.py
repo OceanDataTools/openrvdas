@@ -400,10 +400,13 @@ class LoggerManager:
                 # send a notification to console so it can ask if user wants to
                 # reload.
                 if self.cruise_filename:
-                    mtime = os.path.getmtime(self.cruise_filename)
-                    if mtime > self.cruise_loaded_time:
-                        logging.debug('Cruise file timestamp changed!')
-                        self._write_record_to_data_server('status:file_update', mtime)
+                    try:
+                        mtime = os.path.getmtime(self.cruise_filename)
+                        if mtime > self.cruise_loaded_time:
+                            logging.debug('Cruise file timestamp changed!')
+                            self._write_record_to_data_server('status:file_update', mtime)
+                    except FileNotFoundError:
+                        logging.debug('Cruise file "%s" has disappeared?', self.cruise_filename)
 
                 # Does database have a cruise definition with a newer timestamp?
                 # Means user loaded/reloaded definition. Update our maps to
