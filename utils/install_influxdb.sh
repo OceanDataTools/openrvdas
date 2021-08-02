@@ -440,21 +440,43 @@ function install_telegraf {
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
 
+    # Overwrite the default telegraf.conf with a minimal one that includes
+    # our InfluxDB auth tokens.
     cat >> $TELEGRAF_CONF <<EOF
+# Minimal Telegraf configuration
+[global_tags]
+[agent]
+  interval = "10s"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "0s"
+  precision = ""
+  hostname = ""
+  omit_hostname = false
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+[[inputs.diskio]]
+[[inputs.kernel]]
+[[inputs.mem]]
+[[inputs.processes]]
+[[inputs.swap]]
+[[inputs.system]]
 
-# # Configuration for sending metrics to InfluxDB v2
 [[outputs.influxdb_v2]]
-#   ## The URLs of the InfluxDB cluster nodes.
-#   ##
-#   ## Multiple URLs can be specified for a single cluster, only ONE of the
-#   ## urls will be written to each interval.
-#   ##   ex: urls = ["https://us-west-2-1.aws.cloud2.influxdata.com"]
-#   urls = ["http://127.0.0.1:9999"]
+   urls = ["http://127.0.0.1:8086"]
    token = "$INFLUXDB_AUTH_TOKEN"  # Token for authentication.
    organization = "$ORGANIZATION"  # InfluxDB organization to write to
    bucket = "_monitoring"  # Destination bucket to write into.
-
 EOF
+
     echo Done setting up Telegraf!
 }
 
