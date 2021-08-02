@@ -4,8 +4,8 @@ file from a port_def.yaml specification that, in addition to other
 destinations, also writes parsed data to InfluxDB. A typical
 invocation would be
 
-  local/usap/create_skinny_cruise.py \
-    test/NBP1406/NBP1406_port_defs.yaml > test/NBP1406/NBP1406_skinny_cruise.yaml
+  local/usap/create_cruise.py \
+    test/NBP1406/NBP1406_port_defs.yaml > test/NBP1406/NBP1406_cruise.yaml
 
 It creates four modes:
   off      - nothing running
@@ -155,12 +155,18 @@ TRUE_WIND_TEMPLATE = """  ########
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
             true_dir_name: PortTrueWindDir
             true_speed_name: PortTrueWindSpeed
             update_on_fields:
             - MwxPortRelWindDir
-            wind_dir_field: MwxPortRelWindDir
-            wind_speed_field: MwxPortRelWindSpeed
+            max_field_age:
+              S330CourseTrue: 15
+              S330HeadingTrue: 15
+              S330SpeedKt: 15
+              MwxPortRelWindDir: 15
+              MwxPortRelWindSpeed: 15
             metadata_interval: 10
         writers:
         - class: CachedDataWriter
@@ -180,12 +186,18 @@ TRUE_WIND_TEMPLATE = """  ########
             course_field: S330CourseTrue
             heading_field: S330HeadingTrue
             speed_field: S330SpeedKt
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
             true_dir_name: StbdTrueWindDir
             true_speed_name: StbdTrueWindSpeed
             update_on_fields:
             - MwxStbdRelWindDir
-            wind_dir_field: MwxStbdRelWindDir
-            wind_speed_field: MwxStbdRelWindSpeed
+            max_field_age:
+              S330CourseTrue: 15
+              S330HeadingTrue: 15
+              S330SpeedKt: 15
+              MwxStbdRelWindDir: 15
+              MwxStbdRelWindSpeed: 15
             metadata_interval: 10
         writers:
         - class: CachedDataWriter
