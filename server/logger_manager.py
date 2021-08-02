@@ -287,6 +287,8 @@ class LoggerManager:
         reader = TextFileReader(file_spec=stderr_file_name, tail=True)
         while not self.quit_flag:
             record = reader.read()
+            if not record:
+                continue
             try:
                 parsed_fields = parse.parse(message_format, record)
                 fields = {'asctime': (parsed_fields['ascdate'] + 'T' +
@@ -302,6 +304,7 @@ class LoggerManager:
             except (KeyError, TypeError):
                 logging.warning('Couldn\'t parse stderr message from logger %s: %s',
                                 logger, record)
+                continue
 
     ############################
     def _check_logger_status_loop(self):

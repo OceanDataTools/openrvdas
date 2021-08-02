@@ -207,7 +207,10 @@ class CachedDataWriter(Writer):
                     logging.warning('CachedDataWriter queue is both full and empty?!?')
 
             # Enqueue our latest record for send
-            self.send_queue.put_nowait(record)
+            try:
+                self.send_queue.put_nowait(record)
+            except asyncio.queues.QueueFull:
+                logging.warning('CachedDataWriter unable to write: write queue full')
         else:
             logging.warning('CachedDataWriter got non-dict/DASRecord object of '
                             'type %s: %s', type(record), str(record))
