@@ -758,9 +758,11 @@ http {
         }
         location /js {
             alias /${INSTALL_ROOT}/openrvdas/display/js; # display pages
+            default_type application/javascript;
         }
         location /css {
             alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
+            default_type text/css;
         }
 
         location /static {
