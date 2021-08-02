@@ -366,12 +366,14 @@ class RecordParser:
     ############################
     def parse_for_data_id(self, data_id, field_string):
         &#34;&#34;&#34;Look up the device and device type for a data_id. Parse the field_string
-        according to those formats, returning a dict of {field_name:
-        field_value} or None if unable to match a format pattern.
+        according to those formats. If successful, return a tuple of
+        (field_dict, message_type), where field_dict is a dict of
+        {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
         &#34;&#34;&#34;
+        failure_values = ({}, None)
         if not self.devices:
             logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
-            return None
+            return failure_values
 
         # Get device and device_type definitions for data_id
         device = self.devices.get(data_id, None)
@@ -381,19 +383,19 @@ class RecordParser:
                                 data_id, field_string)
                 logging.warning(&#39;Known data ids are: &#34;%s&#34;&#39;,
                                 &#39;, &#39;.join(self.devices.keys()))
-            return None
+            return failure_values
 
         device_type = device.get(&#39;device_type&#39;, None)
         if not device_type:
             if not self.quiet:
                 logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
-            return None
+            return failure_values
 
         device_definition = self.device_types.get(device_type, None)
         if not device_definition:
             if not self.quiet:
                 logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
-            return None
+            return failure_values
 
         compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
         parsed_fields, message_type = \
@@ -410,7 +412,7 @@ class RecordParser:
         if not device_fields:
             if not self.quiet:
                 logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
-            return None
+            return failure_values
 
         # Assign field values to the appropriate named variable.
         fields = {}
@@ -926,12 +928,14 @@ delimiter
     ############################
     def parse_for_data_id(self, data_id, field_string):
         &#34;&#34;&#34;Look up the device and device type for a data_id. Parse the field_string
-        according to those formats, returning a dict of {field_name:
-        field_value} or None if unable to match a format pattern.
+        according to those formats. If successful, return a tuple of
+        (field_dict, message_type), where field_dict is a dict of
+        {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
         &#34;&#34;&#34;
+        failure_values = ({}, None)
         if not self.devices:
             logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
-            return None
+            return failure_values
 
         # Get device and device_type definitions for data_id
         device = self.devices.get(data_id, None)
@@ -941,19 +945,19 @@ delimiter
                                 data_id, field_string)
                 logging.warning(&#39;Known data ids are: &#34;%s&#34;&#39;,
                                 &#39;, &#39;.join(self.devices.keys()))
-            return None
+            return failure_values
 
         device_type = device.get(&#39;device_type&#39;, None)
         if not device_type:
             if not self.quiet:
                 logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
-            return None
+            return failure_values
 
         device_definition = self.device_types.get(device_type, None)
         if not device_definition:
             if not self.quiet:
                 logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
-            return None
+            return failure_values
 
         compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
         parsed_fields, message_type = \
@@ -970,7 +974,7 @@ delimiter
         if not device_fields:
             if not self.quiet:
                 logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
-            return None
+            return failure_values
 
         # Assign field values to the appropriate named variable.
         fields = {}
@@ -1131,20 +1135,23 @@ delimiter
 </code></dt>
 <dd>
 <div class="desc"><p>Look up the device and device type for a data_id. Parse the field_string
-according to those formats, returning a dict of {field_name:
-field_value} or None if unable to match a format pattern.</p></div>
+according to those formats. If successful, return a tuple of
+(field_dict, message_type), where field_dict is a dict of
+{field_name: field_value}. Return ({}, None) if unable to match a format pattern.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def parse_for_data_id(self, data_id, field_string):
     &#34;&#34;&#34;Look up the device and device type for a data_id. Parse the field_string
-    according to those formats, returning a dict of {field_name:
-    field_value} or None if unable to match a format pattern.
+    according to those formats. If successful, return a tuple of
+    (field_dict, message_type), where field_dict is a dict of
+    {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
     &#34;&#34;&#34;
+    failure_values = ({}, None)
     if not self.devices:
         logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
-        return None
+        return failure_values
 
     # Get device and device_type definitions for data_id
     device = self.devices.get(data_id, None)
@@ -1154,19 +1161,19 @@ field_value} or None if unable to match a format pattern.</p></div>
                             data_id, field_string)
             logging.warning(&#39;Known data ids are: &#34;%s&#34;&#39;,
                             &#39;, &#39;.join(self.devices.keys()))
-        return None
+        return failure_values
 
     device_type = device.get(&#39;device_type&#39;, None)
     if not device_type:
         if not self.quiet:
             logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
-        return None
+        return failure_values
 
     device_definition = self.device_types.get(device_type, None)
     if not device_definition:
         if not self.quiet:
             logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
-        return None
+        return failure_values
 
     compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
     parsed_fields, message_type = \
@@ -1183,7 +1190,7 @@ field_value} or None if unable to match a format pattern.</p></div>
     if not device_fields:
         if not self.quiet:
             logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
-        return None
+        return failure_values
 
     # Assign field values to the appropriate named variable.
     fields = {}
