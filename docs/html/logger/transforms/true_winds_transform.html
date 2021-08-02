@@ -30,10 +30,13 @@ true wind value. Even with the correct algorithm (not a given), unless
 the vessel nav and anemometer values have identical timestamps,
 there's the question of how one integrates/interpolates/extrapolates
 values with different timestamps.</p>
-<p>We allow making the simplifying assumption that, e.g., vessel
-course/speed/heading is less variable than wind dir/speed, so we will
-only produce updated results when we receive new anemometer records. A
-more robust approach would be to wait until we got the next vessel
+<p>The update_on_fields dict allows specifying which fields will trigger
+a new computation. This allows making simplifying assumptions, e.g. that
+vessel course/speed/heading is less variable than wind dir/speed, so we
+will only produce updated results when we receive new anemometer records.
+The max_field_age dict allows specifying a time beyond which we are unwilling
+to trust any computations.</p>
+<p>A more robust approach would be to wait until we got the next vessel
 record and interpolate the course/speed/heading values between the two
 vessel records (or, conversely, output when we got a vessel record,
 using an interpolation of the preceding and following anemometer
@@ -52,10 +55,14 @@ the vessel nav and anemometer values have identical timestamps,
 there&#39;s the question of how one integrates/interpolates/extrapolates
 values with different timestamps.
 
-We allow making the simplifying assumption that, e.g., vessel
-course/speed/heading is less variable than wind dir/speed, so we will
-only produce updated results when we receive new anemometer records. A
-more robust approach would be to wait until we got the next vessel
+The update_on_fields dict allows specifying which fields will trigger
+a new computation. This allows making simplifying assumptions, e.g. that
+vessel course/speed/heading is less variable than wind dir/speed, so we
+will only produce updated results when we receive new anemometer records.
+The max_field_age dict allows specifying a time beyond which we are unwilling
+to trust any computations.
+
+A more robust approach would be to wait until we got the next vessel
 record and interpolate the course/speed/heading values between the two
 vessel records (or, conversely, output when we got a vessel record,
 using an interpolation of the preceding and following anemometer
@@ -89,6 +96,7 @@ class TrueWindsTransform(DerivedDataTransform):
                  true_speed_name,
                  apparent_dir_name,
                  update_on_fields=[],
+                 max_field_age={},
                  zero_line_reference=0,
                  convert_wind_factor=1,
                  convert_speed_factor=1,
@@ -113,6 +121,11 @@ class TrueWindsTransform(DerivedDataTransform):
                  If non-empty, a list of fields, any of whose arrival should
                  trigger an output record. If None, generate output when any
                  field is updated.
+
+        max_field_age
+                 If non-empty, a dict of field_name:seconds, specifying that
+                 no output is to be produces if the age of any of the specified
+                 names is older than the specified number of seconds.
 
         zero_line_reference
                  Angle between bow and zero line on anemometer, referenced
@@ -142,6 +155,8 @@ class TrueWindsTransform(DerivedDataTransform):
         self.apparent_dir_name = apparent_dir_name
 
         self.update_on_fields = update_on_fields
+        self.max_field_age = max_field_age
+        self.field_age = {}
 
         self.zero_line_reference = zero_line_reference
 
@@ -282,16 +297,8 @@ class TrueWindsTransform(DerivedDataTransform):
                     if self.wind_speed_field in self.update_on_fields:
                         update = True
 
-            if None in (self.course_val, self.speed_val, self.heading_val,
-                        self.wind_dir_val, self.wind_speed_val):
-                logging.debug(&#39;Not all required values for true winds are present: &#39;
-                              &#39;time: %s: %s: %s, %s: %s, %s: %s, %s: %s, %s: %s&#39;,
-                              timestamp,
-                              self.course_field, self.course_val,
-                              self.speed_field, self.speed_val,
-                              self.heading_field, self.heading_val,
-                              self.wind_dir_field, self.wind_dir_val,
-                              self.wind_speed_field, self.wind_speed_val)
+            # Check if needed all values are present, and none are too old to use
+            if self._values_too_old(timestamp):
                 continue
 
             # If we&#39;ve not seen anything that updates fields that would
@@ -333,7 +340,60 @@ class TrueWindsTransform(DerivedDataTransform):
             results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
                                      metadata=metadata))
 
-        return results</code></pre>
+        return results
+
+    ############################
+    def _values_too_old(self, timestamp):
+        &#34;&#34;&#34;Return true if any values are missing or too old to use.&#34;&#34;&#34;
+
+        if None in (self.course_val, self.speed_val, self.heading_val,
+                    self.wind_dir_val, self.wind_speed_val):
+            logging.debug(&#39;Not all required values for true winds are present: &#39;
+                          &#39;time: %s: %s: %s, %s: %s, %s: %s, %s: %s, %s: %s&#39;,
+                          timestamp,
+                          self.course_field, self.course_val,
+                          self.speed_field, self.speed_val,
+                          self.heading_field, self.heading_val,
+                          self.wind_dir_field, self.wind_dir_val,
+                          self.wind_speed_field, self.wind_speed_val)
+            return True
+
+        course_max_age = self.max_field_age.get(self.course_field, None)
+        if (course_max_age and timestamp - self.course_val_time &gt; course_max_age):
+            logging.debug(&#39;course_field too old - max age %g, age %g&#39;,
+                          course_max_age, timestamp - self.course_val_time)
+            return True
+
+        speed_max_age = self.max_field_age.get(self.speed_field, None)
+        if speed_max_age:
+            if timestamp - self.speed_val_time &gt; speed_max_age:
+                  logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
+                                speed_max_age, timestamp - self.speed_val_time)
+                  return True
+
+        heading_max_age = self.max_field_age.get(self.heading_field, None)
+        if heading_max_age:
+            if timestamp - self.heading_val_time &gt; heading_max_age:
+                logging.debug(&#39;heading_field too old - max age %g, age %g&#39;,
+                              heading_max_age, timestamp - self.heading_val_time)
+                return True
+
+        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field, None)
+        if wind_dir_max_age:
+            if timestamp - self.wind_dir_val_time &gt; wind_dir_max_age:
+                logging.debug(&#39;wind_dir_field too old - max age %g, age %g&#39;,
+                              wind_dir_max_age, timestamp - self.wind_dir_val_time)
+                return True
+
+        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field, None)
+        if wind_speed_max_age:
+            if timestamp - self.wind_speed_val_time &gt; wind_speed_max_age:
+                logging.debug(&#39;wind_speed_field too old - max age %g, age %g&#39;,
+                              wind_speed_max_age, timestamp - self.wind_speed_val_time)
+                return True
+
+        # Everything is present, and nothing&#39;s too old...
+        return False</code></pre>
 </details>
 </section>
 <section>
@@ -347,7 +407,7 @@ class TrueWindsTransform(DerivedDataTransform):
 <dl>
 <dt id="logger.transforms.true_winds_transform.TrueWindsTransform"><code class="flex name class">
 <span>class <span class="ident">TrueWindsTransform</span></span>
-<span>(</span><span>course_field, speed_field, heading_field, wind_dir_field, wind_speed_field, true_dir_name, true_speed_name, apparent_dir_name, update_on_fields=[], zero_line_reference=0, convert_wind_factor=1, convert_speed_factor=1, metadata_interval=None)</span>
+<span>(</span><span>course_field, speed_field, heading_field, wind_dir_field, wind_speed_field, true_dir_name, true_speed_name, apparent_dir_name, update_on_fields=[], max_field_age={}, zero_line_reference=0, convert_wind_factor=1, convert_speed_factor=1, metadata_interval=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Transform that computes true winds from vessel
@@ -370,6 +430,11 @@ update_on_fields
          If non-empty, a list of fields, any of whose arrival should
          trigger an output record. If None, generate output when any
          field is updated.
+
+max_field_age
+         If non-empty, a dict of field_name:seconds, specifying that
+         no output is to be produces if the age of any of the specified
+         names is older than the specified number of seconds.
 
 zero_line_reference
          Angle between bow and zero line on anemometer, referenced
@@ -403,6 +468,7 @@ metadata_interval - how many seconds between when we attach field metadata
                  true_speed_name,
                  apparent_dir_name,
                  update_on_fields=[],
+                 max_field_age={},
                  zero_line_reference=0,
                  convert_wind_factor=1,
                  convert_speed_factor=1,
@@ -427,6 +493,11 @@ metadata_interval - how many seconds between when we attach field metadata
                  If non-empty, a list of fields, any of whose arrival should
                  trigger an output record. If None, generate output when any
                  field is updated.
+
+        max_field_age
+                 If non-empty, a dict of field_name:seconds, specifying that
+                 no output is to be produces if the age of any of the specified
+                 names is older than the specified number of seconds.
 
         zero_line_reference
                  Angle between bow and zero line on anemometer, referenced
@@ -456,6 +527,8 @@ metadata_interval - how many seconds between when we attach field metadata
         self.apparent_dir_name = apparent_dir_name
 
         self.update_on_fields = update_on_fields
+        self.max_field_age = max_field_age
+        self.field_age = {}
 
         self.zero_line_reference = zero_line_reference
 
@@ -596,16 +669,8 @@ metadata_interval - how many seconds between when we attach field metadata
                     if self.wind_speed_field in self.update_on_fields:
                         update = True
 
-            if None in (self.course_val, self.speed_val, self.heading_val,
-                        self.wind_dir_val, self.wind_speed_val):
-                logging.debug(&#39;Not all required values for true winds are present: &#39;
-                              &#39;time: %s: %s: %s, %s: %s, %s: %s, %s: %s, %s: %s&#39;,
-                              timestamp,
-                              self.course_field, self.course_val,
-                              self.speed_field, self.speed_val,
-                              self.heading_field, self.heading_val,
-                              self.wind_dir_field, self.wind_dir_val,
-                              self.wind_speed_field, self.wind_speed_val)
+            # Check if needed all values are present, and none are too old to use
+            if self._values_too_old(timestamp):
                 continue
 
             # If we&#39;ve not seen anything that updates fields that would
@@ -647,7 +712,60 @@ metadata_interval - how many seconds between when we attach field metadata
             results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
                                      metadata=metadata))
 
-        return results</code></pre>
+        return results
+
+    ############################
+    def _values_too_old(self, timestamp):
+        &#34;&#34;&#34;Return true if any values are missing or too old to use.&#34;&#34;&#34;
+
+        if None in (self.course_val, self.speed_val, self.heading_val,
+                    self.wind_dir_val, self.wind_speed_val):
+            logging.debug(&#39;Not all required values for true winds are present: &#39;
+                          &#39;time: %s: %s: %s, %s: %s, %s: %s, %s: %s, %s: %s&#39;,
+                          timestamp,
+                          self.course_field, self.course_val,
+                          self.speed_field, self.speed_val,
+                          self.heading_field, self.heading_val,
+                          self.wind_dir_field, self.wind_dir_val,
+                          self.wind_speed_field, self.wind_speed_val)
+            return True
+
+        course_max_age = self.max_field_age.get(self.course_field, None)
+        if (course_max_age and timestamp - self.course_val_time &gt; course_max_age):
+            logging.debug(&#39;course_field too old - max age %g, age %g&#39;,
+                          course_max_age, timestamp - self.course_val_time)
+            return True
+
+        speed_max_age = self.max_field_age.get(self.speed_field, None)
+        if speed_max_age:
+            if timestamp - self.speed_val_time &gt; speed_max_age:
+                  logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
+                                speed_max_age, timestamp - self.speed_val_time)
+                  return True
+
+        heading_max_age = self.max_field_age.get(self.heading_field, None)
+        if heading_max_age:
+            if timestamp - self.heading_val_time &gt; heading_max_age:
+                logging.debug(&#39;heading_field too old - max age %g, age %g&#39;,
+                              heading_max_age, timestamp - self.heading_val_time)
+                return True
+
+        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field, None)
+        if wind_dir_max_age:
+            if timestamp - self.wind_dir_val_time &gt; wind_dir_max_age:
+                logging.debug(&#39;wind_dir_field too old - max age %g, age %g&#39;,
+                              wind_dir_max_age, timestamp - self.wind_dir_val_time)
+                return True
+
+        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field, None)
+        if wind_speed_max_age:
+            if timestamp - self.wind_speed_val_time &gt; wind_speed_max_age:
+                logging.debug(&#39;wind_speed_field too old - max age %g, age %g&#39;,
+                              wind_speed_max_age, timestamp - self.wind_speed_val_time)
+                return True
+
+        # Everything is present, and nothing&#39;s too old...
+        return False</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -752,16 +870,8 @@ us a new true wind value, return the results.</p></div>
                 if self.wind_speed_field in self.update_on_fields:
                     update = True
 
-        if None in (self.course_val, self.speed_val, self.heading_val,
-                    self.wind_dir_val, self.wind_speed_val):
-            logging.debug(&#39;Not all required values for true winds are present: &#39;
-                          &#39;time: %s: %s: %s, %s: %s, %s: %s, %s: %s, %s: %s&#39;,
-                          timestamp,
-                          self.course_field, self.course_val,
-                          self.speed_field, self.speed_val,
-                          self.heading_field, self.heading_val,
-                          self.wind_dir_field, self.wind_dir_val,
-                          self.wind_speed_field, self.wind_speed_val)
+        # Check if needed all values are present, and none are too old to use
+        if self._values_too_old(timestamp):
             continue
 
         # If we&#39;ve not seen anything that updates fields that would

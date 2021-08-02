@@ -315,6 +315,8 @@ class LoggerManager:
         reader = TextFileReader(file_spec=stderr_file_name, tail=True)
         while not self.quit_flag:
             record = reader.read()
+            if not record:
+                continue
             try:
                 parsed_fields = parse.parse(message_format, record)
                 fields = {&#39;asctime&#39;: (parsed_fields[&#39;ascdate&#39;] + &#39;T&#39; +
@@ -326,10 +328,11 @@ class LoggerManager:
                           &#39;message&#39;: parsed_fields[&#39;message&#39;]
                           }
                 das_record = DASRecord(fields={field_name: json.dumps(fields)})
-                # logging.warning(&#39;Message: %s&#39;, fields)
                 self.data_server_writer.write(das_record)
-            except KeyError:
-                logging.warning(&#39;Couldn\&#39;t parse stderr message: %s&#39;, record)
+            except (KeyError, TypeError):
+                logging.warning(&#39;Couldn\&#39;t parse stderr message from logger %s: %s&#39;,
+                                logger, record)
+                continue
 
     ############################
     def _check_logger_status_loop(self):
@@ -428,10 +431,13 @@ class LoggerManager:
                 # send a notification to console so it can ask if user wants to
                 # reload.
                 if self.cruise_filename:
-                    mtime = os.path.getmtime(self.cruise_filename)
-                    if mtime &gt; self.cruise_loaded_time:
-                        logging.debug(&#39;Cruise file timestamp changed!&#39;)
-                        self._write_record_to_data_server(&#39;status:file_update&#39;, mtime)
+                    try:
+                        mtime = os.path.getmtime(self.cruise_filename)
+                        if mtime &gt; self.cruise_loaded_time:
+                            logging.debug(&#39;Cruise file timestamp changed!&#39;)
+                            self._write_record_to_data_server(&#39;status:file_update&#39;, mtime)
+                    except FileNotFoundError:
+                        logging.debug(&#39;Cruise file &#34;%s&#34; has disappeared?&#39;, self.cruise_filename)
 
                 # Does database have a cruise definition with a newer timestamp?
                 # Means user loaded/reloaded definition. Update our maps to
@@ -1020,6 +1026,8 @@ logger_log_level - At what logging level our component loggers
         reader = TextFileReader(file_spec=stderr_file_name, tail=True)
         while not self.quit_flag:
             record = reader.read()
+            if not record:
+                continue
             try:
                 parsed_fields = parse.parse(message_format, record)
                 fields = {&#39;asctime&#39;: (parsed_fields[&#39;ascdate&#39;] + &#39;T&#39; +
@@ -1031,10 +1039,11 @@ logger_log_level - At what logging level our component loggers
                           &#39;message&#39;: parsed_fields[&#39;message&#39;]
                           }
                 das_record = DASRecord(fields={field_name: json.dumps(fields)})
-                # logging.warning(&#39;Message: %s&#39;, fields)
                 self.data_server_writer.write(das_record)
-            except KeyError:
-                logging.warning(&#39;Couldn\&#39;t parse stderr message: %s&#39;, record)
+            except (KeyError, TypeError):
+                logging.warning(&#39;Couldn\&#39;t parse stderr message from logger %s: %s&#39;,
+                                logger, record)
+                continue
 
     ############################
     def _check_logger_status_loop(self):
@@ -1133,10 +1142,13 @@ logger_log_level - At what logging level our component loggers
                 # send a notification to console so it can ask if user wants to
                 # reload.
                 if self.cruise_filename:
-                    mtime = os.path.getmtime(self.cruise_filename)
-                    if mtime &gt; self.cruise_loaded_time:
-                        logging.debug(&#39;Cruise file timestamp changed!&#39;)
-                        self._write_record_to_data_server(&#39;status:file_update&#39;, mtime)
+                    try:
+                        mtime = os.path.getmtime(self.cruise_filename)
+                        if mtime &gt; self.cruise_loaded_time:
+                            logging.debug(&#39;Cruise file timestamp changed!&#39;)
+                            self._write_record_to_data_server(&#39;status:file_update&#39;, mtime)
+                    except FileNotFoundError:
+                        logging.debug(&#39;Cruise file &#34;%s&#34; has disappeared?&#39;, self.cruise_filename)
 
                 # Does database have a cruise definition with a newer timestamp?
                 # Means user loaded/reloaded definition. Update our maps to

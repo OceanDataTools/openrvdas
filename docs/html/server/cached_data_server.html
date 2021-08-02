@@ -173,6 +173,9 @@ class RecordCache:
         self.metadata = {}
         self.metadata_lock = threading.Lock()
 
+        # Disk files we&#39;ve tried to write to but failed.
+        self.failed_files = set()
+
         # Create a lock for each key so threads don&#39;t step on each other
         self.locks = {key: threading.Lock() for key in self.keys()}
 
@@ -364,15 +367,33 @@ class RecordCache:
             return
 
         if not os.path.exists(disk_cache):
-            os.makedirs(disk_cache)
+            try:
+                os.makedirs(disk_cache)
+            except OSError as e:
+                logging.error(&#39;Unable to create disk cache directory &#34;%s&#34;: %s&#39;, disk_cache, e)
+                return
 
         fields = self.keys()
         for field in fields:
+            disk_filename = disk_cache + &#39;/&#39; + field
+            if disk_filename in self.failed_files:
+                continue
             if field not in self.locks:
                 self.locks[field] = threading.Lock()
             with self.locks[field]:
-                with open(disk_cache + &#39;/&#39; + field, &#39;w&#39;) as cache_file:
-                    json.dump(self.data[field], cache_file)
+                try:
+                    with open(disk_filename, &#39;w&#39;) as cache_file:
+                        json.dump(self.data[field], cache_file)
+                except (PermissionError, IOError, OSError) as e:
+                    logging.warning(&#39;Unable to write disk cache file %s: %s&#39;, disk_filename, e)
+                    self.failed_files.add(disk_filename)
+
+                # This is BAD practice; but use it to figure out what else might go wrong
+                # so we can add it to specific exceptions above.s
+                except Exception as e:
+                    logging.warning(&#39;Unanticipated exception writing disk cache file %s: %s&#39;,
+                                    disk_filename, e)
+                    self.failed_files.add(disk_filename)
 
     ############################
     def load_from_disk(self, disk_cache):
@@ -382,25 +403,26 @@ class RecordCache:
         if not disk_cache:
             logging.info(&#39;load_from_disk called, but no disk_cache defined&#39;)
             return
+        try:
+            if not os.path.exists(disk_cache):
+                logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
+                return
 
-        if not os.path.exists(disk_cache):
-            logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
-            return
+            field_files = [f for f in os.listdir(disk_cache)
+                           if os.path.isfile(os.path.join(disk_cache, f))]
+            logging.debug(&#39;Got cached fields: %s&#39;, field_files)
+            for field in field_files:
+                if field not in self.locks:
+                    self.locks[field] = threading.Lock()
+                try:
+                    with self.locks[field]:
+                        with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
+                            self.data[field] = json.load(cache_file)
 
-        field_files = [f for f in os.listdir(disk_cache)
-                       if os.path.isfile(os.path.join(disk_cache, f))]
-        logging.debug(&#39;Got cached fields: %s&#39;, field_files)
-        for field in field_files:
-            if field not in self.locks:
-                self.locks[field] = threading.Lock()
-            try:
-                with self.locks[field]:
-                    with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
-                        self.data[field] = json.load(cache_file)
-
-            except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-                logging.warning(&#39;Failed to parse cache for %s&#39;, field)
-
+                except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                    logging.warning(&#39;Failed to parse cache for %s&#39;, field)
+        except OSError as e:
+            logging.error(&#39;Unable to access disk cache at %s: %s&#39;, disk_cache, e)
 
 ############################
 class WebSocketConnection:
@@ -1495,6 +1517,9 @@ If not None, the event loop to use for websocket events</p></div>
         self.metadata = {}
         self.metadata_lock = threading.Lock()
 
+        # Disk files we&#39;ve tried to write to but failed.
+        self.failed_files = set()
+
         # Create a lock for each key so threads don&#39;t step on each other
         self.locks = {key: threading.Lock() for key in self.keys()}
 
@@ -1686,15 +1711,33 @@ If not None, the event loop to use for websocket events</p></div>
             return
 
         if not os.path.exists(disk_cache):
-            os.makedirs(disk_cache)
+            try:
+                os.makedirs(disk_cache)
+            except OSError as e:
+                logging.error(&#39;Unable to create disk cache directory &#34;%s&#34;: %s&#39;, disk_cache, e)
+                return
 
         fields = self.keys()
         for field in fields:
+            disk_filename = disk_cache + &#39;/&#39; + field
+            if disk_filename in self.failed_files:
+                continue
             if field not in self.locks:
                 self.locks[field] = threading.Lock()
             with self.locks[field]:
-                with open(disk_cache + &#39;/&#39; + field, &#39;w&#39;) as cache_file:
-                    json.dump(self.data[field], cache_file)
+                try:
+                    with open(disk_filename, &#39;w&#39;) as cache_file:
+                        json.dump(self.data[field], cache_file)
+                except (PermissionError, IOError, OSError) as e:
+                    logging.warning(&#39;Unable to write disk cache file %s: %s&#39;, disk_filename, e)
+                    self.failed_files.add(disk_filename)
+
+                # This is BAD practice; but use it to figure out what else might go wrong
+                # so we can add it to specific exceptions above.s
+                except Exception as e:
+                    logging.warning(&#39;Unanticipated exception writing disk cache file %s: %s&#39;,
+                                    disk_filename, e)
+                    self.failed_files.add(disk_filename)
 
     ############################
     def load_from_disk(self, disk_cache):
@@ -1704,24 +1747,26 @@ If not None, the event loop to use for websocket events</p></div>
         if not disk_cache:
             logging.info(&#39;load_from_disk called, but no disk_cache defined&#39;)
             return
+        try:
+            if not os.path.exists(disk_cache):
+                logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
+                return
 
-        if not os.path.exists(disk_cache):
-            logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
-            return
+            field_files = [f for f in os.listdir(disk_cache)
+                           if os.path.isfile(os.path.join(disk_cache, f))]
+            logging.debug(&#39;Got cached fields: %s&#39;, field_files)
+            for field in field_files:
+                if field not in self.locks:
+                    self.locks[field] = threading.Lock()
+                try:
+                    with self.locks[field]:
+                        with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
+                            self.data[field] = json.load(cache_file)
 
-        field_files = [f for f in os.listdir(disk_cache)
-                       if os.path.isfile(os.path.join(disk_cache, f))]
-        logging.debug(&#39;Got cached fields: %s&#39;, field_files)
-        for field in field_files:
-            if field not in self.locks:
-                self.locks[field] = threading.Lock()
-            try:
-                with self.locks[field]:
-                    with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
-                        self.data[field] = json.load(cache_file)
-
-            except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-                logging.warning(&#39;Failed to parse cache for %s&#39;, field)</code></pre>
+                except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                    logging.warning(&#39;Failed to parse cache for %s&#39;, field)
+        except OSError as e:
+            logging.error(&#39;Unable to access disk cache at %s: %s&#39;, disk_cache, e)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -2007,24 +2052,26 @@ fields are specified, return metadata for all fields.</p></div>
     if not disk_cache:
         logging.info(&#39;load_from_disk called, but no disk_cache defined&#39;)
         return
+    try:
+        if not os.path.exists(disk_cache):
+            logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
+            return
 
-    if not os.path.exists(disk_cache):
-        logging.info(&#39;load_from_disk: no cache found at &#34;%s&#34;&#39;, disk_cache)
-        return
+        field_files = [f for f in os.listdir(disk_cache)
+                       if os.path.isfile(os.path.join(disk_cache, f))]
+        logging.debug(&#39;Got cached fields: %s&#39;, field_files)
+        for field in field_files:
+            if field not in self.locks:
+                self.locks[field] = threading.Lock()
+            try:
+                with self.locks[field]:
+                    with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
+                        self.data[field] = json.load(cache_file)
 
-    field_files = [f for f in os.listdir(disk_cache)
-                   if os.path.isfile(os.path.join(disk_cache, f))]
-    logging.debug(&#39;Got cached fields: %s&#39;, field_files)
-    for field in field_files:
-        if field not in self.locks:
-            self.locks[field] = threading.Lock()
-        try:
-            with self.locks[field]:
-                with open(disk_cache + &#39;/&#39; + field, &#39;r&#39;) as cache_file:
-                    self.data[field] = json.load(cache_file)
-
-        except (json.decoder.JSONDecodeError, UnicodeDecodeError):
-            logging.warning(&#39;Failed to parse cache for %s&#39;, field)</code></pre>
+            except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                logging.warning(&#39;Failed to parse cache for %s&#39;, field)
+    except OSError as e:
+        logging.error(&#39;Unable to access disk cache at %s: %s&#39;, disk_cache, e)</code></pre>
 </details>
 </dd>
 <dt id="server.cached_data_server.RecordCache.save_to_disk"><code class="name flex">
@@ -2047,15 +2094,33 @@ by disk_cache.</p></div>
         return
 
     if not os.path.exists(disk_cache):
-        os.makedirs(disk_cache)
+        try:
+            os.makedirs(disk_cache)
+        except OSError as e:
+            logging.error(&#39;Unable to create disk cache directory &#34;%s&#34;: %s&#39;, disk_cache, e)
+            return
 
     fields = self.keys()
     for field in fields:
+        disk_filename = disk_cache + &#39;/&#39; + field
+        if disk_filename in self.failed_files:
+            continue
         if field not in self.locks:
             self.locks[field] = threading.Lock()
         with self.locks[field]:
-            with open(disk_cache + &#39;/&#39; + field, &#39;w&#39;) as cache_file:
-                json.dump(self.data[field], cache_file)</code></pre>
+            try:
+                with open(disk_filename, &#39;w&#39;) as cache_file:
+                    json.dump(self.data[field], cache_file)
+            except (PermissionError, IOError, OSError) as e:
+                logging.warning(&#39;Unable to write disk cache file %s: %s&#39;, disk_filename, e)
+                self.failed_files.add(disk_filename)
+
+            # This is BAD practice; but use it to figure out what else might go wrong
+            # so we can add it to specific exceptions above.s
+            except Exception as e:
+                logging.warning(&#39;Unanticipated exception writing disk cache file %s: %s&#39;,
+                                disk_filename, e)
+                self.failed_files.add(disk_filename)</code></pre>
 </details>
 </dd>
 </dl>
