@@ -207,22 +207,26 @@ class DjangoServerAPI(ServerAPI):
         """Get OpenRVDAS configuration from the data store.
         """
         with self.config_rlock:
-            cruise = self._get_cruise_object()
-            if not cruise:
+            try:
+                cruise = self._get_cruise_object()
+                if not cruise:
+                    return None
+                active_mode = cruise.active_mode.name if cruise.active_mode else None
+                default_mode = cruise.default_mode.name if cruise.default_mode else None
+                config = {
+                    'id': cruise.id,
+                    'start': cruise.start,
+                    'end': cruise.end,
+                    'config_filename': cruise.config_filename,
+                    'loaded_time': cruise.loaded_time,
+                    'active_mode': active_mode,
+                    'default_mode': default_mode,
+                    'modes': cruise.modes()
+                }
+                return config
+            except (django.db.OperationalError) as e:
+                logging.warning('Unable to retrieve configuration: %s', e)
                 return None
-            active_mode = cruise.active_mode.name if cruise.active_mode else None
-            default_mode = cruise.default_mode.name if cruise.default_mode else None
-            config = {
-                'id': cruise.id,
-                'start': cruise.start,
-                'end': cruise.end,
-                'config_filename': cruise.config_filename,
-                'loaded_time': cruise.loaded_time,
-                'active_mode': active_mode,
-                'default_mode': default_mode,
-                'modes': cruise.modes()
-            }
-            return config
 
     ############################
     def get_modes(self):
