@@ -122,6 +122,8 @@ class CachedDataWriter(Writer):
 
                 except BrokenPipeError:
                     pass
+                except AttributeError as e:
+                    logging.warning('CachedDataWriter websocket loop error: %s', e)
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning('CachedDataWriter lost websocket connection to '
                                     'data server; trying to reconnect.')
