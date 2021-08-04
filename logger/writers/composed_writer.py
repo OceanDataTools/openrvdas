@@ -121,8 +121,9 @@ class ComposedWriter(Writer):
                 t = threading.Thread(target=self._run_writer, args=(i, record),
                                      name=writer_name, daemon=True)
                 t.start()
-            except RuntimeError as e:
-                logging.error('Failed to write to writer %s: %s', writer_name, e)
+            except (OSError, RuntimeError) as e:
+                logging.error('ComposedWriter failed to write to %s: %s',
+                              writer_name, e)
                 t = None
             writer_threads.append(t)
 

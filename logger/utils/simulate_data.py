@@ -337,7 +337,7 @@ class SimSerial:
                     record = parsed_record['record']
 
                 # We had a problem parsing. Discard record and try reading next one.
-                except (KeyError, ValueError, AttributeError):
+                except (KeyError, ValueError, TypeError, AttributeError):
                     logging.warning('Unable to parse record into "%s"', self.record_format)
                     logging.warning('Record: %s', record)
                     continue

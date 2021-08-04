@@ -10,7 +10,7 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.timestamp import LOGGING_TIME_FORMAT  # noqa: E402
 
 DEFAULT_LOGGING_FORMAT = ' '.join([
-    '%(asctime)-15s.%(msecs)03dZ',
+    '%(asctime)-15sZ',
     # '%(asctime)s',
     '%(levelno)s',
     '%(levelname)s',

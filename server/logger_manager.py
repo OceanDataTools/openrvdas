@@ -284,9 +284,15 @@ class LoggerManager:
                           '{filename:w}.py:{lineno:d} {message}')
 
         # Our caller checked that this file exists, so open with impunity.
+        # Then try going back to just the last five messages in the file.
         reader = TextFileReader(file_spec=stderr_file_name, tail=True)
+        try:
+            reader.seek(offset=5, origin='end')
+        except ValueError:
+            pass  # Couldn't go back that many lines, stay where we are
+
         while not self.quit_flag:
-            record = reader.read()
+            record = reader.read()  # This will block at current end of file
             if not record:
                 continue
             try:
@@ -302,7 +308,7 @@ class LoggerManager:
                 das_record = DASRecord(fields={field_name: json.dumps(fields)})
                 self.data_server_writer.write(das_record)
             except (KeyError, TypeError):
-                logging.warning('Couldn\'t parse stderr message from logger %s: %s',
+                logging.warning('Couldn\'t parse stderr message from logger %s: "%s"',
                                 logger, record)
                 continue
 
