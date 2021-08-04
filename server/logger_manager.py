@@ -160,7 +160,8 @@ class LoggerManager:
         self.check_logger_stderr_thread = threading.Thread(
             name='check_logger_stderr_loop',
             target=self._check_logger_stderr_loop, daemon=True)
-        self.check_logger_stderr_thread.start()
+        # Temporarily disabled, as per issue #283
+        #self.check_logger_stderr_thread.start()
 
         # Check logger status in a separate thread. If we've got the
         # address of a data server websocket, send our updates to it.
