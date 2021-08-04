@@ -247,7 +247,7 @@ class LoggerManager:
             for logger in self.loggers:
                 if logger not in stderr_file_thread:
                     stderr_file_name = self.stderr_file_pattern.format(logger=logger)
-
+                    logging.info('Creating stderr thread for logger %s', logger)
                     # Does stderr file exist? If so, start a thread reading it
                     if os.path.isfile(stderr_file_name):
                         logging.info('Listening to new stderr file "%s"', stderr_file_name)
@@ -310,7 +310,6 @@ class LoggerManager:
             except (KeyError, TypeError):
                 logging.warning('Couldn\'t parse stderr message from logger %s: "%s"',
                                 logger, record)
-                continue
 
     ############################
     def _check_logger_status_loop(self):
