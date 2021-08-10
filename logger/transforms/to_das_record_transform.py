@@ -42,7 +42,8 @@ class ToDASRecordTransform(Transform):
 
         if self.field_name:
             if type(record) is str:
-                return DASRecord(data_id=self.data_id, fields={self.field_name: record})
+                das_record = DASRecord(data_id=self.data_id, fields={self.field_name: record})
+                return das_record
             else:
                 logging.warning('When ToDASRecordTransform is initialized with '
                                 'field_name ("%s"), inputs should be of type str, '

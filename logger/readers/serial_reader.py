@@ -85,7 +85,7 @@ class SerialReader(Reader):
                                         exclusive=exclusive)
         except (serial.SerialException, serial.serialutil.SerialException) as e:
             logging.fatal('Failed to open serial port %s: %s', port, e)
-            sys.exit(1)
+            raise
 
         self.max_bytes = max_bytes
         self.encoding = encoding

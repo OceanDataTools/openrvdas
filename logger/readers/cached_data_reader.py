@@ -175,7 +175,7 @@ class CachedDataReader(Reader):
                 except BrokenPipeError:
                     pass
                 except AttributeError as e:
-                    logging.warning('CachedDataReader websocket loop error: %s', e)
+                    logging.info('CachedDataReader websocket loop error: %s', e)
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning('CachedDataReader lost websocket connection to '
                                     'data server; trying to reconnect.')

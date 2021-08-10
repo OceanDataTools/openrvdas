@@ -20,7 +20,7 @@ class LoggerSupervisor:
    they keep running.
     """
 
-    def __init__(self, configs=None, stderr_file_pattern=None,
+    def __init__(self, configs=None, stderr_file_pattern=None, stderr_data_server=None,
                  max_tries=3, min_uptime=10, interval=1,
                  logger_log_level=logging.WARNING):
         """
@@ -30,6 +30,9 @@ class LoggerSupervisor:
         stderr_file_pattern - Pattern into which logger name will be interpolated
                    to create the file path/name to which the logger's stderr
                    will be written. E.g. '/var/log/openrvdas/{logger}.stderr'
+
+        stderr_data_server  - If not None, host:port of cached data server to
+                send stderr messages to.
 
         max_tries - number of times to try a dead logger config. If zero, then
                     never stop retrying.
@@ -45,6 +48,7 @@ class LoggerSupervisor:
         """
         self.configs = configs or {}
         self.stderr_file_pattern = stderr_file_pattern
+        self.stderr_data_server = stderr_data_server
         self.max_tries = max_tries
         self.min_uptime = min_uptime
         self.interval = interval
@@ -133,10 +137,11 @@ class LoggerSupervisor:
         logging.info('Called start_logger for %s: %s', logger, config_name)
 
         self.logger_config_map[logger] = config
-        stderr_file = self.stderr_file_pattern.format(logger=logger)
+        stderr_filename = self.stderr_file_pattern.format(logger=logger)
 
         runner = LoggerRunner(config=config, name=logger,
-                              stderr_file=stderr_file,
+                              stderr_filename=stderr_filename,
+                              stderr_data_server=self.stderr_data_server,
                               logger_log_level=self.logger_log_level)
         self.logger_runner_map[logger] = runner
         self.logger_runner_map[logger].start()
@@ -250,6 +255,10 @@ if __name__ == '__main__':
                         'the logger\'s stderr will be written. E.g. '
                         '\'/var/log/openrvdas/{logger}.stderr\'')
 
+    parser.add_argument('--stderr_data_server', dest='stderr_data_server', default=None,
+                        help='Optional host:port of a cached data server to which '
+                        ' stderr messages should be written.')
+
     parser.add_argument('--max_tries', dest='max_tries', action='store',
                         type=int, default=3, help='How many times to try a '
                         'crashing config before giving up on it as failed. If '
@@ -294,6 +303,7 @@ if __name__ == '__main__':
                     for logger in mode_config_names}
     sup = LoggerSupervisor(configs=mode_configs,
                            stderr_file_pattern=args.stderr_file_pattern,
+                           stderr_data_server=args.stderr_data_server,
                            max_tries=args.max_tries,
                            min_uptime=args.min_uptime,
                            interval=args.interval,
