@@ -14,9 +14,16 @@
     var USER_AUTHENTICATED = false;
   {% endif %}
 
-  LOGGER_ID = "{{ logger_id }}";
+  var LOGGER_ID = "{{ logger_id }}";
+
+  // We're going to subscribe to stderr updates for this logger from the
+  // CDS and put them in a div. Code for doing that is in fetch_cds_logs.js
+  // and websocket.js.
+  var CDS_DATA_ID = 'stderr:logger:' + LOGGER_ID;
+  var CDS_TARGET_DIV = LOGGER_ID + '_stderr';
 </script>
-<script src="../static/django_gui/edit_config.html.js"></script>
+
+<script src="../static/django_gui/fetch_cds_logs.js"></script>
 <script src="../static/django_gui/websocket.js"></script>
 
 <title>{{ logger_id }} configuration</title>
