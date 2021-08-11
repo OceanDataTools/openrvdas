@@ -31,6 +31,7 @@ var global_last_logger_status_timestamp = 0;
 function initial_send_message() {
   // Subscribing with seconds:-1 means we'll always start by getting
   // the most recent value, then all subsequent ones.
+  console.log('INITIAL MESSAGE')
   return {'type':'subscribe',
           'fields': {
             'status:cruise_definition':{'seconds':-1},
@@ -580,8 +581,8 @@ function open_edit_config(click_event, logger_name) {
   var window_args = [
     'titlebar=no',
     'location=no',
-    'height=300',
-    'width=520',
+    'height=320',
+    'width=720',
     'top=' + click_event.clientY,
     'left=' + (click_event.clientX + 520),
     'scrollbars=yes',

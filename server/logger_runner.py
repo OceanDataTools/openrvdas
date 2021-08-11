@@ -75,7 +75,6 @@ def config_from_filename(filename):
     a cruise definition, and what is after to be the name of a
     configuration inside that definition.
     """
-
     config_name = None
     if filename.find(':') > 0:
         (filename, config_name) = filename.split(':', maxsplit=1)
@@ -148,7 +147,10 @@ def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
             except KeyboardInterrupt:
                 logging.warning(f'Received quit for {config_name}')
     except Exception:
-        time.sleep(0.25)  # give a moment for stderr_writers to finish up
+        pass
+
+    # Allow a moment for stderr_writers to finish up
+    time.sleep(0.25)
 
 
 ################################################################################

@@ -165,9 +165,7 @@ def edit_config(request, logger_id):
 
         else:
             logging.debug('User canceled request')
-
-        # Close window once we've done our processing
-        return HttpResponse('<script>window.close()</script>')
+            return HttpResponse('<script>window.close()</script>')
 
     # If not a POST, render the selector page:
     # What's our current mode? What's the default config for this logger
@@ -187,7 +185,8 @@ def edit_config(request, logger_id):
                       'current_config': current_config,
                       'config_map': json.dumps(config_map),
                       'default_config': default_config,
-                      'config_options': config_options
+                      'config_options': config_options,
+                      'websocket_server': WEBSOCKET_DATA_SERVER
                   })
 
 

@@ -4,11 +4,27 @@
 
 {% block content %}
 
-<script src="../static/django_gui/json-viewer/json-viewer.js"></script>
-<link rel="stylesheet" href="../static/django_gui/json-viewer/json-viewer.css">
+<script type="text/javascript">
+  // Need to define for following JS scripts. For now, count on the
+  // relevant variables being set by Django.
+  var WEBSOCKET_SERVER = "{{ websocket_server }}";
+  {% if user.is_authenticated %}
+    var USER_AUTHENTICATED = true;
+  {% else %}
+    var USER_AUTHENTICATED = false;
+  {% endif %}
+
+  LOGGER_ID = "{{ logger_id }}";
+</script>
+<script src="../static/django_gui/edit_config.html.js"></script>
+<script src="../static/django_gui/websocket.js"></script>
 
 <title>{{ logger_id }} configuration</title>
-<h1>{{ logger_id }} configuration</h1>
+<h1>{{ logger_id }} stderr</h1>
+<div style="height:150px;background-color:white;min-width:0px;padding:0px;overflow-y:auto" id="{{ logger_id }}_stderr">
+</div>
+
+<h1>configuration</h1>
 <hr>
 {% if user.is_authenticated %}
 <form method="post" enctype="multipart/form-data">
@@ -36,8 +52,12 @@
 {% else %}
 Current config: {{ current_config }} <br>
   (<a href="../login"><b>Log in</b></a> to change.)
-  {% endif %}
-  Config definition: <span id="config_json"></span>
+{% endif %}
+Config definition: <div id="config_json"></div>
+
+<link rel="stylesheet" href="../static/django_gui/json-viewer/json-viewer.css">
+<script src="../static/django_gui/json-viewer/json-viewer.js"></script>
+
 <script>
 
 // Create the JSON viewer and attach to the div
