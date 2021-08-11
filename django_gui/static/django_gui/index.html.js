@@ -31,14 +31,13 @@ var global_last_logger_status_timestamp = 0;
 function initial_send_message() {
   // Subscribing with seconds:-1 means we'll always start by getting
   // the most recent value, then all subsequent ones.
-  console.log('INITIAL MESSAGE')
   return {'type':'subscribe',
           'fields': {
             'status:cruise_definition':{'seconds':-1},
             'status:cruise_mode':{'seconds':-1},
             'status:logger_status':{'seconds':-1},
             'status:file_update':{'seconds':0}
-          }
+            }
          }
 }
 

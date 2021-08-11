@@ -153,8 +153,8 @@ def edit_config(request, logger_id):
     # If we've gotten a POST request, they've selected a new config
     if request.method == 'POST':
 
-        # If they've hit the "Save" button
-        if 'save' in request.POST:
+        # If they've hit the "Update" button
+        if 'update' in request.POST:
             # First things first: log the request
             log_request(request, '%s edit_config' % logger_id)
 
@@ -162,10 +162,10 @@ def edit_config(request, logger_id):
             new_config = request.POST['select_config']
             logging.warning('selected config: %s', new_config)
             api.set_active_logger_config(logger_id, new_config)
-
-        else:
-            logging.debug('User canceled request')
+        elif 'close' in request.POST:
             return HttpResponse('<script>window.close()</script>')
+        else:
+            logging.warning('Unrecognized post request?: ' + str(request.POST))
 
     # If not a POST, render the selector page:
     # What's our current mode? What's the default config for this logger
