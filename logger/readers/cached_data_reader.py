@@ -157,7 +157,7 @@ class CachedDataReader(Reader):
                         ws_data_server = 'ws://' + self.data_server
                         ssl_context = None
 
-                    logging.warning(f'CachedDataReader connecting to {ws_data_server}')
+                    logging.info(f'CachedDataReader connecting to {ws_data_server}')
                     async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
                         logging.info(f'Connected to data server {ws_data_server}')
                         # Send our subscription request
