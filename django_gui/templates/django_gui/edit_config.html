@@ -8,22 +8,16 @@
   // Need to define for following JS scripts. For now, count on the
   // relevant variables being set by Django.
   var WEBSOCKET_SERVER = "{{ websocket_server }}";
-  {% if user.is_authenticated %}
-    var USER_AUTHENTICATED = true;
-  {% else %}
-    var USER_AUTHENTICATED = false;
-  {% endif %}
-
   var LOGGER_ID = "{{ logger_id }}";
 
   // We're going to subscribe to stderr updates for this logger from the
-  // CDS and put them in a div. Code for doing that is in fetch_cds_logs.js
-  // and websocket.js.
+  // CDS and put them in a div. Code for doing that is in edit_config.html.js
+  // stderr_log_utils.js and websocket.js.
   var CDS_DATA_ID = 'stderr:logger:' + LOGGER_ID;
   var CDS_TARGET_DIV = LOGGER_ID + '_stderr';
 </script>
-
-<script src="../static/django_gui/fetch_cds_logs.js"></script>
+<script src="../static/django_gui/edit_config.html.js"></script>
+<script src="../static/django_gui/stderr_log_utils.js"></script>
 <script src="../static/django_gui/websocket.js"></script>
 
 <title>{{ logger_id }} configuration</title>

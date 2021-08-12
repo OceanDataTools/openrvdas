@@ -14,7 +14,7 @@
 //      {% endif %}
 //    </script>
 //
-//    <script src="/static/django_gui/index.js"></script>
+//    <script src="/static/django_gui/index.html.js"></script>
 //    <script src="/static/django_gui/websocket.js"></script>
 //
 // Note that this also counts on variables USER_AUTHENTICATED and
@@ -22,7 +22,6 @@
 
 var global_loggers = {};
 var global_active_mode = 'off';
-var global_logger_stderr = {};
 var global_last_cruise_timestamp = 0;
 var global_last_cruise_mode_timestamp = 0;
 var global_last_logger_status_timestamp = 0;
@@ -167,7 +166,8 @@ function process_data_message(message) {
       var LOGGER_STDERR_PREFIX = 'stderr:logger:';
       if (field_name.indexOf(LOGGER_STDERR_PREFIX) == 0) {
         var logger_name = field_name.substr(LOGGER_STDERR_PREFIX.length);
-        process_logger_stderr(logger_name, value_list);
+        // Defined in stderr_log_utils.js
+        process_stderr_message(logger_name, logger_name + '_stderr', value_list);
       }
     }
   }
@@ -274,21 +274,14 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // Stash our new logger list in the globals, then update the
   // loggers, creating one new row for each.
   global_loggers = loggers;
-  global_logger_stderr = {};
   var new_fields = {};
   for (var logger_name in loggers) {
     //console.log('setting up logger ' + logger_name);
     var logger = loggers[logger_name];
-    global_logger_stderr[logger_name] = [];
 
     // table row creation
     var tr = document.createElement('tr');
     tr.setAttribute('id', logger_name + '_row');
-
-    var name_td = document.createElement('td');
-    name_td.setAttribute('id', logger_name + '_td');
-    tr.appendChild(name_td);
-    name_td.innerHTML = logger_name;
 
     var config_td = document.createElement('td');
     config_td.setAttribute('id', logger_name + '_config_td');
@@ -298,10 +291,6 @@ function update_cruise_definition(timestamp, cruise_definition) {
     button.setAttribute('type', 'submit');
     button.innerHTML = logger.active;
 
-    // Disable if user is not authenticated
-    //if (! USER_AUTHENTICATED) {
-    //  button.setAttribute('disabled', true);
-    //}
     button.setAttribute('onclick',
                         'open_edit_config(event, \'' + logger_name + '\')');
     config_td.appendChild(button);
@@ -311,8 +300,8 @@ function update_cruise_definition(timestamp, cruise_definition) {
     var stderr_div = document.createElement('div');
 
     stderr_div.setAttribute('id', logger_name + '_stderr');
-    stderr_div.setAttribute('style', 'height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto;');
-    stderr_div.style.fontSize = 'small';
+    stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;');
+    stderr_div.style.fontSize = 'x-small';
     stderr_td.appendChild(stderr_div);
     tr.appendChild(stderr_td);
     table.appendChild(tr);
@@ -411,81 +400,12 @@ function looks_like_log_line(line) {
   return (typeof line == 'string' && Date.parse(line.split('T')[0]) > 0);
 }
 
-////////////////////////////
-// Add a message to logger's global stderr display. Make sure messages
-// are unique - they're timestamped, so we'll only omit messages that
-// are true duplicates. Return true if we actually add anything.
-function add_to_stderr(logger_name, message) {
-  message = message.replace(/\n/, '<br>');
-  if (global_logger_stderr[logger_name].indexOf(message) == -1) {
-    global_logger_stderr[logger_name].push(message);
-    return true;
-  } else {
-    //console.log('Skipping duplicate message: ' + message);
-    return false;
-  }
-}
-
-////////////////////////////
-// Add a list of (timestamp, message) pairs to the stderr display for
-// logger_name. Make sure messages are in order and unique. Return true
-// if we actually add anything.
-function process_logger_stderr(logger_name, value_list) {
-  // Fetch the div where we're going to put these messages.
-  var stderr_div = document.getElementById(logger_name + '_stderr');
-  if (stderr_div == undefined) {
-    console.log('Found no stderr div for logger ' + logger_name);
-    return;
-  }
-
-  // Process each of the messages in the list.
-  var anything_added = false;
-  for (var list_i = 0; list_i < value_list.length; list_i++) {
-    var [timestamp, message] = value_list[value_list.length-1];
-    if (message.length == 0) {
-      continue;
-    }
-    try {
-      // If we have a structured JSON message
-      message = JSON.parse(message);
-      var prefix = '';
-      if (message['asctime'] !== undefined) {
-        prefix += message['asctime'] + ' ';
-      }
-      if (message['levelname'] !== undefined) {
-        prefix += message['levelname'] + ' ';
-      }
-      if (message['filename'] !== undefined) {
-        prefix += message['filename'] + ':' + message['lineno'] + ' ';
-      }
-      var msg = message['message'].replace('\n','<br>');
-      anything_added = anything_added || add_to_stderr(logger_name, prefix + msg);
-    } catch (e) {
-      // If not JSON, but a string that looks like a log line go ahead
-      // and try adding.
-      if (looks_like_log_line(message)) {
-        anything_added = anything_added || add_to_stderr(logger_name, message);
-      } else {
-        console.log('Skipping unparseable log line: ' +  message);
-      }
-    }
-  }
-  // Once all messages have been added, put in place in proper divs
-  if (anything_added) {
-    stderr_div.innerHTML = global_logger_stderr[logger_name].join('<br>\n');
-    stderr_div.scrollTop = stderr_div.scrollHeight;  // scroll to bottom
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 var NOW_TIMEOUT_INTERVAL = 1000;     // Update console clock every second
 var SERVER_TIMEOUT_INTERVAL = 5000;  // 5 seconds before warn about server
 var STATUS_TIMEOUT_INTERVAL = 10000; // 10 seconds before warn about status
 
-// Question on timer warnings: should we reserve space for the
-// warnings (e.g. use the commented-out "visibility=hidden" style), or
-// have them open up space when errors occur? For now, for
-// compactness, going with the latter route.
+///////////////////////////////
 function date_str() {
   return Date().substring(0,24);
 }
@@ -553,7 +473,6 @@ var server_timeout_timer = setInterval(flag_server_timeout,
 
 ///////////////////////////////
 // Turn select pull-down's text background yellow when it's been changed
-
 var manually_selected_mode = null;
 
 function highlight_select_mode() {
