@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 
+from importlib import reload
 from os.path import dirname, realpath
 
 # Add the openrvdas components onto sys.path
@@ -20,16 +21,18 @@ sys.path.append(dirname(dirname(realpath(__file__))))
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer  # noqa: E402
 
-# For sending stderr to CachedDataServer
 from server.logger_supervisor import LoggerSupervisor  # noqa: E402
-from logger.writers.composed_writer import ComposedWriter  # noqa: E402
+from server.server_api import ServerAPI  # noqa: E402
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
-from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
-from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
 from logger.utils.read_config import read_config  # noqa: E402
-from server.server_api import ServerAPI  # noqa: E402
+
+# For sending stderr to CachedDataServer
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
+from logger.writers.composed_writer import ComposedWriter  # noqa: E402
+
 
 DEFAULT_MAX_TRIES = 3
 
@@ -56,7 +59,7 @@ class LoggerManager:
     def __init__(self,
                  api, supervisor, data_server_websocket=None,
                  stderr_file_pattern='/var/log/openrvdas/{logger}.stderr',
-                 interval=0.25, logger_log_level=logging.WARNING):
+                 interval=0.25, log_level=logging.info, logger_log_level=logging.WARNING):
         """Read desired/current logger configs from Django DB and try to run the
         loggers specified in those configs.
         ```
@@ -77,6 +80,8 @@ class LoggerManager:
               stderr to it.
 
         interval - number of seconds to sleep between checking/updating loggers
+
+        log_level - LoggerManager's log level
 
         logger_log_level - At what logging level our component loggers
               should operate.
@@ -106,6 +111,18 @@ class LoggerManager:
         self.stderr_file_pattern = stderr_file_pattern
         self.interval = interval
         self.logger_log_level = logger_log_level
+
+        # Try to set up logging, right off the bat: reset logging to its
+        # freshly-imported state and add handler that also sends logged
+        # messages to the cached data server.
+        reload(logging)
+        logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, level=log_level)
+
+        if self.data_server_writer:
+            cds_writer = ComposedWriter(
+                transforms=ToDASRecordTransform(data_id='stderr', field_name='stderr:logger_manager'),
+                writers=self.data_server_writer)
+            logging.getLogger().addHandler(StdErrLoggingHandler(cds_writer))
 
         # How our various loops and threads will know it's time to quit
         self.quit_flag = False
@@ -508,6 +525,7 @@ if __name__ == '__main__':  # noqa: C901
         data_server_websocket=args.data_server_websocket,
         stderr_file_pattern=args.stderr_file_pattern,
         interval=args.interval,
+        log_level=log_level,
         logger_log_level=logger_log_level)
 
     # When told to quit, shut down gracefully

@@ -130,18 +130,50 @@ def index(request):
 
     return render(request, 'django_gui/index.html', template_vars)
 
-
 ################################################################################
-# Page to display messages from the openrvdas server
-def server_messages(request, log_level=logging.INFO):
+def change_mode(request):
+    """Change logger manager mode and view logger manager stderr.
+    """
     global api
     if api is None:
         api = DjangoServerAPI()
 
-    template_vars = {'websocket_server': WEBSOCKET_DATA_SERVER,
-                     'log_level': int(log_level)}
-    return render(request, 'django_gui/server_messages.html', template_vars)
+    ############################
+    # If we've gotten a POST request
+    # cruise_id = ''
+    errors = []
+    if request.method == 'POST':
+        logging.debug('POST: %s', request.POST)
 
+        # First things first: log the request
+        log_request(request, 'index')
+
+        # Did we get a mode selection?
+        if 'select_mode' in request.POST:
+            new_mode_name = request.POST['select_mode']
+            logging.info('switching to mode "%s"', new_mode_name)
+            try:
+                api.set_active_mode(new_mode_name)
+            except ValueError as e:
+                logging.warning('Error trying to set mode to "%s": %s',
+                                new_mode_name, str(e))
+        elif 'close' in request.POST:
+            return HttpResponse('<script>window.close()</script>')
+        # Else unknown post
+        else:
+            logging.warning('Unknown POST request: %s', request.POST)
+
+    # Assemble information to draw page
+    template_vars = {
+        'websocket_server': WEBSOCKET_DATA_SERVER,
+    }
+    try:
+        template_vars['modes'] = api.get_modes()
+        template_vars['active_mode'] = api.get_active_mode()
+    except (ValueError, AttributeError) as e:
+        logging.info('Unknown error: %s', str(e))
+
+    return render(request, 'django_gui/change_mode.html', template_vars)
 
 ################################################################################
 def edit_config(request, logger_id):

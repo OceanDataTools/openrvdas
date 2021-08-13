@@ -16,8 +16,7 @@
 // as an associative array of {field_name: div}, where field_name is
 // a match for, e.g. stderr.logger.s330, and div is the id of the page's
 // div into which matching lines should be placed.
-function process_stderr_message(logger_id, target_div_id, log_line_list) {
-  // logger_id      - e.g. 's330'
+function process_stderr_message(target_div_id, log_line_list) {
   // target_div_id  - e.g. 's330_stderr
   // log_line_list  - should be [(timestamp, line), (timestamp, line),...],
   //                  where 'line' is the log message to be recorded.

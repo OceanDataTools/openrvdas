@@ -35,7 +35,10 @@ function initial_send_message() {
             'status:cruise_definition':{'seconds':-1},
             'status:cruise_mode':{'seconds':-1},
             'status:logger_status':{'seconds':-1},
-            'status:file_update':{'seconds':0}
+            'status:file_update':{'seconds':0},
+
+            // Get logger manager stderr, too.
+            'stderr:logger_manager':{'seconds': 60*60}
             }
          }
 }
@@ -160,6 +163,11 @@ function process_data_message(message) {
       document.getElementById('reload_span').style.display = 'inline';
       break;
 
+    case 'stderr:logger_manager':
+      process_stderr_message('logger_manager_stderr', value_list);
+      document.getElementById('reload_span').style.display = 'inline';
+      break;
+
     ////////////////////////////////////////////////////
     // If something else, see if it's a logger status update
     default:
@@ -167,7 +175,7 @@ function process_data_message(message) {
       if (field_name.indexOf(LOGGER_STDERR_PREFIX) == 0) {
         var logger_name = field_name.substr(LOGGER_STDERR_PREFIX.length);
         // Defined in stderr_log_utils.js
-        process_stderr_message(logger_name, logger_name + '_stderr', value_list);
+        process_stderr_message(logger_name + '_stderr', value_list);
       }
     }
   }
@@ -212,40 +220,8 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // Now update the cruise modes
   var modes = cruise_definition.modes;
   global_active_mode = cruise_definition.active_mode;
-
-  var mode_selector = document.getElementById('select_mode');
-  mode_selector.setAttribute('onchange', 'highlight_select_mode()');
-
-  // Check whether modes have changed
-  var modes_changed = (mode_selector.length !== modes.length);
-  if (!modes_changed) {
-    for (var m_i = 0; m_i < mode_selector.length; m_i++) {
-      if (mode_selector[m_i].value !== modes[m_i]) {
-        modes_changed = true;
-        break;
-      }
-    }
-  }
-
-  // If modes have changed, delete old and redraw new
-  if (modes_changed) {
-    mode_selector.style.backgroundColor = 'white'
-    // Remove all old mode options
-    while (mode_selector.length) {
-      mode_selector.remove(0);
-    }
-    for (m_i = 0; m_i < modes.length; m_i++) {
-      var mode_name = modes[m_i];
-      var opt = document.createElement('option');
-      opt.setAttribute('id', 'mode_' + mode_name);
-      opt.innerHTML = mode_name;
-
-      if (mode_name == global_active_mode) {
-        opt.setAttribute('selected', true);
-      }
-      mode_selector.appendChild(opt);
-    }
-  }
+  var mode_button_label = document.getElementById('lm_mode_button_label');
+  mode_button_label.innerHTML = global_active_mode;
 
   ////////////////////////////////
   // Now update loggers
@@ -318,26 +294,10 @@ function update_cruise_definition(timestamp, cruise_definition) {
 ////////////////////////////
 // Process a cruise_mode update
 function update_cruise_mode(timestamp, cruise_mode) {
-
-  ////////////////////////////////
-  // If active mode hasn't changed, nothing to do.
   var new_mode = cruise_mode.active_mode;
-  if (new_mode == global_active_mode) {
-    return;
-  }
-
-  // If it has, update on page
   global_active_mode = new_mode;
-
-  var selector = document.getElementById('select_mode');
-  for (var m_i = 0; m_i < selector.length; m_i++) {
-    var mode_name = selector.options[m_i].value;
-    if (mode_name == new_mode) {
-      selector.selectedIndex = m_i;
-      return;
-    }
-  }
-  console.log('Got unrecognized cruise mode: "' + new_mode + '"');
+  var mode_button_label = document.getElementById('lm_mode_button_label');
+  mode_button_label.innerHTML = new_mode;
 }
 
 ////////////////////////////////////////////////////
@@ -475,21 +435,28 @@ var server_timeout_timer = setInterval(flag_server_timeout,
 // Turn select pull-down's text background yellow when it's been changed
 var manually_selected_mode = null;
 
-function highlight_select_mode() {
-  var mode_selector = document.getElementById('select_mode');
-  manually_selected_mode = mode_selector.options[mode_selector.selectedIndex].text;
-  var new_color = 'white';
-  if (manually_selected_mode != global_active_mode) {
-    var new_color = 'yellow';
-  }
-  document.getElementById('select_mode').style.backgroundColor = new_color;
-}
-
 ///////////////////////////////
 function message_window() {
   var path = '/server_messages/20/';
   window.open(path, '_blank',
   'height=350,width=540,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,copyhistory=no');
+}
+
+///////////////////////////////
+// When user clicks a logger config button.
+function open_change_mode(click_event) {
+  if (!click_event) click_event = window.event;
+  var window_args = [
+    'titlebar=no',
+    'location=no',
+    'height=320',
+    'width=720',
+    'top=' + click_event.clientY,
+    'left=' + (click_event.clientX + 520),
+    'scrollbars=yes',
+    'status=no'
+  ];
+  window.open('../change_mode/', '_blank', window_args.join());
 }
 
 ///////////////////////////////

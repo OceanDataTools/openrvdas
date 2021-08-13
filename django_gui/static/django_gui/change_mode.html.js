@@ -1,16 +1,14 @@
 //////////////////////////////////////////////////////////////////////////////
-// Javascript for fetching log lines whose data_id matches some data_id,
+// Javascript for fetching stder log lines whose data_id matches some data_id,
 // such as 'stderr:logger:s330', and appending them to a specified target div.
 //
 // Typical invocation will look like:
 //
 //    <script type="text/javascript">
 //      var WEBSOCKET_SERVER = 'localhost:8766';
-//      var CDS_DATA_ID = 'stderr:logger:' + LOGGER_ID;
-//      var CDS_TARGET_DIV = LOGGER_ID + '_stderr';
 //    </script>
 //    <script src="/static/django_gui/stderr_log_utils.js"></script>
-//    <script src="/static/django_gui/edit_configs.js"></script>
+//    <script src="/static/django_gui/change_mode.js"></script>
 //    <script src="/static/django_gui/websocket.js"></script>
 //
 //  NOTE: ORDERING IS IMPORTANT.
@@ -23,7 +21,7 @@
     // Have to put this together piece by piecce because JS is stupid.
     var seconds_of_back_logs = 60*60;
     var fields = {};
-    fields[CDS_DATA_ID] = {'seconds': seconds_of_back_logs};
+    fields['stderr:logger_manager'] = {'seconds': seconds_of_back_logs};
     var initial_message = {'type': 'subscribe',
                            'fields': fields};
     return initial_message;
