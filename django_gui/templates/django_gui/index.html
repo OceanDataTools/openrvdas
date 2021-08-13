@@ -45,13 +45,6 @@
       <td style='background-color:gray;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;font-weight:bold;'>
         status
       </td>
-      <td>
-        <button id="display_window" type="submit"
-                onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
-          Show display pages
-        </button>
-      </td>
-
     </tr>
     <tr>
       <td style='background-color:white;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;'>
@@ -74,7 +67,7 @@
       <tbody id='lm_table_body'>
         <tr><th>mode</th><th colspan=3>status</th></tr>
         <tr id="logger_manager_row">
-          <td id="logger_manager_mode_td">
+          <td id="logger_manager_mode_td" style="height:30px;width:75px;">
             <button id="logger_manager_mode_button" type="submit"
                     onclick="open_change_mode(event);"
                     >
@@ -97,7 +90,7 @@
         <tr><th>logger</th><th colspan=3>configuration</th></tr>
         {% for logger_name, logger_config in loggers.items %}
         <tr id="{{ logger_name }}_row">
-          <td id="{{ logger_name }}_config_td">
+          <td id="{{ logger_name }}_config_td" style="height:30px;width:75px;");
             <button id="{{ logger_name }}_config_button" type="submit"
                     onclick="open_edit_config(event, '{{logger_name }}');"
                     {% if not user.is_authenticated %}
@@ -140,6 +133,14 @@
       <button id='load_definition_button' type='submit'
               onclick='open_load_definition(event);'>
         Load new definition
+      </button>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <button id="display_window" type="submit"
+              onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
+        Show display pages
       </button>
     </td>
   </tr>

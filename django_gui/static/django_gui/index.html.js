@@ -261,6 +261,7 @@ function update_cruise_definition(timestamp, cruise_definition) {
 
     var config_td = document.createElement('td');
     config_td.setAttribute('id', logger_name + '_config_td');
+    config_td.setAttribute('style', 'height:30px;width:75px;');
 
     var button = document.createElement('button');
     button.setAttribute('id', logger_name + '_config_button');

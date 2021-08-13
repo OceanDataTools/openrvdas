@@ -148,8 +148,10 @@ def change_mode(request):
         # First things first: log the request
         log_request(request, 'index')
 
+        if 'close' in request.POST:
+            return HttpResponse('<script>window.close()</script>')
         # Did we get a mode selection?
-        if 'select_mode' in request.POST:
+        elif 'select_mode' in request.POST:
             new_mode_name = request.POST['select_mode']
             logging.info('switching to mode "%s"', new_mode_name)
             try:
@@ -157,8 +159,6 @@ def change_mode(request):
             except ValueError as e:
                 logging.warning('Error trying to set mode to "%s": %s',
                                 new_mode_name, str(e))
-        elif 'close' in request.POST:
-            return HttpResponse('<script>window.close()</script>')
         # Else unknown post
         else:
             logging.warning('Unknown POST request: %s', request.POST)
@@ -186,7 +186,9 @@ def edit_config(request, logger_id):
     if request.method == 'POST':
 
         # If they've hit the "Update" button
-        if 'update' in request.POST:
+        if 'close' in request.POST:
+            return HttpResponse('<script>window.close()</script>')
+        elif 'update' in request.POST:
             # First things first: log the request
             log_request(request, '%s edit_config' % logger_id)
 
@@ -194,8 +196,6 @@ def edit_config(request, logger_id):
             new_config = request.POST['select_config']
             logging.warning('selected config: %s', new_config)
             api.set_active_logger_config(logger_id, new_config)
-        elif 'close' in request.POST:
-            return HttpResponse('<script>window.close()</script>')
         else:
             logging.warning('Unrecognized post request?: ' + str(request.POST))
 
