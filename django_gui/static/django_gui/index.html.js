@@ -165,7 +165,6 @@ function process_data_message(message) {
 
     case 'stderr:logger_manager':
       process_stderr_message('logger_manager_stderr', value_list);
-      document.getElementById('reload_span').style.display = 'inline';
       break;
 
     ////////////////////////////////////////////////////
@@ -220,8 +219,8 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // Now update the cruise modes
   var modes = cruise_definition.modes;
   global_active_mode = cruise_definition.active_mode;
-  var mode_button_label = document.getElementById('lm_mode_button_label');
-  mode_button_label.innerHTML = global_active_mode;
+  var mode_button = document.getElementById('logger_manager_mode_button');
+  mode_button.innerHTML = global_active_mode;
 
   ////////////////////////////////
   // Now update loggers
@@ -237,6 +236,42 @@ function update_cruise_definition(timestamp, cruise_definition) {
     return {};
   }
 
+  var new_fields = {};
+
+  // Rebuild logger_manager status - this isn't necessary? Break into
+  // subroutine to share with redrawing logger lines?
+  var lm_table = document.getElementById('logger_manager_table_body');
+  lm_table.deleteRow(1);
+  // table row creation
+  var tr = document.createElement('tr');
+  tr.setAttribute('id', 'logger_manager_row');
+
+  var config_td = document.createElement('td');
+  config_td.setAttribute('id', 'logger_manager_mode_td');
+  config_td.setAttribute('style', 'height:30px;width:75px;');
+
+  var button = document.createElement('button');
+  button.setAttribute('id', 'logger_manager_mode_button');
+  button.setAttribute('type', 'submit');
+  button.innerHTML = global_active_mode;
+
+  button.setAttribute('onclick', 'open_change_mode(event)');
+  config_td.appendChild(button);
+  tr.appendChild(config_td);
+
+  // Create status text area
+  var stderr_td = document.createElement('td');
+  var stderr_div = document.createElement('div');
+  stderr_div.setAttribute('id', 'logger_manager_stderr');
+  stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;');
+  stderr_div.style.fontSize = 'x-small';
+  stderr_td.appendChild(stderr_div);
+  tr.appendChild(stderr_td);
+
+  // Attache everything to the table
+  lm_table.appendChild(tr);
+  new_fields['stderr:logger_manager'] = {'seconds':60*60};
+
   ////////////////////////////////
   // If the list of loggers has changed, we need to rebuild the
   // list. Begin by emptying out table rows except for header row.
@@ -250,7 +285,6 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // Stash our new logger list in the globals, then update the
   // loggers, creating one new row for each.
   global_loggers = loggers;
-  var new_fields = {};
   for (var logger_name in loggers) {
     //console.log('setting up logger ' + logger_name);
     var logger = loggers[logger_name];
@@ -297,8 +331,8 @@ function update_cruise_definition(timestamp, cruise_definition) {
 function update_cruise_mode(timestamp, cruise_mode) {
   var new_mode = cruise_mode.active_mode;
   global_active_mode = new_mode;
-  var mode_button_label = document.getElementById('lm_mode_button_label');
-  mode_button_label.innerHTML = new_mode;
+  var mode_button = document.getElementById('logger_manager_mode_button');
+  mode_button.innerHTML = new_mode;
 }
 
 ////////////////////////////////////////////////////

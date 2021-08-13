@@ -1,8 +1,36 @@
 {% extends 'django_gui/base.html' %}
-
 {% load static %}
-
 {% block content %}
+<style>
+    .time_label {
+        background-color:gray;
+        border-style:solid;
+        border-width:1px;
+        border-color:gray;
+        text-align:right;
+        font-size:small;
+    }
+    .time_str {
+        background-color:white;
+        border-style:solid;
+        border-width:1px;
+        border-color:gray;
+        text-align:left;
+        font-size:small;
+    }
+    .button_td {
+        height:30px;
+        width:75px;
+    }
+    .stderr_window {
+        height:30px;
+        width:450px;
+        background-color:white;
+        padding:0px;
+        overflow-y:auto;
+        font-size:x-small;
+    }
+</style>
 
 <script type="text/javascript">
   // Need to define for following JS scripts. For now, count on the
@@ -16,8 +44,9 @@
 <title>Cruise Management</title>
 <h1><span id='cruise_id'></span> Cruise Management</h1>
 
+{# Show this div if no cruise definition loaded #}
 <div id='empty_loggers'
-  {% if loggers %}
+  {% if loggers %}x
     style='display:none;'
   {% else %}
     style='display:block;'
@@ -25,6 +54,8 @@
 >
 <h3>No cruise definition loaded</h3>
 </div>
+
+{# Show this div if a cruise definition has been loaded #}
 <div id='status_and_loggers'
   {% if loggers %}
     style='display:block;'
@@ -36,77 +67,63 @@
   {# Show server status up top.                                               #}
   <table>
     <tr>
-      <td style='background-color:gray;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;font-weight:bold'>
-        now
-      </td>
-      <td style='background-color:gray;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;font-weight:bold;'>
-        server
-      </td>
-      <td style='background-color:gray;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;font-weight:bold;'>
-        status
+     <td class="time_label">now</td>
+      <td class="time_str"><span id='time_td'></span></td>
+    </tr>
+    <tr>
+      <td class="time_label">server</td>
+      <td class="time_str"><span id='server_time_td'>--no updates--</span>
       </td>
     </tr>
     <tr>
-      <td style='background-color:white;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;'>
-        <span id='time_td'></span>
-      </td>
-      <td style='background-color:white;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;'>
-        <span id='server_time_td'>--no updates--</span>
-      </td>
-      <td style='background-color:white;border-style:solid;border-width:1px;border-color:gray;text-align:center;font-size:small;'>
-        <span id='status_time_td'>--no updates--</span>
-      </td>
+      <td  class="time_label">status</td>
+      <td class="time_str"><span id='status_time_td'>--no updates--</span></td>
     </tr>
   </table>
 
   {# ######################################################################## #}
   {# Draw the logger manager and current mode.                                #}
   <hr>
-  <div id='lm_loaded'>
-    <table id='lm_table'>
-      <tbody id='lm_table_body'>
-        <tr><th>mode</th><th colspan=3>status</th></tr>
-        <tr id="logger_manager_row">
-          <td id="logger_manager_mode_td" style="height:30px;width:75px;">
-            <button id="logger_manager_mode_button" type="submit"
-                    onclick="open_change_mode(event);"
-                    >
-              <span id="lm_mode_button_label">{{ active_mode }}</span>
-            </button>
-          </td>
-          <td><div style="height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;font-size:x-small"
-                   id="logger_manager_stderr"></div></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+
+  <hr>
+  <table id='logger_manager_table'>
+    <tbody id='logger_manager_table_body'>
+      <tr><th>logger monitor</th><th>stderr</th></tr>
+      <tr>
+        <td class="button_td" id="logger_manager_mode_td">
+          <button id="logger_manager_mode_button" type="submit"
+                  onclick="open_change_mode(event);"
+                  >
+            {{ active_mode }}
+          </button>
+        </td>
+        <td ><div class="stderr_window" id="logger_manager_stderr"></div></td>
+      </tr>
+    </tbody>
+  </table>
 
   {# ######################################################################## #}
   {# Draw the loggers and their current configurations.                       #}
-  <hr>
-  <div id='config_loaded'>
-    <table id='logger_table'>
-      <tbody id='logger_table_body'>
-        <tr><th>logger</th><th colspan=3>configuration</th></tr>
-        {% for logger_name, logger_config in loggers.items %}
-        <tr id="{{ logger_name }}_row">
-          <td id="{{ logger_name }}_config_td" style="height:30px;width:75px;");
-            <button id="{{ logger_name }}_config_button" type="submit"
-                    onclick="open_edit_config(event, '{{logger_name }}');"
-                    {% if not user.is_authenticated %}
-                    disabled
-                    {% endif %}
-                    >
-              {{ logger_config.active }}
-            </button>
-          </td>
-          <td><div style="height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto" id="{{ logger_name }}_stderr"></div></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <table id='logger_table'>
+    <tbody id='logger_table_body'>
+      <tr><th>logger</th><th>stderr</th></tr>
+      {% for logger_name, logger_config in loggers.items %}
+      <tr id="{{ logger_name }}_row">
+        <td class="button_td" id="{{ logger_name }}_config_td">
+          <button id="{{ logger_name }}_config_button" type="submit"
+                  onclick="open_edit_config(event, '{{logger_name }}');"
+                  >
+            {{ logger_config.active }}
+          </button>
+        </td>
+        <td><div class="stderr_window" id="{{ logger_name }}_stderr"></div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
   </div>
-</div>
+{# End of 'we have a cruise definition' div #}
+
 {# ######################################################################## #}
 {# Load new definition                                                      #}
 {% if user.is_authenticated %}
