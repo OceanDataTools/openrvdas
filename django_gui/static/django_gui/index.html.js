@@ -236,40 +236,13 @@ function update_cruise_definition(timestamp, cruise_definition) {
     return {};
   }
 
+  // If stuff has gotten updated, need to update CDS fields to
+  // subscribe to.
   var new_fields = {};
 
-  // Rebuild logger_manager status - this isn't necessary? Break into
-  // subroutine to share with redrawing logger lines?
-  var lm_table = document.getElementById('logger_manager_table_body');
-  lm_table.deleteRow(1);
-  // table row creation
-  var tr = document.createElement('tr');
-  tr.setAttribute('id', 'logger_manager_row');
-
-  var config_td = document.createElement('td');
-  config_td.setAttribute('id', 'logger_manager_mode_td');
-  config_td.setAttribute('style', 'height:30px;width:75px;');
-
-  var button = document.createElement('button');
-  button.setAttribute('id', 'logger_manager_mode_button');
-  button.setAttribute('type', 'submit');
+  // Update logger_manager status, resubscribe to updates
+  var button = document.getElementById('logger_manager_mode_button');
   button.innerHTML = global_active_mode;
-
-  button.setAttribute('onclick', 'open_change_mode(event)');
-  config_td.appendChild(button);
-  tr.appendChild(config_td);
-
-  // Create status text area
-  var stderr_td = document.createElement('td');
-  var stderr_div = document.createElement('div');
-  stderr_div.setAttribute('id', 'logger_manager_stderr');
-  stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;');
-  stderr_div.style.fontSize = 'x-small';
-  stderr_td.appendChild(stderr_div);
-  tr.appendChild(stderr_td);
-
-  // Attache everything to the table
-  lm_table.appendChild(tr);
   new_fields['stderr:logger_manager'] = {'seconds':60*60};
 
   ////////////////////////////////
@@ -277,7 +250,7 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // list. Begin by emptying out table rows except for header row.
   var table = document.getElementById('logger_table_body');
   var row_count = table.rows.length;
-  var keep_first_num_rows = 1;
+  var keep_first_num_rows = 3;
   for (var i = keep_first_num_rows; i < row_count; i++) {
     table.deleteRow(keep_first_num_rows);
   }

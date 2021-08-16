@@ -21,6 +21,7 @@
     .button_td {
         height:30px;
         width:75px;
+        font-weight:bold;
     }
     .stderr_window {
         height:30px;
@@ -82,30 +83,23 @@
   </table>
 
   {# ######################################################################## #}
-  {# Draw the logger manager and current mode.                                #}
+  {# Draw the logger manager current mode, and loggers.                       #}
   <hr>
-
-  <hr>
-  <table id='logger_manager_table'>
-    <tbody id='logger_manager_table_body'>
-      <tr><th>logger monitor</th><th>stderr</th></tr>
+  <table id='logger_table'>
+    <tbody id='logger_table_body'>
+      {# Cruise mode and logger manager stderr here #}
+      <tr><th>cruise mode</th><th> logger manager stderr</th></tr>
       <tr>
         <td class="button_td" id="logger_manager_mode_td">
           <button id="logger_manager_mode_button" type="submit"
                   onclick="open_change_mode(event);"
-                  >
-            {{ active_mode }}
+                  {{ active_mode }}
           </button>
         </td>
         <td ><div class="stderr_window" id="logger_manager_stderr"></div></td>
       </tr>
-    </tbody>
-  </table>
 
-  {# ######################################################################## #}
-  {# Draw the loggers and their current configurations.                       #}
-  <table id='logger_table'>
-    <tbody id='logger_table_body'>
+      {# Loggers and logger stderr here #}
       <tr><th>logger</th><th>stderr</th></tr>
       {% for logger_name, logger_config in loggers.items %}
       <tr id="{{ logger_name }}_row">

@@ -146,8 +146,8 @@ def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
                 listener.run()
             except KeyboardInterrupt:
                 logging.warning(f'Received quit for {config_name}')
-    except Exception:
-        pass
+    except Exception as e:
+        logging.fatal(e)
 
     # Allow a moment for stderr_writers to finish up
     time.sleep(0.25)
