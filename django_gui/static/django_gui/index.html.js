@@ -319,7 +319,7 @@ function update_cruise_definition(timestamp, cruise_definition) {
 
     // Also, since we now have a new logger, we'll want to subscribe
     // to stderr updates for it.
-    new_fields['stderr:logger:' + logger_name] = {'seconds':88000};
+    new_fields['stderr:logger:' + logger_name] = {'seconds':6*60*60};
   }
   console.log('Loaded new cruise.');
   //console.log('New fields are: ' + JSON.stringify(new_fields));
