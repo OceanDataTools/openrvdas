@@ -325,6 +325,9 @@ function update_cruise_mode(timestamp, cruise_mode) {
 function update_logger_status(timestamp, logger_status) {
   reset_status_timeout(); // We've gotten a status update
 
+  if (!logger_status || Object.keys(logger_status).length === 0) {
+      return;
+  }
   // Display logger section, if it's not already showing
   // TODO: optimize this so we don't do it every time.
   document.getElementById('empty_loggers').style.display = 'none';
