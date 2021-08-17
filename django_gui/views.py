@@ -130,18 +130,50 @@ def index(request):
 
     return render(request, 'django_gui/index.html', template_vars)
 
-
 ################################################################################
-# Page to display messages from the openrvdas server
-def server_messages(request, log_level=logging.INFO):
+def change_mode(request):
+    """Change logger manager mode and view logger manager stderr.
+    """
     global api
     if api is None:
         api = DjangoServerAPI()
 
-    template_vars = {'websocket_server': WEBSOCKET_DATA_SERVER,
-                     'log_level': int(log_level)}
-    return render(request, 'django_gui/server_messages.html', template_vars)
+    ############################
+    # If we've gotten a POST request
+    # cruise_id = ''
+    errors = []
+    if request.method == 'POST':
+        logging.debug('POST: %s', request.POST)
 
+        # First things first: log the request
+        log_request(request, 'index')
+
+        if 'close' in request.POST:
+            return HttpResponse('<script>window.close()</script>')
+        # Did we get a mode selection?
+        elif 'select_mode' in request.POST:
+            new_mode_name = request.POST['select_mode']
+            logging.info('switching to mode "%s"', new_mode_name)
+            try:
+                api.set_active_mode(new_mode_name)
+            except ValueError as e:
+                logging.warning('Error trying to set mode to "%s": %s',
+                                new_mode_name, str(e))
+        # Else unknown post
+        else:
+            logging.warning('Unknown POST request: %s', request.POST)
+
+    # Assemble information to draw page
+    template_vars = {
+        'websocket_server': WEBSOCKET_DATA_SERVER,
+    }
+    try:
+        template_vars['modes'] = api.get_modes()
+        template_vars['active_mode'] = api.get_active_mode()
+    except (ValueError, AttributeError) as e:
+        logging.info('Unknown error: %s', str(e))
+
+    return render(request, 'django_gui/change_mode.html', template_vars)
 
 ################################################################################
 def edit_config(request, logger_id):
@@ -153,8 +185,10 @@ def edit_config(request, logger_id):
     # If we've gotten a POST request, they've selected a new config
     if request.method == 'POST':
 
-        # If they've hit the "Save" button
-        if 'save' in request.POST:
+        # If they've hit the "Update" button
+        if 'close' in request.POST:
+            return HttpResponse('<script>window.close()</script>')
+        elif 'update' in request.POST:
             # First things first: log the request
             log_request(request, '%s edit_config' % logger_id)
 
@@ -162,12 +196,8 @@ def edit_config(request, logger_id):
             new_config = request.POST['select_config']
             logging.warning('selected config: %s', new_config)
             api.set_active_logger_config(logger_id, new_config)
-
         else:
-            logging.debug('User canceled request')
-
-        # Close window once we've done our processing
-        return HttpResponse('<script>window.close()</script>')
+            logging.warning('Unrecognized post request?: ' + str(request.POST))
 
     # If not a POST, render the selector page:
     # What's our current mode? What's the default config for this logger
@@ -187,7 +217,8 @@ def edit_config(request, logger_id):
                       'current_config': current_config,
                       'config_map': json.dumps(config_map),
                       'default_config': default_config,
-                      'config_options': config_options
+                      'config_options': config_options,
+                      'websocket_server': WEBSOCKET_DATA_SERVER
                   })
 
 
