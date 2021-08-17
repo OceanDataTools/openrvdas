@@ -458,7 +458,7 @@ function open_change_mode(click_event) {
     'titlebar=no',
     'location=no',
     'height=320',
-    'width=720',
+    'width=800',
     'top=' + click_event.clientY,
     'left=' + (click_event.clientX + 520),
     'scrollbars=yes',
