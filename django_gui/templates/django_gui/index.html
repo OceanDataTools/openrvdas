@@ -45,6 +45,24 @@
 <title>Cruise Management</title>
 <h1><span id='cruise_id'></span> Cruise Management</h1>
 
+{# ######################################################################## #}
+{# Show server status up top.                                               #}
+<table>
+  <tr>
+   <td class="time_label">now</td>
+    <td class="time_str"><span id='time_td'></span></td>
+  </tr>
+  <tr>
+    <td class="time_label">server</td>
+    <td class="time_str"><span id='server_time_td'>--no updates--</span>
+    </td>
+  </tr>
+  <tr>
+    <td  class="time_label">status</td>
+    <td class="time_str"><span id='status_time_td'>--no updates--</span></td>
+  </tr>
+</table>
+
 {# Show this div if no cruise definition loaded #}
 <div id='empty_loggers'
   {% if loggers %}x
@@ -53,7 +71,9 @@
     style='display:block;'
   {% endif %}
 >
-<h3>No cruise definition loaded</h3>
+  <p>
+    <b>No cruise definition loaded</b>
+  </p>
 </div>
 
 {# Show this div if a cruise definition has been loaded #}
@@ -64,24 +84,6 @@
     style='display:none;'
   {% endif %}
 >
-  {# ######################################################################## #}
-  {# Show server status up top.                                               #}
-  <table>
-    <tr>
-     <td class="time_label">now</td>
-      <td class="time_str"><span id='time_td'></span></td>
-    </tr>
-    <tr>
-      <td class="time_label">server</td>
-      <td class="time_str"><span id='server_time_td'>--no updates--</span>
-      </td>
-    </tr>
-    <tr>
-      <td  class="time_label">status</td>
-      <td class="time_str"><span id='status_time_td'>--no updates--</span></td>
-    </tr>
-  </table>
-
   {# ######################################################################## #}
   {# Draw the logger manager current mode, and loggers.                       #}
   <hr>
@@ -115,20 +117,23 @@
       {% endfor %}
     </tbody>
   </table>
-  </div>
+
+  <hr>
+  <table>
+    <tr>
+      <td>
+        Current definition file:
+        <span id='filename'>{{ filename|default:"[none]" }}</span>
+      </td>
+    </tr>
+  </table>
+</div>
 {# End of 'we have a cruise definition' div #}
 
 {# ######################################################################## #}
 {# Load new definition                                                      #}
 {% if user.is_authenticated %}
-<hr>
 <table>
-  <tr>
-    <td>
-      Current definition file:
-      <span id='filename'>{{ filename }}</span>
-    </td>
-  </tr>
   <tr>
     <td>
       <span id='reload_span' style='display:none;'>
@@ -147,6 +152,19 @@
       </button>
     </td>
   </tr>
+</table>
+{% endif %}
+
+<p>
+  {% if user.is_authenticated %}
+  Logged in as <b>{{ user }}.</b>
+  <a href='/accounts/logout'>Log out</a>
+  {% else %}
+  <a href='/accounts/login'><b>Log in</b></a> to manage cruise mode or loggers
+  {% endif %}
+</p>
+
+<table>
   <tr>
     <td>
       <button id="display_window" type="submit"
@@ -156,16 +174,4 @@
     </td>
   </tr>
 </table>
-{% endif %}
-<hr>
-<p>
-  {% if user.is_authenticated %}
-  Logged in as <b>{{ user }}.</b>
-  <a href='/accounts/logout'>Log out</a>
-  {% else %}
-  Current definition file: <span id='filename'>{{ filename }}</span><br>
-  <a href='/accounts/login'><b>Log in</b></a> to manage servers, configurations or mode
-  {% endif %}
-</p>
-
 {% endblock content %}

@@ -68,11 +68,19 @@ Once you have logged back on, open two terminal windows.
 
  Select the Log in link and log in as user __rvdas__. You should now see a "Load configuration file" button. Select it, and navigate to load the sample cruise definition file at ``test/NBP1406/NBP1406_cruise.yaml``.
 
- At this point you should see a table of loggers, all in configuration "off". Scroll to the bottom of the page, where there is a "Mode" selector. Select "monitor" and press "Change mode."
+ At this point you should see a table of loggers, all in configuration "off". 
 
  ![NBP Sample Cruise, Mode off](images/nbp_mode_off.png)
 
- After a few seconds of startup, the loggers should turn green and switch to "net" configuration, indicating that they are writing UDP to the network (in this case, to port 6224). You can verify this with another listener:
+ Select the cruise mode "off" button, and it will open a window that allows you to select a different cruise mode, as well as see the logger manager's stderr in greater detail.
+
+ ![NBP Sample Cruise, Change Mode](images/nbp_change_mode.png)
+
+ Select "monitor" from the pull-down menu and press "Change mode." After a few seconds of startup, the loggers should turn green and switch to "net" configuration, indicating that they are writing UDP to the network (in this case, to port 6224). 
+
+ ![NBP Sample Cruise, Change Mode](images/sample_cruise_running.png)
+
+ You can verify this with another listener:
 
  ```
   logger/listener/listen.py --udp 6224
@@ -80,9 +88,9 @@ Once you have logged back on, open two terminal windows.
 
  You can change the active configuration of individual loggers by clicking on the button bearing the name of the current configuration.
 
-4. Open a second browser window and direct it to http://openrvdas/display/nbp_basic.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
+4. Open a second browser window and direct it to http://openrvdas/display/nbp_dashboard.html (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
 
- ![NBP Widget Demo](images/nbp_display.png)
+ ![NBP Widget Demo](images/nbp_dashboard.png)
  
  What is going on here is that, in addition to writing raw data to port 6224, the loggers are also configured to send parsed data to a CachedDataServer via websocket (using a CachedDataWriter). The web console and display widgets connect to the CachedDataServer via websockets and request data to display.
 
