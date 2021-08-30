@@ -236,7 +236,7 @@ function install_influxdb {
     # INFLUXDB_PASSWORD - password to use for InfluxDB
 
     INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
-    INFLUXDB_RELEASE=influxdb-2.0.2
+    INFLUXDB_RELEASE=influxdb2-2.0.8
 
     echo "#####################################################################"
     echo Installing InfluxDB...
@@ -259,10 +259,10 @@ function install_influxdb {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}_darwin_amd64 # for MacOS
+        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-darwin-amd64 # for MacOS
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}_linux_amd64 # for Linux
+        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-linux-amd64 # for Linux
     else
         echo "ERROR: No InfluxDB binary found for architecture \"`uname -s`\"."
         exit_gracefully
@@ -322,7 +322,7 @@ function install_influxdb {
 function install_grafana {
     echo "#####################################################################"
     echo Installing Grafana...
-    GRAFANA_RELEASE=grafana-7.3.4
+    GRAFANA_RELEASE=grafana-8.1.2
     GRAFANA_REPO=dl.grafana.com/oss/release
 
     # If we're on MacOS
@@ -382,13 +382,13 @@ function install_grafana {
 function install_telegraf {
     echo "#####################################################################"
     echo Installing Telegraf...
-    TELEGRAF_RELEASE=telegraf-1.13.3
+    TELEGRAF_RELEASE=telegraf-1.19.3
     TELEGRAF_REPO=dl.influxdata.com/telegraf/releases
 
     # NOTE: in 1.13.3, the tgz file uncompresses to a directory that
     # doesn't include the release number, so just 'telegraf'
     TELEGRAF_UNCOMPRESSED=$TELEGRAF_RELEASE
-    TELEGRAF_UNCOMPRESSED='telegraf'  #
+    #TELEGRAF_UNCOMPRESSED='telegraf'  #
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
