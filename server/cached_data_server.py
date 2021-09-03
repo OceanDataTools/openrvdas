@@ -350,6 +350,7 @@ class RecordCache:
         except OSError as e:
             logging.error('Unable to access disk cache at %s: %s', disk_cache, e)
 
+
 ############################
 class WebSocketConnection:
     """Handle the websocket connection, serving data as requested."""
@@ -564,12 +565,12 @@ class WebSocketConnection:
                         for matching_field_name in matching_field_names:
                             requested_fields[matching_field_name] = field_spec
                             # If we don't have a field spec dict
-                            if not isinstance(field_spec, dict):
-                                back_records = 0
-                                back_seconds = 0
-                            else:
+                            if isinstance(field_spec, dict):
                                 back_records = field_spec.get('back_records', 0)
                                 back_seconds = field_spec.get('seconds', 0)
+                            else:
+                                back_records = 0
+                                back_seconds = 0
 
                             # Now figure out what's the latest timestamp we have for this
                             # field name that respects the back_records and back_seconds
@@ -600,14 +601,14 @@ class WebSocketConnection:
                                     continue
 
                                 # We've been told to return at least 'back_records' records; if
-                                # there aren't at least that many, leave field_timestamps[field] at zero
-                                # to return all we've got.
+                                # there aren't at least that many, leave field_timestamps[field]
+                                # at zero to return all we've got.
                                 if len(field_cache) <= back_records:
                                     continue
 
-                                # If here, we've got at least 'back_records' records, and want to search
-                                # backward to include the last 'back_seconds' seconds of them. Could do
-                                # more efficiently with some sort of binary search, but...
+                                # If here, we've got at least 'back_records' records, and want to
+                                # search backward to include the last 'back_seconds' seconds of
+                                # them. Could do more efficiently with some sort of binary search.
                                 this_record_index = len(field_cache) - back_records - 1
                                 while this_record_index >= 0:
                                     # Recall that each element is (timestamp, value)
