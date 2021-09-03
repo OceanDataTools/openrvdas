@@ -277,6 +277,7 @@ class RecordCache:
                 for i in range(len(value_list) - min_back_records):
                     if value_list[i][0] > oldest:
                         break
+
                 # But keep at least one value
                 last_index = min(i, len(value_list) - 1)
                 self.data[field] = value_list[last_index:]
@@ -558,19 +559,17 @@ class WebSocketConnection:
                     field_timestamps = {}    # last timestamp seen
 
                     for field_name, field_spec in raw_requested_fields.items():
-
                         matching_field_names = self.get_matching_field_names(field_name)
 
                         for matching_field_name in matching_field_names:
                             requested_fields[matching_field_name] = field_spec
-
                             # If we don't have a field spec dict
                             if not isinstance(field_spec, dict):
                                 back_records = 0
                                 back_seconds = 0
                             else:
                                 back_records = field_spec.get('back_records', 0)
-                                back_seconds = field_spec.get('back_seconds', 0)
+                                back_seconds = field_spec.get('seconds', 0)
 
                             # Now figure out what's the latest timestamp we have for this
                             # field name that respects the back_records and back_seconds
@@ -581,7 +580,6 @@ class WebSocketConnection:
                                 logging.debug('No data for requested field %s', field_name)
                                 continue
                             with self.cache.locks[field_name]:
-                                latest_timestamp = field_timestamps.get(field_name, 0)
                                 field_cache = self.cache.data.get(field_name, None)
                                 if field_cache is None:
                                     logging.debug('No cached data for %s', field_name)
@@ -592,12 +590,13 @@ class WebSocketConnection:
                                     continue
 
                                 # If special case -1, they want just single most recent
-                                # value. Set the last value seen as epsilon less than the
-                                # last timestamp we've seen.
+                                # value. Set the last timestamp seen as the second to last
+                                # timestamp if multiple entries, or as zero, if only 1.
                                 if back_seconds == -1:
-                                    last_value = field_cache[-1]
-                                    just_before_last = last_value[0] - sys.float_info.epsilon
-                                    field_timestamps[field_name] = just_before_last
+                                    if len(field_cache) > 1:
+                                        field_timestamps[field_name] = field_cache[-2][0]
+                                    else:
+                                        field_timestamps[field_name] = 0
                                     continue
 
                                 # We've been told to return at least 'back_records' records; if
@@ -610,19 +609,20 @@ class WebSocketConnection:
                                 # backward to include the last 'back_seconds' seconds of them. Could do
                                 # more efficiently with some sort of binary search, but...
                                 this_record_index = len(field_cache) - back_records - 1
-                                while this_record_index:
+                                while this_record_index >= 0:
                                     # Recall that each element is (timestamp, value)
                                     this_timestamp = field_cache[this_record_index][0]
+
                                     if now - this_timestamp > back_seconds:
                                         # Set our 'last seen' timestamp as timestamp of previous
                                         # record and stop looking.
                                         prev_timestamp = field_cache[this_record_index-1][0]
                                         field_timestamps[field_name] = prev_timestamp
                                         break
+                                    this_record_index -= 1
 
                     if raw_requested_fields and not requested_fields:
-                        logging.info(
-                            'Request doesn\'t match any existing fields')
+                        logging.info('Request doesn\'t match any existing fields')
 
                     # Let client know request succeeded
                     await self.send_json_response({'type': 'subscribe', 'status': 200})
@@ -840,7 +840,7 @@ class CachedDataServer:
             interval=1,
             back_seconds=60 * 60,
             max_records=60 * 24,
-            min_back_records=64,
+            min_back_records=100,
             cleanup_interval=60,
             disk_cache=None,
             event_loop=None):
