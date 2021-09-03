@@ -22,8 +22,10 @@
   function initial_send_message() {
     // Have to put this together piece by piecce because JS is stupid.
     var seconds_of_back_logs = 60*60;
+    var min_back_records = 100;
     var fields = {};
-    fields[CDS_DATA_ID] = {'seconds': seconds_of_back_logs};
+    fields[CDS_DATA_ID] = {'seconds': seconds_of_back_logs,
+                           'back_records': min_back_records};
     var initial_message = {'type': 'subscribe',
                            'fields': fields};
     return initial_message;
