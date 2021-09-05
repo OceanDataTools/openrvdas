@@ -559,6 +559,8 @@ class WebSocketConnection:
                     requested_fields = {}
                     field_timestamps = {}    # last timestamp seen
 
+                    logging.debug('Subscription requested')
+
                     for field_name, field_spec in raw_requested_fields.items():
                         matching_field_names = self.get_matching_field_names(field_name)
 
@@ -586,6 +588,9 @@ class WebSocketConnection:
                                     logging.debug('No cached data for %s', field_name)
                                     continue
 
+                                logging.debug('    %s: %d records available; %d requested, '
+                                              '%d seconds', field_name, len(field_cache),
+                                              back_records, back_seconds)
                                 # If no data for requested field, skip.
                                 if not field_cache or not field_cache[-1]:
                                     continue
