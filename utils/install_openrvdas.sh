@@ -291,12 +291,11 @@ function install_packages {
         # Install system packages we need
         echo Installing python and supporting packages
         [ -e /usr/local/bin/python3 ] || brew install python
-        [ -e /usr/local/bin/socat ]  || brew install socat
         [ -e /usr/local/bin/ssh ]    || brew install openssh
         [ -e /usr/local/bin/nginx ]  || brew install nginx
         [ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
-        brew upgrade socat openssh nginx supervisor || echo Upgraded packages
+        brew upgrade openssh nginx supervisor || echo Upgraded packages
         brew link --overwrite python || echo Linking Python
 
     # CentOS/RHEL
@@ -308,7 +307,7 @@ function install_packages {
         yum -y update
 
         echo Installing required packages
-        yum install -y wget socat git nginx gcc supervisor \
+        yum install -y wget git nginx gcc supervisor \
             zlib-devel openssl-devel readline-devel libffi-devel
 
             #sqlite-devel \
@@ -364,7 +363,7 @@ function install_packages {
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         apt-get update
-        apt install -y socat git nginx libreadline-dev \
+        apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
             openssh-server supervisor libssl-dev
     fi
