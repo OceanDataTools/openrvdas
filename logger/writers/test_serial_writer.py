@@ -126,6 +126,7 @@ class SimSerialPort:
     def quit(self):
         self.quit_flag = True
 
+
 ################################################################################
 class TestSerialWriter(unittest.TestCase):
 
@@ -140,14 +141,14 @@ class TestSerialWriter(unittest.TestCase):
         logging.info('created temporary directory "%s"', self.tmpdirname)
 
     ############################
-    #tests a couple cases and the quiet flag
+    # Test a couple cases and the quiet flag
     def test_write(self):
         temp_port = self.tmpdirname + '/readline'
         temp_port_in = temp_port + '_in'
 
         sim_serial = SimSerialPort(temp_port)
         sim_serial.run()
-                
+
         # Give it a moment to get started
         time.sleep(0.1)
 
@@ -171,8 +172,8 @@ class TestSerialWriter(unittest.TestCase):
             self.assertEqual('♥�♥\x00♥♥', res)
 
         def _run_write_specialcase(in_port):
-            writer = SerialWriter(in_port, quiet = True)
-            writer.write('♥�♥\x00♥♥'+ '\n')
+            writer = SerialWriter(in_port, quiet=True)
+            writer.write('♥�♥\x00♥♥' + '\n')
             logging.info('wrote: %s', '♥�♥\x00♥♥')
 
         reader_thread = threading.Thread(target=_run_reader,
@@ -188,7 +189,6 @@ class TestSerialWriter(unittest.TestCase):
         reader_thread.join()
         logging.info('Reader thread completed')
 
-
         reader_thread = threading.Thread(target=_run_read_specialcase,
                                          kwargs={'port': temp_port})
         reader_thread.start()
@@ -203,7 +203,8 @@ class TestSerialWriter(unittest.TestCase):
         logging.info('Reader thread completed')
         # Tell simulated serial port to shut down
         sim_serial.quit()
-        
+
+
 ################################################################################
 if __name__ == '__main__':
     import argparse

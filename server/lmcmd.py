@@ -47,8 +47,8 @@ from os.path import dirname, realpath
 
 # Add the openrvdas components onto sys.path
 sys.path.append(dirname(dirname(realpath(__file__))))
-from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
-from server.server_api_command_line import ServerAPICommandLine
+from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT   # noqa: E402
+from server.server_api_command_line import ServerAPICommandLine  # noqa: E402
 
 ################################################################################
 if __name__ == '__main__':  # noqa: C901
@@ -109,5 +109,3 @@ if __name__ == '__main__':  # noqa: C901
         readline.add_history(command)
     else:
         command_line_reader.run()
-
-

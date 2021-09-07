@@ -130,6 +130,7 @@ def index(request):
 
     return render(request, 'django_gui/index.html', template_vars)
 
+
 ################################################################################
 def change_mode(request):
     """Change logger manager mode and view logger manager stderr.
@@ -141,7 +142,6 @@ def change_mode(request):
     ############################
     # If we've gotten a POST request
     # cruise_id = ''
-    errors = []
     if request.method == 'POST':
         logging.debug('POST: %s', request.POST)
 
@@ -174,6 +174,7 @@ def change_mode(request):
         logging.info('Unknown error: %s', str(e))
 
     return render(request, 'django_gui/change_mode.html', template_vars)
+
 
 ################################################################################
 def edit_config(request, logger_id):

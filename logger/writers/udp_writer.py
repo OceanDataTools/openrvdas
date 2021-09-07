@@ -182,7 +182,7 @@ class UDPWriter(NetworkWriter):
                 # If here, write at least partially succeeded. Reset warnings
                 if self.num_warnings == self.warning_limit:
                     logging.info('UDPWriter.write() succeeded in writing after series of '
-                    'failures; resetting warnings.')
+                                 'failures; resetting warnings.')
                 self.num_warnings = 0  # we've succeeded
 
             except (OSError, ConnectionRefusedError) as e:

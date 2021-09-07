@@ -120,7 +120,8 @@ class LoggerManager:
 
         if self.data_server_writer:
             cds_writer = ComposedWriter(
-                transforms=ToDASRecordTransform(data_id='stderr', field_name='stderr:logger_manager'),
+                transforms=ToDASRecordTransform(data_id='stderr',
+                                                field_name='stderr:logger_manager'),
                 writers=self.data_server_writer)
             logging.getLogger().addHandler(StdErrLoggingHandler(cds_writer))
 

@@ -320,9 +320,9 @@ class TrueWindsTransform(DerivedDataTransform):
         speed_max_age = self.max_field_age.get(self.speed_field, None)
         if speed_max_age:
             if timestamp - self.speed_val_time > speed_max_age:
-                  logging.debug('speed_field too old - max age %g, age %g',
-                                speed_max_age, timestamp - self.speed_val_time)
-                  return True
+                logging.debug('speed_field too old - max age %g, age %g',
+                              speed_max_age, timestamp - self.speed_val_time)
+                return True
 
         heading_max_age = self.max_field_age.get(self.heading_field, None)
         if heading_max_age:
