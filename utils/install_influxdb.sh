@@ -294,7 +294,7 @@ function install_influxdb {
     echo Running server in background
     /usr/local/bin/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
-    sleep 15
+    sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
     /usr/local/bin/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \

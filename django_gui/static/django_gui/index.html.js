@@ -240,10 +240,11 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // subscribe to.
   var new_fields = {};
 
-  // Update logger_manager status, resubscribe to updates
+  // Update logger_manager status, resubscribe to updates asking for greater
+  // of last hour of records or last 100 records.
   var button = document.getElementById('logger_manager_mode_button');
   button.innerHTML = global_active_mode;
-  new_fields['stderr:logger_manager'] = {'seconds':60*60};
+  new_fields['stderr:logger_manager'] = {'seconds':60*60, 'back_records':100};
 
   ////////////////////////////////
   // If the list of loggers has changed, we need to rebuild the
@@ -291,8 +292,9 @@ function update_cruise_definition(timestamp, cruise_definition) {
     table.appendChild(tr);
 
     // Also, since we now have a new logger, we'll want to subscribe
-    // to stderr updates for it.
-    new_fields['stderr:logger:' + logger_name] = {'seconds':60*60};
+    // to stderr updates for it. Seed each logger window with at greater of
+    // one hour of past log messages or most recent 100 messages.
+    new_fields['stderr:logger:' + logger_name] = {'seconds':60*60, 'back_records': 100};
   }
   console.log('Loaded new cruise.');
   //console.log('New fields are: ' + JSON.stringify(new_fields));

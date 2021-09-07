@@ -20,8 +20,10 @@
   function initial_send_message() {
     // Have to put this together piece by piecce because JS is stupid.
     var seconds_of_back_logs = 60*60;
+    var back_records = 100;  // min number of records to seed with
     var fields = {};
-    fields['stderr:logger_manager'] = {'seconds': seconds_of_back_logs};
+    fields['stderr:logger_manager'] = {'seconds': seconds_of_back_logs,
+                                       'back_records': back_records};
     var initial_message = {'type': 'subscribe',
                            'fields': fields};
     return initial_message;
