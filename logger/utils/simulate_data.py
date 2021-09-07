@@ -262,6 +262,12 @@ class SimSerial:
             # it to the port they want to connect to (like /tmp/tty_s330).
             write_fd, read_fd = pty.openpty()     # open the pseudoterminal
             true_read_port = os.ttyname(read_fd)  # this is the true filename of port
+
+            # Get rid of any previous symlink if it exists, and symlink the new pty
+            try:
+                os.unlink(self.read_port)
+            except FileNotFoundError:
+                pass
             os.symlink(true_read_port, self.read_port)
 
             self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
