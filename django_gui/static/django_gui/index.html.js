@@ -158,9 +158,11 @@ function process_data_message(message) {
 
     //////////////////
     // The file from which our definition came has been updated. Make
-    // the section that offers to reload it visible.
+    // the section that offers to reload it visible. If user is not
+    // authenticated, this element will not exist.
     case 'status:file_update':
-      document.getElementById('reload_span').style.display = 'inline';
+      var reload_span = document.getElementById('reload_span');
+      if (reload_span) { reload_span.style.display = 'inline' }
       break;
 
     case 'stderr:logger_manager':
