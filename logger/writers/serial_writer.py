@@ -13,25 +13,25 @@ except ModuleNotFoundError:
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.writers.writer import Writer
-from logger.utils.formats import Text
+from logger.writers.writer import Writer  # noqa: E402
+from logger.utils.formats import Text     # noqa: E402
+
 
 ################################################################################
 class SerialWriter(Writer):
     """
     Writes records to a serial port.
     """
-
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
                  exclusive=None, encoding='utf-8', encoding_errors='ignore', quiet=False):
         """
-        By default, the SerialWriter write records to the specified serial port encoded by UTF-8 
-        and will ignore non unicode characters it encounters. These defaults may be changed by 
+        By default, the SerialWriter write records to the specified serial port encoded by UTF-8
+        and will ignore non unicode characters it encounters. These defaults may be changed by
         specifying.
 
-        encoding - 'utf-8' by default. If empty or None, will throw type error. 
+        encoding - 'utf-8' by default. If empty or None, will throw type error.
                 Other possible encodings are listed in online documentation here:
                 https://docs.python.org/3/library/codecs.html#standard-encodings
 
@@ -39,7 +39,7 @@ class SerialWriter(Writer):
                 'replace', and 'backslashreplace', described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
-                written to the serial port. 
+                written to the serial port.
         """
         super().__init__(input_format=Text)
         if not SERIAL_MODULE_FOUND:
@@ -56,11 +56,10 @@ class SerialWriter(Writer):
         except (serial.SerialException, serial.serialutil.SerialException) as e:
             logging.fatal('Failed to open serial port %s: %s', port, e)
             sys.exit(1)
-       
+
         self.encoding = encoding
         self.encoding_errors = encoding_errors
         self.quiet = quiet
-
 
     ############################
     def write(self, record):

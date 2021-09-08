@@ -95,7 +95,7 @@
         <td class="button_td" id="logger_manager_mode_td">
           <button id="logger_manager_mode_button" type="submit"
                   onclick="open_change_mode(event);"
-                  {{ active_mode }}
+                  {{ active_mode|default:"unknown" }}
           </button>
         </td>
         <td ><div class="stderr_window" id="logger_manager_stderr"></div></td>

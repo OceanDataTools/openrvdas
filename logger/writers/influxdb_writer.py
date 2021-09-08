@@ -13,7 +13,8 @@ from logger.writers.writer import Writer  # noqa: E402
 
 INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
-    from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_URL  # noqa: E402
     INFLUXDB_SETTINGS_FOUND = True
 except (ModuleNotFoundError, ImportError):
     INFLUXDB_SETTINGS_FOUND = False

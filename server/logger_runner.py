@@ -191,7 +191,7 @@ class LoggerRunner:
             signal.signal(signal.SIGTERM, kill_handler)
         except ValueError:
             logging.debug('LoggerRunner not running in main thread; '
-                         'shutting down with Ctl-C may not work.')
+                          'shutting down with Ctl-C may not work.')
 
     ############################
     def start(self):
