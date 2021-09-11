@@ -560,7 +560,6 @@ class WebSocketConnection:
                     field_timestamps = {}    # last timestamp seen
 
                     logging.debug('Subscription requested')
-
                     for field_name, field_spec in raw_requested_fields.items():
                         matching_field_names = self.get_matching_field_names(field_name)
 
@@ -580,19 +579,29 @@ class WebSocketConnection:
                             field_timestamps[matching_field_name] = 0  # if nothing else
 
                             if field_name not in self.cache.locks:
-                                logging.debug('No data for requested field %s', field_name)
+                                logging.debug('No data for requested field %s', matching_field_name)
                                 continue
                             with self.cache.locks[field_name]:
-                                field_cache = self.cache.data.get(field_name, None)
+                                field_cache = self.cache.data.get(matching_field_name, None)
                                 if field_cache is None:
-                                    logging.debug('No cached data for %s', field_name)
+                                    logging.debug('No cached data for %s', matching_field_name)
                                     continue
 
                                 logging.debug('    %s: %d records available; %d requested, '
-                                              '%d seconds', field_name, len(field_cache),
+                                              '%d seconds', matching_field_name, len(field_cache),
                                               back_records, back_seconds)
                                 # If no data for requested field, skip.
                                 if not field_cache or not field_cache[-1]:
+                                    continue
+
+                                # If special case 0, they only want records that come after
+                                # this point in time. Set the  last timestamp seen as the
+                                # most-recently seen timestamp, or zero if no entries.
+                                if back_seconds == 0:
+                                    if len(field_cache) > 0:
+                                        field_timestamps[matching_field_name] = field_cache[-1][0]
+                                    else:
+                                        field_timestamps[matching_field_name] = 0
                                     continue
 
                                 # If special case -1, they want just single most recent
@@ -600,9 +609,9 @@ class WebSocketConnection:
                                 # timestamp if multiple entries, or as zero, if only 1.
                                 if back_seconds == -1:
                                     if len(field_cache) > 1:
-                                        field_timestamps[field_name] = field_cache[-2][0]
+                                        field_timestamps[matching_field_name] = field_cache[-2][0]
                                     else:
-                                        field_timestamps[field_name] = 0
+                                        field_timestamps[matching_field_name] = 0
                                     continue
 
                                 # We've been told to return at least 'back_records' records; if
@@ -623,7 +632,7 @@ class WebSocketConnection:
                                         # Set our 'last seen' timestamp as timestamp of previous
                                         # record and stop looking.
                                         prev_timestamp = field_cache[this_record_index-1][0]
-                                        field_timestamps[field_name] = prev_timestamp
+                                        field_timestamps[matching_field_name] = prev_timestamp
                                         break
                                     this_record_index -= 1
 
@@ -656,8 +665,8 @@ class WebSocketConnection:
                             if field_name not in self.cache.locks:
                                 logging.debug('No data for requested field %s', field_name)
                                 continue
+
                             with self.cache.locks[field_name]:
-                                latest_timestamp = field_timestamps.get(field_name, 0)
                                 field_cache = self.cache.data.get(field_name, None)
                                 if field_cache is None:
                                     logging.debug(
@@ -671,7 +680,8 @@ class WebSocketConnection:
                                 # If special case -1, they want just single most recent
                                 # value, then future results. Grab last value, then set its
                                 # timestamp as the last one we've seen.
-                                elif back_seconds == -1:
+                                back_seconds = field_spec.get('back_seconds', 0)
+                                if back_seconds == -1:
                                     last_value = field_cache[-1]
                                     results[field_name] = [last_value]
                                     # ts of last value
@@ -680,18 +690,18 @@ class WebSocketConnection:
 
                                 # Otherwise - if no data newer than the latest
                                 # timestamp we've already sent, skip,
-                                elif not field_cache[-1][0] > latest_timestamp:
+                                latest_timestamp = field_timestamps.get(field_name, 0)
+                                if not field_cache[-1][0] > latest_timestamp:
                                     continue
 
                                 # Otherwise, copy over records arrived since
                                 # latest_timestamp and update the latest_timestamp sent
                                 # (first element of last pair in field_cache).
-                                else:
-                                    field_results = [
-                                        pair for pair in field_cache if pair[0] > latest_timestamp]
-                                    results[field_name] = field_results
-                                    if field_results:
-                                        field_timestamps[field_name] = field_results[-1][0]
+                                field_results = [
+                                    pair for pair in field_cache if pair[0] > latest_timestamp]
+                                results[field_name] = field_results
+                                if field_results:
+                                    field_timestamps[field_name] = field_results[-1][0]
 
                     ##########
                     # If not outputting data as a field dict, output as a list
