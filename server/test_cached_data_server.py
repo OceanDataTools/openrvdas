@@ -38,6 +38,7 @@ class TestCachedDataServer(unittest.TestCase):
 
         # We call this in ensure_future, below
         async def run_test():
+            await asyncio.sleep(0.05)
             async with websockets.connect('ws://localhost:%d' % WEBSOCKET_PORT) as ws:
                 #####
                 to_send = {'type': 'fields'}
@@ -141,7 +142,7 @@ class TestCachedDataServer(unittest.TestCase):
 
         # We call this in ensure_future, below
         async def run_test():
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.1)
             async with websockets.connect('ws://localhost:%d' % WEBSOCKET_PORT) as ws:
                 #####
                 to_send = {'type': 'fields'}
@@ -243,7 +244,7 @@ class TestCachedDataServer(unittest.TestCase):
 
         # We call this in ensure_future, below
         async def run_test():
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.15)
             async with websockets.connect('ws://localhost:%d' % WEBSOCKET_PORT) as ws:
                 #####
                 to_send = {'type': 'fields'}
