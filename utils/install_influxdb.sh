@@ -601,8 +601,8 @@ programs=$INSTALLED_PROGRAMS
 EOF
     sudo cp -f $TMP_SUPERVISOR_FILE $SUPERVISOR_FILE
 
-    echo Done setting up supervisor files. Please restart/reload supervisor
-    echo for changes to take effect!
+    echo Done setting up supervisor files. Reloading...
+    supervisorctl reload
 }
 
 ###########################################################################
@@ -686,8 +686,6 @@ while true; do
     fi
 done
 
-
-
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
@@ -700,6 +698,11 @@ save_default_variables
 [ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
 
 #########################################################################
+
+# Don't want existing installations to be running while we do this
+echo Stopping supervisor prior to installation.
+supervisorctl stop all
+
 # Let's get to installing things!
 if [ $INSTALL_INFLUXDB == 'yes' ];then
     install_influxdb
