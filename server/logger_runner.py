@@ -44,6 +44,7 @@ import sys
 import time
 
 from importlib import reload
+from logging.handlers import RotatingFileHandler
 from setproctitle import setproctitle
 
 # Add the openrvdas/ directory to module search path
@@ -58,6 +59,12 @@ from logger.transforms.to_das_record_transform import ToDASRecordTransform  # no
 from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
 from logger.writers.composed_writer import ComposedWriter  # noqa: E402
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
+
+# Rotate stderr logs out so that their sizes remain manageable. Plan to keep all
+# stderr logs, but don't swamp if something goes awry. Note: these values
+# should probably be extracted to a settings.py file somewhere.
+STDERR_MAX_BYTES = 1000000  # 10M
+STDERR_BACKUP_COUNT = 100  # 100 backups should be plenty
 
 
 ################################################################################
@@ -123,9 +130,13 @@ def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
     """
     # Reset logging to its freshly-imported state
     reload(logging)
-    logging.basicConfig(format=DEFAULT_LOGGING_FORMAT,
-                        filename=stderr_filename,
-                        level=log_level)
+    stderr_handler = RotatingFileHandler(stderr_filename,
+                                         maxBytes=STDERR_MAX_BYTES,
+                                         backupCount=STDERR_BACKUP_COUNT)
+    logging.basicConfig(
+        handlers=[stderr_handler],
+        level=log_level,
+        format=DEFAULT_LOGGING_FORMAT)
 
     if stderr_data_server:
         field_name = 'stderr:logger:' + logger
