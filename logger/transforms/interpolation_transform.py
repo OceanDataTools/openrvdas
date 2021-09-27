@@ -249,7 +249,7 @@ def interpolate(algorithm, values, timestamp, now):
                         'specification: %s', algorithm)
         return None
     if not values:
-        logging.info('Function subsample() handed empty values list')
+        logging.debug('Function subsample() handed empty values list')
         return None
 
     ##################

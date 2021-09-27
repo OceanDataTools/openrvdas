@@ -13,6 +13,8 @@ websockets
 PyYAML
 parse
 psutil
+setproctitle
+influxdb_client
 
 # Version-restricted packages
 Django==3.1.13

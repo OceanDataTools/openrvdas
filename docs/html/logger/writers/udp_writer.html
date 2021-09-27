@@ -47,7 +47,7 @@ class UDPWriter(NetworkWriter):
 
     def __init__(self, port, destination=&#39;&#39;,
                  interface=&#39;&#39;,  # DEPRECATED!
-                 ttl=3, num_retry=2, eol=&#39;&#39;):
+                 ttl=3, num_retry=2, warning_limit=5, eol=&#39;&#39;):
         &#34;&#34;&#34;
         Write text records to a network socket.
         ```
@@ -68,7 +68,13 @@ class UDPWriter(NetworkWriter):
 
         ttl          For multicast, how many network hops to allow
 
-        num_retry    Number of times to retry if write fails.
+        num_retry    Number of times to retry if write fails. If writer exceeds
+                     this number, it will give up on writing the message and
+                     move on.
+
+        warning_limit  Number of times the writer gives up on writing a message
+                     (without any intervening successes) before it gives up complaining
+                     about failures.
 
         eol          If specified, an end of line string to append to record
                      before sending.
@@ -76,6 +82,8 @@ class UDPWriter(NetworkWriter):
         &#34;&#34;&#34;
         self.ttl = ttl
         self.num_retry = num_retry
+        self.warning_limit = warning_limit
+        self.num_warnings = 0
         self.eol = eol
 
         self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (
@@ -155,7 +163,7 @@ class UDPWriter(NetworkWriter):
             udp_socket.connect((self.destination, self.port))
             return udp_socket
         except OSError as e:
-            logging.warning(&#39;Unable to connect to %s:%d - %s&#39;, self.destination, self.port, e)
+            logging.error(&#39;Unable to connect to %s:%d - %s&#39;, self.destination, self.port, e)
             return None
 
     ############################
@@ -198,8 +206,20 @@ class UDPWriter(NetworkWriter):
         while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
             try:
                 bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
-            except ConnectionRefusedError as e:
-                logging.error(&#39;ERROR: %s: %s&#39;, self.target_str, str(e))
+
+                # If here, write at least partially succeeded. Reset warnings
+                if self.num_warnings == self.warning_limit:
+                    logging.info(&#39;UDPWriter.write() succeeded in writing after series of &#39;
+                    &#39;failures; resetting warnings.&#39;)
+                self.num_warnings = 0  # we&#39;ve succeeded
+
+            except (OSError, ConnectionRefusedError) as e:
+                # If we failed, complain, unless we&#39;ve already complained too much
+                if self.num_warnings &lt; self.warning_limit:
+                    logging.error(&#39;UDPWriter error: %s: %s&#39;, self.target_str, str(e))
+                    self.num_warnings += 1
+                    if self.num_warnings == self.warning_limit:
+                        logging.error(&#39;UDPWriter.write() - muting errors&#39;)
             num_tries += 1
 
         logging.debug(&#39;UDPWriter.write() wrote %d/%d bytes after %d tries&#39;,
@@ -217,7 +237,7 @@ class UDPWriter(NetworkWriter):
 <dl>
 <dt id="logger.writers.udp_writer.UDPWriter"><code class="flex name class">
 <span>class <span class="ident">UDPWriter</span></span>
-<span>(</span><span>port, destination='', interface='', ttl=3, num_retry=2, eol='')</span>
+<span>(</span><span>port, destination='', interface='', ttl=3, num_retry=2, warning_limit=5, eol='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write UDP packets to network.</p>
@@ -239,7 +259,13 @@ interface    DEPRECATED - If specified, the network interface to
 
 ttl          For multicast, how many network hops to allow
 
-num_retry    Number of times to retry if write fails.
+num_retry    Number of times to retry if write fails. If writer exceeds
+             this number, it will give up on writing the message and
+             move on.
+
+warning_limit  Number of times the writer gives up on writing a message
+             (without any intervening successes) before it gives up complaining
+             about failures.
 
 eol          If specified, an end of line string to append to record
              before sending.
@@ -253,7 +279,7 @@ eol          If specified, an end of line string to append to record
 
     def __init__(self, port, destination=&#39;&#39;,
                  interface=&#39;&#39;,  # DEPRECATED!
-                 ttl=3, num_retry=2, eol=&#39;&#39;):
+                 ttl=3, num_retry=2, warning_limit=5, eol=&#39;&#39;):
         &#34;&#34;&#34;
         Write text records to a network socket.
         ```
@@ -274,7 +300,13 @@ eol          If specified, an end of line string to append to record
 
         ttl          For multicast, how many network hops to allow
 
-        num_retry    Number of times to retry if write fails.
+        num_retry    Number of times to retry if write fails. If writer exceeds
+                     this number, it will give up on writing the message and
+                     move on.
+
+        warning_limit  Number of times the writer gives up on writing a message
+                     (without any intervening successes) before it gives up complaining
+                     about failures.
 
         eol          If specified, an end of line string to append to record
                      before sending.
@@ -282,6 +314,8 @@ eol          If specified, an end of line string to append to record
         &#34;&#34;&#34;
         self.ttl = ttl
         self.num_retry = num_retry
+        self.warning_limit = warning_limit
+        self.num_warnings = 0
         self.eol = eol
 
         self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (
@@ -361,7 +395,7 @@ eol          If specified, an end of line string to append to record
             udp_socket.connect((self.destination, self.port))
             return udp_socket
         except OSError as e:
-            logging.warning(&#39;Unable to connect to %s:%d - %s&#39;, self.destination, self.port, e)
+            logging.error(&#39;Unable to connect to %s:%d - %s&#39;, self.destination, self.port, e)
             return None
 
     ############################
@@ -404,8 +438,20 @@ eol          If specified, an end of line string to append to record
         while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
             try:
                 bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
-            except ConnectionRefusedError as e:
-                logging.error(&#39;ERROR: %s: %s&#39;, self.target_str, str(e))
+
+                # If here, write at least partially succeeded. Reset warnings
+                if self.num_warnings == self.warning_limit:
+                    logging.info(&#39;UDPWriter.write() succeeded in writing after series of &#39;
+                    &#39;failures; resetting warnings.&#39;)
+                self.num_warnings = 0  # we&#39;ve succeeded
+
+            except (OSError, ConnectionRefusedError) as e:
+                # If we failed, complain, unless we&#39;ve already complained too much
+                if self.num_warnings &lt; self.warning_limit:
+                    logging.error(&#39;UDPWriter error: %s: %s&#39;, self.target_str, str(e))
+                    self.num_warnings += 1
+                    if self.num_warnings == self.warning_limit:
+                        logging.error(&#39;UDPWriter.write() - muting errors&#39;)
             num_tries += 1
 
         logging.debug(&#39;UDPWriter.write() wrote %d/%d bytes after %d tries&#39;,

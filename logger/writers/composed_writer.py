@@ -116,14 +116,21 @@ class ComposedWriter(Writer):
         # Fire record off to write() requests for each writer.
         writer_threads = []
         for i in range(len(self.writers)):
-            t = threading.Thread(target=self._run_writer, args=(i, record),
-                                 name=str(type(self.writers[i])), daemon=True)
-            t.start()
+            try:
+                writer_name = str(type(self.writers[i]))
+                t = threading.Thread(target=self._run_writer, args=(i, record),
+                                     name=writer_name, daemon=True)
+                t.start()
+            except (OSError, RuntimeError) as e:
+                logging.error('ComposedWriter failed to write to %s: %s',
+                              writer_name, e)
+                t = None
             writer_threads.append(t)
 
         # Wait for all writes to complete
         for t in writer_threads:
-            t.join()
+            if t:
+                t.join()
 
         # Were there any exceptions? Arbitrarily raise the first one in list
         exceptions = [e for e in self.exceptions if e]

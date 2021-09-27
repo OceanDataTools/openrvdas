@@ -41,7 +41,7 @@ from logger.writers.writer import Writer  # noqa: E402
 
 INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
-    from database.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL  # noqa: E402
     INFLUXDB_SETTINGS_FOUND = True
 except (ModuleNotFoundError, ImportError):
     INFLUXDB_SETTINGS_FOUND = False
@@ -84,28 +84,28 @@ class InfluxDBWriter(Writer):
         super().__init__(input_format=Text)
         if not auth_token:
             raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
-                               &#39;none found in database/settings.py. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;none found in database/influxdb/settings.py. Have &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
         if not org:
             raise RuntimeError(&#39;No organization specified in InfluxDBWriter and &#39;
-                               &#39;none found in database/settings.py. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;none found in database/influxdb/settings.py. Have &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
         if not url:
             raise RuntimeError(&#39;No URL specified in InfluxDBWriter and &#39;
-                               &#39;none found in database/settings.py. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;none found in database/influxdb/settings.py. Have &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
 
         if not INFLUXDB_SETTINGS_FOUND:
-            raise RuntimeError(&#39;File database/settings.py not found. &#39;
+            raise RuntimeError(&#39;File database/influxdb/settings.py not found. &#39;
                                &#39;InfluxDB functionality is not available. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
         if not INFLUXDB_CLIENT_FOUND:
             raise RuntimeError(&#39;Python module influxdb_client not found. Please &#39;
@@ -229,7 +229,7 @@ class InfluxDBWriter(Writer):
 <dl>
 <dt id="logger.writers.influxdb_writer.InfluxDBWriter"><code class="flex name class">
 <span>class <span class="ident">InfluxDBWriter</span></span>
-<span>(</span><span>bucket_name, measurement_name=None, auth_token='O7bNK5S2FKIrGuO_VENEzBn4wWnOJBzSbQQeMKaECaCqyGYpt7wF6b4Mu8XUd7Uo7fL8TA2uDx99idXwSboUOg==', org='openrvdas', url='http://localhost:8086')</span>
+<span>(</span><span>bucket_name, measurement_name=None, auth_token=None, org=None, url=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
@@ -286,28 +286,28 @@ url - The URL at which to connect with the InfluxDB instance. If
         super().__init__(input_format=Text)
         if not auth_token:
             raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
-                               &#39;none found in database/settings.py. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;none found in database/influxdb/settings.py. Have &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
         if not org:
             raise RuntimeError(&#39;No organization specified in InfluxDBWriter and &#39;
-                               &#39;none found in database/settings.py. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;none found in database/influxdb/settings.py. Have &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
         if not url:
             raise RuntimeError(&#39;No URL specified in InfluxDBWriter and &#39;
-                               &#39;none found in database/settings.py. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;none found in database/influxdb/settings.py. Have &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
 
         if not INFLUXDB_SETTINGS_FOUND:
-            raise RuntimeError(&#39;File database/settings.py not found. &#39;
+            raise RuntimeError(&#39;File database/influxdb/settings.py not found. &#39;
                                &#39;InfluxDB functionality is not available. Have &#39;
-                               &#39;you copied over database/settings.py.dist &#39;
-                               &#39;to database/settings.py and followed the &#39;
+                               &#39;you copied over database/influxdb/settings.py.dist &#39;
+                               &#39;to database/influxdb/settings.py and followed the &#39;
                                &#39;configuration instructions in it?&#39;)
         if not INFLUXDB_CLIENT_FOUND:
             raise RuntimeError(&#39;Python module influxdb_client not found. Please &#39;

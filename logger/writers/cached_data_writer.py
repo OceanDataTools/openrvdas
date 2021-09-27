@@ -85,8 +85,8 @@ class CachedDataWriter(Writer):
             and cleanups.
             """
             while True:
-                logging.warning('CachedDataWriter trying to connect to '
-                                + self.data_server)
+                logging.debug('CachedDataWriter trying to connect to '
+                              + self.data_server)
                 try:
                     if self.use_wss:
                         # If check_cert is a str, take it as the location of the
@@ -106,9 +106,9 @@ class CachedDataWriter(Writer):
                         ws_data_server = 'ws://' + self.data_server
                         ssl_context = None
 
-                    logging.warning(f'CachedDataWriter connecting to {ws_data_server}')
+                    logging.debug(f'CachedDataWriter connecting to {ws_data_server}')
                     async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
-                        logging.info(f'Connected to data server {ws_data_server}')
+                        logging.debug(f'Connected to data server {ws_data_server}')
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
@@ -122,6 +122,9 @@ class CachedDataWriter(Writer):
 
                 except BrokenPipeError:
                     pass
+                except AttributeError as e:
+                    logging.warning('CachedDataWriter websocket loop error: %s', e)
+                    await asyncio.sleep(0.1)
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning('CachedDataWriter lost websocket connection to '
                                     'data server; trying to reconnect.')
@@ -207,7 +210,10 @@ class CachedDataWriter(Writer):
                     logging.warning('CachedDataWriter queue is both full and empty?!?')
 
             # Enqueue our latest record for send
-            self.send_queue.put_nowait(record)
+            try:
+                self.send_queue.put_nowait(record)
+            except asyncio.queues.QueueFull:
+                logging.warning('CachedDataWriter unable to write: write queue full')
         else:
             logging.warning('CachedDataWriter got non-dict/DASRecord object of '
                             'type %s: %s', type(record), str(record))

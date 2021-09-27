@@ -19,7 +19,7 @@ class UDPWriter(NetworkWriter):
 
     def __init__(self, port, destination='',
                  interface='',  # DEPRECATED!
-                 ttl=3, num_retry=2, eol=''):
+                 ttl=3, num_retry=2, warning_limit=5, eol=''):
         """
         Write text records to a network socket.
         ```
@@ -40,7 +40,13 @@ class UDPWriter(NetworkWriter):
 
         ttl          For multicast, how many network hops to allow
 
-        num_retry    Number of times to retry if write fails.
+        num_retry    Number of times to retry if write fails. If writer exceeds
+                     this number, it will give up on writing the message and
+                     move on.
+
+        warning_limit  Number of times the writer gives up on writing a message
+                     (without any intervening successes) before it gives up complaining
+                     about failures.
 
         eol          If specified, an end of line string to append to record
                      before sending.
@@ -48,6 +54,8 @@ class UDPWriter(NetworkWriter):
         """
         self.ttl = ttl
         self.num_retry = num_retry
+        self.warning_limit = warning_limit
+        self.num_warnings = 0
         self.eol = eol
 
         self.target_str = 'interface: %s, destination: %s, port: %d' % (
@@ -127,7 +135,7 @@ class UDPWriter(NetworkWriter):
             udp_socket.connect((self.destination, self.port))
             return udp_socket
         except OSError as e:
-            logging.warning('Unable to connect to %s:%d - %s', self.destination, self.port, e)
+            logging.error('Unable to connect to %s:%d - %s', self.destination, self.port, e)
             return None
 
     ############################
@@ -170,8 +178,20 @@ class UDPWriter(NetworkWriter):
         while num_tries < self.num_retry and bytes_sent < rec_len:
             try:
                 bytes_sent = self.socket.send(record.encode('utf-8'))
-            except ConnectionRefusedError as e:
-                logging.error('ERROR: %s: %s', self.target_str, str(e))
+
+                # If here, write at least partially succeeded. Reset warnings
+                if self.num_warnings == self.warning_limit:
+                    logging.info('UDPWriter.write() succeeded in writing after series of '
+                                 'failures; resetting warnings.')
+                self.num_warnings = 0  # we've succeeded
+
+            except (OSError, ConnectionRefusedError) as e:
+                # If we failed, complain, unless we've already complained too much
+                if self.num_warnings < self.warning_limit:
+                    logging.error('UDPWriter error: %s: %s', self.target_str, str(e))
+                    self.num_warnings += 1
+                    if self.num_warnings == self.warning_limit:
+                        logging.error('UDPWriter.write() - muting errors')
             num_tries += 1
 
         logging.debug('UDPWriter.write() wrote %d/%d bytes after %d tries',

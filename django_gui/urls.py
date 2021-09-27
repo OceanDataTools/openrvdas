@@ -30,10 +30,8 @@ urlpatterns = [
 
     path('login/', views.login_user, name='login_user'),
 
-    path('server_messages', views.server_messages, name='server_messages'),
-    path('server_messages/<int:log_level>', views.server_messages,
-         name='server_messages'),
-
+    path('change_mode/',
+         views.change_mode, name='change_mode'),
     path('edit_config/<str:logger_id>',
          views.edit_config, name='edit_config'),
     path('choose_file/', views.choose_file, name='choose_file'),

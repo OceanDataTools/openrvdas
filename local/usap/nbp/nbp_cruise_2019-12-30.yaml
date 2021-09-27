@@ -4,7 +4,7 @@
 #
 # Created by:
 #   command:  local/usap/create_cruise.py local/usap/nbp/nbp_port_defs.yaml
-#   time:     Sat Nov 30 21:56:00 2019 UTC
+#   time:     Mon Dec 30 15:51:02 2019 UTC
 #   user:     pablo
 #
 ########################################
@@ -139,10 +139,10 @@ loggers:
     configs:
     - true_wind->off
     - true_wind->on
-  subsample:
+  snapshot:
     configs:
-    - subsample->off
-    - subsample->on
+    - snapshot->off
+    - snapshot->on
 
 ########################################
 modes:
@@ -168,7 +168,7 @@ modes:
     tsg2: tsg2->off
     seap: seap->off
     true_wind: true_wind->off
-    subsample: subsample->off
+    snapshot: snapshot->off
 
   monitor:
     PCOD: PCOD->net
@@ -192,7 +192,7 @@ modes:
     tsg2: tsg2->net
     seap: seap->net
     true_wind: true_wind->on
-    subsample: subsample->on
+    snapshot: snapshot->on
 
   log:
     PCOD: PCOD->file/net
@@ -216,7 +216,7 @@ modes:
     tsg2: tsg2->file/net
     seap: seap->file/net
     true_wind: true_wind->on
-    subsample: subsample->on
+    snapshot: snapshot->on
 
   'log+db':
     PCOD: PCOD->file/net/db
@@ -240,7 +240,7 @@ modes:
     tsg2: tsg2->file/net/db
     seap: seap->file/net/db
     true_wind: true_wind->on
-    subsample: subsample->on
+    snapshot: snapshot->on
 
 ########################################
 default_mode: 'off'
@@ -274,7 +274,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -313,7 +313,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -342,7 +342,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -352,7 +352,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -366,7 +366,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -396,7 +396,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -435,7 +435,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -464,7 +464,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -474,7 +474,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -488,7 +488,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -518,7 +518,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -557,7 +557,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -586,7 +586,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -596,7 +596,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -610,7 +610,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -640,7 +640,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -679,7 +679,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -708,7 +708,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -718,7 +718,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -732,7 +732,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -762,7 +762,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -801,7 +801,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -830,7 +830,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -840,7 +840,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -854,7 +854,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -884,7 +884,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -923,7 +923,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -952,7 +952,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -962,7 +962,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -976,7 +976,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1006,7 +1006,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1045,7 +1045,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1074,7 +1074,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1084,7 +1084,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1098,7 +1098,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1128,7 +1128,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1167,7 +1167,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1196,7 +1196,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1206,7 +1206,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1220,7 +1220,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1250,7 +1250,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1289,7 +1289,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1318,7 +1318,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1328,7 +1328,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1342,7 +1342,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1372,7 +1372,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1411,7 +1411,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1440,7 +1440,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1450,7 +1450,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1464,7 +1464,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1494,7 +1494,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1533,7 +1533,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1562,7 +1562,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1572,7 +1572,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1586,7 +1586,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1616,7 +1616,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1655,7 +1655,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1684,7 +1684,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1694,7 +1694,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1708,7 +1708,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1738,7 +1738,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1777,7 +1777,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1806,7 +1806,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1816,7 +1816,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1830,7 +1830,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1860,7 +1860,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1899,7 +1899,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1928,7 +1928,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -1938,7 +1938,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -1952,7 +1952,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -1982,7 +1982,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2021,7 +2021,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2050,7 +2050,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2060,7 +2060,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2074,7 +2074,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2104,7 +2104,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2143,7 +2143,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2172,7 +2172,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2182,7 +2182,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2196,7 +2196,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2226,7 +2226,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2265,7 +2265,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2294,7 +2294,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2304,7 +2304,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2318,7 +2318,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2348,7 +2348,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2387,7 +2387,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2416,7 +2416,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2426,7 +2426,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2440,7 +2440,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2470,7 +2470,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2509,7 +2509,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2538,7 +2538,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2548,7 +2548,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2562,7 +2562,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
   ########
@@ -2592,7 +2592,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2631,7 +2631,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2660,7 +2660,7 @@ configs:
         - class: UDPWriter
           kwargs:
             port: 6224
-            interface: 157.132.129.255 
+            interface: 157.132.129.255
     - class: ComposedWriter     # Also parse to fields and send to CACHE UDP
       kwargs:                   # port for CachedDataServer to pick up
         transforms:
@@ -2670,7 +2670,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -2684,7 +2684,7 @@ configs:
         - class: ParseTransform
           kwargs:
             metadata_interval: 10
-            definition_path: local/devices/*.yaml,local/usap/devices/*.yaml,local/usap/nbp/devices/*.yaml
+            definition_path: local/usap/nbp/devices/nbp_devices.yaml
         writers:
         - class: DatabaseWriter
 
@@ -2758,11 +2758,11 @@ configs:
             data_server: localhost:8766
 
   # Derived data subsampling logger
-  subsample->off:
-    name: subsample->off
+  snapshot->off:
+    name: snapshot->off
 
-  subsample->on:
-    name: subsample->on
+  snapshot->on:
+    name: snapshot->on
     readers:
       class: CachedDataReader
       kwargs:
@@ -2791,73 +2791,65 @@ configs:
               seconds: 0
 
     transforms:
-    - class: SubsampleTransform
+    - class: InterpolationTransform
+      module: logger.transforms.interpolation_transform
       kwargs:
-        back_seconds: 3600
-        metadata_interval: 20  # send metadata every 20 seconds
+        interval: 30
+        window: 30
+        metadata_interval: 60  # send metadata every 60 seconds
         field_spec:
-          MwxAirTemp:
-            output: AvgMwxAirTemp
-            subsample:
+          AvgMwxAirTemp:
+            source: MwxAirTemp
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          RTMPTemp:
-            output: AvgRTMPTemp
-            subsample:
+              window: 30
+          AvgRTMPTemp:
+            source: RTMPTemp
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          PortTrueWindDir:
-            output: AvgPortTrueWindDir
-            subsample:
+              window: 30
+          AvgPortTrueWindDir:
+            source: PortTrueWindDir
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          PortTrueWindSpeed:
-            output: AvgPortTrueWindSpeed
-            subsample:
+              window: 30
+          AvgPortTrueWindSpeed:
+            source: PortTrueWindSpeed
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          StbdTrueWindDir:
-            output: AvgStbdTrueWindDir
-            subsample:
+              window: 30
+          AvgStbdTrueWindDir:
+            source: StbdTrueWindDir
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          StbdTrueWindSpeed:
-            output: AvgStbdTrueWindSpeed
-            subsample:
+              window: 30
+          AvgStbdTrueWindSpeed:
+            source: StbdTrueWindSpeed
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          MwxBarometer:
-            output: AvgMwxBarometer
-            subsample:
+              window: 30
+          AvgMwxBarometer:
+            source: MwxBarometer
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          KnudDepthHF:
-            output: AvgKnudDepthHF
-            subsample:
+              window: 30
+          AvgKnudDepthHF:
+            source: KnudDepthHF
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          KnudDepthLF:
-            output: AvgKnudDepthLF
-            subsample:
+              window: 30
+          AvgKnudDepthLF:
+            source: KnudDepthLF
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
-          Grv1Value:
-            output: AvgGrv1Value
-            subsample:
+              window: 30
+          AvgGrv1Value:
+            source: Grv1Value
+            algorithm:
               type: boxcar_average
-              window: 10
-              interval: 10
+              window: 30
     writers:
     - class: CachedDataWriter
       kwargs:
-        data_server: localhost:8766        
+        data_server: localhost:8766
 

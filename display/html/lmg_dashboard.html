@@ -1,0 +1,511 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LM Gould Dashboard</title>
+
+    <style type="text/css">
+      .ship_table {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 1080px;
+        background-color: lightslategray;
+      }
+      .ship_table td, .ship_table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      .td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 270px;
+      }
+      .name_td_100 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 540px;
+      }
+      .name_td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 270px;
+      }
+      .name_td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        font-weight: bold;
+        width: 135px;
+      }
+      .val_td_100 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 540px;
+      }
+      .val_td_50 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 270px;
+      }
+      .val_td_25 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 135px;
+      }
+      .td_30 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 30%;
+      }
+      .td_70 {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+        width: 70%;
+      }
+      .val_td {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- This is where we define location of data server. -->
+    <script src="../js/widgets/settings.js"></script>
+
+    <script src="../js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="../js/highcharts/code/highcharts.js"></script>
+    <script src="../js/highcharts/code/highcharts-more.js"></script>
+    <script src="../js/highcharts/code/modules/data.js"></script>
+
+    <script src="../js/widgets/highcharts_widget.js"></script>
+    <script src="../js/widgets/text_widget.js"></script>
+    <script src="../js/widgets/widget_server.js"></script>
+
+    <table class="ship_table">
+      <tr>
+        <td class="name_td_50" colspan=2>
+          NB Palmer
+	  <span id="gmt_day">--</span>-<span id="gmt_month">---</span>-<span id="gmt_year">----</span><br>
+          GMT Time: <span id="gmt_time">--:--:--.--</span>
+        </td>
+        <td class="val_td_50" colspan=2>
+          Lat: <span id="gps_lat">--.----</span>°
+          <span id="gps_n_or_s"></span><br>
+          Lon: <span id="gps_lon">--.----</span>°
+          <span id="gps_e_or_w"></span>
+        </td>
+        <td class="val_td_25">Course: <span id="course_true">---</span>°</td>
+        <td class="val_td_25">Heading: <span id="heading_true">---</span>°</td>
+        <td class="val_td_25">SOG: <span id="sog_kt">-</span> kts</td>
+        <td class="val_td_25">
+          Pitch: <span id="pitch">-</span>°<br>
+          Roll: <span id="roll">-</span>°
+        </td>
+      </tr>
+      <tr>
+        <td class="val_td_50" colspan=2>
+          Relative Wind: <span id="rel_wind_speed" style="color:red">---</span> kt
+          <div id="rel_wind_dir"
+               style="height: 200px; width: 200px"></div>
+        </td>
+        <td class="val_td_50" colspan=2>
+          True Wind: <span id="true_wind_speed" style="color:green">---</span> kt
+          <div id="true_wind_dir"
+               style="height: 200px; width: 200px"></div>
+        </td>
+	<td class="name_td_100" colspan=4 rowspan=3>
+          <div id="true_wind_speed_line" style="min-width: 100px;  height: 150px;"></div><br>
+          <div id="barometer_line" style="min-width: 100px;  height: 150px;"></div>
+	</td>
+      </tr>
+      <tr>
+        <td class="val_td_50" colspan=2>Air Temp: <span id="air_temp">---</span></td>
+        <td class="val_td_50" colspan=2>Relative Humidity: <span id="rel_humid">--</span>%</td>
+      </tr>
+      <tr>
+	<td class="val_td_50" colspan=2>Sea Temp: <span id="sea_temp">---</span></td>
+        <td class="val_td_50" colspan=2>Barometer: <span id="barometer">-</span> mB</td>
+      </tr>
+      <tr>
+	<td class="val_td_100" colspan=4>
+          <div id="air_temp_line" style="min-width: 100px;  height: 125px;"></div>
+	</td>
+	<td class="name_td_100" colspan=4>
+          <div id="knudsen_line" style="min-width: 100px;  height: 125px;"></div>
+	</td>
+      </tr>
+      <tr>
+	<td class="val_td_100" colspan=4>
+          <div id="sea_temp_line" style="min-width: 100px;  height: 125px;"></div>
+	</td>
+	<td class="name_td_100" colspan=4>
+          <div id="gravity_line" style="min-width: 100px;  height: 125px;"></div>
+	</td>
+      </tr>
+    </table>
+
+  <script type="text/javascript">
+  var widget_list = [];
+
+  function round_1(val) {
+    return val.toFixed(1);
+  }
+  function round_2(val) {
+    return val.toFixed(2);
+  }
+  function round_4(val) {
+    return val.toFixed(4);
+  }
+
+  /////////////////////////
+  // Start of widgets
+
+  // Lat/Lon text widgets
+  widget_list.push(new TextWidget('gps_lat',
+                                  {S330Latitude:
+                                    {
+                                      name: "Latitude",
+                                      transform: round_4,
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_n_or_s', {S330NorS: {name: "N/S"}}));
+
+  widget_list.push(new TextWidget('gps_lon',
+                                  {S330Longitude:
+                                    {
+                                      name: "Longitude",
+                                      transform: round_4,
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gps_e_or_w', {S330EorW: {name: "E/W"}}));
+
+  function s330_time_to_time_str(time) {
+    time /= 100;
+    var seconds = (100*(time - Math.floor(time))).toFixed(2);
+    time = Math.floor(time);
+    time /= 100;
+    var minutes = (100*(time - Math.floor(time))).toFixed(0);
+    time = Math.floor(time);
+    time /= 100;
+    var hours = (100*(time - Math.floor(time))).toFixed(0);
+
+    return (hours < 10 ? '0' : '') + hours
+            + ':' + (minutes < 10 ? '0' : '') + minutes
+            + ':' + (seconds < 10 ? '0' : '') + seconds;
+  }
+
+  widget_list.push(new TextWidget('gmt_time', {
+                                    S330GPSTime: {
+                                      name: "GMT Time",
+                                      transform: function(val) {
+                                        return s330_time_to_time_str(val);
+                                      },
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+
+  function month_to_name(month) {
+    var month_map = {
+      01: 'Jan', 02: 'Feb', 03: 'Mar', 04: 'Apr',
+      05: 'May', 06: 'Jun', 07: 'Jul', 08: 'Aug',
+      09: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'};
+    return month_map[parseInt(month)];
+  }
+  widget_list.push(new TextWidget('gmt_day', {S330GPSDay: {name: "GMT Day",
+                               transform: function(val) {
+                               return parseInt(val).toString().padStart(2, '0')
+                               }
+                               }}));
+  widget_list.push(new TextWidget('gmt_month', {S330GPSMonth: {
+                                      name: "GMT Month",
+                                      transform: function(val) {
+                                        return month_to_name(val);
+                                      },
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+                                    }
+                                  }));
+  widget_list.push(new TextWidget('gmt_year',
+                                  {S330GPSYear: {name: "GMT Year",
+                                      timeout_css: {
+                                        5: "background-color:yellow",
+                                       15: "background-color:red"
+                                      }
+}}));
+
+
+  //////////////////
+  // Relative winds
+  var rel_wind_fields = {
+    MwxPortRelWindDir: {
+      name: 'Port Relative Wind',
+      color: 'red',
+      transform: function(val) { return Math.round(val); }
+    },
+    MwxStbdRelWindDir: {
+      name: 'Stbd. Relative Wind',
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
+    }
+  };
+  widget_list.push(new DialWidget('rel_wind_dir', rel_wind_fields,
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
+
+  //////////////////
+  // True winds
+  var true_wind_fields = {
+    PortTrueWindDir: {
+      name: 'Port True Wind',
+      color: 'red',
+      transform: function(val) { return Math.round(val); }
+    },
+    StbdTrueWindDir: {
+      name: 'Stbd True Wind',
+      color: 'green',
+      transform: function(val) { return Math.round(val); }
+    }
+  };
+  widget_list.push(new DialWidget('true_wind_dir', true_wind_fields,
+                                  {title:{text:''},
+                                   chart:{type: 'gauge',
+                                          backgroundColor:'lightslategray',
+                                          maxPadding:0,
+                                          marginTop:0,
+                                          marginBottom:0,
+                                          marginLeft:0,
+                                          marginRight:0,
+                                         },
+                                   credits:false, maxPadding: 0.05}));
+
+  // Transform to convert speeds in meters per second to knots
+  function ms_to_knots(val) {
+    return (val * 1.94384).toFixed(2);
+  }
+
+  // Relative wind is in m/s, so convert to knots
+  var rel_wind_speed_fields = {
+    MwxPortRelWindSpeed: {
+      name: "Port Rel Wind Speed",
+      transform: ms_to_knots,
+      timeout_css: {
+        5: "background-color:yellow",
+       15: "background-color:red"
+      }
+    }
+  };
+  widget_list.push(new TextWidget('rel_wind_speed', rel_wind_speed_fields));
+
+  var true_wind_speed_fields = {
+    PortTrueWindSpeed: {
+      name: "True Wind Speed",
+      transform: ms_to_knots,
+      timeout_css: {
+        5: "background-color:yellow",
+       15: "background-color:red"
+      }
+    }
+  };
+  widget_list.push(new TextWidget('true_wind_speed',
+                                  true_wind_speed_fields));
+
+  widget_list.push(new TextWidget('course_true',
+      {S330CourseTrue: {name: 'Course', transform: round_1,
+      timeout_css: {
+        5: "background-color:yellow",
+       15: "background-color:red"
+      }
+}}));
+  widget_list.push(new TextWidget('heading_true',
+      {GyroHeadingTrue: {name: 'Heading', transform: round_1,
+      timeout_css: {
+        5: "background-color:yellow",
+       15: "background-color:red"
+      }
+}}));
+  widget_list.push(new TextWidget('sog_kt',
+      {S330SpeedKt: {name: 'Speed', transform: round_1,
+      timeout_css: {
+        5: "background-color:yellow",
+       15: "background-color:red"
+      }
+}}));
+
+  widget_list.push(new TextWidget('air_temp', {MwxAirTemp: {name: "Air Temp",
+                               transform: function(val) {
+                                      //show C and F
+                                      tempc = parseFloat(val);
+                                      tempf = tempc * 9 / 5 + 32;
+                                      return (tempc.toFixed(1) + "° C / " + tempf.toFixed(1) + "° F");
+                                      },
+                               timeout_css: {
+                               5: "background-color:yellow",
+                               15: "background-color:red"
+                               }
+}}));
+  widget_list.push(new TextWidget('rel_humid', {MwxAirRelHumid: {name: "RH"}}));
+  widget_list.push(new TextWidget('barometer', {MwxBarometer:{name: "Barometer",
+      transform: round_2,
+      timeout_css: {
+        5: "background-color:yellow",
+       15: "background-color:red"
+      }
+}}));
+
+  widget_list.push(new TextWidget('sea_temp',
+                               {RTMPTemp: {
+                               name: "Sea Temp",
+                               transform: function(val) {
+                               tempc = val;
+                               tempf = tempc * 9 / 5 + 32;
+                               return (tempc.toFixed(1) + "° C / " + tempf.toFixed(1) + "° F");
+                               },
+                               timeout_css: {
+                               5: "background-color:yellow",
+                               15: "background-color:red"
+                               }
+                               }}));
+  var air_temp_line_fields = {
+    AvgMwxAirTemp: {
+      name: 'Air Temp',
+      seconds: 3600,
+      color: 'green',
+      transform: function(val) {
+        return parseFloat(val)},
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'air_temp_line', air_temp_line_fields, 'Air Temp C',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
+  var sea_temp_line_fields = {
+    AvgRTMPTemp: {
+      name: 'Sea Temp',
+      seconds: 3600,
+      color: 'blue',
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'sea_temp_line', sea_temp_line_fields, 'Sea Temp C',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
+  var true_wind_speed_line_fields = {
+    AvgPortTrueWindSpeed: {
+      name: 'Port True Wind Speed',
+      seconds: 3600,
+      color: 'red',
+    },
+    AvgStbdTrueWindSpeed: {
+      name: 'Stbd True Wind Speed',
+      seconds: 3600,
+      color: 'green',
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'true_wind_speed_line', true_wind_speed_line_fields, 'True Wind Speed, kts',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
+  var barometer_line_fields = {
+    AvgMwxBarometer: {
+      name: 'Atmospheric Pressure, mB',
+      seconds: 3600,
+      color: 'slategray',
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'barometer_line', barometer_line_fields, 'Atmospheric Pressure, mB',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
+  var knudsen_line_fields = {
+    AvgKnudDepthLF: {
+      name: 'LF Depth',
+      seconds: 3600,
+      color: 'brown',
+      transform: function(val) {
+        return parseFloat(val)},
+    },
+    AvgKnudDepthHF: {
+      name: 'HF Depth',
+      seconds: 3600,
+      color: 'black',
+      transform: function(val) {
+        return parseFloat(val)},
+    }
+  };
+  widget_list.push(new TimelineWidget(
+    'knudsen_line', knudsen_line_fields, 'Knudsen depth, meters',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+  var gravity_line_fields = {
+    AvgGrv1Value: {
+      name: 'Gravity Flit Count',
+      seconds: 3600,
+      color: 'green',
+      transform: function(val) {
+        return parseFloat(val)},
+    },
+  };
+  widget_list.push(new TimelineWidget(
+    'gravity_line', gravity_line_fields, 'Gravity Flit Count',
+    {title:{text:''},
+     legend:{enabled: false},
+     credits:{enabled: false}}
+  ));
+
+  widget_list.push(new TextWidget('pitch',
+      {S330Pitch: {name: 'Pitch', transform: round_1,
+                               timeout_css: {
+                               5: "background-color:yellow",
+                               15: "background-color:red"
+                               }
+                               }}));
+  widget_list.push(new TextWidget('roll',
+      {S330Roll: {name: 'Roll', transform: round_1,
+                               timeout_css: {
+                               5: "background-color:yellow",
+                               15: "background-color:red"
+                               }}}));
+
+  var widget_server = new WidgetServer(widget_list,
+                                       WEBSOCKET_DATA_SERVER);
+  widget_server.serve();
+</script>
+</body>
+</html>

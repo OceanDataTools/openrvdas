@@ -1,0 +1,1171 @@
+###########################################################
+###########################################################
+# YAML cruise definition file for OpenRVDAS.
+#
+# Created by:
+#   command:  local/usap/create_cruise.py local/usap/lmg/lmg_port_defs_2021-07-31.yaml
+#   time:     Sun Aug  1 13:20:28 2021 UTC
+#   user:     rvdas
+#
+########################################
+cruise:
+  id: LMG
+  start: '2019-01-01'
+  end: '2019-12-31'
+
+########################################
+loggers:
+  lgar:
+    configs:
+    - lgar->off
+    - lgar->net
+    - lgar->net/file
+  lgyr:
+    configs:
+    - lgyr->off
+    - lgyr->net
+    - lgyr->net/file
+  tsg2:
+    configs:
+    - tsg2->off
+    - tsg2->net
+    - tsg2->net/file
+  lknu:
+    configs:
+    - lknu->off
+    - lknu->net
+    - lknu->net/file
+  utsg:
+    configs:
+    - utsg->off
+    - utsg->net
+    - utsg->net/file
+  lrtm:
+    configs:
+    - lrtm->off
+    - lrtm->net
+    - lrtm->net/file
+  lsea:
+    configs:
+    - lsea->off
+    - lsea->net
+    - lsea->net/file
+  lpco:
+    configs:
+    - lpco->off
+    - lpco->net
+    - lpco->net/file
+  loxy:
+    configs:
+    - loxy->off
+    - loxy->net
+    - loxy->net/file
+  ldfl:
+    configs:
+    - ldfl->off
+    - ldfl->net
+    - ldfl->net/file
+  lsep:
+    configs:
+    - lsep->off
+    - lsep->net
+    - lsep->net/file
+  ladc:
+    configs:
+    - ladc->off
+    - ladc->net
+    - ladc->net/file
+  lsvp:
+    configs:
+    - lsvp->off
+    - lsvp->net
+    - lsvp->net/file
+  lguv:
+    configs:
+    - lguv->off
+    - lguv->net
+    - lguv->net/file
+  lais:
+    configs:
+    - lais->off
+    - lais->net
+    - lais->net/file
+  lmwx:
+    configs:
+    - lmwx->off
+    - lmwx->net
+    - lmwx->net/file
+  lwn1:
+    configs:
+    - lwn1->off
+    - lwn1->net
+    - lwn1->net/file
+  net_reader:
+    configs:
+    - net_reader->off
+    - net_reader->on
+  true_wind:
+    configs:
+    - true_wind->off
+    - true_wind->on
+  snapshot:
+    configs:
+    - snapshot->off
+    - snapshot->on
+
+########################################
+modes:
+  'off':
+    lgar: lgar->off
+    lgyr: lgyr->off
+    tsg2: tsg2->off
+    lknu: lknu->off
+    utsg: utsg->off
+    lrtm: lrtm->off
+    lsea: lsea->off
+    lpco: lpco->off
+    loxy: loxy->off
+    ldfl: ldfl->off
+    lsep: lsep->off
+    ladc: ladc->off
+    lsvp: lsvp->off
+    lguv: lguv->off
+    lais: lais->off
+    lmwx: lmwx->off
+    lwn1: lwn1->off
+    net_reader: net_reader->off
+    true_wind: true_wind->off
+    snapshot: snapshot->off
+
+  no_write:
+    lgar: lgar->net
+    lgyr: lgyr->net
+    tsg2: tsg2->net
+    lknu: lknu->net
+    utsg: utsg->net
+    lrtm: lrtm->net
+    lsea: lsea->net
+    lpco: lpco->net
+    loxy: loxy->net
+    ldfl: ldfl->net
+    lsep: lsep->net
+    ladc: ladc->net
+    lsvp: lsvp->net
+    lguv: lguv->net
+    lais: lais->net
+    lmwx: lmwx->net
+    lwn1: lwn1->net
+    net_reader: net_reader->on
+    true_wind: true_wind->on
+    snapshot: snapshot->on
+
+  write:
+    lgar: lgar->net/file
+    lgyr: lgyr->net/file
+    tsg2: tsg2->net/file
+    lknu: lknu->net/file
+    utsg: utsg->net/file
+    lrtm: lrtm->net/file
+    lsea: lsea->net/file
+    lpco: lpco->net/file
+    loxy: loxy->net/file
+    ldfl: ldfl->net/file
+    lsep: lsep->net/file
+    ladc: ladc->net/file
+    lsvp: lsvp->net/file
+    lguv: lguv->net/file
+    lais: lais->net/file
+    lmwx: lmwx->net/file
+    lwn1: lwn1->net/file
+    net_reader: net_reader->on
+    true_wind: true_wind->on
+    snapshot: snapshot->on
+
+########################################
+default_mode: 'off'
+
+########################################
+configs:
+  ########
+  lgar->off:
+    name: lgar->off
+
+  lgar->net:
+    name: lgar->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr00
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lgar
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lgar->net/file:
+    name: lgar->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr00
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lgar/raw/LMG_lgar
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgar
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lgyr->off:
+    name: lgyr->off
+
+  lgyr->net:
+    name: lgyr->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr02
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lgyr
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lgyr->net/file:
+    name: lgyr->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr02
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lgyr/raw/LMG_lgyr
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lgyr
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  tsg2->off:
+    name: tsg2->off
+
+  tsg2->net:
+    name: tsg2->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr03
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: tsg2
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  tsg2->net/file:
+    name: tsg2->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr03
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/tsg2/raw/LMG_tsg2
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: tsg2
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lknu->off:
+    name: lknu->off
+
+  lknu->net:
+    name: lknu->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr05
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lknu
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lknu->net/file:
+    name: lknu->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr05
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lknu/raw/LMG_lknu
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lknu
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  utsg->off:
+    name: utsg->off
+
+  utsg->net:
+    name: utsg->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: utsg
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  utsg->net/file:
+    name: utsg->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 4800
+        port: /dev/ttyr06
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/utsg/raw/LMG_utsg
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: utsg
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lrtm->off:
+    name: lrtm->off
+
+  lrtm->net:
+    name: lrtm->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr07
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lrtm
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lrtm->net/file:
+    name: lrtm->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr07
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lrtm/raw/LMG_lrtm
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lrtm
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lsea->off:
+    name: lsea->off
+
+  lsea->net:
+    name: lsea->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr08
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lsea
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lsea->net/file:
+    name: lsea->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr08
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lsea/raw/LMG_lsea
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsea
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lpco->off:
+    name: lpco->off
+
+  lpco->net:
+    name: lpco->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr09
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lpco
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lpco->net/file:
+    name: lpco->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr09
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lpco/raw/LMG_lpco
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lpco
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  loxy->off:
+    name: loxy->off
+
+  loxy->net:
+    name: loxy->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0a
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: loxy
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  loxy->net/file:
+    name: loxy->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0a
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/loxy/raw/LMG_loxy
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: loxy
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  ldfl->off:
+    name: ldfl->off
+
+  ldfl->net:
+    name: ldfl->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: ldfl
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  ldfl->net/file:
+    name: ldfl->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0b
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/ldfl/raw/LMG_ldfl
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ldfl
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lsep->off:
+    name: lsep->off
+
+  lsep->net:
+    name: lsep->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0c
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lsep
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lsep->net/file:
+    name: lsep->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0c
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lsep/raw/LMG_lsep
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsep
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  ladc->off:
+    name: ladc->off
+
+  ladc->net:
+    name: ladc->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: ladc
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  ladc->net/file:
+    name: ladc->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0d
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/ladc/raw/LMG_ladc
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: ladc
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lsvp->off:
+    name: lsvp->off
+
+  lsvp->net:
+    name: lsvp->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0e
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lsvp
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lsvp->net/file:
+    name: lsvp->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 19200
+        port: /dev/ttyr0e
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lsvp/raw/LMG_lsvp
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lsvp
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lguv->off:
+    name: lguv->off
+
+  lguv->net:
+    name: lguv->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0f
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lguv
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lguv->net/file:
+    name: lguv->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr0f
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lguv/raw/LMG_lguv
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lguv
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lais->off:
+    name: lais->off
+
+  lais->net:
+    name: lais->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr14
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lais
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lais->net/file:
+    name: lais->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr14
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lais/raw/LMG_lais
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lais
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lmwx->off:
+    name: lmwx->off
+
+  lmwx->net:
+    name: lmwx->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr15
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lmwx
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lmwx->net/file:
+    name: lmwx->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 9600
+        port: /dev/ttyr15
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lmwx/raw/LMG_lmwx
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lmwx
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  lwn1->off:
+    name: lwn1->off
+
+  lwn1->net:
+    name: lwn1->net
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp and logger label
+    - class: TimestampTransform
+    - class: PrefixTransform
+      kwargs:
+        prefix: lwn1
+    writers:
+    - class: UDPWriter
+      kwargs:
+        port: 6224
+        destination: 157.132.133.255
+
+  lwn1->net/file:
+    name: lwn1->net/file
+    readers:                    # Read from serial port
+    - class: SerialReader
+      kwargs:
+        baudrate: 38400
+        port: /dev/ttyr16
+    transforms:                 # Add timestamp
+    - class: TimestampTransform
+    writers:
+    - class: LogfileWriter      # Write to logfile
+      kwargs:
+        filebase: /data/logger/lwn1/raw/LMG_lwn1
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: lwn1
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: 6224
+            destination: 157.132.133.255
+  ########
+  net_reader->off:
+    name: net_reader->off
+
+  net_reader->on:
+    name: net_reader->on
+    readers:                    # Read from simulated serial port
+    - class: UDPReader
+      kwargs:
+        port: 6224
+    transforms:                 # Add timestamp and logger label
+    - class: ParseTransform
+      kwargs:
+        metadata_interval: 10
+        definition_path: local/usap/lmg/devices/lmg_devices.yaml
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
+    - class: InfluxDBWriter
+      kwargs:
+        bucket_name: openrvdas
+  ########
+  true_wind->off:
+    name: true_wind->off
+
+  true_wind->on:
+    name: true_wind->on
+    readers:
+    - class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
+    writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: openrvdas
+            measurement_name: true_wind
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: localhost:8766
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: openrvdas
+            measurement_name: true_wind
+
+  ########
+  # Derived data subsampling logger
+  snapshot->off:
+    name: snapshot->off
+
+  snapshot->on:
+    name: snapshot->on
+    readers:
+    - class: CachedDataReader
+      kwargs:
+        data_server: localhost:8766
+        subscription:
+          fields:
+            MwxAirTemp:
+              seconds: 0
+            RTMPTemp:
+              seconds: 0
+            PortTrueWindDir:
+              seconds: 0
+            PortTrueWindSpeed:
+              seconds: 0
+            StbdTrueWindDir:
+              seconds: 0
+            StbdTrueWindSpeed:
+              seconds: 0
+            MwxBarometer:
+              seconds: 0
+            KnudDepthHF:
+              seconds: 0
+            KnudDepthLF:
+              seconds: 0
+            Grv1Value:
+              seconds: 0
+    transforms:
+    - class: InterpolationTransform
+      module: logger.transforms.interpolation_transform
+      kwargs:
+        interval: 30
+        window: 30
+        metadata_interval: 60  # send metadata every 60 seconds
+        field_spec:
+          AvgMwxAirTemp:
+            source: MwxAirTemp
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgRTMPTemp:
+            source: RTMPTemp
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgPortTrueWindDir:
+            source: PortTrueWindDir
+            algorithm:
+              type: polar_average
+              window: 30
+          AvgPortTrueWindSpeed:
+            source: PortTrueWindSpeed
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgStbdTrueWindDir:
+            source: StbdTrueWindDir
+            algorithm:
+              type: polar_average
+              window: 30
+          AvgStbdTrueWindSpeed:
+            source: StbdTrueWindSpeed
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgMwxBarometer:
+            source: MwxBarometer
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgKnudDepthHF:
+            source: KnudDepthHF
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgKnudDepthLF:
+            source: KnudDepthLF
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgGrv1Value:
+            source: Grv1Value
+            algorithm:
+              type: boxcar_average
+              window: 30
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: localhost:8766
+    - class: InfluxDBWriter
+      kwargs:
+        bucket_name: openrvdas
+        measurement_name: snapshot
+
+

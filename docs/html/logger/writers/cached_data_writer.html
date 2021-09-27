@@ -31,6 +31,7 @@
 import asyncio
 import json
 import logging
+import ssl
 import sys
 import threading
 import websockets
@@ -44,7 +45,8 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 class CachedDataWriter(Writer):
     def __init__(self, data_server, start_server=False, back_seconds=480,
                  cleanup_interval=6, update_interval=1,
-                 max_backup=60 * 60 * 24):
+                 max_backup=60 * 60 * 24,
+                 use_wss=False, check_cert=False):
         &#34;&#34;&#34;Feed passed records to a CachedDataServer via a websocket. Expects
         records in DASRecord or dict formats.
         ```
@@ -63,11 +65,18 @@ class CachedDataWriter(Writer):
                       oldest records. By default, cache one day&#39;s worth of
                       records at 1 Hz (86,400 records). If max_backup is zero,
                       cache size is unbounded.
+
+        use_wss -     If True, use secure websockets
+
+        check_cert  - If True and use_wss is True, check the server&#39;s TLS certificate
+                      for validity; if a str, use as local filepath location of .pem
+                      file to check against.
+
         ```
         &#34;&#34;&#34;
         host_port = data_server.split(&#39;:&#39;)
         if len(host_port) == 1:
-            self.data_server = &#39;localhost:&#39; + data_server  # they gave us &#39;:8765&#39;
+            self.data_server = &#39;localhost:&#39; + data_server  # they gave us &#39;8766&#39;
         elif not len(host_port[0]):
             self.data_server = &#39;localhost&#39; + data_server   # they gave us &#39;:8766&#39;
         else:
@@ -76,6 +85,8 @@ class CachedDataWriter(Writer):
         self.websocket = None
         self.back_seconds = back_seconds
         self.cleanup_interval = cleanup_interval
+        self.use_wss = use_wss
+        self.check_cert = check_cert
 
         # Event loop we&#39;ll use to asynchronously manage writes to websocket
         self.event_loop = asyncio.new_event_loop()
@@ -103,9 +114,29 @@ class CachedDataWriter(Writer):
             &#34;&#34;&#34;
             while True:
                 logging.info(&#39;CachedDataWriter trying to connect to &#39;
-                             + self.data_server)
+                                + self.data_server)
                 try:
-                    async with websockets.connect(&#39;ws://&#39; + self.data_server) as ws:
+                    if self.use_wss:
+                        # If check_cert is a str, take it as the location of the
+                        # .pem file we&#39;ll check for validity. Otherwise, if not
+                        # False, take as a bool to verify by own means.
+                        ws_data_server = &#39;wss://&#39; + self.data_server
+                        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                        if self.check_cert:
+                            if isinstance(self.check_cert, str):
+                                ssl_context.load_verify_locations(self.check_cert)
+                            else:
+                                ssl_context.verify_mode = ssl.CERT_REQUIRED
+                        else:
+                            ssl_context.verify_mode = ssl.CERT_NONE
+
+                    else:  # not using wss
+                        ws_data_server = &#39;ws://&#39; + self.data_server
+                        ssl_context = None
+
+                    logging.info(f&#39;CachedDataWriter connecting to {ws_data_server}&#39;)
+                    async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
+                        logging.info(f&#39;Connected to data server {ws_data_server}&#39;)
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
@@ -117,8 +148,15 @@ class CachedDataWriter(Writer):
                             except asyncio.QueueEmpty:
                                 await asyncio.sleep(.2)
 
+                except BrokenPipeError:
+                    pass
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning(&#39;CachedDataWriter lost websocket connection to &#39;
+                                    &#39;data server; trying to reconnect.&#39;)
+                    await asyncio.sleep(0.2)
+
+                except websockets.exceptions.InvalidStatusCode:
+                    logging.warning(&#39;CachedDataWriter InvalidStatusCode connecting to &#39;
                                     &#39;data server; trying to reconnect.&#39;)
                     await asyncio.sleep(0.2)
 
@@ -197,7 +235,10 @@ class CachedDataWriter(Writer):
                     logging.warning(&#39;CachedDataWriter queue is both full and empty?!?&#39;)
 
             # Enqueue our latest record for send
-            self.send_queue.put_nowait(record)
+            try:
+                self.send_queue.put_nowait(record)
+            except asyncio.queues.QueueFull:
+                logging.warning(&#39;CachedDataWriter unable to write: write queue full&#39;)
         else:
             logging.warning(&#39;CachedDataWriter got non-dict/DASRecord object of &#39;
                             &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
@@ -214,7 +255,7 @@ class CachedDataWriter(Writer):
 <dl>
 <dt id="logger.writers.cached_data_writer.CachedDataWriter"><code class="flex name class">
 <span>class <span class="ident">CachedDataWriter</span></span>
-<span>(</span><span>data_server, start_server=False, back_seconds=480, cleanup_interval=6, update_interval=1, max_backup=86400)</span>
+<span>(</span><span>data_server, start_server=False, back_seconds=480, cleanup_interval=6, update_interval=1, max_backup=86400, use_wss=False, check_cert=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class Writer about which we know nothing else. By default the
@@ -236,6 +277,13 @@ max_backup    If the writer isn't able to connect to the data server,
               oldest records. By default, cache one day's worth of
               records at 1 Hz (86,400 records). If max_backup is zero,
               cache size is unbounded.
+
+use_wss -     If True, use secure websockets
+
+check_cert  - If True and use_wss is True, check the server's TLS certificate
+              for validity; if a str, use as local filepath location of .pem
+              file to check against.
+
 </code></pre></div>
 <details class="source">
 <summary>
@@ -244,7 +292,8 @@ max_backup    If the writer isn't able to connect to the data server,
 <pre><code class="python">class CachedDataWriter(Writer):
     def __init__(self, data_server, start_server=False, back_seconds=480,
                  cleanup_interval=6, update_interval=1,
-                 max_backup=60 * 60 * 24):
+                 max_backup=60 * 60 * 24,
+                 use_wss=False, check_cert=False):
         &#34;&#34;&#34;Feed passed records to a CachedDataServer via a websocket. Expects
         records in DASRecord or dict formats.
         ```
@@ -263,11 +312,18 @@ max_backup    If the writer isn't able to connect to the data server,
                       oldest records. By default, cache one day&#39;s worth of
                       records at 1 Hz (86,400 records). If max_backup is zero,
                       cache size is unbounded.
+
+        use_wss -     If True, use secure websockets
+
+        check_cert  - If True and use_wss is True, check the server&#39;s TLS certificate
+                      for validity; if a str, use as local filepath location of .pem
+                      file to check against.
+
         ```
         &#34;&#34;&#34;
         host_port = data_server.split(&#39;:&#39;)
         if len(host_port) == 1:
-            self.data_server = &#39;localhost:&#39; + data_server  # they gave us &#39;:8765&#39;
+            self.data_server = &#39;localhost:&#39; + data_server  # they gave us &#39;8766&#39;
         elif not len(host_port[0]):
             self.data_server = &#39;localhost&#39; + data_server   # they gave us &#39;:8766&#39;
         else:
@@ -276,6 +332,8 @@ max_backup    If the writer isn't able to connect to the data server,
         self.websocket = None
         self.back_seconds = back_seconds
         self.cleanup_interval = cleanup_interval
+        self.use_wss = use_wss
+        self.check_cert = check_cert
 
         # Event loop we&#39;ll use to asynchronously manage writes to websocket
         self.event_loop = asyncio.new_event_loop()
@@ -303,9 +361,29 @@ max_backup    If the writer isn't able to connect to the data server,
             &#34;&#34;&#34;
             while True:
                 logging.info(&#39;CachedDataWriter trying to connect to &#39;
-                             + self.data_server)
+                                + self.data_server)
                 try:
-                    async with websockets.connect(&#39;ws://&#39; + self.data_server) as ws:
+                    if self.use_wss:
+                        # If check_cert is a str, take it as the location of the
+                        # .pem file we&#39;ll check for validity. Otherwise, if not
+                        # False, take as a bool to verify by own means.
+                        ws_data_server = &#39;wss://&#39; + self.data_server
+                        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                        if self.check_cert:
+                            if isinstance(self.check_cert, str):
+                                ssl_context.load_verify_locations(self.check_cert)
+                            else:
+                                ssl_context.verify_mode = ssl.CERT_REQUIRED
+                        else:
+                            ssl_context.verify_mode = ssl.CERT_NONE
+
+                    else:  # not using wss
+                        ws_data_server = &#39;ws://&#39; + self.data_server
+                        ssl_context = None
+
+                    logging.info(f&#39;CachedDataWriter connecting to {ws_data_server}&#39;)
+                    async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
+                        logging.info(f&#39;Connected to data server {ws_data_server}&#39;)
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
@@ -317,8 +395,15 @@ max_backup    If the writer isn't able to connect to the data server,
                             except asyncio.QueueEmpty:
                                 await asyncio.sleep(.2)
 
+                except BrokenPipeError:
+                    pass
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning(&#39;CachedDataWriter lost websocket connection to &#39;
+                                    &#39;data server; trying to reconnect.&#39;)
+                    await asyncio.sleep(0.2)
+
+                except websockets.exceptions.InvalidStatusCode:
+                    logging.warning(&#39;CachedDataWriter InvalidStatusCode connecting to &#39;
                                     &#39;data server; trying to reconnect.&#39;)
                     await asyncio.sleep(0.2)
 
@@ -397,7 +482,10 @@ max_backup    If the writer isn't able to connect to the data server,
                     logging.warning(&#39;CachedDataWriter queue is both full and empty?!?&#39;)
 
             # Enqueue our latest record for send
-            self.send_queue.put_nowait(record)
+            try:
+                self.send_queue.put_nowait(record)
+            except asyncio.queues.QueueFull:
+                logging.warning(&#39;CachedDataWriter unable to write: write queue full&#39;)
         else:
             logging.warning(&#39;CachedDataWriter got non-dict/DASRecord object of &#39;
                             &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
@@ -511,7 +599,10 @@ field_name: [(timestamp, value), (timestamp, value),&hellip;],
                 logging.warning(&#39;CachedDataWriter queue is both full and empty?!?&#39;)
 
         # Enqueue our latest record for send
-        self.send_queue.put_nowait(record)
+        try:
+            self.send_queue.put_nowait(record)
+        except asyncio.queues.QueueFull:
+            logging.warning(&#39;CachedDataWriter unable to write: write queue full&#39;)
     else:
         logging.warning(&#39;CachedDataWriter got non-dict/DASRecord object of &#39;
                         &#39;type %s: %s&#39;, type(record), str(record))</code></pre>

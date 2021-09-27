@@ -105,7 +105,7 @@ function get_os_type {
     elif [[ `uname -s` == 'Linux' ]];then
         if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]];then
             OS_TYPE=Ubuntu
-        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
         else
             echo Unknown Linux variant!
@@ -197,12 +197,13 @@ function get_influxdb_auth_token {
 }
 
 ###########################################################################
-# Tweak the database/settings.py file to use new token
+# Create database/influxdb/settings.py and set up our new token
 function fix_database_settings {
-    SETTINGS=$INSTALL_ROOT/openrvdas/database/settings.py
-
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
+
+    SETTINGS=$INSTALL_ROOT/openrvdas/database/influxdb/settings.py
+    cp ${SETTINGS}.dist $SETTINGS
 
     sed -i -e "s/INFLUXDB_ORG = '.*'/INFLUXDB_ORG = '$ORGANIZATION'/" $SETTINGS
     sed -i -e "s/INFLUXDB_AUTH_TOKEN = '.*'/INFLUXDB_AUTH_TOKEN = '$INFLUXDB_AUTH_TOKEN'/" $SETTINGS
@@ -210,7 +211,6 @@ function fix_database_settings {
     # If they've run this with an old installation of OpenRVDAS,
     # database/settings.py may have the old/wrong port number for InfluxDB
     sed -i -e "s/INFLUXDB_URL = 'http:\/\/localhost:9999'/INFLUXDB_URL = 'http:\/\/localhost:8086'/" $SETTINGS
-
 }
 
 ###########################################################################
@@ -219,8 +219,9 @@ function fix_database_settings {
 # need to have available.
 function open_required_ports {
     if [ $OS_TYPE == 'CentOS' ] && [ `systemctl is-active firewalld` == 'active' ]; then
-        echo Opening ports 9999 \(InfluxDB\) and 3000 \(Grafana\)
+        echo Opening ports 8086 \(InfluxDB\) and 3000 \(Grafana\)
         sudo firewall-cmd -q --permanent --add-port=9999/tcp > /dev/null  # InfluxDB
+        sudo firewall-cmd -q --permanent --add-port=8086/tcp > /dev/null  # InfluxDB
         sudo firewall-cmd -q --permanent --add-port=3000/tcp > /dev/null  # Grafana
         sudo firewall-cmd -q --reload > /dev/null
     fi
@@ -235,7 +236,7 @@ function install_influxdb {
     # INFLUXDB_PASSWORD - password to use for InfluxDB
 
     INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
-    INFLUXDB_RELEASE=influxdb-2.0.2
+    INFLUXDB_RELEASE=influxdb2-2.0.8
 
     echo "#####################################################################"
     echo Installing InfluxDB...
@@ -248,15 +249,6 @@ function install_influxdb {
         echo "from all Grafana and Telegraf servers."
         yes_no "Overwrite existing installation?" no
         if [ $YES_NO_RESULT == 'no' ];then
-
-            # They may have run install_openrvdas.sh again, which will have overwritten our
-            # virtual environment and any settings in database/settings.py. So even if we're
-            # not updating the installation, make sure we've still got influxdb_client and
-            # grab the latest auth token and stuff it back in.
-            pip install \
-                --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-                influxdb_client
-            fix_database_settings
             return 0
         fi
     fi
@@ -267,10 +259,10 @@ function install_influxdb {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}_darwin_amd64 # for MacOS
+        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-darwin-amd64 # for MacOS
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}_linux_amd64 # for Linux
+        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-linux-amd64 # for Linux
     else
         echo "ERROR: No InfluxDB binary found for architecture \"`uname -s`\"."
         exit_gracefully
@@ -302,7 +294,7 @@ function install_influxdb {
     echo Running server in background
     /usr/local/bin/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
-    sleep 15
+    sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
     /usr/local/bin/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
@@ -330,7 +322,7 @@ function install_influxdb {
 function install_grafana {
     echo "#####################################################################"
     echo Installing Grafana...
-    GRAFANA_RELEASE=grafana-7.3.4
+    GRAFANA_RELEASE=grafana-8.1.2
     GRAFANA_REPO=dl.grafana.com/oss/release
 
     # If we're on MacOS
@@ -390,13 +382,13 @@ function install_grafana {
 function install_telegraf {
     echo "#####################################################################"
     echo Installing Telegraf...
-    TELEGRAF_RELEASE=telegraf-1.13.3
+    TELEGRAF_RELEASE=telegraf-1.19.3
     TELEGRAF_REPO=dl.influxdata.com/telegraf/releases
 
     # NOTE: in 1.13.3, the tgz file uncompresses to a directory that
     # doesn't include the release number, so just 'telegraf'
     TELEGRAF_UNCOMPRESSED=$TELEGRAF_RELEASE
-    TELEGRAF_UNCOMPRESSED='telegraf'  #
+    #TELEGRAF_UNCOMPRESSED='telegraf'  #
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
@@ -448,21 +440,43 @@ function install_telegraf {
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
 
-    cat >> $TELEGRAF_CONF <<EOF
+    # Overwrite the default telegraf.conf with a minimal one that includes
+    # our InfluxDB auth tokens.
+    cat > $TELEGRAF_CONF <<EOF
+# Minimal Telegraf configuration
+[global_tags]
+[agent]
+  interval = "10s"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "0s"
+  precision = ""
+  hostname = ""
+  omit_hostname = false
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+[[inputs.diskio]]
+[[inputs.kernel]]
+[[inputs.mem]]
+[[inputs.processes]]
+[[inputs.swap]]
+[[inputs.system]]
 
-# # Configuration for sending metrics to InfluxDB v2
 [[outputs.influxdb_v2]]
-#   ## The URLs of the InfluxDB cluster nodes.
-#   ##
-#   ## Multiple URLs can be specified for a single cluster, only ONE of the
-#   ## urls will be written to each interval.
-#   ##   ex: urls = ["https://us-west-2-1.aws.cloud2.influxdata.com"]
-#   urls = ["http://127.0.0.1:9999"]
+   urls = ["http://127.0.0.1:8086"]
    token = "$INFLUXDB_AUTH_TOKEN"  # Token for authentication.
    organization = "$ORGANIZATION"  # InfluxDB organization to write to
    bucket = "_monitoring"  # Destination bucket to write into.
-
 EOF
+
     echo Done setting up Telegraf!
 }
 
@@ -587,8 +601,8 @@ programs=$INSTALLED_PROGRAMS
 EOF
     sudo cp -f $TMP_SUPERVISOR_FILE $SUPERVISOR_FILE
 
-    echo Done setting up supervisor files. Please restart/reload supervisor
-    echo for changes to take effect!
+    echo Done setting up supervisor files. Reloading...
+    supervisorctl reload
 }
 
 ###########################################################################
@@ -672,8 +686,6 @@ while true; do
     fi
 done
 
-
-
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
@@ -686,6 +698,11 @@ save_default_variables
 [ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
 
 #########################################################################
+
+# Don't want existing installations to be running while we do this
+echo Stopping supervisor prior to installation.
+supervisorctl stop all
+
 # Let's get to installing things!
 if [ $INSTALL_INFLUXDB == 'yes' ];then
     install_influxdb
