@@ -989,7 +989,10 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
+killasgroup=true
 stderr_logfile=/var/log/openrvdas/nginx.stderr
+stderr_logfile_maxbytes=10000000 ; 10M
+stderr_logfile_maxbackups=100
 ;user=$RVDAS_USER
 
 [program:uwsgi]
@@ -999,7 +1002,10 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
+killasgroup=true
 stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+stderr_logfile_maxbytes=10000000 ; 10M
+stderr_logfile_maxbackups=100
 user=$RVDAS_USER
 
 [program:cached_data_server]
@@ -1008,7 +1014,10 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
+killasgroup=true
 stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
+stderr_logfile_maxbytes=10000000 ; 10M
+stderr_logfile_maxbackups=100
 user=$RVDAS_USER
 
 [program:logger_manager]
@@ -1018,7 +1027,10 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
+killasgroup=true
 stderr_logfile=/var/log/openrvdas/logger_manager.stderr
+stderr_logfile_maxbytes=10000000 ; 10M
+stderr_logfile_maxbackups=100
 user=$RVDAS_USER
 
 [program:simulate_nbp]
@@ -1027,7 +1039,10 @@ directory=${INSTALL_ROOT}/openrvdas
 autostart=false
 autorestart=true
 startretries=3
+killasgroup=true
 stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
+stderr_logfile_maxbytes=10000000 ; 10M
+stderr_logfile_maxbackups=100
 user=$RVDAS_USER
 
 [group:web]
