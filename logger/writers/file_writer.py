@@ -2,6 +2,7 @@
 
 import os.path
 import sys
+import math
 
 from datetime import timezone
 
@@ -16,8 +17,9 @@ class FileWriter(Writer):
     """Write to the specified file. If filename is empty, write to stdout."""
 
     def __init__(self, filename=None, mode='a', delimiter='\n', flush=True,
-                 split_by_time=False, time_format='-' + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True):
+                 split_by_time=False, split_interval=None,
+                 time_format='-' + DATE_FORMAT, time_zone=timezone.utc,
+                 create_path=True):
         """Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -37,6 +39,9 @@ class FileWriter(Writer):
                      day, appending a -YYYY-MM-DD string to the specified
                      filename. By overridding time_format, other split
                      intervals, such as hourly or monthly, may be imposed.
+
+        split_interval Splits files based on a defined hour or minute time
+                     interval such as every 2 hours (2H) or 15 minutes (15M). 
 
         time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
                      e.g. '-%Y-%m' is used, files will be split by month;
@@ -60,9 +65,55 @@ class FileWriter(Writer):
         self.time_format = time_format
         self.time_zone = time_zone
 
-        if split_by_time and not filename:
+        if split_by_time or split_interval is not None and not filename:
             raise ValueError('FileWriter: filename must be specified if '
-                             'split_by_time is True.')
+                             'split_by_time is specified or split_interval '
+                             'is True.')
+
+        if split_interval is None:
+            self.split_interval = None    
+
+        else:
+            # Verify the split_interval argument is valid be confirming
+            # the last charater is 'H' or 'M' and the preceding characters
+            # parse as an integer
+
+            if split_interval[-1] not in ['H','M']:
+                raise ValueError('FileWriter: split_interval must be an integer '
+                                 'followed by \'H\' or \'M\'.')
+            try:
+                int(split_interval[:-1])
+            except ValueError:
+                raise ValueError('FileWriter: split_interval must be an integer '
+                                 'followed by \'H\' or \'M\'.')
+
+            # Verify the time_format string is valid for the given split_interval
+            if split_interval[-1] == 'H'
+
+                # automatically update default time_format
+                if time_format == '-' + DATE_FORMAT:
+                    self.time_format = '-' + DATE_FORMAT + 'T%H00'
+
+                # raise error if the custom time_format does not contain
+                # an hour designation
+                elif "%H" not in self.time_format:
+                     raise ValueError('FileWriter: time_format must contain a '
+                                      'hour designation (%H).')
+
+            if split_interval[-1] == 'H'
+
+                # automatically update default time_format
+                if time_format == '-' + DATE_FORMAT:
+                    self.time_format = '-' + DATE_FORMAT + 'T%H%M'
+
+                # raise error if the custom time_format does not contain
+                # an hour designation
+                elif "%H" not in self.time_format or "%M" not in self.time_format:
+                     raise ValueError('FileWriter: time_format must contain a '
+                                      'hour designation (%H) and minute '
+                                      'designation (%M).')
+
+            self.split_interval = (int(split_interval[:-1]), split_interval[-1])
 
         # If we're splitting by time, keep track of current file suffix so
         # we know when to roll over.
@@ -85,8 +136,27 @@ class FileWriter(Writer):
         # Note: the self.timestamp variable exists for debugging, and
         # should be left as None in actual use, which tells the time_str
         # method to use current system time.
-        return time_str(timestamp=self.timestamp, time_zone=self.time_zone,
-                        time_format=self.time_format)
+
+        # if there is no split interval
+        if self.split_interval is None:
+            return time_str(timestamp=self.timestamp, time_zone=self.time_zone,
+                            time_format=self.time_format)
+
+        # if the data is being split by N hours
+        elif self.split_interval[1] == 'H': # hour
+            timestamp_raw = datetime.now(time_zone)
+            timestamp_proc = timestamp_raw.replace(hour=interval * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
+
+            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
+                            time_format=self.time_format)
+
+        # if the data is being split by N minutes
+        elif self.split_interval[1] == 'M': # minute
+            timestamp_raw = datetime.now(time_zone)
+            timestamp_proc = timestamp_raw.replace(minute=interval * math.floor(timestamp_raw.hour/self.split_interval[0]), second=0)
+
+            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
+                            time_format=self.time_format)
 
     ############################
     def _set_file(self, filename):
@@ -120,7 +190,7 @@ class FileWriter(Writer):
 
         # If we're splitting by some time interval, see if it's time to
         # roll over to a new file.
-        if self.split_by_time:
+        if self.split_by_time or split_interval is not None:
             new_file_suffix = self._get_file_suffix()
             if new_file_suffix != self.file_suffix:
                 self.file_suffix = new_file_suffix
