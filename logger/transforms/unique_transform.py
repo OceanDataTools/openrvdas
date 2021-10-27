@@ -22,7 +22,7 @@ class UniqueTransform(Transform):
 
     ############################
     def transform(self, record):
-        """Prepend a prefix."""
+        """If same as previous, return None, else record."""
         if record == self.prev_record:
             return None
 
