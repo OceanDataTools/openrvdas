@@ -49,14 +49,13 @@ If --config is specified
 the script will expect a YAML file keyed by instrument names, where
 each instrument name references a dict including keys 'class' (Serial
 or UDP), 'port' (e.g. 5501 or /tmp/ttyr05) and 'filebase'. It may
-optionally include 'prefix', 'eol', 'timestamp' and 'time_format'
+optionally include 'eol', 'timestamp' and 'time_format'
 keys:
 
 ############# Gyro ###############
   gyro:
     class: UDP
     timestamp: true
-    prefix: gyro
     eol: \r
     port: 56332
     filebase: /data/2019-05-11/raw/GYRO
@@ -159,7 +158,7 @@ class SimUDP:
                 if not record:
                     if not loop or self.first_time:
                         break
-                    logging.info('Looping instrument %s', self.prefix)
+                    logging.info('Looping instrument %s', self.filebase)
                     self.reader = LogfileReader(filebase=self.filebase,
                                                 record_format=self.record_format,
                                                 use_timestamps=True)
@@ -185,7 +184,7 @@ class SimUDP:
         except (OSError, KeyboardInterrupt):
             self.quit_flag = True
 
-        logging.info('Finished %s', self.prefix)
+        logging.info('Finished %s', self.filebase)
 
 
 ################################################################################
