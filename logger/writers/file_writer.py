@@ -3,8 +3,9 @@
 import os.path
 import sys
 import math
+import logging
 
-from datetime import timezone
+from datetime import datetime, timezone
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -65,7 +66,7 @@ class FileWriter(Writer):
         self.time_format = time_format
         self.time_zone = time_zone
 
-        if split_by_time or split_interval is not None and not filename:
+        if (split_by_time or split_interval) is not None and not filename:
             raise ValueError('FileWriter: filename must be specified if '
                              'split_by_time is specified or split_interval '
                              'is True.')
@@ -88,7 +89,7 @@ class FileWriter(Writer):
                                  'followed by \'H\' or \'M\'.')
 
             # Verify the time_format string is valid for the given split_interval
-            if split_interval[-1] == 'H'
+            if split_interval[-1] == 'H':
 
                 # automatically update default time_format
                 if time_format == '-' + DATE_FORMAT:
@@ -100,7 +101,7 @@ class FileWriter(Writer):
                      raise ValueError('FileWriter: time_format must contain a '
                                       'hour designation (%H).')
 
-            if split_interval[-1] == 'H'
+            if split_interval[-1] == 'M':
 
                 # automatically update default time_format
                 if time_format == '-' + DATE_FORMAT:
@@ -145,16 +146,18 @@ class FileWriter(Writer):
         # if the data is being split by N hours
         elif self.split_interval[1] == 'H': # hour
             timestamp_raw = datetime.now(time_zone)
-            timestamp_proc = timestamp_raw.replace(hour=interval * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
+            timestamp_proc = timestamp_raw.replace(hour=self.split_interval[0] * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
 
+            print(timestamp_proc.timestamp())
             return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
                             time_format=self.time_format)
 
         # if the data is being split by N minutes
         elif self.split_interval[1] == 'M': # minute
-            timestamp_raw = datetime.now(time_zone)
-            timestamp_proc = timestamp_raw.replace(minute=interval * math.floor(timestamp_raw.hour/self.split_interval[0]), second=0)
+            timestamp_raw = datetime.now(self.time_zone)
+            timestamp_proc = timestamp_raw.replace(minute=self.split_interval[0] * math.floor(timestamp_raw.minute/self.split_interval[0]), second=0)
 
+            print(timestamp_proc.timestamp())
             return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
                             time_format=self.time_format)
 
@@ -190,7 +193,7 @@ class FileWriter(Writer):
 
         # If we're splitting by some time interval, see if it's time to
         # roll over to a new file.
-        if self.split_by_time or split_interval is not None:
+        if self.split_by_time or self.split_interval is not None:
             new_file_suffix = self._get_file_suffix()
             if new_file_suffix != self.file_suffix:
                 self.file_suffix = new_file_suffix
