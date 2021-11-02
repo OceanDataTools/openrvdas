@@ -148,7 +148,6 @@ class FileWriter(Writer):
             timestamp_raw = datetime.now(time_zone)
             timestamp_proc = timestamp_raw.replace(hour=self.split_interval[0] * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
 
-            print(timestamp_proc.timestamp())
             return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
                             time_format=self.time_format)
 
@@ -157,7 +156,6 @@ class FileWriter(Writer):
             timestamp_raw = datetime.now(self.time_zone)
             timestamp_proc = timestamp_raw.replace(minute=self.split_interval[0] * math.floor(timestamp_raw.minute/self.split_interval[0]), second=0)
 
-            print(timestamp_proc.timestamp())
             return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
                             time_format=self.time_format)
 
