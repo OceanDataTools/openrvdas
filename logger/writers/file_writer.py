@@ -3,7 +3,6 @@
 import os.path
 import sys
 import math
-import logging
 
 from datetime import datetime, timezone
 
