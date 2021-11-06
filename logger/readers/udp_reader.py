@@ -10,6 +10,16 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 from logger.utils.formats import Text  # noqa: E402
 
+# The maximum length of UDP record we can receive. Records will be
+# truncated at this length. Note that the effective maximum value for
+# this parameter is the underlying system's Maximum Transmission Unit
+# (MTU). If read_buffer_size is set larger than the MTU and a packet
+# longer than the MTU is received, the system will throw an
+#    [Errno 40] Message too long
+# (caught by this Reader) and the entire packet will be discarded. On
+# Linux machines, it appears that the MTU may be up to 65k; on MacOS,
+# the default is 4096. See
+#     https://stackoverflow.com/questions/22819214/udp-message-too-long
 READ_BUFFER_SIZE = 4096  # max number of characters to read in one call
 
 
@@ -18,11 +28,6 @@ READ_BUFFER_SIZE = 4096  # max number of characters to read in one call
 class UDPReader(Reader):
     """
     Read UDP broadcast and multicast records from a socket.
-
-    TODO: code won't handle records that are larger than 4K right now,
-    which, if we start getting into Toby Martin's Total Metadata Ingestion
-    (TMI), may not be enough. We'll need to implement something that will
-    aggregate recv()'s and know when it's got an entire record?
     """
     ############################
 
@@ -43,6 +48,16 @@ class UDPReader(Reader):
                      are encountered in a packet, split the packet and return
                      the first of them, buffering the remainder for subsequent
                      calls.
+
+        read_buffer_size
+                The maximum length of UDP record we can receive. Records will be
+                truncated at this length. Note that the effective maximum value for
+                this parameter is the underlying system's Maximum Transmission Unit
+                (MTU). If read_buffer_size is set larger than the MTU and a packet
+                longer than the MTU is received, the system will throw an "[Errno 40]
+                Message too long" (caught by this Reader) and the entire packet will
+                be discarded. On Linux machines, it appears that the MTU may be up to
+                65k; on MacOS, the default is 4096.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
@@ -96,7 +111,11 @@ class UDPReader(Reader):
         # If no eol character/string specified, just read a packet and
         # return it as the next record.
         if not self.eol:
-            record = self.socket.recv(self.read_buffer_size)
+            try:
+                record = self.socket.recv(self.read_buffer_size)
+            except OSError as e:
+                logging.error('UDPReader error: %s', str(e))
+                return None
             logging.debug('UDPReader.read() received %d bytes', len(record))
             return self._decode_bytes(record)
 
