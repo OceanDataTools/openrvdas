@@ -40,8 +40,9 @@ class FileWriter(Writer):
                      filename. By overridding time_format, other split
                      intervals, such as hourly or monthly, may be imposed.
 
-        split_interval Splits files based on a defined hour or minute time
-                     interval such as every 2 hours (2H) or 15 minutes (15M). 
+        split_interval Splits files based on a defined hour (H) or minute (M)
+                     time interval such as every 2 hours (2H) or 15 minutes
+                     (15M). Currently H and M are the only options. 
 
         time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
                      e.g. '-%Y-%m' is used, files will be split by month;
@@ -64,16 +65,16 @@ class FileWriter(Writer):
         self.split_by_time = split_by_time
         self.time_format = time_format
         self.time_zone = time_zone
+        self.split_interval = None
+        self.split_interval_in_seconds = 0
+        self.next_file_split = 0
 
         if (split_by_time or split_interval) is not None and not filename:
             raise ValueError('FileWriter: filename must be specified if '
                              'split_by_time is specified or split_interval '
                              'is True.')
 
-        if split_interval is None:
-            self.split_interval = None    
-
-        else:
+        if split_interval is not None:
             # Verify the split_interval argument is valid be confirming
             # the last charater is 'H' or 'M' and the preceding characters
             # parse as an integer
@@ -82,38 +83,11 @@ class FileWriter(Writer):
                 raise ValueError('FileWriter: split_interval must be an integer '
                                  'followed by \'H\' or \'M\'.')
             try:
-                int(split_interval[:-1])
+                self.split_interval = (int(split_interval[:-1]), split_interval[-1])
+                self.split_interval_in_seconds = _get_split_interval_in_seconds(split_interval)
             except ValueError:
                 raise ValueError('FileWriter: split_interval must be an integer '
                                  'followed by \'H\' or \'M\'.')
-
-            # Verify the time_format string is valid for the given split_interval
-            if split_interval[-1] == 'H':
-
-                # automatically update default time_format
-                if time_format == '-' + DATE_FORMAT:
-                    self.time_format = '-' + DATE_FORMAT + 'T%H00'
-
-                # raise error if the custom time_format does not contain
-                # an hour designation
-                elif "%H" not in self.time_format:
-                     raise ValueError('FileWriter: time_format must contain a '
-                                      'hour designation (%H).')
-
-            if split_interval[-1] == 'M':
-
-                # automatically update default time_format
-                if time_format == '-' + DATE_FORMAT:
-                    self.time_format = '-' + DATE_FORMAT + 'T%H%M'
-
-                # raise error if the custom time_format does not contain
-                # an hour designation
-                elif "%H" not in self.time_format or "%M" not in self.time_format:
-                     raise ValueError('FileWriter: time_format must contain a '
-                                      'hour designation (%H) and minute '
-                                      'designation (%M).')
-
-            self.split_interval = (int(split_interval[:-1]), split_interval[-1])
 
         # If we're splitting by time, keep track of current file suffix so
         # we know when to roll over.
@@ -128,6 +102,42 @@ class FileWriter(Writer):
             file_dir = os.path.dirname(filename)
             if file_dir:
                 os.makedirs(file_dir, exist_ok=True)
+
+
+    ############################
+    @static_method
+    def _get_split_interval_in_seconds(split_interval):
+        if split_interval[1] == 'H':
+
+            # automatically update default time_format
+            if time_format == '-' + DATE_FORMAT:
+                self.time_format = '-' + DATE_FORMAT + 'T%H00'
+
+            # raise error if the custom time_format does not contain
+            # an hour designation
+            elif "%H" not in self.time_format:
+                 raise ValueError('FileWriter: time_format must contain a '
+                                  'hour designation (%H).')
+
+            return split_interval[0] * 3600
+
+        if split_interval[1] == 'M':
+
+            # automatically update default time_format
+            if time_format == '-' + DATE_FORMAT:
+                self.time_format = '-' + DATE_FORMAT + 'T%H%M'
+
+            # raise error if the custom time_format does not contain
+            # an hour designation
+            elif "%H" not in self.time_format or "%M" not in self.time_format:
+                 raise ValueError('FileWriter: time_format must contain a '
+                                  'hour designation (%H) and minute '
+                                  'designation (%M).')
+
+            return split_interval[0] * 60
+
+        return 0
+
 
     ############################
     def _get_file_suffix(self):
@@ -146,6 +156,7 @@ class FileWriter(Writer):
         elif self.split_interval[1] == 'H': # hour
             timestamp_raw = datetime.now(time_zone)
             timestamp_proc = timestamp_raw.replace(hour=self.split_interval[0] * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
+            self.next_file_split = timestamp_proc + timedelta(seconds=self.split_interval_in_seconds)
 
             return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
                             time_format=self.time_format)
@@ -154,6 +165,7 @@ class FileWriter(Writer):
         elif self.split_interval[1] == 'M': # minute
             timestamp_raw = datetime.now(self.time_zone)
             timestamp_proc = timestamp_raw.replace(minute=self.split_interval[0] * math.floor(timestamp_raw.minute/self.split_interval[0]), second=0)
+            self.next_file_split = timestamp_proc + timedelta(seconds=self.split_interval_in_seconds)
 
             return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
                             time_format=self.time_format)
@@ -190,7 +202,8 @@ class FileWriter(Writer):
 
         # If we're splitting by some time interval, see if it's time to
         # roll over to a new file.
-        if self.split_by_time or self.split_interval is not None:
+        # if self.split_by_time or self.split_interval is not None:
+        if self.split_by_time or (self.split_interval and time.now() > self.next_file_split):
             new_file_suffix = self._get_file_suffix()
             if new_file_suffix != self.file_suffix:
                 self.file_suffix = new_file_suffix
