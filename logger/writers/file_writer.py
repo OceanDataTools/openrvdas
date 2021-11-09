@@ -4,7 +4,7 @@ import os.path
 import sys
 import math
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -67,7 +67,7 @@ class FileWriter(Writer):
         self.time_zone = time_zone
         self.split_interval = None
         self.split_interval_in_seconds = 0
-        self.next_file_split = 0
+        self.next_file_split = datetime.now(self.time_zone)
 
         if (split_by_time or split_interval) is not None and not filename:
             raise ValueError('FileWriter: filename must be specified if '
@@ -84,7 +84,7 @@ class FileWriter(Writer):
                                  'followed by \'H\' or \'M\'.')
             try:
                 self.split_interval = (int(split_interval[:-1]), split_interval[-1])
-                self.split_interval_in_seconds = _get_split_interval_in_seconds(split_interval)
+                self.split_interval_in_seconds = self._get_split_interval_in_seconds(split_interval)
             except ValueError:
                 raise ValueError('FileWriter: split_interval must be an integer '
                                  'followed by \'H\' or \'M\'.')
@@ -105,7 +105,7 @@ class FileWriter(Writer):
 
 
     ############################
-    @static_method
+    @staticmethod
     def _get_split_interval_in_seconds(split_interval):
         if split_interval[1] == 'H':
 
@@ -154,7 +154,7 @@ class FileWriter(Writer):
 
         # if the data is being split by N hours
         elif self.split_interval[1] == 'H': # hour
-            timestamp_raw = datetime.now(time_zone)
+            timestamp_raw = datetime.now(self.time_zone)
             timestamp_proc = timestamp_raw.replace(hour=self.split_interval[0] * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
             self.next_file_split = timestamp_proc + timedelta(seconds=self.split_interval_in_seconds)
 
@@ -203,7 +203,7 @@ class FileWriter(Writer):
         # If we're splitting by some time interval, see if it's time to
         # roll over to a new file.
         # if self.split_by_time or self.split_interval is not None:
-        if self.split_by_time or (self.split_interval and time.now() > self.next_file_split):
+        if self.split_by_time or (self.split_interval and datetime.now(self.time_zone) > self.next_file_split):
             new_file_suffix = self._get_file_suffix()
             if new_file_suffix != self.file_suffix:
                 self.file_suffix = new_file_suffix
