@@ -76,6 +76,8 @@ import threading
 import time
 import websockets
 
+from websockets.connection import ConnectionClosed
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
 from logger.utils.das_record import DASRecord                 # noqa: E402
@@ -808,7 +810,7 @@ class WebSocketConnection:
                 logging.warning('unparseable JSON: %s', raw_request)
 
             # If our connection closed, complain and exit gracefully
-            except websockets.exceptions.ConnectionClosed:
+            except ConnectionClosed:
                 logging.info('Client closed connection')
                 self.quit()
 
