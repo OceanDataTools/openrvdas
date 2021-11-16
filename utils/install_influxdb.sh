@@ -236,7 +236,7 @@ function install_influxdb {
     # INFLUXDB_PASSWORD - password to use for InfluxDB
 
     INFLUXDB_REPO=dl.influxdata.com/influxdb/releases
-    INFLUXDB_RELEASE=influxdb-2.0.2
+    INFLUXDB_RELEASE=influxdb2-2.0.8
 
     echo "#####################################################################"
     echo Installing InfluxDB...
@@ -259,10 +259,10 @@ function install_influxdb {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}_darwin_amd64 # for MacOS
+        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-darwin-amd64 # for MacOS
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}_linux_amd64 # for Linux
+        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-linux-amd64 # for Linux
     else
         echo "ERROR: No InfluxDB binary found for architecture \"`uname -s`\"."
         exit_gracefully
@@ -294,7 +294,7 @@ function install_influxdb {
     echo Running server in background
     /usr/local/bin/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
-    sleep 15
+    sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
     /usr/local/bin/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
@@ -322,7 +322,7 @@ function install_influxdb {
 function install_grafana {
     echo "#####################################################################"
     echo Installing Grafana...
-    GRAFANA_RELEASE=grafana-7.3.4
+    GRAFANA_RELEASE=grafana-8.1.2
     GRAFANA_REPO=dl.grafana.com/oss/release
 
     # If we're on MacOS
@@ -382,13 +382,13 @@ function install_grafana {
 function install_telegraf {
     echo "#####################################################################"
     echo Installing Telegraf...
-    TELEGRAF_RELEASE=telegraf-1.13.3
+    TELEGRAF_RELEASE=telegraf-1.19.3
     TELEGRAF_REPO=dl.influxdata.com/telegraf/releases
 
     # NOTE: in 1.13.3, the tgz file uncompresses to a directory that
     # doesn't include the release number, so just 'telegraf'
     TELEGRAF_UNCOMPRESSED=$TELEGRAF_RELEASE
-    TELEGRAF_UNCOMPRESSED='telegraf'  #
+    #TELEGRAF_UNCOMPRESSED='telegraf'  #
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
@@ -601,8 +601,8 @@ programs=$INSTALLED_PROGRAMS
 EOF
     sudo cp -f $TMP_SUPERVISOR_FILE $SUPERVISOR_FILE
 
-    echo Done setting up supervisor files. Please restart/reload supervisor
-    echo for changes to take effect!
+    echo Done setting up supervisor files. Reloading...
+    supervisorctl reload
 }
 
 ###########################################################################
@@ -686,8 +686,6 @@ while true; do
     fi
 done
 
-
-
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
@@ -700,6 +698,11 @@ save_default_variables
 [ -z $HTTP_PROXY ] || export https_proxy=$HTTP_PROXY
 
 #########################################################################
+
+# Don't want existing installations to be running while we do this
+echo Stopping supervisor prior to installation.
+supervisorctl stop all
+
 # Let's get to installing things!
 if [ $INSTALL_INFLUXDB == 'yes' ];then
     install_influxdb

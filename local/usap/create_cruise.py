@@ -113,6 +113,22 @@ NET_READER_TEMPLATE = """  ########
     - class: CachedDataWriter
       kwargs:
         data_server: %DATA_SERVER%
+
+  net_reader->on+influx:
+    name: net_reader->on+influx
+    readers:                    # Read from simulated serial port
+    - class: UDPReader
+      kwargs:
+        port: %RAW_UDP_PORT%
+    transforms:                 # Add timestamp and logger label
+    - class: ParseTransform
+      kwargs:
+        metadata_interval: 10
+        definition_path: %PARSE_DEFINITION_PATH%
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: %DATA_SERVER%
     - class: InfluxDBWriter
       kwargs:
         bucket_name: openrvdas
@@ -379,6 +395,7 @@ output += """  net_reader:
     configs:
     - net_reader->off
     - net_reader->on
+    - net_reader->on+influx
 """
 output += """  true_wind:
     configs:
@@ -414,6 +431,16 @@ output += '    net_reader: net_reader->on\n'
 output += '    true_wind: true_wind->on\n'
 output += '    snapshot: snapshot->on\n'
 
+#### no_write+influx
+output += """
+  no_write+influx:
+"""
+for logger in loggers:
+  output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
+output += '    net_reader: net_reader->on+influx\n'
+output += '    true_wind: true_wind->on\n'
+output += '    snapshot: snapshot->on\n'
+
 #### write
 output += """
   write:
@@ -421,6 +448,16 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->net/file\n'.replace('%LOGGER%', logger)
 output += '    net_reader: net_reader->on\n'
+output += '    true_wind: true_wind->on\n'
+output += '    snapshot: snapshot->on\n'
+
+#### write+influx
+output += """
+  write+influx:
+"""
+for logger in loggers:
+  output += '    %LOGGER%: %LOGGER%->net/file\n'.replace('%LOGGER%', logger)
+output += '    net_reader: net_reader->on+influx\n'
 output += '    true_wind: true_wind->on\n'
 output += '    snapshot: snapshot->on\n'
 

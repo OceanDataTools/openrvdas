@@ -18,7 +18,6 @@ $HEHDT,087.1,T*21
 $HEHDT,087.1,T*21
 $HEHDT,087.1,T*21
 
-
 By default, the reader assumes that the log file record format is
 "{timestamp:ti} {record}" but if, for example, the timestamp has a different
 format, or a different separator is used between the timestamp and record,
@@ -50,14 +49,13 @@ If --config is specified
 the script will expect a YAML file keyed by instrument names, where
 each instrument name references a dict including keys 'class' (Serial
 or UDP), 'port' (e.g. 5501 or /tmp/ttyr05) and 'filebase'. It may
-optionally include 'prefix', 'eol', 'timestamp' and 'time_format'
+optionally include 'eol', 'timestamp' and 'time_format'
 keys:
 
 ############# Gyro ###############
   gyro:
     class: UDP
     timestamp: true
-    prefix: gyro
     eol: \r
     port: 56332
     filebase: /data/2019-05-11/raw/GYRO
@@ -89,14 +87,12 @@ import glob
 import logging
 import os.path
 import parse
-import subprocess
+import pty
 import sys
 import threading
-import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
-from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
 
 from logger.utils.read_config import read_config  # noqa: E402
@@ -162,7 +158,7 @@ class SimUDP:
                 if not record:
                     if not loop or self.first_time:
                         break
-                    logging.info('Looping instrument %s', self.prefix)
+                    logging.info('Looping instrument %s', self.filebase)
                     self.reader = LogfileReader(filebase=self.filebase,
                                                 record_format=self.record_format,
                                                 use_timestamps=True)
@@ -188,11 +184,10 @@ class SimUDP:
         except (OSError, KeyboardInterrupt):
             self.quit_flag = True
 
-        logging.info('Finished %s', self.prefix)
+        logging.info('Finished %s', self.filebase)
+
 
 ################################################################################
-
-
 class SimSerial:
     """Create a virtual serial port and feed stored logfile data to it."""
     ############################
@@ -226,6 +221,7 @@ class SimSerial:
         self.filebase = filebase
         self.record_format = record_format or '{timestamp:ti} {record}'
         self.compiled_record_format = parse.compile(self.record_format)
+        self.eol = eol
         self.serial_params = None
 
         # Complain, but go ahead if read_port or write_port exist.
@@ -252,51 +248,6 @@ class SimSerial:
                               'exclusive': exclusive}
         self.quit = False
 
-        # Finally, find path to socat executable
-        self.socat_path = None
-        for socat_path in ['/usr/bin/socat', '/usr/local/bin/socat']:
-            if os.path.exists(socat_path) and os.path.isfile(socat_path):
-                self.socat_path = socat_path
-        if not self.socat_path:
-            raise NameError('Executable "socat" not found on path. Please refer '
-                            'to installation guide to install socat.')
-
-    ############################
-    def _run_socat(self):
-        """Internal: run the actual command."""
-        verbose = '-d'
-        write_port_params = 'pty,link=%s,raw,echo=0' % self.write_port
-        read_port_params = 'pty,link=%s,raw,echo=0' % self.read_port
-
-        cmd = [self.socat_path,
-               verbose,
-               # verbose,   # repeating makes it more verbose
-               read_port_params,
-               write_port_params,
-               ]
-        try:
-            # Run socat process using Popen, checking every second or so whether
-            # it's died (poll() != None) or we've gotten a quit signal.
-            logging.info('Calling: %s', ' '.join(cmd))
-            socat_process = subprocess.Popen(cmd)
-            while not self.quit and not socat_process.poll():
-                try:
-                    socat_process.wait(1)
-                except subprocess.TimeoutExpired:
-                    pass
-
-        except Exception as e:
-            logging.error('ERROR: socat command: %s', e)
-
-        # If here, process has terminated, or we've seen self.quit. We
-        # want both to be true: if we've terminated, set self.quit so that
-        # 'run' loop can exit. If self.quit, terminate process.
-        if self.quit:
-            socat_process.kill()
-        else:
-            self.quit = True
-        logging.info('Finished: %s', ' '.join(cmd))
-
     ############################
     def run(self, loop=False):
         # If self.serial_params is None, it means that either read or
@@ -305,54 +256,65 @@ class SimSerial:
         if not self.serial_params:
             return
 
-        """Create the virtual port with socat and start feeding it records from
-        the designated logfile. If loop==True, loop when reaching end of input."""
-        self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
-        self.socat_thread.start()
-        time.sleep(0.2)
+        try:
+            # Create simulated serial port (something like /dev/ttys2), and link
+            # it to the port they want to connect to (like /tmp/tty_s330).
+            write_fd, read_fd = pty.openpty()     # open the pseudoterminal
+            true_read_port = os.ttyname(read_fd)  # this is the true filename of port
 
-        self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
-                                    record_format=self.record_format, time_format=self.time_format)
-
-        self.writer = TextFileWriter(self.write_port, truncate=True)
-
-        logging.info('Starting %s: %s', self.read_port, self.filebase)
-        while not self.quit:
+            # Get rid of any previous symlink if it exists, and symlink the new pty
             try:
-                record = self.reader.read()  # get the next record
-                logging.debug('SimSerial got: %s', record)
+                os.unlink(self.read_port)
+            except FileNotFoundError:
+                pass
+            os.symlink(true_read_port, self.read_port)
 
-                # End of input? If loop==True, re-open the logfile from the start
-                if record is None:
-                    if not loop:
-                        break
-                    self.reader = LogfileReader(filebase=self.filebase,
-                                                use_timestamps=True,
-                                                record_format=self.record_format,
-                                                time_format=self.time_format)
-
-                # We've now got a record. Try parsing timestamp off it
+            self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
+                                        record_format=self.record_format,
+                                        time_format=self.time_format)
+            logging.info('Starting %s: %s', self.read_port, self.filebase)
+            while not self.quit:
                 try:
-                    parsed_record = self.compiled_record_format.parse(record).named
-                    record = parsed_record['record']
+                    record = self.reader.read()  # get the next record
+                    logging.debug('SimSerial got: %s', record)
 
-                # We had a problem parsing. Discard record and try reading next one.
-                except (KeyError, ValueError, TypeError, AttributeError):
-                    logging.warning('Unable to parse record into "%s"', self.record_format)
-                    logging.warning('Record: %s', record)
-                    continue
+                    # End of input? If loop==True, re-open the logfile from the start
+                    if record is None:
+                        if not loop:
+                            break
 
-                if not record:
-                    continue
+                        self.reader = LogfileReader(filebase=self.filebase,
+                                                    use_timestamps=True,
+                                                    record_format=self.record_format,
+                                                    time_format=self.time_format)
 
-                logging.debug('SimSerial writing: %s', record)
-                self.writer.write(record)   # and write it to the virtual port
-            except (OSError, KeyboardInterrupt):
-                break
+                    # We've now got a record. Try parsing timestamp off it
+                    try:
+                        parsed_record = self.compiled_record_format.parse(record).named
+                        record = parsed_record['record']
 
-        # If we're here, we got None from our input, and are done. Signal
-        # for run_socat to exit
-        self.quit = True
+                    # We had a problem parsing. Discard record and try reading next one.
+                    except (KeyError, ValueError, TypeError, AttributeError):
+                        logging.warning('Unable to parse record into "%s"', self.record_format)
+                        logging.warning('Record: %s', record)
+                        continue
+
+                    if not record:
+                        continue
+
+                    logging.debug('SimSerial writing: %s', record)
+                    os.write(write_fd, (record + self.eol).encode('utf8'))
+
+                except (OSError, KeyboardInterrupt):
+                    break
+
+            # If we're here, we got None from our input, and are done. Signal
+            # for run_socat to exit
+            self.quit = True
+
+        finally:
+            # Get rid of the symlink we've created
+            os.unlink(self.read_port)
 
 
 ################################################################################

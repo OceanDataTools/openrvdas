@@ -38,12 +38,13 @@ create a network listener on port 6224 in yet another window:
 """
 import logging
 import multiprocessing
-import os
 import pprint
 import signal
 import sys
+import time
 
 from importlib import reload
+from logging.handlers import RotatingFileHandler
 from setproctitle import setproctitle
 
 # Add the openrvdas/ directory to module search path
@@ -52,6 +53,18 @@ sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.read_config import read_config  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
 from logger.listener.listen import ListenerFromLoggerConfig  # noqa: E402
+
+# For writing to cached data server
+from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
+from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
+from logger.writers.composed_writer import ComposedWriter  # noqa: E402
+from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
+
+# Rotate stderr logs out so that their sizes remain manageable. Plan to keep all
+# stderr logs, but don't swamp if something goes awry. Note: these values
+# should probably be extracted to a settings.py file somewhere.
+STDERR_MAX_BYTES = 1000000  # 10M
+STDERR_BACKUP_COUNT = 100  # 100 backups should be plenty
 
 
 ################################################################################
@@ -69,7 +82,6 @@ def config_from_filename(filename):
     a cruise definition, and what is after to be the name of a
     configuration inside that definition.
     """
-
     config_name = None
     if filename.find(':') > 0:
         (filename, config_name) = filename.split(':', maxsplit=1)
@@ -100,60 +112,81 @@ def config_is_runnable(config):
 
 
 ################################################################################
-def run_logger(logger, config, stderr_file=None, log_level=logging.INFO):
+def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
+               log_level=logging.INFO):
     """Run a logger, sending its stderr to a cached data server if so indicated
 
     logger -    Name of logger
 
     config -    Config dict
 
-    stderr_file  - If not None, send stderr to this file
+    stderr_filename  - If not None, send stderr to this file.
+
+    stderr_data_server  - If not None, host:port of cached data server to
+                send stderr messages to.
 
     log_level - Level at which logger should be logging (e.g logging.WARNING,
                 logging.INFO, etc.
     """
-    # Make sure we can write the file in question
-    if stderr_file:
-        os.makedirs(os.path.dirname(stderr_file), exist_ok=True)
-
-    # Need to reset logging to its freshly-imported state
+    # Reset logging to its freshly-imported state
     reload(logging)
-    logging.basicConfig(format=DEFAULT_LOGGING_FORMAT,
-                        filename=stderr_file,
-                        level=log_level)
+    stderr_handler = RotatingFileHandler(stderr_filename,
+                                         maxBytes=STDERR_MAX_BYTES,
+                                         backupCount=STDERR_BACKUP_COUNT)
+    logging.basicConfig(
+        handlers=[stderr_handler],
+        level=log_level,
+        format=DEFAULT_LOGGING_FORMAT)
+
+    if stderr_data_server:
+        field_name = 'stderr:logger:' + logger
+        cds_writer = ComposedWriter(
+            transforms=ToDASRecordTransform(data_id='stderr', field_name=field_name),
+            writers=CachedDataWriter(data_server=stderr_data_server))
+        logging.getLogger().addHandler(StdErrLoggingHandler(cds_writer))
 
     # Set the name of the process for ps
     config_name = config.get('name', 'no_name')
     setproctitle('openrvdas/server/logger_runner.py:' + config_name)
-    logging.info('Starting logger %s config %s', logger, config_name)
+    logging.info(f'Starting logger {logger} config {config_name}')
 
-    if config_is_runnable(config):
-        listener = ListenerFromLoggerConfig(config=config)
-        try:
-            listener.run()
-        except KeyboardInterrupt:
-            logging.warning('Received quit for %s', config_name)
+    try:
+        if config_is_runnable(config):
+            listener = ListenerFromLoggerConfig(config=config)
+            try:
+                listener.run()
+            except KeyboardInterrupt:
+                logging.warning(f'Received quit for {config_name}')
+    except Exception as e:
+        logging.fatal(e)
+
+    # Allow a moment for stderr_writers to finish up
+    time.sleep(0.25)
 
 
 ################################################################################
 class LoggerRunner:
     ############################
-    def __init__(self, config, name=None, stderr_file=None,
-                 logger_log_level=logging.WARNING):
+    def __init__(self, config, name=None, stderr_filename=None,
+                 stderr_data_server=None, logger_log_level=logging.WARNING):
         """Create a LoggerRunner.
         ```
         config   - Python dict containing the logger configuration to be run
 
         name     - Optional name to give to logger process.
 
-        stderr_file - Optional filename to direct stderr to
+        stderr_filename - Optional name of file to write stderr to.
+
+        stderr_data_server - Optional host:port of a cached data server to
+                   send encoded stderr messages to.
 
         logger_log_level - At what logging level our logger should operate.
         ```
         """
         self.config = config
         self.name = name or config.get('name', 'Unnamed logger')
-        self.stderr_file = stderr_file
+        self.stderr_filename = stderr_filename
+        self.stderr_data_server = stderr_data_server
         self.logger_log_level = logger_log_level
 
         self.process = None     # this is hold the logger process
@@ -168,8 +201,8 @@ class LoggerRunner:
         try:
             signal.signal(signal.SIGTERM, kill_handler)
         except ValueError:
-            logging.info('LoggerRunner not running in main thread; '
-                         'shutting down with Ctl-C may not work.')
+            logging.debug('LoggerRunner not running in main thread; '
+                          'shutting down with Ctl-C may not work.')
 
     ############################
     def start(self):
@@ -189,7 +222,8 @@ class LoggerRunner:
         run_logger_kwargs = {
             'logger': self.name,
             'config': self.config,
-            'stderr_file': self.stderr_file,
+            'stderr_filename': self.stderr_filename,
+            'stderr_data_server': self.stderr_data_server,
             'log_level': self.logger_log_level
         }
         self.process = multiprocessing.Process(target=run_logger,
@@ -239,10 +273,14 @@ if __name__ == '__main__':
     parser.add_argument('--name', dest='name', action='store', default=None,
                         help='Name to give to logger process.')
 
-    parser.add_argument('--stderr_file', dest='stderr_file', default=None,
+    parser.add_argument('--stderr_filename', dest='stderr_filename', default=None,
                         help='Optional filename to which stderr should be '
                         'written. Will attempt to create path if it does not '
                         'exist.')
+
+    parser.add_argument('--stderr_data_server', dest='stderr_data_server', default=None,
+                        help='Optional host:port of a cached data server to which '
+                        ' stderr messages should be written.')
 
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
@@ -269,7 +307,8 @@ if __name__ == '__main__':
     # Finally, create our runner and run it
     runner = LoggerRunner(config=config,
                           name=args.name,
-                          stderr_file=args.stderr_file,
+                          stderr_filename=args.stderr_filename,
+                          stderr_data_server=args.stderr_data_server,
                           logger_log_level=logger_log_level)
     runner.start()
 

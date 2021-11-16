@@ -157,7 +157,7 @@ class CachedDataReader(Reader):
                         ws_data_server = 'ws://' + self.data_server
                         ssl_context = None
 
-                    logging.warning(f'CachedDataReader connecting to {ws_data_server}')
+                    logging.info(f'CachedDataReader connecting to {ws_data_server}')
                     async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
                         logging.info(f'Connected to data server {ws_data_server}')
                         # Send our subscription request
@@ -175,7 +175,7 @@ class CachedDataReader(Reader):
                 except BrokenPipeError:
                     pass
                 except AttributeError as e:
-                    logging.warning('CachedDataReader websocket loop error: %s', e)
+                    logging.info('CachedDataReader websocket loop error: %s', e)
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning('CachedDataReader lost websocket connection to '
                                     'data server; trying to reconnect.')

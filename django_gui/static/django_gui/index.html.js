@@ -14,7 +14,7 @@
 //      {% endif %}
 //    </script>
 //
-//    <script src="/static/django_gui/index.js"></script>
+//    <script src="/static/django_gui/index.html.js"></script>
 //    <script src="/static/django_gui/websocket.js"></script>
 //
 // Note that this also counts on variables USER_AUTHENTICATED and
@@ -22,7 +22,6 @@
 
 var global_loggers = {};
 var global_active_mode = 'off';
-var global_logger_stderr = {};
 var global_last_cruise_timestamp = 0;
 var global_last_cruise_mode_timestamp = 0;
 var global_last_logger_status_timestamp = 0;
@@ -36,8 +35,11 @@ function initial_send_message() {
             'status:cruise_definition':{'seconds':-1},
             'status:cruise_mode':{'seconds':-1},
             'status:logger_status':{'seconds':-1},
-            'status:file_update':{'seconds':0}
-          }
+            'status:file_update':{'seconds':0},
+
+            // Get logger manager stderr, too.
+            'stderr:logger_manager':{'seconds': 60*60}
+            }
          }
 }
 
@@ -156,9 +158,15 @@ function process_data_message(message) {
 
     //////////////////
     // The file from which our definition came has been updated. Make
-    // the section that offers to reload it visible.
+    // the section that offers to reload it visible. If user is not
+    // authenticated, this element will not exist.
     case 'status:file_update':
-      document.getElementById('reload_span').style.display = 'inline';
+      var reload_span = document.getElementById('reload_span');
+      if (reload_span) { reload_span.style.display = 'inline' }
+      break;
+
+    case 'stderr:logger_manager':
+      process_stderr_message('logger_manager_stderr', value_list);
       break;
 
     ////////////////////////////////////////////////////
@@ -167,7 +175,8 @@ function process_data_message(message) {
       var LOGGER_STDERR_PREFIX = 'stderr:logger:';
       if (field_name.indexOf(LOGGER_STDERR_PREFIX) == 0) {
         var logger_name = field_name.substr(LOGGER_STDERR_PREFIX.length);
-        process_logger_stderr(logger_name, value_list);
+        // Defined in stderr_log_utils.js
+        process_stderr_message(logger_name + '_stderr', value_list);
       }
     }
   }
@@ -212,40 +221,8 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // Now update the cruise modes
   var modes = cruise_definition.modes;
   global_active_mode = cruise_definition.active_mode;
-
-  var mode_selector = document.getElementById('select_mode');
-  mode_selector.setAttribute('onchange', 'highlight_select_mode()');
-
-  // Check whether modes have changed
-  var modes_changed = (mode_selector.length !== modes.length);
-  if (!modes_changed) {
-    for (var m_i = 0; m_i < mode_selector.length; m_i++) {
-      if (mode_selector[m_i].value !== modes[m_i]) {
-        modes_changed = true;
-        break;
-      }
-    }
-  }
-
-  // If modes have changed, delete old and redraw new
-  if (modes_changed) {
-    mode_selector.style.backgroundColor = 'white'
-    // Remove all old mode options
-    while (mode_selector.length) {
-      mode_selector.remove(0);
-    }
-    for (m_i = 0; m_i < modes.length; m_i++) {
-      var mode_name = modes[m_i];
-      var opt = document.createElement('option');
-      opt.setAttribute('id', 'mode_' + mode_name);
-      opt.innerHTML = mode_name;
-
-      if (mode_name == global_active_mode) {
-        opt.setAttribute('selected', true);
-      }
-      mode_selector.appendChild(opt);
-    }
-  }
+  var mode_button = document.getElementById('logger_manager_mode_button');
+  mode_button.innerHTML = global_active_mode;
 
   ////////////////////////////////
   // Now update loggers
@@ -261,12 +238,22 @@ function update_cruise_definition(timestamp, cruise_definition) {
     return {};
   }
 
+  // If stuff has gotten updated, need to update CDS fields to
+  // subscribe to.
+  var new_fields = {};
+
+  // Update logger_manager status, resubscribe to updates asking for greater
+  // of last hour of records or last 100 records.
+  var button = document.getElementById('logger_manager_mode_button');
+  button.innerHTML = global_active_mode;
+  new_fields['stderr:logger_manager'] = {'seconds':60*60, 'back_records':100};
+
   ////////////////////////////////
   // If the list of loggers has changed, we need to rebuild the
   // list. Begin by emptying out table rows except for header row.
   var table = document.getElementById('logger_table_body');
   var row_count = table.rows.length;
-  var keep_first_num_rows = 1;
+  var keep_first_num_rows = 3;
   for (var i = keep_first_num_rows; i < row_count; i++) {
     table.deleteRow(keep_first_num_rows);
   }
@@ -274,34 +261,23 @@ function update_cruise_definition(timestamp, cruise_definition) {
   // Stash our new logger list in the globals, then update the
   // loggers, creating one new row for each.
   global_loggers = loggers;
-  global_logger_stderr = {};
-  var new_fields = {};
   for (var logger_name in loggers) {
     //console.log('setting up logger ' + logger_name);
     var logger = loggers[logger_name];
-    global_logger_stderr[logger_name] = [];
 
     // table row creation
     var tr = document.createElement('tr');
     tr.setAttribute('id', logger_name + '_row');
 
-    var name_td = document.createElement('td');
-    name_td.setAttribute('id', logger_name + '_td');
-    tr.appendChild(name_td);
-    name_td.innerHTML = logger_name;
-
     var config_td = document.createElement('td');
     config_td.setAttribute('id', logger_name + '_config_td');
+    config_td.setAttribute('style', 'height:30px;width:75px;');
 
     var button = document.createElement('button');
     button.setAttribute('id', logger_name + '_config_button');
     button.setAttribute('type', 'submit');
     button.innerHTML = logger.active;
 
-    // Disable if user is not authenticated
-    //if (! USER_AUTHENTICATED) {
-    //  button.setAttribute('disabled', true);
-    //}
     button.setAttribute('onclick',
                         'open_edit_config(event, \'' + logger_name + '\')');
     config_td.appendChild(button);
@@ -311,15 +287,16 @@ function update_cruise_definition(timestamp, cruise_definition) {
     var stderr_div = document.createElement('div');
 
     stderr_div.setAttribute('id', logger_name + '_stderr');
-    stderr_div.setAttribute('style', 'height:30px;background-color:white;min-width:0px;padding:0px;overflow-y:auto;');
-    stderr_div.style.fontSize = 'small';
+    stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;');
+    stderr_div.style.fontSize = 'x-small';
     stderr_td.appendChild(stderr_div);
     tr.appendChild(stderr_td);
     table.appendChild(tr);
 
     // Also, since we now have a new logger, we'll want to subscribe
-    // to stderr updates for it.
-    new_fields['stderr:logger:' + logger_name] = {'seconds':6*60*60};
+    // to stderr updates for it. Seed each logger window with at greater of
+    // one hour of past log messages or most recent 100 messages.
+    new_fields['stderr:logger:' + logger_name] = {'seconds':6*60*60, 'back_records': 100};
   }
   console.log('Loaded new cruise.');
   //console.log('New fields are: ' + JSON.stringify(new_fields));
@@ -329,26 +306,10 @@ function update_cruise_definition(timestamp, cruise_definition) {
 ////////////////////////////
 // Process a cruise_mode update
 function update_cruise_mode(timestamp, cruise_mode) {
-
-  ////////////////////////////////
-  // If active mode hasn't changed, nothing to do.
   var new_mode = cruise_mode.active_mode;
-  if (new_mode == global_active_mode) {
-    return;
-  }
-
-  // If it has, update on page
   global_active_mode = new_mode;
-
-  var selector = document.getElementById('select_mode');
-  for (var m_i = 0; m_i < selector.length; m_i++) {
-    var mode_name = selector.options[m_i].value;
-    if (mode_name == new_mode) {
-      selector.selectedIndex = m_i;
-      return;
-    }
-  }
-  console.log('Got unrecognized cruise mode: "' + new_mode + '"');
+  var mode_button = document.getElementById('logger_manager_mode_button');
+  mode_button.innerHTML = new_mode;
 }
 
 ////////////////////////////////////////////////////
@@ -368,6 +329,9 @@ function update_cruise_mode(timestamp, cruise_mode) {
 function update_logger_status(timestamp, logger_status) {
   reset_status_timeout(); // We've gotten a status update
 
+  if (!logger_status || Object.keys(logger_status).length === 0) {
+      return;
+  }
   // Display logger section, if it's not already showing
   // TODO: optimize this so we don't do it every time.
   document.getElementById('empty_loggers').style.display = 'none';
@@ -411,81 +375,12 @@ function looks_like_log_line(line) {
   return (typeof line == 'string' && Date.parse(line.split('T')[0]) > 0);
 }
 
-////////////////////////////
-// Add a message to logger's global stderr display. Make sure messages
-// are unique - they're timestamped, so we'll only omit messages that
-// are true duplicates. Return true if we actually add anything.
-function add_to_stderr(logger_name, message) {
-  message = message.replace(/\n/, '<br>');
-  if (global_logger_stderr[logger_name].indexOf(message) == -1) {
-    global_logger_stderr[logger_name].push(message);
-    return true;
-  } else {
-    //console.log('Skipping duplicate message: ' + message);
-    return false;
-  }
-}
-
-////////////////////////////
-// Add a list of (timestamp, message) pairs to the stderr display for
-// logger_name. Make sure messages are in order and unique. Return true
-// if we actually add anything.
-function process_logger_stderr(logger_name, value_list) {
-  // Fetch the div where we're going to put these messages.
-  var stderr_div = document.getElementById(logger_name + '_stderr');
-  if (stderr_div == undefined) {
-    console.log('Found no stderr div for logger ' + logger_name);
-    return;
-  }
-
-  // Process each of the messages in the list.
-  var anything_added = false;
-  for (var list_i = 0; list_i < value_list.length; list_i++) {
-    var [timestamp, message] = value_list[value_list.length-1];
-    if (message.length == 0) {
-      continue;
-    }
-    try {
-      // If we have a structured JSON message
-      message = JSON.parse(message);
-      var prefix = '';
-      if (message['asctime'] !== undefined) {
-        prefix += message['asctime'] + ' ';
-      }
-      if (message['levelname'] !== undefined) {
-        prefix += message['levelname'] + ' ';
-      }
-      if (message['filename'] !== undefined) {
-        prefix += message['filename'] + ':' + message['lineno'] + ' ';
-      }
-      var msg = message['message'].replace('\n','<br>');
-      anything_added = anything_added || add_to_stderr(logger_name, prefix + msg);
-    } catch (e) {
-      // If not JSON, but a string that looks like a log line go ahead
-      // and try adding.
-      if (looks_like_log_line(message)) {
-        anything_added = anything_added || add_to_stderr(logger_name, message);
-      } else {
-        console.log('Skipping unparseable log line: ' +  message);
-      }
-    }
-  }
-  // Once all messages have been added, put in place in proper divs
-  if (anything_added) {
-    stderr_div.innerHTML = global_logger_stderr[logger_name].join('<br>\n');
-    stderr_div.scrollTop = stderr_div.scrollHeight;  // scroll to bottom
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 var NOW_TIMEOUT_INTERVAL = 1000;     // Update console clock every second
 var SERVER_TIMEOUT_INTERVAL = 5000;  // 5 seconds before warn about server
 var STATUS_TIMEOUT_INTERVAL = 10000; // 10 seconds before warn about status
 
-// Question on timer warnings: should we reserve space for the
-// warnings (e.g. use the commented-out "visibility=hidden" style), or
-// have them open up space when errors occur? For now, for
-// compactness, going with the latter route.
+///////////////////////////////
 function date_str() {
   return Date().substring(0,24);
 }
@@ -553,18 +448,7 @@ var server_timeout_timer = setInterval(flag_server_timeout,
 
 ///////////////////////////////
 // Turn select pull-down's text background yellow when it's been changed
-
 var manually_selected_mode = null;
-
-function highlight_select_mode() {
-  var mode_selector = document.getElementById('select_mode');
-  manually_selected_mode = mode_selector.options[mode_selector.selectedIndex].text;
-  var new_color = 'white';
-  if (manually_selected_mode != global_active_mode) {
-    var new_color = 'yellow';
-  }
-  document.getElementById('select_mode').style.backgroundColor = new_color;
-}
 
 ///////////////////////////////
 function message_window() {
@@ -575,13 +459,30 @@ function message_window() {
 
 ///////////////////////////////
 // When user clicks a logger config button.
+function open_change_mode(click_event) {
+  if (!click_event) click_event = window.event;
+  var window_args = [
+    'titlebar=no',
+    'location=no',
+    'height=320',
+    'width=800',
+    'top=' + click_event.clientY,
+    'left=' + (click_event.clientX + 520),
+    'scrollbars=yes',
+    'status=no'
+  ];
+  window.open('../change_mode/', '_blank', window_args.join());
+}
+
+///////////////////////////////
+// When user clicks a logger config button.
 function open_edit_config(click_event, logger_name) {
   if (!click_event) click_event = window.event;
   var window_args = [
     'titlebar=no',
     'location=no',
-    'height=300',
-    'width=520',
+    'height=320',
+    'width=720',
     'top=' + click_event.clientY,
     'left=' + (click_event.clientX + 520),
     'scrollbars=yes',

@@ -3,17 +3,16 @@
 """
 import datetime
 import getpass  # to get username
-import json
 import logging
 import multiprocessing
 import os
-import parse
 import signal
 import socket  # to get hostname
 import sys
 import threading
 import time
 
+from importlib import reload
 from os.path import dirname, realpath
 
 # Add the openrvdas components onto sys.path
@@ -22,17 +21,18 @@ sys.path.append(dirname(dirname(realpath(__file__))))
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer  # noqa: E402
 
-# For sending stderr to CachedDataServer
 from server.logger_supervisor import LoggerSupervisor  # noqa: E402
-from logger.writers.composed_writer import ComposedWriter  # noqa: E402
+from server.server_api import ServerAPI  # noqa: E402
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
-from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
-from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
-from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.utils.read_config import read_config  # noqa: E402
-from server.server_api import ServerAPI  # noqa: E402
+
+# For sending stderr to CachedDataServer
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
+from logger.writers.composed_writer import ComposedWriter  # noqa: E402
+
 
 DEFAULT_MAX_TRIES = 3
 
@@ -59,7 +59,7 @@ class LoggerManager:
     def __init__(self,
                  api, supervisor, data_server_websocket=None,
                  stderr_file_pattern='/var/log/openrvdas/{logger}.stderr',
-                 interval=0.25, logger_log_level=logging.WARNING):
+                 interval=0.25, log_level=logging.info, logger_log_level=logging.WARNING):
         """Read desired/current logger configs from Django DB and try to run the
         loggers specified in those configs.
         ```
@@ -69,17 +69,19 @@ class LoggerManager:
         supervisor - a LoggerSupervisor object to use to manage logger
               processes.
 
-        data_server_websocket - websocket address to which we are going to send
-              our status updates.
+        data_server_websocket - cached data server host:port to which we are
+              going to send our status updates.
 
         stderr_file_pattern - Pattern into which logger name will be
-                   interpolated to create the file path/name to which the
-                   logger's stderr will be written. E.g.
-                   '/var/log/openrvdas/{logger}.stderr' If
-                   data_server_websocket is defined, will write logger
-                   stderr to it.
+              interpolated to create the file path/name to which the
+              logger's stderr will be written. E.g.
+              '/var/log/openrvdas/{logger}.stderr' If
+              data_server_websocket is defined, will write logger
+              stderr to it.
 
         interval - number of seconds to sleep between checking/updating loggers
+
+        log_level - LoggerManager's log level
 
         logger_log_level - At what logging level our component loggers
               should operate.
@@ -110,6 +112,19 @@ class LoggerManager:
         self.interval = interval
         self.logger_log_level = logger_log_level
 
+        # Try to set up logging, right off the bat: reset logging to its
+        # freshly-imported state and add handler that also sends logged
+        # messages to the cached data server.
+        reload(logging)
+        logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, level=log_level)
+
+        if self.data_server_writer:
+            cds_writer = ComposedWriter(
+                transforms=ToDASRecordTransform(data_id='stderr',
+                                                field_name='stderr:logger_manager'),
+                writers=self.data_server_writer)
+            logging.getLogger().addHandler(StdErrLoggingHandler(cds_writer))
+
         # How our various loops and threads will know it's time to quit
         self.quit_flag = False
 
@@ -123,10 +138,6 @@ class LoggerManager:
 
         self.logger_status = None
         self.status_time = 0
-
-        # We loop to check the logger stderr and pass it off to the cached
-        # data server. Do this in a separate thread.
-        self.check_logger_stderr_thread = None
 
         # We loop to check the logger status and pass it off to the cached
         # data server. Do this in a separate thread.
@@ -154,14 +165,6 @@ class LoggerManager:
         if the main thread does.
         """
         logging.info('Starting LoggerManager')
-
-        # Start thread to check stderr of all loggers and send to cached
-        # data server, if we've got the address of one.
-        self.check_logger_stderr_thread = threading.Thread(
-            name='check_logger_stderr_loop',
-            target=self._check_logger_stderr_loop, daemon=True)
-        # Temporarily disabled, as per issue #283
-        #self.check_logger_stderr_thread.start()
 
         # Check logger status in a separate thread. If we've got the
         # address of a data server websocket, send our updates to it.
@@ -227,90 +230,6 @@ class LoggerManager:
                     'status:cruise_definition', cruise_dict)
         except (AttributeError, ValueError, TypeError) as e:
             logging.info('Failed to update cruise definition: %s', e)
-
-    ############################
-
-    def _check_logger_stderr_loop(self):
-        """Read the stderr file for each logger we have and, if we've got the
-        address of a cached data server, send the annotated messages to
-        it.
-
-        When a logger goes away, we leave the thread active - overhead is
-        pretty low, and the alternative is doing non-blocking reads or
-        trying to signal blocked threads to terminate.
-        """
-
-        # Map from logger: thread running a listener on its stderr file
-        stderr_file_thread = {}    # logger: thread running listener
-
-        while not self.quit_flag:
-            # Check if there are any loggers for which we don't have threads
-            for logger in self.loggers:
-                if logger not in stderr_file_thread:
-                    stderr_file_name = self.stderr_file_pattern.format(logger=logger)
-                    logging.info('Creating stderr thread for logger %s', logger)
-                    # Does stderr file exist? If so, start a thread reading it
-                    if os.path.isfile(stderr_file_name):
-                        logging.info('Listening to new stderr file "%s"', stderr_file_name)
-                        stderr_file_thread[logger] = threading.Thread(
-                            name=logger + '_stderr_reader',
-                            target=self._stderr_file_to_cds,
-                            kwargs={'logger': logger, 'stderr_file_name': stderr_file_name},
-                            daemon=True)
-                        stderr_file_thread[logger].start()
-
-            # Sleep before checking again whether there are any new loggers
-            # with stderr files.
-            time.sleep(self.interval * 2)
-
-    ##############################################################################
-    def _stderr_file_to_cds(self, logger, stderr_file_name):
-        """Iteratively read from a file (presumed to be a logger's stderr file
-        and send the lines to a cached data server labeled as coming from
-        stderr:logger:<logger>.
-
-        Format of error messages is as a JSON-encoded dict of asctime, levelno,
-        levelname, filename, lineno and message.
-
-        To be run in a separate thread from _check_logger_stderr_loop
-        """
-
-        if not self.data_server_writer:
-            logging.error('INTERNAL ERROR: called _stderr_file_to_cds(), but no '
-                          'cached data server defined?!?')
-            return
-
-        field_name = 'stderr:logger:' + logger
-        message_format = ('{ascdate:S} {asctime:S} {levelno:d} {levelname:w} '
-                          '{filename:w}.py:{lineno:d} {message}')
-
-        # Our caller checked that this file exists, so open with impunity.
-        # Then try going back to just the last five messages in the file.
-        reader = TextFileReader(file_spec=stderr_file_name, tail=True)
-        try:
-            reader.seek(offset=5, origin='end')
-        except ValueError:
-            pass  # Couldn't go back that many lines, stay where we are
-
-        while not self.quit_flag:
-            record = reader.read()  # This will block at current end of file
-            if not record:
-                continue
-            try:
-                parsed_fields = parse.parse(message_format, record)
-                fields = {'asctime': (parsed_fields['ascdate'] + 'T' +
-                                      parsed_fields['asctime']),
-                          'levelno': parsed_fields['levelno'],
-                          'levelname': parsed_fields['levelname'],
-                          'filename': parsed_fields['filename'] + '.py',
-                          'lineno': parsed_fields['lineno'],
-                          'message': parsed_fields['message']
-                          }
-                das_record = DASRecord(fields={field_name: json.dumps(fields)})
-                self.data_server_writer.write(das_record)
-            except (KeyError, TypeError):
-                logging.warning('Couldn\'t parse stderr message from logger %s: "%s"',
-                                logger, record)
 
     ############################
     def _check_logger_status_loop(self):
@@ -595,6 +514,7 @@ if __name__ == '__main__':  # noqa: C901
     supervisor = LoggerSupervisor(
         configs=None,
         stderr_file_pattern=args.stderr_file_pattern,
+        stderr_data_server=args.data_server_websocket,
         max_tries=args.max_tries,
         interval=args.interval,
         logger_log_level=logger_log_level)
@@ -606,6 +526,7 @@ if __name__ == '__main__':  # noqa: C901
         data_server_websocket=args.data_server_websocket,
         stderr_file_pattern=args.stderr_file_pattern,
         interval=args.interval,
+        log_level=log_level,
         logger_log_level=logger_log_level)
 
     # When told to quit, shut down gracefully
