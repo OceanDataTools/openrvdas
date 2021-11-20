@@ -15,6 +15,7 @@ parse
 psutil
 setproctitle
 influxdb_client
+pyModbusTCP
 
 # Version-restricted packages
 Django==3.1.13
