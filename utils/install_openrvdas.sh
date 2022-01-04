@@ -565,7 +565,7 @@ GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
 
 create database if not exists test character set utf8;
 GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
+GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost';
 
 flush privileges;
 \q
