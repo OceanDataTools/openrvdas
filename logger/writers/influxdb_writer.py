@@ -177,7 +177,7 @@ class InfluxDBWriter(Writer):
                             'list or DASRecord format. Type %s: %s',
                             type(record), str(record))
         try:
-            if type(record) in [list, DASRecord]:
+            if isinstance(record, list):
                 influxDB_record = [record_to_influx(r) for r in record]
             else:
                 influxDB_record = record_to_influx(record)
