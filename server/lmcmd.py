@@ -10,9 +10,8 @@ available commands, and use arrow keys to navigate command history.
 
 Args:
     --database
-        If specified, either 'django' or 'hapi'; which database
-        to connect to for OpenRVDAS state. If not specified, defaults to
-        'django'.
+        If specified, 'django'; which database to connect to for OpenRVDAS
+        state. If not specified, defaults to 'django'.
     -v
         If specified, increase verbosity of diagnostics from 'warning'
         to 'info'. If repeated, increase to 'debug'.
@@ -25,16 +24,9 @@ Usage:
     server/lmcmd.py help
         Print available interface commands and exit.
 
-    server/lmcmd.py --database hapi
-        As above, but use HAPI database
-
     server/lcmd.py get_active_mode
         Connect to default (django) database and run the 'get_active_mode'
         command.
-
-    server/lcmd.py --database hapi set_active_mode underway
-        Connect to HAPI database, execute command 'set_active_mode underway',
-        then exit.
 """
 import argparse
 import atexit
@@ -54,7 +46,7 @@ from server.server_api_command_line import ServerAPICommandLine  # noqa: E402
 if __name__ == '__main__':  # noqa: C901
     parser = argparse.ArgumentParser()
     parser.add_argument('--database', dest='database', action='store',
-                        choices=['django', 'hapi'],
+                        choices=['django'],
                         default='django', help='Which backing store database '
                         'to connect to')
 
@@ -78,9 +70,6 @@ if __name__ == '__main__':  # noqa: C901
     if args.database == 'django':
         from django_gui.django_server_api import DjangoServerAPI
         api = DjangoServerAPI()
-    elif args.database == 'hapi':
-        from hapi.hapi_server_api import HapiServerAPI
-        api = HapiServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
 

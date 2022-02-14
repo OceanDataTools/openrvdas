@@ -504,7 +504,7 @@ if __name__ == &#39;__main__&#39;:  # noqa: C901
                         help=&#39;Optional name of mode to start system in.&#39;)
 
     parser.add_argument(&#39;--database&#39;, dest=&#39;database&#39;, action=&#39;store&#39;,
-                        choices=[&#39;memory&#39;, &#39;django&#39;, &#39;hapi&#39;],
+                        choices=[&#39;memory&#39;, &#39;django&#39;],
                         default=&#39;memory&#39;, help=&#39;What backing store database &#39;
                         &#39;to use.&#39;)
 
@@ -601,9 +601,6 @@ if __name__ == &#39;__main__&#39;:  # noqa: C901
     elif args.database == &#39;memory&#39;:
         from server.in_memory_server_api import InMemoryServerAPI
         api = InMemoryServerAPI()
-    elif args.database == &#39;hapi&#39;:
-        from hapi.hapi_server_api import HapiServerAPI
-        api = HapiServerAPI()
     else:
         raise ValueError(&#39;Illegal arg for --database: &#34;%s&#34;&#39; % args.database)
 

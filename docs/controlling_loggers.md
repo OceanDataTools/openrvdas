@@ -93,7 +93,7 @@ Perusing a complete cruise configuration file such as [test/NBP1406/NBP1406_crui
 
 ## What the logger manager does
 
-* It spawns a command line console interface to a database/backing store where it will store/retrieve information on which logger configurations should be running and which are. By default, this database will be an in-memory, transient store, unless overridden with the ``--database`` flag to select ``django`` or ``hapi``). When run as a service, the console may be disabled by using the ``--no-console`` flag:
+* It spawns a command line console interface to a database/backing store where it will store/retrieve information on which logger configurations should be running and which are. By default, this database will be an in-memory, transient store, unless overridden with the ``--database`` flag to select ``django``). When run as a service, the console may be disabled by using the ``--no-console`` flag:
 
   ```
   server/logger_manager.py --database django --no-console
