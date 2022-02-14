@@ -20,7 +20,6 @@ django_gui/settings.py-e
 database/settings.py
 database/settings.py-e
 logger/settings.py
-hapi/settings.py
 display/js/widgets/settings.js
 
 # Files created by utils/install_openrvdas.sh
