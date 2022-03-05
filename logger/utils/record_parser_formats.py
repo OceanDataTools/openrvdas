@@ -121,7 +121,7 @@ def nmea_lat_lon(text):
         return None
 
 
-nmea_lat_lon.pattern = r'(\s*(\d+(\.\d*)?|\.\d+)?|)'
+nmea_lat_lon.pattern = r'(\s*[-]?(\d+(\.\d*)?|\.\d+)?|)'
 
 
 def nmea_lat_lon_dir(text):
