@@ -49,7 +49,7 @@ def optional_d(text):
         return None
 
 
-optional_d.pattern = r'\s*\d*'
+optional_d.pattern = r'\s*[-+]?\d*'
 
 
 def optional_f(text):
