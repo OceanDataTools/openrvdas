@@ -143,7 +143,7 @@ def nmea_lat_lon_dir(text):
             logging.warning('Improper NMEA-style latitude/longitude: "%s"', text)
             return None
         decimal_degrees = degrees + fractional_degrees
-        if dir in ['E', 'S']:
+        if dir in ['W', 'S']:
             decimal_degrees = -decimal_degrees
         return decimal_degrees
     else:
