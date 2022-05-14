@@ -109,7 +109,10 @@ class FormatTransform(Transform):
             fields[field] = value
 
         # Add the timestamp as a field as well.
-        fields['timestamp'] = record.get('timestamp', 0)
+        if type(record) is DASRecord:
+          fields['timestamp'] = record.timestamp
+        else:
+          fields['timestamp'] = record.get('timestamp', 0)
 
         try:
             result = self.format_str.format(**fields)
