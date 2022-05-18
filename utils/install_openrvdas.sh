@@ -102,9 +102,24 @@ function get_os_type {
             elif [[ ! -z `grep "VERSION_ID=\"20" /etc/os-release` ]];then
                 OS_VERSION=20
             else
-                echo "Sorry - unknown OS Version! - exiting."
+                echo "Sorry - unknown Ubuntu OS Version! - exiting."
                 exit_gracefully
             fi
+
+        # With Debian (Raspbian) we're mapping to Ubuntu. Not clear that
+        # version 10 -> 18 is the right map, but 11 (bullseye)-> 20 seems to work
+        elif [[ ! -z `grep "NAME=\"Debian" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Raspbian" /etc/os-release` ]];then
+            OS_TYPE=Ubuntu
+            if [[ ! -z `grep "VERSION_ID=\"10" /etc/os-release` ]];then
+                OS_VERSION=18
+            elif [[ ! -z `grep "VERSION_ID=\"11" /etc/os-release` ]];then
+                OS_VERSION=20
+            else
+                echo "Sorry - unknown Debian OS Version! - exiting."
+                exit_gracefully
+            fi
+
+        # CentOS/RHEL
         elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
@@ -112,11 +127,11 @@ function get_os_type {
             elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
                 OS_VERSION=8
             else
-                echo "Sorry - unknown OS Version! - exiting."
+                echo "Sorry - unknown CentOS/RHEL Version! - exiting."
                 exit_gracefully
             fi
         else
-            echo "Unknown Linux variant!"
+            echo "Sorry - unknown Linux variant!"
             exit_gracefully
         fi
     else
@@ -565,7 +580,7 @@ GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
 
 create database if not exists test character set utf8;
 GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost' identified by 'test';
+GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost';
 
 flush privileges;
 \q

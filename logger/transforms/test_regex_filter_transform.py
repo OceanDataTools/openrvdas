@@ -19,7 +19,7 @@ class TestRegexFilterTransform(unittest.TestCase):
 
         transform = RegexFilterTransform(pattern='^foo', negate=True)
         self.assertEqual(transform.transform('not foo'), 'not foo')
-        self.assertIsNone(transform.transform('foo bar'), 'foo bar')
+        self.assertIsNone(transform.transform('foo bar'))
 
         transform = RegexFilterTransform(pattern='^\dfoo')  # noqa: W605
         self.assertIsNone(transform.transform(None))
@@ -28,11 +28,7 @@ class TestRegexFilterTransform(unittest.TestCase):
 
         transform = RegexFilterTransform(pattern='^\dfoo', negate=True)  # noqa: W605
         self.assertEqual(transform.transform('not foo'), 'not foo')
-        self.assertIsNone(transform.transform('6foo bar'), 'foo bar')
-
-        # transform = RegexFilterTransform('RegexFilter', sep='\t')
-        # self.assertEqual(transform.transform('foo'), 'prefix\tfoo')
-
+        self.assertIsNone(transform.transform('6foo bar'))
 
 if __name__ == '__main__':
     import argparse

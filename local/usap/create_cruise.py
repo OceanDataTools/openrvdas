@@ -188,6 +188,84 @@ TRUE_WIND_TEMPLATE = """  ########
         - class: CachedDataWriter
           kwargs:
             data_server: %DATA_SERVER%
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: StbdApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            wind_dir_field: MwxStbdRelWindDir
+            wind_speed_field: MwxStbdRelWindSpeed
+            true_dir_name: StbdTrueWindDir
+            true_speed_name: StbdTrueWindSpeed
+            update_on_fields:
+            - MwxStbdRelWindDir
+            max_field_age:
+              S330CourseTrue: 15
+              S330HeadingTrue: 15
+              S330SpeedKt: 15
+              MwxStbdRelWindDir: 15
+              MwxStbdRelWindSpeed: 15
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
+
+  true_wind->on+influx:
+    name: true_wind->on+influx
+    readers:
+    - class: CachedDataReader
+      kwargs:
+        data_server: %DATA_SERVER%
+        subscription:
+          fields:
+            S330CourseTrue:
+              seconds: 0
+            S330HeadingTrue:
+              seconds: 0
+            S330SpeedKt:
+              seconds: 0
+            MwxPortRelWindDir:
+              seconds: 0
+            MwxPortRelWindSpeed:
+              seconds: 0
+            MwxStbdRelWindDir:
+              seconds: 0
+            MwxStbdRelWindSpeed:
+              seconds: 0
+    writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            apparent_dir_name: PortApparentWindDir
+            convert_speed_factor: 0.5144
+            course_field: S330CourseTrue
+            heading_field: S330HeadingTrue
+            speed_field: S330SpeedKt
+            wind_dir_field: MwxPortRelWindDir
+            wind_speed_field: MwxPortRelWindSpeed
+            true_dir_name: PortTrueWindDir
+            true_speed_name: PortTrueWindSpeed
+            update_on_fields:
+            - MwxPortRelWindDir
+            max_field_age:
+              S330CourseTrue: 15
+              S330HeadingTrue: 15
+              S330SpeedKt: 15
+              MwxPortRelWindDir: 15
+              MwxPortRelWindSpeed: 15
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: %DATA_SERVER%
         - class: InfluxDBWriter
           kwargs:
             bucket_name: openrvdas
@@ -232,6 +310,97 @@ SNAPSHOT_TEMPLATE = """  ########
 
   snapshot->on:
     name: snapshot->on
+    readers:
+    - class: CachedDataReader
+      kwargs:
+        data_server: %DATA_SERVER%
+        subscription:
+          fields:
+            MwxAirTemp:
+              seconds: 0
+            RTMPTemp:
+              seconds: 0
+            PortTrueWindDir:
+              seconds: 0
+            PortTrueWindSpeed:
+              seconds: 0
+            StbdTrueWindDir:
+              seconds: 0
+            StbdTrueWindSpeed:
+              seconds: 0
+            MwxBarometer:
+              seconds: 0
+            KnudDepthHF:
+              seconds: 0
+            KnudDepthLF:
+              seconds: 0
+            Grv1Value:
+              seconds: 0
+    transforms:
+    - class: InterpolationTransform
+      module: logger.transforms.interpolation_transform
+      kwargs:
+        interval: 30
+        window: 30
+        metadata_interval: 60  # send metadata every 60 seconds
+        field_spec:
+          AvgMwxAirTemp:
+            source: MwxAirTemp
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgRTMPTemp:
+            source: RTMPTemp
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgPortTrueWindDir:
+            source: PortTrueWindDir
+            algorithm:
+              type: polar_average
+              window: 30
+          AvgPortTrueWindSpeed:
+            source: PortTrueWindSpeed
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgStbdTrueWindDir:
+            source: StbdTrueWindDir
+            algorithm:
+              type: polar_average
+              window: 30
+          AvgStbdTrueWindSpeed:
+            source: StbdTrueWindSpeed
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgMwxBarometer:
+            source: MwxBarometer
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgKnudDepthHF:
+            source: KnudDepthHF
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgKnudDepthLF:
+            source: KnudDepthLF
+            algorithm:
+              type: boxcar_average
+              window: 30
+          AvgGrv1Value:
+            source: Grv1Value
+            algorithm:
+              type: boxcar_average
+              window: 30
+    writers:
+    - class: CachedDataWriter
+      kwargs:
+        data_server: %DATA_SERVER%
+
+  snapshot->on+influx:
+    name: snapshot->on+influx
     readers:
     - class: CachedDataReader
       kwargs:
@@ -401,11 +570,13 @@ output += """  true_wind:
     configs:
     - true_wind->off
     - true_wind->on
+    - true_wind->on+influx
 """
 output += """  snapshot:
     configs:
     - snapshot->off
     - snapshot->on
+    - snapshot->on+influx
 """
 
 ################################################################################
@@ -438,8 +609,8 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->net\n'.replace('%LOGGER%', logger)
 output += '    net_reader: net_reader->on+influx\n'
-output += '    true_wind: true_wind->on\n'
-output += '    snapshot: snapshot->on\n'
+output += '    true_wind: true_wind->on+influx\n'
+output += '    snapshot: snapshot->on+influx\n'
 
 #### write
 output += """
@@ -458,8 +629,8 @@ output += """
 for logger in loggers:
   output += '    %LOGGER%: %LOGGER%->net/file\n'.replace('%LOGGER%', logger)
 output += '    net_reader: net_reader->on+influx\n'
-output += '    true_wind: true_wind->on\n'
-output += '    snapshot: snapshot->on\n'
+output += '    true_wind: true_wind->on+influx\n'
+output += '    snapshot: snapshot->on+influx\n'
 
 output += """
 ########################################

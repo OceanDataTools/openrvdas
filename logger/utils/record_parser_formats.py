@@ -49,7 +49,7 @@ def optional_d(text):
         return None
 
 
-optional_d.pattern = r'\s*\d*'
+optional_d.pattern = r'\s*[-+]?\d*'
 
 
 def optional_f(text):
@@ -121,7 +121,7 @@ def nmea_lat_lon(text):
         return None
 
 
-nmea_lat_lon.pattern = r'(\s*(\d+(\.\d*)?|\.\d+)?|)'
+nmea_lat_lon.pattern = r'(\s*[-]?(\d+(\.\d*)?|\.\d+)?|)'
 
 
 def nmea_lat_lon_dir(text):
@@ -143,7 +143,7 @@ def nmea_lat_lon_dir(text):
             logging.warning('Improper NMEA-style latitude/longitude: "%s"', text)
             return None
         decimal_degrees = degrees + fractional_degrees
-        if dir in ['E', 'S']:
+        if dir in ['W', 'S']:
             decimal_degrees = -decimal_degrees
         return decimal_degrees
     else:
