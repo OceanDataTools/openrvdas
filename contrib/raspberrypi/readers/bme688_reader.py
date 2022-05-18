@@ -107,11 +107,18 @@ class BME688Reader():
                 logging.debug(f'BME688Reader sleeping {time_to_sleep} seconds')
                 time.sleep(time_to_sleep)
 
-        temp = self.bme680.temperature
-        humidity = self.bme680.relative_humidity
-        pressure = self.bme680.pressure
-        gas = self.bme680.gas
-
+        # Occasionally the board throws an undetermined read error; catch it
+        # and try again. Continue once we've read all four values.
+        while True:
+            try:
+                temp = self.bme680.temperature
+                humidity = self.bme680.relative_humidity
+                pressure = self.bme680.pressure
+                gas = self.bme680.gas
+                break
+            except OSError as e:
+                logging.warning(f'BME688 read error: {str(e)}')
+                time.sleep(0.01)
         self.last_record = time.time()
 
         # Do whatever conversions have been requested
