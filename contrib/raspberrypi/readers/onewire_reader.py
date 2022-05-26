@@ -48,7 +48,7 @@ where onewire.yaml is:
 import logging
 import time
 
-from pi1wire import Pi1Wire
+from pi1wire import Pi1Wire, UnsupportResponseException
 
 
 ################################################################################
@@ -93,8 +93,21 @@ class OneWireReader():
 
         # if mac_addresses is specified, map from mac_address to self.sensor[i]
         if mac_addresses:
-            self.mac_map = {s.mac_address: self.mac_addresses.index(s.mac_address)
+            self.mac_map = {s.mac_address: self.sensors[self.mac_addresses.index(s.mac_address)]
                             for s in self.sensors}
+
+    ############################
+    def _safe_get_temperature(self, sensor):
+        if not sensor:
+            return self.sensor_missing_value
+        try:
+            temp = sensor.get_temperature()
+            if self.temp_in_f:
+                temp = c_to_f(temp)
+        except UnsupportResponseException as e:
+            logging.warning(f'OneWireReader got unsupported response for sensor {sensor}: {str(e)}')
+            temp = self.sensor_missing_value
+        return temp
 
     ############################
     def read(self):
@@ -117,18 +130,11 @@ class OneWireReader():
             results = []
             for mac in self.mac_addresses:
                 sensor = self.mac_map.get(mac, None)
-                if sensor:
-                    temp = sensor.get_temperature()
-                    if self.temp_in_f:
-                        temp = c_to_f(temp)
-                else:
-                    temp = self.sensor_missing_value
-                results.append(temp)
+                results.append(self._safe_get_temperature(sensor))
         else:
-            results = [sensor.get_temperature() for sensor in self.sensors]
-            if self.temp_in_f:
-                results = [c_to_f(temp) for temp in results]
+            results = [self._safe_get_temperature(sensor) for sensor in self.sensors]
 
         self.last_record = time.time()
 
-        return ' '.join([str(value) for value in results])
+        record = ' '.join([str(value) for value in results])
+        return record
