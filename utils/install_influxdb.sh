@@ -291,11 +291,11 @@ EOF
     echo Running InfluxDB setup - killing all currently-running instances
     pkill -x influxd || echo No processes killed
     echo Running server in background
-    /usr/local/bin/influxd --reporting-disabled > /dev/null &
+    /usr/bin/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
     sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
-    /usr/local/bin/influx setup \
+    /usr/bin/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
         --org openrvdas --bucket openrvdas --retention 0 --force # > /dev/null
     echo Killing the InfluxDB instance we started
