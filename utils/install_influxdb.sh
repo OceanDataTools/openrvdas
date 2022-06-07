@@ -257,35 +257,34 @@ function install_influxdb {
     # Clear out any old setup directories.
     rm -rf ~/.influxdbv2
 
+    # From https://docs.influxdata.com/influxdb/v2.2/install/?t=CLI+Setup
+
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-darwin-amd64 # for MacOS
+        brew update
+        brew install influxdb
     # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-linux-amd64 # for Linux
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        # From https://portal.influxdata.com/downloads/
+        cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
+        [influxdb]
+        name = InfluxDB Repository - RHEL \$releasever
+        baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+        enabled = 1
+        gpgcheck = 1
+        gpgkey = https://repos.influxdata.com/influxdb.key
+        EOF
+        sudo yum install influxdb2
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        # From https://portal.influxdata.com/downloads/
+        wget -qO- https://repos.influxdata.com/influxdb.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
+        export DISTRIB_ID=$(lsb_release -si); export DISTRIB_CODENAME=$(lsb_release -sc)
+        echo "deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.gpg] https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list > /dev/null
+        apt-get update && apt-get install -y influxdb2
     else
         echo "ERROR: No InfluxDB binary found for architecture \"`uname -s`\"."
         exit_gracefully
     fi
-    INFLUXDB_URL=https://${INFLUXDB_REPO}/${INFLUXDB_PACKAGE}.tar.gz
-
-    # Grab, uncompress and copy into place
-    pushd /tmp >> /dev/null
-    if [ -e ${INFLUXDB_PACKAGE}.tar.gz ]; then
-        echo Already have archive locally: /tmp/${INFLUXDB_PACKAGE}.tar.gz
-    else
-        echo Fetching binaries
-        wget $INFLUXDB_URL
-    fi
-    if [ -d ${INFLUXDB_PACKAGE} ]; then
-        echo Already have uncompressed release locally: /tmp/${INFLUXDB_PACKAGE}
-    else
-        echo Uncompressing...
-        tar xzf ${INFLUXDB_PACKAGE}.tar.gz
-    fi
-    echo Copying into place...
-    sudo cp -f  ${INFLUXDB_PACKAGE}/influx ${INFLUXDB_PACKAGE}/influxd /usr/local/bin
-    popd >> /dev/null
 
     # Run setup
     echo "#################################################################"
