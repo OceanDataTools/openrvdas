@@ -380,7 +380,7 @@ function install_grafana {
 
     echo Downloading plugins
     sudo /usr/sbin/grafana-cli plugins install grafana-influxdb-flux-datasource
-    sudo /usr/sbin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install briangann-gauge-panel
+    sudo /usr/sbin/grafana-cli plugins install briangann-gauge-panel
 
     echo Done setting up Grafana!
 }
