@@ -376,13 +376,11 @@ function install_grafana {
     fi
     popd >> /dev/null
 
-echo INSTALLED
-    grafana-cli --homepath /usr/local/etc/grafana admin reset-admin-password $INFLUXDB_PASSWORD
+    sudo /usr/sbin/grafana-cli admin reset-admin-password $INFLUXDB_PASSWORD
 
-    PLUGINS_DIR=/usr/local/etc/grafana/data/plugins
     echo Downloading plugins
-    /usr/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install grafana-influxdb-flux-datasource
-    /usr/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install briangann-gauge-panel
+    sudo /usr/sbin/grafana-cli plugins install grafana-influxdb-flux-datasource
+    sudo /usr/sbin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install briangann-gauge-panel
 
     echo Done setting up Grafana!
 }
