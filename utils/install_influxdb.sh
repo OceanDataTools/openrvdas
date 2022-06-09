@@ -508,7 +508,7 @@ EOF
             INSTALLED_PROGRAMS=${INSTALLED_PROGRAMS},grafana
         fi
 
-        GRAFANA_HOMEPATH=/usr/local/etc/grafana
+        GRAFANA_HOMEPATH=/usr/share/grafana
 
         if [[ $RUN_GRAFANA == 'yes' ]];then
             AUTOSTART_GRAFANA=true
@@ -519,7 +519,7 @@ EOF
 
 ; Run Grafana
 [program:grafana]
-command=/usr/sbin/grafana-server # --homepath $GRAFANA_HOMEPATH
+command=/usr/sbin/grafana-server --homepath $GRAFANA_HOMEPATH
 directory=/opt/openrvdas
 autostart=$AUTOSTART_GRAFANA
 autorestart=true
