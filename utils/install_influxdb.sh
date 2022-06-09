@@ -498,7 +498,7 @@ EOF
     # If Grafana is installed, create an entry for it. Grafana
     # requires all sorts of command line help, and the locations of
     # the files it needs depend on the system, so hunt around.
-    if [[ -e /usr/local/bin/grafana-server ]]; then
+    if [[ -e /usr/sbin/grafana-server ]]; then
         if [[ -z "$INSTALLED_PROGRAMS" ]];then
             INSTALLED_PROGRAMS=grafana
         else
@@ -516,7 +516,7 @@ EOF
 
 ; Run Grafana
 [program:grafana]
-command=/usr/local/bin/grafana-server --homepath $GRAFANA_HOMEPATH
+command=/usr/sbin/grafana-server # --homepath $GRAFANA_HOMEPATH
 directory=/opt/openrvdas
 autostart=$AUTOSTART_GRAFANA
 autorestart=true
@@ -528,14 +528,14 @@ EOF
 
     ##########
     # If Telegraf is installed, create an entry for it.
-    if [[ -e /usr/local/bin/telegraf ]]; then
+    if [[ -e /usr/bin/telegraf ]]; then
         if [[ -z "$INSTALLED_PROGRAMS" ]];then
             INSTALLED_PROGRAMS=telegraf
         else
             INSTALLED_PROGRAMS=${INSTALLED_PROGRAMS},telegraf
         fi
 
-        TELEGRAF_CONF=/usr/local/etc/telegraf/etc/telegraf/telegraf.conf
+        TELEGRAF_CONF=/etc/telegraf/telegraf.conf
 
         if [[ $RUN_TELEGRAF == 'yes' ]];then
             AUTOSTART_TELEGRAF=true
@@ -546,7 +546,7 @@ EOF
 
 ; Run Telegraf
 [program:telegraf]
-command=/usr/local/bin/telegraf --config=${TELEGRAF_CONF}
+command=/usr/bin/telegraf # --config=${TELEGRAF_CONF}
 directory=/opt/openrvdas
 autostart=$AUTOSTART_TELEGRAF
 autorestart=true
