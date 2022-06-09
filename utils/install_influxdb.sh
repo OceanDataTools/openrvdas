@@ -358,21 +358,31 @@ function install_grafana {
         ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
         ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
     # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+    elif [ $OS_TYPE == 'CentOS' ]; then
         CURRENT_USER=$USER
         sudo cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
         sudo ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
         sudo ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
         sudo chown -R $CURRENT_USER /usr/local/etc/grafana
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        sudo apt-get install -y apt-transport-https
+        sudo apt-get install -y software-properties-common wget
+        wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+
+        echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+
+        sudo apt-get update
+        sudo apt-get install grafana
     fi
     popd >> /dev/null
 
+echo INSTALLED
     grafana-cli --homepath /usr/local/etc/grafana admin reset-admin-password $INFLUXDB_PASSWORD
 
     PLUGINS_DIR=/usr/local/etc/grafana/data/plugins
     echo Downloading plugins
-    /usr/local/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install grafana-influxdb-flux-datasource
-    /usr/local/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install briangann-gauge-panel
+    /usr/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install grafana-influxdb-flux-datasource
+    /usr/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install briangann-gauge-panel
 
     echo Done setting up Grafana!
 }
@@ -382,60 +392,14 @@ function install_grafana {
 function install_telegraf {
     echo "#####################################################################"
     echo Installing Telegraf...
-    TELEGRAF_RELEASE=telegraf-1.19.3
-    TELEGRAF_REPO=dl.influxdata.com/telegraf/releases
 
-    # NOTE: in 1.13.3, the tgz file uncompresses to a directory that
-    # doesn't include the release number, so just 'telegraf'
-    TELEGRAF_UNCOMPRESSED=$TELEGRAF_RELEASE
-    #TELEGRAF_UNCOMPRESSED='telegraf'  #
-
-    # If we're on MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-        TELEGRAF_PACKAGE=${TELEGRAF_RELEASE}_darwin_amd64 # for MacOS
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        TELEGRAF_PACKAGE=${TELEGRAF_RELEASE}_linux_amd64 # for Linux
-    else
-        echo "ERROR: No Telegraf binary found for architecture \"`uname -s`\"."
-        exit_gracefully
-    fi
-    TELEGRAF_URL=https://${TELEGRAF_REPO}/${TELEGRAF_PACKAGE}.tar.gz
-
-    # Grab, uncompress and copy into place. We need to make a subdir
-    # under /tmp because there's something strange with (at least the
-    # current version of) the tar file which makes it try to change
-    # the ctime of the directory it's in.
-    mkdir -p /tmp/telegraf  #
-    pushd /tmp/telegraf >> /dev/null
-    if [ -e ${TELEGRAF_PACKAGE}.tar.gz ]; then
-        echo Already have archive locally: /tmp/${TELEGRAF_PACKAGE}.tar.gz
-    else
-        echo Fetching binaries
-        wget $TELEGRAF_URL
-    fi
-    if [ -d ${TELEGRAF_UNCOMPRESSED} ]; then
-        echo Already have uncompressed release locally: /tmp/${TELEGRAF_RELEASE}
-    else
-        echo Uncompressing...
-        tar xzf ${TELEGRAF_PACKAGE}.tar.gz
-    fi
-
-    echo Copying into place...
-    if [ $OS_TYPE == 'MacOS' ]; then
-        cp -rf ${TELEGRAF_UNCOMPRESSED} /usr/local/etc/telegraf
-        ln -fs /usr/local/etc/telegraf/usr/bin/telegraf /usr/local/bin
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        CURRENT_USER=$USER
-        sudo cp -rf ${TELEGRAF_UNCOMPRESSED} /usr/local/etc/telegraf
-        sudo ln -fs /usr/local/etc/telegraf/usr/bin/telegraf /usr/local/bin
-        sudo chown -R $CURRENT_USER /usr/local/etc/telegraf
-    fi
-    popd >> /dev/null
+    wget -qO- https://repos.influxdata.com/influxdb.key | sudo tee /etc/apt/trusted.gpg.d/influxdata.asc >/dev/null
+    echo "deb https://repos.influxdata.com/debian stable main" | sudo tee /etc/apt/sources.list.d/influxdata.list
+    sudo apt-get update
+    sudo apt-get install telegraf
 
     echo Configuring Telegraf
-    TELEGRAF_CONF=/usr/local/etc/telegraf/etc/telegraf/telegraf.conf
+    TELEGRAF_CONF=/etc/telegraf/telegraf.conf
 
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
