@@ -510,7 +510,7 @@ EOF
 
     ##########
     # If InfluxDB is installed, create an entry for it
-    if [[ -e /usr/local/bin/influxd ]]; then
+    if [[ -e /usr/bin/influxd ]]; then
         INSTALLED_PROGRAMS=influxdb
 
         if [[ $RUN_INFLUXDB == 'yes' ]];then
@@ -522,7 +522,7 @@ EOF
 
 ; Run InfluxDB
 [program:influxdb]
-command=/usr/local/bin/influxd --reporting-disabled
+command=/usr/bin/influxd --reporting-disabled
 directory=/opt/openrvdas
 autostart=$AUTOSTART_INFLUXDB
 autorestart=true
