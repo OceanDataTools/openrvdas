@@ -402,6 +402,9 @@ function install_telegraf {
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
 
+echo SKIPPING TELEGRAF SETUP!
+return
+
     # Overwrite the default telegraf.conf with a minimal one that includes
     # our InfluxDB auth tokens.
     sudo cat > $TELEGRAF_CONF <<EOF
