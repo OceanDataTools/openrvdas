@@ -404,7 +404,7 @@ function install_telegraf {
 
     # Overwrite the default telegraf.conf with a minimal one that includes
     # our InfluxDB auth tokens.
-    cat > $TELEGRAF_CONF <<EOF
+    sudo cat > $TELEGRAF_CONF <<EOF
 # Minimal Telegraf configuration
 [global_tags]
 [agent]
