@@ -302,6 +302,10 @@ EOF
     echo Killing the InfluxDB instance we started
     pkill -x influxd || echo No processes killed
 
+    # We're going to run Influx from supervisorctl, so disable automatic service
+    sudo systemctl stop influxd
+    sudo systemctl disable influxd
+
     # Set the values in database/settings.py so that InfluxDBWriter
     # has correct default organization and token.
     fix_database_settings
@@ -402,7 +406,15 @@ function install_telegraf {
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
 
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
 echo SKIPPING TELEGRAF SETUP!
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!
 return
 
     # Overwrite the default telegraf.conf with a minimal one that includes
@@ -525,7 +537,7 @@ autostart=$AUTOSTART_GRAFANA
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/grafana.stderr
-user=$USER
+;user=$USER
 EOF
     fi
 
