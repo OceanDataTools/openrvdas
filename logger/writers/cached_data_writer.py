@@ -62,7 +62,7 @@ class CachedDataWriter(Writer):
 
         # Event loop we'll use to asynchronously manage writes to websocket
         self.event_loop = asyncio.new_event_loop()
-        self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
+        self.send_queue = asyncio.Queue(maxsize=max_backup)
 
         # Start the thread that will asynchronously pull stuff from the
         # queue and send to the websocket. Also will, if we've got our oue
