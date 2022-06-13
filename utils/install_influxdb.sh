@@ -400,26 +400,16 @@ function install_telegraf {
     sudo apt-get update
     sudo apt-get install telegraf
 
-    echo Configuring Telegraf
-    TELEGRAF_CONF=/etc/telegraf/telegraf.conf
-
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
 
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-echo SKIPPING TELEGRAF SETUP!
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-echo !!!!!!!!!!!!!!!!!!!!!!!!!!
-return
+    # Create conf in /tmp, then move into place, to get around permission quirk
+    echo Configuring Telegraf
+    TELEGRAF_CONF_FILE=/openrvdas.conf
+    TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
+    TELEGRAF_CONF=$TELEGRAF_CONF_DIR/$TELEGRAF_CONF_FILE
 
-    # Overwrite the default telegraf.conf with a minimal one that includes
-    # our InfluxDB auth tokens.
-    sudo cat > $TELEGRAF_CONF <<EOF
+    sudo cat > /tmp/$TELEGRAF_CONF_FILE <<EOF
 # Minimal Telegraf configuration
 [global_tags]
 [agent]
@@ -454,6 +444,7 @@ return
    bucket = "_monitoring"  # Destination bucket to write into.
 EOF
 
+    sudo cp /tmp/$TELEGRAF_CONF_FILE $TELEGRAF_CONF
     echo Done setting up Telegraf!
 }
 
@@ -550,8 +541,6 @@ EOF
             INSTALLED_PROGRAMS=${INSTALLED_PROGRAMS},telegraf
         fi
 
-        TELEGRAF_CONF=/etc/telegraf/telegraf.conf
-
         if [[ $RUN_TELEGRAF == 'yes' ]];then
             AUTOSTART_TELEGRAF=true
         else
@@ -561,7 +550,7 @@ EOF
 
 ; Run Telegraf
 [program:telegraf]
-command=/usr/bin/telegraf # --config=${TELEGRAF_CONF}
+command=/usr/bin/telegraf --config=${TELEGRAF_CONF}
 directory=/opt/openrvdas
 autostart=$AUTOSTART_TELEGRAF
 autorestart=true
