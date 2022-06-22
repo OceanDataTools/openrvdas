@@ -101,6 +101,8 @@ function get_os_type {
                 OS_VERSION=18
             elif [[ ! -z `grep "VERSION_ID=\"20" /etc/os-release` ]];then
                 OS_VERSION=20
+            elif [[ ! -z `grep "VERSION_ID=\"21" /etc/os-release` ]];then
+                OS_VERSION=21
             elif [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
                 OS_VERSION=22
             else
