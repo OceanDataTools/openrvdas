@@ -276,7 +276,7 @@ enabled = 1
 gpgcheck = 1
 gpgkey = https://repos.influxdata.com/influxdb.key
 EOF
-        sudo yum install influxdb2
+        sudo yum install -y influxdb2
 
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         # From https://portal.influxdata.com/downloads/
