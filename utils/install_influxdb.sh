@@ -266,15 +266,18 @@ function install_influxdb {
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
         # From https://portal.influxdata.com/downloads/
+
+        # influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
         cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
-        [influxdb]
-        name = InfluxDB Repository - RHEL \$releasever
-        baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
-        enabled = 1
-        gpgcheck = 1
-        gpgkey = https://repos.influxdata.com/influxdb.key
+[influxdb]
+name = InfluxDB Repository - RHEL \$releasever
+baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdb.key
 EOF
         sudo yum install influxdb2
+
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         # From https://portal.influxdata.com/downloads/
         wget -qO- https://repos.influxdata.com/influxdb.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
