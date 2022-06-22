@@ -76,7 +76,7 @@ import threading
 import time
 import websockets
 
-from websockets.connection import ConnectionClosed
+from websockets.exceptions import ConnectionClosed
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
@@ -1025,7 +1025,7 @@ class CachedDataServer:
         # If client disconnects, tell connection to quit
         try:
             await connection.serve_requests()
-        except websockets.ConnectionClosed:
+        except ConnectionClosed:
             logging.warning('client disconnected')
         except KeyboardInterrupt:
             logging.warning('Keyboard Interrupt')
