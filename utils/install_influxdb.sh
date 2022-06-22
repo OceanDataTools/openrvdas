@@ -329,48 +329,56 @@ EOF
 function install_grafana {
     echo "#####################################################################"
     echo Installing Grafana...
-    GRAFANA_RELEASE=grafana-8.1.2
-    GRAFANA_REPO=dl.grafana.com/oss/release
 
-    # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.linux-amd64 # for Linux
-    else
-        echo "ERROR: No Grafana binary found for architecture \"`uname -s`\"."
-        exit_gracefully
-    fi
-    GRAFANA_URL=https://${GRAFANA_REPO}/${GRAFANA_PACKAGE}.tar.gz
+            GRAFANA_RELEASE=grafana-8.1.2
+            GRAFANA_REPO=dl.grafana.com/oss/release
 
-    # Grab, uncompress and copy into place
-    pushd /tmp >> /dev/null
-    if [ -e ${GRAFANA_PACKAGE}.tar.gz ]; then
-        echo Already have archive locally: /tmp/${GRAFANA_PACKAGE}.tar.gz
-    else
-        echo Fetching binaries
-        wget $GRAFANA_URL
-    fi
-    if [ -d ${GRAFANA_RELEASE} ]; then
-        echo Already have uncompressed release locally: /tmp/${GRAFANA_RELEASE}
-    else
-        echo Uncompressing...
-        tar xzf ${GRAFANA_PACKAGE}.tar.gz
-    fi
+            # If we're on MacOS
+            if [ $OS_TYPE == 'MacOS' ]; then
+                GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
+            # If we're on Linux
+            elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+                GRAFANA_PACKAGE=${GRAFANA_RELEASE}.linux-amd64 # for Linux
+            else
+                echo "ERROR: No Grafana binary found for architecture \"`uname -s`\"."
+                exit_gracefully
+            fi
+            GRAFANA_URL=https://${GRAFANA_REPO}/${GRAFANA_PACKAGE}.tar.gz
 
-    echo Copying into place...
-    if [ $OS_TYPE == 'MacOS' ]; then
+            # Grab, uncompress and copy into place
+            pushd /tmp >> /dev/null
+            if [ -e ${GRAFANA_PACKAGE}.tar.gz ]; then
+                echo Already have archive locally: /tmp/${GRAFANA_PACKAGE}.tar.gz
+            else
+                echo Fetching binaries
+                wget $GRAFANA_URL
+            fi
+            if [ -d ${GRAFANA_RELEASE} ]; then
+                echo Already have uncompressed release locally: /tmp/${GRAFANA_RELEASE}
+            else
+                echo Uncompressing...
+                tar xzf ${GRAFANA_PACKAGE}.tar.gz
+            fi
+
         cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
         ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
         ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
-        CURRENT_USER=$USER
-        sudo cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
-        sudo ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
-        sudo ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
-        sudo chown -R $CURRENT_USER /usr/local/etc/grafana
+        cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
+[grafana]
+name=grafana
+baseurl=https://packages.grafana.com/oss/rpm
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.grafana.com/gpg.key
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+EOF
+        sudo yum install -y grafana
+
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         sudo apt-get install -y apt-transport-https
         sudo apt-get install -y software-properties-common wget
