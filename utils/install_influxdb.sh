@@ -389,7 +389,6 @@ EOF
         sudo apt-get update
         sudo apt-get install grafana
     fi
-    popd >> /dev/null
 
     sudo /usr/sbin/grafana-cli admin reset-admin-password $INFLUXDB_PASSWORD
 
