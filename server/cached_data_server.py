@@ -76,7 +76,10 @@ import threading
 import time
 import websockets
 
-from websockets.exceptions import ConnectionClosed
+try:
+    from websockets.exceptions import ConnectionClosed
+except ImportError:
+    from websockets.connection import ConnectionClosed
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402

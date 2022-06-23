@@ -331,40 +331,15 @@ function install_grafana {
     echo Installing Grafana...
 
     if [ $OS_TYPE == 'MacOS' ]; then
-            GRAFANA_RELEASE=grafana-8.1.2
-            GRAFANA_REPO=dl.grafana.com/oss/release
-
-            # If we're on MacOS
-            if [ $OS_TYPE == 'MacOS' ]; then
-                GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
-            # If we're on Linux
-            elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-                GRAFANA_PACKAGE=${GRAFANA_RELEASE}.linux-amd64 # for Linux
-            else
-                echo "ERROR: No Grafana binary found for architecture \"`uname -s`\"."
-                exit_gracefully
-            fi
-            GRAFANA_URL=https://${GRAFANA_REPO}/${GRAFANA_PACKAGE}.tar.gz
-
-            # Grab, uncompress and copy into place
-            pushd /tmp >> /dev/null
-            if [ -e ${GRAFANA_PACKAGE}.tar.gz ]; then
-                echo Already have archive locally: /tmp/${GRAFANA_PACKAGE}.tar.gz
-            else
-                echo Fetching binaries
-                wget $GRAFANA_URL
-            fi
-            if [ -d ${GRAFANA_RELEASE} ]; then
-                echo Already have uncompressed release locally: /tmp/${GRAFANA_RELEASE}
-            else
-                echo Uncompressing...
-                tar xzf ${GRAFANA_PACKAGE}.tar.gz
-            fi
+        GRAFANA_RELEASE=grafana-8.1.2
+        GRAFANA_REPO=dl.grafana.com/oss/release
+        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
 
         cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
         ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
         ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
-    # If we're on Linux
+
+    # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
         cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
 [grafana]
@@ -379,6 +354,7 @@ sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 EOF
         sudo yum install -y grafana
 
+    # If we're on Ubuntu
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         sudo apt-get install -y apt-transport-https
         sudo apt-get install -y software-properties-common wget
@@ -405,10 +381,39 @@ function install_telegraf {
     echo "#####################################################################"
     echo Installing Telegraf...
 
-    wget -qO- https://repos.influxdata.com/influxdb.key | sudo tee /etc/apt/trusted.gpg.d/influxdata.asc >/dev/null
-    echo "deb https://repos.influxdata.com/debian stable main" | sudo tee /etc/apt/sources.list.d/influxdata.list
-    sudo apt-get update
-    sudo apt-get install telegraf
+    if [ $OS_TYPE == 'MacOS' ]; then
+        GRAFANA_RELEASE=grafana-8.1.2
+        GRAFANA_REPO=dl.grafana.com/oss/release
+        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
+
+        cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
+        ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
+        ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
+
+    # If we're on CentOS
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
+# influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
+cat <<EOF | sudo tee /etc/yum.repos.d/influxdata.repo
+[influxdata]
+name = InfluxData Repository - Stable
+baseurl = https://repos.influxdata.com/stable//main
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdb.key
+EOF
+        sudo yum install -y grafana
+
+    # If we're on Ubuntu
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        # influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
+        wget -q https://repos.influxdata.com/influxdb.key
+        echo '23a1c8836f0afc5ed24e0486339d7cc8f6790b83886c4c96995b88a061c5bb5d influxdb.key' | sha256sum -c && cat influxdb.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
+        echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
+
+        sudo apt-get update
+        sudo apt-get install telegraf
+    fi
 
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
