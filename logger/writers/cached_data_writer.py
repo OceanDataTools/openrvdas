@@ -115,11 +115,11 @@ class CachedDataWriter(Writer):
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
-                                logging.debug('sending record: %s', record)
+                                logging.warning('sending record: %s', record)
                                 record = {'type': 'publish', 'data': record}
                                 await ws.send(json.dumps(record))
                                 response = await ws.recv()
-                                logging.debug('received response: %s', response)
+                                logging.warning('received response: %s', response)
                             except asyncio.QueueEmpty:
                                 await asyncio.sleep(.2)
 
