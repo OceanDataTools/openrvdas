@@ -130,6 +130,8 @@ function get_os_type {
                 OS_VERSION=7
             elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
                 OS_VERSION=8
+            elif [[ ! -z `grep "VERSION_ID=\"9" /etc/os-release` ]];then
+                OS_VERSION=9
             else
                 echo "Sorry - unknown CentOS/RHEL Version! - exiting."
                 exit_gracefully
