@@ -473,6 +473,8 @@ class WebSocketConnection:
                 raw_request = await self.websocket.recv()
                 request = json.loads(raw_request)
 
+                logging.warning('CDS got request')
+
                 # Make sure we've received a dict
                 if not isinstance(request, dict):
                     await self.send_json_response(
@@ -489,7 +491,7 @@ class WebSocketConnection:
 
                 # Send client a list of the variable names we're able to serve.
                 elif request['type'] == 'fields':
-                    logging.debug('fields request')
+                    logging.warning('fields request')
                     await self.send_json_response(
                         {'type': 'fields', 'status': 200,
                          'data': self.cache.keys()})
@@ -506,7 +508,7 @@ class WebSocketConnection:
 
                 # Client wants to publish to cache and provides a dict of data
                 elif request['type'] == 'publish':
-                    logging.debug('publish request')
+                    logging.warning('publish request')
                     data = request.get('data', None)
                     if data is None:
                         await self.send_json_response(
@@ -525,7 +527,7 @@ class WebSocketConnection:
                 # Client wants to subscribe, and provides a dict of requested
                 # fields
                 elif request['type'] == 'subscribe':
-                    logging.debug('subscribe request')
+                    logging.warning('subscribe request')
                     # Have they given us a new subscription interval?
                     requested_interval = request.get('interval', None)
                     if requested_interval is not None:
@@ -651,7 +653,7 @@ class WebSocketConnection:
                 # fields that have been requested, send along any new data for
                 # them.
                 elif request['type'] == 'ready':
-                    logging.debug('Websocket got ready...')
+                    logging.warning('Websocket got ready...')
                     if not field_timestamps:
                         # Client has told us that they're ready, but there are no
                         # fields that match their request. Let them know, then
@@ -781,7 +783,7 @@ class WebSocketConnection:
                         logging.warning(mesg)
                         await self.send_json_response({'status': 400, 'error': mesg}, is_error=True)
 
-                    logging.debug(
+                    logging.warning(
                         'Websocket results: %s...',
                         str(results)[
                             0:100])
