@@ -213,6 +213,7 @@ class CachedDataWriter(Writer):
                     logging.warning('CachedDataWriter queue is both full and empty?!?')
 
             # Enqueue our latest record for send
+            logging.warning('Enqueing to send: %s', record)
             try:
                 self.send_queue.put_nowait(record)
             except asyncio.queues.QueueFull:
