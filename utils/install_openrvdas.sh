@@ -372,7 +372,7 @@ function install_packages {
                 ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
                 ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
             fi
-        elif [ $OS_VERSION == '8' ]; then
+        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
             yum install -y python3 python3-devel
         else
             echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
