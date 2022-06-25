@@ -276,8 +276,11 @@ enabled = 1
 gpgcheck = 1
 gpgkey = https://repos.influxdata.com/influxdb.key
 EOF
-        sudo yum install -y --nobest influxdb2 influxdb2-cli
-
+        if [ $OS_VERSION == '7' ]; then
+            sudo yum install -y influxdb2 influxdb2-cli
+        else
+            sudo yum install -y --nobest influxdb2 influxdb2-cli
+        fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         # From https://portal.influxdata.com/downloads/
         wget -qO- https://repos.influxdata.com/influxdb.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
