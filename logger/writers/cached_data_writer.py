@@ -59,12 +59,12 @@ class CachedDataWriter(Writer):
         self.cleanup_interval = cleanup_interval
         self.use_wss = use_wss
         self.check_cert = check_cert
+        self.event_loop = asyncio.new_event_loop()
 
         # "loop" parameter removed in Ubuntu 22, but needed in earlier releases
         try:
             self.send_queue = asyncio.Queue(maxsize=max_backup)
         except RuntimeError:
-            self.event_loop = asyncio.new_event_loop()
             self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
 
         # Start the thread that will asynchronously pull stuff from the
