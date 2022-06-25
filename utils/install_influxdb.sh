@@ -406,14 +406,15 @@ function install_telegraf {
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
         cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
-# influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
-cat <<EOF | sudo tee /etc/yum.repos.d/influxdata.repo
-[influxdata]
-name = InfluxData Repository - Stable
-baseurl = https://repos.influxdata.com/stable//main
-enabled = 1
-gpgcheck = 1
-gpgkey = https://repos.influxdata.com/influxdb.key
+[grafana]
+name=grafana
+baseurl=https://packages.grafana.com/oss/rpm
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.grafana.com/gpg.key
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 EOF
         sudo yum install -y grafana
 
