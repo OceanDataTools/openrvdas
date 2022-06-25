@@ -115,11 +115,11 @@ class CachedDataWriter(Writer):
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
-                                logging.warning('sending record: %s', record)
+                                logging.debug('sending record: %s', record)
                                 record = {'type': 'publish', 'data': record}
                                 await ws.send(json.dumps(record))
                                 response = await ws.recv()
-                                logging.warning('received response: %s', response)
+                                logging.debug('received response: %s', response)
                             except asyncio.QueueEmpty:
                                 await asyncio.sleep(.2)
 
@@ -213,7 +213,6 @@ class CachedDataWriter(Writer):
                     logging.warning('CachedDataWriter queue is both full and empty?!?')
 
             # Enqueue our latest record for send
-            logging.warning('Enqueing to send: %s', record)
             try:
                 self.send_queue.put_nowait(record)
             except asyncio.queues.QueueFull:
