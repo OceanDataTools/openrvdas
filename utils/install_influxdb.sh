@@ -319,8 +319,8 @@ EOF
     pkill -x influxd || echo No processes killed
 
     # We're going to run Influx from supervisorctl, so disable automatic service
-    sudo systemctl stop influxd
-    sudo systemctl disable influxd
+    sudo systemctl stop influxd || echo influxd not loaded as a service, so nothing to stop
+    sudo systemctl disable influxd || echo influxd not loaded as a service, so nothing to disable
 
     # Set the values in database/settings.py so that InfluxDBWriter
     # has correct default organization and token.
