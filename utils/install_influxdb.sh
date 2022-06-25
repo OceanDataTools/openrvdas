@@ -416,7 +416,7 @@ gpgkey=https://packages.grafana.com/gpg.key
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 EOF
-        sudo yum install -y grafana
+        sudo yum install -y telegraf
 
     # If we're on Ubuntu
     elif [ $OS_TYPE == 'Ubuntu' ]; then
@@ -434,7 +434,7 @@ EOF
 
     # Create conf in /tmp, then move into place, to get around permission quirk
     echo Configuring Telegraf
-    TELEGRAF_CONF_FILE=/openrvdas.conf
+    TELEGRAF_CONF_FILE=openrvdas.conf
     TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
     TELEGRAF_CONF=$TELEGRAF_CONF_DIR/$TELEGRAF_CONF_FILE
 
