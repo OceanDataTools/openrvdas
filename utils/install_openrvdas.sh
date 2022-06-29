@@ -1074,8 +1074,8 @@ user=$RVDAS_USER
 ${SIMULATE_NBP_COMMENT}[program:simulate_nbp]
 ${SIMULATE_NBP_COMMENT}command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 ${SIMULATE_NBP_COMMENT}directory=${INSTALL_ROOT}/openrvdas
-${SIMULATE_NBP_COMMENT}autostart=false
-${SIMULATE_NBP_COMMENT}autorestart=${AUTOSTART_SIMULATE_NBP}
+${SIMULATE_NBP_COMMENT}autostart=${AUTOSTART_SIMULATE_NBP}
+${SIMULATE_NBP_COMMENT}autorestart=true
 ${SIMULATE_NBP_COMMENT}startretries=3
 ${SIMULATE_NBP_COMMENT}killasgroup=true
 ${SIMULATE_NBP_COMMENT}stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
@@ -1393,14 +1393,14 @@ echo
 echo "#####################################################################"
 echo "For test installations, OpenRVDAS can configure simulated inputs from"
 echo "stored data, which will allow you to run the \"NBP1406_cruise.yaml\""
-echo "configuration out of the box. This script will be configured to run under"
-echo "supervisord as \"simulate:simulate_nbp\"."
+echo "configuration out of the box. This script will be configured to run"
+echo "under supervisord as \"simulate:simulate_nbp\"."
 echo
-yes_no "Do you want to install this script?"
-INSTALL_SIMULATE_NBP=$YES_NO_RESULT  DEFAULT_INSTALL_SIMULATE_NBP
+yes_no "Do you want to install this script?" $DEFAULT_INSTALL_SIMULATE_NBP
+INSTALL_SIMULATE_NBP=$YES_NO_RESULT
 
 if [ $INSTALL_SIMULATE_NBP == 'yes' ]; then
-  yes_no "Run InfluxDB on boot?" $DEFAULT_RUN_SIMULATE_NBP
+  yes_no "Run simulate:simulate_nbp on boot?" $DEFAULT_RUN_SIMULATE_NBP
   RUN_SIMULATE_NBP=$YES_NO_RESULT
 else
   RUN_SIMULATE_NBP=no
@@ -1565,7 +1565,7 @@ echo "Restarting services: supervisor"
         sudo chown $RVDAS_USER /usr/local/var/run
         sudo chgrp $RVDAS_GROUP /usr/local/var/run
         brew tap homebrew/services
-        brew services restart supervisor
+        brew services reload supervisor
 
     # Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
