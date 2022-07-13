@@ -51,17 +51,31 @@ class TestValueFilterTransform(unittest.TestCase):
     def test_error(self):
         p = ParseTransform(
             field_patterns=['{LF:nc},{LFDepth:of},{LFValid:od},{HF:nc},{HFDepth:of},{HFValid:od},{SoundSpeed:og},{Latitude:f},{Longitude:f}'])
-        q = ValueFilterTransform(bounds='LFDepth:0:6000,HFDepth:0:5000')
+        q = ValueFilterTransform(bounds='LFDepth:0:6000,HFDepth:0:5000', log_level=logging.INFO)
+        with self.assertLogs(level='INFO') as cm:
+            test_str = 'knud 2017-11-04T05:12:21.981359Z 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183'
+            record = p.transform(test_str)
+            record_copy = p.transform(test_str)
+            del record_copy['fields']['HFDepth']
+            self.assertEqual(q.transform(record), q.transform(record_copy))
 
-        record = 'knud 2017-11-04T05:12:21.981359Z'
-        self.assertEqual(q.transform(record),
-                         'Record passed to ValueFilterTransform was neither a dict nor a DASRecord. Type was <class \'str\'>: knud 2017-11-04T05:12:21.981359Z')
+        q = ValueFilterTransform(bounds='LFDepth:0:6000,HFDepth:0:5000', log_level=logging.WARNING)
+        with self.assertLogs(level='WARNING') as cm:
+            test_str = 'knud 2017-11-04T05:12:21.981359Z 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183'
+            record = p.transform(test_str)
+            record_copy = p.transform(test_str)
+            del record_copy['fields']['HFDepth']
+            self.assertEqual(q.transform(record), q.transform(record_copy))
 
-        test_str = 'knud 2017-11-04T05:12:21.981359Z 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183'
-        record = p.transform(test_str)
-        record_copy = p.transform(test_str)
-        del record_copy['fields']['HFDepth']
-        self.assertEqual(q.transform(record), q.transform(record_copy))
+        with self.assertLogs(level='WARNING') as cm:
+            record = 'knud 2017-11-04T05:12:21.981359Z'
+            self.assertEqual(q.transform(record), None)
+            self.assertEqual(cm.output,
+                             ['WARNING:root:Record passed to ValueFilterTransform was neither a dict nor a '
+                              "DASRecord. Type was <class 'str'>: knud 2017-11-04T05:12:21.981359Z"])
+
+        with self.assertRaises(ValueError):
+            ValueFilterTransform(bounds='LFDepth:0:6000,HFDepth:0:5000', log_level='a string')
 
     ############################
 

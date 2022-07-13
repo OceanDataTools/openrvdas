@@ -22,14 +22,31 @@ class ValueFilterTransform(Transform):
     """
     Transform that filters out values in a passed DASRecord that are out of bounds."""
 
-    def __init__(self, bounds):
+    def __init__(self, bounds, log_level=logging.INFO):
         """
         ```
-        bounds   A comma-separated list of conditions of the format
+        bounds
+                 A comma-separated list of conditions of the format
 
                     <field_name>:<lower_bound>:<upper_bound>
 
-                 Either <lower_bound> or <upper_bound> may be empty.
+                 Either <lower_bound> or <upper_bound> may be empty. For example:
+                    # No lower temp, no upper speed
+                    'SeawaterTemp::50,SpeedOverGround:0:,CourseOverGround:0:360'
+
+        log_level
+                 At what level the transform should log a message when it sees a value
+                 that is out of bounds. Allowed values are log levels from the logging module,
+                 e.g. logging.INFO, logging.DEBUG, logging.WARNING, etc.
+
+                 If the logger is running in normal mode, it will display messages that
+                 have log level INFO and more severe (WARNING, ERROR, FATAL). Setting the
+                 log_level parameter of this transform to logging.WARNING means that any time
+                 a value falls out of its specified bounds, a WARNING message will be sent to
+                 the console, appearing in yellow on the web console. logging.ERROR means it will
+                 appear in red. Setting it to logging.DEBUG means that no message will appear on
+                 the console.
+
         ```
         """
         self.bounds = {}
@@ -43,6 +60,12 @@ class ValueFilterTransform(Transform):
                 raise ValueError('ValueFilterTransform bounds must be colon-separated '
                                  'triples of field_name:lower_bound:upper_bound. '
                                  f'Found "{condition}" instead.')
+        if log_level not in [logging.DEBUG, logging.INFO, logging.WARNING,
+                             logging.ERROR, logging.FATAL]:
+            raise ValueError('ValueFilterTransform log_level must be a logging module log '
+                             'level, such as logging.DEBUG, logging.INFO or logging.WARNING. '
+                             f'Found "{log_level}" instead.')
+        self.log_level = log_level
 
     ############################
     def transform(self, record):
@@ -67,10 +90,11 @@ class ValueFilterTransform(Transform):
             else:
                 fields = record
         else:
-            return (f'Record passed to ValueFilterTransform was neither a dict nor a '
-                    f'DASRecord. Type was {type(record)}: {str(record)[:80]}')
+            logging.log(self.log_level,
+                        f'Record passed to ValueFilterTransform was neither a dict nor a '
+                        f'DASRecord. Type was {type(record)}: {str(record)[:80]}')
+            return None
 
-        errors = []
         for bound in self.bounds:
             if bound not in fields:
                 continue
@@ -80,16 +104,18 @@ class ValueFilterTransform(Transform):
 
             # We expect field value to be numeric; if not, complain lightly and remove it
             if type(value) is not int and type(value) is not float:
-                logging.info(f'ValueFilterTransform found non-numeric value for {bound}: {value}')
+                logging.log(self.log_level,
+                            'ValueFilterTransform found non-numeric value for {bound}: {value}')
                 del fields[bound]
 
             # If value exists and is out of bounds, delete it
             elif lower is not None and value < lower:
-                logging.info(f'Value for {bound}: {value} less than lower bound {lower}')
+                logging.log(self.log_level,
+                            f'Value for {bound}: {value} less than lower bound {lower}')
                 del fields[bound]
             elif upper is not None and value > upper:
-                logging.info(f'Value for {bound}: {value} greater than upper bound {upper}')
+                logging.log(self.log_level,
+                            f'Value for {bound}: {value} greater than upper bound {upper}')
                 del fields[bound]
 
         return record
-
