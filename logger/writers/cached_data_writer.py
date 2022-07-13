@@ -59,10 +59,13 @@ class CachedDataWriter(Writer):
         self.cleanup_interval = cleanup_interval
         self.use_wss = use_wss
         self.check_cert = check_cert
-
-        # Event loop we'll use to asynchronously manage writes to websocket
         self.event_loop = asyncio.new_event_loop()
-        self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
+
+        # "loop" parameter removed in Ubuntu 22, but needed in earlier releases
+        try:
+            self.send_queue = asyncio.Queue(maxsize=max_backup)
+        except RuntimeError:
+            self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
 
         # Start the thread that will asynchronously pull stuff from the
         # queue and send to the websocket. Also will, if we've got our oue

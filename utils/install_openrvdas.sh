@@ -101,6 +101,10 @@ function get_os_type {
                 OS_VERSION=18
             elif [[ ! -z `grep "VERSION_ID=\"20" /etc/os-release` ]];then
                 OS_VERSION=20
+            elif [[ ! -z `grep "VERSION_ID=\"21" /etc/os-release` ]];then
+                OS_VERSION=21
+            elif [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
+                OS_VERSION=22
             else
                 echo "Sorry - unknown Ubuntu OS Version! - exiting."
                 exit_gracefully
@@ -120,12 +124,14 @@ function get_os_type {
             fi
 
         # CentOS/RHEL
-        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
             elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
                 OS_VERSION=8
+            elif [[ ! -z `grep "VERSION_ID=\"9" /etc/os-release` ]];then
+                OS_VERSION=9
             else
                 echo "Sorry - unknown CentOS/RHEL Version! - exiting."
                 exit_gracefully
@@ -169,6 +175,9 @@ function set_default_variables {
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
 
+    DEFAULT_INSTALL_SIMULATE_NBP=no
+    DEFAULT_RUN_SIMULATE_NBP=no
+
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
@@ -210,6 +219,9 @@ DEFAULT_RVDAS_USER=$RVDAS_USER
 DEFAULT_INSTALL_MYSQL=$INSTALL_MYSQL
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
+DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
+DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
 
 DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
 DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
@@ -368,7 +380,7 @@ function install_packages {
                 ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
                 ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
             fi
-        elif [ $OS_VERSION == '8' ]; then
+        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
             yum install -y python3 python3-devel
         else
             echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
@@ -938,6 +950,17 @@ function setup_supervisor {
         AUTOSTART=false
     fi
 
+    # Whether the simulation script is commented out, and if not,
+    # whether it should autorun on boot
+    SIMULATE_NBP_COMMENT=';'
+    AUTOSTART_SIMULATE_NBP='false'
+    if [ $INSTALL_SIMULATE_NBP = 'yes' ]; then
+        SIMULATE_NBP_COMMENT=''
+    fi
+    if [ $RUN_SIMULATE_NBP = 'yes' ]; then
+        AUTOSTART_SIMULATE_NBP='true'
+    fi
+
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         ETC_HOME=/usr/local/etc
@@ -1048,17 +1071,17 @@ stderr_logfile_maxbytes=10000000 ; 10M
 stderr_logfile_maxbackups=100
 user=$RVDAS_USER
 
-[program:simulate_nbp]
-command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
-directory=${INSTALL_ROOT}/openrvdas
-autostart=false
-autorestart=true
-startretries=3
-killasgroup=true
-stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
-user=$RVDAS_USER
+${SIMULATE_NBP_COMMENT}[program:simulate_nbp]
+${SIMULATE_NBP_COMMENT}command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
+${SIMULATE_NBP_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${SIMULATE_NBP_COMMENT}autostart=${AUTOSTART_SIMULATE_NBP}
+${SIMULATE_NBP_COMMENT}autorestart=true
+${SIMULATE_NBP_COMMENT}startretries=3
+${SIMULATE_NBP_COMMENT}killasgroup=true
+${SIMULATE_NBP_COMMENT}stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
+${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=100
+${SIMULATE_NBP_COMMENT}user=$RVDAS_USER
 
 [group:web]
 programs=nginx,uwsgi
@@ -1066,8 +1089,8 @@ programs=nginx,uwsgi
 [group:openrvdas]
 programs=logger_manager,cached_data_server
 
-[group:simulate]
-programs=simulate_nbp
+${SIMULATE_NBP_COMMENT}[group:simulate]
+${SIMULATE_NBP_COMMENT}programs=simulate_nbp
 EOF
 
     # Copy supervisor file into place
@@ -1365,6 +1388,24 @@ echo
 yes_no "Start the OpenRVDAS server on boot? " $DEFAULT_OPENRVDAS_AUTOSTART
 OPENRVDAS_AUTOSTART=$YES_NO_RESULT
 
+# Set up simulate_nbp script?
+echo
+echo "#####################################################################"
+echo "For test installations, OpenRVDAS can configure simulated inputs from"
+echo "stored data, which will allow you to run the \"NBP1406_cruise.yaml\""
+echo "configuration out of the box. This script will be configured to run"
+echo "under supervisord as \"simulate:simulate_nbp\"."
+echo
+yes_no "Do you want to install this script?" $DEFAULT_INSTALL_SIMULATE_NBP
+INSTALL_SIMULATE_NBP=$YES_NO_RESULT
+
+if [ $INSTALL_SIMULATE_NBP == 'yes' ]; then
+  yes_no "Run simulate:simulate_nbp on boot?" $DEFAULT_RUN_SIMULATE_NBP
+  RUN_SIMULATE_NBP=$YES_NO_RESULT
+else
+  RUN_SIMULATE_NBP=no
+fi
+
 #########################################################################
 # Enable Supervisor web-interface?
 echo
@@ -1524,7 +1565,7 @@ echo "Restarting services: supervisor"
         sudo chown $RVDAS_USER /usr/local/var/run
         sudo chgrp $RVDAS_GROUP /usr/local/var/run
         brew tap homebrew/services
-        brew services restart supervisor
+        brew services reload supervisor
 
     # Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then

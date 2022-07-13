@@ -293,6 +293,7 @@ class TrueWindsTransform(DerivedDataTransform):
             results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
                                      metadata=metadata))
 
+        logging.debug('Sending %d true wind results.', len(results))
         return results
 
     ############################

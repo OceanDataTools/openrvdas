@@ -1,9 +1,7 @@
 # OpenRVDAS Installation Guide
-At the time of this writing OpenRVDAS has been built and tested against MacOS X, CentOS 7, CentOS 8, Ubuntu 18, Ubuntu 20 and Raspbian
+At the time of this writing OpenRVDAS has been built and tested against MacOS X, CentOS 7-9, Ubuntu 18-22 and Raspbian
 operating systems. It may be possible to build against other Linux-based operating systems, and guides will be added
 here as they are verified and documented.
-
-*Note that OpenRVDAS is still very much under development and subject to unannounced changes.*
 
 To begin installation, grab the script from github:
 
@@ -14,6 +12,7 @@ BRANCH=master  # stable master branch
 #BRANCH=dev    # development branch with latest changes
 
 wget https://$OPENRVDAS_REPO/$BRANCH/utils/install_openrvdas.sh
+chmod +x install_openrvdas.sh
 ```
 
 Now run the script. On LINUX, it should be run as root:

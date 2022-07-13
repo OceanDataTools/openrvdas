@@ -105,8 +105,18 @@ function get_os_type {
     elif [[ `uname -s` == 'Linux' ]];then
         if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Debian" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Raspbian" /etc/os-release` ]];then
             OS_TYPE=Ubuntu
-        elif [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
+            if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
+                OS_VERSION=7
+            elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
+                OS_VERSION=8
+            elif [[ ! -z `grep "VERSION_ID=\"9" /etc/os-release` ]];then
+                OS_VERSION=9
+            else
+                echo "Sorry - unknown CentOS/RHEL Version! - exiting."
+                exit_gracefully
+            fi
         else
             echo Unknown Linux variant!
             exit_gracefully
@@ -257,50 +267,60 @@ function install_influxdb {
     # Clear out any old setup directories.
     rm -rf ~/.influxdbv2
 
+    # From https://docs.influxdata.com/influxdb/v2.2/install/?t=CLI+Setup
+
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-darwin-amd64 # for MacOS
+        brew update
+        brew install influxdb
     # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        INFLUXDB_PACKAGE=${INFLUXDB_RELEASE}-linux-amd64 # for Linux
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        # From https://portal.influxdata.com/downloads/
+
+        # influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
+        cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
+[influxdb]
+name = InfluxDB Repository - RHEL \$releasever
+baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdb.key
+EOF
+        if [ $OS_VERSION == '7' ]; then
+            sudo yum install -y influxdb2 influxdb2-cli
+        else
+            sudo yum install -y --nobest influxdb2 influxdb2-cli
+        fi
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        # From https://portal.influxdata.com/downloads/
+        wget -qO- https://repos.influxdata.com/influxdb.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
+        export DISTRIB_ID=$(lsb_release -si); export DISTRIB_CODENAME=$(lsb_release -sc)
+        echo "deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.gpg] https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y influxdb2
     else
         echo "ERROR: No InfluxDB binary found for architecture \"`uname -s`\"."
         exit_gracefully
     fi
-    INFLUXDB_URL=https://${INFLUXDB_REPO}/${INFLUXDB_PACKAGE}.tar.gz
-
-    # Grab, uncompress and copy into place
-    pushd /tmp >> /dev/null
-    if [ -e ${INFLUXDB_PACKAGE}.tar.gz ]; then
-        echo Already have archive locally: /tmp/${INFLUXDB_PACKAGE}.tar.gz
-    else
-        echo Fetching binaries
-        wget $INFLUXDB_URL
-    fi
-    if [ -d ${INFLUXDB_PACKAGE} ]; then
-        echo Already have uncompressed release locally: /tmp/${INFLUXDB_PACKAGE}
-    else
-        echo Uncompressing...
-        tar xzf ${INFLUXDB_PACKAGE}.tar.gz
-    fi
-    echo Copying into place...
-    sudo cp -f  ${INFLUXDB_PACKAGE}/influx ${INFLUXDB_PACKAGE}/influxd /usr/local/bin
-    popd >> /dev/null
 
     # Run setup
     echo "#################################################################"
     echo Running InfluxDB setup - killing all currently-running instances
     pkill -x influxd || echo No processes killed
     echo Running server in background
-    /usr/local/bin/influxd --reporting-disabled > /dev/null &
+    /usr/bin/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
     sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
-    /usr/local/bin/influx setup \
+    /usr/bin/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
         --org openrvdas --bucket openrvdas --retention 0 --force # > /dev/null
     echo Killing the InfluxDB instance we started
     pkill -x influxd || echo No processes killed
+
+    # We're going to run Influx from supervisorctl, so disable automatic service
+    sudo systemctl stop influxd || echo influxd not loaded as a service, so nothing to stop
+    sudo systemctl disable influxd || echo influxd not loaded as a service, so nothing to disable
 
     # Set the values in database/settings.py so that InfluxDBWriter
     # has correct default organization and token.
@@ -322,57 +342,48 @@ function install_influxdb {
 function install_grafana {
     echo "#####################################################################"
     echo Installing Grafana...
-    GRAFANA_RELEASE=grafana-8.1.2
-    GRAFANA_REPO=dl.grafana.com/oss/release
 
-    # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
+        GRAFANA_RELEASE=grafana-8.1.2
+        GRAFANA_REPO=dl.grafana.com/oss/release
         GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.linux-amd64 # for Linux
-    else
-        echo "ERROR: No Grafana binary found for architecture \"`uname -s`\"."
-        exit_gracefully
-    fi
-    GRAFANA_URL=https://${GRAFANA_REPO}/${GRAFANA_PACKAGE}.tar.gz
 
-    # Grab, uncompress and copy into place
-    pushd /tmp >> /dev/null
-    if [ -e ${GRAFANA_PACKAGE}.tar.gz ]; then
-        echo Already have archive locally: /tmp/${GRAFANA_PACKAGE}.tar.gz
-    else
-        echo Fetching binaries
-        wget $GRAFANA_URL
-    fi
-    if [ -d ${GRAFANA_RELEASE} ]; then
-        echo Already have uncompressed release locally: /tmp/${GRAFANA_RELEASE}
-    else
-        echo Uncompressing...
-        tar xzf ${GRAFANA_PACKAGE}.tar.gz
-    fi
-
-    echo Copying into place...
-    if [ $OS_TYPE == 'MacOS' ]; then
         cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
         ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
         ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        CURRENT_USER=$USER
-        sudo cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
-        sudo ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
-        sudo ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
-        sudo chown -R $CURRENT_USER /usr/local/etc/grafana
+
+    # If we're on CentOS
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
+[grafana]
+name=grafana
+baseurl=https://packages.grafana.com/oss/rpm
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.grafana.com/gpg.key
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+EOF
+        sudo yum install -y grafana
+
+    # If we're on Ubuntu
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        sudo apt-get install -y apt-transport-https
+        sudo apt-get install -y software-properties-common wget
+        wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+
+        echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+
+        sudo apt-get update
+        sudo apt-get install grafana
     fi
-    popd >> /dev/null
 
-    grafana-cli --homepath /usr/local/etc/grafana admin reset-admin-password $INFLUXDB_PASSWORD
+    sudo /usr/sbin/grafana-cli admin reset-admin-password $INFLUXDB_PASSWORD
 
-    PLUGINS_DIR=/usr/local/etc/grafana/data/plugins
     echo Downloading plugins
-    /usr/local/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install grafana-influxdb-flux-datasource
-    /usr/local/bin/grafana-cli --pluginsDir $PLUGINS_DIR plugins install briangann-gauge-panel
+    sudo /usr/sbin/grafana-cli plugins install grafana-influxdb-flux-datasource
+    sudo /usr/sbin/grafana-cli plugins install briangann-gauge-panel
 
     echo Done setting up Grafana!
 }
@@ -382,67 +393,52 @@ function install_grafana {
 function install_telegraf {
     echo "#####################################################################"
     echo Installing Telegraf...
-    TELEGRAF_RELEASE=telegraf-1.19.3
-    TELEGRAF_REPO=dl.influxdata.com/telegraf/releases
 
-    # NOTE: in 1.13.3, the tgz file uncompresses to a directory that
-    # doesn't include the release number, so just 'telegraf'
-    TELEGRAF_UNCOMPRESSED=$TELEGRAF_RELEASE
-    #TELEGRAF_UNCOMPRESSED='telegraf'  #
-
-    # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        TELEGRAF_PACKAGE=${TELEGRAF_RELEASE}_darwin_amd64 # for MacOS
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        TELEGRAF_PACKAGE=${TELEGRAF_RELEASE}_linux_amd64 # for Linux
-    else
-        echo "ERROR: No Telegraf binary found for architecture \"`uname -s`\"."
-        exit_gracefully
-    fi
-    TELEGRAF_URL=https://${TELEGRAF_REPO}/${TELEGRAF_PACKAGE}.tar.gz
+        GRAFANA_RELEASE=grafana-8.1.2
+        GRAFANA_REPO=dl.grafana.com/oss/release
+        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
 
-    # Grab, uncompress and copy into place. We need to make a subdir
-    # under /tmp because there's something strange with (at least the
-    # current version of) the tar file which makes it try to change
-    # the ctime of the directory it's in.
-    mkdir -p /tmp/telegraf  #
-    pushd /tmp/telegraf >> /dev/null
-    if [ -e ${TELEGRAF_PACKAGE}.tar.gz ]; then
-        echo Already have archive locally: /tmp/${TELEGRAF_PACKAGE}.tar.gz
-    else
-        echo Fetching binaries
-        wget $TELEGRAF_URL
-    fi
-    if [ -d ${TELEGRAF_UNCOMPRESSED} ]; then
-        echo Already have uncompressed release locally: /tmp/${TELEGRAF_RELEASE}
-    else
-        echo Uncompressing...
-        tar xzf ${TELEGRAF_PACKAGE}.tar.gz
-    fi
+        cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
+        ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
+        ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
 
-    echo Copying into place...
-    if [ $OS_TYPE == 'MacOS' ]; then
-        cp -rf ${TELEGRAF_UNCOMPRESSED} /usr/local/etc/telegraf
-        ln -fs /usr/local/etc/telegraf/usr/bin/telegraf /usr/local/bin
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        CURRENT_USER=$USER
-        sudo cp -rf ${TELEGRAF_UNCOMPRESSED} /usr/local/etc/telegraf
-        sudo ln -fs /usr/local/etc/telegraf/usr/bin/telegraf /usr/local/bin
-        sudo chown -R $CURRENT_USER /usr/local/etc/telegraf
-    fi
-    popd >> /dev/null
+    # If we're on CentOS
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
+[grafana]
+name=grafana
+baseurl=https://packages.grafana.com/oss/rpm
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.grafana.com/gpg.key
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+EOF
+        sudo yum install -y telegraf
 
-    echo Configuring Telegraf
-    TELEGRAF_CONF=/usr/local/etc/telegraf/etc/telegraf/telegraf.conf
+    # If we're on Ubuntu
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        # influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
+        wget -q https://repos.influxdata.com/influxdb.key
+        echo '23a1c8836f0afc5ed24e0486339d7cc8f6790b83886c4c96995b88a061c5bb5d influxdb.key' | sha256sum -c && cat influxdb.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
+        echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
+
+        sudo apt-get update
+        sudo apt-get install telegraf
+    fi
 
     # Make sure we've got an InfluxDB auth token
     get_influxdb_auth_token
 
-    # Overwrite the default telegraf.conf with a minimal one that includes
-    # our InfluxDB auth tokens.
-    cat > $TELEGRAF_CONF <<EOF
+    # Create conf in /tmp, then move into place, to get around permission quirk
+    echo Configuring Telegraf
+    TELEGRAF_CONF_FILE=openrvdas.conf
+    TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
+    TELEGRAF_CONF=$TELEGRAF_CONF_DIR/$TELEGRAF_CONF_FILE
+
+    sudo cat > /tmp/$TELEGRAF_CONF_FILE <<EOF
 # Minimal Telegraf configuration
 [global_tags]
 [agent]
@@ -477,6 +473,7 @@ function install_telegraf {
    bucket = "_monitoring"  # Destination bucket to write into.
 EOF
 
+    sudo cp /tmp/$TELEGRAF_CONF_FILE $TELEGRAF_CONF
     echo Done setting up Telegraf!
 }
 
@@ -510,7 +507,7 @@ EOF
 
     ##########
     # If InfluxDB is installed, create an entry for it
-    if [[ -e /usr/local/bin/influxd ]]; then
+    if [[ -e /usr/bin/influxd ]]; then
         INSTALLED_PROGRAMS=influxdb
 
         if [[ $RUN_INFLUXDB == 'yes' ]];then
@@ -522,7 +519,7 @@ EOF
 
 ; Run InfluxDB
 [program:influxdb]
-command=/usr/local/bin/influxd --reporting-disabled
+command=/usr/bin/influxd --reporting-disabled
 directory=/opt/openrvdas
 autostart=$AUTOSTART_INFLUXDB
 autorestart=true
@@ -536,14 +533,14 @@ EOF
     # If Grafana is installed, create an entry for it. Grafana
     # requires all sorts of command line help, and the locations of
     # the files it needs depend on the system, so hunt around.
-    if [[ -e /usr/local/bin/grafana-server ]]; then
+    if [[ -e /usr/sbin/grafana-server ]]; then
         if [[ -z "$INSTALLED_PROGRAMS" ]];then
             INSTALLED_PROGRAMS=grafana
         else
             INSTALLED_PROGRAMS=${INSTALLED_PROGRAMS},grafana
         fi
 
-        GRAFANA_HOMEPATH=/usr/local/etc/grafana
+        GRAFANA_HOMEPATH=/usr/share/grafana
 
         if [[ $RUN_GRAFANA == 'yes' ]];then
             AUTOSTART_GRAFANA=true
@@ -554,26 +551,24 @@ EOF
 
 ; Run Grafana
 [program:grafana]
-command=/usr/local/bin/grafana-server --homepath $GRAFANA_HOMEPATH
+command=/usr/sbin/grafana-server --homepath $GRAFANA_HOMEPATH
 directory=/opt/openrvdas
 autostart=$AUTOSTART_GRAFANA
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/grafana.stderr
-user=$USER
+;user=$USER
 EOF
     fi
 
     ##########
     # If Telegraf is installed, create an entry for it.
-    if [[ -e /usr/local/bin/telegraf ]]; then
+    if [[ -e /usr/bin/telegraf ]]; then
         if [[ -z "$INSTALLED_PROGRAMS" ]];then
             INSTALLED_PROGRAMS=telegraf
         else
             INSTALLED_PROGRAMS=${INSTALLED_PROGRAMS},telegraf
         fi
-
-        TELEGRAF_CONF=/usr/local/etc/telegraf/etc/telegraf/telegraf.conf
 
         if [[ $RUN_TELEGRAF == 'yes' ]];then
             AUTOSTART_TELEGRAF=true
@@ -584,7 +579,7 @@ EOF
 
 ; Run Telegraf
 [program:telegraf]
-command=/usr/local/bin/telegraf --config=${TELEGRAF_CONF}
+command=/usr/bin/telegraf --config=${TELEGRAF_CONF}
 directory=/opt/openrvdas
 autostart=$AUTOSTART_TELEGRAF
 autorestart=true
