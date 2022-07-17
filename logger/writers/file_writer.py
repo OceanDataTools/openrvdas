@@ -17,7 +17,7 @@ class FileWriter(Writer):
     """Write to the specified file. If filename is empty, write to stdout."""
 
     def __init__(self, filename=None, mode='a', delimiter='\n', flush=True,
-                 split_by_time=False, split_interval=None,
+                 split_by_time=False, split_interval=None, header=None,
                  time_format='-' + DATE_FORMAT, time_zone=timezone.utc,
                  create_path=True):
         """Write text records to a file. If no filename is specified, write to
@@ -44,6 +44,9 @@ class FileWriter(Writer):
                      time interval such as every 2 hours (2H) or 15 minutes
                      (15M). Currently H and M are the only options. 
 
+        header       Add the specified header to each file.  Value can be a
+                     string or filepath
+
         time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
                      e.g. '-%Y-%m' is used, files will be split by month;
                      if -%y-%m-%d:%H' is specified, splits will be
@@ -52,7 +55,7 @@ class FileWriter(Writer):
 
         time_zone    Time zone to use for determining splits. By default UTC.
 
-        create_path Create directory path to file if it doesn't exist ```
+        create_path  Create directory path to file if it doesn't exist ```
         ```
 
         """
@@ -67,6 +70,7 @@ class FileWriter(Writer):
         self.time_zone = time_zone
         self.split_interval = None
         self.split_interval_in_seconds = 0
+        self.header = None
         self.next_file_split = datetime.now(self.time_zone)
 
         if (split_by_time or split_interval) is not None and not filename:
@@ -88,6 +92,25 @@ class FileWriter(Writer):
             except ValueError:
                 raise ValueError('FileWriter: split_interval must be an integer '
                                  'followed by \'H\' or \'M\'.')
+
+        if header is not None:
+            if 'b' in mode:
+                raise ValueError('FileWriter: Unable to add header to '
+                                 'a binary data file')
+
+            if os.path.isfile(header):
+                try:
+                    with open(header, 'r') as file:
+                        self.header = file.read()
+                except:
+                    raise ValueError('FileWriter: Unable to add header to '
+                                     'data file from header file: %s', header)
+            elif isinstance(header, str):
+                self.header = header + '\n'
+            else:
+                raise ValueError('FileWriter: Unable to add header to data '
+                                 'file. Header argument must be a string or '
+                                 'filepath: %s', header)
 
         # If we're splitting by time, keep track of current file suffix so
         # we know when to roll over.
@@ -175,8 +198,12 @@ class FileWriter(Writer):
         """Set the current file to the specified filename."""
 
         # If they haven't given us a filename, we'll write to stdout
-        if self.filename is None:
+        if filename is None:
             self.file = sys.stdout
+
+            if self.header is not None:
+                self.file.write(self.header)
+
             return
 
         # If here, we have a filename. If we already have a file open,
@@ -184,8 +211,16 @@ class FileWriter(Writer):
         if self.file:
             self.file.close()
 
+        # Check to see if file already exists
+        file_is_new = not os.path.isfile(filename)
+
         # Finally, open the specified file with the specified mode
         self.file = open(filename, self.mode)
+
+        # Add header record to file if a header was specified and the file was
+        # just created.
+        if file_is_new and self.header is not None:
+            self.file.write(self.header)
 
     ############################
     def write(self, record):

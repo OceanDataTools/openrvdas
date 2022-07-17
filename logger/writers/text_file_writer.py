@@ -14,7 +14,7 @@ class TextFileWriter(Writer):
     """Write to the specified file. If filename is empty, write to stdout."""
 
     def __init__(self, filename=None, flush=True, truncate=False,
-                 split_by_date=False, create_path=True):
+                 split_by_date=False, create_path=True, header=None):
         """Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -28,6 +28,9 @@ class TextFileWriter(Writer):
                      a -YYYY-MM-DD string to the specified filename.
 
         create_path  Create directory path to file if it doesn't exist
+
+        header       Add the specified header to each file.  Value can be a
+                     string or filepath
       ```
         """
         super().__init__(input_format=Text)
@@ -36,10 +39,26 @@ class TextFileWriter(Writer):
         self.flush = flush
         self.truncate = truncate
         self.split_by_date = split_by_date
+        self.header = None
 
         if split_by_date and not filename:
             raise ValueError('TextFileWriter: filename must be specified if '
                              'split_by_date is True.')
+
+        if header is not None:
+            if os.path.isfile(header):
+                try:
+                    with open(header, 'r') as file:
+                        self.header = file.read()
+                except:
+                    raise ValueError('TextFileWriter: Unable to add header to '
+                                     'data file from header file: %s', header)
+            elif isinstance(header, str):
+                self.header = header + '\n'
+            else:
+                raise ValueError('TextFileWriter: Unable to add header to data '
+                                 'file. Header argument must be a string or '
+                                 'filepath: %s', header)
 
         # If we're splitting by date, keep track of current file date
         # here.
@@ -53,7 +72,7 @@ class TextFileWriter(Writer):
                 os.makedirs(file_dir, exist_ok=True)
 
         # Figure out what file we ought be writing to and open it.
-        self.file = self._set_file()
+        self._set_file()
 
     ############################
     def _today(self):
@@ -72,7 +91,12 @@ class TextFileWriter(Writer):
 
         # If they haven't given us a filename, we'll write to stdout
         if self.filename is None:
-            return sys.stdout
+            self.file = sys.stdout
+
+            if self.header is not None:
+                self.file.write(self.header)
+
+            return
 
         # If here, we have a filename. Check if we're splitting by date;
         # if so, see if it's time to close out our current file an start a
@@ -85,9 +109,9 @@ class TextFileWriter(Writer):
                     self.file.close()
                     self.file = None
 
-        # If we do have a file open, return it.
+        # If we do have a file open, return.
         if self.file:
-            return self.file
+            return
 
         # If here, we don't have a file open. This may be because it's our
         # first time writing, or because we're splitting by dates and
@@ -98,9 +122,13 @@ class TextFileWriter(Writer):
         else:
             filename = self.filename
 
-        # Open and return the file
+        # Open and set the file
         mode = 'w' if self.truncate else 'a'
-        return open(filename, mode)
+        self.file = open(filename, mode)
+
+        # Add header record to file if a header was specified.
+        if self.header is not None:
+            self.file.write(self.header)
 
     ############################
     def write(self, record):
@@ -118,7 +146,7 @@ class TextFileWriter(Writer):
         # If we're splitting by date, make sure that we're still writing
         # to the right file.
         if self.split_by_date:
-            self.file = self._set_file()
+            self._set_file()
 
         # Write the record and flush if requested
         self.file.write(str(record) + '\n')

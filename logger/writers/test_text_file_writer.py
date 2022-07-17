@@ -16,6 +16,8 @@ SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
 
+SAMPLE_HEADER = 'Hi, I\'m a header'
+
 
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
     time.sleep(pre_sleep_interval)
@@ -56,6 +58,18 @@ class TestTextFileWriter(unittest.TestCase):
             for line in SAMPLE_DATA:
                 writer.write(line)
                 self.assertEqual(line, f.readline().strip())
+
+    ############################
+    def test_write_with_header(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            writer = TextFileWriter(tmpdirname + '/f', header=SAMPLE_HEADER)
+            for line in SAMPLE_DATA:
+                writer.write(line)
+
+            with open(tmpdirname + '/f') as f:
+                self.assertEqual(SAMPLE_HEADER, f.readline().strip())
+                for line in SAMPLE_DATA:
+                    self.assertEqual(line, f.readline().strip())
 
     ############################
     def test_compatible(self):
