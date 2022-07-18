@@ -18,8 +18,8 @@ class FileWriter(Writer):
 
     def __init__(self, filename=None, mode='a', delimiter='\n', flush=True,
                  split_by_time=False, split_interval=None, header=None,
-                 time_format='-' + DATE_FORMAT, time_zone=timezone.utc,
-                 create_path=True):
+                 header_file=None, time_format='-' + DATE_FORMAT,
+                 time_zone=timezone.utc, create_path=True):
         """Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -44,8 +44,9 @@ class FileWriter(Writer):
                      time interval such as every 2 hours (2H) or 15 minutes
                      (15M). Currently H and M are the only options. 
 
-        header       Add the specified header to each file.  Value can be a
-                     string or filepath
+        header       Add the specified header string to each file.
+
+        header_file  Add the content of the specified file to each file.
 
         time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
                      e.g. '-%Y-%m' is used, files will be split by month;
@@ -93,24 +94,30 @@ class FileWriter(Writer):
                 raise ValueError('FileWriter: split_interval must be an integer '
                                  'followed by \'H\' or \'M\'.')
 
-        if header is not None:
-            if 'b' in mode:
-                raise ValueError('FileWriter: Unable to add header to '
-                                 'a binary data file')
+        if header is not None and header_file is not None:
+            raise ValueError('FileWriter: cannot specify the header and '
+                             'header_file arguments.')
 
-            if os.path.isfile(header):
-                try:
-                    with open(header, 'r') as file:
-                        self.header = file.read()
-                except:
-                    raise ValueError('FileWriter: Unable to add header to '
-                                     'data file from header file: %s', header)
-            elif isinstance(header, str):
+        if header is not None:
+            if isinstance(header, str):
                 self.header = header + '\n'
             else:
                 raise ValueError('FileWriter: Unable to add header to data '
-                                 'file. Header argument must be a string or '
-                                 'filepath: %s', header)
+                                 'file. header argument must be a string: %s',
+                                 header)
+
+        if header_file is not None:
+            try:
+                with open(header_file, 'r') as file:
+                    self.header = file.read()
+            except:
+                raise ValueError('FileWriter: Unable to add header to data '
+                                 'file. header_file argument must be a valid '
+                                 'filepath: %s', header_file)
+
+        if self.header is not None and 'b' in mode:
+            raise ValueError('FileWriter: Unable to add header to a binary '
+                             'data file')
 
         # If we're splitting by time, keep track of current file suffix so
         # we know when to roll over.

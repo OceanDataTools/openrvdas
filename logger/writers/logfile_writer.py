@@ -18,7 +18,7 @@ class LogfileWriter(Writer):
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
                  split_char=' ', suffix='', header=None,
-                 rollover_hourly=False):
+                 header_file=None, rollover_hourly=False):
         """Write timestamped text records to file. Base filename will have
         date appended, in keeping with R2R format recommendations
         (http://www.rvdata.us/operators/directory). When timestamped date on
@@ -37,8 +37,9 @@ class LogfileWriter(Writer):
 
         suffix          string to apply to the end of the log filename
 
-        header          Add the specified header to each file.  Value can be a
-                        string or filepath
+        header          Add the specified header string to each file.
+
+        header_file     Add the content of the specified file to each file.
 
         rollover_hourly Set files to truncate by hour.  By default files will
                         truncate by day
@@ -53,6 +54,7 @@ class LogfileWriter(Writer):
         self.split_char = split_char
         self.suffix = suffix
         self.header = header
+        self.header_file = header_file
         self.rollover_hourly = rollover_hourly
 
         self.current_date = None
@@ -98,7 +100,10 @@ class LogfileWriter(Writer):
             self.current_date = date_str
             self.current_hour = self.rollover_hourly and hr_str or ""
             logging.info('LogfileWriter opening new file: %s', self.current_filename)
-            self.writer = FileWriter(filename=self.current_filename, header=self.header, flush=self.flush)
+            self.writer = FileWriter(filename=self.current_filename,
+                                     header=self.header,
+                                     header_file=self.header_file,
+                                     flush=self.flush)
 
         logging.debug('LogfileWriter writing record: %s', record)
         self.writer.write(record)

@@ -14,7 +14,8 @@ class TextFileWriter(Writer):
     """Write to the specified file. If filename is empty, write to stdout."""
 
     def __init__(self, filename=None, flush=True, truncate=False,
-                 split_by_date=False, create_path=True, header=None):
+                 split_by_date=False, create_path=True, header=None,
+                 header_file=None):
         """Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -29,8 +30,9 @@ class TextFileWriter(Writer):
 
         create_path  Create directory path to file if it doesn't exist
 
-        header       Add the specified header to each file.  Value can be a
-                     string or filepath
+        header       Add the specified header string to each file.
+
+        header_file  Add the content of the specified file to each file.
       ```
         """
         super().__init__(input_format=Text)
@@ -45,20 +47,26 @@ class TextFileWriter(Writer):
             raise ValueError('TextFileWriter: filename must be specified if '
                              'split_by_date is True.')
 
+        if header is not None and header_file is not None:
+            raise ValueError('FileWriter: cannot specify the header and '
+                             'header_file arguments.')
+
         if header is not None:
-            if os.path.isfile(header):
-                try:
-                    with open(header, 'r') as file:
-                        self.header = file.read()
-                except:
-                    raise ValueError('TextFileWriter: Unable to add header to '
-                                     'data file from header file: %s', header)
-            elif isinstance(header, str):
+            if isinstance(header, str):
                 self.header = header + '\n'
             else:
-                raise ValueError('TextFileWriter: Unable to add header to data '
-                                 'file. Header argument must be a string or '
-                                 'filepath: %s', header)
+                raise ValueError('FileWriter: Unable to add header to data '
+                                 'file. header argument must be a string: %s',
+                                 header)
+
+        if header_file is not None:
+            try:
+                with open(header_file, 'r') as file:
+                    self.header = file.read()
+            except:
+                raise ValueError('FileWriter: Unable to add header to data '
+                                 'file. header_file argument must be a valid '
+                                 'filepath: %s', header_file)
 
         # If we're splitting by date, keep track of current file date
         # here.
