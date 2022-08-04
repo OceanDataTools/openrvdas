@@ -13,6 +13,7 @@ SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
 
+SAMPLE_HEADER = 'Hi, I\'m a header'
 
 class TestFileWriter(unittest.TestCase):
 
@@ -24,6 +25,18 @@ class TestFileWriter(unittest.TestCase):
                 writer.write(line)
 
             with open(tmpdirname + '/f') as f:
+                for line in SAMPLE_DATA:
+                    self.assertEqual(line, f.readline().strip())
+
+    ############################
+    def test_write_with_header(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            writer = FileWriter(tmpdirname + '/f', header=SAMPLE_HEADER)
+            for line in SAMPLE_DATA:
+                writer.write(line)
+
+            with open(tmpdirname + '/f') as f:
+                self.assertEqual(SAMPLE_HEADER, f.readline().strip())
                 for line in SAMPLE_DATA:
                     self.assertEqual(line, f.readline().strip())
 
