@@ -79,6 +79,11 @@ DEFAULT_RUN_INFLUXDB=no
 DEFAULT_RUN_GRAFANA=no
 DEFAULT_RUN_TELEGRAF=no
 
+DEFAULT_USE_SSL=no
+DEFAULT_HAVE_SSL_CERTIFICATE=no
+DEFAULT_SSL_CRT_LOCATION=
+DEFAULT_SSL_KEY_LOCATION=
+
 # Organization to be used by OpenRVDAS and Telegraf when writing to InfluxDB
 ORGANIZATION=openrvdas
 
@@ -159,6 +164,11 @@ DEFAULT_INSTALL_TELEGRAF=$INSTALL_TELEGRAF
 DEFAULT_RUN_INFLUXDB=$RUN_INFLUXDB
 DEFAULT_RUN_GRAFANA=$RUN_GRAFANA
 DEFAULT_RUN_TELEGRAF=$RUN_TELEGRAF
+
+DEFAULT_USE_SSL=$USE_SSL
+DEFAULT_HAVE_SSL_CERTIFICATE=$HAVE_SSL_CERTIFICATE
+DEFAULT_SSL_CRT_LOCATION=$SSL_CRT_LOCATION
+DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 EOF
 }
 
@@ -221,6 +231,14 @@ function fix_database_settings {
     # If they've run this with an old installation of OpenRVDAS,
     # database/settings.py may have the old/wrong port number for InfluxDB
     sed -i -e "s/INFLUXDB_URL = 'http:\/\/localhost:9999'/INFLUXDB_URL = 'http:\/\/localhost:8086'/" $SETTINGS
+
+    # If we're using SSL, change any "http" reference to "https"; if not
+    # do vice versa.
+    if [[ $USE_SSL == 'yes' ]];then
+        sed -i -e "s/http:/https:/" $SETTINGS
+    else
+        sed -i -e "s/https:/http:/" $SETTINGS
+    fi
 }
 
 ###########################################################################
@@ -515,11 +533,16 @@ EOF
         else
             AUTOSTART_INFLUXDB=false
         fi
-        cat >> $TMP_SUPERVISOR_FILE <<EOF
 
+        if [[ $USE_SSL == 'yes' ]]
+            INFLUX_SSL_OPTIONS="--tls-cert=\"SSL_CRT_LOCATION\" --tls-key=\"SSL_KEY_LOCATION\""
+        else
+            INFLUX_SSL_OPTIONS=""
+        fi
+        cat >> $TMP_SUPERVISOR_FILE <<EOF
 ; Run InfluxDB
 [program:influxdb]
-command=/usr/bin/influxd --reporting-disabled
+command=/usr/bin/influxd --reporting-disabled $INFLUX_SSL_OPTIONS
 directory=/opt/openrvdas
 autostart=$AUTOSTART_INFLUXDB
 autorestart=true
@@ -631,6 +654,64 @@ read -p "Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo "Activating virtual environment in '${INSTALL_ROOT}/openrvdas'"
 source $INSTALL_ROOT/openrvdas/venv/bin/activate
+echo
+echo "#####################################################################"
+echo "InfluxDB and Grafana can use SSL via secure websockets for off-server"
+echo "access to web console and display widgets. If you enable SSL, you will"
+echo "need to either have or create SSL .key and .crt files."
+echo
+echo "If you create a self-signed certificate, users may need to take additional"
+echo "steps to connect to the web console and display widgets from their machines'"
+echo "browsers. For guidance on this, please see the secure_websockets.md doc in"
+echo "this project's docs subdirectory."
+echo
+yes_no "Use SSL and secure websockets? " $DEFAULT_USE_SSL
+USE_SSL=$YES_NO_RESULT
+
+if [ "$USE_SSL" == "yes" ]; then
+    echo
+    read -p "Port on which to serve web console? ($DEFAULT_SSL_SERVER_PORT) " SSL_SERVER_PORT
+    SSL_SERVER_PORT=${SSL_SERVER_PORT:-$DEFAULT_SSL_SERVER_PORT}
+    SERVER_PORT=$SSL_SERVER_PORT
+    WEBSOCKET_PROTOCOL='wss'
+
+    # Propagate unused variables so they're saved in defaults
+    NONSSL_SERVER_PORT=$DEFAULT_NONSSL_SERVER_PORT
+
+    # Get or create SSL keys
+    echo
+    echo "#####################################################################"
+    echo "The OpenRVDAS console, cached data server and display widgets use HTTPS"
+    echo "and WSS \(secure websockets\) for communication and require an SSL"
+    echo "certificate in the form of .key and .crt files. If you already have such"
+    echo "keys on your machine that you wish to use, answer "yes" to the question"
+    echo "below, and you will be prompted for their locations. Otherwise answer \"no\""
+    echo "and you will be prompted to create a self-signed certificate."
+    echo
+    yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
+    HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
+    if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
+        read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+    else
+        read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+    fi
+    SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
+    SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
+else
+    echo
+    read -p "Port on which to serve web console? ($DEFAULT_NONSSL_SERVER_PORT) " NONSSL_SERVER_PORT
+    NONSSL_SERVER_PORT=${NONSSL_SERVER_PORT:-$DEFAULT_NONSSL_SERVER_PORT}
+    SERVER_PORT=$NONSSL_SERVER_PORT
+    WEBSOCKET_PROTOCOL='ws'
+
+    # Propagate unused variables so they're saved in defaults
+    SSL_SERVER_PORT=$DEFAULT_SSL_SERVER_PORT
+    HAVE_SSL_CERTIFICATE=$DEFAULT_HAVE_SSL_CERTIFICATE
+    SSL_CRT_LOCATION=$DEFAULT_SSL_CRT_LOCATION
+    SSL_KEY_LOCATION=$DEFAULT_SSL_KEY_LOCATION
+fi
 
 yes_no "Install InfluxDB?" $DEFAULT_INSTALL_INFLUXDB
 INSTALL_INFLUXDB=$YES_NO_RESULT
