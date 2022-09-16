@@ -535,7 +535,7 @@ EOF
         fi
 
         if [[ $USE_SSL == 'yes' ]];then
-            INFLUX_SSL_OPTIONS="--tls-cert=\"SSL_CRT_LOCATION\" --tls-key=\"SSL_KEY_LOCATION\""
+            INFLUX_SSL_OPTIONS="--tls-cert=\"$SSL_CRT_LOCATION\" --tls-key=\"$SSL_KEY_LOCATION\""
         else
             INFLUX_SSL_OPTIONS=""
         fi
