@@ -472,6 +472,15 @@ EOF
     TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
     TELEGRAF_CONF=$TELEGRAF_CONF_DIR/$TELEGRAF_CONF_FILE
 
+    # For now, don't verify certificates
+    if [[ $USE_SSL == 'yes' ]];then
+        TELEGRAF_PROTOCOL='https'
+        INSECURE_SKIP_VERIFY='insecure_skip_verify = true'
+    else
+        TELEGRAF_PROTOCOL='http'
+        INSECURE_SKIP_VERIFY=''
+    fi
+
     sudo cat > /tmp/$TELEGRAF_CONF_FILE <<EOF
 # Minimal Telegraf configuration
 [global_tags]
@@ -501,10 +510,11 @@ EOF
 [[inputs.system]]
 
 [[outputs.influxdb_v2]]
-   urls = ["http://127.0.0.1:8086"]
+   urls = ["$TELEGRAF_PROTOCOL://127.0.0.1:8086"]
    token = "$INFLUXDB_AUTH_TOKEN"  # Token for authentication.
    organization = "$ORGANIZATION"  # InfluxDB organization to write to
    bucket = "_monitoring"  # Destination bucket to write into.
+   $INSECURE_SKIP_VERIFY
 EOF
 
     sudo cp /tmp/$TELEGRAF_CONF_FILE $TELEGRAF_CONF
