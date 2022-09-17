@@ -405,7 +405,7 @@ EOF
 
     # If we're using SSL, change any "http" reference to "https"; if not
     # do vice versa.
-    GRAFANA_CONFIG = /usr/share/grafana/conf/defaults.ini
+    GRAFANA_CONFIG='/usr/share/grafana/conf/defaults.ini'
     if [[ $USE_SSL == 'yes' ]];then
         sed -i -e "s/protocol = http/protocol = https/" $GRAFANA_CONFIG
         sed -i -e "s/ssl_mode =.*/ssl_mode = skip-verify/" $GRAFANA_CONFIG
