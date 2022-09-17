@@ -409,8 +409,9 @@ EOF
     if [[ $USE_SSL == 'yes' ]];then
         sudo sed -i -e "s/protocol = http.*/protocol = https/" $GRAFANA_CONFIG
         sudo sed -i -e "s/ssl_mode =.*/ssl_mode = skip-verify/" $GRAFANA_CONFIG
-        sudo sed -i -e "s/cert_file =.*/cert_file = $SSL_CRT_LOCATION/" $GRAFANA_CONFIG
-        sudo sed -i -e "s/cert_key =.*/cert_key = $SSL_KEY_LOCATION/" $GRAFANA_CONFIG
+        # Filepath contains '/', so use '#' for sed delimiter
+        sudo sed -i -e "s#cert_file =.*#cert_file = $SSL_CRT_LOCATION#" $GRAFANA_CONFIG
+        sudo sed -i -e "s#cert_key =.*#cert_key = $SSL_KEY_LOCATION#" $GRAFANA_CONFIG
     else
         sudo sed -i -e "s/protocol = http.*/protocol = http/" $GRAFANA_CONFIG
         sudo sed -i -e "s/ssl_mode =.*/ssl_mode = disable/" $GRAFANA_CONFIG
