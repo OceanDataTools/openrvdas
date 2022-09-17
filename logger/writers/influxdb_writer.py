@@ -99,7 +99,11 @@ class InfluxDBWriter(Writer):
     def _connect(self):
 
         while not self.write_api:
-            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org)
+            if self.url.find('https:') == 0:
+                client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org,
+                                        ssl=True, verify_ssl=False)
+            else:
+                client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org)
 
             # get the orgID from the name:
             try:
