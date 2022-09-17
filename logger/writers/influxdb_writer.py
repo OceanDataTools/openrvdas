@@ -99,12 +99,12 @@ class InfluxDBWriter(Writer):
     def _connect(self):
 
         while not self.write_api:
-            if self.url.find('https:') == 0:
-                client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org,
-                                        ssl=True, verify_ssl=False)
-            else:
-                client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org)
-
+            # If url begins with "https", we're using SSL; for now, don't insist on
+            # verifying certs.
+            use_ssl = self.url.find('https:') == 0
+            verify_ssl = False
+            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org,
+                                    ssl=use_ssl, verify_ssl=verify_ssl)
             # get the orgID from the name:
             try:
                 organizations_api = client.organizations_api()
