@@ -172,6 +172,19 @@ DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 EOF
 }
 
+###########################################################################
+###########################################################################
+# Set up certificate files, if requested
+function setup_ssl_certificate {
+    echo "Certificate will be placed in ${SSL_CRT_LOCATION}"
+    echo "Key will be placed in ${SSL_KEY_LOCATION}"
+    echo "Please answer the following prompts to continue:"
+    echo
+    openssl req \
+       -newkey rsa:2048 -nodes -keyout ${SSL_KEY_LOCATION} \
+       -x509 -days 365 -out ${SSL_CRT_LOCATION}
+}
+
 #########################################################################
 #########################################################################
 # Return a normalized yes/no for a value
@@ -764,6 +777,16 @@ if [ $INSTALL_TELEGRAF == "yes" ]; then
   RUN_TELEGRAF=$YES_NO_RESULT
 else
   RUN_TELEGRAF=no
+fi
+
+#########################################################################
+#########################################################################
+# Create new self-signed SSL certificate, if that's what they want
+if [ $USE_SSL == "yes" ] && [ $HAVE_SSL_CERTIFICATE == 'no' ]; then
+    echo
+    echo "#####################################################################"
+    echo "Ready to set up new self-signed SSL certificate."
+    setup_ssl_certificate
 fi
 
 echo "#####################################################################"
