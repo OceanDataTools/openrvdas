@@ -14,7 +14,7 @@ from logger.writers.writer import Writer  # noqa: E402
 INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
 try:
     from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG  # noqa: E402
-    from database.influxdb.settings import INFLUXDB_URL  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_URL, INFLUXDB_VERIFY_SSL  # noqa: E402
     INFLUXDB_SETTINGS_FOUND = True
 except (ModuleNotFoundError, ImportError):
     INFLUXDB_SETTINGS_FOUND = False
@@ -32,7 +32,8 @@ class InfluxDBWriter(Writer):
 
     def __init__(self, bucket_name, measurement_name=None,
                  auth_token=INFLUXDB_AUTH_TOKEN,
-                 org=INFLUXDB_ORG, url=INFLUXDB_URL):
+                 org=INFLUXDB_ORG, url=INFLUXDB_URL,
+                 verify_ssl=INFLUXDB_VERIFY_SSL):
         """Write data records to the InfluxDB.
         ```
         bucket_name - the name of the bucket in InfluxDB.  If the bucket does
@@ -52,6 +53,10 @@ class InfluxDBWriter(Writer):
         url - The URL at which to connect with the InfluxDB instance. If
                   omitted, will look for value in imported INFLUXDB_ORG
                   and throw an exception if it is not found.
+
+        verify_ssl - If the URL begins with 'https', SSL will be used for the
+                  connection. If so, and verify_ssl is true, the writer will
+                  attempt to verify the validity of the relevant SSL certificate.
         ```
         """
         super().__init__(input_format=Text)
@@ -88,6 +93,8 @@ class InfluxDBWriter(Writer):
         self.auth_token = auth_token
         self.org = org
         self.url = url
+        self.use_ssl = url.find('https:') == 0
+        self.verify_ssl = verify_ssl
         self.bucket_name = bucket_name
         self.measurement_name = measurement_name
         self.write_api = None
@@ -98,14 +105,9 @@ class InfluxDBWriter(Writer):
     ############################
     def _connect(self):
 
-        # If url begins with "https", we're using SSL; for now, don't insist on
-        # verifying certs.
-        use_ssl = self.url.find('https:') == 0
-        verify_ssl = False
-
         while not self.write_api:
             client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org,
-                                    ssl=use_ssl, verify_ssl=verify_ssl)
+                                    ssl=self.use_ssl, verify_ssl=self.verify_ssl)
             # get the orgID from the name:
             try:
                 organizations_api = client.organizations_api()
