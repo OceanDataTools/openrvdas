@@ -3,6 +3,7 @@
 import time
 import logging
 import sys
+import urllib3
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -98,6 +99,10 @@ class InfluxDBWriter(Writer):
         self.bucket_name = bucket_name
         self.measurement_name = measurement_name
         self.write_api = None
+
+        # If we've chosen not to verify SSL, urllib3 will complain
+        # mightily in the logs each time we make a call.
+        urrlib3.disable_warnings()
 
         # TODO: retry connecting if connection dies while writing.
         self._connect()
