@@ -103,7 +103,7 @@ class InfluxDBWriter(Writer):
 
         # If we've chosen not to verify SSL, urllib3 will complain
         # mightily in the logs each time we make a call.
-        urrlib3.disable_warnings()
+        urllib3.disable_warnings()
 
         # TODO: retry connecting if connection dies while writing.
         self._connect()
