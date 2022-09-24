@@ -19,6 +19,7 @@ try:
     INFLUXDB_SETTINGS_FOUND = True
 except (ModuleNotFoundError, ImportError):
     INFLUXDB_SETTINGS_FOUND = False
+    INFLUXDB_VERIFY_SSL = False
 
 try:
     from influxdb_client import InfluxDBClient  # noqa: E402
