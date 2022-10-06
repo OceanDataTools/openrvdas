@@ -193,9 +193,15 @@ class TextFileReader(StorageReader):
                 break
             elif char == self.eol[eol_index]:
                 eol_index += 1
+                record += char
             else:
                 eol_index = 0
                 record += char
+
+        # If we're here because we did in fact get a full eol string,
+        # retroactively snip it from our record.
+        if eol_index == len(self.eol):
+            record = record[:-eol_index]
 
         return record
 

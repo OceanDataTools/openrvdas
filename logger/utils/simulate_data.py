@@ -103,13 +103,13 @@ class SimUDP:
     """Open a network port and feed stored logfile data to it."""
     ############################
 
-    def __init__(self, port, filebase=None, record_format=None,
-                 time_format=TIME_FORMAT, eol='\n'):
+    def __init__(self, port, name=None, filebase=None, record_format=None,
+                 time_format=TIME_FORMAT, eol='\n', input_eol=None):
         """
         ```
         port -  UDP port on which to write records.
 
-        time_format - What format to use for timestamp
+        name -  Optional user-friendly name to display on warning messages
 
         filebase - Prefix string to be matched (with a following "*") to find
                    files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
@@ -117,13 +117,22 @@ class SimUDP:
         record_format
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is '{timestamp:ti} {record}'
+
+        time_format - What format to use for timestamp
+
+        eol - String to append to end of an output record
+
+        input_eol - Optional string by which to recognize the end of a record
         ```
         """
         self.port = port
+        self.name = name
         self.time_format = time_format
         self.filebase = filebase
         self.record_format = record_format or '{timestamp:ti} {record}'
         self.compiled_record_format = parse.compile(self.record_format)
+        self.eol = eol
+        self.input_eol = input_eol
 
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + '*'):
@@ -133,7 +142,8 @@ class SimUDP:
 
         self.reader = LogfileReader(filebase=filebase, use_timestamps=True,
                                     record_format=self.record_format,
-                                    time_format=self.time_format)
+                                    time_format=self.time_format,
+                                    eol=self.input_eol)
         self.writer = UDPWriter(port=port, eol=eol)
 
         self.first_time = True
@@ -161,7 +171,8 @@ class SimUDP:
                     logging.info('Looping instrument %s', self.filebase)
                     self.reader = LogfileReader(filebase=self.filebase,
                                                 record_format=self.record_format,
-                                                use_timestamps=True)
+                                                use_timestamps=True,
+                                                eol=self.input_eol)
                     continue
 
                 # We've now got a record. Try parsing timestamp off it
@@ -171,7 +182,8 @@ class SimUDP:
 
                 # We had a problem parsing. Discard record and try reading next one.
                 except (KeyError, ValueError, AttributeError):
-                    logging.warning('Unable to parse record into "%s"', self.record_format)
+                    logging.warning('%s: Unable to parse record into "%s"',
+                                    self.name, self.record_format)
                     logging.warning('Record: %s', record)
                     continue
 
@@ -192,8 +204,8 @@ class SimSerial:
     """Create a virtual serial port and feed stored logfile data to it."""
     ############################
 
-    def __init__(self, port, time_format=TIME_FORMAT, filebase=None,
-                 record_format=None, eol='\n',
+    def __init__(self, port, name=None, time_format=TIME_FORMAT, filebase=None,
+                 record_format=None, eol='\n', input_eol=None,
                  baudrate=9600, bytesize=8, parity='N', stopbits=1,
                  timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
                  dsrdtr=False, inter_byte_timeout=None, exclusive=None):
@@ -204,24 +216,32 @@ class SimSerial:
         port - Temporary serial port to create and make available for reading
                records.
 
+        name -  Optional user-friendly name to display on warning messages
+
+        time_format - What format to use for timestamp
+
         filebase     Possibly wildcarded string specifying files to be opened.
 
         record_format
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is '{timestamp:ti} {record}'.
 
-        time_format - What format to use for timestamp
+        eol - String by which to recognize the end of a record
+
+        input_eol - Optional string by which to recognize the end of a record
         ```
         """
         # We'll create two virtual ports: 'port' and 'port_in'; we will write
         # to port_in and read the values back out from port
         self.read_port = port
         self.write_port = port + '_in'
+        self.name = name
         self.time_format = time_format
         self.filebase = filebase
         self.record_format = record_format or '{timestamp:ti} {record}'
         self.compiled_record_format = parse.compile(self.record_format)
         self.eol = eol
+        self.input_eol = input_eol
         self.serial_params = None
 
         # Complain, but go ahead if read_port or write_port exist.
@@ -271,7 +291,8 @@ class SimSerial:
 
             self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
                                         record_format=self.record_format,
-                                        time_format=self.time_format)
+                                        time_format=self.time_format,
+                                        eol=self.input_eol)
             logging.info('Starting %s: %s', self.read_port, self.filebase)
             while not self.quit:
                 try:
@@ -286,7 +307,8 @@ class SimSerial:
                         self.reader = LogfileReader(filebase=self.filebase,
                                                     use_timestamps=True,
                                                     record_format=self.record_format,
-                                                    time_format=self.time_format)
+                                                    time_format=self.time_format,
+                                                    eol=self.input_eol)
 
                     # We've now got a record. Try parsing timestamp off it
                     try:
@@ -295,7 +317,8 @@ class SimSerial:
 
                     # We had a problem parsing. Discard record and try reading next one.
                     except (KeyError, ValueError, TypeError, AttributeError):
-                        logging.warning('Unable to parse record into "%s"', self.record_format)
+                        logging.warning('%s: Unable to parse record into "%s"',
+                                        self.name, self.record_format)
                         logging.warning('Record: %s', record)
                         continue
 
@@ -358,7 +381,7 @@ if __name__ == '__main__':
                         help='Increase output verbosity')
     args = parser.parse_args()
 
-    LOGGING_FORMAT = '%(asctime)-15s %(message)s'
+    LOGGING_FORMAT = '%(asctime)-15s %(lineno)d %(message)s'
     logging.basicConfig(format=LOGGING_FORMAT)
 
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
@@ -378,6 +401,8 @@ if __name__ == '__main__':
                 logging.warning('No class definition for config "%s"', inst)
                 continue
 
+            # Stash name of config
+            config['name'] = inst
             # Save class of simulator, and remove it from the config dict
             inst_class = config['class']
             del config['class']
