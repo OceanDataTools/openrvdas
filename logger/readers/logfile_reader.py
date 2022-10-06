@@ -27,7 +27,7 @@ class LogfileReader(TimestampedReader):
                  record_format=None,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
-                 quiet=False):
+                 eol=None, quiet=False):
         """
         ```
         filebase     Possibly wildcarded string specifying files to be opened.
@@ -59,6 +59,8 @@ class LogfileReader(TimestampedReader):
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is '{timestamp:ti} {record}'.
 
+        eol          Optional character by which to recognize the end of a record
+
         quiet - if not False, don't complain when unable to parse a record.
 
         ```
@@ -79,6 +81,7 @@ class LogfileReader(TimestampedReader):
         self.time_format = time_format
         self.tail = tail
         self.refresh_file_spec = refresh_file_spec
+        self.eol = eol
         self.quiet = quiet
 
         # If use_timestamps, we need to keep track of our last_read to
@@ -99,7 +102,7 @@ class LogfileReader(TimestampedReader):
                                      tail=tail,
                                      refresh_file_spec=refresh_file_spec,
                                      retry_interval=retry_interval,
-                                     interval=interval)
+                                     interval=interval, eol=eol)
 
     ############################
     def read(self):
