@@ -14,10 +14,8 @@ class TestStripTransform(unittest.TestCase):
     def test_default(self):
 
         alpha = '  abc defg  '
-
         transform = StripTransform()
         self.assertEqual(transform.transform(alpha), 'abcdefg')
-
         transform = StripTransform(strip_prefix=True)
         self.assertEqual(transform.transform(alpha), 'abc defg  ')
         transform = StripTransform(strip_suffix=True)
@@ -30,6 +28,9 @@ class TestStripTransform(unittest.TestCase):
         transform = StripTransform(chars=' cad', strip_prefix=True)
         self.assertEqual(transform.transform(alpha), 'bc defg  ')
 
+        beta = '\x01\x05abc d\x19'
+        transform = StripTransform(unprintable=True)
+        self.assertEqual(transform.transform(beta), 'abc d')
 
 ################################################################################
 if __name__ == '__main__':

@@ -8,11 +8,6 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.transforms.transform import Transform  # noqa: E402
 
-def _ctoi(c):
-    if isinstance(c, str):
-        return ord(c)
-    else:
-        return c
 
 ################################################################################
 class StripTransform(Transform):
@@ -64,12 +59,12 @@ class StripTransform(Transform):
         # If we're stripping unprintables
         if self.unprintable:
             if not self.strip_prefix and not self.strip_suffix:
-                record = ''.join([c for c in record if 32 <= _ctoi(c) <= 126])
+                record = ''.join([c for c in record if c.isprintable()])
             if self.strip_prefix:
-                while record and not 32 <= _ctoi(record[0]) <= 126:
+                while record and not record[0].isprintable():
                     record = record[1:]
             if self.strip_suffix:
-                while record and not 32 <= _ctoi(record[-1]) <= 126:
+                while record and not record[-1].isprintable():
                     record = record[:-1]
 
         # If we're working with a specified character set
