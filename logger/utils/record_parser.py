@@ -35,8 +35,8 @@ class RecordParser:
                  field_patterns=None, metadata=None,
                  definition_path=DEFAULT_DEFINITION_PATH,
                  return_das_record=False, return_json=False,
-                 metadata_interval=None, quiet=False,
-                 prepend_data_id=False, delimiter=':'):
+                 metadata_interval=None, strip_unprintable=False,
+                 quiet=False, prepend_data_id=False, delimiter=':'):
         """Create a parser that will parse field values out of a text record
         and return either a Python dict of data_id, timestamp and fields,
         a JSON encoding of that dict, or a binary DASRecord.
@@ -67,6 +67,10 @@ class RecordParser:
             record if those data haven't been returned in the last
             metadata_interval seconds.
 
+        strip_unprintable
+                Strip out and ignore any leading or trailing non-printable binary
+                characters in the string to be parsed.
+
         quiet - if not False, don't complain when unable to parse a record.
 
         prepend_data_id - If true prepend the instrument data_id to field_names
@@ -78,6 +82,7 @@ class RecordParser:
             Not used if prepend_data_id is false.
         ```
         """
+        self.strip_unprintable = strip_unprintable
         self.quiet = quiet
         self.field_patterns = field_patterns
         self.metadata = metadata or {}
@@ -208,6 +213,9 @@ class RecordParser:
         # If we don't have fields, there's nothing to parse
         if field_string is None:
             return None
+
+        if self.strip_unprintable:
+            field_string = ''.join([c for c in field_string if c.isprintable()])
         field_string = field_string.strip()
         if not field_string:
             return None
@@ -217,6 +225,7 @@ class RecordParser:
         # If we've been given a set of field_patterns to apply, use the
         # first that matches.
         if self.field_patterns:
+            data_id = None
             fields, message_type = self._parse_field_string(field_string,
                                                             self.compiled_field_patterns)
         # If we were given no explicit field_patterns to use, we need to
