@@ -240,7 +240,7 @@ class RecordParser:
             fields, message_type = self.parse_for_data_id(data_id, field_string)
 
         # We should now have a dictionary of fields. If not, go home
-        if not fields:
+        if fields is None:
             if not self.quiet:
                 logging.warning('No formats matched field_string "%s"', field_string)
             return None
@@ -306,8 +306,7 @@ class RecordParser:
     ############################
     def _parse_field_string(self, field_string, compiled_field_patterns):
         # Default if we don't match anything
-        fields = {}
-        message_type = None
+        fields = message_type = None
 
         # If our pattern(s) are just a single compiled parser, try parsing and
         # return with no message type.
@@ -320,7 +319,7 @@ class RecordParser:
         elif isinstance(compiled_field_patterns, list):
             for pattern in compiled_field_patterns:
                 fields, message_type = self._parse_field_string(field_string, pattern)
-                if fields:
+                if fields is not None:
                     break
 
         # If it's a dict, try out on all values, using the key as message type.
@@ -331,7 +330,7 @@ class RecordParser:
             for message_type, pattern in compiled_field_patterns.items():
                 fields, int_message_type = self._parse_field_string(field_string, pattern)
                 message_type = int_message_type or message_type
-                if fields:
+                if fields is not None:
                     break
         else:
             raise ValueError('Unexpected pattern type in parser: %s'
@@ -346,7 +345,7 @@ class RecordParser:
         (field_dict, message_type), where field_dict is a dict of
         {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
         """
-        failure_values = ({}, None)
+        failure_values = (None, None)
         if not self.devices:
             logging.warning('RecordParser has no device definitions; unable to parse!')
             return failure_values
@@ -378,8 +377,10 @@ class RecordParser:
             self._parse_field_string(field_string, compiled_format_patterns)
 
         # Did we get anything?
-        if not parsed_fields and not self.quiet:
-            logging.warning('No formats matched field_string "%s"', field_string)
+        if parsed_fields is None:
+            if not self.quiet:
+                logging.warning('No formats matched field_string "%s"', field_string)
+            return failure_values
 
         logging.debug('Got fields: %s', pprint.pformat(parsed_fields))
 
