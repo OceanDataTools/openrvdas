@@ -518,6 +518,7 @@ EOF
 [[inputs.diskio]]
 [[inputs.kernel]]
 [[inputs.mem]]
+[[inputs.net]]
 [[inputs.processes]]
 [[inputs.swap]]
 [[inputs.system]]
