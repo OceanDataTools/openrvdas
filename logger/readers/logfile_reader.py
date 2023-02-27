@@ -124,8 +124,8 @@ class LogfileReader(TimestampedReader):
         # current file really does match our logfile name format...
         while True:
             record = self.reader.read()
-            if not record:  # None means we're out of records
-                return None
+            if record is None:  # None means we're out of records
+                return record
 
             # If we've got a record and we're not using timestamps, we're
             # done - just return it.
@@ -152,7 +152,7 @@ class LogfileReader(TimestampedReader):
             except (KeyError, ValueError, AttributeError):
                 if not self.quiet:
                     logging.warning('Unable to parse record into "%s"', self.record_format)
-                    logging.warning('Record: %s', record)
+                    logging.warning('Record: "%s"', record)
                 continue
 
         # If here, we've got a record and a timestamp and are intending to
