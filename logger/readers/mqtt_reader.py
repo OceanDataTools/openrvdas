@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from queue import Queue
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -72,34 +73,41 @@ class MQTTReader(Reader):
             raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                       'try "pip install paho-mqtt" prior to use.')
 
+        def on_connect(client, userdata, flags, rc):
+            logging.warn("Connected With Result Code: {}".format(rc))
+
+        def on_message(client, userdata, message):
+            self.queue.put(message)
+
         self.broker = broker
         self.channel = channel
         self.client_name = client_name
+        self.queue = Queue()
 
         try:
             self.paho = mqtt.Client(client_name)
-            self.paho.connect(broker)
+            self.paho.on_connect = on_connect
+            self.paho.on_message = on_message
+
+            self.paho.connect(broker, 1883)
             self.paho.subscribe(channel)
-
-            while self.paho.loop() == 0:
-                pass
-
+            
         except mqtt.WebsocketConnectionError as e:
             logging.error('Unable to connect to broker at %s:%s',
                           self.broker, self.channel)
             raise e
-
+    
     ############################
     def read(self):
         while True:
             try:
-                self.paho.loop_forever()
-                message = next(iter(self.paho.listen()))
-                logging.debug('Got message "%s"', message)
-                if message.get('type', None) == 'message':
-                    data = message.get('data', None)
-                    if data:
-                        return data
+                self.paho.loop()
+                while not self.queue.empty():
+                    message = self.queue.get()
+                    if message is None:
+                        continue
+                    logging.debug('Got message "%s"', message.payload)
+                    return message.payload
             except KeyboardInterrupt:
                 self.paho.disconnect()
                 exit(0)
