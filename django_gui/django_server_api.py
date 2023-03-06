@@ -463,9 +463,10 @@ class DjangoServerAPI(ServerAPI):
                     logger = self._get_logger_object(logger)
 
                     # Old config is no longer the current config
-                    old_config = logger.config
-                    old_config.current_config = False
-                    old_config.save()
+                    if logger.config:
+                        old_config = logger.config
+                        old_config.current_config = False
+                        old_config.save()
 
                     # Get the new config
                     new_config = self._get_logger_config_object_by_name(config_name)
