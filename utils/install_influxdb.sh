@@ -463,7 +463,7 @@ gpgkey=https://packages.grafana.com/gpg.key
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 EOF
-        `sudo yum install -y telegraf
+        sudo yum install -y telegraf
 
     # If we're on Ubuntu
     elif [ $OS_TYPE == 'Ubuntu' ]; then
