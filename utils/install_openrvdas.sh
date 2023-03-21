@@ -83,17 +83,24 @@ yes_no() {
 function get_os_type {
     if [[ `uname -s` == 'Darwin' ]];then
         OS_TYPE=MacOS
-        if [[ `uname -p` == 'arm' ]];then
+        OS_VERSION=`uname -p`
+        if [[ $HARDWARE_VERSION == 'arm' ]];then
             echo
-            echo "WARNING: As of 11/20/2020, Homebrew did not yet support ARM architecture on"
-            echo "MacOS. If installation fails, please try installing using the built-in Rosetta"
-            echo "interpreter: Make a copy of /Applications/Terminal.app (e.g. RTerminal.app)."
-            echo "Select it in the Finder and open its information pane (Clover-I). Select "
-            echo "'Open using Rosetta', and use this copy of Terminal when installing OpenRVDAS."
+            echo "WARNING: detected MacOS ARM architecture. Will install Rosetta emulator and"
+            echo "rerun this script emulating X86 architecture."
             echo
-            read -p "Hit return to continue. " DUMMY_VAR
+            read -p "Hit return to continue or Ctrl-C to exit. " DUMMY_VAR
             echo
+            softwareupdate --install-rosetta --agree-to-license
+
+            # Recursively run this script, but now as X86_64
+            THIS_SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+            arch -x86_64 /bin/bash $THIS_SCRIPT_PATH
+
+            # Exit quietly after recursive run
+            return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
         fi
+
     elif [[ `uname -s` == 'Linux' ]];then
         if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]];then
             OS_TYPE=Ubuntu
@@ -144,7 +151,9 @@ function get_os_type {
         echo Unknown OS type: `uname -s`
         exit_gracefully
     fi
-    echo Recognizing OS type as $OS_TYPE
+    echo "#####################################################################"
+    echo "Detected OS = $OS_TYPE, Version = $OS_VERSION"
+
 }
 
 ###########################################################################
@@ -184,9 +193,9 @@ function set_default_variables {
 
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
+        echo "#####################################################################"
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
         source $PREFERENCES_FILE
-        echo branch $DEFAULT_OPENRVDAS_BRANCH
     fi
 }
 
@@ -307,23 +316,35 @@ function install_packages {
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         # Install homebrew:
-        echo Checking for homebrew
-        [ -e /usr/local/bin/brew ] || echo Installing homebrew
-        [ -e /usr/local/bin/brew ] || ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+        HOMEBREW_BASE='/usr/local/homebrew'
 
-        # Install git:
-        echo Looking for/installing git
-        [ -e /usr/local/bin/git ] || brew install git
+        echo Checking for homebrew
+        if [ ! -f ${HOMEBREW_BASE}/bin/brew ];then
+            echo "Installing homebrew"
+
+            if [ ! -d ${HOMEBREW_BASE} ];then
+                sudo mkdir $HOMEBREW_BASE
+            fi
+            sudo chown $RVDAS_USER $HOMEBREW_BASE
+            curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C $HOMEBREW_BASE
+        fi
+
+        # Put brew in path for now
+        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+
+        brew update --force --quiet
+        chmod -R go-w "$(brew --prefix)/share/zsh"
 
         # Install system packages we need
         echo Installing python and supporting packages
-        [ -e /usr/local/bin/python3 ] || brew install python
-        [ -e /usr/local/bin/ssh ]    || brew install openssh
-        [ -e /usr/local/bin/nginx ]  || brew install nginx
-        [ -e /usr/local/bin/supervisorctl ] || brew install supervisor
+        [ -e /usr/local/bin/python3 ] || [ -e /usr/bin/python3 ] || brew install python
+        [ -e /usr/local/bin/ssh ]     || [ -e /usr/bin/ssh ]     || brew install openssh
+        [ -e /usr/local/bin/git ]     || [ -e /usr/bin/git ]     || brew install git
+        [ -e /usr/local/bin/nginx ]   || brew install nginx
+        #[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
-        brew upgrade openssh nginx supervisor || echo Upgraded packages
-        brew link --overwrite python || echo Linking Python
+        #brew upgrade openssh nginx supervisor || echo Upgraded packages
+        #brew link --overwrite python || echo Linking Python
 
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
@@ -699,14 +720,15 @@ function setup_python_packages {
     python3 -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
 
-    pip install \
+    echo "Installing Python packages - please enter sudo password if prompted."
+    sudo pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       --upgrade pip
-    pip install \
+    sudo pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel  # To help with the rest of the installations
 
-    pip install -r utils/requirements.txt
+    sudo pip install -r utils/requirements.txt
 
     # If we're installing database, then also install relevant
     # Python clients.
@@ -851,6 +873,7 @@ function setup_django {
     # RVDAS_DATABASE_PASSWORD - string to use for Django password
 
     cd ${INSTALL_ROOT}/openrvdas
+    source venv/bin/activate
     cp django_gui/settings.py.dist django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PROTOCOL = 'ws'/WEBSOCKET_PROTOCOL = '${WEBSOCKET_PROTOCOL}'/g" django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PORT = 80/WEBSOCKET_PORT = ${SERVER_PORT}/g" django_gui/settings.py
@@ -859,10 +882,10 @@ function setup_django {
 
     # NOTE: we're still inside virtualenv, so we're getting the python
     # that was installed under it.
-    python manage.py makemigrations django_gui
-    python manage.py migrate
+    python3 manage.py makemigrations django_gui
+    python3 manage.py migrate
     rm -rf static
-    python manage.py collectstatic --no-input --clear --link -v 0
+    python3 manage.py collectstatic --no-input --clear --link -v 0
     chmod -R og+rX static
 
     # A temporary hack to allow the display/ pages to be accessed by Django
@@ -871,7 +894,7 @@ function setup_django {
 
     # Bass-ackwards way of creating superuser $RVDAS_USER, as the
     # createsuperuser command won't work from a script
-    python manage.py shell <<EOF
+    python3 manage.py shell <<EOF
 from django.contrib.auth.models import User
 try:
   User.objects.get(username='${RVDAS_USER}').delete()
@@ -1000,7 +1023,7 @@ function setup_supervisor {
 [unix_http_server]
 file=$SUPERVISOR_SOCK   ; (the path to the socket file)
 chmod=0770              ; socket file mode (default 0700)
-${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_USER}
+${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
 EOF
 
     if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
@@ -1184,6 +1207,9 @@ function setup_firewall {
 ###########################################################################
 ###########################################################################
 
+echo
+echo "OpenRVDAS configuration script"
+
 # Read from the preferences file in $PREFERENCES_FILE, if it exists
 set_default_variables
 
@@ -1201,9 +1227,6 @@ fi
 # Set creation mask so that everything we install is, by default,
 # world readable/executable.
 umask 022
-
-echo "#####################################################################"
-echo "OpenRVDAS configuration script"
 
 echo "#####################################################################"
 # We don't set hostname on MacOS
@@ -1531,9 +1554,9 @@ echo "#####################################################################"
 echo "Creating OpenRVDAS-specific uWSGI files"
 
 # Make everything accessible to nginx
-chmod 755 ${INSTALL_ROOT}/openrvdas
-chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
-chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
+sudo chmod 755 ${INSTALL_ROOT}/openrvdas
+sudo chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+sudo chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
 
 # Create openrvdas log and tmp directories
 sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
@@ -1564,8 +1587,13 @@ echo "Restarting services: supervisor"
         sudo mkdir -p /usr/local/var/run/
         sudo chown $RVDAS_USER /usr/local/var/run
         sudo chgrp $RVDAS_GROUP /usr/local/var/run
-        brew tap homebrew/services
-        brew services reload supervisor
+
+        echo "NOTE: on MacOS, supervisord will not be started automatically."
+        echo "To run it, try"
+        echo "    sudo /opt/openrvdas/venv/bin/supervisord \\"
+        echo "       -c /usr/local/etc/supervisord.conf"
+        echo
+        read -p "Hit return to continue. " DUMMY_VAR
 
     # Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
