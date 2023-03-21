@@ -721,14 +721,14 @@ function setup_python_packages {
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
-    sudo pip install \
+    pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       --upgrade pip
-    sudo pip install \
+    pip install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel  # To help with the rest of the installations
 
-    sudo pip install -r utils/requirements.txt
+    pip install -r utils/requirements.txt
 
     # If we're installing database, then also install relevant
     # Python clients.
@@ -1617,7 +1617,6 @@ echo "Restarting services: supervisor"
         systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
         systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
     fi
-
 
 # Deactivate the virtual environment - we'll be calling all relevant
 # binaries using their venv paths, so don't need it.
