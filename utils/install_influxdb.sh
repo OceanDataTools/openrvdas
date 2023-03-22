@@ -328,7 +328,7 @@ EOF
         #export DISTRIB_ID=$(lsb_release -si); export DISTRIB_CODENAME=$(lsb_release -sc)
         echo "deb [trusted=yes] https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list > /dev/null
 
-        sudo apt-get update
+        sudo apt-get update || echo "Failed to update all packages"
         sudo apt-get install -y influxdb2
     else
         echo "ERROR: No InfluxDB binary found for architecture \"`uname -s`\"."
