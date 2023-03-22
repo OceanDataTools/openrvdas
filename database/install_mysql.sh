@@ -155,6 +155,10 @@ EOF
 function install_mysql_macos {
     echo "#####################################################################"
     echo "Installing and enabling MySQL..."
+    HOMEBREW_BASE='/usr/local/homebrew'
+    # Put brew in path for now
+    eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+
     [ -e /usr/local/bin/mysql ]  || brew install mysql
     brew upgrade mysql || echo Upgraded database package
     brew tap homebrew/services
