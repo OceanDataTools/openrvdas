@@ -419,235 +419,6 @@ function install_packages {
 
 ###########################################################################
 ###########################################################################
-function install_mysql_macos {
-    echo "#####################################################################"
-    echo "Installing and enabling MySQL..."
-    [ -e /usr/local/bin/mysql ]  || brew install mysql
-    brew upgrade mysql || echo Upgraded database package
-    brew tap homebrew/services
-    brew services restart mysql
-
-    echo "#####################################################################"
-    echo "Setting up database tables and permissions"
-    # Verify current root password for mysql
-    while true; do
-        # Check whether they're right about the current password; need
-        # a special case if the password is empty.
-        PASS=TRUE
-        [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root  < /dev/null) || PASS=FALSE
-        [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
-        case $PASS in
-            TRUE ) break;;
-            * ) echo "Database root password failed";read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD;;
-        esac
-    done
-
-    # Set the new root password
-    cat > /tmp/set_pwd <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$NEW_ROOT_DATABASE_PASSWORD';
-FLUSH PRIVILEGES;
-EOF
-
-    # If there's a current root password
-    [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /tmp/set_pwd
-
-    # If there's no current root password
-    [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root < /tmp/set_pwd
-    rm -f /tmp/set_pwd
-
-    # Now do the rest of the 'mysql_safe_installation' stuff
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
-FLUSH PRIVILEGES;
-EOF
-
-    echo "#####################################################################"
-    echo "Setting up database users"
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-drop user if exists 'test'@'localhost';
-create user 'test'@'localhost' identified by 'test';
-
-drop user if exists '$RVDAS_USER'@'localhost';
-create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
-
-create database if not exists data character set utf8;
-GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
-
-create database if not exists test character set utf8;
-GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost';
-
-flush privileges;
-\q
-EOF
-    echo Done setting up database
-}
-
-###########################################################################
-###########################################################################
-function install_mysql_centos {
-    echo "#####################################################################"
-    echo "Installing and enabling Mariadb (MySQL replacement in CentOS 7)..."
-
-    yum install -y  mariadb-server mariadb-devel
-    if [ $OS_VERSION == '7' ]; then
-        yum install -y mariadb-libs
-    fi
-    systemctl restart mariadb              # to manually start db server
-    systemctl enable mariadb               # to make it start on boot
-
-    echo "#####################################################################"
-    echo "Setting up database tables and permissions"
-    # Verify current root password for mysql
-    while true; do
-        # Check whether they're right about the current password; need
-        # a special case if the password is empty.
-        PASS=TRUE
-        [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root  < /dev/null) || PASS=FALSE
-        [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
-        case $PASS in
-            TRUE ) break;;
-            * ) echo "Database root password failed";read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD;;
-        esac
-    done
-
-    # Set the new root password
-    cat > /tmp/set_pwd <<EOF
-UPDATE mysql.user SET Password=PASSWORD('$NEW_ROOT_DATABASE_PASSWORD') WHERE User='root';
-FLUSH PRIVILEGES;
-EOF
-
-    # If there's a current root password
-    [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /tmp/set_pwd
-
-    # If there's no current root password
-    [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root < /tmp/set_pwd
-    rm -f /tmp/set_pwd
-
-    # Now do the rest of the 'mysql_safe_installation' stuff
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
-FLUSH PRIVILEGES;
-EOF
-
-    # Try creating databases. Command will fail if they exist, so we need
-    # to do one at a time and trap any possible errors.
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF > /dev/null || echo "table \"data\" appears to already exist - no problem"
-create database data character set utf8;
-EOF
-
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-GRANT ALL PRIVILEGES ON data.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-
-GRANT ALL PRIVILEGES ON test.* TO $RVDAS_USER@localhost IDENTIFIED BY '$RVDAS_DATABASE_PASSWORD' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY 'test' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-EOF
-    echo "Done setting up MariaDB"
-}
-
-###########################################################################
-###########################################################################
-function install_mysql_ubuntu {
-    echo "#####################################################################"
-    echo "Installing and enabling MySQL..."
-
-    apt install -y mysql-server mysql-common mysql-client libmysqlclient-dev
-    systemctl restart mysql    # to manually start db server
-    systemctl enable mysql     # to make it start on boot
-
-    echo "#####################################################################"
-    echo "Setting up database tables and permissions"
-    # Verify current root password for mysql
-    while true; do
-        # Check whether they're right about the current password; need
-        # a special case if the password is empty.
-        PASS=TRUE
-        [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root  < /dev/null) || PASS=FALSE
-        [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || (mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /dev/null) || PASS=FALSE
-        case $PASS in
-            TRUE ) break;;
-            * ) echo "Database root password failed";read -p "Current database password for root? (if one exists - hit return if not) " CURRENT_ROOT_DATABASE_PASSWORD;;
-        esac
-    done
-
-    # Set the new root password
-    cat > /tmp/set_pwd <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$NEW_ROOT_DATABASE_PASSWORD';
-FLUSH PRIVILEGES;
-EOF
-
-    # If there's a current root password
-    [ -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root -p$CURRENT_ROOT_DATABASE_PASSWORD < /tmp/set_pwd
-
-    # If there's no current root password
-    [ ! -z $CURRENT_ROOT_DATABASE_PASSWORD ] || mysql -u root < /tmp/set_pwd
-    rm -f /tmp/set_pwd
-
-    # Now do the rest of the 'mysql_safe_installation' stuff
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-DELETE FROM mysql.user WHERE User='';
-DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
-FLUSH PRIVILEGES;
-EOF
-
-    # Start mysql to start up as a service
-    update-rc.d mysql defaults
-
-    echo "#####################################################################"
-    echo "Setting up database users"
-    mysql -u root -p$NEW_ROOT_DATABASE_PASSWORD <<EOF
-drop user if exists 'test'@'localhost';
-create user 'test'@'localhost' identified by 'test';
-
-drop user if exists 'rvdas'@'localhost';
-create user '$RVDAS_USER'@'localhost' identified by '$RVDAS_DATABASE_PASSWORD';
-
-create database if not exists data character set utf8;
-GRANT ALL PRIVILEGES ON data.* TO '$RVDAS_USER'@'localhost';
-
-create database if not exists test character set utf8;
-GRANT ALL PRIVILEGES ON test.* TO '$RVDAS_USER'@'localhost';
-GRANT ALL PRIVILEGES ON test.* TO 'test'@'localhost';
-
-flush privileges;
-\q
-EOF
-    echo "Done setting up MySQL"
-
-}
-
-###########################################################################
-###########################################################################
-# Install and configure database
-function install_mysql {
-    # Expect the following shell variables to be appropriately set:
-    # RVDAS_USER - valid userid
-    # RVDAS_DATABASE_PASSWORD - current rvdas user MySQL database password
-    # NEW_ROOT_DATABASE_PASSWORD - new root password to use for MySQL
-    # CURRENT_ROOT_DATABASE_PASSWORD - current root password for MySQL
-
-    # MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-        install_mysql_macos
-
-    # CentOS/RHEL
-    elif [ $OS_TYPE == 'CentOS' ]; then
-        install_mysql_centos
-
-    # Ubuntu/Debian
-    elif [ $OS_TYPE == 'Ubuntu' ]; then
-         install_mysql_ubuntu
-    fi
-}
-
-###########################################################################
-###########################################################################
 # Install OpenRVDAS
 function install_openrvdas {
     # Expect the following shell variables to be appropriately set:
@@ -729,12 +500,6 @@ function setup_python_packages {
       wheel  # To help with the rest of the installations
 
     pip install -r utils/requirements.txt
-
-    # If we're installing database, then also install relevant
-    # Python clients.
-    if [ $INSTALL_MYSQL == 'yes' ]; then
-      pip install -r utils/requirements_mysql.txt
-    fi
 }
 
 ###########################################################################
@@ -1346,34 +1111,6 @@ fi
 
 #########################################################################
 #########################################################################
-# Do they want to install/configure MySQL for use by DatabaseWriter, etc?
-echo
-echo "#####################################################################"
-echo "MySQL or MariaDB, the CentOS replacement for MySQL, can be installed and"
-echo "configured so that DatabaseWriter and DatabaseReader have something to"
-echo "write to and read from."
-echo
-yes_no "Install and configure MySQL database? " $DEFAULT_INSTALL_MYSQL
-INSTALL_MYSQL=$YES_NO_RESULT
-
-if [ $INSTALL_MYSQL == 'yes' ]; then
-    echo Will install/configure MySQL
-    # Get current and new passwords for database
-    echo "Root database password will be empty on initial installation. If this"
-    echo "is the initial installation, hit "return" when prompted for root"
-    echo "database password, otherwise enter the password you used during the"
-    echo "initial installation."
-    echo
-    echo "Current database password for root \(hit return if this is the"
-    read -p "initial installation)? " CURRENT_ROOT_DATABASE_PASSWORD
-    read -p "New database password for root? ($CURRENT_ROOT_DATABASE_PASSWORD) " NEW_ROOT_DATABASE_PASSWORD
-    NEW_ROOT_DATABASE_PASSWORD=${NEW_ROOT_DATABASE_PASSWORD:-$CURRENT_ROOT_DATABASE_PASSWORD}
-else
-    echo "Skipping MySQL installation/configuration"
-fi
-
-#########################################################################
-#########################################################################
 # CentOS/RHEL only: do they want to install/configure firewalld?
 INSTALL_FIREWALLD=no
 if [ $OS_TYPE == 'CentOS' ]; then
@@ -1473,22 +1210,6 @@ install_packages
 
 #########################################################################
 #########################################################################
-# If we're installing MySQL/MariaDB
-echo "#####################################################################"
-if [ $INSTALL_MYSQL == 'yes' ]; then
-    echo "Installing/configuring database"
-    # Expect the following shell variables to be appropriately set:
-    # RVDAS_USER - valid userid
-    # RVDAS_DATABASE_PASSWORD - current rvdas user MySQL database password
-    # NEW_ROOT_DATABASE_PASSWORD - new root password to use for MySQL
-    # CURRENT_ROOT_DATABASE_PASSWORD - current root password for MySQL
-    install_mysql
-else
-    echo "Skipping database setup"
-fi
-
-#########################################################################
-#########################################################################
 # Set up OpenRVDAS
 echo "#####################################################################"
 echo "Fetching and setting up OpenRVDAS code..."
@@ -1506,7 +1227,6 @@ echo "#####################################################################"
 echo "Installing virtual environment for Django, uWSGI and other Python-dependent packages."
 # Expect the following shell variables to be appropriately set:
 # INSTALL_ROOT - path where openrvdas/ is
-# INSTALL_MYSQL - set if MySQL is to be installed, unset otherwise
 setup_python_packages
 
 #########################################################################
