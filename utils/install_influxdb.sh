@@ -473,7 +473,7 @@ function install_telegraf {
     elif [ $OS_TYPE == 'CentOS' ]; then
         TELEGRAF_CONF_FILE=openrvdas.conf
         TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
-        TELEGRAF_BIN=/usr/local/bin/telegraf
+        TELEGRAF_BIN=/usr/bin/telegraf
 
         cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
 [grafana]
