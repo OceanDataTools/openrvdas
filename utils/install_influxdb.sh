@@ -302,10 +302,15 @@ function install_influxdb {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
+        INFLUX_PATH=/usr/local/bin
+        HOMEBREW_BASE='/usr/local/homebrew'
+        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
         brew install influxdb
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
+        INFLUX_PATH=/usr/bin
+
         # From https://portal.influxdata.com/downloads/
 
         # influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
@@ -323,6 +328,7 @@ EOF
             sudo yum install -y --nobest influxdb2 influxdb2-cli
         fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
+        INFLUX_PATH=/usr/bin
         # influxdata-archive_compat.key GPG Fingerprint: 9D539D90D3328DC7D6C8D3B9D8FF8E1F7DF8B07E
         wget -q https://repos.influxdata.com/influxdata-archive_compat.key
         echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
@@ -340,14 +346,15 @@ EOF
     echo Running InfluxDB setup - killing all currently-running instances
     pkill -x influxd || echo No processes killed
     echo Running server in background
-    /usr/bin/influxd --reporting-disabled > /dev/null &
+    ${INFLUX_PATH}/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
     sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
-    /usr/bin/influx setup \
+    ${INFLUX_PATH}/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
         --org openrvdas --bucket openrvdas --retention 0 --force # > /dev/null
-    echo Killing the InfluxDB instance we started
+
+    #    echo Killing the InfluxDB instance we started
     pkill -x influxd || echo No processes killed
 
     # We're going to run Influx from supervisorctl, so disable automatic service
@@ -376,16 +383,21 @@ function install_grafana {
     echo Installing Grafana...
 
     if [ $OS_TYPE == 'MacOS' ]; then
-        GRAFANA_RELEASE=grafana-8.1.2
-        GRAFANA_REPO=dl.grafana.com/oss/release
-        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
+        GRAFANA_PATH=/usr/local/homebrew/bin
+        GRAFANA_CONFIG=/usr/local/homebrew/share/grafana/conf/defaults.ini
+        GRAFANA_HOMEPATH=/usr/local/homebrew/share/grafana
 
-        cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
-        ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
-        ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
+        HOMEBREW_BASE='/usr/local/homebrew'
+        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+        brew update
+        brew install grafana
 
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
+        GRAFANA_PATH=/usr/sbin
+        GRAFANA_CONFIG=/usr/share/grafana/conf/defaults.ini
+        GRAFANA_HOMEPATH=/usr/share/grafana
+
         cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
 [grafana]
 name=grafana
@@ -401,6 +413,10 @@ EOF
 
     # If we're on Ubuntu
     elif [ $OS_TYPE == 'Ubuntu' ]; then
+        GRAFANA_PATH=/usr/sbin
+        GRAFANA_CONFIG=/usr/share/grafana/conf/defaults.ini
+        GRAFANA_HOMEPATH=/usr/share/grafana
+
         sudo apt-get install -y apt-transport-https
         sudo apt-get install -y software-properties-common wget
         sudo apt-get install -y software-properties-common wget
@@ -408,17 +424,19 @@ EOF
         echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
         sudo apt-get update
         sudo apt-get install grafana
+
     fi
 
-    sudo /usr/sbin/grafana-cli admin reset-admin-password $INFLUXDB_PASSWORD
+    pushd $GRAFANA_HOMEPATH
+    sudo ${GRAFANA_PATH}/grafana-cli admin reset-admin-password $INFLUXDB_PASSWORD
 
     echo Downloading plugins
-    sudo /usr/sbin/grafana-cli plugins install grafana-influxdb-flux-datasource
-    sudo /usr/sbin/grafana-cli plugins install briangann-gauge-panel
+    sudo ${GRAFANA_PATH}/grafana-cli plugins install grafana-influxdb-flux-datasource
+    sudo ${GRAFANA_PATH}/grafana-cli plugins install briangann-gauge-panel
+    popd
 
     # If we're using SSL, change any "http" reference to "https"; if not
     # do vice versa.
-    GRAFANA_CONFIG='/usr/share/grafana/conf/defaults.ini'
     if [[ $USE_SSL == 'yes' ]];then
         sudo sed -i -e "s/protocol = http.*/protocol = https/" $GRAFANA_CONFIG
         sudo sed -i -e "s/ssl_mode =.*/ssl_mode = skip-verify/" $GRAFANA_CONFIG
@@ -442,16 +460,21 @@ function install_telegraf {
     echo Installing Telegraf...
 
     if [ $OS_TYPE == 'MacOS' ]; then
-        GRAFANA_RELEASE=grafana-8.1.2
-        GRAFANA_REPO=dl.grafana.com/oss/release
-        GRAFANA_PACKAGE=${GRAFANA_RELEASE}.darwin-amd64 # for MacOS
+        TELEGRAF_CONF_FILE=openrvdas.conf
+        TELEGRAF_CONF_DIR=/usr/local/homebrew/etc/telegraf.d
+        TELEGRAF_BIN=/usr/local/homebrew/bin/telegraf
 
-        cp -rf ${GRAFANA_RELEASE} /usr/local/etc/grafana
-        ln -fs /usr/local/etc/grafana/bin/grafana-server /usr/local/bin
-        ln -fs /usr/local/etc/grafana/bin/grafana-cli /usr/local/bin
+        HOMEBREW_BASE='/usr/local/homebrew'
+        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+        brew update
+        brew install telegraf
 
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
+        TELEGRAF_CONF_FILE=openrvdas.conf
+        TELEGRAF_CONF_DIR=/usr/local/homebrew/etc/telegraf.d
+        TELEGRAF_BIN=/usr/local/bin/telegraf
+
         cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
 [grafana]
 name=grafana
@@ -467,6 +490,10 @@ EOF
 
     # If we're on Ubuntu
     elif [ $OS_TYPE == 'Ubuntu' ]; then
+        TELEGRAF_CONF_FILE=openrvdas.conf
+        TELEGRAF_CONF_DIR=/usr/local/homebrew/etc/telegraf.d
+        TELEGRAF_BIN=/usr/local/bin/telegraf
+
         wget -q https://repos.influxdata.com/influxdata-archive_compat.key
         echo '23a1c8836f0afc5ed24e0486339d7cc8f6790b83886c4c96995b88a061c5bb5d influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
         echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
@@ -480,8 +507,7 @@ EOF
 
     # Create conf in /tmp, then move into place, to get around permission quirk
     echo Configuring Telegraf
-    TELEGRAF_CONF_FILE=openrvdas.conf
-    TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
+
     TELEGRAF_CONF=$TELEGRAF_CONF_DIR/$TELEGRAF_CONF_FILE
 
     # For now, don't verify certificates
@@ -564,7 +590,7 @@ EOF
 
     ##########
     # If InfluxDB is installed, create an entry for it
-    if [[ -e /usr/bin/influxd ]]; then
+    if [[ $INSTALL_INFLUXDB == 'yes' ]]; then
         INSTALLED_PROGRAMS=influxdb
 
         if [[ $RUN_INFLUXDB == 'yes' ]];then
@@ -581,7 +607,7 @@ EOF
         cat >> $TMP_SUPERVISOR_FILE <<EOF
 ; Run InfluxDB
 [program:influxdb]
-command=/usr/bin/influxd --reporting-disabled $INFLUX_SSL_OPTIONS
+command=${INFLUX_PATH}/influxd --reporting-disabled $INFLUX_SSL_OPTIONS
 directory=/opt/openrvdas
 autostart=$AUTOSTART_INFLUXDB
 autorestart=true
@@ -595,14 +621,12 @@ EOF
     # If Grafana is installed, create an entry for it. Grafana
     # requires all sorts of command line help, and the locations of
     # the files it needs depend on the system, so hunt around.
-    if [[ -e /usr/sbin/grafana-server ]]; then
+    if [[  $INSTALL_GRAFANA == 'yes' ]]; then
         if [[ -z "$INSTALLED_PROGRAMS" ]];then
             INSTALLED_PROGRAMS=grafana
         else
             INSTALLED_PROGRAMS=${INSTALLED_PROGRAMS},grafana
         fi
-
-        GRAFANA_HOMEPATH=/usr/share/grafana
 
         if [[ $RUN_GRAFANA == 'yes' ]];then
             AUTOSTART_GRAFANA=true
@@ -613,8 +637,8 @@ EOF
 
 ; Run Grafana
 [program:grafana]
-command=/usr/sbin/grafana-server --homepath $GRAFANA_HOMEPATH
-directory=/opt/openrvdas
+command=${GRAFANA_PATH}/grafana-server --homepath $GRAFANA_HOMEPATH
+directory=$GRAFANA_HOMEPATH
 autostart=$AUTOSTART_GRAFANA
 autorestart=true
 startretries=3
@@ -625,7 +649,7 @@ EOF
 
     ##########
     # If Telegraf is installed, create an entry for it.
-    if [[ -e /usr/bin/telegraf ]]; then
+    if [[  $INSTALL_TELEGRAF == 'yes' ]]; then
         if [[ -z "$INSTALLED_PROGRAMS" ]];then
             INSTALLED_PROGRAMS=telegraf
         else
@@ -641,7 +665,7 @@ EOF
 
 ; Run Telegraf
 [program:telegraf]
-command=/usr/bin/telegraf --config=${TELEGRAF_CONF}
+command=${TELEGRAF_BIN} --config=${TELEGRAF_CONF}
 directory=/opt/openrvdas
 autostart=$AUTOSTART_TELEGRAF
 autorestart=true
