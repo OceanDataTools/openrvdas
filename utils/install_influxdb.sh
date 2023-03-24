@@ -472,7 +472,7 @@ function install_telegraf {
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
         TELEGRAF_CONF_FILE=openrvdas.conf
-        TELEGRAF_CONF_DIR=/usr/local/homebrew/etc/telegraf.d
+        TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
         TELEGRAF_BIN=/usr/local/bin/telegraf
 
         cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
@@ -491,8 +491,8 @@ EOF
     # If we're on Ubuntu
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         TELEGRAF_CONF_FILE=openrvdas.conf
-        TELEGRAF_CONF_DIR=/usr/local/homebrew/etc/telegraf.d
-        TELEGRAF_BIN=/usr/local/bin/telegraf
+        TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
+        TELEGRAF_BIN=/usr/bin/telegraf
 
         wget -q https://repos.influxdata.com/influxdata-archive_compat.key
         echo '23a1c8836f0afc5ed24e0486339d7cc8f6790b83886c4c96995b88a061c5bb5d influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
