@@ -333,10 +333,10 @@ function install_packages {
 
         # Install system packages we need
         echo Installing python and supporting packages
-        [ -e /usr/local/bin/python3 ] || [ -e /usr/bin/python3 ] || brew install python
-        [ -e /usr/local/bin/ssh ]     || [ -e /usr/bin/ssh ]     || brew install openssh
-        [ -e /usr/local/bin/git ]     || [ -e /usr/bin/git ]     || brew install git
-        [ -e /usr/local/bin/nginx ]   || brew install nginx
+        [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
+        [ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
+        [ -e ${HOMEBREW_BASE}/bin/git ]    || brew install git
+        [ -e ${HOMEBREW_BASE}/bin/nginx ]  || brew install nginx
         #[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
@@ -749,7 +749,7 @@ function setup_supervisor {
     if [ $OS_TYPE == 'MacOS' ]; then
         ETC_HOME=/usr/local/etc
         HTTP_HOST=127.0.0.1
-        NGINX_BIN=/usr/local/bin/nginx
+        NGINX_BIN=${HOMEBREW_BASE}/bin/nginx
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
         SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
         SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
