@@ -311,7 +311,21 @@ function install_influxdb {
     elif [ $OS_TYPE == 'CentOS' ]; then
         INFLUX_PATH=/usr/bin
 
+        # Remove old repo, if it's lying around
+        if [ -e /etc/yum.repos.d/influxdb.repo ]; then
+            sudo rm /etc/yum.repos.d/influxdb.repo
+        fi
         # From https://portal.influxdata.com/downloads/
+        # influxdata-archive_compat.key GPG fingerprint:
+        #     9D53 9D90 D332 8DC7 D6C8 D3B9 D8FF 8E1F 7DF8 B07E
+        cat <<EOF | sudo tee /etc/yum.repos.d/influxdata.repo
+[influxdata]
+name = InfluxData Repository - Stable
+baseurl = https://repos.influxdata.com/stable/\$basearch/main
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdata-archive_compat.key
+EOF
 
         # influxdb.key GPG Fingerprint: 05CE15085FC09D18E99EFB22684A14CF2582E0C5
         cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
@@ -475,16 +489,20 @@ function install_telegraf {
         TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
         TELEGRAF_BIN=/usr/bin/telegraf
 
-        cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
-[grafana]
-name=grafana
-baseurl=https://packages.grafana.com/oss/rpm
-repo_gpgcheck=1
-enabled=1
-gpgcheck=1
-gpgkey=https://packages.grafana.com/gpg.key
-sslverify=1
-sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+        # Remove old repo, if it's lying around
+        if [ -e /etc/yum.repos.d/influxdb.repo ]; then
+            sudo rm /etc/yum.repos.d/influxdb.repo
+        fi
+        # From: https://portal.influxdata.com/downloads/
+        # influxdata-archive_compat.key GPG fingerprint:
+        #     9D53 9D90 D332 8DC7 D6C8 D3B9 D8FF 8E1F 7DF8 B07E
+        cat <<EOF | sudo tee /etc/yum.repos.d/influxdata.repo
+[influxdata]
+name = InfluxData Repository - Stable
+baseurl = https://repos.influxdata.com/stable/\$basearch/main
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdata-archive_compat.key
 EOF
         sudo yum install -y telegraf
 
