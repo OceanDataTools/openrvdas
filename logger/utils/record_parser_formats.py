@@ -32,6 +32,7 @@ The recognized format types we add are:
   nlat = NMEA-formatted latitude or longitude, converted to decimal degrees
 
   nc = any ASCII text that is not a comma
+  ns = any ASCII text that is not an asterisk ("star")
 
 See 'Custom Type Conversions' in https://pypi.org/project/parse/ for a
 discussion of how format types work.
@@ -164,6 +165,19 @@ def not_comma(text):
 
 not_comma.pattern = r'[^,]*'
 
+
+def not_star(text):
+    """Method for parsing a string (or anything) terminated by a "*"
+    """
+    if text:
+        return text
+    else:
+        return None
+
+
+not_star.pattern = r'[^\*]*'
+
+
 extra_format_types = dict(
     od=optional_d,
     of=optional_f,
@@ -174,4 +188,5 @@ extra_format_types = dict(
     nlat=nmea_lat_lon,
     nlat_dir=nmea_lat_lon_dir,
 
-    nc=not_comma)
+    nc=not_comma,
+    ns=not_star)

@@ -27,7 +27,7 @@ class LogfileReader(TimestampedReader):
                  record_format=None,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
-                 quiet=False):
+                 eol=None, quiet=False):
         """
         ```
         filebase     Possibly wildcarded string specifying files to be opened.
@@ -59,6 +59,8 @@ class LogfileReader(TimestampedReader):
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is '{timestamp:ti} {record}'.
 
+        eol          Optional character by which to recognize the end of a record
+
         quiet - if not False, don't complain when unable to parse a record.
 
         ```
@@ -79,6 +81,7 @@ class LogfileReader(TimestampedReader):
         self.time_format = time_format
         self.tail = tail
         self.refresh_file_spec = refresh_file_spec
+        self.eol = eol
         self.quiet = quiet
 
         # If use_timestamps, we need to keep track of our last_read to
@@ -99,7 +102,7 @@ class LogfileReader(TimestampedReader):
                                      tail=tail,
                                      refresh_file_spec=refresh_file_spec,
                                      retry_interval=retry_interval,
-                                     interval=interval)
+                                     interval=interval, eol=eol)
 
     ############################
     def read(self):
@@ -121,8 +124,8 @@ class LogfileReader(TimestampedReader):
         # current file really does match our logfile name format...
         while True:
             record = self.reader.read()
-            if not record:  # None means we're out of records
-                return None
+            if record is None:  # None means we're out of records
+                return record
 
             # If we've got a record and we're not using timestamps, we're
             # done - just return it.
@@ -149,7 +152,7 @@ class LogfileReader(TimestampedReader):
             except (KeyError, ValueError, AttributeError):
                 if not self.quiet:
                     logging.warning('Unable to parse record into "%s"', self.record_format)
-                    logging.warning('Record: %s', record)
+                    logging.warning('Record: "%s"', record)
                 continue
 
         # If here, we've got a record and a timestamp and are intending to

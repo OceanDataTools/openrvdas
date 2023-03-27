@@ -177,7 +177,7 @@ Seapath200:
   # list. Parser will use the first one that matches the whole line.
   format:
     GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-    HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    HDT: "$GPHDT,{HeadingTrue:of},T*{CheckSum:x}"
     VTG: "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
     ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
     PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
@@ -397,7 +397,7 @@ device_types:
     # list. Parser will use the first one that matches the whole line.
     format:
       GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-      HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+      HDT: "$GPHDT,{HeadingTrue:of},T*{CheckSum:x}"
       VTG: "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
       ZDA: "$GPZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:d},{LocalZone:w}*{CheckSum:x}"
       PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
@@ -514,6 +514,30 @@ class TestRecordParser(unittest.TestCase):
                 logging.info('line:\n%s', line)
                 record = p.parse_record(line)
                 logging.info('record:\n%s', pprint.pformat(record))
+
+    ############################
+    def test_empty_record_parser(self):
+
+        p = RecordParser(definition_path=self.device_filename)
+
+        # Expect warning when it can't parse record
+        with self.assertLogs(level='WARNING') as cm:
+            record = p.parse_record('seap 2017-11-04T07:00:17.618759Z $GPHDT,X235.83,T*0A')
+
+        # No warning when it can parse record
+        record = p.parse_record('seap 2017-11-04T07:00:17.618759Z $GPHDT,235.83,T*0A')
+        self.assertDictEqual(record,
+                             {'data_id': 'seap', 'timestamp': 1509778817.618759,
+                              'fields': {'Seap200HeadingTrue': 235.83}, 'message_type': 'HDT'})
+
+        # Check that parser *doesn't* throw a warning for a record that it can parse, but results
+        # # in no data fields. Do this by checking that the only thing logged is a dummy message.
+        with self.assertLogs(level='WARNING') as cm:
+            # We want to assert there are no warnings, but the 'assertLogs' method does not support that.
+            # Therefore, we are adding a dummy warning, and then we will assert it is the only warning.
+            logging.warning('Dummy warning')
+            record = p.parse_record('seap 2017-11-04T07:00:17.618759Z $GPHDT,,T*0A')
+        self.assertEqual(['WARNING:root:Dummy warning'],cm.output)
 
     ############################
     def test_parse_records(self):

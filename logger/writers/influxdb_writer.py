@@ -19,6 +19,7 @@ try:
     INFLUXDB_SETTINGS_FOUND = True
 except (ModuleNotFoundError, ImportError):
     INFLUXDB_SETTINGS_FOUND = False
+    INFLUXDB_VERIFY_SSL = False
 
 try:
     from influxdb_client import InfluxDBClient  # noqa: E402
@@ -102,7 +103,7 @@ class InfluxDBWriter(Writer):
 
         # If we've chosen not to verify SSL, urllib3 will complain
         # mightily in the logs each time we make a call.
-        urrlib3.disable_warnings()
+        urllib3.disable_warnings()
 
         # TODO: retry connecting if connection dies while writing.
         self._connect()

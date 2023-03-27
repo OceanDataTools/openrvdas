@@ -20,7 +20,7 @@ class TextFileReader(StorageReader):
     ############################
 
     def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-                 retry_interval=0.1, interval=0):
+                 retry_interval=0.1, interval=0, eol=None):
         """
         ```
         file_spec    Possibly wildcarded string speficying files to be opened.
@@ -43,6 +43,8 @@ class TextFileReader(StorageReader):
         interval
                      How long to sleep between returning records. In general
                      this should be zero except for debugging purposes.
+
+        eol          Optional character by which to recognize the end of a record
         ```
         Note that the order in which files are opened will probably be in
         alphanumeric by filename, but this is not strictly enforced and
@@ -56,6 +58,7 @@ class TextFileReader(StorageReader):
         self.refresh_file_spec = refresh_file_spec
         self.retry_interval = retry_interval
         self.interval = interval
+        self.eol = eol
 
         # If interval != 0, we need to keep track of our last_read to know
         # how long to sleep
@@ -142,7 +145,10 @@ class TextFileReader(StorageReader):
             # If we've got a current file, or if _get_next_file() gets one
             # for us, try to read a record.
             if self.current_file or self._get_next_file():
-                record = self.current_file.readline()
+                if not self.eol:
+                    record = self.current_file.readline()
+                else:
+                    record = self._read_until_eol()
                 if record:
                     self.last_read = time.time()
                     record = record.rstrip('\n')
@@ -169,6 +175,35 @@ class TextFileReader(StorageReader):
             logging.debug('TextFileReader - tail/refresh specified, so sleeping '
                           '%f seconds before trying again', self.retry_interval)
             time.sleep(self.retry_interval)
+
+    ############################
+    # If self.eol is a string instead of None, read until we've consumed that
+    # string or reached eof, and return that as a record.
+    def _read_until_eol(self):
+        if not self.eol:
+            logging.fatal('Code error: called _read_until_eof, but no eof string specified')
+            return
+
+        record = ''
+        eol_index = 0  # we're going to count our way through eol characters
+        while eol_index < len(self.eol):
+            # read by character
+            char = self.current_file.read(1)
+            if char == '':
+                break
+            elif char == self.eol[eol_index]:
+                eol_index += 1
+                record += char
+            else:
+                eol_index = 0
+                record += char
+
+        # If we're here because we did in fact get a full eol string,
+        # retroactively snip it from our record.
+        if eol_index == len(self.eol):
+            record = record[:-eol_index]
+
+        return record
 
     ############################
     # Current behavior is to just go to the end if we run out of records,

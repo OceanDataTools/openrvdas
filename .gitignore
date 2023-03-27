@@ -52,6 +52,16 @@ local/rcrv/settings.py
 local/rcrv/config_template.yaml
 local/rcrv/.coriolix_preferences
 
+# OceanX
+local/alucia
+
+# Stony Brook
+local/stonybrook
+
+local/unols
+
+local/usap/palmer
+
 # local for Scripps Institution of Oceanography
 #
 # SIO is testing this software out and wants the ability to make rapid

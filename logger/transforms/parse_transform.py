@@ -7,7 +7,6 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import record_parser  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
-
 ################################################################################
 class ParseTransform(Transform):
     """Parse a "<data_id> <timestamp> <message>" record and return
@@ -16,8 +15,8 @@ class ParseTransform(Transform):
     def __init__(self, record_format=None, field_patterns=None, metadata=None,
                  definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                  return_json=False, return_das_record=False,
-                 metadata_interval=None, quiet=False, prepend_data_id=False,
-                 delimiter=':'):
+                 metadata_interval=None, strip_unprintable=False, quiet=False,
+                 prepend_data_id=False, delimiter=':'):
         """
         ```
         record_format
@@ -49,6 +48,10 @@ class ParseTransform(Transform):
                 pertaining to each field in the returned record if those data
                 haven't been returned in the last metadata_interval seconds.
 
+        strip_unprintable
+                Strip out and ignore any leading or trailing non-printable binary
+                characters in the string to be parsed.
+
         quiet - if not False, don't complain when unable to parse a record.
 
         prepend_data_id
@@ -69,6 +72,7 @@ class ParseTransform(Transform):
             return_json=return_json,
             return_das_record=return_das_record,
             metadata_interval=metadata_interval,
+            strip_unprintable=strip_unprintable,
             quiet=quiet,
             prepend_data_id=prepend_data_id,
             delimiter=delimiter)
