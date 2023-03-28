@@ -2909,6 +2909,7 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
+            "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -5892,6 +5893,7 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
+            "axisLabel": "",
             "axisPlacement": "left",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -6274,7 +6276,7 @@
         ]
       },
       "gridPos": {
-        "h": 4,
+        "h": 5,
         "w": 8,
         "x": 0,
         "y": 18
@@ -6362,19 +6364,73 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "MwxAirTemp lmwx"
+              "options": "MwxPAR lmwx"
             },
             "properties": [
               {
                 "id": "displayName",
-                "value": "Air Termperature"
+                "value": "Photo-available"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxPIRThermo lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Infrared"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxPSP"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Shortwave"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Photo-available"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Shortwave"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-blue",
+                  "mode": "fixed"
+                }
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 4,
+        "h": 5,
         "w": 8,
         "x": 8,
         "y": 18
@@ -6385,7 +6441,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -6399,11 +6455,11 @@
             "type": "influxdb",
             "uid": "BOyDGLfVz"
           },
-          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPAR\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPAR\" or \r\n            r._field == \"MwxPIRThermo\" or r._field == \"MwxPSP\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
         }
       ],
-      "title": "Photosynthetically-Available Radiation",
+      "title": "Radiation",
       "type": "timeseries"
     }
   ],
@@ -6416,7 +6472,7 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -6436,6 +6492,6 @@
   "timezone": "",
   "title": "LMG Weather Dashboard",
   "uid": "c7uWsZIMz",
-  "version": 5,
+  "version": 6,
   "weekStart": ""
 }
