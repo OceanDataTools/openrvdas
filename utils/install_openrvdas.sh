@@ -483,8 +483,19 @@ function setup_python_packages {
     #if [ -d $VENV_PATH ];then
     #    mv $VENV_PATH ${VENV_PATH}.bak.$$
     #fi
-
+    PYTHON_PATH=$(which python3)
+    if [ -n "$PYTHON_PATH" ];then
+        echo "Using python at $PYTHON_PATH"
+    elif [ -e '/usr/local/bin/python3' ];then
+        PYTHON_PATH=/usr/local/bin/python3
+    elif [ -e '/usr/bin/python3' ];then
+        PYTHON_PATH=/usr/bin/python3
+    else
+        echo 'No python3 found?!?'
+        #exit_gracefully
+    fi
     python3 -m venv $VENV_PATH
+
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
