@@ -30,8 +30,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -74,8 +73,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start:-10m)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330GPSDate\")\r\n  |> last()",
@@ -87,8 +85,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -135,8 +132,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330Latitude\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
@@ -148,8 +144,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -198,8 +193,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"lsep\" and r._field == \"S330NorS\"\r\n  )\r\n  |> last()\r\n  |> toString()",
@@ -211,8 +205,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -259,8 +252,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330Longitude\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
@@ -272,8 +264,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -320,8 +311,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330EorW\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
@@ -333,8 +323,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -379,8 +368,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330HeadingTrue\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
@@ -392,8 +380,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -438,8 +425,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330CourseTrue\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
@@ -451,8 +437,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -501,8 +486,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: -1m)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330SpeedKt\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
@@ -514,8 +498,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -560,8 +543,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330Pitch\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
@@ -573,8 +555,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -619,8 +600,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330Roll\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
@@ -632,8 +612,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -678,8 +657,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "hide": false,
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"lsep\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"S330Heave\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
