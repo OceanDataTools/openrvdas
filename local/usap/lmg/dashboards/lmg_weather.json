@@ -35,8 +35,7 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "decimals": 1,
       "fontSizes": [
@@ -210,8 +209,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPortRelWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
@@ -1469,8 +1467,7 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "decimals": 1,
       "fontSizes": [
@@ -1644,8 +1641,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxStbdRelWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
@@ -2898,8 +2894,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -3002,8 +2997,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPortRelWindSpeed\" or r._field == \"MwxStbdRelWindSpeed\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
@@ -3019,8 +3013,7 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "decimals": 1,
       "fontSizes": [
@@ -3194,8 +3187,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"PortTrueWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
@@ -4453,8 +4445,7 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "decimals": 1,
       "fontSizes": [
@@ -4628,8 +4619,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"StbdTrueWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
@@ -5882,8 +5872,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -5986,8 +5975,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"PortTrueWindSpeed\" or r._field == \"StbdTrueWindSpeed\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
@@ -5998,8 +5986,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -6090,8 +6077,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxBarometer\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
@@ -6102,8 +6088,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -6194,8 +6179,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxAirTemp\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
@@ -6206,8 +6190,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -6298,8 +6281,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxAirRelHumid\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
@@ -6310,8 +6292,7 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "BOyDGLfVz"
+        "type": "influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -6452,8 +6433,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "BOyDGLfVz"
+            "type": "influxdb"
           },
           "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPAR\" or \r\n            r._field == \"MwxPIRThermo\" or r._field == \"MwxPSP\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
