@@ -495,7 +495,7 @@ function setup_python_packages {
         echo 'No python3 found?!?'
         #exit_gracefully
     fi
-    python3 -m venv $VENV_PATH
+    ${PYTHON_PATH} -m venv $VENV_PATH
 
     source $VENV_PATH/bin/activate  # activate virtual environment
 
