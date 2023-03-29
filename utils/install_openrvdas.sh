@@ -484,7 +484,7 @@ function setup_python_packages {
     #if [ -d $VENV_PATH ];then
     #    mv $VENV_PATH ${VENV_PATH}.bak.$$
     #fi
-    PYTHON_PATH=$(which python3)
+    PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
     if [ -n "$PYTHON_PATH" ];then
         echo "Using python at $PYTHON_PATH"
     elif [ -e '/usr/local/bin/python3' ];then
