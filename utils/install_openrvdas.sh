@@ -176,7 +176,6 @@ function set_default_variables {
 
     DEFAULT_RVDAS_USER=rvdas
 
-    DEFAULT_INSTALL_MYSQL=no
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
 
@@ -186,6 +185,8 @@ function set_default_variables {
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
+
+    DEFAULT_INSTALL_DOC_MARKDOWN=yes
 
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
@@ -221,7 +222,6 @@ DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
 
-DEFAULT_INSTALL_MYSQL=$INSTALL_MYSQL
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
 
@@ -232,6 +232,7 @@ DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
 DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
 DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=$SUPERVISORD_WEBINTERFACE_PORT
 
+DEFAULT_INSTALL_DOC_MARKDOWN=$INSTALL_DOC_MARKDOWN
 EOF
 }
 
@@ -469,7 +470,7 @@ function install_openrvdas {
 function setup_python_packages {
     # Expect the following shell variables to be appropriately set:
     # INSTALL_ROOT - path where openrvdas/ is
-    # INSTALL_MYSQL - set if MySQL is to be installed, unset otherwise
+
 
     # Set up virtual environment
     VENV_PATH=$INSTALL_ROOT/openrvdas/venv
@@ -530,7 +531,13 @@ function setup_nginx {
 
     fi
 
-    # Put the nginx conf file in place and link it up
+    if [ $INSTALL_DOC_MARKDOWN == 'yes' ];then
+        MARKDOWN_COMMENT='' # We uncomment the Strapdown-related lines in conf
+    else
+        MARKDOWN_COMMENT='#'
+    fi
+
+    # Now create the nginx conf file in place and link it up
     cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
 # openrvdas_nginx.conf
 
@@ -591,16 +598,23 @@ http {
             alias /${INSTALL_ROOT}/openrvdas/display/css; # display pages
             default_type text/css;
         }
-
         location /static {
             alias ${INSTALL_ROOT}/openrvdas/static; # project static files
             autoindex on;
         }
-
         location /docs {
             alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
             autoindex on;
         }
+        # Added by KPed so Markdown renders in the browser
+        # See https://gist.github.com/shukebeta/b7435d02892cb2ad2b9c8d56572adb2b
+        ${MARKDOWN_COMMENT}location ~ /.*\.md {
+        ${MARKDOWN_COMMENT}    root /opt/openrvdas;
+        ${MARKDOWN_COMMENT}    default_type text/html;
+        ${MARKDOWN_COMMENT}    charset UTF-8;
+        ${MARKDOWN_COMMENT}    add_before_body /static/StrapDown.js/prepend;
+        ${MARKDOWN_COMMENT}    add_after_body /static/StrapDown.js/postpend;
+        ${MARKDOWN_COMMENT}}
 
         # Internally, Cached Data Server operates on port 8766; we proxy
         # it externally, serve cached data server at $SERVER_PORT/cds-ws
@@ -971,6 +985,27 @@ function setup_firewall {
     echo "Done setting SELINUX permissions"
 }
 
+
+###########################################################################
+###########################################################################
+# Download and install js script to render .md documents
+function setup_markdown {
+   # Get the Strapdown.js package that will render .md files
+    STRAPDOWN_PATH=${INSTALL_ROOT}/openrvdas/static
+    git clone https://github.com/Naereen/StrapDown.js.git $STRAPDOWN_PATH/Strapdown.js
+    cat > ${STRAPDOWN_PATH}/Strapdown.js/prepend <<EOF
+<!DOCTYPE html>
+<html>
+<xmp theme='cyborg' style='display:none;'t>
+EOF
+    cat > ${STRAPDOWN_PATH}/Strapdown.js/postpend <<EOF
+<!DOCTYPE html>
+</xmp>
+<script src='/static/StrapDown.js/strapdown.js'></script>
+</html>
+EOF
+}
+
 ###########################################################################
 ###########################################################################
 ###########################################################################
@@ -1202,6 +1237,14 @@ if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
         SUPERVISORD_WEBINTERFACE_PASS=${SUPERVISORD_WEBINTERFACE_PASS:-$RVDAS_USER}
     fi
 fi
+echo
+echo "#####################################################################"
+echo "This script can install Strapdown.js so that the .md files in"
+echo "the /docs directory are rendered properly."
+echo "under supervisord as \"simulate:simulate_nbp\"."
+echo
+yes_no "Do you want to install Strapdown.js?" $DEFAULT_INSTALL_DOC_MARKDOWN
+INSTALL_DOC_MARKDOWN=$YES_NO_RESULT
 
 #########################################################################
 #########################################################################
@@ -1304,6 +1347,13 @@ setup_supervisor
 # If we've been instructed to set up firewall, do so.
 if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
+fi
+
+###########################################################################
+###########################################################################
+# Download and install js script to render .md documents
+if [ $INSTALL_DOC_MARKDOWN == 'yes' ]; then
+    setup_markdown
 fi
 
 echo
