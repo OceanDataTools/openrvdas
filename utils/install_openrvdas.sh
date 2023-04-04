@@ -367,19 +367,26 @@ function install_packages {
         export LD_LIBRARY_PATH=/usr/local/lib
         export LD_RUN_PATH=/usr/local/lib
 
-        # Fetch and build SQLite3
+        # Check if correct SQLite3 is installed
         SQLITE_VERSION=3320300
-        if [ `/usr/local/bin/sqlite3 --version |  cut -f1 -d' '` == '3.32.3' ]; then
-            echo Already have appropriate version of sqlite3
+        required_version="3.32.3"
+
+        if ! command -v sqlite3 &> /dev/null
+        then
+            echo "SQLite3 is not installed. Installing version $required_version..."
+            sudo yum install -y sqlite-devel-$required_version sqlite-$required_version
         else
-            cd /var/tmp
-            SQLITE_BASE=sqlite-autoconf-${SQLITE_VERSION}
-            SQLITE_TGZ=${SQLITE_BASE}.tar.gz
-            [ -e $SQLITE_TGZ ] || wget https://www.sqlite.org/2020/${SQLITE_TGZ}
-            tar xzf ${SQLITE_TGZ}
-            cd ${SQLITE_BASE}
-            sh ./configure
-            sudo make && make install
+            # Get the current version of SQLite3
+            current_version=$(sqlite3 --version | awk '{print $1}')
+
+            # Compare the current version with the required version
+            if [[ "$current_version" != "$required_version" ]]
+            then
+                echo "SQLite3 version $required_version is required, but version $current_version is installed. Installing version $required_version..."
+                sudo yum install -y sqlite-devel-$required_version sqlite-$required_version
+            else
+                echo "SQLite3 version $required_version is already installed."
+            fi
         fi
 
         if [ $OS_VERSION == '7' ]; then
