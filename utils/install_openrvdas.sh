@@ -1023,14 +1023,6 @@ set_default_variables
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
 
-# If we're on Linux, should run as root
-if [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-    if [ "$(whoami)" != "root" ]; then
-        echo "ERROR: installation script must be run as root."
-        exit_gracefully
-    fi
-fi
-
 # Set creation mask so that everything we install is, by default,
 # world readable/executable.
 umask 022
