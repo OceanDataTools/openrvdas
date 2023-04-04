@@ -252,20 +252,20 @@ function set_hostname {
 
     # If we're on CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
-        hostnamectl set-hostname $HOSTNAME
-        echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
+        sudo hostnamectl set-hostname $HOSTNAME
+        sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-        hostnamectl set-hostname $HOSTNAME
-        echo $HOSTNAME > /etc/hostname
+        sudo hostnamectl set-hostname $HOSTNAME
+        sudo echo $HOSTNAME > /etc/hostname
     fi
 
     ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
     if grep -q "$ETC_HOSTS_LINE" /etc/hosts ; then
         echo Hostname already in /etc/hosts
     else
-        echo "$ETC_HOSTS_LINE" >> /etc/hosts
+        sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts
     fi
 }
 
