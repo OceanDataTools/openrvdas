@@ -265,7 +265,7 @@ function set_hostname {
     if grep -q "$ETC_HOSTS_LINE" /etc/hosts ; then
         echo Hostname already in /etc/hosts
     else
-        sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts
+        #sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts
     fi
 }
 
