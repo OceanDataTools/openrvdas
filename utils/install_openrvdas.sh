@@ -253,7 +253,7 @@ function set_hostname {
     # If we're on CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
+        #sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
