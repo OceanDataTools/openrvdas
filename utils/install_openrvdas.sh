@@ -374,7 +374,7 @@ function install_packages {
         if ! command -v sqlite3 &> /dev/null
         then
             echo "SQLite3 is not installed. Installing version $required_version..."
-            sudo yum install -y sqlite-devel-$required_version sqlite-$required_version
+            sudo yum install -y sqlite-$required_version sqlite-devel
         else
             # Get the current version of SQLite3
             current_version=$(sqlite3 --version | awk '{print $1}')
@@ -383,7 +383,7 @@ function install_packages {
             if [[ "$current_version" != "$required_version" ]]
             then
                 echo "SQLite3 version $required_version is required, but version $current_version is installed. Installing version $required_version..."
-                sudo yum install -y sqlite-devel-$required_version sqlite-$required_version
+                sudo yum install -y sqlite-$required_version sqlite-devel
             else
                 echo "SQLite3 version $required_version is already installed."
             fi
