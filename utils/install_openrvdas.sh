@@ -347,13 +347,13 @@ function install_packages {
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
         if [ $OS_VERSION == '7' ]; then
-            yum install -y deltarpm
+            sudo yum install -y deltarpm
         fi
-        yum install -y epel-release
-        yum -y update
+        sudo yum install -y epel-release
+        sudo yum -y update
 
         echo Installing required packages
-        yum install -y wget git nginx gcc supervisor \
+        sudo yum install -y wget git nginx gcc supervisor \
             zlib-devel openssl-devel readline-devel libffi-devel
 
             #sqlite-devel \
@@ -378,7 +378,7 @@ function install_packages {
             tar xzf ${SQLITE_TGZ}
             cd ${SQLITE_BASE}
             sh ./configure
-            make && make install
+            sudo make && make install
         fi
 
         if [ $OS_VERSION == '7' ]; then
@@ -394,13 +394,13 @@ function install_packages {
                 tar xvf ${PYTHON_TGZ}
                 cd ${PYTHON_BASE}
                 sh ./configure # --enable-optimizations
-                make altinstall
+                sudo make altinstall
 
-                ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
-                ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+                sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
+                sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
             fi
         elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
-            yum install -y python3 python3-devel
+            sudo yum install -y python3 python3-devel
         else
             echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
             exit_gracefully
@@ -408,8 +408,8 @@ function install_packages {
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-        apt-get update
-        apt install -y git nginx libreadline-dev \
+        sudo apt-get update
+        sudo apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
             openssh-server supervisor libssl-dev
     fi
