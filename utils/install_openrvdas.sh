@@ -253,7 +253,7 @@ function set_hostname {
     # If we're on CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        #sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
+        sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network  || echo "Unable to update /etc/sysconfig/network"
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
@@ -266,7 +266,7 @@ function set_hostname {
         echo Hostname already in /etc/hosts
     else
         echo Skipping adding to /etc/hosts
-        #sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts
+        sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts || echo "Unable to update /etc/hosts"
     fi
 }
 
