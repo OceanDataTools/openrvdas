@@ -843,7 +843,7 @@ save_default_variables
 
 # Don't want existing installations to be running while we do this
 echo Stopping supervisor prior to installation.
-supervisorctl stop all
+sudo supervisorctl stop all
 
 # Let's get to installing things!
 if [ $INSTALL_INFLUXDB == 'yes' ];then
