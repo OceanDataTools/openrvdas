@@ -692,7 +692,7 @@ EOF
     sudo cp -f $TMP_SUPERVISOR_FILE $SUPERVISOR_FILE
 
     echo Done setting up supervisor files. Reloading...
-    supervisorctl reload
+    sudo supervisorctl reload
 }
 
 ###########################################################################
