@@ -918,8 +918,8 @@ ${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
 ${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=100
 ${SIMULATE_NBP_COMMENT}user=$RVDAS_USER
 
-[group:web]
-programs=nginx,uwsgi
+${GUI_COMMENT}[group:web]
+${GUI_COMMENT}programs=nginx,uwsgi
 
 [group:openrvdas]
 programs=logger_manager,cached_data_server
