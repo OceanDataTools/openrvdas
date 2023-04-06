@@ -149,7 +149,6 @@ function get_os_type {
     fi
     echo "#####################################################################"
     echo "Detected OS = $OS_TYPE, Version = $OS_VERSION"
-
 }
 
 ###########################################################################
@@ -181,6 +180,8 @@ function set_default_variables {
 
     DEFAULT_INSTALL_SIMULATE_NBP=no
     DEFAULT_RUN_SIMULATE_NBP=no
+
+    DEFAULT_INSTALL_GUI=yes
 
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
@@ -224,6 +225,8 @@ DEFAULT_RVDAS_USER=$RVDAS_USER
 
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
+DEFAULT_INSTALL_GUI=$INSTALL_GUI
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
@@ -279,30 +282,36 @@ function create_user {
     echo Checking if user $RVDAS_USER exists yet
     if id -u $RVDAS_USER > /dev/null; then
         echo User "$RVDAS_USER" exists
-        return
+    else
+        # MacOS
+        if [ $OS_TYPE == 'MacOS' ]; then
+          echo No such pre-existing user: $RVDAS.
+          echo On MacOS, must install for pre-existing user. Exiting.
+          exit_gracefully
+
+        # CentOS/RHEL
+        elif [ $OS_TYPE == 'CentOS' ]; then
+            echo Creating $RVDAS_USER
+            sudo adduser $RVDAS_USER
+            sudo passwd $RVDAS_USER
+
+        # Ubuntu/Debian
+        elif [ $OS_TYPE == 'Ubuntu' ]; then
+              echo Creating $RVDAS_USER
+              sudo adduser --gecos "" $RVDAS_USER
+        fi
     fi
 
-    # MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-      echo No such pre-existing user: $RVDAS.
-      echo On MacOS, must install for pre-existing user. Exiting.
-      exit_gracefully
-
-    # CentOS/RHEL
-    elif [ $OS_TYPE == 'CentOS' ]; then
-        echo Creating $RVDAS_USER
-        adduser $RVDAS_USER
-        passwd $RVDAS_USER
-        usermod -a -G tty $RVDAS_USER
-        usermod -a -G wheel $RVDAS_USER
+    # Set up user permissions, whether or not pre-existing.
+    # For MacOS we don't change anything
+    if [ $OS_TYPE == 'CentOS' ]; then
+        sudo usermod -a -G tty $RVDAS_USER
+        sudo usermod -a -G wheel $RVDAS_USER
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-          echo Creating $RVDAS_USER
-          adduser --gecos "" $RVDAS_USER
-          #passwd $RVDAS_USER
-          usermod -a -G tty $RVDAS_USER
-          usermod -a -G sudo $RVDAS_USER
+          sudo usermod -a -G tty $RVDAS_USER
+          sudo usermod -a -G sudo $RVDAS_USER
     fi
 }
 
@@ -761,6 +770,14 @@ function setup_supervisor {
     # INSTALL_ROOT - path where openrvdas/ is found
     # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
 
+    # If we're not installing the web GUI, comment out those bits of
+    # the supervisor config that run them.
+    if [[ "$INSTALL_GUI" == "yes" ]];then
+        GUI_COMMENT=''
+    else
+        GUI_COMMENT=';'
+    fi
+
     VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
     if [ $OPENRVDAS_AUTOSTART = 'yes' ]; then
         AUTOSTART=true
@@ -839,30 +856,30 @@ EOF
     cat >> /tmp/openrvdas.ini <<EOF
 
 ; The scripts we're going to run
-[program:nginx]
-command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
-directory=${INSTALL_ROOT}/openrvdas
-autostart=$AUTOSTART
-autorestart=true
-startretries=3
-killasgroup=true
-stderr_logfile=/var/log/openrvdas/nginx.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
-;user=$RVDAS_USER
+${GUI_COMMENT}[program:nginx]
+${GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
+${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${GUI_COMMENT}autostart=$AUTOSTART
+${GUI_COMMENT}autorestart=true
+${GUI_COMMENT}startretries=3
+${GUI_COMMENT}killasgroup=true
+${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
+${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${GUI_COMMENT}stderr_logfile_maxbackups=100
+${GUI_COMMENT};user=$RVDAS_USER
 
-[program:uwsgi]
-command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
-stopsignal=INT
-directory=${INSTALL_ROOT}/openrvdas
-autostart=$AUTOSTART
-autorestart=true
-startretries=3
-killasgroup=true
-stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
-user=$RVDAS_USER
+${GUI_COMMENT}[program:uwsgi]
+${GUI_COMMENT}command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+${GUI_COMMENT}stopsignal=INT
+${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${GUI_COMMENT}autostart=$AUTOSTART
+${GUI_COMMENT}autorestart=true
+${GUI_COMMENT}startretries=3
+${GUI_COMMENT}killasgroup=true
+${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${GUI_COMMENT}stderr_logfile_maxbackups=100
+${GUI_COMMENT}user=$RVDAS_USER
 
 [program:cached_data_server]
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
@@ -1209,6 +1226,19 @@ else
   RUN_SIMULATE_NBP=no
 fi
 
+
+#########################################################################
+# Install web console programs - nginx and uwsgi?
+echo
+echo "#####################################################################"
+echo "The full OpenRVDAS installation includes a web-based console for loading"
+echo "and controlling loggers, but a slimmed-down version of the code may be"
+echo "installed and run without it if desired for portability or computational"
+echo "reasons."
+echo
+yes_no "Install OpenRVDAS web console GUI? " $DEFAULT_INSTALL_GUI
+INSTALL_GUI=$YES_NO_RESULT
+
 #########################################################################
 # Enable Supervisor web-interface?
 echo
@@ -1283,9 +1313,11 @@ setup_python_packages
 #########################################################################
 #########################################################################
 # Set up nginx
-echo "#####################################################################"
-echo "Setting up NGINX"
-setup_nginx
+if [[ "$INSTALL_GUI" == "yes" ]];then
+    echo "#####################################################################"
+    echo "Setting up NGINX"
+    setup_nginx
+fi
 
 #########################################################################
 #########################################################################
@@ -1300,13 +1332,15 @@ fi
 #########################################################################
 #########################################################################
 # Set up uwsgi
-echo
-echo "#####################################################################"
-echo "Setting up UWSGI"
-# Expect the following shell variables to be appropriately set:
-# HOSTNAME - name of host
-# INSTALL_ROOT - path where openrvdas/ is
-setup_uwsgi
+if [[ "$INSTALL_GUI" == "yes" ]];then
+    echo
+    echo "#####################################################################"
+    echo "Setting up UWSGI"
+    # Expect the following shell variables to be appropriately set:
+    # HOSTNAME - name of host
+    # INSTALL_ROOT - path where openrvdas/ is
+    setup_uwsgi
+fi
 
 #########################################################################
 #########################################################################
@@ -1380,20 +1414,22 @@ echo "Restarting services: supervisor"
 
         # CentOS/RHEL
         if [ $OS_TYPE == 'CentOS' ]; then
-            systemctl enable supervisord
-            systemctl restart supervisord
+            sudo systemctl enable supervisord
+            sudo systemctl restart supervisord
         else # Ubuntu/Debian
-            systemctl enable supervisor
-            systemctl restart supervisor
+            sudo systemctl enable supervisor
+            sudo systemctl restart supervisor
         fi
 
-        # Previous installations used nginx and uwsgi as a service. We need to
-        # disable them if they're running.
-        echo Disabling legacy services
-        systemctl stop nginx 2> /dev/null || echo "nginx not running"
-        systemctl disable nginx 2> /dev/null || echo "nginx disabled"
-        systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
-        systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
+        if [[ "$INSTALL_GUI" == "yes" ]];then
+            # Previous installations used nginx and uwsgi as a service. We need to
+            # disable them if they're running.
+            echo Disabling legacy services
+            sudo systemctl stop nginx 2> /dev/null || echo "nginx not running"
+            sudo systemctl disable nginx 2> /dev/null || echo "nginx disabled"
+            sudo systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
+            sudo systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
+        fi
     fi
 
 # Deactivate the virtual environment - we'll be calling all relevant
