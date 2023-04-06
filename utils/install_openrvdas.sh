@@ -677,7 +677,7 @@ function setup_django {
     # RVDAS_DATABASE_PASSWORD - string to use for Django password
 
     cd ${INSTALL_ROOT}/openrvdas
-    source venv/bin/activate
+    source ${INSTALL_ROOT}/openrvdas/venv/bin/activate
     cp django_gui/settings.py.dist django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PROTOCOL = 'ws'/WEBSOCKET_PROTOCOL = '${WEBSOCKET_PROTOCOL}'/g" django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PORT = 80/WEBSOCKET_PORT = ${SERVER_PORT}/g" django_gui/settings.py
