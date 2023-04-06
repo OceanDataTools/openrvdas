@@ -513,6 +513,7 @@ function setup_python_packages {
         echo 'No python3 found?!?'
         #exit_gracefully
     fi
+    cd $INSTALL_ROOT/openrvdas
     ${PYTHON_PATH} -m venv $VENV_PATH
 
     source $VENV_PATH/bin/activate  # activate virtual environment
@@ -525,7 +526,9 @@ function setup_python_packages {
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel  # To help with the rest of the installations
 
-    pip3 install -r utils/requirements.txt
+    # For some reason, locked down RHEL8 boxes require sudo here, and require
+    # us to execute pip via python.
+    sudo venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
 }
 
 ###########################################################################
