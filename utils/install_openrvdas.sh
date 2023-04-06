@@ -519,15 +519,15 @@ function setup_python_packages {
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
-    pip3 install \
+    # For some reason, locked down RHEL8 boxes require sudo here, and require
+    # us to execute pip via python. Lord love a duck...
+    sudo venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       --upgrade pip
-    pip3 install \
+    sudo venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel  # To help with the rest of the installations
 
-    # For some reason, locked down RHEL8 boxes require sudo here, and require
-    # us to execute pip via python.
     sudo venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
 }
 
