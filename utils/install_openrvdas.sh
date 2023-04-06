@@ -518,14 +518,14 @@ function setup_python_packages {
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
-    pip install \
+    pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       --upgrade pip
-    pip install \
+    pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel  # To help with the rest of the installations
 
-    pip install -r utils/requirements.txt
+    pip3 install -r utils/requirements.txt
 }
 
 ###########################################################################
