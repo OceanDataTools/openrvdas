@@ -343,8 +343,14 @@ function install_packages {
         chmod -R go-w "$(brew --prefix)/share/zsh"
 
         # Install system packages we need
-        echo Installing python and supporting packages
-        [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
+        PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
+        if [ -n "$PYTHON_PATH" ];then
+            echo "Using python at $PYTHON_PATH"
+        else
+            echo Installing python from Homebrew
+            [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
+        fi
+        echo Installing supporting packages from Homebrew
         [ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
         [ -e ${HOMEBREW_BASE}/bin/git ]    || brew install git
         [ -e ${HOMEBREW_BASE}/bin/nginx ]  || brew install nginx
