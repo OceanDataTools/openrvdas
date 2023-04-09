@@ -184,8 +184,7 @@ devices:
   
     ########
     serial_number: "0001AXK"
-    description: "Forward depth sonar. Mounted under Bosun's mattress. Allergic to cheese."
-  
+
   ######################################
   lpco:
     category: "device"
