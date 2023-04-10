@@ -340,6 +340,7 @@ function install_packages {
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
 
         brew update --force --quiet
+        brew upgrade
         chmod -R go-w "$(brew --prefix)/share/zsh"
 
         # Install system packages we need

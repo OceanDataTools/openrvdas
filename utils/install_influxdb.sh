@@ -307,7 +307,8 @@ function install_influxdb {
         HOMEBREW_BASE='/usr/local/homebrew'
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
-        brew install influxdb
+        brew upgrade
+        brew install --overwrite influxdb
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
         INFLUX_PATH=/usr/bin
@@ -395,7 +396,8 @@ function install_grafana {
         HOMEBREW_BASE='/usr/local/homebrew'
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
-        brew install grafana
+        brew upgrade
+        brew install --overwrite grafana
 
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
@@ -472,7 +474,8 @@ function install_telegraf {
         HOMEBREW_BASE='/usr/local/homebrew'
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
-        brew install telegraf
+        brew upgrade
+        brew install --overwrite telegraf
 
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
