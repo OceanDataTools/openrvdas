@@ -1,22 +1,69 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_OPEN_RVDAS INFLUXDB",
+      "label": "Open RVDAS InfluxDB",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "briangann-gauge-panel",
+      "name": "D3 Gauge",
+      "version": "0.0.9"
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.4.7"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": null,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "colors": [
@@ -24,14 +71,11 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
-      "decimals": 1,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
       },
+      "decimals": 1,
       "fontSizes": [
         4,
         5,
@@ -158,6 +202,30 @@
           "value": 2
         }
       ],
+      "markerEndShapes": [
+        {
+          "$$hashKey": "object:41",
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "$$hashKey": "object:42",
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "$$hashKey": "object:43",
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "$$hashKey": "object:44",
+          "id": 2,
+          "name": "stub"
+        }
+      ],
       "operatorName": "current",
       "operatorNameOptions": [
         "min",
@@ -178,14 +246,16 @@
       "svgContainer": {},
       "targets": [
         {
-          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPortRelWindDir\")\r\n  ",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPortRelWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
         }
       ],
       "thresholds": "",
       "tickMaps": [],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Port Rel Wind Dir",
       "type": "briangann-gauge-panel",
       "unitFormats": [
@@ -1435,14 +1505,11 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
-      "decimals": 1,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
       },
+      "decimals": 1,
       "fontSizes": [
         4,
         5,
@@ -1569,6 +1636,30 @@
           "value": 2
         }
       ],
+      "markerEndShapes": [
+        {
+          "$$hashKey": "object:41",
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "$$hashKey": "object:42",
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "$$hashKey": "object:43",
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "$$hashKey": "object:44",
+          "id": 2,
+          "name": "stub"
+        }
+      ],
       "operatorName": "current",
       "operatorNameOptions": [
         "min",
@@ -1589,14 +1680,16 @@
       "svgContainer": {},
       "targets": [
         {
-          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxStbdRelWindDir\")\r\n  ",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxStbdRelWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
         }
       ],
       "thresholds": "",
       "tickMaps": [],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Stbd Rel Wind Dir",
       "type": "briangann-gauge-panel",
       "unitFormats": [
@@ -2841,110 +2934,120 @@
       ]
     },
     {
-      "aliasColors": {
-        "MwxPortRelWindSpeed lmwx": "dark-green",
-        "MwxStbdRelWindSpeed lmwx": "dark-red"
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
       },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "velocityknot"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxPortRelWindSpeed lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxStbdRelWindSpeed lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Starboard"
+              }
+            ]
+          }
+        ]
       },
-      "fill": 0,
-      "fillGradient": 0,
       "gridPos": {
-        "h": 14,
-        "w": 12,
+        "h": 7,
+        "w": 8,
         "x": 8,
         "y": 0
       },
-      "hiddenSeries": false,
       "id": 7,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "percentage": false,
-      "pluginVersion": "7.1.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:94",
-          "alias": "MwxStbdRelWindSpeed lmwx",
-          "yaxis": 2
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        {
-          "$$hashKey": "object:101",
-          "alias": "MwxPortRelWindSpeed lmwx",
-          "yaxis": 2
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      },
+      "pluginVersion": "9.4.7",
       "targets": [
         {
-          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPortRelWindSpeed\" or r._field == \"MwxStbdRelWindSpeed\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPortRelWindSpeed\" or r._field == \"MwxStbdRelWindSpeed\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> map(fn: (r) => ({ r with _value: r._value * 1.944 }))\r\n  |> yield(name: \"mean\")\r\n",
           "refId": "A"
         }
       ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
       "title": "Relative wind speed",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:293",
-          "format": "short",
-          "label": "knots",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        },
-        {
-          "$$hashKey": "object:294",
-          "format": "velocityknot",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "type": "timeseries"
     },
     {
       "colors": [
@@ -2952,14 +3055,11 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
-      "decimals": 1,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
       },
+      "decimals": 1,
       "fontSizes": [
         4,
         5,
@@ -3086,6 +3186,30 @@
           "value": 2
         }
       ],
+      "markerEndShapes": [
+        {
+          "$$hashKey": "object:41",
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "$$hashKey": "object:42",
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "$$hashKey": "object:43",
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "$$hashKey": "object:44",
+          "id": 2,
+          "name": "stub"
+        }
+      ],
       "operatorName": "current",
       "operatorNameOptions": [
         "min",
@@ -3106,14 +3230,16 @@
       "svgContainer": {},
       "targets": [
         {
-          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"PortTrueWindDir\")\r\n  ",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"PortTrueWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
         }
       ],
       "thresholds": "",
       "tickMaps": [],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Port True Wind Dir",
       "type": "briangann-gauge-panel",
       "unitFormats": [
@@ -4363,14 +4489,11 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
-      "decimals": 1,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
       },
+      "decimals": 1,
       "fontSizes": [
         4,
         5,
@@ -4497,6 +4620,30 @@
           "value": 2
         }
       ],
+      "markerEndShapes": [
+        {
+          "$$hashKey": "object:41",
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "$$hashKey": "object:42",
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "$$hashKey": "object:43",
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "$$hashKey": "object:44",
+          "id": 2,
+          "name": "stub"
+        }
+      ],
       "operatorName": "current",
       "operatorNameOptions": [
         "min",
@@ -4517,14 +4664,16 @@
       "svgContainer": {},
       "targets": [
         {
-          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"StbdTrueWindDir\")\r\n  ",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"StbdTrueWindDir\")\r\n  |> last()\r\n  ",
           "refId": "A"
         }
       ],
       "thresholds": "",
       "tickMaps": [],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Stbd True Wind Dir",
       "type": "briangann-gauge-panel",
       "unitFormats": [
@@ -5767,10 +5916,593 @@
           "value": "null"
         }
       ]
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "velocityknot"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PortTrueWindSpeed true_wind"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "StbdTrueWindSpeed true_wind"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Starboard"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 7
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"true_wind\")\r\n  |> filter(fn: (r) => r._field == \"PortTrueWindSpeed\" or r._field == \"StbdTrueWindSpeed\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> map(fn: (r) => ({ r with _value: r._value * 1.944 }))\r\n  |> yield(name: \"mean\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "True wind speed",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "pressurembar"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxAirTemp lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Air Termperature"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 14
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxBarometer\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Baro Pressure",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-blue",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxAirTemp lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Air Termperature"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 14
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxAirTemp\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Air Temperature",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "humidity"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxAirTemp lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Air Termperature"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 18
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxAirRelHumid\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Relative Humidity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-RdYlGr"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "mvolt"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxPAR lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Photo-available"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxPIRThermo lmwx"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Infrared"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MwxPSP"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Shortwave"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Photo-available"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Shortwave"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 18
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_OPEN_RVDAS INFLUXDB}"
+          },
+          "query": "from(bucket: \"openrvdas\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"lmwx\")\r\n  |> filter(fn: (r) => r._field == \"MwxPAR\" or \r\n            r._field == \"MwxPIRThermo\" or r._field == \"MwxPSP\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean)\r\n  |> yield(name: \"mean\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Radiation",
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 26,
+  "revision": 1,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -5795,7 +6527,8 @@
     ]
   },
   "timezone": "",
-  "title": "NBP Weather Dashboard",
+  "title": "LMG Weather Dashboard",
   "uid": "c7uWsZIMz",
-  "version": 23
+  "version": 3,
+  "weekStart": ""
 }

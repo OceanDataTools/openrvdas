@@ -22,7 +22,7 @@
   "panels": [
     {
       "content": "Metrics for host tag '[[host]]' from bucket '[[bucket]]'. \n\n**Note**: You have to set the name of your bucket containing the system metrics in the dashboard variable. At the moment there is no macro to fetch the list of available buckets.\n\nThis dashboard is inspired by the default System dashboard provided in the hosted InfluxData instances.",
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -56,7 +56,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -144,7 +144,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -232,7 +232,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -320,7 +320,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -404,7 +404,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -496,7 +496,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -588,7 +588,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -679,7 +679,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -771,7 +771,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -862,7 +862,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -953,7 +953,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1044,7 +1044,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Flux (InfluxDB) [BETA]",
+      "datasource": {"type": "influxdb"},
       "fieldConfig": {
         "defaults": {
           "custom": {},
