@@ -5,6 +5,7 @@ Knudsen3260:
 
   format:
     - "{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "{LF:g}kHz,{LFDepth:of},0,0.00,{Latitude:f},{Longitude:f}"
     - ",,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
     - "{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
     - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"

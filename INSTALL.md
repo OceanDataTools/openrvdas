@@ -3,29 +3,18 @@ At the time of this writing OpenRVDAS has been built and tested against MacOS X,
 operating systems. It may be possible to build against other Linux-based operating systems, and guides will be added
 here as they are verified and documented.
 
-To begin installation, grab the script from github:
-
+You will need to be able to run the ``sudo`` command. To begin installation, grab the script from github and run from the command line:
 ```
 OPENRVDAS_REPO=raw.githubusercontent.com/oceandatatools/openrvdas
-
-BRANCH=master  # stable master branch
-#BRANCH=dev    # development branch with latest changes
-
+BRANCH=master
 wget https://$OPENRVDAS_REPO/$BRANCH/utils/install_openrvdas.sh
 chmod +x install_openrvdas.sh
-```
-
-Now run the script. On LINUX, it should be run as root:
-
-```
 sudo ./install_openrvdas.sh
 ```
-On MacOS, it should be run as a user that has sudo permissions (the script will prompt several times
- for the sudo password when needed):
+selecting ``master``, ``dev`` or other branch of the repo if your project has one.
 
-```
-./install_openrvdas.sh
-``` 
+On MacOS, it should be run as a user that has sudo permissions (the script will prompt several times
+for the sudo password when needed):
 
 _The script will ask a lot of questions and provide default answers in parens that will be filled in if you hit "return"; without any other input:_
 
