@@ -11,7 +11,7 @@ ADCP_OS75:
   format:
     PUHAW: "$PUHAW,UVH,{VelocityE:f},{VelocityN:f},{HeadingT:f}"
     VDVBW: "$VDVBW,{LongWaterSpeed:f},{TransWaterSpeed:f},{WaterSpeedStatus:ow},{LongGroundSpeed:of},{TransGroundSpeed:of},{GroundSpeedStatus:ow}*{Checksum:x}"
-
+    VDR:   "$VDR,{WaterDirectionT:f},T,{WaterDirectionM:of},M,{WaterSpeed:f},N*{Checksum:x}"
   fields:
     VelocityE:
       units: ""
@@ -38,6 +38,61 @@ ADCP_OS75:
       description: "Transverse ground speed (negative means port)"
     GroundSpeedStatus:
       description: "A = Data Valid"
+    WaterDirectionT:
+      units: "degrees"
+      description: "Direction (true) water is moving"
+    WaterDirectionM:
+      units: "degrees"
+      description: "Direction (magnetic) water is moving"
+    WaterSpeed:
+      units: "knots"
+      description: "Speed water is moving"
+
+######################################
+ADCP_WH300:
+  category: "device_type"
+  description: "RD Industries WH-300 Acoustic Doppler Current Profiler"
+  
+  format:
+    PUHAW: "$PUHAW,UVH,{VelocityE:f},{VelocityN:f},{HeadingT:f}"
+    VDVBW: "$VDVBW,{LongWaterSpeed:f},{TransWaterSpeed:f},{WaterSpeedStatus:ow},{LongGroundSpeed:of},{TransGroundSpeed:of},{GroundSpeedStatus:ow}*{Checksum:x}"
+    #"$VDR,2.77,T,,M,16.7915,N*28"
+    VDR:   "$VDR,{WaterDirectionT:f},T,{WaterDirectionM:of},M,{WaterSpeed:f},N*{Checksum:x}"
+  fields:
+    VelocityE:
+      units: ""
+      description: "Current velocity to (relative) east"
+    VelocityN:
+      units: ""
+      description: "Current velocity to (relative) north"
+    HeadingT:
+      units: "degrees"
+      description: "True Heading"
+    LongWaterSpeed:
+      units: "knots"
+      description: "Longitudinal water speed (negative means astern)"
+    TransWaterSpeed:
+      units: "knots"
+      description: "Longitudinal water speed (negative means port)"
+    WaterSpeedStatus:
+      description: "A = Data Valid"
+    LongGroundSpeed:
+      units: "knots"
+      description: "Longitudinal ground speed (negative means astern)"
+    TransGroundSpeed:
+      units: "knots"
+      description: "Transverse ground speed (negative means port)"
+    GroundSpeedStatus:
+      description: "A = Data Valid"
+    WaterDirectionT:
+      units: "degrees"
+      description: "Direction (true) water is moving"
+    WaterDirectionM:
+      units: "degrees"
+      description: "Direction (magnetic) water is moving"
+    WaterSpeed:
+      units: "knots"
+      description: "Speed water is moving"
 
 ######################################
 Gravimeter_BGM3:
@@ -61,8 +116,8 @@ Gyrocompass:
   description: "Gyrocompass"
 
   format:
-   HEHDT: "$HEHDT,{HeadingTrue:g},T*{Checksum:x}"
-   HEROT: "$HEROT,{RateOfTurn:g},A*{Checksum:x}"
+    HEHDT: "$HEHDT,{HeadingTrue:g},T*{Checksum:x}"
+    HEROT: "$HEROT,{RateOfTurn:g},A*{Checksum:x}"
 
   fields:
     HeadingTrue:
@@ -199,7 +254,7 @@ SBE48:
   description: "Digital Remote Temperature Sensor Sea-Bird SBE-48"
 
   format: "# {Temp:g}, {Date:nc}, {Time:nc}"
-
+  
   fields:
     Temp:
       units: "C"
@@ -215,7 +270,7 @@ SVP:
   description: "Sound velocity profiler"
 
   format: "{Velocity:g}"
-
+  
   fields:
     Velocity:
       units: "m/s"
@@ -229,10 +284,37 @@ TSG_SBE45:
   format:
   - "{Temp:og},{Conductivity:og},{Salinity:og},{SoundVelocity:og}"
   - "{Temp:og},{Conductivity:og},{Salinity:og}"
+  
   fields:
     Temp:
       units: "C"
       description: "Temperature"
+    Conductivity:
+      units: "s/m"
+      description: "Conductivity"
+    Salinity:
+      units: "PSU"
+      description: "Salinity"
+    SoundVelocity:
+      units: "m/s"
+      description: "SoundVelocity"
+
+######################################
+TSG_SBE45_SBE38:
+  category: "device_type"
+  description: "Thermosalinograph Sea-Bird SBE-45 integrated with a SBE-38 Temperature Sensor"
+
+  format: 
+  - "t1= {Temp:og}, c1= {Conductivity:og}, s= {Salinity:og}, sv={SoundVelocity:og}, t2= {Temp2:og}"
+  - "t1= {Temp:og}, c1= {Conductivity:og}, s= {Salinity:og}, t2= {Temp2:og}"
+  
+  fields:
+    Temp:
+      units: "C"
+      description: "Temperature"
+    Temp2:
+      units: "C"
+      description: "Temperature (SBE38)"
     Conductivity:
       units: "s/m"
       description: "Conductivity"
@@ -249,7 +331,7 @@ Winch:
   description: "Unknown winch model"
 
   format: "{LANID:nc},{WinchTime:ti},{Name:nc},{Tension:of},{Speed:of},{Payout:of},{Checksum:g}"
-
+  
   fields:
     LANID:
       units: ""
@@ -269,3 +351,110 @@ Winch:
     Payout:
       units: "meters"
       description: "Winch payout"
+
+######################################
+Flowmeter:
+  category: "device_type"
+  description: "Atlas Sci flowmeter with OceanX custom interface board"
+
+  format: "{flowrate:of}"
+  
+  fields:
+    flowrate:
+      units: "mlpm"
+      description: "Flowrate"
+
+######################################
+Fluorometer:
+  category: "device_type"
+  description: "WHCL followthrough Fluorometer"
+
+  format: "{counts:og}"
+  
+  fields:
+    counts:
+      units: "counts"
+      description: "Fluorometer signal counts"
+
+######################################
+Transmissometer:
+  category: "device_type"
+  description: "C-Star Transmissometer"
+
+  #CST-1862DR    07964   00814   01190   10.238  530
+  format: "{sensor:S}{:s}{refraw:g}{:s}{sigraw:g}{:s}{cscraw:g}{:s}{beamatten:g}{:s}{thermraw:g}"
+  
+  fields:
+    sensor:
+      units: ""
+      description: "Model and Serial Number"
+    refraw:
+      units: "counts"
+      description: "Reference raw count value"
+    sigraw:
+      units: "counts"
+      description: "Signal raw count value"
+    cscraw:
+      units: "counts"
+      description: "Correct signal raw count value"
+    beamatten:
+      units: "meters"
+      description: "Calculated beam attenuation coefficient in m"
+    thermraw:
+      units: "counts"
+      description: "Internal thermistor raw count value"
+
+#######################################
+Vaisala:
+  category: "device_type"
+  description: "Vaisala WXT536 Weather Sensor"
+  # For full details on the Vaisala message protocol, see page 70 of the Vaisala Manual
+  # Typical Messages:
+  # SR0,Dm=352D,Sn=0.9M,Sm=2.4M,Sx=3.4M,Ta=29.5C,Ua=46.8P,Pa=1017.1H,Rc=0.00M,Ri=0.0M
+  # $WIXDR,A,146,D,1,S,16.3,M,1,C,7.0,C,0,H,60.8,P,0,P,1013.1,H,0,V,40.63,M,0,C,8.1,C,2,U,26.1,#,0*3B
+  # $WIMWV,146,R,16.4,M,A*0E
+  # $WIXDR,C,3.7,C,2,U,26.1,#,0,U,26.7,V,1,U,3.625,V,2*27
+  # $WIXDR,C,3.7,C,2,U,26.1,#,0,U,26.7,V,1,U,3.625,V,2*27
+  # $WIXDR,C,3.1,C,0,H,60.1,P,0,P,1021.4,H,0*4D"
+  # $WIXDR,C,3.1,C,0,H,60.1,P,0,P,1021.4,H,0*4D"
+  
+  format:
+    SR0:   "SR0,Dm={AvgWindDirection:g}D,Sn={MinWindSpeed:f}M,Sm={AvgWindSpeed:f}M,Sx={MaxWindSpeed:f}M,Ta={AirTemp:g}C,Ua={RelativeHumidity:f}P,Pa={Barometer:f}H,Rc={RainAccumulation:f}M,Ri={RainIntensity:g}M"
+    WIMWV: "$WIMWV,{AvgWindDirection:g},R,{AvgWindSpeed:f},M,A*{Checksum:x}"
+    WIXDR: "$WIXDR,{TransducerID:w},{AvgWindDirection:g},D,1,S,{AvgWindSpeed:f},M,1,C,{AirTemp:f},C,0,H,{RelativeHumidity:f},P,0,P,{Barometer:f},H,0,V,{RainAccumulation:f},M,0,C,{HeatingTemp:f},C,2,U,{SupplyVoltage:f},#,0*{Checksum:x}"
+  
+  fields:
+    AvgWindDirection:
+      units: "Deg"
+      description: "Avg Wind Direction"
+    MinWindSpeed:
+      units: "m/s"
+      description: "Min Wind Speed (lull)"
+    AvgWindSpeed:
+      units: "m/s"
+      description: "Avg Wind Speed"
+    MaxWindSpeed:
+      units: "m/s"
+      description: "Max Wind Speed (gust)"
+    AirTemp:
+      units: "C"
+      description: "Air Temperature"
+    RelativeHumidity:
+      units: "%"
+      description: "Relative Humidity"
+    Barometer:
+      units: "Pa"
+      description: "Barometric Pressure"
+    RainAccumulation:
+      units: "mm"
+      description: "Rain Accumulation"
+    RainIntensity:
+      units: "mm/h"
+      description: "Rain Intensity"
+    HeatingTemp:
+      units: "C"
+      description: "Internal heating temp"
+    SupplyVoltage:
+      units: "v"
+      description: "power supply voltage"
+
