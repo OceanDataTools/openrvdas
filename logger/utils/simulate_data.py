@@ -135,7 +135,6 @@ class SimUDP:
         self.input_eol = input_eol
         self.quiet=quiet
 
-        print(f'RECORD FORMAT "{record_format}"')
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + '*'):
             logging.warning('No files matching "%s*"', filebase)
