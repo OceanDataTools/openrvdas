@@ -135,6 +135,7 @@ class SimUDP:
         self.input_eol = input_eol
         self.quiet=quiet
 
+        print(f'RECORD FORMAT "{record_format}"')
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + '*'):
             logging.warning('No files matching "%s*"', filebase)
@@ -414,6 +415,15 @@ if __name__ == '__main__':
             # Save class of simulator, and remove it from the config dict
             inst_class = config['class']
             del config['class']
+
+            # Fold in some things from the command line, if they're
+            # not specified in the config itself.
+            if 'time_format' not in config:
+                config['time_format'] = args.time_format
+            if 'record_format' not in config:
+                config['record_format'] = args.record_format
+            if 'quiet' not in config:
+                config['quiet'] = args.quiet
 
             # Create the appropriate simulator with the config
             if inst_class == 'Serial':
