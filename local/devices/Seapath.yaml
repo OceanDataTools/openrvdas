@@ -21,9 +21,6 @@ Seapath200:
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
-    GPSTime:
-      units: ""
-      description: ""
     FixQuality:
       units: ""
       description: ""
@@ -148,9 +145,6 @@ Seapath330:
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
-    GPSTime:
-      units: ""
-      description: ""
     FixQuality:
       units: ""
       description: ""
@@ -284,9 +278,6 @@ Seapath380:
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
-    GPSTime:
-      units: ""
-      description: ""
     FixQuality:
       units: ""
       description: ""
