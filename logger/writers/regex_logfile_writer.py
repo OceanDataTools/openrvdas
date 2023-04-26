@@ -21,7 +21,8 @@ class RegexLogfileWriter(Writer):
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
                  split_char=' ', suffix='', header=None,
-                 header_file=None, rollover_hourly=False):
+                 header_file=None, rollover_hourly=False,
+                 quiet=False):
         """Write timestamped text records to a filebase. The filebase will
         have the current date appended, in keeping with R2R format
         recommendations (http://www.rvdata.us/operators/directory). When the
@@ -54,6 +55,9 @@ class RegexLogfileWriter(Writer):
 
         rollover_hourly Set files to truncate by hour.  By default files will
                         truncate by day
+
+        quiet           If True, don't complain if a record doesn't match
+                        any mapped prefix
         ```
         """
         self.filebase = filebase
@@ -65,6 +69,7 @@ class RegexLogfileWriter(Writer):
         self.header = header
         self.header_file = header_file
         self.rollover_hourly = rollover_hourly
+        self.quiet = quiet
 
         # If our filebase is a dict, we're going to be doing our
         # fancy pattern->filebase mapping.
@@ -92,8 +97,9 @@ class RegexLogfileWriter(Writer):
             return
 
         if not isinstance(record, str):
-            logging.error('LogfileWriter.write() - record not timestamped: %s ',
-                          record)
+            if not self.quiet:
+                logging.error(f'LogfileWriter.write() - record not '
+                              f'timestamped: {record}')
             return
 
         # Get the timestamp we'll be using
@@ -101,8 +107,9 @@ class RegexLogfileWriter(Writer):
             time_str = record.split(self.split_char)[0]
             ts = timestamp.timestamp(time_str, time_format=self.time_format)
         except ValueError:
-            logging.error('LogfileWriter.write() - bad timestamp: %s', record)
-            return
+            if not self.quiet:
+                logging.error('LogfileWriter.write() - bad timestamp: %s', record)
+                return
 
         # Now parse ts into hour and date strings
         hr_str = self.rollover_hourly and \
@@ -116,7 +123,9 @@ class RegexLogfileWriter(Writer):
             matched_patterns = [self.write_if_match(record, pattern, time_str)
                                 for pattern in self.filebase]
             if not True in matched_patterns:
-                logging.warning(f'No patterns matched in PatternLogfileWriter for record "{record}"')
+                if not self.quiet:
+                    logging.warning(f'No patterns matched in PatternLogfileWriter '
+                                    f'for record "{record}"')
         else:
             pattern = 'fixed'  # just an arbitrary fixed pattern
             filename = self.filebase + '-' + time_str
