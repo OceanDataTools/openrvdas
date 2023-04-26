@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 import sys
 import unittest
 
@@ -17,6 +18,28 @@ class TestPrefixTransform(unittest.TestCase):
 
         transform = PrefixTransform('prefix', sep='\t')
         self.assertEqual(transform.transform('foo'), 'prefix\tfoo')
+
+    def test_map(self):
+        transform = PrefixTransform({'p1': 'prefix1',
+                                     'p2':'prefix2'},
+                                    quiet=True)
+        self.assertIsNone(transform.transform(None))
+        self.assertEqual(transform.transform('foop1'), 'prefix1 foop1')
+        self.assertEqual(transform.transform('foop2'), 'prefix2 foop2')
+        self.assertEqual(transform.transform('foo'), None)
+
+        transform = PrefixTransform({'p1': 'prefix1',
+                                     'p2':'prefix2',
+                                     '':'prefix3'},
+                                    quiet=True)
+        self.assertEqual(transform.transform('foop1'), 'prefix1 foop1')
+        self.assertEqual(transform.transform('foop2'), 'prefix2 foop2')
+        self.assertEqual(transform.transform('foo'), 'prefix3 foo')
+
+        transform = PrefixTransform({'p1': 'prefix1',
+                                     'p2':'prefix2'})
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            transform.transform('foo')
 
 
 if __name__ == '__main__':
