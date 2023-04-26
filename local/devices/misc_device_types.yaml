@@ -61,8 +61,8 @@ Gyrocompass:
   description: "Gyrocompass"
 
   format:
-   HEHDT: "$HEHDT,{HeadingTrue:g},T*{Checksum:x}"
-   HEROT: "$HEROT,{RateOfTurn:g},A*{Checksum:x}"
+    HEHDT: "$HEHDT,{HeadingTrue:g},T*{Checksum:x}"
+    HEROT: "$HEROT,{RateOfTurn:g},A*{Checksum:x}"
 
   fields:
     HeadingTrue:
@@ -229,6 +229,7 @@ TSG_SBE45:
   format:
   - "{Temp:og},{Conductivity:og},{Salinity:og},{SoundVelocity:og}"
   - "{Temp:og},{Conductivity:og},{Salinity:og}"
+
   fields:
     Temp:
       units: "C"

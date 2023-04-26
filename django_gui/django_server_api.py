@@ -720,6 +720,11 @@ class DjangoServerAPI(ServerAPI):
                 if configs is None:
                     raise ValueError('Cruise definition has no configs')
 
+                # Some syntactic sugar to simplify config definitions
+                for config_name, config in configs.items():
+                    if 'name' not in config:
+                        config['name'] = config_name
+
                 for mode, mode_loggers in modes.items():
                     for mode_logger, mode_logger_config in mode_loggers.items():
                         if mode_logger not in loggers:
