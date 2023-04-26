@@ -53,6 +53,7 @@ class TrueWindsTransform(DerivedDataTransform):
                  zero_line_reference=0,
                  convert_wind_factor=1,
                  convert_speed_factor=1,
+                 data_id=None,
                  metadata_interval=None):
         """
         ```
@@ -95,6 +96,8 @@ class TrueWindsTransform(DerivedDataTransform):
 
         metadata_interval - how many seconds between when we attach field metadata
                      to a record we send out.
+
+        data_id  Optional name that will be attached to the resulting DASRecord
         ```
         """
         self.course_field = course_field
@@ -118,6 +121,8 @@ class TrueWindsTransform(DerivedDataTransform):
 
         self.metadata_interval = metadata_interval
         self.last_metadata_send = 0
+
+        self.data_id = data_id
 
         # TODO: It may make sense for us to cache most recent values so
         # that, for example, we can take single DASRecords in the
@@ -291,7 +296,7 @@ class TrueWindsTransform(DerivedDataTransform):
                 metadata = None
 
             results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
-                                     metadata=metadata))
+                                     metadata=metadata, data_id=self.data_id))
 
         logging.debug('Sending %d true wind results.', len(results))
         return results
