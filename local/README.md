@@ -1,3 +1,15 @@
+# Where did all the code go?
+
+Initially, we encouraged OpenRVDAS users to put their institution and
+vessel-specific code and configurations in this directory. We now encourage
+users instead to put their code into a separate repository and link it into
+this directory, as described below.
+
+All of the files that were formerly stored in this directory can now be
+found in separate repositories at https://github.com/OceanDataTools. If
+you wish to use some of those files, please check them out and link them
+in as described below.
+
 # How to Use the 'local/' Directory
 
 In short, this is where you should put symbolic links to the code specific
