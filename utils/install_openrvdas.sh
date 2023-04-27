@@ -38,6 +38,11 @@
 
 PREFERENCES_FILE='.install_openrvdas_preferences'
 
+# Define this here, even though it's just for MacOS, so that it's defined
+# when it's referenced down in install_packages, and doesn't have to
+# be defined twice.
+HOMEBREW_BASE='/usr/local/homebrew'
+
 ###########################################################################
 ###########################################################################
 function exit_gracefully {
@@ -323,8 +328,6 @@ function install_packages {
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         # Install homebrew:
-        HOMEBREW_BASE='/usr/local/homebrew'
-
         echo Checking for homebrew
         if [ ! -f ${HOMEBREW_BASE}/bin/brew ];then
             echo "Installing homebrew"
@@ -344,15 +347,18 @@ function install_packages {
         chmod -R go-w "$(brew --prefix)/share/zsh"
 
         # Install system packages we need
-        PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
-        if [ -n "$PYTHON_PATH" ];then
-            echo "Using python at $PYTHON_PATH"
-        else
-            echo Installing python from Homebrew
-            [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
-        fi
+        #PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
+        #if [ -n "$PYTHON_PATH" ];then
+        #    echo "Using python at $PYTHON_PATH"
+        #else
+        echo Installing python from Homebrew
+        [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
+        brew link python3
+        #fi
+        #brew install python #uwsgi
+
         echo Installing supporting packages from Homebrew
-        [ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
+        #[ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
         [ -e ${HOMEBREW_BASE}/bin/git ]    || brew install git
         [ -e ${HOMEBREW_BASE}/bin/nginx ]  || brew install nginx
         #[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
@@ -496,7 +502,6 @@ function setup_python_packages {
     # Expect the following shell variables to be appropriately set:
     # INSTALL_ROOT - path where openrvdas/ is
 
-
     # Set up virtual environment
     VENV_PATH=$INSTALL_ROOT/openrvdas/venv
 
@@ -509,20 +514,21 @@ function setup_python_packages {
     #if [ -d $VENV_PATH ];then
     #    mv $VENV_PATH ${VENV_PATH}.bak.$$
     #fi
-    PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
-    if [ -n "$PYTHON_PATH" ];then
-        echo "Using python at $PYTHON_PATH"
+    if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
+        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+        PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
     elif [ -e '/usr/local/bin/python3' ];then
         PYTHON_PATH=/usr/local/bin/python3
     elif [ -e '/usr/bin/python3' ];then
         PYTHON_PATH=/usr/bin/python3
     else
         echo 'No python3 found?!?'
-        #exit_gracefully
+        exit_gracefully
     fi
+
+    echo "Creating virtual environment using $PYTHON_PATH"
     cd $INSTALL_ROOT/openrvdas
     ${PYTHON_PATH} -m venv $VENV_PATH
-
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
@@ -534,7 +540,6 @@ function setup_python_packages {
     venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel
-
     venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
 }
 
