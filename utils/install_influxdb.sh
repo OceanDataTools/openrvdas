@@ -308,7 +308,10 @@ function install_influxdb {
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
         brew upgrade
-        brew install --overwrite influxdb
+        brew install --overwrite influxdb influxdb-cli
+        ln -sf ${HOMEBREW_BASE}/bin/influxd $INFLUX_PATH
+        ln -sf ${HOMEBREW_BASE}/bin/influx $INFLUX_PATH
+
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
         INFLUX_PATH=/usr/bin
@@ -846,7 +849,7 @@ save_default_variables
 
 # Don't want existing installations to be running while we do this
 echo Stopping supervisor prior to installation.
-sudo supervisorctl stop all
+sudo supervisorctl stop all || echo "Supervisor not running."
 
 # Let's get to installing things!
 if [ $INSTALL_INFLUXDB == 'yes' ];then
