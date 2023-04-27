@@ -415,6 +415,15 @@ if __name__ == '__main__':
             inst_class = config['class']
             del config['class']
 
+            # Fold in some things from the command line, if they're
+            # not specified in the config itself.
+            if 'time_format' not in config:
+                config['time_format'] = args.time_format
+            if 'record_format' not in config:
+                config['record_format'] = args.record_format
+            if 'quiet' not in config:
+                config['quiet'] = args.quiet
+
             # Create the appropriate simulator with the config
             if inst_class == 'Serial':
                 writer = SimSerial(**config)

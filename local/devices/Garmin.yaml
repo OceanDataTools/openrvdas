@@ -18,9 +18,6 @@ Garmin02: # Don't really know what this device type is - it's gp02 on the NBP
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
-    GPSTime:
-      units: ""
-      description: ""
     CourseTrue:
       units: "degrees"
       description: "True course"    
@@ -87,9 +84,6 @@ Garmin19: # A Garmin 19, as on the LMG
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
-    Time:
-      units: ""
-      description: ""
     CourseTrue:
       units: "degrees"
       description: "True course"    

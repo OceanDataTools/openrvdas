@@ -40,9 +40,6 @@ TrimbleGPS:
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
-    GPSTime:
-      units: ""
-      description: ""
     FixQuality:
       units: ""
       description: ""
@@ -79,9 +76,6 @@ TrimbleGPS:
     SpeedKm:
       units: "km/hour"
       description: "Speed over ground in kilometers per hour"
-    Mode:
-      units: ""
-      description: ""
     GPSTime:
       units: ""
       description: ""
