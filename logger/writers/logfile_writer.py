@@ -124,8 +124,8 @@ class LogfileWriter(Writer):
                                 for pattern in self.filebase]
             if not True in matched_patterns:
                 if not self.quiet:
-                    logging.warning(f'No patterns matched in PatternLogfileWriter '
-                                    f'for record "{record}"')
+                    logging.warning(f'No patterns matched in LogfileWriter '
+                                    f'options for record "{record}"')
         else:
             pattern = 'fixed'  # just an arbitrary fixed pattern
             filename = self.filebase + '-' + time_str
