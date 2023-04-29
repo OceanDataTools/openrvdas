@@ -1,17 +1,41 @@
+# Where did all the code go?
+
+Initially, we encouraged OpenRVDAS users to put their institution and
+vessel-specific code and configurations in this directory. We now encourage
+users instead to put their code into a separate repository and link it into
+this directory, as described below.
+
+All of the files that were formerly stored in this directory can now be
+found in separate repositories at https://github.com/OceanDataTools. If
+you wish to use some of those files, please check them out and link them
+in as described below.
+
 # How to Use the 'local/' Directory
 
-In short, this is where you should put anything/everything specific to
-your ship, project and/or organization. Nowhere else.
+In short, this is where you should put symbolic links to the code specific
+to your project. There should be little, if any, actual code in this directory.
 
-Below, we propose a directory structure that should prevent file
-collisions if you ever hope to share or make use of definitions or
-configurations from other organizations:
+For example, if you work for University of Upper Windsock and have code for
+your ship, the M/V Plunger, you would probably create a UUW repository with
+university-wide code and definitions and a 'mvp' subdirectory for ship-specific
+code and definitions (see below for suggested structure).
 
+Assuming OpenRVDAS is checked out into `/opt/openrvdas`, you might then check
+your repository out into `/opt/oceandatatools_local/uww`, creating a symbolic
+link as follows:
+```
+ln -s /opt/oceandatatools_local/uww /opt/openrvdas/local
+```
+This will allow you to reference your institution's and ship's configurations
+and data as though they were subdirectories under `local`, without clogging
+the original repository with institution/ship-specific files.
+
+The effective file structure should look something like:
 ```
   local/
-    devices/             - Definitions for widely-used device types (SeaPath, Garmin, etc.)
     <your org or ship>/  - Subdirectory for device and cruise definitions specific to your org
       devices/             - Device types and physical devices specific to your org
+      modules/             - Readers, transforms and writers specific to your org
       <cruise id>/         - Directory for files specific to cruise a specific cruise
         devices/                - (optional) Device definitions specific to this particular cruise
         <cruise_id>_cruise.yaml - Cruise definition file for this cruise
@@ -21,29 +45,23 @@ For example,
 ```
   local/
     devices/   - Definitions for widely-used device types (SeaPath, Garmin, etc.)
-    
-    nbp/       - Subdirectory for device and cruise definitions for the NB Palmer
-      devices/   - Device types and physical devices specific to the NB Palmer
-      NBP1906/   - Files specific to cruise NBP1406
-        devices/   - If there are any devices specific to cruise NBP1906
-        NBP1906_cruise.yaml - Cruise definition file for NBP1906
-        NBP1906_winch.yaml  - If you want to have a separate instance for monitoring winches
-      NBP1907/   - Files specific to cruise NBP1907
-        ...
-        
-    lmg/       - Subdirectory for the Lawrence M. Gould
-      devices/   -  Device types and physical devices specific to the LM Gould
-      LMG1903/   - Files specific to cruise LMG1903
-        LMG_1903_cruise.yaml - Cruise definition file for LMG1903
+    usap/
+      nbp/       - Subdirectory for device and cruise definitions for the NB Palmer
+        devices/   - Device types and physical devices specific to the NB Palmer
+        NBP1906/   - Files specific to cruise NBP1406
+          devices/   - If there are any devices specific to cruise NBP1906
+          NBP1906_cruise.yaml - Cruise definition file for NBP1906
+          NBP1906_winch.yaml  - If you want to have a separate instance for monitoring winches
+        NBP1907/   - Files specific to cruise NBP1907
+          ...
+            
+      lmg/       - Subdirectory for the Lawrence M. Gould
+        devices/   -  Device types and physical devices specific to the LM Gould
+        LMG1903/   - Files specific to cruise LMG1903
+          LMG_1903_cruise.yaml - Cruise definition file for LMG1903
       ...
-      
-    sikuliaq/
-      ...
+
 ```
-In general, we recommend that any organization or ship using OpenRVDAS
-create their own branch or fork of the code to allow them to
-selectively merge OpenRVDAS code updates as they see fit. Following
-the above structure will simplify the process
 
 ## Local Device/Device Type Definitions
 

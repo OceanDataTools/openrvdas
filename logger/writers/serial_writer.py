@@ -57,9 +57,8 @@ class SerialWriter(Writer):
                                         write_timeout=write_timeout, dsrdtr=dsrdtr,
                                         inter_byte_timeout=inter_byte_timeout,
                                         exclusive=exclusive)
-        except (serial.SerialException, serial.serialutil.SerialException) as e:
-            logging.fatal('Failed to open serial port %s: %s', port, e)
-            sys.exit(1)
+        except serial.SerialException as e:
+            raise serial.SerialException(f'Failed to open serial port {port}: {e}')
 
         self.eol = eol
         self.encoding = encoding

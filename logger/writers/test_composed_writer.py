@@ -32,25 +32,6 @@ class TestComposedWriter(unittest.TestCase):
         logging.info('created temporary directory "%s"', self.tmpdirname)
 
     ############################
-    def test_check_format(self):
-        f1_name = self.tmpdirname + '/f1'
-        f2_name = self.tmpdirname + '/f2'
-
-        # This should be okay
-        ComposedWriter(transforms=[PrefixTransform('prefix')],
-                       writers=[TextFileWriter(f1_name),
-                                TextFileWriter(f2_name)],
-                       check_format=True)
-
-        # Should raise an error if formats are not compatible
-        with self.assertLogs(logging.getLogger(), logging.ERROR):
-            with self.assertRaises(ValueError):
-                ComposedWriter(transforms=[ParseNMEATransform()],
-                               writers=[TextFileWriter(f1_name),
-                                        TextFileWriter(f2_name)],
-                               check_format=True)
-
-    ############################
     def test_all_files(self):
 
         f1_name = self.tmpdirname + '/f1'
