@@ -14,9 +14,10 @@ PyYAML
 parse
 psutil
 setproctitle
-supervisor
 influxdb_client
 pyModbusTCP
+
+#supervisor  # For MacOS only - install separately
 
 # Version-restricted packages
 Django==3.1.14
