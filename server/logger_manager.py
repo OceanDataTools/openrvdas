@@ -581,7 +581,7 @@ if __name__ == '__main__':  # noqa: C901
                 readline.read_history_file(hist_path)
                 # default history len is -1 (infinite), which may grow unruly
                 readline.set_history_length(1000)
-            except (FileNotFoundError, PermissionError):
+            except (FileNotFoundError, PermissionError, OSError):
                 pass
             atexit.register(readline.write_history_file, hist_path)
 
