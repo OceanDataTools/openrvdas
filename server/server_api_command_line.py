@@ -177,7 +177,7 @@ class ServerAPICommandLine:
                     # of the file we've just loaded to the dict.
                     config = read_config(filename)
                     if 'cruise' in config:
-                        config['cruise']['config_filename'] = filename
+                        config['config_filename'] = filename
                     self.api.load_configuration(config)
                 except FileNotFoundError:
                     logging.error('Unable to find file "%s"', filename)

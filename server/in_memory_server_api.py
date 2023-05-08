@@ -80,11 +80,13 @@ class InMemoryServerAPI(ServerAPI):
         """
         config = self.get_configuration()
         if not config:
-            return None
+            return {}
 
         if 'loggers' not in config:
             raise ValueError('No loggers found')
-        logger_configs = config['loggers']
+        logger_configs = config.get('loggers', None)
+        if not logger_configs:
+            raise ValueError('No logger configurations found')
 
         # Fetch and insert the currently active config for each logger
         for logger in logger_configs:
@@ -94,24 +96,22 @@ class InMemoryServerAPI(ServerAPI):
     ############################
     def get_logger_config(self, config_name):
         """Retrieve the config associated with the specified name."""
-        config = self.get_configuration()
-        # if not cruise_id:
-        #   raise ValueError('No cruise config defined that would allow '
-        #                    'setting logger config by name')
-        configs = config.get('configs', None)
-        if configs is None:
+        cruise_config = self.get_configuration()
+        if cruise_config is None:
+            return {}
+        logger_configs = cruise_config.get('configs', None)
+        if logger_configs is None:
             raise ValueError('No "config" found')
-        config2 = configs.get(config_name, None)
-        if config2 is None:
-            raise ValueError('No config "%s" in config' % config_name)
-        return config2
+        logger_config = logger_configs.get(config_name, None)
+        if logger_config is None:
+            raise ValueError('No logger config "%s" in config' % config_name)
+        return logger_config
 
     ############################
     def get_logger_configs(self, mode=None):
         """Retrieve the configs associated with a cruise id and mode from the
         data store. If mode is omitted, retrieve configs associated with
-        the cruise's current logger configs. If cruise_id is omitted,
-        return configs for *all* cruises."""
+        the cruise's current logger configs."""
         loggers = self.get_loggers()
         if not loggers:
             return None
@@ -134,7 +134,12 @@ class InMemoryServerAPI(ServerAPI):
 
         # If mode is not specified, get logger's current config name
         if mode is None:
-            mode = self.get_active_mode()
+            config_name = self.logger_config.get(logger_id, None)
+            if config_name is None:
+                raise ValueError(f'Logger id "{logger_id}" has no mode!')
+            return config_name
+
+        # Otherwise, we return the config_name for the specifed mode
         modes = self.config.get('modes')
         mode_configs = modes.get(mode, None)
         if mode_configs is None:
