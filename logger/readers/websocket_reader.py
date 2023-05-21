@@ -1,24 +1,12 @@
 #!/usr/bin/env python3
 
 import asyncio
-import json
 import logging
 import queue
 import ssl
-import sys
 import threading
 import time
 import websockets
-
-try:
-    import websockets
-    WEBSOCKETS_ENABLED = True
-except ModuleNotFoundError:
-    WEBSOCKETS_ENABLED = False
-
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.readers.reader import Reader  # noqa: E402
 
 DEFAULT_SERVER_WEBSOCKET = 'localhost:8766'
 
@@ -97,11 +85,11 @@ class WebsocketReader():
                     logging.warning(f'WebsocketReader websocket loop error: {e}')
                 except websockets.exceptions.ConnectionClosed:
                     logging.info('WebsocketReader lost websocket connection to '
-                                    'data server; trying to reconnect.')
+                                 'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
                 except websockets.exceptions.InvalidStatusCode:
                     logging.info('WebsocketReader InvalidStatusCode connecting to '
-                                    'data server; trying to reconnect.')
+                                 'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
                 except OSError as e:
                     logging.info('Unable to connect to websocket. Sleeping to try again...')

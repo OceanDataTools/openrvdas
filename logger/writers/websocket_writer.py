@@ -4,13 +4,9 @@
 import asyncio
 import logging
 import ssl
-import sys
 import threading
 import websockets
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from server.websocket_server import WebsocketServer  # noqa: E402
 
 ################################################################################
 class WebsocketWriter():
@@ -22,7 +18,7 @@ class WebsocketWriter():
         port        Port on localhost on which to open websocket
 
         cert_file   If specified, use SSL with these certificate file and key files.
-        key_file    Note that if one is specified, both must be.   
+        key_file    Note that if one is specified, both must be.
         ```
         """
         self.host = 'localhost'
@@ -41,7 +37,7 @@ class WebsocketWriter():
         # Send queue for each client
         self.send_queue = {}
 
-       # Event loop - we'll set this in run()
+        # Event loop - we'll set this in run()
         self.loop = None
 
         # Start async websocket server in a separate thread
@@ -73,7 +69,7 @@ class WebsocketWriter():
             client_id = 0
             while client_id in self.client_map:
                 client_id += 1
-  
+
             logging.info(f'New client #{client_id} attached')
             self.client_map[client_id] = websocket
             self.send_queue[client_id] = asyncio.Queue()
@@ -112,7 +108,7 @@ class WebsocketWriter():
         """Write a record to all connected clients"""
         if not record:
             return
-        
+
         logging.debug(f'WebsocketWriter received record: {record}')
         with self.client_map_lock:
             for client_id, sender in self.client_map.items():
