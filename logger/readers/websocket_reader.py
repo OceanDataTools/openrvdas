@@ -105,7 +105,7 @@ class WebsocketReader():
                     await asyncio.sleep(0.2)
                 except OSError as e:
                     logging.info('Unable to connect to websocket. Sleeping to try again...')
-                    logging.info(f'Connection error: {e}'))
+                    logging.info(f'Connection error: {e}')
                     await asyncio.sleep(2)
 
         # In the outer function, get a new event loop and fire up the

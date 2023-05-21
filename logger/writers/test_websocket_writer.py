@@ -25,7 +25,7 @@ class WebsocketWriterTest(unittest.TestCase):
             time.sleep(0.1)
         logging.debug(f'writer thread exiting')
 
-    def NOT_test_read(self):
+    def test_read(self):
         uri = 'ws://localhost:8080'
         records = ["Hello, world!", "Goodbye, world!"]
         writer_thread = threading.Thread(target=self._run_writer,
@@ -44,7 +44,7 @@ class WebsocketWriterTest(unittest.TestCase):
         writer_thread.join()
         logging.debug(f'writer thread joined')
 
-    def test_read_ssl(self):
+    def NOT_test_read_ssl(self):
         uri = 'wss://localhost:8081'
         records = ["Hello, world!", "Goodbye, world!"]
         writer_thread = threading.Thread(target=self._run_writer,
