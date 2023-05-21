@@ -16,22 +16,23 @@ from server.websocket_server import WebsocketServer  # noqa: E402
 class WebsocketWriter():
     ############################
 
-    def __init__(self, port, ssl=False, check_cert=False):
+    def __init__(self, port, cert_file=None, key_file=None):
         """
         ```
-        port -     Port on localhost on which to open websocket
+        port        Port on localhost on which to open websocket
 
-        ssl -      If True, use ssl
-
-        check_cert  - If ssl = True, should either be False (don't check certs
-                   for validity) or a string to use as local filepath location
-                   of .pem file to check against.
+        cert_file   If specified, use SSL with these certificate file and key files.
+        key_file    Note that if one is specified, both must be.   
         ```
         """
         self.host = 'localhost'
         self.port = port
         self.ssl = ssl
-        self.check_cert = check_cert
+
+        if (not cert_file and key_file) or (cert_file and not key_file):
+            raise ValueError('If cert_file or key_file is specified, both must be.')
+        self.cert_file = cert_file
+        self.key_file = key_file
 
         # Map from client_id to websocket
         self.client_map = {}
@@ -67,7 +68,6 @@ class WebsocketWriter():
 
     ############################
     async def _websocket_handler(self, websocket, path):
-        logging.warning(f'WebsocketServer got connection on path {path}')
         with self.client_map_lock:
             # Find a unique client_id for this client
             client_id = 0
@@ -92,16 +92,9 @@ class WebsocketWriter():
     def run(self):
         # Create an SSL context if we're using SSL
         ssl_context = None
-        if self.ssl:
+        if self.cert_file:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            # If check_cert is a str, take it as the location of the
-            # .pem file we'll check for validity. Otherwise, if not
-            # False, take as a bool to verify by own means.
-            if self.check_cert:
-                if isinstance(self.check_cert, str):
-                    ssl_context.load_verify_locations(self.check_cert)
-                else:
-                    ssl_context.verify_mode = ssl.CERT_REQUIRED
+            ssl_context.load_cert_chain(certfile=self.cert_file, keyfile=self.key_file)
 
         # Set up an event loop for the websocket server
         self.loop = asyncio.new_event_loop()
