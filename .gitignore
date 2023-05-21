@@ -40,6 +40,9 @@ static/
 # PyCharm
 .idea/
 
+# Visual Studio Code
+.vscode
+
 # virtualenv
 venv/
 
