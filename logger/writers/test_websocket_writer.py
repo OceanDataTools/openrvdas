@@ -50,8 +50,8 @@ class WebsocketWriterTest(unittest.TestCase):
     def test_read_ssl(self):
         uri = 'wss://localhost:8081'
         records = ["Hello, world!", "Goodbye, world!"]
-        cert_file = dirname(realpath(__file__)) + '/test.crt'
-        key_file = dirname(realpath(__file__)) + '/test.key'
+        cert_file = dirname(dirname(realpath(__file__))) + '/utils/test.crt'
+        key_file = dirname(dirname(realpath(__file__))) + '/utils/test.key'
         writer_thread = threading.Thread(target=self._run_writer,
                                             args=(8081, records, cert_file, key_file),
                                             daemon=True)
