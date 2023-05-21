@@ -59,7 +59,7 @@ class WebsocketWriter():
                 await websocket.send(record)
                 logging.debug(f'WebsocketWriter sent client {client_id} record: {record}')
 
-        except websockets.exceptions.ConnectionClosed:
+        except websockets.exceptions.ConnectionClosed:  # type: ignore
             logging.info(f'Websocket connection lost for client {client_id}')
 
     ############################
@@ -96,7 +96,7 @@ class WebsocketWriter():
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
-        start_server = websockets.serve(ws_handler=self._websocket_handler,
+        start_server = websockets.serve(ws_handler=self._websocket_handler,  # type: ignore
                                         host=self.host, port=self.port,
                                         ssl=ssl_context)
 
@@ -113,4 +113,5 @@ class WebsocketWriter():
         with self.client_map_lock:
             for client_id, sender in self.client_map.items():
                 logging.debug(f'Pushing record to client {client_id}')
-                self.loop.call_soon_threadsafe(self.send_queue[client_id].put_nowait, record)
+                self.loop.call_soon_threadsafe(                        # type: ignore
+                    self.send_queue[client_id].put_nowait, record)
