@@ -16,8 +16,8 @@ from logger.readers.websocket_reader import WebsocketReader  # noqa: E402
 class WebsocketWriterTest(unittest.TestCase):
 
     # Method to run in separate thread to run WebsocketReader
-    def _run_writer(self, port, records, cert_file=None, key_file=None):
-        writer = WebsocketWriter(port=port, cert_file=cert_file, key_file=key_file)
+    def _run_writer(self, uri, records, cert_file=None, key_file=None):
+        writer = WebsocketWriter(uri=uri, cert_file=cert_file, key_file=key_file)
 
         while not writer.client_map:
             time.sleep(0.1)
@@ -33,7 +33,7 @@ class WebsocketWriterTest(unittest.TestCase):
         uri = 'ws://localhost:8080'
         records = ["Hello, world!", "Goodbye, world!"]
         writer_thread = threading.Thread(target=self._run_writer,
-                                         args=(8080, records),
+                                         args=(uri, records),
                                          daemon=True)
         writer_thread.start()
 
@@ -54,7 +54,7 @@ class WebsocketWriterTest(unittest.TestCase):
         cert_file = dirname(dirname(realpath(__file__))) + '/utils/test.crt'
         key_file = dirname(dirname(realpath(__file__))) + '/utils/test.key'
         writer_thread = threading.Thread(target=self._run_writer,
-                                         args=(8081, records, cert_file, key_file),
+                                         args=(uri, records, cert_file, key_file),
                                          daemon=True)
         writer_thread.start()
 

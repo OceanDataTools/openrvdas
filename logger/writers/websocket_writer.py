@@ -7,26 +7,40 @@ import ssl
 import threading
 import websockets
 
+from urllib.parse import urlparse
+
 
 ################################################################################
 class WebsocketWriter():
     ############################
 
-    def __init__(self, port, cert_file=None, key_file=None):
+    def __init__(self, uri, cert_file=None, key_file=None):
         """
         ```
-        port        Port on localhost on which to open websocket
+        uri         Protocol, hostname and port to serve as. E.g. 'wss://openrvdas:8081'
+                    If protocol is 'wss', use SSL, and cert_file and key_file must be specified.
 
-        cert_file   If specified, use SSL with these certificate file and key files.
-        key_file    Note that if one is specified, both must be.
+        cert_file   If using ssl, the file path to relevant certificate file and key files.
+        key_file
         ```
         """
-        self.host = 'localhost'
-        self.port = port
-        self.ssl = ssl
+        self.uri = uri
+        parsed_uri = urlparse(uri)
+        self.host = parsed_uri.hostname
+        self.port = parsed_uri.port
+        self.protocol = parsed_uri.scheme
 
-        if (not cert_file and key_file) or (cert_file and not key_file):
-            raise ValueError('If cert_file or key_file is specified, both must be.')
+        if self.protocol == 'wss':
+            self.ssl = True
+            if (not cert_file or not key_file):
+                raise ValueError('Both cert_file and key_file must be specified for wss')
+        elif self.protocol == 'ws':
+            self.ssl = False
+            if (cert_file or key_file):
+                raise ValueError('If protocol is ws, cert_file and key_file should be empty')
+        else:
+            raise ValueError(f'Protocol "{self.protocol}" not recognized. Must be ws or wss')
+
         self.cert_file = cert_file
         self.key_file = key_file
 
@@ -88,9 +102,10 @@ class WebsocketWriter():
     def run(self):
         # Create an SSL context if we're using SSL
         ssl_context = None
-        if self.cert_file:
+        if self.ssl:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            ssl_context.load_cert_chain(certfile=self.cert_file, keyfile=self.key_file)
+            ssl_context.load_cert_chain(
+                certfile=self.cert_file, keyfile=self.key_file)  # type: ignore
 
         # Set up an event loop for the websocket server
         self.loop = asyncio.new_event_loop()
