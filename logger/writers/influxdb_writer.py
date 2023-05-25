@@ -12,9 +12,10 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
-INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
+INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = INFLUXDB_BUCKET = None
 try:
     from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_BUCKET  # noqa: E402
     from database.influxdb.settings import INFLUXDB_URL, INFLUXDB_VERIFY_SSL  # noqa: E402
     INFLUXDB_SETTINGS_FOUND = True
 except (ModuleNotFoundError, ImportError):
@@ -32,7 +33,7 @@ except (ModuleNotFoundError, ImportError):
 class InfluxDBWriter(Writer):
     """Write to the specified file. If filename is empty, write to stdout."""
 
-    def __init__(self, bucket_name, measurement_name=None,
+    def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
                  auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
                  verify_ssl=INFLUXDB_VERIFY_SSL):
@@ -61,7 +62,7 @@ class InfluxDBWriter(Writer):
                   attempt to verify the validity of the relevant SSL certificate.
         ```
         """
-        super().__init__(input_format=Text)
+        super().__init__(input_format=Text)  # type: ignore
         if not auth_token:
             raise RuntimeError('No auth token specified in InfluxDBWriter and '
                                'none found in database/influxdb/settings.py. Have '
@@ -113,7 +114,7 @@ class InfluxDBWriter(Writer):
 
         while not self.write_api:
             client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org,
-                                    ssl=self.use_ssl, verify_ssl=self.verify_ssl)
+                                    ssl=self.use_ssl, verify_ssl=self.verify_ssl)  # type: ignore
             # get the orgID from the name:
             try:
                 organizations_api = client.organizations_api()

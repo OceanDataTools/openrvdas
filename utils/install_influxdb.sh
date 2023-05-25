@@ -71,6 +71,9 @@ DEFAULT_HTTP_PROXY=$http_proxy
 DEFAULT_INFLUXDB_USER=rvdas
 DEFAULT_INFLUXDB_PASSWORD=rvdasrvdas
 
+DEFAULT_INFLUXDB_ORGANIZATION=openrvdas
+DEFAULT_INFLUXDB_BUCKET=openrvdas
+
 DEFAULT_INSTALL_INFLUXDB=yes
 DEFAULT_INSTALL_GRAFANA=yes
 DEFAULT_INSTALL_TELEGRAF=yes
@@ -83,9 +86,6 @@ DEFAULT_USE_SSL=no
 DEFAULT_HAVE_SSL_CERTIFICATE=no
 DEFAULT_SSL_CRT_LOCATION=
 DEFAULT_SSL_KEY_LOCATION=
-
-# Organization to be used by OpenRVDAS and Telegraf when writing to InfluxDB
-ORGANIZATION=openrvdas
 
 # Bucket Telegraf should write its data to
 TELEGRAF_BUCKET=_monitoring
@@ -157,6 +157,8 @@ DEFAULT_HTTP_PROXY=$HTTP_PROXY
 
 DEFAULT_INFLUXDB_USER=$INFLUXDB_USER
 DEFAULT_INFLUXDB_PASSWORD=$INFLUXDB_PASSWORD
+DEFAULT_INFLUXDB_ORGANIZATION=$INFLUXDB_ORGANIZATION
+DEFAULT_INFLUXDB_BUCKET=$INFLUXDB_BUCKET
 
 DEFAULT_INSTALL_INFLUXDB=$INSTALL_INFLUXDB
 DEFAULT_INSTALL_GRAFANA=$INSTALL_GRAFANA
@@ -239,7 +241,8 @@ function fix_database_settings {
     SETTINGS=$INSTALL_ROOT/openrvdas/database/influxdb/settings.py
     cp ${SETTINGS}.dist $SETTINGS
 
-    sed -i -e "s/INFLUXDB_ORG = '.*'/INFLUXDB_ORG = '$ORGANIZATION'/" $SETTINGS
+    sed -i -e "s/INFLUXDB_ORG = '.*'/INFLUXDB_ORG = '$INFLUXDB_ORGANIZATION'/" $SETTINGS
+    sed -i -e "s/INFLUXDB_BUCKET = '.*'/INFLUXDB_BUCKET = '$INFLUXDB_BUCKET'/" $SETTINGS
     sed -i -e "s/INFLUXDB_AUTH_TOKEN = '.*'/INFLUXDB_AUTH_TOKEN = '$INFLUXDB_AUTH_TOKEN'/" $SETTINGS
 
     # If they've run this with an old installation of OpenRVDAS,
@@ -361,7 +364,7 @@ EOF
     echo Running influx setup
     ${INFLUX_PATH}/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
-        --org openrvdas --bucket openrvdas --retention 0 --force # > /dev/null
+        --org $INFLUXDB_ORGANIZATION --bucket $INFLUXDB_BUCKET --retention 0 --force # > /dev/null
 
     #    echo Killing the InfluxDB instance we started
     pkill -x influxd || echo No processes killed
@@ -566,7 +569,7 @@ EOF
 [[outputs.influxdb_v2]]
    urls = ["$TELEGRAF_PROTOCOL://127.0.0.1:8086"]
    token = "$INFLUXDB_AUTH_TOKEN"  # Token for authentication.
-   organization = "$ORGANIZATION"  # InfluxDB organization to write to
+   organization = "$INFLUXDB_ORGANIZATION"  # InfluxDB organization to write to
    bucket = "_monitoring"  # Destination bucket to write into.
    $INSECURE_SKIP_VERIFY
 EOF
@@ -833,6 +836,13 @@ while true; do
       break
     fi
 done
+
+echo
+read -p "'Organization' to use for InfluxDB OpenRVDAS data? ($DEFAULT_INFLUXDB_ORGANIZATION) " INFLUXDB_ORGANIZATION
+INFLUXDB_ORGANIZATION=${INFLUXDB_ORGANIZATION:-$DEFAULT_INFLUXDB_ORGANIZATION}
+echo
+read -p "Bucket to use for InfluxDB OpenRVDAS data? ($DEFAULT_INFLUXDB_BUCKET) " INFLUXDB_BUCKET
+INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-$DEFAULT_INFLUXDB_BUCKET}
 
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
