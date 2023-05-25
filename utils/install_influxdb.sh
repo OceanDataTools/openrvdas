@@ -627,6 +627,7 @@ EOF
 [program:influxdb]
 command=${INFLUX_PATH}/influxd --reporting-disabled $INFLUX_SSL_OPTIONS
 directory=/opt/openrvdas
+environment=INFLUXD_CONFIG_PATH=/etc/influxdb
 autostart=$AUTOSTART_INFLUXDB
 autorestart=true
 startretries=3
