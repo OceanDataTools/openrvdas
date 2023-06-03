@@ -1,0 +1,300 @@
+<!-- 
+
+    @/modals.html
+
+    contains the HTML for the modal dialogues for
+    changing logger_manager mode or individual logger
+    modes.
+
+    Modals are the new popup.  Popups are the old
+    dead to me.
+
+    Basic premise here is that the modals get filled in
+    by an fetch to a CGI (written in python), and
+    submit changes via POST to the same script.
+
+    Associated javascript file(s) is/are planned, but for the 
+    moment the associated code is here inside a <script> tag.
+-->
+
+
+<!-- Change Cruise Mode Modal Dialogue-->
+<div class="modal fade" id="CruiseModeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="CruiseModalLabel">Change Cruise Mode</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" 
+            action="/cgi-bin/CruiseMode.cgi"
+            onsubmit="CGI.AjaxPost(event, this, 'CruiseModeModal')">
+      <div class="modal_body" id="CruiseModeModalBody"></div>
+      <div id="ChangeMode_mb" class="modal-body"></div>
+      <div id="ChangeMode_modalfooter" class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Apply Change</button>
+      </div>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Change Cruise Mode Modal -->
+
+<!-- Example Logger Mode Modal -->
+<div class="modal fade" 
+     id="LoggerModal"
+     tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="LoggerModalTitle">Change Logger Mode</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" 
+            action="/cgi-bin/LoggerMode.cgi"
+            onsubmit="CGI.AjaxPost(event, this, 'LoggerModal')">
+      <div class="modal_body" id="LoggerModeModalBody"></div>
+      <div id="Logger_mb" class="modal-body"></div>
+      <div id="Logger_modalfooter" class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Apply Change</button>
+      </div>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Example Logger Mode Modal -->
+
+<script>
+var LoggerButton = (function() { 
+    // Event handler called when the modal is shown on the page.
+    //
+    // shown(element_id)  ==> nothing
+    //     @element_id = DOM element id of the button
+    var shown = async function(element_id) {
+        // Set modal title
+        var logger_id = element_id.attributes.for.value;
+        var title_el = document.getElementById('LoggerModalTitle');
+        if (title_el) {
+            title_el.innerHTML = "Change " + logger_id + " mode";
+        }
+        // fill in modal body
+        url = '/cgi-bin/LoggerMode.cgi?' + logger_id
+        var result = await CGI.AjaxGet(url);
+        var dest = document.getElementById('LoggerModeModalBody');
+        if (dest) {
+            dest.innerHTML = result;
+        } 
+    }
+
+    // Event handler called when the button is clicked
+    //   Get the modal, attach listener, and show it.
+    //
+    // show(element_id)  ==> nothing
+    //     @element_id - DOM element id of the button 
+    function show(element_id) {
+        var el = document.getElementById('LoggerModal');
+        if (el) {
+            el.addEventListener('show.bs.modal', 
+                                LoggerButton.shown(element_id));
+        }
+        var m = bootstrap.Modal.getOrCreateInstance(el);
+        if (m) {
+            m.show();
+        }
+    }
+
+    // creates a logger button to display on the GUI
+    //
+    // create(logger_id, text) ==> button element
+    //    @logger_id - ServerAPI logger id for this button
+    //    @text      - initial text shown on the button face
+    function create(logger_id, text) {
+        var b = document.createElement('button');
+        b.setAttribute('id', logger_id + "_btn");
+        b.setAttribute('type', 'button');
+        b.setAttribute('for', logger_id);
+        b.setAttribute('onclick', 'LoggerButton.show(this)');
+        b.className = 'btn btn-secondary btn-sm';
+        b.innerHTML = text;
+        return b;
+    }
+
+    // This function should be called by index.html to update
+    // the button's innerHTML and style (on status change)
+    var empty_loggers = document.getElementById('empty_loggers');
+    var status_and_loggers = document.getElementById('status_and_loggers');
+    var status_timestamp = 0;
+
+    function update(timestamp, logger_status) {
+        // Update timestamp on status_td
+        status_td.update();
+
+        // Bail if logger_status is empty
+        if (!logger_status || Object.keys(logger_status).length == 0) {
+            return;
+        }
+
+        // If status not empty, we have loggers, so show the
+        // 'we have loggers' div
+        if (empty_loggers) { 
+            empty_loggers.className = 'd-none';
+        }
+        if (status_and_loggers) {
+            status_and_loggers.className = 'd-block';
+        }
+
+        // Don't update buttons if this message is old.
+        if (timestamp <= status_timestamp) {
+            console.info('Got stale logger status - skipping...');
+        } else {
+            status_timestamp = timestamp;
+        }
+
+        for (var logger_name in logger_status) {
+            var status = logger_status[logger_name];
+            var button = document.getElementById(logger_name + '_btn');
+            if (button == undefined) {
+                continue;
+            }
+            button.innerHTML = status.config;
+            switch (status.status) {
+                case 'RUNNING':
+                    button.className = 'btn btn-sm btn-success';
+                    button.style.backgroundColor = '';
+                    break;
+                case 'EXITED':
+                    button.className = 'btn btn-sm btn-secondary';
+                    button.style.backgroundColor = "";
+                    break;
+                case 'STARTING':
+                    button.className = 'btn btn-sm';
+                    button.style.backgroundColor = "khaki";
+                    break;
+                case 'BACKOFF':
+                    button.className = 'btn btn-sm';
+                    button.style.backgroundColor = "gold";
+                    break;
+                case 'FATAL':
+                    button.className = 'btn btn-sm btn-danger';
+                    button.style.backgroundColor = "";
+                    break;
+                default:
+                    // remove any styling we may have left behind
+                    button.style.backgroundColor = "";
+                    button.className = 'btn btn-sm';
+            }
+        }
+    }
+
+    // methods for LoggerButton
+    return {
+        shown: shown,
+        show: show,
+        create: create,
+        update: update,
+    }
+})();
+
+    
+// FIXME:  Package these into a function for the logger_manager button
+//         Why? Namespace pollution, style consistency, etc....
+    async function show_CruiseMode_modal(CruiseMode_el) {
+        var result = await CGI.AjaxGet("/cgi-bin/CruiseMode.cgi");
+        // FIXME:  Check result for 'error' field
+        var dest = document.getElementById('CruiseModeModalBody');
+        if (dest) {
+            dest.innerHTML = result;
+        }
+        // sttach event to submit button
+    }
+
+    // Attach events to buttons
+    const CruiseMode_el = document.getElementById('CruiseModeModal');
+    if (CruiseMode_el) {
+        CruiseMode_el.addEventListener('show.bs.modal', () => {
+            // 'show' triggered by clicking the button
+            show_CruiseMode_modal(CruiseMode_el);
+         })
+    }
+
+var CGI = (function() {
+    var AjaxGet = async function(url) {
+        try {
+            response = Ajax('GET', url);
+        } catch (error) {
+            return { ok: false, error: error };
+        }
+        return response;
+    }
+
+    var AjaxPost = async function(evt, form, parentModal) {
+        // Don't do typical "submit" action, do this instead
+        evt.preventDefault();
+        jwt = localStorage.getItem('jwt_token');
+        post_options = {
+            method: 'post',
+              body: new FormData(form),
+           headers: { 'Authorization': 'Bearer ' + jwt }
+        }
+        url = form.action;
+        try {
+            var post = await fetch(form.action, post_options);
+        } catch (error) {
+            console.error(error);
+            // Paste the error message somewhere in the form
+            return false;
+        }
+        if (!post.ok) {
+            console.error("Post of form not OK");
+            var t = await post.text();
+            console.error(t)
+            // FIXME: paste the error message (from t) somewhere in the form
+            return false;
+        } else {
+            // POST is OK, so mode was (probably) changed.
+            var el = document.getElementById(parentModal);
+            var our_modal = bootstrap.Modal.getInstance(el);
+            if (our_modal) {
+                our_modal.hide();
+            } else {
+                console.error("our_model isn't our modal :-(");
+            }
+        }
+        return false;
+    }
+
+    return {
+        AjaxGet: AjaxGet,
+        AjaxPost: AjaxPost
+    }
+
+})();
+
+// BS5 modal events:
+//////////////////////////////////////////////////////
+// show.bs.modal: fired as soon as the show() method of the instance is called
+// shown.bs.modal: fired when the modal element is completely visible
+//                 after all CSS transitions are done
+// hide.bs.modal: fired as soon as the hide() method is called
+// hidden.bs.model: fired when the element is completely hidden
+//                  after all CSS transitions are done
+// hidePrevented.bs.modal: fired when the modal is shown, and the user
+//                         clicks on the backdrop or presses ESCo
+
+// BS5 modal methods:
+/////////////////////////////////////////////////////////////////////
+// dispose - destroys an element's modal
+// getInstance = "Static" method which allows you to get the modal instance
+//               associated with a DOM element
+// getOrCreateInstance - above, but on steroids
+// handleUpdate - Manually readjusts the modal's postion if the height
+//                changes while it is open
+// hide - Manually hides a modal.  Returns to the caller BEFORE THE MODAL
+//        HAS ACTUALLY BEEN HIDDENi (css transitions, etc).
+// show - Manually open a modal
+// toggle - toggles (show/hide) modal
+</script>

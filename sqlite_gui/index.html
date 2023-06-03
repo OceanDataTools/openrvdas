@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<!--
+    <link rel='icon' type='image/x-icon' href='/static/favicon.ico'>
+-->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <link rel="stylesheet" id="theme-css" href="/js/bootstrap.min.css">
+    <title>OpenRVDAS Cruise Management</title>
+    <style>
+      /* FIXME:  Put this in a css file?? */
+      .stderr_window {
+          height:40px;
+          padding:0px;
+          overflow-y:auto;
+          font-size:x-small;
+      }
+      .tiny {
+          font-size:0.5em;
+          height: 8px;
+      }
+    </style>
+
+  </head>
+  <body onload="body_load()">
+    <!--# include file='./navbar.html' -->
+<h1>OpenRVDAS Dashboard</h1>
+
+<!-- #####################################################################-->
+<!-- Show server status up top.                                           -->
+<table class='table table-sm'>
+  <tr>
+    <td class="table-secondary">now</td>
+    <td class="table-light"><span id='time_td'></span></td>
+    <td class="table-secondary">server</td>
+    <td class="table-light"><span id='server_time_td'>--no updates--</span></td>
+    <td class="table-secondary">status</td>
+    <td class="table-light"><span id='status_time_td'>--no updates--</span></td>
+  </tr>
+</table>
+<!-- Show this div if no cruise definition loaded -->
+<!-- A million monkeys on the web say using the Bootstrap class
+     instead of directly styling displsy:[none|block] helps with
+     mobile devices.  They might be right. -->
+<div id='empty_loggers' class='d-block'>
+  <p>
+    <b>No cruise definition loaded</b>
+  </p>
+</div>
+
+<!-- Show this div if a cruise definition has been loaded -->
+<div id='status_and_loggers' class='d-none'>
+  <!-- ################################################################## -->
+  <!-- Draw the logger manager current mode, and loggers.                 -->
+  <table class='table table-striped table-responive-sm' id='logger_table'>
+    <!-- Cruise mode and logger manager stderr here -->
+    <thead class='table-dark'>
+      <tr>
+        <th>cruise mode</th>
+        <th>logger manager stderr</th>
+      </tr>
+    </thead>
+    <tbody id='logger_table_body'>
+      <tr>
+        <td id="logger_manager_mode_td">
+          <button id="mode_button"
+                  type="button"
+                  class="btn btn-sm btn-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#CruiseModeModal">
+            ???
+          </button>
+        </td>
+        <td ><div class="stderr_window" id="logger_manager_stderr"></div></td>
+      </tr>
+
+      <!-- Loggers and logger stderr here -->
+      <tr class='table-dark'>
+        <th>logger</th>
+        <th>stderr</th>
+      </tr>
+    <template>
+      <tr id="loggerid_row">
+        <td id="loggerid_lgar_config_td">
+          <button id="lgar_btn" 
+                  type="button" 
+                  for="loggerid" 
+                  onclick="LoggerButton.show(this)" 
+                  class="btn btn-sm btn-secondary">
+            loggerid-&gt;off
+          </button>
+        </td>
+        <td>
+          <div id="loggerid_stderr" class="stderr_window">
+            <span class="text-body">timstamp level message</span>
+          </div>
+        </td>
+      </tr>
+    </template>
+      <!-- This gets more rows filled in by javascript.  -->
+    </tbody>
+  </table>
+
+  <hr>
+<!-- FIXME:  Now on the menubar, but needs to be a menu -->
+<!--         Not quite there, yet -->
+  <table>
+    <tr>
+      <td>
+        Current definition file:
+        <span id='filename'>{{ filename|default:"[none]" }}</span>
+      </td>
+    </tr>
+  </table>
+</div>
+<!-- End of 'we have a cruise definition' div -->
+
+<!-- ################################################################## -->
+<!-- Load new definition                                                -->
+<table>
+  <tr>
+    <td>
+      <span id='reload_span' style='display:none;'>
+        <form method='post' style='display:inline;'
+              enctype='multipart/form-data'>
+          <button name='reload_button' id='reload_button' type='submit'
+                   style='background-color:yellow'>
+          Definition is stale. Reload definition
+          </button>
+        </form>
+      </span>
+      <button id='load_definition_button' type='submit'
+              onclick='open_load_definition(event);'>
+        Load new definition
+      </button>
+    </td>
+  </tr>
+</table>
+
+
+<!--
+<p>
+  Logged in as <b>{{ user }}.</b>
+  <a href='/accounts/logout'>Log out</a>
+  <a href='/accounts/login'><b>Log in</b></a> to manage cruise mode or loggers
+</p>
+-->
+</div> <!-- content -->
+<!-- Render the page, then add the scripts. Usually best... -->
+<!--# include file='./modals.html' -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/json5.min.js"></script>
+    <script src='head.html.js'></script>
+    <script src="index.html.js"></script>
+    <script src="stderr_log_utils.js"></script>
+    <script src='websocket.js'></script>
+<!-- Need to make a "tail.html" ??-->
+
+
+    <hr>
+    <p style="font-size:70%">
+      <a href="/docs/README.md"> OpenRVDAS (c)2018 David Pablo Cohn</a>
+    </p>
+  </body>
+</html>

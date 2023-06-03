@@ -1,0 +1,148 @@
+    <!-- navbar -->
+    <nav class="navbar navbar-expand-sm navbar-dark bg-dark py-0">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src='./logo.svg' height='50' width='50' /> 
+        </a>
+        <button class="navbar-toggler" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#navbarSupportedContent">
+        </button>
+        <!-- And here's the navbar stuff -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" href="#">Home</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link"
+                 href="#"
+                 role='button'
+                 data-bs-toggle='dropdown'>
+                <span id='cruise_id'>
+                  CruiseID
+                  <span class='position-absolute top-0 start-100 
+                               translate-middle badge rounded-pill bg-warning d-none'
+                        id='stale_span'>
+                    Stale
+                  </span>
+                </span>
+              </a>
+              <ul class='dropdown-menu' id='cruiseid_dropdown'>
+                <li>
+                  <a class='dropdown-item'
+                   href='#'>Reload Definition</a>
+                </li>
+                <li>
+                  <a class='dropdown-item'
+                   href='LoadConfig.html'
+                   target='_new'>Load New Cruise Def</a>
+                </li>
+                <li>
+                  <a class='dropdown-item'
+                   href='#'
+                   id='conf_file'>Some other thing...</a>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" 
+                 href="#" 
+                 id="navbarDropdown" 
+                 role="button" 
+                 data-bs-toggle="dropdown">Links 
+              </a>
+              <ul class="dropdown-menu" id='links_dropdown'>
+                <li>
+                  <a class="dropdown-item" 
+                     href="/display/" 
+                     target="_now">Displays</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" 
+                     href="/docs/" 
+                     target="_new">Docs</a>
+                </li>
+              </ul>
+            </li>
+<!-- Theme selector.  There has to be a better way... -->
+<!-- maybe an options element? -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" 
+                 href="#" 
+                 id="navbarDropdown" 
+                 role="button" 
+                 data-bs-toggle="dropdown">Themes 
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('cerulean');">Cerulean</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('cosmo');">Cosmo</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('cyborg');">Cyborg</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('darkly');">Darkly</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('journal');">Journal</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('materia');">Materia</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('sandstone');">Sandstone</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('simplex');">Simplex</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('sketchy');">Sketchy</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('slate');">Slate</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('spacelab');">Spacelab</a></li>
+                <li><a class="dropdown-item" href="#" onclick="Theme.change('superhero');">Superhero</a></li>
+              </ul>
+            </li>
+<!-- End theme selector -->
+<!--
+            <li class="nav-item">
+              <a class="nav-link disabled" href="#" tabindex="-1">Disabled</a>
+            </li>
+-->
+          </ul>
+          <div class='btn-group dropdown'>
+            <!-- Bootstrap bug?  onload function never gets called -->
+            <button type = 'button'
+                    id = 'login_button'
+                    class = 'btn btn-outline-primary'
+                    data-bs-toggle = 'dropdown'>
+            </button>
+            <!-- style=transform is obviously just a hack. -->
+            <div class='dropdown-menu dropdown-menu' 
+                 style='transform:translateX(-120px);'>
+              <form class='m-3' 
+                    id='login_form' 
+                    method=POST 
+                    action='/cgi-bin/Auth.cgi'
+                    onsubmit='LoginButton.pressed(event, this)'>
+                <div class='form-group'>
+                  <input type='text' class='form-control'
+                         id='fm1'
+                         name='username'
+                         autocomplete='username'
+                         placeholder='Username'>
+                </div>
+                <div class='form-group'>
+                  <input type='password' 
+                         class='form-control' 
+                         id='fm2'
+                         name='password'
+                         autocomplete='current-password'
+                         placeholder='Password'>
+                </div>
+                <div>
+                  <input type='hidden'
+                         id='login_action'
+                         name='login_action'
+                         value='login'>
+                </div>
+                <div class='form-group py-2 d-flex justify-content-center'>
+                  <button type='submit' 
+                          class='btn btn-primary'
+                          id='login_submit_button'>
+                      Log In
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav> <!-- end navbar -->

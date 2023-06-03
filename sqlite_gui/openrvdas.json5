@@ -1,0 +1,75 @@
+{
+    // <openrvdas root>/www/openrvdas.json5
+    //
+    //     This file is JSON5, not JSON.  It's pretty much just
+    //     like JSON.  The main difference is that you can put
+    //     comments in it.  Pretty much anything that's legal
+    //     in a JavaScript object is legal here.
+    //
+    /////////////////////////////////////////////////////////////////////////
+
+    // ws - the URL for the websocket for the cached data server
+    //      You can use "" as the address, and the code that loads
+    //      this config will construct a best-guess.
+    //
+    "ws": "",
+
+    // Links - These will be used to help populate the "Links"
+    //         dropdown on the navbar. 'Docs' and 'Displays' will
+    //         always be present.
+    //
+    "Links" : {
+        // 'link name': {
+        //     'url': 'url for this URL'
+        //            you can use ${host} to use this hostname
+        //     'name': alternate name to display 
+        //     'tooltip': 'text for a tooltip for this link'
+        // }
+        "Supervisor": {
+            'url': "http://${host}:9001",
+            'tooltip': 'some clever quip',
+        },
+        "PyScript": {
+            'url': 'https://${host}/pyscript.html',
+            'tooltip': 'Test pyscript yamllint'
+        },
+        //"Grafana": {
+        //    'url': 'https://${host}:3000',
+        //    'tooltip': 'Credentials found in the usual place',
+        //    'name': 'Graf von Ana',
+        //},
+        //"Influxdb": {
+        //    'url': 'https://${host}:8086',
+        //    'tooltip': 'What is wrong with an old fashioned RRDB?'
+        //},
+    },
+
+    // Timeouts - The default timeouts for the time elements near the
+    //            top of the page.  Since they were constants near
+    //            the top of the javascript file, it is assumed that
+    //            someone at some point wanted them to be user-editable.
+    //
+    //            The value is the time (in seconds) before we flag 
+    //            a problem.  Fractional times are allowed.
+    //            NOTE:  These values aren't used (yet).
+    //                   I have concerns that since this is async,
+    //                   something might try to access them before
+    //                   they're defined, which means we need to 
+    //                   set default values, which defeats the purpose.
+
+    "Timeouts" : {
+        "Now": 1,
+        "Server": 5,
+        "Status": 10
+    },
+
+    // confdir - where to find cruise configuration files.
+    //           defaults to <openrvdas root>/local, but you could
+    //           save yourself a couple clicks by setting your instance's 
+    //           specific directory
+    // "confdir": '/opt/openrvdas/local/myorg/myship',
+    'confdir': '/opt/openrvdas/local/usap/lmg',
+
+    "ham": "eggs",
+    "foo": "bar"
+}

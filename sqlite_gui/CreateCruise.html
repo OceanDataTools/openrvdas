@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<!--
+    <link rel='icon' type='image/x-icon' href='/static/favicon.ico'>
+-->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <link rel="stylesheet" id="theme-css" href="/js/bootstrap.min.css">
+    <link rel="stylesheet" id="theme-css" href="/js/bootstrap-icons.min.css">
+    <title>OpenRVDAS Cruise Management</title>
+    <meta charset="utf-8">
+<!-- FIXME:  Wrap this in a CSS file -->
+    <style>
+      .lcontainer {
+        /* FIXME:  Set height based on widnow size */
+        height: 18em;
+        width: 100%;
+      }
+      .lcontainer__left {
+        resize: horizontal;
+        overflow: auto; 
+      }
+      .lcontainer__right {
+        flex: 1;
+        overflow: auto;
+      }
+      .top-row {
+        border: 2px solid black;
+        padding-bottom: 2px;
+        padding-top: 2px;
+      }
+      .CodeMirror {
+        height: auto;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body onload="do_stuff()">
+<!--# include file="navbar.html" -->
+    <!-- Big form...
+         Cruise name:
+         Start:
+         End:
+         Default Mode: <from select modes>
+         Loggers: <list loggers>
+         Modes: <standard>
+         Logger Template: 
+             Off
+             Net
+             Write
+             Influx
+     -->
+             
+         
+    <div class='container-fluid'>
+      <div class='row top-row'>
+        <div class='col col-1'>
+          <!-- FIXME:  ToolTip "Load this into the API" -->
+          <button type='button' class='btn btn-sm btn-primary'>
+            Load
+          </button>
+        </div>
+        <div class='col col-9'>
+            <input size=80 
+                   id='current_file'
+                   placeholder='name of current config file' />
+        </div>
+        <!-- FIXME:  Should this be tabs instead of buttons -->
+        <div class='col col-1'>
+          <button type='button' class='btn btn-sm btn-success'>
+            <!-- FIXME: Tooltip "show RAW input" -->
+            Raw
+          </button>
+        </div>
+        <div class='col col-1'>
+          <button type='button' class='btn btn-sm btn-primary'>
+            <!-- FIXME: Tooltip "show Parsed JSON" -->
+            JSON
+          </button>
+        </div>
+      </div>
+    </div> <!-- ./container-fluid -->
+    <div class="d-flex lcontainer row">
+<!-- FIXME:  This div should be a drop taget -->
+      <div class="lcontainer__left col-3" 
+           id='file_list'> 
+      </div>
+      <div class="lcontainer__right col-9" 
+           id='config_text'>
+        <!-- FIXME;  Put some tabs here, RAW/JSON/Errors -->
+        <textarea id='editor'>
+        Config File Contents Here
+        </textarea>
+      </div>
+    </div>
+<!--# include file='modals.html' -->    
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/json5.min.js"></script>
+    <script src='head.html.js'></script>
+    <script src='websocket.js'></script>
+    <script src='js/js-yaml.min.js'></script>
+    <link rel='stylesheet' href='js/codemirror5/codemirror.css'>
+    <link rel='stylesheet' href='js/codemirror5/lint/lint.css'>
+    <link rel='stylesheet' href='js/codemirror5/addons/simplescrollbars.css'>
+    <script src='js/codemirror5/codemirror.js'></script>
+    <script src='js/codemirror5/mode/yaml.js'></script>
+    <script src='js/codemirror5/lint/lint.js'></script>
+    <script src='js/codemirror5/lint/yaml-lint.js'></script>
+    <script src='js/codemirror5/addons/simplescrollbars.js'></script>
+    <script src='LoadConfig.js'></script>
+    <hr>
+    <p style="font-size:70%">
+      <a href="/docs/README.md"> OpenRVDAS (c)2018 David Pablo Cohn</a>
+    </p>
+  </body>
+</html>
