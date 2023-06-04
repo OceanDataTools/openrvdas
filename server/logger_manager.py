@@ -401,7 +401,7 @@ if __name__ == '__main__':  # noqa: C901
                         help='Optional name of mode to start system in.')
 
     parser.add_argument('--database', dest='database', action='store',
-                        choices=['memory', 'django'],
+                        choices=['memory', 'django', 'sqlite'],
                         default='memory', help='What backing store database '
                         'to use.')
 
@@ -498,6 +498,9 @@ if __name__ == '__main__':  # noqa: C901
     elif args.database == 'memory':
         from server.in_memory_server_api import InMemoryServerAPI
         api = InMemoryServerAPI()
+    elif args.database == 'sqlite':
+        from sqlite_gui.sqlite_server_api import SQLiteServerAPI
+        api = SQLiteServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
 
