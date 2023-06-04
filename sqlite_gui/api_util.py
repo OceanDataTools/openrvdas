@@ -517,10 +517,9 @@ def readline_completer(text, state):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--database', dest='database', action='store',
-                        choices=['memory', 'django', 'sqlite'],
+                        choices=['sqlite'],
                         default='sqlite', help='What backing store database '
-                        'to use. Currently-implemented options are "memory" '
-                        'and "django".')
+                        'to use. Currently-implemented option is sqlite')
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
                         help='Increase output verbosity')
