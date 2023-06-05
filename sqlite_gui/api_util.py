@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Command line interface for SQLiteServer API.
 ```
-    server/server_api_command_line.py
+   sqlite_server/api_tool.py
 ```
 and type "help" for list of valid commands.
 
@@ -30,6 +30,7 @@ LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
 
 SOURCE_NAME = 'CommandLine'
 USER = os.environ.get('SUDO_USER') or getpass.getuser()
+
 
 ############################
 def kill_handler(self, signum):
@@ -136,7 +137,6 @@ class ServerAPICommandLine:
         for command, desc in commands:
             print('  %s\n      %s' % (command, desc))
 
-
     #####################################################
     def get_configuration(self, *args):
         """ Get OpenRVDAS configuration from the data store. """
@@ -147,20 +147,17 @@ class ServerAPICommandLine:
         print(yaml.dump(jconfig, indent=2))
         pass
 
-
     #####################################################
     def get_modes(self, *args):
         """Get the list of modes from the data store.
         > api.get_modes()
-            ["off", "port", "underway"]
-        """
-       
+            ["off", "port", "underway"] """
+
         modes = self.api.get_modes()
         if len(modes) > 0:
             print('Available Modes: %s' % (', '.join(modes)))
         else:
             print('Available Modes: n/a')
-
 
     #####################################################
     def get_active_mode(self, *args):
@@ -172,7 +169,6 @@ class ServerAPICommandLine:
         mode = self.api.get_active_mode()
         print('Current mode: %s' % (mode))
 
-
     #####################################################
     def get_default_mode(self, *args):
         """Get the default mode from the data store.
@@ -182,7 +178,6 @@ class ServerAPICommandLine:
 
         mode = self.api.get_default_mode()
         print('Default mode: %s' % (mode))
-
 
     #####################################################
     def get_loggers(self, *args):
@@ -196,7 +191,6 @@ class ServerAPICommandLine:
 
         loggers = self.api.get_loggers()
         print('Loggers: ', json.dumps(loggers))
-
 
     #####################################################
     def get_logger(self, *args):
@@ -215,7 +209,6 @@ class ServerAPICommandLine:
             (logger_name, json.dumps(logger_modes))
         print(Q)
 
-
     #####################################################
     def get_logger_configs(self, *args):
         """Retrieve the configs associated with a mode from the data store.
@@ -233,7 +226,6 @@ class ServerAPICommandLine:
         configs = self.api.get_logger_configs(mode)
         Q = "configs for mode %s: %s" % (mode, configs)
         print(Q)
-
 
     #####################################################
     def get_logger_config_name(self, *args):
@@ -257,7 +249,6 @@ class ServerAPICommandLine:
         print("logger_config_name(%s, %s): " %
               (logger_name, mode), config_name)
 
-
     #####################################################
     def get_logger_config_names(self, *args):
         """Retrieve list of logger config names for the specified logger.
@@ -273,7 +264,6 @@ class ServerAPICommandLine:
         print("get_logger_config_names(%s)" % logger_id)
         config_names = self.api.get_logger_config_names(logger_id)
         print("logger_config_names(%s) = " % logger_id, config_names)
-
 
     #####################################################
     def set_active_mode(self, *args):
@@ -317,7 +307,6 @@ class ServerAPICommandLine:
                              message='Change: ' + args)
         pass
 
-
     #####################################################
     def get_status(self, *args):
         """ Print most recent status for each logger """
@@ -325,27 +314,26 @@ class ServerAPICommandLine:
         status_dict = self.api.get_status()
         print('%s' % pprint.pformat(status_dict))
 
-
     #####################################################
     def _message_log(self, *args):
         """ Save message to the API datastore """
-        
-        splits = "".join(args).split(' ')
-        # How we gonna parse these args?
-        pass     
+
+        # splits = "".join(args).split(' ')
+        # How we gonna parse KWARGS?
+        # toss in argparser here?
+        pass
 
     #####################################################
     def get_message_log(self, *args):
         """ Get logged messages from the API """
 
-        splites = "".join(args).split(' ')
+        splits = "".join(args).split(' ')
         if len(splits) < 2:
             SOURCE_NAME = None
         else:
             SOURCE_NAME = splits[1]
         server_log = self.api.get_message_log(source=SOURCE_NAME)
         print('%s' % pprint.pformat(server_log))
-
 
     #####################################################
     def delete_configuration(self, *args):
@@ -363,7 +351,6 @@ class ServerAPICommandLine:
         logger_id = splits[1]
         logger_config = self.api.get_logger_config(logger_id)
         print('Configs for %s: %s' % (logger_id, logger_config))
-
 
     #####################################################
     def load_configuration(self, *args):
@@ -395,11 +382,10 @@ class ServerAPICommandLine:
         except Exception as err:
             print("Exception in load_configuration: ", err, file=sys.stderr)
 
-        #for key in self.api.__dict__.keys():
+        # for key in self.api.__dict__.keys():
         #    print()
         #    print(key, " = ", self.api.__dict__[key])
         #    print()
-
 
     ############################
     def process_command(self, command):
@@ -553,7 +539,7 @@ if __name__ == '__main__':
     atexit.register(readline.write_history_file, histpath)
 
     ############################
-    # Instantiate API 
+    # Instantiate API
     from sqlite_gui.sqlite_server_api import SQLiteServerAPI
     api = SQLiteServerAPI()
     command_line_reader = ServerAPICommandLine(api)
