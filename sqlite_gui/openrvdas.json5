@@ -2,9 +2,10 @@
     // <openrvdas root>/www/openrvdas.json5
     //
     //     This file is JSON5, not JSON.  It's pretty much just
-    //     like JSON.  The main difference is that you can put
+    //     like JSON.  The main difference for us is that you can put
     //     comments in it.  Pretty much anything that's legal
     //     in a JavaScript object is legal here.
+    //     More info at https://json5.org
     //
     /////////////////////////////////////////////////////////////////////////
 
@@ -13,14 +14,18 @@
     //      this config will construct a best-guess.
     //
     "ws": "",
+    //ws: 'wss://other_openrvdas_host.org:4321'
 
     // Links - These will be used to help populate the "Links"
     //         dropdown on the navbar. 'Docs' and 'Displays' will
-    //         always be present.
+    //         always be present.  This section is mainly because
+    //         not all installations of OpenRVDAS will be using
+    //         InfluxDB or Grafana, or the web interface to
+    //         supervisord.
     //
     "Links" : {
         // 'link name': {
-        //     'url': 'url for this URL'
+        //     'url': 'url for this shortcut'
         //            you can use ${host} to use this hostname
         //     'name': alternate name to display 
         //     'tooltip': 'text for a tooltip for this link'
@@ -36,7 +41,7 @@
         //"Grafana": {
         //    'url': 'https://${host}:3000',
         //    'tooltip': 'Credentials found in the usual place',
-        //    'name': 'Graf von Ana',
+        //    'name': 'Graf von Zeppelin',
         //},
         //"Influxdb": {
         //    'url': 'https://${host}:8086',
@@ -46,21 +51,16 @@
 
     // Timeouts - The default timeouts for the time elements near the
     //            top of the page.  Since they were constants near
-    //            the top of the javascript file, it is assumed that
-    //            someone at some point wanted them to be user-editable.
+    //            the top of the original javascript file, it is assumed
+    //            that someone at some point wanted them to be editable.
     //
     //            The value is the time (in seconds) before we flag 
     //            a problem.  Fractional times are allowed.
-    //            NOTE:  These values aren't used (yet).
-    //                   I have concerns that since this is async,
-    //                   something might try to access them before
-    //                   they're defined, which means we need to 
-    //                   set default values, which defeats the purpose.
 
-    "Timeouts" : {
-        "Now": 1,
-        "Server": 5,
-        "Status": 10
+    Timeouts : {
+        Now: 1,
+        Server: 5,
+        Status: 9.5
     },
 
     // confdir - where to find cruise configuration files.
