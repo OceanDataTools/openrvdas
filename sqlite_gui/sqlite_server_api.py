@@ -31,6 +31,7 @@ DATABASE_COMPRESS = True
 # Let's trust SQLite and forget about thread locking.
 # https://www.sqlite.org/lockingv3.html
 
+
 class SQLiteServerAPI(ServerAPI):
     ############################
 
@@ -574,7 +575,7 @@ class SQLiteServerAPI(ServerAPI):
 
         if 'cruise' in self.config:
             cruise = self.config.get('cruise')
-            cruise_id = cruise.get('cruise_id', mone)
+            cruise_id = cruise.get('cruise_id', None)
             if not cruise_id:
                 cruise_id = cruise.get('id', "none")
         else:
@@ -600,7 +601,8 @@ class SQLiteServerAPI(ServerAPI):
             self._backup_database()
 
         self.config = config
-        self.config['loaded_time'] = datetime.utcnow().isoformat()
+        # self.config['loaded_time'] = datetime.utcnow().isoformat()
+        self.config['loaded_time'] = datetime.utcnow()
 
         # Set cruise into default mode, if one is defined
         if 'default_mode' in config:
@@ -608,15 +610,14 @@ class SQLiteServerAPI(ServerAPI):
             self.set_active_mode(active_mode)
         else:
             logging.warn("Cruise has no default mode")
-        # Some things aren't where you think they are
-        # API does not send 'cruise' dict as part of 'config'
+        # Why not send the entire config to the CDS?  Why
+        # just *almost* all of it?  JSON issue?
         # FIXME:  Submit pull request
         cruise = config.get('cruise', None)
         if cruise:
             for key in ['id', 'start', 'end']:
-                if not key in self.config:
+                if key not in self.config:
                     self.config[key] = cruise.get(key, None)
-        print("api:self.config['config_filename'] = %s " % self.config['config_filename'], file=sys.stderr)
         self._save_config()
         self.signal_load()
 
