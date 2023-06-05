@@ -521,14 +521,9 @@ class SQLiteServerAPI(ServerAPI):
              (timestamp, loglevel, cruise, source, user, message) \
              VALUES(?, ?, ?, ?, ?, ?)"
 
-        # NOTE(kped) If we're retrieving these from the databaase,
-        #            do we need to store them in memory at all?
-        # FIXME: get "cruise" from config.get(whatever)
-        cruise_id = "none"
-        if 'cruise' in self.config:
-            cruise = self.config.get('cruise')
-            if 'id' in cruise:
-                cruise_id = cruise.get('id', "none")
+        cruise = self.config.get('cruise', {})
+        cruise_id = cruise.get('id', 'none')
+
         self._sql_cmd(Q, now, log_level, cruise_id, source, user, message)
 
     ############################
@@ -573,14 +568,8 @@ class SQLiteServerAPI(ServerAPI):
     def _backup_database(self):
         """ Backup the database """
 
-        if 'cruise' in self.config:
-            cruise = self.config.get('cruise')
-            cruise_id = cruise.get('cruise_id', None)
-            if not cruise_id:
-                cruise_id = cruise.get('id', "none")
-        else:
-            # FIXME:  Log something
-            return
+        cruise = self.config.get('cruise', {})
+        cruise_id = cruise.get('cruise_id', 'none')
 
         dt = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         filename = "openrvdas-%s-%s.sql" % (cruise_id, dt)
