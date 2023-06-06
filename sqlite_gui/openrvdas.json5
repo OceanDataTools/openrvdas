@@ -38,6 +38,10 @@
             'url': 'https://${host}/pyscript.html',
             'tooltip': 'Test pyscript yamllint'
         },
+        GitHub: {
+            url: 'https://github.com/FrozenGeek/openrvdas/blob/usap/sqlite_gui/',
+            tooltip: 'SQLite_GUI on GitHub'
+        },
         //"Grafana": {
         //    'url': 'https://${host}:3000',
         //    'tooltip': 'Credentials found in the usual place',
