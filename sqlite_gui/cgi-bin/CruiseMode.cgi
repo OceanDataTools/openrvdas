@@ -9,7 +9,7 @@ import cgi
 import cgitb
 import sys
 import os
-import jwt
+# import jwt
 from os.path import dirname, realpath
 import secret
 
@@ -63,39 +63,39 @@ def handle_post():
     if content:
         print(content)
         if content.get('error', None):
-            print(contet, file=sys.stderr)
+            print(content, file=sys.stderr)
     else:
         print('{}')
 
 
 ##############################################################################
-def validate_token():
-    """ We should have received a JWT in the Authorization header.
-        Validate it.
-    """
+# def validate_token():
+#    """ We should have received a JWT in the Authorization header.
+#        Validate it.
+#    """
 
-    our_secret = secret.SECRET
-    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
-    if not auth_header:
-        return (False, 'nobody')
-    
-    auth_split = auth_header.split(' ');
-    if len(auth_split) > 1:
-        token = auth_split[1]
-    else:
-        return (False, 'nobody')
-    payload = {}
-    try:
-        payload = jwt.decode(token, our_secret, algorithms="HS256" )
-    except jwt.PyJWTError as err:
-        print("PyJWTError: ", err, file=sys.stderr)
-        return (False, 'nobody')
-    
-    username = payload.get('name', None)
-    if not username:
-        return (False, 'nobody')
-    
-    return (True, username)
+#    our_secret = secret.SECRET
+#    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
+#    if not auth_header:
+#        return (False, 'nobody')
+#
+#    auth_split = auth_header.split(' ');
+#    if len(auth_split) > 1:
+#        token = auth_split[1]
+#    else:
+#        return (False, 'nobody')
+#    payload = {}
+#    try:
+#        payload = jwt.decode(token, our_secret, algorithms="HS256" )
+#    except jwt.PyJWTError as err:
+#        print("PyJWTError: ", err, file=sys.stderr)
+#        return (False, 'nobody')
+#
+#    username = payload.get('name', None)
+#    if not username:
+#        return (False, 'nobody')
+#
+#    return (True, username)
 
 
 ##############################################################################
@@ -112,7 +112,7 @@ def process_post_request():
         form[key] = fs[key].value
 
     mode = form.get('radios', 'not specified')
-    (validated, username) = validate_token()
+    (validated, username) = secret.validate_token()
     if not validated:
         content['error'] = 'Login Required'
         return (headers, content, 401)

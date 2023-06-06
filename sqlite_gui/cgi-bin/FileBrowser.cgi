@@ -12,7 +12,7 @@ import sys
 import os
 import json
 from os.path import dirname, realpath
-import jwt
+# import jwt
 import secret
 
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -24,35 +24,35 @@ cgitb.enable()
 
 
 ##############################################################################
-def validate_token():
-    """ We should have received a JWT in the Authorization header.
-        Validate it.
-    """
+# def validate_token():
+#    """ We should have received a JWT in the Authorization header.
+#        Validate it.
+#    """
 
-    our_secret = secret.SECRET
-    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
-    if not auth_header:
-        print("No auth header", file=sys.stderr)
-        return None
-    else:
-        # print("Auth header = ", auth_header, file=sys.stderr)
-        pass
-
-    auth_split = auth_header.split(' ');
-    if len(auth_split) > 1:
-        token = auth_split[1]
-        # print("Token = ", token, file=sys.stderr)
-    else:
-        print("Auth header unparseable", file=sys.stderr)
-        return None
-    payload = {}
-    try:
-        payload = jwt.decode(token, our_secret, algorithms="HS256" )
-    except jwt.PyJWTError as err:
-        print("PyJWTError: ", err, file=sys.stderr)
-        return None
-
-    return payload.get('name', None)
+#    our_secret = secret.SECRET
+#    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
+#    if not auth_header:
+#        print("No auth header", file=sys.stderr)
+#        return None
+#    else:
+#        # print("Auth header = ", auth_header, file=sys.stderr)
+#        pass
+#
+#    auth_split = auth_header.split(' ')
+#    if len(auth_split) > 1:
+#        token = auth_split[1]
+#        # print("Token = ", token, file=sys.stderr)
+#    else:
+#        print("Auth header unparseable", file=sys.stderr)
+#        return None
+#    payload = {}
+#    try:
+#        payload = jwt.decode(token, our_secret, algorithms="HS256" )
+#    except jwt.PyJWTError as err:
+#        print("PyJWTError: ", err, file=sys.stderr)
+#        return None
+#
+#    return payload.get('name', None)
 
 
 ##############################################################################
@@ -78,7 +78,7 @@ def handle_get():
 def process_get():
     """ Lower level processing for GET request
         The GET method only sends JSON to the client listing
-        the files and directories and optionally the text of 
+        the files and directories and optionally the text of
         a requested file.
 
         { 'dirs': [ 'enterprise', 'lexington'],
@@ -116,15 +116,15 @@ def process_get():
         content['dirs'] = sdirs
         sfiles = sorted(files)
         content['files'] = sfiles
-        content['dir'] = dirname;
+        content['dir'] = dirname
     except Exception as error:
         content = {}
         content['error'] = "Cannot list directory %s" % dirname
-        content['exception'] = error 
+        content['exception'] = error
         return ([], content, 451)
 
     fname = form.get('file', None)
-    # FIXME:  Security:  Need to not send text of arbitrary file 
+    # FIXME:  Security:  Need to not send text of arbitrary file
     #         (Like /etc/shadow).
     if fname:
         filepath = os.path.join(dirname, fname)
@@ -132,7 +132,6 @@ def process_get():
             content['text'] = file.read()
 
     return ([], content, 200)
-
 
 
 ##############################################################################
@@ -143,7 +142,7 @@ def handle_post():
 
     if content:
         headers.append("Content-Type: text/json")
-        
+
     headers.append('Status: %s' % status)
     for header in headers:
         print(header)
@@ -177,7 +176,7 @@ def process_post_request():
         content['ok'] = 'false'
         content['error'] = "No filename specified"
         return (headers, content, 418)
-    username = validate_token()
+    username = secret.validate_token()
     if not username:
         content['ok'] = 'false'
         content['error'] = 'Not Authorized'
@@ -185,7 +184,7 @@ def process_post_request():
     try:
         config = read_config(fname)
         config['config_filename'] = fname
-        junk = api.load_configuration(config)
+        api.load_configuration(config)
         config = api.get_configuration()
         print(config['cruise'], file=sys.stderr)
     except Exception as err:

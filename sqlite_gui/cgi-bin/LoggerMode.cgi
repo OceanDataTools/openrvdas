@@ -11,7 +11,7 @@ import cgitb
 import sys
 import os
 from os.path import dirname, realpath
-import jwt
+# import jwt
 import secret
 
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -22,29 +22,29 @@ cgitb.enable()
 
 
 ##############################################################################
-def validate_token():
-    """ We should have received a JWT in the Authorization header.
-        Validate it.
-    """
-
-    our_secret = secret.SECRET
-    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
-    if not auth_header:
-        return None
-
-    auth_split = auth_header.split(' ');
-    if len(auth_split) > 1:
-        token = auth_split[1]
-    else:
-        return None
-    payload = {}
-    try:
-        payload = jwt.decode(token, our_secret, algorithms="HS256" )
-    except jwt.PyJWTError as err:
-        print("PyJWTError: ", err, file=sys.stderr)
-        return None
-
-    return payload.get('name', None)
+# def validate_token():
+#    """ We should have received a JWT in the Authorization header.
+#        Validate it.
+#    """
+#
+#    our_secret = secret.SECRET
+#    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
+#    if not auth_header:
+#        return None
+#
+#    auth_split = auth_header.split(' ');
+#    if len(auth_split) > 1:
+#        token = auth_split[1]
+#    else:
+#        return None
+#    payload = {}
+#    try:
+#        payload = jwt.decode(token, our_secret, algorithms="HS256" )
+#    except jwt.PyJWTError as err:
+#        print("PyJWTError: ", err, file=sys.stderr)
+#        return None
+#
+#    return payload.get('name', None)
 
 
 ##############################################################################
@@ -124,7 +124,7 @@ def process_post_request():
         return (headers, content, 418)
 
     # Make sure we're authorized to do this
-    username = validate_token()
+    username = secret.validate_token()
     if not username:
         content['ok'] = 'false'
         content['error'] = 'Login Required'
@@ -139,7 +139,7 @@ def process_post_request():
     try:
         # if mode in modes
         if mode in modes:
-            res = api.set_active_logger_config(logger_id, mode)
+            api.set_active_logger_config(logger_id, mode)
             Q = 'Changing %s mode to %s' % (logger_id, mode)
             api.message_log('Web GUI', username, 3, Q)
         else:
