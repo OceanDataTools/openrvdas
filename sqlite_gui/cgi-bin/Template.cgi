@@ -7,51 +7,63 @@
            compatibility we need to start replacing it now.
 """
 
-import cgi
-import cgitb
 import sys
 import os
-import jwt
 import secret
-from os.path import dirname, realpath
+import multipart
+# from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from sqlite_gui.sqlite_server_api import SQLiteServerAPI as serverapi # noqa E402
+# sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+# from sqlite_gui.sqlite_server_api import SQLiteServerAPI as serverapi # noqa E402
 
-api = serverapi()
-cgitb.enable()
 
 ##############################################################################
-def read_form():
-    """ Reads formdata and/or QUERY_STRING and returns form data 
-        formatted as a regular dictionary.  The CGI module is 
-        deprecated, so this function exists mainly so we can
-        work on a replacement """
+def read_query_string():
+    """ Read QUERY_STRING and parse it into a dictionary """
 
-    # Convert CGI module FieldStorage to a regular dict.
+    form = {}
     qs = os.environ.get("QUERY_STRING", None)
-    if qs is None:
-        qs = ""
-        for line in sys.stdin:
-            qs = qs + line
     print('qs = %s' % qs, file=sys.stderr)
-    return {}
-
     SearchParams = [i.split('=') for i in qs.split('&')]
     print('SearchParams = %s' % SearchParams, file=sys.stderr)
     for iSplits in SearchParams:
         if len(iSplits) > 1:
-            form[iSplits[0][ = iSplits[1]
+            form[iSplits[0]] = iSplits[1]
         else:
             form[iSplits[0]] = ''
+    return form
 
-    print("read_form: form = %s", form, file=sys.stderr)
+
+##############################################################################
+def read_form():
+    """ Reads formdata and/or QUERY_STRING and returns form data
+        formatted as a regular dictionary.  The CGI module is
+        deprecated, so this function exists mainly so we can
+        work on a replacement """
 
     form = {}
-    cFS = cgi.FieldStorage()
-    for key in cFS.keys():
-        form[key] = cFS[key].value
+    files = {}
+    method = os.environ.get('REQUEST_METHOD', None)
 
+    if method == "GET":
+        form = read_query_string()
+    if method == "POST":
+
+        def on_field(field):
+            form[field.field_name] = field.value
+
+        def on_file(file):
+            value = {}
+            value['name'] - file.file_name
+            value['file_object'] = file.file_object
+            files[file.field_name] = value
+
+        multipart_headers = {}
+        multipart_headers['Content-Type'] = os.environ['CONTENT_TYPE']
+        multipart_headers['Content-Length'] = os.environ['CONTENT_LENGTH']
+        multipart.parse_form(multipart_headers, sys.stdin, on_field, on_file)
+    for key in form:
+        print(key, ' = ', form[key], file=sys.stderr)
     return form
 
 
@@ -60,35 +72,18 @@ def handle_get():
     """ Called when this is accessed via the GET HTTP method """
 
     # Send HTTP headers
-    print("Content-Type: text/html;")
+    print('Content-Type: text/html;')
     print()
 
-    # Get QUERY_STRING for logger_id
-    # Send HTTP response body
-    qs = os.environ.get("QUERY_STRING", None)
-    SearchParams = [i.split('=') for i in qs.split('&')]
-    logger_id = SearchParams[0][0]
-    logger_conf = api.get_logger(logger_id)
-    active_mode = None
-    if 'active' in logger_conf:
-        active_mode = logger_conf.get('active', None)
-    if 'configs' not in logger_conf:
-        Q = "<h3>'configs' not in configuration</h3>"
-        print(Q)
-        return
-    modes = logger_conf.get('configs', None)
-    for mode in modes:
-        print('<div class="form-check" style="padding-left: 3em">')
-        print('<input class="form-check-input" type="radio" ')
-        print('name="radios" ')
-        print('id="%s_radioButton" ' % mode)
-        if mode == active_mode:
-            print('checked=true ')
-        print('value="%s">' % mode)
-        print('<label class="form-check-label" ')
-        print('for="%s_radioButton"' % mode)
-        print('text="%s">%s</label></div>' % (mode, mode))
-    Q = '<input type="hidden" name="logger_id" value="%s">' % logger_id
+    # Get form data
+    form = read_form()
+
+    # Do the thing
+    print("content goes here %s" % form)
+
+    # Add CSRF Token to form
+    sl_jwt = secret.short_ttl_jwt()
+    Q = '<input type="hidden" name="CSRF" value="%s" .>' % sl_jwt
     print(Q)
 
 
@@ -96,6 +91,8 @@ def handle_get():
 def handle_post():
     """ Called when this is accessed via the POST HTTP method """
 
+    # we only include headers because... you know...
+    # maybe Set-Cookie, maybe Last-Modified...
     (headers, content, status) = process_post_request()
 
     headers.append('Status: %s' % status)
@@ -116,53 +113,59 @@ def handle_post():
 
 ##############################################################################
 def process_post_request():
+
     headers = []
     content = {}
-    cFS = cgi.FieldStorage()
-    form = {}
-    # Convert FieldStorage to a regular dict.  Easier.
-    for key in cFS.keys():
-        form[key] = cFS[key].value
 
-    mode = form.get('radios', 'not specified')
-    logger_id = form.get('logger_id', None)
-    if logger_id is None:
-        Q = 'No logger_id found in form fields'
-        content = {'ok': 'false', 'error': Q}
-        return (headers, content, 418)
+    # Parse form data
+    form = read_form()
+
+    # CSRF Protection (goes here)
+    sl_jwt = form.get('CSRF', None)
+    if not sl_jwt:
+        content['ok'] = 0
+        content['error'] = 'CSRF token not found'
+        # print("CSRF Token not found", file=sys.stderr)
+        # for key in form:
+        #    print('%s = %s' % (key, form.get(key, '<No Value>')),
+        #          file=sys.stder
+        return ([], content, 401)
+
+    if not secret.validate_csrf(sl_jwt):
+        print("CSRF NOT VALID", file=sys.stderr)
+        content['ok'] = 0
+        content['error'] = 'CSRF token invalid or expired'
+        return ([], content, 401)
 
     # Make sure we're authorized to do this
-    username = validate_jwt()
+    username = secret.validate_jwt()
     if not username:
         content['ok'] = 'false'
         content['error'] = 'Login Required'
         return (headers, content, 401)
 
-    logger_conf = api.get_logger(logger_id)
-    if 'configs' not in logger_conf:
-        Q = 'configs not in logger_conf'
-        content = {'ok': 'false', 'error': Q}
-        return (headers, content, 412)
-    modes = logger_conf.get('configs', None)
+    # Do the thing
     try:
-        # if mode in modes
-        if mode in modes:
-            res = api.set_active_logger_config(logger_id, mode)
-            Q = 'Changing %s mode to %s' % (logger_id, mode)
-            api.message_log('Web GUI', username, 3, Q)
-        else:
-            Q = 'mode "%s" not in config for logger "%s"' % (mode, logger_id)
-            content = {'ok': 'false', 'error': Q}
-            return (headers, content, 405)
+        # Some ServerAPI stuff or something
+        content['whatever'] = "whatever"
     except Exception as err:
-        Q = "api.set_active_logger_config(%s): %s" % (mode, err)
-        content = {'ok': 'false', 'error': Q}
-        return (headers, content, 405)
-    else:
-        content = {'ok': 'true',
-                   'status_text': 'logger mode changed to %s' % mode}
+        content['ok'] = 0
+        content['error'] = str(err)
+        return ([], content, 418)
 
-    return (headers, content, 200)
+    # Done doing the thing
+    if True:     # This is how we return success
+        content['ok'] = 1
+        return ([], content, 200)
+    if False:    # This is how we return failure
+        content['ok'] = 0
+        content['error'] = "some error message"
+        """ Some HTTP error codes you might like:
+        400 - Bad Request    412 - Precondition failed
+        401 - Unauthorized   418 - I am a teapot (not joking)
+        403 - Forbidden      451 - Unavailable for legal reasons
+        """
+        return ([], content, 451)  # Pick an error code
 
 
 ##############################################################################
@@ -179,5 +182,5 @@ if __name__ == "__main__":
         except Exception as err:
             print("Error processing form: %s", err, file=sys.stderr)
     else:
-        # Command line
+        # Command line for debugging
         handle_post()
