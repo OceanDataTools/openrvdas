@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""API implementation for interacting with an in-memory data store.
+"""API implementation for interacting with a SQLite3 data store.
 
-See server/server_api_command_line.py for a sample script that
-exercises this class. Also see server/server_api.py for full
-documentation on the ServerAPI.
+   Based on in_memory_server_api.py
+
+   See api_tool.py for a simple script that exercises this class.
+   See also server/server_api.py for full documentation of the API.
 """
 
 import logging
@@ -27,9 +28,13 @@ ID_SEPARATOR = ':'
 DATABASE_BACKUPS = True
 DATABASE_COMPRESS = True
 ########################################################################
-
 # Let's trust SQLite and forget about thread locking.
 # https://www.sqlite.org/lockingv3.html
+# https://www.sqlite.org/threadsafe.html
+# SQLITE3, by default, when built from source, builds in serialized mode
+# (can be safely used by multiple threads without restriction)
+# All distros tested are good.  To test yours:
+# strings `which sqlite3` | grep THREADSAFE (should = 1)
 
 
 class SQLiteServerAPI(ServerAPI):
@@ -43,11 +48,6 @@ class SQLiteServerAPI(ServerAPI):
         self.server_messages = []
         self.cx = None
         self.timestamp = self._get_database_timestamp()
-        # https://www.sqlite.org/threadsafe.html
-        # SQLITE3, by default, when built from source, builds in serialized mode
-        # (can be safely used by multiple threads without restriction)
-        # Not sure how to check on packaged sqlite's....
-        # strings `which sqlite3` | grep THREADSAFE (should = 1)
 
     #############################
     # API methods below are used in querying/modifying the API for the
@@ -156,12 +156,10 @@ class SQLiteServerAPI(ServerAPI):
             return rows
         except sqlite3.OperationalError:
             # No such table
-            # FIXME:  We should be logging this
             logging.error("No such table for query: %s", query)
             logging.error("Please read SQLiteAPI.md")
             raise sqlite3.OperationalError
         except sqlite3.Error as err:
-            # FIXME:  We should be logging this
             logging.error("Database error: ", err)
             raise err
 
@@ -180,8 +178,8 @@ class SQLiteServerAPI(ServerAPI):
                 conf = gzip.compress(conf)
             self._sql_cmd(Q, conf, DATABASE_COMPRESS)
             cx = self._get_connection()
-            # This will slow us down, but keeps the database
-            # size small, which speeds us up.
+            # VACUUM takes a millisecond or so, but keeps the database
+            # size small, which speeds us back up.
             cx.execute("VACUUM",)
         except Exception as err:
             logging.warn("Failed to save database: %s" % err)
@@ -232,17 +230,19 @@ class SQLiteServerAPI(ServerAPI):
             if row0.get('compressed', 0):
                 conf = gzip.decompress(conf)
 
+            # Wanted JSON, but datetime objects aren't JSON
+            # serializable, so went with YAML.
             conf = yaml.load(conf, Loader=yaml.FullLoader)
             if "loggers" not in conf:
                 return None
 
-            # FIXME: Should cruise.{start/end} be datetime?
             self.timestamp = db_timestamp
             self.config = conf
 
     # For each of the get_* function, check if the timestamp
     # is newer than our current timestamp, pull config from
     # the database.
+    ##################################################################
     def get_configuration(self):
         """ Return cruise config for specified cruise id. """
 
@@ -589,6 +589,7 @@ class SQLiteServerAPI(ServerAPI):
         if DATABASE_BACKUPS:
             self._backup_database()
 
+        logging.warn('Loading new config')
         self.config = config
         # self.config['loaded_time'] = datetime.utcnow().isoformat()
         self.config['loaded_time'] = datetime.utcnow()
@@ -609,6 +610,7 @@ class SQLiteServerAPI(ServerAPI):
                     self.config[key] = cruise.get(key, None)
         self._save_config()
         self.signal_load()
+        logging.warn('api loaded new config')
 
     ###############################
     def delete_configuration(self):
