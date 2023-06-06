@@ -82,6 +82,9 @@ def handle_get():
         print('text="%s">%s</label></div>' % (mode, mode))
     Q = '<input type="hidden" name="logger_id" value="%s">' % logger_id
     print(Q)
+    sl_jwt = secret.short_ttl_jwt()
+    Q = '<input type="hidden" name="CSRF" value="%s">' % sl_jwt
+    print(Q)
 
 
 ##############################################################################
@@ -108,6 +111,8 @@ def handle_post():
 
 ##############################################################################
 def process_post_request():
+
+    print("LoggerMode.cgi processing post request", file=sys.stderr)
     headers = []
     content = {}
     cFS = cgi.FieldStorage()
@@ -116,17 +121,29 @@ def process_post_request():
     for key in cFS.keys():
         form[key] = cFS[key].value
 
+    # CSRF protection
+    sl_jwt = form.get('CSRF', None)
+    if not sl_jwt:
+        print("No sl_jwt found", file=sys.stderr)
+        for key in form:
+            print('%s = %s' % (key, form.get(key, '<No Value>')), file=sys.stderr)
+    if secret.validate_csrf(sl_jwt):
+        print("CSRF token validated", file=sys.stderr)
+    else:
+        print("CSRF NOT VALID", file=sys.stderr)
+
+    # Do the thing
     mode = form.get('radios', 'not specified')
     logger_id = form.get('logger_id', None)
     if logger_id is None:
         Q = 'No logger_id found in form fields'
-        content = {'ok': 'false', 'error': Q}
+        content = {'ok': 0, 'error': Q}
         return (headers, content, 418)
 
     # Make sure we're authorized to do this
     username = secret.validate_token()
     if not username:
-        content['ok'] = 'false'
+        content['ok'] = 0
         content['error'] = 'Login Required'
         return (headers, content, 401)
 
@@ -151,7 +168,10 @@ def process_post_request():
         content = {'ok': 'false', 'error': Q}
         return (headers, content, 405)
     else:
-        content = {'ok': 'true',
+        # NOTE(KPED): Do we want to query the API to be sure
+        #             the change took?  Not thrilled that the
+        #             API doesn't return success/fail.
+        content = {'ok': 1,
                    'status_text': 'logger mode changed to %s' % mode}
 
     return (headers, content, 200)
