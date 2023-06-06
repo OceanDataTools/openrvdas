@@ -1,4 +1,18 @@
 #!/usr/bin/env python
+"""
+    ${OPENRVDAS}/cgi-bin/Usertool.py
+
+    Manages list of users authorized to make changes to the API via
+    the SQLite API web interface.
+
+    Verbs:
+    -a, -add,       Add a user
+    -d, --delete,   Delete a user
+    -l, --list,     List users
+
+    -u/--user <username>
+    -p/--passwd <plain text passwd>
+"""
 
 import argparse
 import hashlib
