@@ -112,8 +112,9 @@ def process_post_request():
         form[key] = fs[key].value
 
     mode = form.get('radios', 'not specified')
-    (validated, username) = secret.validate_token()
-    if not validated:
+    username = secret.validate_token()
+    if not username:
+        content['ok'] = 0
         content['error'] = 'Login Required'
         return (headers, content, 401)
 
@@ -123,10 +124,12 @@ def process_post_request():
         if mode in modes:
             api.set_active_mode(mode)
         else:
+            content['ok'] = 0
             content['error'] = 'Mode %s not allowed' % mode
             return (headers, content, 406)
     except Exception as err:
         Q = "Exception in api.set_active_modes(%s): %s" % (mode, err)
+        content['ok'] = 0
         content['error'] = Q
         return (headers, content, 406)
 
