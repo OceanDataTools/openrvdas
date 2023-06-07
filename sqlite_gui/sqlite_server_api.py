@@ -25,7 +25,7 @@ DEFAULT_MAX_TRIES = 3
 ID_SEPARATOR = ':'
 
 # Not a runtime option because the API doesn't have any
-DATABASE_BACKUPS = True
+DATABASE_BACKUPS = False
 DATABASE_COMPRESS = True
 ########################################################################
 # Let's trust SQLite and forget about thread locking.
@@ -247,19 +247,6 @@ class SQLiteServerAPI(ServerAPI):
         """ Return cruise config for specified cruise id. """
 
         self._do_we_need_to_reload()
-        # Not sure how necessary this wiii be if the
-        # config is loaded from file
-        # cruise = self.config.get('cruise', None)
-        # if cruise:
-        #    add_dict = {
-        #        'id': cruise.get('id', None),
-        #        'start': cruise.get('start', None),
-        #        'end': cruise.get('end', None),
-        #        'config_filename': cruise.get('config_filename', None),
-        #    }
-        #    for key in add_dict:
-        #        self.config[key] = add_dict[key]
-
         return self.config or None
         # return self.config or None
 
@@ -569,15 +556,18 @@ class SQLiteServerAPI(ServerAPI):
         """ Backup the database """
 
         cruise = self.config.get('cruise', {})
-        cruise_id = cruise.get('cruise_id', 'none')
+        cruise_id = cruise.get('id', 'none')
 
         dt = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        ourpath = os.path.dirname(__file__)
         filename = "openrvdas-%s-%s.sql" % (cruise_id, dt)
+        dbfile = os.path.join(ourpath, filename)
+        dburi = "".join(["file:", dbfile])
         try:
             cx = self._get_connection()
-            cx.execute("VACUUM INTO ?", (filename,))
+            cx.execute("VACUUM INTO ?", (dburi,))
         except Exception as err:
-            logging.warn("Failed to backup database: %s", err)
+            logging.warn("Failed to backup database: %s" % err)
             pass
 
     #####################################
@@ -589,7 +579,6 @@ class SQLiteServerAPI(ServerAPI):
         if DATABASE_BACKUPS:
             self._backup_database()
 
-        logging.warn('Loading new config')
         self.config = config
         # self.config['loaded_time'] = datetime.utcnow().isoformat()
         self.config['loaded_time'] = datetime.utcnow()
@@ -610,7 +599,6 @@ class SQLiteServerAPI(ServerAPI):
                     self.config[key] = cruise.get(key, None)
         self._save_config()
         self.signal_load()
-        logging.warn('api loaded new config')
 
     ###############################
     def delete_configuration(self):
