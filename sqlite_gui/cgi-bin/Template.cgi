@@ -67,12 +67,12 @@ def read_form():
         for part in parts:
             lines = part.split('\n')
             if 'Content-Disposition: form-data' in lines[0]:
-                lines.pop(-1)
-                lines.pop(1)
+                lines.pop(-1)   # should be blank
+                lines.pop(1)    # should be blank
                 s = lines[0].split('=')
                 key = s[1].strip()
                 if key[0] == '"':
-                    key = key[1:-1]
+                    key = key[1:-1]    # de-quote the name
                 value = lines[1].strip()
                 form[key] = value
         
