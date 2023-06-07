@@ -10,7 +10,6 @@
 import sys
 import os
 import secret
-import multipart
 # from os.path import dirname, realpath
 
 # sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -33,6 +32,7 @@ def read_query_string():
             form[iSplits[0]] = ''
     return form
 
+# Content-Type  =  multipart/form-data; boundary=----WebKitFormBoundarytorpL8tdJ19HcPXj
 
 ##############################################################################
 def read_form():
@@ -48,22 +48,38 @@ def read_form():
     if method == "GET":
         form = read_query_string()
     if method == "POST":
-
-        def on_field(field):
-            form[field.field_name] = field.value
-
-        def on_file(file):
-            value = {}
-            value['name'] - file.file_name
-            value['file_object'] = file.file_object
-            files[file.field_name] = value
-
-        multipart_headers = {}
-        multipart_headers['Content-Type'] = os.environ['CONTENT_TYPE']
-        multipart_headers['Content-Length'] = os.environ['CONTENT_LENGTH']
-        multipart.parse_form(multipart_headers, sys.stdin, on_field, on_file)
+        ct = os.environ.get('CONTENT_TYPE', None)
+        if '; boundary=' not in ct:
+            print("No boundary.  We're screwed", file=sys.stderr)
+        if 'multipart/form-data' not in ct:
+            print("Not multipart/form-data.  We're screwed", file=sys.stderr)
+        boundary = ct.split('=')[1]
+        body = ""
+        parts = []
+        part = ""
+        for line in sys.stdin:
+            if boundary in line:
+                parts.append(part)
+                part = ""
+            else:
+                part = part + line
+            body = body + line
+        for part in parts:
+            lines = part.split('\n')
+            if 'Content-Disposition: form-data' in lines[0]:
+                lines.pop(-1)
+                lines.pop(1)
+                s = lines[0].split('=')
+                key = s[1].strip()
+                if key[0] == '"':
+                    key = key[1:-1]
+                value = lines[1].strip()
+                form[key] = value
+        
+    print("Printing out form{}", file=sys.stderr)
     for key in form:
         print(key, ' = ', form[key], file=sys.stderr)
+    print("...Done", file=sys.stderr)
     return form
 
 
@@ -138,7 +154,7 @@ def process_post_request():
         return ([], content, 401)
 
     # Make sure we're authorized to do this
-    username = secret.validate_jwt()
+    username = secret.validate_token()
     if not username:
         content['ok'] = 'false'
         content['error'] = 'Login Required'
@@ -180,7 +196,7 @@ if __name__ == "__main__":
         try:
             handle_post()
         except Exception as err:
-            print("Error processing form: %s", err, file=sys.stderr)
+            print("Error processing form: %s" % err, file=sys.stderr)
     else:
         # Command line for debugging
         handle_post()
