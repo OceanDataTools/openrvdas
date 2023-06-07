@@ -103,64 +103,20 @@
   </table>
 
   <hr>
-<!-- FIXME:  Now on the menubar, but needs to be a menu -->
-<!--         Not quite there, yet -->
-  <table>
-    <tr>
-      <td>
-        Current definition file:
-        <span id='filename'>{{ filename|default:"[none]" }}</span>
-      </td>
-    </tr>
-  </table>
 </div>
-<!-- End of 'we have a cruise definition' div -->
 
-<!-- ################################################################## -->
-<!-- Load new definition                                                -->
-<table>
-  <tr>
-    <td>
-      <span id='reload_span' style='display:none;'>
-        <form method='post' style='display:inline;'
-              enctype='multipart/form-data'>
-          <button name='reload_button' id='reload_button' type='submit'
-                   style='background-color:yellow'>
-          Definition is stale. Reload definition
-          </button>
-        </form>
-      </span>
-      <button id='load_definition_button' type='submit'
-              onclick='open_load_definition(event);'>
-        Load new definition
-      </button>
-    </td>
-  </tr>
-</table>
-
-
-<!--
-<p>
-  Logged in as <b>{{ user }}.</b>
-  <a href='/accounts/logout'>Log out</a>
-  <a href='/accounts/login'><b>Log in</b></a> to manage cruise mode or loggers
-</p>
--->
 </div> <!-- content -->
 <!-- Render the page, then add the scripts. Usually best... -->
 <!--# include file='./modals.html' -->
+    <hr>
+    <p style="font-size:70%">
+      <a href="/docs/README.md"> OpenRVDAS (c)2018 David Pablo Cohn</a>
+    </p>
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script src="/js/json5.min.js"></script>
     <script src='head.html.js'></script>
     <script src="index.html.js"></script>
     <script src="stderr_log_utils.js"></script>
     <script src='websocket.js'></script>
-<!-- Need to make a "tail.html" ??-->
-
-
-    <hr>
-    <p style="font-size:70%">
-      <a href="/docs/README.md"> OpenRVDAS (c)2018 David Pablo Cohn</a>
-    </p>
   </body>
 </html>

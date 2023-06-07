@@ -218,6 +218,7 @@ var CruiseDef = (function() {
     function show_correct_divs(config) {
         // Interwebs says using the classes works better
         // than setting visibility on mobile.  May be true.
+        // Why are we actually doing this?
         if (config.loggers) {
             el_empty.className = "d-none";
             el_populated.className = "d-block";
@@ -236,9 +237,10 @@ var CruiseDef = (function() {
             // cruise_definition.filename
         }
         // FIXME;  For now, we're doing this.  Yuk!
-        el = document.getElementById('conf_file');
+        el = document.getElementById('LoadConfig_link');
         if (el) {
-            el.innerHTML = filename;
+            el.setAttribute('data-bs-toggle', 'tooltip');
+            el.setAttribute('title', filename);
         }
     }
 
