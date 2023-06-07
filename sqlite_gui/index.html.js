@@ -282,6 +282,7 @@ var CruiseDef = (function() {
         var diff = diff_loggers(config.loggers);
         loggers = config.loggers;
         console.info('Loaded new configuration');
+        odas.api = config;
         if (diff.size == 0) {
            // Set the logger button texts
            // FIXME:  I think we already have a function for this.
