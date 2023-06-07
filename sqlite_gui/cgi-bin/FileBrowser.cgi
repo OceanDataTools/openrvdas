@@ -75,6 +75,28 @@ def handle_get():
 
 
 ##############################################################################
+def get_load(form):
+    """ Called when the Load button is pressed in LoadCOnfig.html """
+
+    content = {}
+    
+    html = '<div>Confirm Load?</div>'
+    html = html + '<span>'
+    fname = form.get('fname', 'Something is wrong')
+    html = html + fname
+    html = html + '</span>'
+    sl_jwt = secret.short_ttl_jwt()
+    html = html + '<input type="hidden" '
+    html = html + 'name="CSRF Token" value="%s">' % sl_jwt
+    html = html + '<input type="hidden" '
+    html = html + 'name="fname" value="%s">' % fname
+    html = html + '<input type="hidden" '
+    html = html + 'name="verb" value="load">'
+    content['html'] = html
+    return ([], content, 200)
+
+
+##############################################################################
 def process_get():
     """ Lower level processing for GET request
         The GET method only sends JSON to the client listing
@@ -96,6 +118,15 @@ def process_get():
         form[key] = fs[key].value
     # print("Query = %s" % form, file=sys.stderr)
 
+    try:
+        if form.get('verb', None) == 'load':
+            (headers, content, status) = get_load(form)
+            return (headers, content, status)
+    except Exception as err:
+            print("Error trying to get_load: %s" % err, file=sys.stderr)
+            content['ok'] = 0
+            content['error'] = err
+            return ([], content, 451)
     dirname = form.get('dir', '/opt/openrvdas/local')
     # FIXME:  Validate dirname or 400 (maybe 406)
     if not os.path.isdir(dirname):
@@ -169,29 +200,30 @@ def process_post_request():
     fs = cgi.FieldStorage()
     for key in fs.keys():
         form[key] = fs[key].value
-        print("%s = %s" % (key, form[key]), file=sys.stderr)
+        # print("%s = %s" % (key, form[key]), file=sys.stderr)
 
     fname = form.get('fname', None)
     if not fname:
-        content['ok'] = 'false'
+        content['ok'] = 0
         content['error'] = "No filename specified"
-        return (headers, content, 418)
+        return ([], content, 418)
     username = secret.validate_token()
     if not username:
-        content['ok'] = 'false'
+        content['ok'] = 0
         content['error'] = 'Not Authorized'
-        return (headers, content, 401)
+        return ([], content, 401)
     try:
         config = read_config(fname)
         config['config_filename'] = fname
         api.load_configuration(config)
         config = api.get_configuration()
-        print(config['cruise'], file=sys.stderr)
+        # FIXME:  Log this to api.messagelog
+        # print(config['cruise'], file=sys.stderr)
     except Exception as err:
         Q = "Exception in api.load_configuration(%s): %s" % (fname, err)
         content['ok'] = 'false'
         content['error'] = Q
-        return (headers, content, 406)
+        return ([], content, 406)
     else:
         pass
         # print("No exception loading config", file=sys.stderr)
@@ -199,7 +231,8 @@ def process_post_request():
     # FIXME: log the mode change in the API.
     content['ok'] = 'true'
     content['config_filename'] = fname
-    return (headers, content, 200)
+    print('Loading %s' % fname, file=sys.stderr)
+    return ([], content, 200)
 
 
 ##############################################################################

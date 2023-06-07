@@ -81,20 +81,82 @@
         </textarea>
       </div>
     </div>
+
+<!-- Load Button Modal -->
+<div class="modal fade"
+     id="LoadButton_Modal"
+     tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Load Config File</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post"
+            action="/cgi-bin/FileBrowser.cgi"
+            onsubmit="CGI.AjaxPost(event, this, 'LoadButton_Modal')">
+      <div class="modal_body" id="LoadButtonModeModalBody"></div>
+      <div id="LoadButton_mb" class="modal-body"></div>
+      <div id="LoadButton_modalfooter" class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Confirm?</button>
+      </div>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Load Button Modal -->
+
     <script>
-        async function LoadButtonClicked() {
+        async function LoadButton_shown() {
+            function auto_close(modal) {
+                var el = document.getElementById('LoadButton_Modal');
+                var modal = bootstrap.Modal.getOrCreateInstance(el);
+                if (modal) {
+                    modal.hide();
+                }
+            }
             var el = document.getElementById('current_file');
             var fname = el.value || el.placeholder;
-            var fd = new FormData();
-            fd.append('fname', fname);
-            fd.append('verb', 'load');
-            var options = { 'body': fd };
-            var url = 'cgi-bin/FileBrowser.cgi';
-            response = await Ajax('post', url, options);
-            var ham = 'eggs';
+            var params = 'verb=load&fname=' + fname
+            var url = 'cgi-bin/FileBrowser.cgi?' + params;
+            var result = await CGI.AjaxGet(url);
+            // Response received, set up auto-close
+            setTimeout(auto_close, 30000); // 30 seconds is an eternity
+            // Should have token, etc
+            var dest = document.getElementById('LoadButton_mb');
+            if (dest) {
+                dest.innerHTML = result.html;
+            }
         }
+
+        function LoadButtonClicked(rvt) {
+            var el = document.getElementById('LoadButton_Modal');
+            if (el) {
+                el.addEventListener('show.bs.modal', 
+                                    LoadButton_shown());
+            }
+            var our_modal = bootstrap.Modal.getOrCreateInstance(el);
+            if (our_modal) {
+                our_modal.show();
+            }
+        }
+            
+            // First thing, create a timout to auto-close the modal
+            // 
+ //           var el = document.getElementById('current_file');
+//            var fname = el.value || el.placeholder;
+//            var fd = new FormData();
+//            fd.append('fname', fname);
+//            fd.append('verb', 'load');
+//            var options = { 'body': fd };
+//            var url = 'cgi-bin/FileBrowser.cgi';
+//            response = await Ajax('post', url, options);
+//            var ham = 'eggs';
+//        }
     </script>   
-<!--# include file='modals.html' -->    
+<!--# include file='modals.html' --> <!-- This gets us CGI -->   
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script src="/js/json5.min.js"></script>
     <script src='head.html.js'></script>
