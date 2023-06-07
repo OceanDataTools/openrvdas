@@ -29,8 +29,7 @@
       <form method="post" 
             action="/cgi-bin/CruiseMode.cgi"
             onsubmit="CGI.AjaxPost(event, this, 'CruiseModeModal')">
-      <div class="modal_body" id="CruiseModeModalBody"></div>
-      <div id="ChangeMode_mb" class="modal-body"></div>
+      <div class="modal-body" id="CruiseModeModalBody"></div>
       <div id="ChangeMode_modalfooter" class="modal-footer">
         <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
         <button type="submit" class="btn btn-primary">Apply Change</button>
@@ -42,7 +41,7 @@
 </div>
 <!-- End Change Cruise Mode Modal -->
 
-<!-- Example Logger Mode Modal -->
+<!-- Logger Mode Modal -->
 <div class="modal fade" 
      id="LoggerModal"
      tabindex="-1">
@@ -55,8 +54,7 @@
       <form method="post" 
             action="/cgi-bin/LoggerMode.cgi"
             onsubmit="CGI.AjaxPost(event, this, 'LoggerModal')">
-      <div class="modal_body" id="LoggerModeModalBody"></div>
-      <div id="Logger_mb" class="modal-body"></div>
+      <div class="modal-body" id="LoggerModeModalBody"></div>
       <div id="Logger_modalfooter" class="modal-footer">
         <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
         <button type="submit" class="btn btn-primary">Apply Change</button>
@@ -66,15 +64,24 @@
     </div>
   </div>
 </div>
-<!-- /Example Logger Mode Modal -->
+<!-- Logger Mode Modal -->
 
 <script>
 var LoggerButton = (function() { 
     // Event handler called when the modal is shown on the page.
+    // The modal is shown on the page when you click a logger button
     //
     // shown(element_id)  ==> nothing
     //     @element_id = DOM element id of the button
     var shown = async function(element_id) {
+        // auto_close after timeout
+        function auto_close() {
+            var el = document.getElementById('LoggerModal')
+            var modal = bootstrap.Modal.getOrCreateInstance(el);
+            if (modal) {
+                modal.hide();
+            }
+        }
         // Set modal title
         var logger_id = element_id.attributes.for.value;
         var title_el = document.getElementById('LoggerModalTitle');
@@ -84,6 +91,7 @@ var LoggerButton = (function() {
         // fill in modal body
         url = '/cgi-bin/LoggerMode.cgi?' + logger_id
         var result = await CGI.AjaxGet(url);
+        setTimeout(auto_close, 30000);
         var dest = document.getElementById('LoggerModeModalBody');
         if (dest) {
             dest.innerHTML = result;
@@ -92,6 +100,8 @@ var LoggerButton = (function() {
 
     // Event handler called when the button is clicked
     //   Get the modal, attach listener, and show it.
+    //   We should not anonymous inline the 'shown' method, SeeL
+    // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
     //
     // show(element_id)  ==> nothing
     //     @element_id - DOM element id of the button 
@@ -101,9 +111,9 @@ var LoggerButton = (function() {
             el.addEventListener('show.bs.modal', 
                                 LoggerButton.shown(element_id));
         }
-        var m = bootstrap.Modal.getOrCreateInstance(el);
-        if (m) {
-            m.show();
+        var our_modal = bootstrap.Modal.getOrCreateInstance(el);
+        if (our_modal) {
+            our_modal.show();
         }
     }
 
@@ -125,11 +135,16 @@ var LoggerButton = (function() {
 
     // This function should be called by index.html to update
     // the button's innerHTML and style (on status change)
-    var empty_loggers = document.getElementById('empty_loggers');
-    var status_and_loggers = document.getElementById('status_and_loggers');
     var status_timestamp = 0;
 
     function update(timestamp, logger_status) {
+        // Don't update buttons if this message is old.
+        if (timestamp <= status_timestamp) {
+            console.debug('Got stale logger status - skipping...');
+            return false;
+        }
+        status_timestamp = timestamp;
+
         // Update timestamp on status_td
         status_td.update();
 
@@ -138,55 +153,38 @@ var LoggerButton = (function() {
             return;
         }
 
-        // If status not empty, we have loggers, so show the
-        // 'we have loggers' div
-        if (empty_loggers) { 
-            empty_loggers.className = 'd-none';
-        }
-        if (status_and_loggers) {
-            status_and_loggers.className = 'd-block';
-        }
-
-        // Don't update buttons if this message is old.
-        if (timestamp <= status_timestamp) {
-            console.info('Got stale logger status - skipping...');
-        } else {
-            status_timestamp = timestamp;
-        }
-
+        // For each logger, set button style
         for (var logger_name in logger_status) {
             var status = logger_status[logger_name];
             var button = document.getElementById(logger_name + '_btn');
-            if (button == undefined) {
+            if (!button) {
                 continue;
             }
             button.innerHTML = status.config;
+            var extra_class = "";
+            var button_color = "";
             switch (status.status) {
                 case 'RUNNING':
-                    button.className = 'btn btn-sm btn-success';
-                    button.style.backgroundColor = '';
+                    extra_class = 'btn-success';
                     break;
                 case 'EXITED':
-                    button.className = 'btn btn-sm btn-secondary';
-                    button.style.backgroundColor = "";
+                    extra_class = 'btn-secondary';
                     break;
                 case 'STARTING':
-                    button.className = 'btn btn-sm';
-                    button.style.backgroundColor = "khaki";
+                    button_color = 'khaki';
                     break;
                 case 'BACKOFF':
-                    button.className = 'btn btn-sm';
-                    button.style.backgroundColor = "gold";
+                    button_color = 'gold';
                     break;
                 case 'FATAL':
-                    button.className = 'btn btn-sm btn-danger';
-                    button.style.backgroundColor = "";
+                    extra_class = 'btn-danger';
                     break;
                 default:
-                    // remove any styling we may have left behind
-                    button.style.backgroundColor = "";
-                    button.className = 'btn btn-sm';
-            }
+                    break;
+            } // esac 
+            button.className = 'btn btn-sm ' + extra_class;
+            button.style.backgroundColor = button_color;
+              
         }
     }
 
@@ -203,13 +201,20 @@ var LoggerButton = (function() {
 // FIXME:  Package these into a function for the logger_manager button
 //         Why? Namespace pollution, style consistency, etc....
     async function show_CruiseMode_modal(CruiseMode_el) {
+        function auto_close() {
+            var el = document.getElementById('CruiseModeModal')
+            var modal = bootstrap.Modal.getOrCreateInstance(el);
+            if (modal) {
+                modal.hide();
+            }
+        }
         var result = await CGI.AjaxGet("/cgi-bin/CruiseMode.cgi");
+        setTimeout(auto_close, 30000)
         // FIXME:  Check result for 'error' field
         var dest = document.getElementById('CruiseModeModalBody');
         if (dest) {
             dest.innerHTML = result;
         }
-        // sttach event to submit button
     }
 
     // Attach events to buttons
