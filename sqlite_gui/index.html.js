@@ -284,7 +284,10 @@ var CruiseDef = (function() {
         var diff = diff_loggers(config.loggers);
         loggers = config.loggers;
         console.info('Loaded new configuration');
-        odas.api = config;
+        console.info("odas = ", JSON5.stringify(odas, null, "  "));
+        if (odas) {
+            odas.api = config;
+        }
         if (diff.size == 0) {
            // Set the logger button texts
            // FIXME:  I think we already have a function for this.
@@ -421,6 +424,9 @@ function process_data_message(message) {
 
             // Cruise Mode update
             case 'status:cruise_mode':
+                if (typeof(global_last_cruise_timestamp) == 'undefined') {
+                    global_last_cruise_timestamp = 0;
+                }
                 if (timestamp < global_last_cruise_timestamp) {
                     break;
                 }
@@ -430,10 +436,6 @@ function process_data_message(message) {
 
             // Logger Status update
             case 'status:logger_status':
-                if (timestamp < global_last_logger_status_timestamp) {
-                    break;
-                }
-                global_last_logger_status_timestamp = timestamp;
                 //update_logger_status(timestamp, values);
                 LoggerButton.update(timestamp, values);
                 break;

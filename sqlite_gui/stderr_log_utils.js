@@ -32,7 +32,8 @@ var STDERR = (function() {
             var [timestamp, log_line] = lines[i];
 
             // Clean up message and add to new_log_lines list
-            log_line = log_line.replace ('\n', '<br />') + '<br />\n';
+            log_line = log_line.replace(/\n$/, '');
+            log_line = log_line.replace('\n', '<br />');
             new_log_lines += color_log_line(log_line);
         }
 
@@ -40,23 +41,25 @@ var STDERR = (function() {
         // going to put them, and add to bottom.
         if (new_log_lines.length > 0) {
             var target_div = document.getElementById(target);
-            if (target_div) {
-                target_div.innerHTML += new_log_lines;
-                // scroll to bottom
-                target_div.scrollTop = target_div.scrollHeight;
-                // FIFO the message, keeping an arbitrary 200
-                count = target_div.childElementCount;
-                while (count > 200) {
-                    target_div.removeChild(target_div.firstChild);
-                    count--;
-                }
-            } else {
-                console.log ('Couldn\'t find div for ' + target);
+            if (!target_div) {
+                console.warn ('Couldn\'t find div for ' + target);
+                return;
+            }
+            target_div.innerHTML += new_log_lines;
+            // scroll to bottom
+            target_div.scrollTop = target_div.scrollHeight;
+            // FIFO the message, keeping an arbitrary 200
+            // Otherwise we could have 10's of thousands.  Not cool.
+            count = target_div.childElementCount;
+            while (count > 200) {
+                target_div.removeChild(target_div.firstChild);
+                count--;
             }
         }
     }
 
     function color_log_line (message) {
+        // message = message.substring(0, 200);
         var color = 'text-body';
         if (message.includes (' 30 WARNING ') > 0) {
             color = 'text-warning';
@@ -67,7 +70,7 @@ var STDERR = (function() {
         else if (message.includes (' 50 CRITICAL ') > 0) {
             color = 'text-danger bg-dark';
         }
-        message = '<span class="' + color + '">' + message + '</span>';
+        message = '<span class="' + color + '">' + message + '</span><br />';
         return message;
     }
 

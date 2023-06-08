@@ -24,91 +24,97 @@
 
   </head>
   <body onload="body_load()">
+    <div class='container-fluid'>
     <!--# include file='./navbar.html' -->
-<h1>OpenRVDAS Dashboard</h1>
+    <h1>OpenRVDAS Dashboard</h1>
 
 <!-- #####################################################################-->
 <!-- Show server status up top.                                           -->
-<table class='table table-sm'>
-  <tr>
-    <td class="table-secondary">now</td>
-    <td class="table-light"><span id='time_td'></span></td>
-    <td class="table-secondary">server</td>
-    <td class="table-light"><span id='server_time_td'>--no updates--</span></td>
-    <td class="table-secondary">status</td>
-    <td class="table-light"><span id='status_time_td'>--no updates--</span></td>
-  </tr>
-</table>
+    <table class='table table-sm'>
+      <tr>
+        <td class="table-secondary">now</td>
+        <td class="table-light"><span id='time_td'></span></td>
+        <td class="table-secondary">server</td>
+        <td class="table-light">
+          <span id='server_time_td'>--no updates--</span>
+        </td>
+        <td class="table-secondary">status</td>
+        <td class="table-light">
+          <span id='status_time_td'>--no updates--</span>
+        </td>
+      </tr>
+    </table>
 <!-- Show this div if no cruise definition loaded -->
 <!-- A million monkeys on the web say using the Bootstrap class
      instead of directly styling displsy:[none|block] helps with
      mobile devices.  They might be right. -->
-<div id='empty_loggers' class='d-block'>
-  <p>
-    <b>No cruise definition loaded</b>
-  </p>
-</div>
+    <div id='empty_loggers' class='d-block'>
+      <p>
+        <b>No cruise definition loaded</b>
+      </p>
+    </div>
 
 <!-- Show this div if a cruise definition has been loaded -->
-<div id='status_and_loggers' class='d-none'>
-  <!-- ################################################################## -->
-  <!-- Draw the logger manager current mode, and loggers.                 -->
-  <table class='table table-striped table-responive-sm' id='logger_table'>
-    <!-- Cruise mode and logger manager stderr here -->
-    <thead class='table-dark'>
-      <tr>
-        <th>cruise mode</th>
-        <th>logger manager stderr</th>
-      </tr>
-    </thead>
-    <tbody id='logger_table_body'>
-      <tr>
-        <td id="logger_manager_mode_td">
-          <button id="mode_button"
-                  type="button"
-                  class="btn btn-sm btn-secondary"
-                  data-bs-toggle="modal"
-                  data-bs-target="#CruiseModeModal">
-            ???
-          </button>
-        </td>
-        <td ><div class="stderr_window" id="logger_manager_stderr"></div></td>
-      </tr>
+    <div id='status_and_loggers' class='d-none'>
+    <!-- ################################################################## -->
+    <!-- Draw the logger manager current mode, and loggers.                 -->
+      <table class='table table-striped table-responive-sm' id='logger_table'>
+      <!-- Cruise mode and logger manager stderr here -->
+        <thead class='table-dark' style='overflow:hidden;'>
+          <tr>
+            <th>cruise mode</th>
+            <th>logger manager stderr</th>
+          </tr>
+        </thead>
+        <tbody id='logger_table_body'>
+          <tr>
+            <td id="logger_manager_mode_td">
+              <button id="mode_button"
+                      type="button"
+                      class="btn btn-sm btn-secondary"
+                      data-bs-toggle="modal"
+                      data-bs-target="#CruiseModeModal">
+                ???
+              </button>
+            </td>
+            <td >
+              <div class="stderr_window" id="logger_manager_stderr"></div>
+            </td>
+          </tr>
 
-      <!-- Loggers and logger stderr here -->
-      <tr class='table-dark'>
-        <th>logger</th>
-        <th>stderr</th>
-      </tr>
-    <template>
-      <tr id="loggerid_row">
-        <td id="loggerid_lgar_config_td">
-          <button id="lgar_btn" 
-                  type="button" 
-                  for="loggerid" 
-                  onclick="LoggerButton.show(this)" 
-                  class="btn btn-sm btn-secondary">
-            loggerid-&gt;off
-          </button>
-        </td>
-        <td>
-          <div id="loggerid_stderr" class="stderr_window">
-            <span class="text-body">timstamp level message</span>
-          </div>
-        </td>
-      </tr>
-    </template>
-      <!-- This gets more rows filled in by javascript.  -->
-    </tbody>
-  </table>
+          <!-- Loggers and logger stderr here -->
+          <tr class='table-dark'>
+            <th>logger</th>
+            <th>stderr</th>
+          </tr>
+        <template>
+          <tr id="loggerid_row">
+            <td id="loggerid_config_td">
+              <button id="loggerid_btn" 
+                      type="button" 
+                      for="loggerid" 
+                      onclick="LoggerButton.show(this)" 
+                      class="btn btn-sm btn-secondary">
+                loggerid-&gt;off
+              </button>
+            </td>
+            <td>
+              <div id="loggerid_stderr" class="stderr_window">
+                <span class="text-body">${timstamp} ${level} ${message}</span>
+              </div>
+            </td>
+          </tr>
+        </template>
+        <!-- This gets multiple rows that look like the
+             template (which actually does nothing)
+             filled in by javascript.  -->
+        </tbody>
+      </table>
 
-  <hr>
-</div>
-
-</div> <!-- content -->
+      <hr>
+    </div> <!-- /#status-and-loggers -->
 <!-- Render the page, then add the scripts. Usually best... -->
 <!--# include file='./modals.html' -->
-    <hr>
     <p style="font-size:70%">
       <a href="/docs/README.md"> OpenRVDAS (c)2018 David Pablo Cohn</a>
     </p>
