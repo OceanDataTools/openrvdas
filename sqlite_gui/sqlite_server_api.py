@@ -25,7 +25,7 @@ DEFAULT_MAX_TRIES = 3
 ID_SEPARATOR = ':'
 
 # Not a runtime option because the API doesn't have any
-DATABASE_BACKUPS = False
+DATABASE_BACKUPS = True
 DATABASE_COMPRESS = True
 ########################################################################
 # Let's trust SQLite and forget about thread locking.
@@ -554,18 +554,17 @@ class SQLiteServerAPI(ServerAPI):
     ##############################
     def _backup_database(self):
         """ Backup the database """
-
-        cruise = self.config.get('cruise', {})
+        config = self.get_configuration()
+        cruise = config.get('cruise', '{}')
         cruise_id = cruise.get('id', 'none')
 
         dt = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         ourpath = os.path.dirname(__file__)
         filename = "openrvdas-%s-%s.sql" % (cruise_id, dt)
         dbfile = os.path.join(ourpath, filename)
-        dburi = "".join(["file:", dbfile])
         try:
             cx = self._get_connection()
-            cx.execute("VACUUM INTO ?", (dburi,))
+            cx.execute('VACUUM INTO ?', (dbfile,))
         except Exception as err:
             logging.warn("Failed to backup database: %s" % err)
             pass
