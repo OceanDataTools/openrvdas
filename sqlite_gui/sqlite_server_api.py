@@ -554,6 +554,7 @@ class SQLiteServerAPI(ServerAPI):
     ##############################
     def _backup_database(self):
         """ Backup the database """
+
         config = self.get_configuration()
         cruise = config.get('cruise', '{}')
         cruise_id = cruise.get('id', 'none')
