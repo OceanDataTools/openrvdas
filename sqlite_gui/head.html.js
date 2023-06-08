@@ -338,7 +338,7 @@ async function Load_Config_JSON() {
     }
 
     try {
-        var o = await Ajax('GET', '/openrvdas.json5')
+        var o = await Ajax('GET', '/openrvdas.json')
         jsonLoaded(o);
     } catch (error) {
         console.error(error);

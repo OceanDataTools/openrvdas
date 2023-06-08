@@ -78,7 +78,7 @@
     // "confdir": '/opt/openrvdas/local/myorg/myship',
     // "safedir": '/opt/openrvdas/local',
     confdir: '/opt/openrvdas/local/usap/lmg',
-    safedir: '/opt/openrvdas/local,
+    safedir: '/opt/openrvdas/local',
 
     "ham": "eggs",
     "foo": "bar",
