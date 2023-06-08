@@ -1,33 +1,40 @@
 
 ### Install requirements for SQLITE UI
-
-Need to `pip install pyjwt`
-copy `openrvdas_sqlite.ini` to /etc/supervisor.d (or your distro equiv)
-May or may not need to `chmod g+w /opt/openrvdas`.
-May or may not need to `gpasswd -a nginx rvdas`
-Need to check those two on a clean install...
-Need to run the `CreateDatabse.sh` script to build a blank database.
+Need to `pip install pyjwt`  
+copy `openrvdas_sqlite.ini` to /etc/supervisor.d (or your distro equiv)  
+May or may not need to `chmod g+w /opt/openrvdas`.  
+May or may not need to `gpasswd -a nginx rvdas`  
+Need to check those two on a clean install...  
+Need to run the `CreateDatabse.sh` script to build a blank database.  
 Need to `cd cgi-bin` and run `UserTool.py`, add a user authorized to
-make changes.
-SSL cert/key go in the nginx directory.
-
+make changes.  
+SSL cert/key go in the nginx directory.  
+Users are encouraged to change the passphrase in cgi-bin/secret.py  
 
 ### Running it
+Using supervisor  
+Stop the following (using the web interface or supervisorctl)   
+- openrvdas:Logger_Manager  
+- web:nginx  
+- web:uwsgi  
+Start the SQLite group (using the web interface or `supervisorctl start sqlite:*)`   
+- sqlite.fcgiwrap  
+- sqlite:logger_manager  
+- sqlite:nginx_sqlite   
+Configure the web interface (if desired) by modifying openrvdas.json,
+and load a configuration, or use `api_tool.py` and commands for the 
+ServerAPI.
 
-Using supervisor, stop `openrvdas:Logger_Manager`, `web:nginx`, `web:uwsgi`,
-start the `SQLite` group (`sqlite.fcgiwrap`, `sqlite:logger_manager`, and
-`sqlite:nginx_sqlite`). 
-`api_tool.py` is sort of like the API command line tool, but whipped together
-while I was working on the API so I could make sure I was doing it right.
-Works interactively or one-shot with the command as an argument.
+### FUTURE ROADMAP
+Code cleanups to the javascript  
+- Encapsulate more globals  
+- Class for the cruise mode button  
+- Class for the ws message parsers  
+Better and/or more authorization schemes (PAM would probably be good).  
+Better handling of errors from the CGI scripts.  
+Create an installation script.  
+Figure out why database backups not working.  
 
-### ROADMAP
-Code cleanups to the javascript (many of which could be applied to the
-django GUI).
-Our auth scheme is pretty good.  We could add a second (short-lived) JWT
-to the CGI forms, and move the secret to a single file we pull in
-at runtime (avoiding the need to edit each of the CGI files if we
-want to change the secret)
-Maybe better and/or more authorization schemes (PAM would probably be good).
-Maybe better handling of errors from the CGI scripts.
-
+### Non SQLite related changes
+- pty data simulation (no more socat)
+- 
