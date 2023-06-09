@@ -2,7 +2,18 @@
 """
     cgi-bin/Auth.cgi
 
-    Handles logging in/out in a secure (enough) manner.
+    Handles logging in a secure (enough) manner.
+    Authorized username/password paris are stored
+    in a Shelf (managed by the Usertool.py utility).
+    The provided password is hashed and oompared against
+    the hash stored in the shelf.  If they match, the
+    password is accepted and a JWT is constructed
+    valid for 90 days.   The client returns that
+    JWT in the Authorization header of subsequent requests.
+    Since this authentication scheme is stateless, we
+    don't need to store the token on our side.  A client
+    can log out by the simple expedient of forgetting
+    the JWT.
 """
 
 import cgi
@@ -18,9 +29,17 @@ import secret
 
 ##############################################################################
 def handle_post():
-    """ Called when this is accessed via the POST method """
+    """ Called when this is accessed via the POST method.
+        The message body is constructed by a helper routine
+        that returns a dictionary, and that dictionary is
+        returned to the calling page as JSON
+    """
 
-    (headers, content, status) = process_post_request()
+    try:
+        (headers, content, status) = process_post_request()
+    except Exception as err:
+        content['ok'] = 0
+        content['error'] = str(err)
 
     if content:
         headers.append("Content-Type: text/json")
@@ -31,7 +50,7 @@ def handle_post():
 
     if content:
         print(json.dumps(content, indent=2))
-        if content.get('error', None):
+        if not content.get('ok', 0):
             print(content, file=sys.stderr)
 
 
@@ -80,7 +99,6 @@ def build_jwt(form):
         "exp": datetime.now() + timedelta(days=90),
         "iat": datetime.now()
     }
-    # https://xkcd.com/936/
     our_jwt = jwt.encode(payload_data,
                          secret.SECRET,
                          algorithm="HS256")
@@ -89,9 +107,10 @@ def build_jwt(form):
 
 ##############################################################################
 def process_post_request():
-    """ Lower level processing for the post request.  I do it this way
-        hoping to not output anything to stdout hoping that
-        we won't get a 502 error.
+    """ for requeired fields (user/pass),
+        authenticates the credentials, and if successful
+        provides a token to be returned to the user.
+        Returns a dictonary
     """
 
     content = {}
@@ -111,6 +130,11 @@ def process_post_request():
         content['jwt'] = build_jwt(form)
     else:
         content['error'] = "Not authenticated"
+
+    if 'error' in content:
+        content['ok'] = 0
+    else:
+        content['ok'] = 1
 
     return ([], content, 200)
 
