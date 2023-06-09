@@ -65,7 +65,7 @@
     Timeouts : {
         Now: 1,
         Server: 5,
-        Status: 9.5
+        Status: 9.5,
     },
 
     // confdir - where to find cruise configuration files.

@@ -93,7 +93,7 @@ async function Ajax(method, url, options = {}) {
 //      Creates and populates the 'odas' object which holds the
 //      global values.
 //
-async function Load_Config_JSON() {
+function Load_Config_JSON() {
     // Fix up "Links", replacing "${host}" with hostname
     function fix_up_links(o) {
         for (var key in o.Links) {
@@ -152,28 +152,18 @@ async function Load_Config_JSON() {
         }
     }
 
-    try {
-        var o = await Ajax('GET', '/openrvdas.json')
+    // Have to load the config synchronous, not async
+    // otherwise our config values will not exists by 
+    // the time the other script files need them.
+    var r = new XMLHttpRequest();
+    r.open('GET', '/openrvdas.json', false)
+    r.send(null);
+    if (r.status == 200) {
+        o = JSON5.parse(r.responseText);
         jsonLoaded(o);
-    } catch (error) {
-        console.error(error);
+    } else {
+        cosole.error("I forgot how to do XMLHttpRequests");
     }
 }
-////////////////////////////////////////////////////////////////////////////
-//
-//  body_laod() ==> (nothing)
-//
-//      Called when the body of the page has been loaded.  Handles
-//      basic initialization tasks:
-//      - Setting up the login button on the navbar
-//      = Loading the config file
-//      - Setting the theme
-//
-async function body_load() {
-    // Load the config JSON (json5, actually)
-    await Load_Config_JSON();
-    // Load theme (if any)/
-    // Theme.on_load();
-    // Login Button
-    // LoginButton.on_load();
-}
+
+Load_Config_JSON();

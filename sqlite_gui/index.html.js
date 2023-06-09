@@ -2,30 +2,10 @@
 // Javascript for 'index.html'
 //
 // Typical invocation will look like:
-//
-//    <script type="text/javascript">
-//      // Need to define for following JS scripts. For now, count on the
-//      // relevant variables being set by Django.
-//      var WEBSOCKET_SERVER = "{{ websocket_server }}";
-//      {% if user.is_authenticated %}
-//        var USER_AUTHENTICATED = true;
-//      {% else %}
-//        var USER_AUTHENTICATED = false;
-//      {% endif %}
-//    </script>
-//
 //    <script src="/static/django_gui/index.html.js"></script>
 //    <script src="/static/django_gui/websocket.js"></script>
 //
-// Note that this also counts on variables USER_AUTHENTICATED and
-// WEBSOCKET_SERVER being set in the calling page.
-
-// User servicable parts
-// FIXME: Should probably be part of the config, otherwise roll
-//        them into their objects/classes
-//var NOW_TIMEOUT_INTERVAL = 1000;     // Update console clock every second
-//var SERVER_TIMEOUT_INTERVAL = 5000;  // 5 seconds before warn about server
-//var STATUS_TIMEOUT_INTERVAL = 10000; // 10 seconds before warn about status
+//
 ////////////////////////////////////////////////////////////////////
 //
 //  The 'now' element was previously only updated when a message
@@ -39,9 +19,7 @@
 var time_td = (function() {
     var el = document.getElementById('time_td');
     if (!el) { return; }
-    // default timeout if no value in config file
-    // FIXME:  This actually evaluates before the JSON is loaded,
-    //         so the config file basically does nothing.
+
     var t = 1000;
 
     function update_now() {
@@ -52,11 +30,6 @@ var time_td = (function() {
  
     // We could probably wait one second to write the time, but...
     update_now();
-
-    return {
-        el: el,
-    }
-        
 })();
 
 ////////////////////////////////////////////////////////////////////
@@ -72,14 +45,15 @@ var status_td = (function() {
     }
 
     // Default timeout 10 seconds, over-ride by config
-    var t = 10000;
-    if (odas) {
-        if (odas.Timeouts) {
-            t = odas.Timeouts.Status * 1000;
-        }
-    }
-
-    var timer = setTimeout(timed_out, t);
+    // FIXME:  This actually evaluates before the 
+    //         config has fully loaded, so the config
+    //         file does *nothing*.  Needs to be synchrous.
+    //         Gotta figure that one out....
+    var o = window.odas || {};
+    var oT = o.Timeouts || {};
+    var timeout_ms = oT.Status * 1000 || 10000;
+    console.log("status_timeout = ", timeout_ms)
+    var timer = setTimeout(timed_out, timeout_ms);
 
     function timed_out() {
         if (el) {
@@ -89,7 +63,7 @@ var status_td = (function() {
 
     var update = function() {
         clearTimeout(timer);
-        timer = setTimeout(timed_out, t);
+        timer = setTimeout(timed_out, timeout_ms);
         if (el) {
             el.innerHTML = Date().substring(0,24);
             el.className = '';
@@ -112,6 +86,9 @@ var server_td = (function() {
     el.className = '';
 
     // Default timeout 5 seconds, over-ride by config
+    // FIXME:  Config loads async, and may not have
+    //         compelted by the time this executes,
+    //         meaning the config does nothing.   
     var t = 5000;
     if (odas) {
         if (odas.Timeouts) {
@@ -389,6 +366,7 @@ function process_data_message(message) {
         var value_list = message[field_name];
         // Get the [timestamp, value] pair at the end of the list.
         // That should be the most recent.
+        // FIXME:  Faster to pop??
         var [ timestamp, values ] = value_list[value_list.length - 1];
         // Do we want to make a dispatch table for these?
         // if (key) { func['field_name'] }
@@ -405,19 +383,10 @@ function process_data_message(message) {
             // Cruise Mode update
             case 'status:cruise_mode':
                 cruise_mode.status_update(timestamp, values);
-                //if (typeof(global_last_cruise_timestamp) == 'undefined') {
-                //    global_last_cruise_timestamp = 0;
-                //}
-                //if (timestamp < global_last_cruise_timestamp) {
-                //    break;
-                //}
-                //global_last_cruise_timestamp = timestamp;
-                //update_cruise_mode(timestamp, values);
                 break;
 
             // Logger Status update
             case 'status:logger_status':
-                //update_logger_status(timestamp, values);
                 LoggerButton.update(timestamp, values);
                 break;
 
@@ -453,12 +422,17 @@ function process_data_message(message) {
 
 
 var cruise_mode = (function() {
+    // Methods should be:
+    //     CreateButton (construct button, attach events)
+    //     ButtonPresseda(show modal)
+    //     status_update(message from CDS)
+    //     update(mode)
     var mode_button = document.getElementById('mode_button');
     var active_mode = 'off';
     var status_timestamp = 0;
 
     function init() {
-        // attach events to the button
+        // attach events to the button ??  Handle Modal here?
     }
 
     function status_update(timestamp, values) {
@@ -471,7 +445,9 @@ var cruise_mode = (function() {
             update(values.active_mode);
         }
     }
+
     // Called when we get a message saying the mode has changed
+    // This method also called directly when cruise config is updated
     function update(new_mode) {
         active_mode = new_mode;
         if (mode_button) {
@@ -479,6 +455,7 @@ var cruise_mode = (function() {
         }
     }
 
+    // not called anywhere, but...
     function get_mode() {
         return active_mode;
     }

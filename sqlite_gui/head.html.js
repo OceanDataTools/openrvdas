@@ -35,7 +35,7 @@ var global_last_cruise_timestamp = 0;
 var global_last_cruise_mode_timestamp = 0;
 var global_last_logger_status_timestamp = 0;
 
-var odas = new Object;
+//var odas = new Object;
 //odas.loggers = {};
 //odas.active_mode = 'off';
 //odas.last_cruise_timestamp = 0;
