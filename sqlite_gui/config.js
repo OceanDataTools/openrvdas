@@ -35,7 +35,7 @@ var odas = new Object;
 
 // Caveat Emptor:  Errors are thrown
 async function Ajax(method, url, options = {}) {
-    var fetch_options = {};
+    var fetch_options = options || {};
     if (method.toLowerCase() == 'post') {
         jwt = localStorage.getItem('jwt_token');
         var auth_header = {'Authorization': 'Bearer ' + jwt}
@@ -43,6 +43,8 @@ async function Ajax(method, url, options = {}) {
         fetch_options['body'] = options.body;
         fetch_options['headers'] = auth_header;
     }
+    // FIXME:  Add a timeout (AbortController)
+    //         Wrap fetch in try/catch (in case server is down)
     const response = await fetch(url, fetch_options);
     if (!response.ok) {
         e = { error: response.status,

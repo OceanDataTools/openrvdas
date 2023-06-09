@@ -182,6 +182,8 @@ function process_message(message_str) {
     }
 }
 
+// WOW!!  Lots and lots of code here.  Any way to make this
+//        *less* code?
 var CruiseDef = (function() {
     var our_timestamp = 0;
     var el_empty =  document.getElementById('empty_loggers');
@@ -197,16 +199,14 @@ var CruiseDef = (function() {
         var old_set = new Set(Object.keys(loggers));
 
         for (var logger of new_set) {
-            if (old_set.has(logger)) {
-                continue;
+            if (!old_set.has(logger)) {
+                new_loggers.push(logger);
             }
-            new_loggers.push(logger);
         }
         for (logger of old_set) {
-            if (new_set.has(logger)) {
-                continue;
+            if (!new_set.has(logger)) {
+                old_loggers.push(logger);
             }
-            old_loggers.push(logger);
         }
         return {
             new: new_loggers,
@@ -257,20 +257,20 @@ var CruiseDef = (function() {
         }
         our_timestamp = timestamp;
         show_correct_divs(config);
-        // var new_fields = update_cruise_definition(timestamp, config);
         // Ensure all the correct parts are there
-        if (!config.modes) {
-            console.log('Cruise definition has no modes - ignoring.');
-            return {};
+        // The API sorts these, but the code exists in the Django
+        // GUI, supposedly for a reason....
+        var keys = ['modes', 'active_mode', 'loggers'];
+        for (index in keys) {
+            if (keys[index] in config) {
+                continue;
+            }
+            msg = 'Cruise def has no ' + keys[index] + ' - ignoring.'
+            console.warn(msg);
+            return;
         }
-        if (!config.active_mode) {
-            console.log('Cruise definition has no active mode - ignoring.');
-            return {};
-        }
-        if (!config.loggers) {
-            console.log('Cruise definition has no loggers - ignoring.');
-            return {};
-        }
+        console.info('Loaded new configuration');
+        odas.api = config;
         // update cruise name on navbar
         if (config.cruise_id) {
             update_cruise_id(config.cruise_id, config.filename);
@@ -283,35 +283,20 @@ var CruiseDef = (function() {
         // but that would change the order.  I think we care...
         var diff = diff_loggers(config.loggers);
         loggers = config.loggers;
-        console.info('Loaded new configuration');
-        console.info("odas = ", JSON5.stringify(odas, null, "  "));
-        if (odas) {
-            odas.api = config;
-        }
         if (diff.size == 0) {
            // Set the logger button texts
-           // FIXME:  I think we already have a function for this.
            for (var logger_name in loggers) {
-                var button = document.getElementById(logger_name + '_btn');
-                if (button) {
-                    button.innerHTML = loggers[logger_name].active;
-                }
-            }
-            return {};
+               var mode = loggers[logger_name].active;
+               LoggerButton.mode_update(logger_name, mode);
+           }
+           return {};
         } else {
-            update_logger_rows(loggers);
+           update_logger_rows(loggers);
         }
-        var foo = 'bar';
         // If stuff has gotten updated, need to update CDS fields to
         // subscribe to.
-        var new_fields = {};
 
-        // Update logger_manager status, resubscribe to updates asking for greater
-        // of last hour of records or last 100 records.
-        // var button = document.getElementById('logger_manager_mode_button');
-        //button.innerHTML = global_active_mode;
-        var time_window = {'seconds':1*60*60, 'back_records': 100};
-        new_fields['stderr:logger_manager'] = time_window;
+        var new_fields = {};
 
         ////////////////////////////////
         // If the list of loggers has changed, we need to rebuild the
@@ -357,15 +342,13 @@ var CruiseDef = (function() {
             // most recent 100 messages
             var name = 'stderr:logger:' + logger_name
             new_fields[name] = time_window;
-            new_fields['stderr:logger:' + logger_name] = {'seconds':6*60*60, 'back_records': 100};
+            var time_window = {'seconds':6*60*60, 'back_records': 100};
+            new_fields['stderr:logger:' + logger_name] = time_window;
         }
-        //console.log('New fields are: ' + JSON.stringify(new_fields));
-        //////////////////
-        // Finally: Do we have new field subscriptions? Create the
-        // subscription request.  But make sure we keep listening for future
-        // logger_list, mode_list mode updates.
-        // FIXME:  Are new_fields used anywhere besides cruise_definition?
+
         if (Object.keys(new_fields).length) {
+            var time_window = {'seconds':1*60*60, 'back_records': 100};
+            new_fields['stderr:logger_manager'] = time_window;
             new_fields['status:cruise_definition'] = {'seconds':-1};
             new_fields['status:cruise_mode'] = {'seconds':-1};
             new_fields['status:logger_status'] = {'seconds':-1};
@@ -398,9 +381,6 @@ function process_data_message(message) {
     //   }
     // }
   
-    //console.log("process_data_message: ", JSON.stringify(message));
-    var new_fields = {};
-
     for (var field_name in message) {
         // If we receive a status update, update the status time
         if (field_name.startsWith('status:')) {
@@ -415,7 +395,7 @@ function process_data_message(message) {
         switch (field_name) {
             // Cruise definition updatee
             case 'status:cruise_definition':
-                var nf = CruiseDef.status_message(timestamp, values);
+                CruiseDef.status_message(timestamp, values);
                 // var nf = status_cruise_definition(timestamp, values);
                 // for (var key in nf) {
                 //    new_fields[key] = nf[key];
@@ -424,14 +404,15 @@ function process_data_message(message) {
 
             // Cruise Mode update
             case 'status:cruise_mode':
-                if (typeof(global_last_cruise_timestamp) == 'undefined') {
-                    global_last_cruise_timestamp = 0;
-                }
-                if (timestamp < global_last_cruise_timestamp) {
-                    break;
-                }
-                global_last_cruise_timestamp = timestamp;
-                update_cruise_mode(timestamp, values);
+                cruise_mode.status_update(timestamp, values);
+                //if (typeof(global_last_cruise_timestamp) == 'undefined') {
+                //    global_last_cruise_timestamp = 0;
+                //}
+                //if (timestamp < global_last_cruise_timestamp) {
+                //    break;
+                //}
+                //global_last_cruise_timestamp = timestamp;
+                //update_cruise_mode(timestamp, values);
                 break;
 
             // Logger Status update
@@ -446,9 +427,7 @@ function process_data_message(message) {
             // authenticated, this element will not exist.
             // File_update update
             case 'status:file_update':
-                // FIXME:  This needs to go on the menubar.
-                //         Using a badge might be a good idea.
-                //         Dynamically add something to the dropdown?
+                // FIXME:  This needs to be a badge. on CruiseID
                var reload_span = document.getElementById('reload_span');
                if (reload_span) { reload_span.style.display = 'inline' }
                break;
@@ -461,8 +440,8 @@ function process_data_message(message) {
             // If something else, see if it's a logger status update
             default:
                 var LOGGER_STDERR_PREFIX = 'stderr:logger:';
-                if (field_name.indexOf(LOGGER_STDERR_PREFIX) == 0) {
-                    var logger_name = field_name.substr(LOGGER_STDERR_PREFIX.length);
+                if (field_name.startsWith(LOGGER_STDERR_PREFIX)) {
+                    var logger_name = field_name.split(':')[2];
                     // Defined in stderr_log_utils.js
                     var target = logger_name + '_stderr'
                     STDERR.process(target, value_list);
@@ -475,59 +454,41 @@ function process_data_message(message) {
 
 var cruise_mode = (function() {
     var mode_button = document.getElementById('mode_button');
-    var timestamp = 0;
+    var active_mode = 'off';
+    var status_timestamp = 0;
 
     function init() {
         // attach events to the button
     }
 
+    function status_update(timestamp, values) {
+        if (timestamp < status_timestamp) {
+            console.debug("Stale status:cruise_mode message");
+            return;
+        }
+        status_timestamp = timestamp;
+        if (values.active_mode != active_mode) {
+            update(values.active_mode);
+        }
+    }
     // Called when we get a message saying the mode has changed
     function update(new_mode) {
-        global_active_mode = new_mode;
+        active_mode = new_mode;
         if (mode_button) {
             mode_button.innerHTML = new_mode;
         }
     }
 
-    // Called when we receive a status update from the CDS
-    function status_update(timestamp, value) {
-    
+    function get_mode() {
+        return active_mode;
     }
 
     init();
 
     return {
         update: update,
+        get_mode: get_mode,
         status_update: status_update,
     }
 })();
-
-////////////////////////////
-// Process a cruise_mode update
-function update_cruise_mode(timestamp, cruise_mode) {
-//                if (timestamp < global_last_cruise_timestamp) {
-//                    break;
-//                }
-//                global_last_cruise_timestamp = timestamp;
-//                update_cruise_mode(timestamp, values);
-    var new_mode = cruise_mode.active_mode;
-    global_active_mode = new_mode;
-    var mode_button = document.getElementById('mode_button');
-    mode_button.innerHTML = new_mode;
-}
-
-////////////////////////////////////////////////////
-// If we've got a logger status update. Status will be a dict of
-// logger_name:status pairs. 'status' will be an array of:
-//
-//   logger_name: {
-//     config:  config_name_string,
-//     errors:  [list of error strings],
-//     failed:  bool
-//     pid:     number or null if not running
-//     running: ternary value:
-//       true:  we're running and is supposed to be
-//       false: not running and is supposed to be
-//       null:  not running and not supposed to be
-//   }
 

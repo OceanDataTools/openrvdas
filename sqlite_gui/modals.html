@@ -184,9 +184,20 @@ var LoggerButton = (function() {
             } // esac 
             button.className = 'btn btn-sm ' + extra_class;
             button.style.backgroundColor = button_color;
-              
         }
     }
+
+    function mode_update(logger_id, mode) {
+        var el_name = logger_id + '_btn';
+        var el = document.getElementById(el_name);
+        if (el) {
+            el.innerHTML = mode;
+        }
+        if (odas.api.loggers[logger_id].active != mode) {
+            console.warn('API mode differs from passed mode');
+        }
+    } 
+        
 
     // methods for LoggerButton
     return {
@@ -194,11 +205,12 @@ var LoggerButton = (function() {
         show: show,
         create: create,
         update: update,
+        mode_update: mode_update,
     }
 })();
 
     
-// FIXME:  Package these into a function for the logger_manager button
+// FIXME:  Package these into a Class for the logger_manager button
 //         Why? Namespace pollution, style consistency, etc....
     async function show_CruiseMode_modal(CruiseMode_el) {
         function auto_close() {
@@ -278,28 +290,4 @@ var CGI = (function() {
     }
 
 })();
-
-// BS5 modal events:
-//////////////////////////////////////////////////////
-// show.bs.modal: fired as soon as the show() method of the instance is called
-// shown.bs.modal: fired when the modal element is completely visible
-//                 after all CSS transitions are done
-// hide.bs.modal: fired as soon as the hide() method is called
-// hidden.bs.model: fired when the element is completely hidden
-//                  after all CSS transitions are done
-// hidePrevented.bs.modal: fired when the modal is shown, and the user
-//                         clicks on the backdrop or presses ESCo
-
-// BS5 modal methods:
-/////////////////////////////////////////////////////////////////////
-// dispose - destroys an element's modal
-// getInstance = "Static" method which allows you to get the modal instance
-//               associated with a DOM element
-// getOrCreateInstance - above, but on steroids
-// handleUpdate - Manually readjusts the modal's postion if the height
-//                changes while it is open
-// hide - Manually hides a modal.  Returns to the caller BEFORE THE MODAL
-//        HAS ACTUALLY BEEN HIDDENi (css transitions, etc).
-// show - Manually open a modal
-// toggle - toggles (show/hide) modal
 </script>
