@@ -2,8 +2,9 @@
 """
     cgi-bin/LoggerMode.cgi
 
-    Handles GET/POST requests associated with logger buttons on
-    the OpenRVDAS GUI (SQLite version).
+    Handles request from the logger buttons.
+    GET requests provide a list of logger config names for the logger.
+    POST requests change the logger config to the selected config name
 """
 
 import cgi
@@ -23,7 +24,12 @@ cgitb.enable()
 
 ##############################################################################
 def handle_get():
-    """ Called when this is accessed via the GET HTTP method """
+    """ Handles GET requests for the logger buttons
+
+        Queries the API for a list of logger names, and returns HTML form
+        fields with radio buttons to select the desired mode.  Adds a CSRF
+        token.
+    """
 
     # Send HTTP headers
     print("Content-Type: text/html;")
@@ -63,7 +69,11 @@ def handle_get():
 
 ##############################################################################
 def handle_post():
-    """ Called when this is accessed via the POST HTTP method """
+    """ POST request handler for the logger buttons
+
+        Calls a helper function to perform the action, then outputs the
+        data provided.
+    """
 
     (headers, content, status) = process_post_request()
 
@@ -76,19 +86,20 @@ def handle_post():
     print()
 
     if content:
-        if 'error' in content:
-            content['ok'] = 0
-        else:
-            content['ok'] = 1
+        content['ok'] = 1 if 'error' in content else 0
         print(content)
-    else:
-        print('{}')
 
 
 ##############################################################################
 def process_post_request():
+    """ Does the actual processing for the POST requests
 
-    print("LoggerMode.cgi processing post request", file=sys.stderr)
+        Parses the form data to extract the required fields, authenticates
+        the user, checks the validity fot the CSRF token, authenticates the
+        user, calls the API to set the desired logger mode, then logs the
+        mode change to the API messagelog.
+    """
+
     content = {}
     cFS = cgi.FieldStorage()
     form = {}
@@ -108,19 +119,19 @@ def process_post_request():
         content['error'] = "CSRF check failed"
         return ([], content, 403)
 
-    # Do the thing
-    mode = form.get('radios', 'not specified')
-    logger_id = form.get('logger_id', None)
-    if logger_id is None:
-        Q = 'No logger_id found in form fields'
-        content = {'ok': 0, 'error': Q}
-        return ([], content, 418)
-
     # Make sure we're authorized to do this
     username = secret.validate_token()
     if not username:
         content['error'] = 'Login Required'
         return ([], content, 401)
+
+    # Do the thing
+    mode = form.get('radios', 'not specified')
+    logger_id = form.get('logger_id', None)
+    if logger_id is None:
+        Q = 'No logger_id found in form fields'
+        content['error'] = Q
+        return ([], content, 418)
 
     logger_conf = api.get_logger(logger_id)
     if 'configs' not in logger_conf:
@@ -132,8 +143,6 @@ def process_post_request():
         # if mode in modes
         if mode in modes:
             api.set_active_logger_config(logger_id, mode)
-            Q = 'Changing %s mode to %s' % (logger_id, mode)
-            api.message_log('Web GUI', username, 3, Q)
         else:
             Q = 'mode "%s" not in config for logger "%s"' % (mode, logger_id)
             content['error'] = Q
@@ -146,8 +155,9 @@ def process_post_request():
         # NOTE(KPED): Do we want to query the API to be sure
         #             the change took?  Not thrilled that the
         #             API doesn't return success/fail.
-        Q = 'logger mode changed to %s' % mode
-        content['status_text'] = Q
+        Q = 'Changing %s mode to %s' % (logger_id, mode)
+        api.message_log('Web GUI', username, 3, Q)
+        content['message'] = Q
 
     return ([], content, 200)
 

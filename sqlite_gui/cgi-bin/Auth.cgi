@@ -2,18 +2,16 @@
 """
     cgi-bin/Auth.cgi
 
-    Handles logging in a secure (enough) manner.
-    Authorized username/password paris are stored
-    in a Shelf (managed by the Usertool.py utility).
-    The provided password is hashed and oompared against
-    the hash stored in the shelf.  If they match, the
-    password is accepted and a JWT is constructed
-    valid for 90 days.   The client returns that
-    JWT in the Authorization header of subsequent requests.
-    Since this authentication scheme is stateless, we
-    don't need to store the token on our side.  A client
-    can log out by the simple expedient of forgetting
-    the JWT.
+    Handles login a secure (enough) manner.
+
+    The provided password is hashed and oompared against the hash stored
+    in a Shelf for the provided username.  If the hashes match, the password
+    is accepted and a JWT is constructed valid for 90 days.   The client
+    returns that JWT in the Authorization header of subsequent requests.
+
+    Since this authentication scheme is stateless, we don't need to store
+    the token on the server side.  A client can log out by the simple
+    expedient of forgetting the JWT.
 """
 
 import cgi
@@ -30,6 +28,7 @@ import secret
 ##############################################################################
 def handle_post():
     """ Called when this is accessed via the POST method.
+
         The message body is constructed by a helper routine
         that returns a dictionary, and that dictionary is
         returned to the calling page as JSON
@@ -49,17 +48,20 @@ def handle_post():
     print()
 
     if content:
-        print(json.dumps(content, indent=2))
+        content['ok'] = 0 if 'error' in content else 1
+        print(content)
         if not content.get('ok', 0):
             print(content, file=sys.stderr)
+    else:
+        print({})
 
 
 ##############################################################################
 def authenticate(form):
     # FIXME:  This needs to return a reason on failure
     #         User not found, passwords don't match
-    """ extract username/password from form data,
-        authenticate the user, return true or false
+    """ Extract username/password from form data, authenticate the user,
+        return true or false
     """
 
     DB_FILE = "./passwd/passwd-ish"
@@ -107,10 +109,10 @@ def build_jwt(form):
 
 ##############################################################################
 def process_post_request():
-    """ for requeired fields (user/pass),
-        authenticates the credentials, and if successful
-        provides a token to be returned to the user.
-        Returns a dictonary
+    """ Look in formdata for requeired fields (username/password),
+        authenticates the credentials, and if successful provides a
+        token to be returned to the user.  Ouput is provided in the
+        form of a dictionary.
     """
 
     content = {}
@@ -120,21 +122,12 @@ def process_post_request():
     for key in cFS.keys():
         form[key] = cFS[key].value
 
-    # Action should be one of 'login', 'logout'
-    action = form.get('login_action', 'not specified')
-    content['login_action'] = action
-    # Authenitcate username/password against local list
-    # See "Usertool.py"
-    authenticated = authenticate(form)
-    if authenticated:
+    username = authenticate(form)
+    if username:
         content['jwt'] = build_jwt(form)
+        content['message'] = "User %s authenticate" % username
     else:
         content['error'] = "Not authenticated"
-
-    if 'error' in content:
-        content['ok'] = 0
-    else:
-        content['ok'] = 1
 
     return ([], content, 200)
 

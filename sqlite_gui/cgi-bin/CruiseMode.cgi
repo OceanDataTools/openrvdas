@@ -2,9 +2,12 @@
 """
     cgi-bin/CruiseMode.cgi
 
-    Script that handles GET/PUT for changing logger manager mode
-    GET request return HTML with form fields enumerating the
-    cruise modes known to the API.  Hidden fields
+    Script that handles GET/PUT for changing logger manager mode GET
+    request return HTML with form fields enumerating the cruise modes
+    known to the API.  Hidden fields include a JWT for CSRF protection.
+
+    POST requests change the cruise mode via the API and log the change
+    to the API messagelog.
 """
 
 import cgi
@@ -26,7 +29,11 @@ cgitb.enable()
 
 ##############################################################################
 def handle_get():
-    """ Called when this is accessed via the GET HTTP method """
+    """ GET handler for CruiseMode
+
+        Queries the API for a list of modes and returns HTML
+        form radio buttons to select one.
+    """
 
     # Send HTTP headers
     print("Content-Type: text/html;")
@@ -53,7 +60,11 @@ def handle_get():
 
 ##############################################################################
 def handle_post():
-    """ Called when this is accessed via the POST HTTP method """
+    """ POST handler for CruiseMode
+
+        Calls a helper function to do the actual processing, then outputs
+        the returned information.
+    """
 
     (headers, content, status) = process_post_request()
 
@@ -66,6 +77,7 @@ def handle_post():
     print()
 
     if content:
+        content['ok'] = 1 if 'error' in content else 0
         print(content)
         if content.get('error', None):
             print(content, file=sys.stderr)
@@ -75,9 +87,13 @@ def handle_post():
 
 ##############################################################################
 def process_post_request():
-    """ Lower level handler for the POST request """
+    """ Processes the post request and returns data for output.
 
-    headers = []
+        Parses form data, checks authentication, checks CSRF,
+        call the API to set the desired mode, and logs the
+        change to the API messagelog.
+    """
+
     content = {}
 
     # Handle form fields
@@ -89,19 +105,18 @@ def process_post_request():
     mode = form.get('radios', 'not specified')
     username = secret.validate_token()
     if not username:
-        content['ok'] = 0
         content['error'] = 'Login Required'
-        return (headers, content, 401)
+        return ([], content, 401)
 
-    # CSRF Protection (first pass)
+    # CSRF Protection
     sl_jwt = form.get('CSRF', None)
     if not sl_jwt:
-        print("No sl_jwt found", file=sys.stderr)
+        content['error'] = 'CSRF token not found'
+        return ([], content, 403)
 
-    if secret.validate_csrf(sl_jwt):
-        print("CSRF token validated", file=sys.stderr)
-    else:
-        print("CSRF NOT VALID", file=sys.stderr)
+    if not secret.validate_csrf(sl_jwt):
+        content['error'] = 'CSRF not valid'
+        return ([], content, 403)
 
     # Do the thing
     try:
@@ -110,15 +125,14 @@ def process_post_request():
         if mode in modes:
             api.set_active_mode(mode)
         else:
-            content['ok'] = 0
             content['error'] = 'Mode %s not allowed' % mode
-            return (headers, content, 406)
+            return ([], content, 406)
     except Exception as err:
         Q = "Exception in api.set_active_modes(%s): %s" % (mode, err)
-        content['ok'] = 0
         content['error'] = Q
-        return (headers, content, 406)
+        return ([], content, 406)
 
+    # NOTE)Kped): Query API for current mode to confirm ??
     # Add mode change to the message log
     Q = 'Changing cruise mode to %s' % mode
     try:
@@ -126,7 +140,9 @@ def process_post_request():
     except Exception:
         pass
 
-    return (headers, content, 200)
+    content['message'] = Q
+
+    return ([], content, 200)
 
 
 ##############################################################################
