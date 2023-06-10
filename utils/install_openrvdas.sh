@@ -38,6 +38,11 @@
 
 PREFERENCES_FILE='.install_openrvdas_preferences'
 
+# Define this here, even though it's just for MacOS, so that it's defined
+# when it's referenced down in install_packages, and doesn't have to
+# be defined twice.
+HOMEBREW_BASE='/usr/local/homebrew'
+
 ###########################################################################
 ###########################################################################
 function exit_gracefully {
@@ -127,7 +132,7 @@ function get_os_type {
             fi
 
         # CentOS/RHEL
-        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
@@ -149,7 +154,6 @@ function get_os_type {
     fi
     echo "#####################################################################"
     echo "Detected OS = $OS_TYPE, Version = $OS_VERSION"
-
 }
 
 ###########################################################################
@@ -182,6 +186,8 @@ function set_default_variables {
     DEFAULT_INSTALL_SIMULATE_NBP=no
     DEFAULT_RUN_SIMULATE_NBP=no
 
+    DEFAULT_INSTALL_GUI=yes
+
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
@@ -201,7 +207,7 @@ function set_default_variables {
 # Save defaults in a preferences file for the next time we run.
 function save_default_variables {
     cat > $PREFERENCES_FILE <<EOF
-# Defaults written by/to be read by build_openrvdas_centos7.sh
+# Defaults written by/to be read by install_openrvdas.sh
 
 DEFAULT_HOSTNAME=$HOSTNAME
 DEFAULT_INSTALL_ROOT=$INSTALL_ROOT
@@ -224,6 +230,8 @@ DEFAULT_RVDAS_USER=$RVDAS_USER
 
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
+DEFAULT_INSTALL_GUI=$INSTALL_GUI
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
@@ -252,20 +260,21 @@ function set_hostname {
 
     # If we're on CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
-        hostnamectl set-hostname $HOSTNAME
-        echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network
+        sudo hostnamectl set-hostname $HOSTNAME
+        sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network  || echo "Unable to update /etc/sysconfig/network"
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-        hostnamectl set-hostname $HOSTNAME
-        echo $HOSTNAME > /etc/hostname
+        sudo hostnamectl set-hostname $HOSTNAME
+        sudo echo $HOSTNAME > /etc/hostname
     fi
 
     ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
     if grep -q "$ETC_HOSTS_LINE" /etc/hosts ; then
         echo Hostname already in /etc/hosts
     else
-        echo "$ETC_HOSTS_LINE" >> /etc/hosts
+        echo Skipping adding to /etc/hosts
+        sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts || echo "Unable to update /etc/hosts"
     fi
 }
 
@@ -278,30 +287,36 @@ function create_user {
     echo Checking if user $RVDAS_USER exists yet
     if id -u $RVDAS_USER > /dev/null; then
         echo User "$RVDAS_USER" exists
-        return
+    else
+        # MacOS
+        if [ $OS_TYPE == 'MacOS' ]; then
+          echo No such pre-existing user: $RVDAS.
+          echo On MacOS, must install for pre-existing user. Exiting.
+          exit_gracefully
+
+        # CentOS/RHEL
+        elif [ $OS_TYPE == 'CentOS' ]; then
+            echo Creating $RVDAS_USER
+            sudo adduser $RVDAS_USER
+            sudo passwd $RVDAS_USER
+
+        # Ubuntu/Debian
+        elif [ $OS_TYPE == 'Ubuntu' ]; then
+              echo Creating $RVDAS_USER
+              sudo adduser --gecos "" $RVDAS_USER
+        fi
     fi
 
-    # MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-      echo No such pre-existing user: $RVDAS.
-      echo On MacOS, must install for pre-existing user. Exiting.
-      exit_gracefully
-
-    # CentOS/RHEL
-    elif [ $OS_TYPE == 'CentOS' ]; then
-        echo Creating $RVDAS_USER
-        adduser $RVDAS_USER
-        passwd $RVDAS_USER
-        usermod -a -G tty $RVDAS_USER
-        usermod -a -G wheel $RVDAS_USER
+    # Set up user permissions, whether or not pre-existing.
+    # For MacOS we don't change anything
+    if [ $OS_TYPE == 'CentOS' ]; then
+        sudo usermod -a -G tty $RVDAS_USER
+        sudo usermod -a -G wheel $RVDAS_USER
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-          echo Creating $RVDAS_USER
-          adduser --gecos "" $RVDAS_USER
-          #passwd $RVDAS_USER
-          usermod -a -G tty $RVDAS_USER
-          usermod -a -G sudo $RVDAS_USER
+          sudo usermod -a -G tty $RVDAS_USER
+          sudo usermod -a -G sudo $RVDAS_USER
     fi
 }
 
@@ -313,8 +328,6 @@ function install_packages {
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         # Install homebrew:
-        HOMEBREW_BASE='/usr/local/homebrew'
-
         echo Checking for homebrew
         if [ ! -f ${HOMEBREW_BASE}/bin/brew ];then
             echo "Installing homebrew"
@@ -330,12 +343,22 @@ function install_packages {
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
 
         brew update --force --quiet
+        brew upgrade
         chmod -R go-w "$(brew --prefix)/share/zsh"
 
         # Install system packages we need
-        echo Installing python and supporting packages
+        #PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
+        #if [ -n "$PYTHON_PATH" ];then
+        #    echo "Using python at $PYTHON_PATH"
+        #else
+        echo Installing python from Homebrew
         [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
-        [ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
+        brew link python3
+        #fi
+        #brew install python #uwsgi
+
+        echo Installing supporting packages from Homebrew
+        #[ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
         [ -e ${HOMEBREW_BASE}/bin/git ]    || brew install git
         [ -e ${HOMEBREW_BASE}/bin/nginx ]  || brew install nginx
         #[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
@@ -346,14 +369,15 @@ function install_packages {
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
         if [ $OS_VERSION == '7' ]; then
-            yum install -y deltarpm
+            sudo yum install -y deltarpm
         fi
-        yum install -y epel-release
-        yum -y update
+        sudo yum install -y epel-release
+        sudo yum -y update
 
         echo Installing required packages
-        yum install -y wget git nginx gcc supervisor \
-            zlib-devel openssl-devel readline-devel libffi-devel
+        sudo yum install -y wget git nginx gcc supervisor \
+            zlib-devel openssl-devel readline-devel libffi-devel \
+            sqlite
 
             #sqlite-devel \
             #python3 python3-devel python3-pip
@@ -365,19 +389,26 @@ function install_packages {
         export LD_LIBRARY_PATH=/usr/local/lib
         export LD_RUN_PATH=/usr/local/lib
 
-        # Fetch and build SQLite3
+        # Check if correct SQLite3 is installed
         SQLITE_VERSION=3320300
-        if [ `/usr/local/bin/sqlite3 --version |  cut -f1 -d' '` == '3.32.3' ]; then
-            echo Already have appropriate version of sqlite3
-        else
-            cd /var/tmp
-            SQLITE_BASE=sqlite-autoconf-${SQLITE_VERSION}
-            SQLITE_TGZ=${SQLITE_BASE}.tar.gz
-            [ -e $SQLITE_TGZ ] || wget https://www.sqlite.org/2020/${SQLITE_TGZ}
-            tar xzf ${SQLITE_TGZ}
-            cd ${SQLITE_BASE}
-            sh ./configure
-            make && make install
+        #required_version="3.32.3"
+
+        if ! command -v sqlite3 &> /dev/null
+        then
+            echo "SQLite3 is not installed. Installing ..."
+            sudo yum install -y sqlite sqlite-devel
+#        else
+#            # Get the current version of SQLite3
+#            current_version=$(sqlite3 --version | awk '{print $1}')
+#
+#            # Compare the current version with the required version
+#            if [[ "$current_version" != "$required_version" ]]
+#            then
+#                echo "SQLite3 version $required_version is required, but version $current_version is installed. Installing version $required_version..."
+#                sudo yum install -y sqlite-$required_version sqlite-devel
+#            else
+#                echo "SQLite3 version $required_version is already installed."
+#            fi
         fi
 
         if [ $OS_VERSION == '7' ]; then
@@ -393,13 +424,13 @@ function install_packages {
                 tar xvf ${PYTHON_TGZ}
                 cd ${PYTHON_BASE}
                 sh ./configure # --enable-optimizations
-                make altinstall
+                sudo make altinstall
 
-                ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
-                ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+                sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
+                sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
             fi
         elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
-            yum install -y python3 python3-devel
+            sudo yum install -y python3 python3-devel
         else
             echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
             exit_gracefully
@@ -407,8 +438,8 @@ function install_packages {
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-        apt-get update
-        apt install -y git nginx libreadline-dev \
+        sudo apt-get update
+        sudo apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
             openssh-server supervisor libssl-dev
     fi
@@ -471,7 +502,6 @@ function setup_python_packages {
     # Expect the following shell variables to be appropriately set:
     # INSTALL_ROOT - path where openrvdas/ is
 
-
     # Set up virtual environment
     VENV_PATH=$INSTALL_ROOT/openrvdas/venv
 
@@ -484,30 +514,33 @@ function setup_python_packages {
     #if [ -d $VENV_PATH ];then
     #    mv $VENV_PATH ${VENV_PATH}.bak.$$
     #fi
-    PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
-    if [ -n "$PYTHON_PATH" ];then
-        echo "Using python at $PYTHON_PATH"
+    if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
+        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+        PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
     elif [ -e '/usr/local/bin/python3' ];then
         PYTHON_PATH=/usr/local/bin/python3
     elif [ -e '/usr/bin/python3' ];then
         PYTHON_PATH=/usr/bin/python3
     else
         echo 'No python3 found?!?'
-        #exit_gracefully
+        exit_gracefully
     fi
-    ${PYTHON_PATH} -m venv $VENV_PATH
 
+    echo "Creating virtual environment using $PYTHON_PATH"
+    cd $INSTALL_ROOT/openrvdas
+    ${PYTHON_PATH} -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
-    pip install \
+    # For some reason, locked down RHEL8 boxes require sudo here, and require
+    # us to execute pip via python. Lord love a duck...
+    venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       --upgrade pip
-    pip install \
+    venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-      wheel  # To help with the rest of the installations
-
-    pip install -r utils/requirements.txt
+      wheel
+    venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
 }
 
 ###########################################################################
@@ -659,7 +692,7 @@ function setup_django {
     # RVDAS_DATABASE_PASSWORD - string to use for Django password
 
     cd ${INSTALL_ROOT}/openrvdas
-    source venv/bin/activate
+    source ${INSTALL_ROOT}/openrvdas/venv/bin/activate
     cp django_gui/settings.py.dist django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PROTOCOL = 'ws'/WEBSOCKET_PROTOCOL = '${WEBSOCKET_PROTOCOL}'/g" django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PORT = 80/WEBSOCKET_PORT = ${SERVER_PORT}/g" django_gui/settings.py
@@ -752,6 +785,14 @@ function setup_supervisor {
     # INSTALL_ROOT - path where openrvdas/ is found
     # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
 
+    # If we're not installing the web GUI, comment out those bits of
+    # the supervisor config that run them.
+    if [[ "$INSTALL_GUI" == "yes" ]];then
+        GUI_COMMENT=''
+    else
+        GUI_COMMENT=';'
+    fi
+
     VENV_BIN=${INSTALL_ROOT}/openrvdas/venv/bin
     if [ $OPENRVDAS_AUTOSTART = 'yes' ]; then
         AUTOSTART=true
@@ -830,30 +871,30 @@ EOF
     cat >> /tmp/openrvdas.ini <<EOF
 
 ; The scripts we're going to run
-[program:nginx]
-command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
-directory=${INSTALL_ROOT}/openrvdas
-autostart=$AUTOSTART
-autorestart=true
-startretries=3
-killasgroup=true
-stderr_logfile=/var/log/openrvdas/nginx.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
-;user=$RVDAS_USER
+${GUI_COMMENT}[program:nginx]
+${GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
+${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${GUI_COMMENT}autostart=$AUTOSTART
+${GUI_COMMENT}autorestart=true
+${GUI_COMMENT}startretries=3
+${GUI_COMMENT}killasgroup=true
+${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
+${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${GUI_COMMENT}stderr_logfile_maxbackups=100
+${GUI_COMMENT};user=$RVDAS_USER
 
-[program:uwsgi]
-command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
-stopsignal=INT
-directory=${INSTALL_ROOT}/openrvdas
-autostart=$AUTOSTART
-autorestart=true
-startretries=3
-killasgroup=true
-stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
-user=$RVDAS_USER
+${GUI_COMMENT}[program:uwsgi]
+${GUI_COMMENT}command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+${GUI_COMMENT}stopsignal=INT
+${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${GUI_COMMENT}autostart=$AUTOSTART
+${GUI_COMMENT}autorestart=true
+${GUI_COMMENT}startretries=3
+${GUI_COMMENT}killasgroup=true
+${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${GUI_COMMENT}stderr_logfile_maxbackups=100
+${GUI_COMMENT}user=$RVDAS_USER
 
 [program:cached_data_server]
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
@@ -892,8 +933,8 @@ ${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
 ${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=100
 ${SIMULATE_NBP_COMMENT}user=$RVDAS_USER
 
-[group:web]
-programs=nginx,uwsgi
+${GUI_COMMENT}[group:web]
+${GUI_COMMENT}programs=nginx,uwsgi
 
 [group:openrvdas]
 programs=logger_manager,cached_data_server
@@ -1022,14 +1063,6 @@ set_default_variables
 
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
-
-# If we're on Linux, should run as root
-if [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-    if [ "$(whoami)" != "root" ]; then
-        echo "ERROR: installation script must be run as root."
-        exit_gracefully
-    fi
-fi
 
 # Set creation mask so that everything we install is, by default,
 # world readable/executable.
@@ -1208,6 +1241,19 @@ else
   RUN_SIMULATE_NBP=no
 fi
 
+
+#########################################################################
+# Install web console programs - nginx and uwsgi?
+echo
+echo "#####################################################################"
+echo "The full OpenRVDAS installation includes a web-based console for loading"
+echo "and controlling loggers, but a slimmed-down version of the code may be"
+echo "installed and run without it if desired for portability or computational"
+echo "reasons."
+echo
+yes_no "Install OpenRVDAS web console GUI? " $DEFAULT_INSTALL_GUI
+INSTALL_GUI=$YES_NO_RESULT
+
 #########################################################################
 # Enable Supervisor web-interface?
 echo
@@ -1282,9 +1328,11 @@ setup_python_packages
 #########################################################################
 #########################################################################
 # Set up nginx
-echo "#####################################################################"
-echo "Setting up NGINX"
-setup_nginx
+if [[ "$INSTALL_GUI" == "yes" ]];then
+    echo "#####################################################################"
+    echo "Setting up NGINX"
+    setup_nginx
+fi
 
 #########################################################################
 #########################################################################
@@ -1299,13 +1347,15 @@ fi
 #########################################################################
 #########################################################################
 # Set up uwsgi
-echo
-echo "#####################################################################"
-echo "Setting up UWSGI"
-# Expect the following shell variables to be appropriately set:
-# HOSTNAME - name of host
-# INSTALL_ROOT - path where openrvdas/ is
-setup_uwsgi
+if [[ "$INSTALL_GUI" == "yes" ]];then
+    echo
+    echo "#####################################################################"
+    echo "Setting up UWSGI"
+    # Expect the following shell variables to be appropriately set:
+    # HOSTNAME - name of host
+    # INSTALL_ROOT - path where openrvdas/ is
+    setup_uwsgi
+fi
 
 #########################################################################
 #########################################################################
@@ -1379,20 +1429,22 @@ echo "Restarting services: supervisor"
 
         # CentOS/RHEL
         if [ $OS_TYPE == 'CentOS' ]; then
-            systemctl enable supervisord
-            systemctl restart supervisord
+            sudo systemctl enable supervisord
+            sudo systemctl restart supervisord
         else # Ubuntu/Debian
-            systemctl enable supervisor
-            systemctl restart supervisor
+            sudo systemctl enable supervisor
+            sudo systemctl restart supervisor
         fi
 
-        # Previous installations used nginx and uwsgi as a service. We need to
-        # disable them if they're running.
-        echo Disabling legacy services
-        systemctl stop nginx 2> /dev/null || echo "nginx not running"
-        systemctl disable nginx 2> /dev/null || echo "nginx disabled"
-        systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
-        systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
+        if [[ "$INSTALL_GUI" == "yes" ]];then
+            # Previous installations used nginx and uwsgi as a service. We need to
+            # disable them if they're running.
+            echo Disabling legacy services
+            sudo systemctl stop nginx 2> /dev/null || echo "nginx not running"
+            sudo systemctl disable nginx 2> /dev/null || echo "nginx disabled"
+            sudo systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
+            sudo systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
+        fi
     fi
 
 # Deactivate the virtual environment - we'll be calling all relevant

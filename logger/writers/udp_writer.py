@@ -189,6 +189,7 @@ class UDPWriter(NetworkWriter):
                 # If we failed, complain, unless we've already complained too much
                 if self.num_warnings < self.warning_limit:
                     logging.error('UDPWriter error: %s: %s', self.target_str, str(e))
+                    logging.error('UDPWriter record: %s', record)
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error('UDPWriter.write() - muting errors')

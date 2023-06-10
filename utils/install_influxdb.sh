@@ -110,7 +110,7 @@ function get_os_type {
     elif [[ `uname -s` == 'Linux' ]];then
         if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Debian" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Raspbian" /etc/os-release` ]];then
             OS_TYPE=Ubuntu
-        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Server\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux Workstation\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
@@ -307,7 +307,11 @@ function install_influxdb {
         HOMEBREW_BASE='/usr/local/homebrew'
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
-        brew install influxdb
+        brew upgrade
+        brew install --overwrite influxdb influxdb-cli
+        ln -sf ${HOMEBREW_BASE}/bin/influxd $INFLUX_PATH
+        ln -sf ${HOMEBREW_BASE}/bin/influx $INFLUX_PATH
+
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
         INFLUX_PATH=/usr/bin
@@ -395,7 +399,8 @@ function install_grafana {
         HOMEBREW_BASE='/usr/local/homebrew'
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
-        brew install grafana
+        brew upgrade
+        brew install --overwrite grafana
 
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
@@ -472,7 +477,8 @@ function install_telegraf {
         HOMEBREW_BASE='/usr/local/homebrew'
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
-        brew install telegraf
+        brew upgrade
+        brew install --overwrite telegraf
 
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
@@ -692,7 +698,7 @@ EOF
     sudo cp -f $TMP_SUPERVISOR_FILE $SUPERVISOR_FILE
 
     echo Done setting up supervisor files. Reloading...
-    supervisorctl reload
+    sudo supervisorctl reload
 }
 
 ###########################################################################
@@ -843,7 +849,7 @@ save_default_variables
 
 # Don't want existing installations to be running while we do this
 echo Stopping supervisor prior to installation.
-supervisorctl stop all
+sudo supervisorctl stop all || echo "Supervisor not running."
 
 # Let's get to installing things!
 if [ $INSTALL_INFLUXDB == 'yes' ];then

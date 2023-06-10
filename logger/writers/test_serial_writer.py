@@ -74,8 +74,9 @@ class SimSerialPort:
             if os.path.exists(socat_path) and os.path.isfile(socat_path):
                 self.socat_path = socat_path
         if not self.socat_path:
-            raise NameError('Executable "socat" not found on path. Please refer '
-                            'to installation guide to install socat.')
+            logging.error('Executable "socat" not found on path. Please refer '
+                          'to installation guide to install socat.')
+            self.quit_flag = True
 
     ############################
     def _run_socat(self):
@@ -147,6 +148,8 @@ class TestSerialWriter(unittest.TestCase):
         temp_port_in = temp_port + '_in'
 
         sim_serial = SimSerialPort(temp_port)
+        if sim_serial.quit_flag:
+            return
         sim_serial.run()
 
         # Give it a moment to get started
