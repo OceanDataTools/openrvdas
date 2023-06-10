@@ -114,6 +114,9 @@ async function dir_clicked(evt) {
 
 // Loads the clicked file into the editor window so the
 // yaml lint can look at it.
+// FIXME:  The yaml linter wth CodeMirror... sub-optimal
+//         See: https://codepen.io/facka/pen/ExPrMRd
+//         Same linter, but code looks a lot lighter.
 function file_clicked(evt) {
     target = evt.target;
     name = target.innerText;
