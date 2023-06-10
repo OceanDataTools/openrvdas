@@ -1,28 +1,21 @@
 //////////////////////////////////////////////////////////////////////////////
-// Javascript for the 'head.html' stub included in all (most) of
-// the webpages presented to the public.
 //
-// includes fixups for the navbar, login/logout forms, and gets us 
-// our (former) framework variables
+// sqlite_gui/websocket.js
 //
-// Typical invocation will look like:
+// The class for the websocket connection to the cached data server
 //
-//    <script type="text/javascript">
-//      // Need to define for following JS scripts. For now, count on the
-//      // relevant variables being set by Django.
-//      var WEBSOCKET_SERVER = "{{ websocket_server }}";
-//      {% if user.is_authenticated %}
-//        var USER_AUTHENTICATED = true;
-//      {% else %}
-//        var USER_AUTHENTICATED = false;
-//      {% endif %}
-//    </script>
+// The only method of interest to most people will be 
+// WS.write(argument)
+//     The argument will be converted to JSON and sent to the websocket.
 //
-//    <script src="/static/django_gui/index.html.js"></script>
-//    <script src="/static/django_gui/websocket.js"></script>
+// The websocket name can either be specified in the config file
+// (openrvdas.json), or if not specified (or specified as ""),
+// this routine will take a "best guess".
 //
-// Note that this also counts on variables USER_AUTHENTICATED and
-// WEBSOCKET_SERVER being set in the calling page.
+// This is usually placed last in the list of included scripts.
+// If you want to try a different ordering, go for it, let me
+// know how it works out.
+//
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -60,21 +53,24 @@ var WS = (function() {
 
     function connect_websocket() {
         try {
-            var url = odas.ws;
-            // Guess the websocket URL if not provided.
-            if (!odas || !odas.ws || odas.ws == "") {
-                var p = document.location.protocol;
+            // config object (odas) may not exist.  Fallback.
+            o = odas || {};
+            url = odas.ws || "";
+            if (url == "") {
                 var proto = 'ws://';
-                var port = 80;
+                var p = document.location.protocol;
                 if (p == 'https:') {
                     proto = 'wss://';
-                    port = 443;
                 }
-                url = proto + document.location.host + ':' + port + '/cds-ws';
+                port = "";
+                p = document.location.port;
+                if (p != "") {
+                    port = ":" + p;
+                }
+                url = proto + document.location.host + port + '/cds-ws';
             } 
             sock = new WebSocket(url);
         } catch {}
-        odas.websocket = sock;
 
         sock.onopen = function() {
             clearTimeout(rwc);
@@ -99,7 +95,6 @@ var WS = (function() {
             //FIXME:  Should always check received_message.data.status
             var data = received_message.data;
             parser_queue.forEach(function(func){ func(data); } );
-            //process_message(received_message.data);
             write({'type':'ready'})
         }
 
