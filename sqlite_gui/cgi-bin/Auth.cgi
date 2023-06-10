@@ -34,12 +34,16 @@ def handle_post():
         returned to the calling page as JSON
     """
 
+    header = []
+    content = {}
+    status = 999
     try:
         (headers, content, status) = process_post_request()
     except Exception as err:
         content['ok'] = 0
         content['error'] = str(err)
 
+    headers.append('Status: %s' % status)
     if content:
         headers.append("Content-Type: text/json")
 
@@ -93,6 +97,7 @@ def authenticate(form):
 ##############################################################################
 def build_jwt(form):
     """ Build a JWT for an authenticated user """
+    # NOTE(Kped): Should this be moved to secret.py ??
 
     name = form.get('username', 'nobody')
     # exp should be 90 days (I guess)
@@ -102,7 +107,7 @@ def build_jwt(form):
         "iat": datetime.now()
     }
     our_jwt = jwt.encode(payload_data,
-                         secret.SECRET,
+                         secret._SECRET,
                          algorithm="HS256")
     return our_jwt
 
