@@ -22,32 +22,6 @@ cgitb.enable()
 
 
 ##############################################################################
-# def validate_token():
-#    """ We should have received a JWT in the Authorization header.
-#        Validate it.
-#    """
-#
-#    our_secret = secret.SECRET
-#    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
-#    if not auth_header:
-#        return None
-#
-#    auth_split = auth_header.split(' ');
-#    if len(auth_split) > 1:
-#        token = auth_split[1]
-#    else:
-#        return None
-#    payload = {}
-#    try:
-#        payload = jwt.decode(token, our_secret, algorithms="HS256" )
-#    except jwt.PyJWTError as err:
-#        print("PyJWTError: ", err, file=sys.stderr)
-#        return None
-#
-#    return payload.get('name', None)
-
-
-##############################################################################
 def handle_get():
     """ Called when this is accessed via the GET HTTP method """
 
@@ -102,9 +76,11 @@ def handle_post():
     print()
 
     if content:
+        if 'error' in content:
+            content['ok'] = 0
+        else:
+            content['ok'] = 1
         print(content)
-        if content.get('error', None):
-            print(content, file=sys.stderr)
     else:
         print('{}')
 
@@ -113,7 +89,6 @@ def handle_post():
 def process_post_request():
 
     print("LoggerMode.cgi processing post request", file=sys.stderr)
-    headers = []
     content = {}
     cFS = cgi.FieldStorage()
     form = {}
@@ -125,12 +100,13 @@ def process_post_request():
     sl_jwt = form.get('CSRF', None)
     if not sl_jwt:
         print("No sl_jwt found", file=sys.stderr)
-        for key in form:
-            print('%s = %s' % (key, form.get(key, '<No Value>')), file=sys.stderr)
-    if secret.validate_csrf(sl_jwt):
-        print("CSRF token validated", file=sys.stderr)
-    else:
+        content['error'] = "CSRF check failed"
+        return ([], content, 403)
+
+    if not secret.validate_csrf(sl_jwt):
         print("CSRF NOT VALID", file=sys.stderr)
+        content['error'] = "CSRF check failed"
+        return ([], content, 403)
 
     # Do the thing
     mode = form.get('radios', 'not specified')
@@ -138,20 +114,19 @@ def process_post_request():
     if logger_id is None:
         Q = 'No logger_id found in form fields'
         content = {'ok': 0, 'error': Q}
-        return (headers, content, 418)
+        return ([], content, 418)
 
     # Make sure we're authorized to do this
     username = secret.validate_token()
     if not username:
-        content['ok'] = 0
         content['error'] = 'Login Required'
-        return (headers, content, 401)
+        return ([], content, 401)
 
     logger_conf = api.get_logger(logger_id)
     if 'configs' not in logger_conf:
         Q = 'configs not in logger_conf'
-        content = {'ok': 'false', 'error': Q}
-        return (headers, content, 412)
+        content['error'] = Q
+        return ([], content, 412)
     modes = logger_conf.get('configs', None)
     try:
         # if mode in modes
@@ -161,20 +136,20 @@ def process_post_request():
             api.message_log('Web GUI', username, 3, Q)
         else:
             Q = 'mode "%s" not in config for logger "%s"' % (mode, logger_id)
-            content = {'ok': 'false', 'error': Q}
-            return (headers, content, 405)
+            content['error'] = Q
+            return ([], content, 405)
     except Exception as err:
         Q = "api.set_active_logger_config(%s): %s" % (mode, err)
-        content = {'ok': 'false', 'error': Q}
-        return (headers, content, 405)
+        content['error'] = Q
+        return ([], content, 405)
     else:
         # NOTE(KPED): Do we want to query the API to be sure
         #             the change took?  Not thrilled that the
         #             API doesn't return success/fail.
-        content = {'ok': 1,
-                   'status_text': 'logger mode changed to %s' % mode}
+        Q = 'logger mode changed to %s' % mode
+        content['status_text'] = Q
 
-    return (headers, content, 200)
+    return ([], content, 200)
 
 
 ##############################################################################

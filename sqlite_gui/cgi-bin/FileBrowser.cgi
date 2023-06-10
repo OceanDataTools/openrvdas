@@ -79,7 +79,7 @@ def get_load(form):
     """ Called when the Load button is pressed in LoadCOnfig.html """
 
     content = {}
-    
+
     html = '<div>Confirm Load?</div>'
     html = html + '<span>'
     fname = form.get('fname', 'Something is wrong')
@@ -123,10 +123,10 @@ def process_get():
             (headers, content, status) = get_load(form)
             return (headers, content, status)
     except Exception as err:
-            print("Error trying to get_load: %s" % err, file=sys.stderr)
-            content['ok'] = 0
-            content['error'] = err
-            return ([], content, 451)
+        print("Error trying to get_load: %s" % err, file=sys.stderr)
+        content['ok'] = 0
+        content['error'] = err
+        return ([], content, 451)
     dirname = form.get('dir', '/opt/openrvdas/local')
     # FIXME:  Validate dirname or 400 (maybe 406)
     if not os.path.isdir(dirname):
@@ -191,7 +191,6 @@ def handle_post():
 def process_post_request():
     """ Lower level handler for the POST request """
 
-    headers = []
     content = {}
 
     # Handle form fields

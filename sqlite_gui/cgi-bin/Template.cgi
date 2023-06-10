@@ -34,6 +34,7 @@ def read_query_string():
 
 # Content-Type  =  multipart/form-data; boundary=----WebKitFormBoundarytorpL8tdJ19HcPXj
 
+
 ##############################################################################
 def read_form():
     """ Reads formdata and/or QUERY_STRING and returns form data
@@ -75,7 +76,7 @@ def read_form():
                     key = key[1:-1]    # de-quote the name
                 value = lines[1].strip()
                 form[key] = value
-        
+
     print("Printing out form{}", file=sys.stderr)
     for key in form:
         print(key, ' = ', form[key], file=sys.stderr)

@@ -2,7 +2,9 @@
 """
     cgi-bin/CruiseMode.cgi
 
-    Escript that handles GET/PUT for changing logger manager mode
+    Script that handles GET/PUT for changing logger manager mode
+    GET request return HTML with form fields enumerating the
+    cruise modes known to the API.  Hidden fields
 """
 
 import cgi
@@ -44,6 +46,9 @@ def handle_get():
         print('<label class="form-check-label" ')
         print('for="%s_radioButton"' % mode)
         print('text="%s">%s</label></div>' % (mode, mode))
+    sl_jwt = secret.short_ttl_jwt()
+    Q = '<input type="hidden" name="CSRF" value="%s">' % sl_jwt
+    print(Q)
 
 
 ##############################################################################
@@ -69,36 +74,6 @@ def handle_post():
 
 
 ##############################################################################
-# def validate_token():
-#    """ We should have received a JWT in the Authorization header.
-#        Validate it.
-#    """
-
-#    our_secret = secret.SECRET
-#    auth_header = os.environ.get('HTTP_AUTHORIZATION', None)
-#    if not auth_header:
-#        return (False, 'nobody')
-#
-#    auth_split = auth_header.split(' ');
-#    if len(auth_split) > 1:
-#        token = auth_split[1]
-#    else:
-#        return (False, 'nobody')
-#    payload = {}
-#    try:
-#        payload = jwt.decode(token, our_secret, algorithms="HS256" )
-#    except jwt.PyJWTError as err:
-#        print("PyJWTError: ", err, file=sys.stderr)
-#        return (False, 'nobody')
-#
-#    username = payload.get('name', None)
-#    if not username:
-#        return (False, 'nobody')
-#
-#    return (True, username)
-
-
-##############################################################################
 def process_post_request():
     """ Lower level handler for the POST request """
 
@@ -118,6 +93,17 @@ def process_post_request():
         content['error'] = 'Login Required'
         return (headers, content, 401)
 
+    # CSRF Protection (first pass)
+    sl_jwt = form.get('CSRF', None)
+    if not sl_jwt:
+        print("No sl_jwt found", file=sys.stderr)
+
+    if secret.validate_csrf(sl_jwt):
+        print("CSRF token validated", file=sys.stderr)
+    else:
+        print("CSRF NOT VALID", file=sys.stderr)
+
+    # Do the thing
     try:
         modes = api.get_modes()
         # Silly, but test anyway
