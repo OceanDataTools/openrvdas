@@ -53,8 +53,7 @@ var WS = (function() {
 
     function connect_websocket() {
         try {
-            // config object (odas) may not exist.
-            // Protect ourself from barfs.
+            // config object (odas) may not exist.  Fallback.
             o = odas || {};
             url = odas.ws || "";
             if (url == "") {
