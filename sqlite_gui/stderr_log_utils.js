@@ -4,7 +4,6 @@
 //
 // Typical invocation will look like:
 //    <script src="/static/django_gui/stderr_log_utils.js"></script>
-//    <script src="/static/django_gui/edit_config.html.js"></script>
 //    <script src="/static/django_gui/websocket.js"></script>
 //
 // Will take lines whose id matches 'stderr:logger:gyr1' and append them
@@ -15,6 +14,11 @@
 // to the div we've been passed.
 
 var STDERR = (function() {
+    var loggers = {}
+
+    // FIXME:  Move creating stderr windows here.
+    // FIXME:  Add context menu
+    // FIXME:  Keep track of errors for possible badges.
 
     // target  - e.g. 's330_stderr
     // lines  - should be [(timestamp, line), (timestamp, line),...],
@@ -34,7 +38,7 @@ var STDERR = (function() {
             // Clean up message and add to new_log_lines list
             log_line = log_line.replace(/\n$/, '');
             log_line = log_line.replace('\n', '<br />');
-            new_log_lines += color_log_line(log_line);
+            new_log_lines += color_log_line(log_line, target);
         }
 
         // Once all log lines have been added, fetch the div where we're
@@ -58,17 +62,31 @@ var STDERR = (function() {
         }
     }
 
-    function color_log_line (message) {
-        // message = message.substring(0, 200);
+    // Add a span that includes 3 buttons,right justified.  In that,
+    // three small badges. aSee if there's a text-small class
+    // Badge.  Want to add these to each stderr window with count
+    //         of error warning/error/criticals.
+    // <span class="position-absolute top-0 start-100
+    //              translate-middle badge rounded-pill bg-danger">
+    // Add the d-none class, toggle that when count > 0             
+    // 99+
+    // </span>
+    var crit = {};
+    var errs = {};
+    var warn = {};
+    function color_log_line (message, target) {
         var color = 'text-body';
         if (message.includes (' 30 WARNING ') > 0) {
             color = 'text-warning';
+            warn[target] = warn[target] + 1 || 1;
         }
         else if (message.includes (' 40 ERROR ') > 0) {
             color = 'text-warning bg-dark';
+            errs[target] = errs[target] + 1 || 1;
         }
         else if (message.includes (' 50 CRITICAL ') > 0) {
-            color = 'text-danger bg-dark';
+            color = 'text-light bg-danger';
+            crit[target] = crit[target] + 1 || 1;
         }
         message = '<span class="' + color + '">' + message + '</span><br />';
         return message;
