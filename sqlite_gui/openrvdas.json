@@ -37,7 +37,8 @@
         },
         "PyScript": {
             'url': 'https://${host}/pyscript.html',
-            'tooltip': 'Test pyscript yamllint'
+            'tooltip': 'Test pyscript yamllint',
+            'name': 'Experimental Pyscript',
         },
         GitHub: {
             url: 'https://github.com/FrozenGeek/openrvdas/tree/sqlite_gui',

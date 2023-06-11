@@ -38,21 +38,18 @@ var time_td = (function() {
 //
 ////////////////////////////////////////////////////////////////////
 var status_td = (function() {
-    // FIXME:  Tooltip "last status from logger_manager"
     var el = document.getElementById('status_time_td');
+    el.setAttribute('data-bs-toggle', 'tooltip');
+    el.setAttribute('data-bs-placement', 'top');
+    el.setAttribute('title', 'Last status update from LoggerManager');
     if (el) {
         el.className = '';
     }
 
     // Default timeout 10 seconds, over-ride by config
-    // FIXME:  This actually evaluates before the 
-    //         config has fully loaded, so the config
-    //         file does *nothing*.  Needs to be synchrous.
-    //         Gotta figure that one out....
     var o = window.odas || {};
     var oT = o.Timeouts || {};
     var timeout_ms = oT.Status * 1000 || 10000;
-    console.log("status_timeout = ", timeout_ms)
     var timer = setTimeout(timed_out, timeout_ms);
 
     function timed_out() {
@@ -81,8 +78,10 @@ var status_td = (function() {
 //
 ////////////////////////////////////////////////////////////////////
 var server_td = (function() {
-    // FIXME:  Tooltip "last update from CDS"
     var el = document.getElementById('server_time_td');
+    el.setAttribute('data-bs-toggle', 'tooltip');
+    el.setAttribute('data-bs-placement', 'top');
+    el.setAttribute('title', 'Last communication from CDS');
     el.className = '';
 
     // Default timeout 5 seconds, over-ride by config
@@ -309,6 +308,7 @@ var CruiseDef = (function() {
 
             stderr_div.setAttribute('id', logger_name + '_stderr');
             stderr_div.className = 'stderr_window';
+            stderr_div.addEventListener('contextmenu', ctxmenu);
             stderr_td.appendChild(stderr_div);
             tr.appendChild(stderr_td);
             table.appendChild(tr);
@@ -335,6 +335,21 @@ var CruiseDef = (function() {
         }
     }
         
+    function ctxmenu(evt) {
+        var div = evt.currentTarget;
+        // show a dropdown or something:  'acknolege alarmss, clear window'
+        // clear window clears alarm count, clears badge
+        // acknowlege errors just clears the badee and resets the count
+        // So... where do we store the count?
+        //   ANSWER;  Object in the logger class.
+        if (div.id.endsWith('_stderr')) {
+            id = div.id.slice(0, -7).strip();
+            console.info('Show context menu for ', id);
+        }
+        var foo = 'bar';
+    }
+
+
     return {
         status_message: status_message,
     }   

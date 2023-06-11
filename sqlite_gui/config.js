@@ -91,21 +91,9 @@ async function Ajax(method, url, options = {}) {
 //
 //      Loads the file openrvdas.json5 (found in this directory)
 //      Creates and populates the 'odas' object which holds the
-//      global values.
+//      global config values.
 //
-function Load_Config_JSON() {
-    // Fix up "Links", replacing "${host}" with hostname
-    function fix_up_links(o) {
-        for (var key in o.Links) {
-            var l = o.Links[key];
-            if (o.Links[key].url) {
-                var s = o.Links[key].url;
-                s = s.replace('${host}', document.location.host);
-                o.Links[key].url = s
-            }
-        }
-        return o;
-    }
+function Load_Config() {
 
     // Add to "Links" dropdown on navbar
     function addLinks(links) {
@@ -116,10 +104,7 @@ function Load_Config_JSON() {
             aLa.className = 'dropdown-item';
             aLa.setAttribute('href', link.url);
             aLa.setAttribute('target', '_new');
-            if (!link.name) {
-                link.name = key;
-            }
-            aLa.innerHTML = link.name;
+            aLa.innerHTML = link.name || key;
             // What about tooltips?
             if (link.tooltip) {
                 aLa.setAttribute('data-bs-toggle', 'tooltip');
@@ -136,34 +121,35 @@ function Load_Config_JSON() {
         }
     }
 
-    // Called when openrvdas.json5 has been loaded
-    function jsonLoaded(o) {
-        // If we have "Links", replace ${host} 
-        if (o.Links) {
-            o = fix_up_links(o);
-            addLinks(o.Links);
-        }
-        if (!window.odas) {
-            window.odas = new Object;
-        }
-        window.odas = new Object; // create global object 
-        for (var key in o) {
-            odas[key] = o[key];
-        }
-    }
-
     // Have to load the config synchronous, not async
     // otherwise our config values will not exists by 
     // the time the other script files need them.
+    // 
     var r = new XMLHttpRequest();
     r.open('GET', '/openrvdas.json', false)
     r.send(null);
     if (r.status == 200) {
-        o = JSON5.parse(r.responseText);
-        jsonLoaded(o);
+        window.odas = new Object; // explicitly create global object
+        try {
+            odas = JSON5.parse(r.responseText);
+            if (odas.Links) {
+                for (var key in odas.Links) {
+                    var link = odas.Links[key];
+                    if (link.url) {
+                        var s = link.url;
+                        s = s.replace('${host}', document.location.host);
+                        odas.Links[key].url = s
+                    }
+                 }
+                 // fix_up_links(odas);
+                 addLinks(odas.Links);
+            }
+        } catch (e) {
+            console.error("Error in config: ", e)
+        }
     } else {
-        cosole.error("I forgot how to do XMLHttpRequests");
+        cosole.error("Unable to load config file");
     }
 }
 
-Load_Config_JSON();
+Load_Config();

@@ -30,10 +30,10 @@
 // handle these updates.  Oh yeah, one other thing, make the
 // functions that handle these updates be methods of objects.  :-)
 //var global_loggers = {};
-var global_active_mode = 'off';
-var global_last_cruise_timestamp = 0;
-var global_last_cruise_mode_timestamp = 0;
-var global_last_logger_status_timestamp = 0;
+// var global_active_mode = 'off';
+// var global_last_cruise_timestamp = 0;
+// var global_last_cruise_mode_timestamp = 0;
+// var global_last_logger_status_timestamp = 0;
 
 //var odas = new Object;
 //odas.loggers = {};
