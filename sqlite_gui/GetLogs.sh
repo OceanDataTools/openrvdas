@@ -2,8 +2,12 @@
 
 # @/GetLogs.sh ${CRUISE}
 
-# Selects log messages from current (and backup) sqlite databases
-# for cruise specified on command line
+# If we've done things right, all the CGI's (and the api_tool) will
+# log to the messagelog any time they make a change in logger or
+# cruise mode state.  This allows us to extract a comprehensive
+# report of logger state with a simple SQL query.
+
+# Resolves issue 279
 
 Q="SELECT cruise FROM logmessages;"
 ROOT="/opt/openrvdas/sqlite_gui"
