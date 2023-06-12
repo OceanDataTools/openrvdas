@@ -1,0 +1,92 @@
+/******************************************************************
+ *
+ *  @/index.css
+ *
+ *  css elements for things found on the index.html page
+ *
+ * ********************************************************************/
+
+.stderr_window {
+    height: 40px;
+    padding: 0px;
+    overflow-y: auto;
+    font-size: x-small;
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* I think this is not used */
+.tiny {
+    font-size:0.5em;
+    height: 8px;
+}
+
+/* Styles for the context menu attached to the stderr windows */
+.menu {
+    position: absolute;
+    width: 200px;
+    padding: 2px;
+    margin: 0;
+    border: 1px solid #bbb;
+    background: #eee;
+    background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100px, #e5e5e5 100%);
+    z-index: 100;
+    border-radius: 3px;
+    box-shadow: 1px 1px 4px rgba(0,0,0,.2);
+    opacity: 0;
+    transform: translate(0, 15px) scale(.95);
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+    pointer-events: none;
+}
+
+.menu-item {
+    display: block;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.menu-btn { 
+    display: block;
+    color: #444;
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 6px 8px;
+    border-radius: 3px;
+}
+
+a.menu-btn {
+    outline: 0 none;
+    text-decoration: none;
+}
+
+.menu-text {
+    margin-left: 25px;
+}
+.menu-item:hover > .menu-btn { 
+    color: #fff; 
+    outline: none; 
+    background-color: #2E3940;
+    background: linear-gradient(to bottom, #5D6D79, #2E3940);
+    border: 1px solid #2E3940;
+}
+
+.menu .menu {
+    top: 4px;
+    left: 99%;
+}
+
+.menu-show,
+.menu-item:hover > .menu {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    pointer-events: auto;
+}
+
+.menu-item:hover > .menu {
+    transition-delay: 300ms;
+}
