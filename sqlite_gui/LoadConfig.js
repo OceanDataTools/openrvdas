@@ -206,11 +206,11 @@ async function do_stuff() {
     yaml_editor.setSize('100%', '18em');
 
     // Load config
-    await Load_Config_JSON();
+    await Load_Config();
     // Load Theme
-    Theme.on_load();
+    //Theme.on_load();
     // Init Login Button
-    LoginButton.on_load();
+    //LoginButton.on_load();
 
     if (odas) { 
         dir = odas.confdir || '/opt/openrvdas/local';
