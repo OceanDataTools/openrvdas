@@ -71,6 +71,8 @@ var STDERR = (function() {
     // Add the d-none class, toggle that when count > 0             
     // 99+
     // </span>
+    // // Add 'ctx' class to anything that should accept the
+    //    context menu.  attach the context menu to 
     var crit = {};
     var errs = {};
     var warn = {};
@@ -92,8 +94,96 @@ var STDERR = (function() {
         return message;
     }
 
+    /////////////////////////////////////////////////////////////////
+    //
+    // Code for handling the context menu on the STDERR windows
+    //
+    /////////////////////////////////////////////////////////////////
+    var currentContextTarget = null;
+    var ctxmenu = function(evt) {
+        evt.preventDefault();
+        ctx_menu_html.style.left = evt.pageX + 'px';
+        ctx_menu_html.style.top = evt.pageY + 'px';
+        ctx_menu_html.classList.add('menu-show');
+        // debug code
+        var div = evt.currentTarget;
+        currentContextTarget = div;
+        if (div.id.endsWith('_stderr')) {
+            id = div.id.slice(0, -7);
+            console.info('Show context menu for', id);
+            
+        } else {
+            console.warn('Context menu on inappropriate div', id);
+        }
+    }
+
+    var ctx_ack = function(evt) {
+        console.log("ctx_ack called:");
+        console.log("currentContextTarget =", currentContextTarget.id);
+        ctx_menu_html.classList.remove('menu-show');
+    }
+
+    var ctx_clear = function(evt) {
+        console.log("ctx_clear called:");
+        console.log("currentContextTarget =", currentContextTarget.id);
+        var d = currentContextTarget;
+        while (d.lastElementChild) {
+            d.removeChild(d.lastElementChild);
+        }
+        ctx_menu_html.classList.remove('menu-show');
+    }
+
+    var create_ctx_menu_html = function() {
+        //<ul class="menu" id="context-menu">
+        var ul = document.createElement('ul');
+        ul.className = 'menu';
+        ul.setAttribute('id', 'STDERR-context-menu');
+        //<li class="menu-item">
+        var li = document.createElement('menu');
+        li.className = 'menu-item';
+        // <a href="#" onClick="STDERR.ctx_ack()" class="menu-btn">
+        var a = document.createElement('a');
+        a.className = 'menu-btn';
+        a.addEventListener('click', ctx_ack);
+        // <span class="menu-text">Acknowlege</span>
+        var sp = document.createElement('span');
+        sp.className = 'menu-text';
+        sp.innerHTML = 'Acknowlege';
+        a.appendChild(sp);
+        // </a>
+        li.appendChild(a);
+        // </li>
+        ul.appendChild(li);
+        // <li class="menu-item">
+        li = document.createElement('li');
+        li.className = 'menu-item';
+        // <a href="#" onClick="STDERR.ctx_clear()" class="menu-btn">
+        var a = document.createElement('a');
+        a.className = 'menu-btn';
+        a.addEventListener('click', ctx_clear);
+        // <span class="menu-text">Clear</span>
+        var sp = document.createElement('span');
+        sp.className = 'menu-text';
+        sp.innerHTML = 'Clear';
+        a.appendChild(sp);
+        // </li>
+        li.appendChild(a);
+        // </ul>
+        ul.appendChild(li);
+        return ul;
+    }
+
+    // only run once when function instantiates
+    var ctx_menu_html = create_ctx_menu_html();
+    document.body.appendChild(ctx_menu_html);
+
+    // FIXME:  Figure out how to refactor stuff so we do not
+    //         need to export the context menu functions.
     return {
         process: process,
+        ctxmenu: ctxmenu,
+        ctx_ack: ctx_ack,
+        ctx_clear: ctx_clear,
     }
 
 })();

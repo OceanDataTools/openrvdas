@@ -308,7 +308,7 @@ var CruiseDef = (function() {
 
             stderr_div.setAttribute('id', logger_name + '_stderr');
             stderr_div.className = 'stderr_window';
-            stderr_div.addEventListener('contextmenu', ctxmenu);
+            stderr_div.addEventListener('contextmenu', STDERR.ctxmenu);
             stderr_td.appendChild(stderr_div);
             tr.appendChild(stderr_td);
             table.appendChild(tr);
@@ -335,20 +335,6 @@ var CruiseDef = (function() {
         }
     }
         
-    function ctxmenu(evt) {
-        var div = evt.currentTarget;
-        // show a dropdown or something:  'acknolege alarmss, clear window'
-        // clear window clears alarm count, clears badge
-        // acknowlege errors just clears the badee and resets the count
-        // So... where do we store the count?
-        //   ANSWER;  Object in the logger class.
-        if (div.id.endsWith('_stderr')) {
-            id = div.id.slice(0, -7).strip();
-            console.info('Show context menu for ', id);
-        }
-        var foo = 'bar';
-    }
-
 
     return {
         status_message: status_message,
@@ -389,10 +375,6 @@ function process_data_message(message) {
             // Cruise definition updatee
             case 'status:cruise_definition':
                 CruiseDef.status_message(timestamp, values);
-                // var nf = status_cruise_definition(timestamp, values);
-                // for (var key in nf) {
-                //    new_fields[key] = nf[key];
-                // }
                 break;
 
             // Cruise Mode update
