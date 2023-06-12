@@ -53,7 +53,7 @@ var STDERR = (function() {
             target_div.scrollTop = target_div.scrollHeight;
             // FIFO the message, keeping an arbitrary 200
             // Otherwise we could have 10's of thousands.  Not cool.
-            count = target_div.childElementCount;
+            var count = target_div.childElementCount;
             while (count > 200) {
                 target_div.removeChild(target_div.firstChild);
                 count--;
