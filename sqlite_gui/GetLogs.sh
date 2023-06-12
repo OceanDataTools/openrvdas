@@ -7,7 +7,7 @@
 # cruise mode state.  This allows us to extract a comprehensive
 # report of logger state with a simple SQL query.
 
-# Resolves issue 279
+# Resolves OceanDataTools/openrvdas#279
 
 Q="SELECT cruise FROM logmessages;"
 ROOT="/opt/openrvdas/sqlite_gui"
