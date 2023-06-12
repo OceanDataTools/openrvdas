@@ -123,6 +123,10 @@ var LoginButton = (function() {
         if (el) {
             el.innerHTML = 'Log In';
         }
+        el = document.getElementById('config_operations');
+        if (el) {
+            el.classList.add('disabled');
+        }
     }
 
     // The submit button was pressed (to log in, or log otu)
@@ -174,6 +178,10 @@ var LoginButton = (function() {
         el = document.getElementById('login_submit_button');
         if (el) {
             el.innerHTML = 'Log Out';
+        }
+        el = document.getElementById('config_operations');
+        if (el) {
+            el.classList.remove('disabled');
         }
     }
 

@@ -85,16 +85,10 @@ var server_td = (function() {
     el.className = '';
 
     // Default timeout 5 seconds, over-ride by config
-    // FIXME:  Config loads async, and may not have
-    //         compelted by the time this executes,
-    //         meaning the config does nothing.   
-    var t = 5000;
-    if (odas) {
-        if (odas.Timeouts) {
-            t = odas.Timeouts.Server * 1000;
-        }
-    }
-
+    // use error-less fallback in case config not loaded
+    var o = odas || {};
+    var oT = o.Timeouts || {};
+    t = oT.Server * 1000 || 5000;
     var timer = setTimeout(timed_out, t);
 
     function timed_out() {
@@ -107,7 +101,7 @@ var server_td = (function() {
         clearTimeout(timer);
         timer = setTimeout(timed_out, t);
         if (el) {
-            el.innerHTML = Date().substring(0,24);
+            el.innerHTML = Date().substring(0, 24);
             el.className = '';
         }
     }
@@ -209,11 +203,9 @@ var CruiseDef = (function() {
         if (el) {
             txtNode = el.childNodes[0];
             txtNode.nodeValue = cruise_id;
-            // Add tooltip with definition file name
-            // cruise_definition.filename
         }
-        // FIXME;  For now, we're doing this.  Yuk!
-        el = document.getElementById('LoadConfig_link');
+        // FIXME;  Put this on the 'reload' element, not 'load new'
+        el = document.getElementById('reload_config_link');
         if (el) {
             el.setAttribute('data-bs-toggle', 'tooltip');
             el.setAttribute('title', filename);
