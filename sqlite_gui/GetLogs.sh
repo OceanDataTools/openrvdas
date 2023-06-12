@@ -33,9 +33,11 @@ while IFS='|' read -r DTG loglevel cruise source user message ; do
     echo "${DTG} ${message}"
 done
 
+echo "...Searching backup databases"
 backupdb=`find ${ROOT} -name "openrvdas-${CRUISE}-*.sql"`
 if [ -n "${backupdb}" ] ; then
     for FILE in ${backupdb} ; do
+        echo "...backup database: ${FILE}"
         sqlite3 ${FILE} "${Q}" |\
         while IFS='|' read -r DTG l c s u message ; do
             echo "${DTG} ${message}"
