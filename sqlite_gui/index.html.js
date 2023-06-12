@@ -88,8 +88,8 @@ var server_td = (function() {
     // use error-less fallback in case config not loaded
     var o = odas || {};
     var oT = o.Timeouts || {};
-    t = oT.Server * 1000 || 5000;
-    var timer = setTimeout(timed_out, t);
+    var timeout_ms = oT.Server * 1000 || 5000;
+    var timer = setTimeout(timed_out, timeout_ms);
 
     function timed_out() {
         if (el) {
@@ -99,7 +99,7 @@ var server_td = (function() {
 
     var update = function() {
         clearTimeout(timer);
-        timer = setTimeout(timed_out, t);
+        timer = setTimeout(timed_out, timeout_ms);
         if (el) {
             el.innerHTML = Date().substring(0, 24);
             el.className = '';
@@ -211,7 +211,7 @@ var CruiseDef = (function() {
     function update_cruise_id(cruise_id, filename) {
         var el = document.getElementById('cruise_id');
         if (el) {
-            txtNode = el.childNodes[0];
+            var txtNode = el.childNodes[0];
             txtNode.nodeValue = cruise_id;
         }
         // FIXME;  Put this on the 'reload' element, not 'load new'

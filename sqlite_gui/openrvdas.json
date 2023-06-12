@@ -69,6 +69,19 @@
         Status: 9.5,
     },
 
+    // Themes - We use a selection of themes from BootsWatch
+    //          Available themes are:
+    //          cerulean  flatly   lux     pulse     sketchy  superhero   zephyr
+    //          cosmo     journal  materia quartz    slate    united
+    //          cyborg    litera   minty   sandstone solar    vapor
+    //          darkly    lumen    morph   simplex   spacelab yeti
+    //          Some of these themes are crimes against humanity, but some
+    //          look pretty good.  They're not all on the menu.
+    Themes: {
+        // theme: <select one from the list above>,
+        HideThemes: true, // actually, any value here hides the selector
+    },
+
     // confdir - where to find cruise configuration files.
     //           defaults to <openrvdas root>/local, but you could
     //           save yourself a couple clicks by setting your instance's 

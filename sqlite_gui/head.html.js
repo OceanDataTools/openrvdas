@@ -65,7 +65,7 @@ var LoginButton = (function() {
         var jwt = localStorage.getItem('jwt_token');
         if (jwt) {
             try {
-                username = check_jwt(jwt);
+                var username = check_jwt(jwt);
                 logged_in(username);
             } catch (error) {
                 iziToast.warning({
@@ -168,7 +168,7 @@ var LoginButton = (function() {
         }
         if (obj.jwt) {
             try {
-                username = check_jwt(obj.jwt);
+                var username = check_jwt(obj.jwt);
                 localStorage.setItem('jwt_token', obj.jwt);
                 logged_in(username);
             } catch (error) {
@@ -220,9 +220,19 @@ var Theme = (function() {
     var css_el = document.getElementById('theme-css');
 
     var on_load = function() {
-        theme = localStorage.getItem('theme');
+        // Allow config to over-ride stored theme on startup
+        var o = odas || {};
+        var oT = o.Themes || {};
+        var theme = oT.theme || localStorage.getItem('theme');
+
         if (theme) {
             change(theme);
+        }
+ 
+        // NOTE: Should add an option to hide theme selector
+        if (oT.HideThemes) {
+            var el = document.getElementById('theme_dropdown');
+            el.classList.add('d-none');
         }
     }
 
