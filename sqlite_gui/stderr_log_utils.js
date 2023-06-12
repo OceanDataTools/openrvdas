@@ -17,7 +17,6 @@ var STDERR = (function() {
     var loggers = {}
 
     // FIXME:  Move creating stderr windows here.
-    // FIXME:  Add context menu
     // FIXME:  Keep track of errors for possible badges.
 
     // target  - e.g. 's330_stderr
@@ -71,8 +70,6 @@ var STDERR = (function() {
     // Add the d-none class, toggle that when count > 0             
     // 99+
     // </span>
-    // // Add 'ctx' class to anything that should accept the
-    //    context menu.  attach the context menu to 
     var crit = {};
     var errs = {};
     var warn = {};
@@ -110,22 +107,22 @@ var STDERR = (function() {
         currentContextTarget = div;
         if (div.id.endsWith('_stderr')) {
             id = div.id.slice(0, -7);
-            console.info('Show context menu for', id);
+            // console.info('Show context menu for', id);
             
         } else {
-            console.warn('Context menu on inappropriate div', id);
+            // console.warn('Context menu on inappropriate div', id);
         }
     }
 
     var ctx_ack = function(evt) {
-        console.log("ctx_ack called:");
-        console.log("currentContextTarget =", currentContextTarget.id);
+        // console.log("ctx_ack called:");
+        // console.log("currentContextTarget =", currentContextTarget.id);
         ctx_menu_html.classList.remove('menu-show');
     }
 
     var ctx_clear = function(evt) {
-        console.log("ctx_clear called:");
-        console.log("currentContextTarget =", currentContextTarget.id);
+        // console.log("ctx_clear called:");
+        // console.log("currentContextTarget =", currentContextTarget.id);
         var d = currentContextTarget;
         while (d.lastElementChild) {
             d.removeChild(d.lastElementChild);
@@ -182,8 +179,6 @@ var STDERR = (function() {
     return {
         process: process,
         ctxmenu: ctxmenu,
-        ctx_ack: ctx_ack,
-        ctx_clear: ctx_clear,
     }
 
 })();

@@ -51,7 +51,11 @@ async function Ajax(method, url, options = {}) {
               reason: response.statusText,
               response: response
             };
-        console.error('fetch error: ', JSON.stringify(e, null, "  "))
+        iziToast.error({
+            title: 'fetch error',
+            message: JSON.stringify(e, null, "  "),
+        });
+        // console.error('fetch error: ', JSON.stringify(e, null, "  "))
         // var errobj = {};
         // errobj.message = response.statusText;
         // errobj.name = response.status + " error"
@@ -72,7 +76,11 @@ async function Ajax(method, url, options = {}) {
         try {
             var j5 = JSON5.parse(j);
         } catch (error) {
-            console.error('JSON5 error: ', j, error);
+            iziToast.error({
+                title: 'JSON5 error',
+                message: error,
+            });
+            //console.error('JSON5 error: ', j, error);
             e = { error: true,
                   body: j,
                   reason: error
@@ -116,7 +124,11 @@ function Load_Config() {
                 var el = document.getElementById('links_dropdown');
                 el.appendChild(aLli);
             } catch (error) {
-                console.error(error);
+                iziToast.warning({
+                    title: 'Unable to add link',
+                    message: error,
+                });
+                // console.error(error);
             }
         }
     }
@@ -145,7 +157,11 @@ function Load_Config() {
                  addLinks(odas.Links);
             }
         } catch (e) {
-            console.error("Error in config: ", e)
+            iziToast.error({
+                title: 'Error in config file',
+                message: e,
+            });
+            // console.error("Error in config: ", e)
         }
     } else {
         cosole.error("Unable to load config file");

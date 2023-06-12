@@ -1,146 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-<!--
+    <!--
     <link rel='icon' type='image/x-icon' href='/static/favicon.ico'>
--->
+    -->
     <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <link rel="stylesheet" id="theme-css" href="/js/bootstrap.min.css">
+    <link rel="stylesheet"  href="/js/iziToast/css/iziToast.css">
+    <link rel="stylesheet" href="./index.css">
     <title>OpenRVDAS Cruise Management</title>
-    <style>
-      /* FIXME:  Put this in a css file?? */
-      .stderr_window {
-          height:40px;
-          padding:0px;
-          overflow-y:auto;
-          font-size:x-small;
-          resize: vertical;
-      }
-      .tiny {
-          font-size:0.5em;
-          height: 8px;
-      }
-.menu {
-position: absolute;
-width: 200px;
-padding: 2px;
-margin: 0;
-border: 1px solid #bbb;
-background: #eee;
-background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100px, #e5e5e5 100%);
-z-index: 100;
-border-radius: 3px;
-box-shadow: 1px 1px 4px rgba(0,0,0,.2);
-opacity: 0;
-transform: translate(0, 15px) scale(.95);
-transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-pointer-events: none;
-}
-
-.menu-item {
-display: block;
-position: relative;
-margin: 0;
-padding: 0;
-white-space: nowrap;
-}
-
-.menu-btn { 
-display: block;
-color: #444;
-font-family: 'Roboto', sans-serif;
-font-size: 13px;
-cursor: pointer;
-border: 1px solid transparent;
-white-space: nowrap;
-padding: 6px 8px;
-border-radius: 3px;
-}
-
-button.menu-btn {
-background: none;
-line-height: normal;
-overflow: visible;
--webkit-user-select: none;
--moz-user-select: none;
--ms-user-select: none;
-width: 100%;
-text-align: left;
-}
-
-a.menu-btn {
-outline: 0 none;
-text-decoration: none;
-}
-
-.menu-text {
-margin-left: 25px;
-}
-
-.menu-btn .fa {
-position: absolute;
-left: 8px;
-top: 50%;
-transform: translateY(-50%);
-}
-
-.menu-item:hover > .menu-btn { 
-color: #fff; 
-outline: none; 
-background-color: #2E3940;
-background: linear-gradient(to bottom, #5D6D79, #2E3940);
-border: 1px solid #2E3940;
-}
-
-.menu-item-disabled {
-opacity: .5;
-pointer-events: none;
-}
-
-.menu-item-disabled .menu-btn {
-cursor: default;
-}
-
-.menu-separator {
-display:block;
-margin: 7px 5px;
-height:1px;
-border-bottom: 1px solid #fff;
-background-color: #aaa;
-}
-
-.menu-item-submenu::after {
-content: "";
-position: absolute;
-right: 6px;
-top: 50%;
-transform: translateY(-50%);
-border: 5px solid transparent;
-border-left-color: #808080; 
-}
-
-.menu-item-submenu:hover::after {
-border-left-color: #fff;
-}
-
-.menu .menu {
-top: 4px;
-left: 99%;
-}
-
-.menu-show,
-.menu-item:hover > .menu {
-opacity: 1;
-transform: translate(0, 0) scale(1);
-pointer-events: auto;
-}
-
-.menu-item:hover > .menu {
-transition-delay: 300ms;
-}
-    </style>
-
   </head>
   <body>
     <div class='container-fluid'>
@@ -240,6 +109,7 @@ transition-delay: 300ms;
     </p>
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script src="/js/json5.min.js"></script>
+    <script src="/js/iziToast/js/iziToast.js"></script>
     <script src="config.js"></script>
     <script src='head.html.js'></script>
     <script src="index.html.js"></script>

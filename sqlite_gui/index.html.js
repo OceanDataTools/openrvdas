@@ -128,27 +128,37 @@ function process_message(message_str) {
     // for next message.
     if (message.status != 200) {
         // Maybe set a badge somewhere?
-        console.warn('Error from server: ' + message_str);
+        iziToast.warning({
+            title: 'Error from Cached Data Server',
+            message: message_str,
+        });
+        //console.warn('Error from server: ' + message_str);
         return;
     }
 
     // Now go through all the types of messages we know about and
     // deal with them.
     switch (message.type) {
-        //console.log("message.type = ", message.type);
         case 'data':
             process_data_message(message.data);
             break;
         case 'subscribe':
-            //console.log('Subscribe request successful');
             break;
         case undefined:
             Q = "Error: meesage has no type field: "
-            console.warn(Q, message_str);
+            iziToast.warning({
+                title: 'CDS message has no type field',
+                message: message_str,
+            });
+            // console.warn(Q, message_str);
             break;
         default:
             Q = "Error: unknown message type (";
-            console.warn(Q, message.type, ')');
+            iziToast.warning({
+                title: 'CDS message has unknown type',
+                message: Q,
+            });
+            // console.warn(Q, message.type, ')');
     }
 }
 
@@ -237,7 +247,11 @@ var CruiseDef = (function() {
             console.warn(msg);
             return;
         }
-        console.info('Loaded new configuration');
+        iziToast.success({
+            title: 'Loaded new configuration file',
+            message: config.filename,
+        });
+        // console.info('Loaded new configuration');
         odas.api = config;
         // update cruise name on navbar
         if (config.cruise_id) {
@@ -339,8 +353,6 @@ var CruiseDef = (function() {
 // We've got data fields - process and put them where they belong in
 // the HTML...
 function process_data_message(message) {
-    //console.log('Got new data message: ' + JSON.stringify(message));
-    //
     // We expect to receive a field dict, format:
     // {
     //   'data_id': ...,  # optional

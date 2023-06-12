@@ -261,14 +261,22 @@ var CGI = (function() {
         try {
             var post = await fetch(form.action, post_options);
         } catch (error) {
-            console.error(error);
+            iziToast.error({
+                title: 'Post failed',
+                message: error,
+            });
+            // console.error(error);
             // Paste the error message somewhere in the form
             return false;
         }
         if (!post.ok) {
-            console.error("Post of form not OK");
+            // console.error("Post of form not OK");
             var t = await post.text();
-            console.error(t)
+            iziToast.error({
+                title: 'Error',
+                message: t,
+            });
+            // console.error(t)
             // FIXME: paste the error message (from t) somewhere in the form
             return false;
         } else {

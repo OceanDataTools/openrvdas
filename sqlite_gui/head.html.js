@@ -68,7 +68,11 @@ var LoginButton = (function() {
                 username = check_jwt(jwt);
                 logged_in(username);
             } catch (error) {
-                console.warn(error);
+                iziToast.warning({
+                    title: 'Auth token problem',
+                    message: error,
+                });
+                //console.warn(error);
                 logged_out();
             }
         } else {
@@ -145,13 +149,21 @@ var LoginButton = (function() {
         try {
             response = await Ajax('post', form.action, options);
         } catch (error) {
-            console.error(error);
+            iziToast.error({
+                title: 'Error logging in',
+                message: error,
+            });
+            // console.error(error);
             return false;
         }
         try {
             obj = JSON5.parse(response);
         } catch (error) {
-            console.error(response, error);
+            iziToast.error({
+                title: 'JSON error',
+                message: error,
+            });
+            // console.error(response, error);
             return false;
         }
         if (obj.jwt) {
