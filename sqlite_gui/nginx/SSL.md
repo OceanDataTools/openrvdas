@@ -1,8 +1,10 @@
 ## Generating a certificate
-If your organization does not already have a plan for generating certifcates
-for securing your websites or you just need a quick and dirty certificate
-to get yourself started, you can whip one out running
-`bash make_certificate.notes`. 
+Many organizations these days have a plan/policy for managing webserver
+certificates.  Those can be a private PKI server, LetsEncrypt, or a
+curated list of powershell scripts to run.  For those who do not have
+a plan in place, or just want to do some quick and dirty testing, this
+script might be of assistance.
+`GenerateCertificate.sh`. 
 
 ## How to make your browser trust the certifcate
 The script does not just generate a certificate that just signed itself.
