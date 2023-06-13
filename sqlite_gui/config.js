@@ -38,7 +38,7 @@ async function Ajax(method, url, options={}) {
     var fetch_options = options || {};
     if (method.toLowerCase() == 'post') {
         jwt = localStorage.getItem('jwt_token');
-        var auth_header = {'Authorization': 'Bearer ' + jwt}
+        var auth_header = {'Authorization': 'Bearer ' + jwt};
         fetch_options['method'] = 'post';
         fetch_options['body'] = options.body;
         fetch_options['headers'] = auth_header;
@@ -49,20 +49,17 @@ async function Ajax(method, url, options={}) {
     const response = await fetch(url, fetch_options);
     if (!response.ok) {
         // this means the rquest completes poorly.
-        var foo = 42;
-        iziToast.error({
+        e = {
             title: 'fetch error',
             message: response.statusText,
-        });
-        e = {
-            message: response.statusText,
-        }
+        };
+        iziToast.error(e);
         throw new Error(e);
     }
     var j = await response.text();
 
     // convert weird response.headers object to normal object
-    var headers = {}
+    var headers = {};
     for (var pair of response.headers.entries()) {
         headers[pair[0]] = pair[1];
     }
@@ -71,14 +68,13 @@ async function Ajax(method, url, options={}) {
     if (headers['content-type'] == 'application/json') {
         try {
             var j5 = JSON5.parse(j);
+            j = j5;
         } catch (error) {
             iziToast.error({
                 title: 'JSON5 error',
                 message: error,
             });
             throw error;
-        } finally {
-            j = j5;
         }
     }
     return j;
@@ -129,10 +125,10 @@ function Load_Config() {
     // the time the other script files need them.
     // 
     var r = new XMLHttpRequest();
-    r.open('GET', '/openrvdas.json', false)
+    r.open('GET', '/openrvdas.json', false);
     r.send(null);
     if (r.status == 200) {
-        window.odas = new Object; // explicitly create global object
+        window.odas = {}; // explicitly create global object
         try {
             odas = JSON5.parse(r.responseText);
             if (odas.Links) {
@@ -141,7 +137,7 @@ function Load_Config() {
                     if (link.url) {
                         var s = link.url;
                         s = s.replace('${host}', document.location.host);
-                        odas.Links[key].url = s
+                        odas.Links[key].url = s;
                     }
                  }
                  // fix_up_links(odas);

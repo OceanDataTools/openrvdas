@@ -16,6 +16,54 @@
 //    moment the associated code is here inside a <script> tag.
 
 
+var CGI = (function() {
+    var AjaxGet = async function(url) {
+        try {
+            response = Ajax('GET', url);
+        } catch (error) {
+            return { ok: false, error: error };
+        }
+        return response;
+    };
+
+    var AjaxPost = async function(evt, form, parentModal) {
+        // Don't do typical "submit" action, do this instead
+        evt.preventDefault();
+        jwt = localStorage.getItem('jwt_token');
+        post_options = {
+            method: 'post',
+              body: new FormData(form),
+           headers: { 'Authorization': 'Bearer ' + jwt }
+        };
+        url = form.action;
+        var post = await fetch(form.action, post_options);
+        if (!post.ok) {
+            // console.error("Post of form not OK");
+            var t = await post.text();
+            iziToast.error({
+                title: 'Error',
+                message: t,
+            });
+            return false;
+        } else {
+            // POST is OK, so mode was (probably) changed.
+            var el = document.getElementById(parentModal);
+            var our_modal = bootstrap.Modal.getInstance(el);
+            if (our_modal) {
+                our_modal.hide();
+            } else {
+                console.error("our_model isn't our modal :-(");
+            }
+        }
+        return false;
+    };
+
+    return {
+        AjaxGet: AjaxGet,
+        AjaxPost: AjaxPost,
+    };
+
+})();
 var LoggerButton = (function() { 
     // Event handler called when the modal is shown on the page.
     // The modal is shown on the page when you click a logger button
@@ -200,51 +248,3 @@ var CruiseModeModal = (function() {
 
 })();
 
-var CGI = (function() {
-    var AjaxGet = async function(url) {
-        try {
-            response = Ajax('GET', url);
-        } catch (error) {
-            return { ok: false, error: error };
-        }
-        return response;
-    };
-
-    var AjaxPost = async function(evt, form, parentModal) {
-        // Don't do typical "submit" action, do this instead
-        evt.preventDefault();
-        jwt = localStorage.getItem('jwt_token');
-        post_options = {
-            method: 'post',
-              body: new FormData(form),
-           headers: { 'Authorization': 'Bearer ' + jwt }
-        };
-        url = form.action;
-        var post = await fetch(form.action, post_options);
-        if (!post.ok) {
-            // console.error("Post of form not OK");
-            var t = await post.text();
-            iziToast.error({
-                title: 'Error',
-                message: t,
-            });
-            return false;
-        } else {
-            // POST is OK, so mode was (probably) changed.
-            var el = document.getElementById(parentModal);
-            var our_modal = bootstrap.Modal.getInstance(el);
-            if (our_modal) {
-                our_modal.hide();
-            } else {
-                console.error("our_model isn't our modal :-(");
-            }
-        }
-        return false;
-    };
-
-    return {
-        AjaxGet: AjaxGet,
-        AjaxPost: AjaxPost
-    };
-
-})();
