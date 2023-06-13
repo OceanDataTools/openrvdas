@@ -363,13 +363,11 @@ class ServerAPICommandLine:
         try:
             # Load the file to memory and parse to a dict. Add the name
             # of the file we've just loaded to the dict.
-            # FIXME:  I think the API does this for us....
             config = read_config(filename)
             config['config_filename'] = filename
             print("config['config_filename'] = %s" % config['config_filename'], file=sys.stderr)
 
             self.api.load_configuration(config)
-            # FIXME:  I think the API does this for us....
             default_mode = self.api.get_default_mode()
             if default_mode:
                 self.api.set_active_mode(default_mode)

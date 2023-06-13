@@ -152,7 +152,7 @@ class SQLiteServerAPI(ServerAPI):
             now = datetime.utcnow()
             cx.execute(Q, (now,))
             cx.commit()
-            # FIXME:  If using WAL, checkpoint
+            # Note:  If using WAL, checkpoint
             return rows
         except sqlite3.OperationalError:
             # No such table
@@ -415,7 +415,7 @@ class SQLiteServerAPI(ServerAPI):
         calling us to have made that determination."""
 
         # self.logger_config[logger] = config_name
-        # FIXME: We can check that config_name is in logger[configs]
+        # NOTE: We can check that config_name is in logger[configs]
         self.config['loggers'][logger]['active'] = config_name
         self._save_config()
         logging.info('Signaling update')
@@ -522,7 +522,8 @@ class SQLiteServerAPI(ServerAPI):
         omitted, only retrieve most recent message.
         """
 
-        # FIXME:  Should we pull this from the database?
+        # NOTE:  Should we pull this from the database?
+        #        No... if they want more history, look directly.
         index = len(self.server_messages) - 1
         messages = []
         while index >= 0:
@@ -591,7 +592,6 @@ class SQLiteServerAPI(ServerAPI):
             logging.warn("Cruise has no default mode")
         # Why not send the entire config to the CDS?  Why
         # just *almost* all of it?  JSON issue?
-        # FIXME:  Submit pull request
         cruise = config.get('cruise', None)
         if cruise:
             for key in ['id', 'start', 'end']:
