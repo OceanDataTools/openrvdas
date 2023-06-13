@@ -30,11 +30,11 @@
 // handle these updates.  Oh yeah, one other thing, make the
 // functions that handle these updates be methods of objects.  :-)
 
-var odas = new Object;
+var odas = {};
 
 
 // Caveat Emptor:  Errors are thrown
-async function Ajax(method, url, options = {}) {
+async function Ajax(method, url, options={}) {
     var fetch_options = options || {};
     if (method.toLowerCase() == 'post') {
         jwt = localStorage.getItem('jwt_token');
@@ -44,17 +44,19 @@ async function Ajax(method, url, options = {}) {
         fetch_options['headers'] = auth_header;
     }
     // NOTE:  Add a timeout (AbortController)
-    //        Wrap fetch in try/catch (in case server is down)
+    // NOTE:  I tried wrapping fetch in try/catch (in case server
+    //        is down), but got a promise instead of a response
     const response = await fetch(url, fetch_options);
     if (!response.ok) {
-        e = { error: response.status,
-              reason: response.statusText,
-              response: response
-            };
+        // this means the rquest completes poorly.
+        var foo = 42;
         iziToast.error({
             title: 'fetch error',
-            message: JSON.stringify(e, null, "  "),
+            message: response.statusText,
         });
+        e = {
+            message: response.statusText,
+        }
         throw new Error(e);
     }
     var j = await response.text();
@@ -74,12 +76,7 @@ async function Ajax(method, url, options = {}) {
                 title: 'JSON5 error',
                 message: error,
             });
-            //console.error('JSON5 error: ', j, error);
-            e = { error: true,
-                  body: j,
-                  reason: error
-                };
-            throw new Error(e);
+            throw error;
         } finally {
             j = j5;
         }
