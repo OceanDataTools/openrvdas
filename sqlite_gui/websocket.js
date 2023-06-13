@@ -92,7 +92,6 @@ var WS = (function() {
         }
 
         sock.onmessage = function (received_message) { 
-            //FIXME:  Should always check received_message.data.status
             var data = received_message.data;
             parser_queue.forEach(function(func){ func(data); } );
             write({'type':'ready'})
