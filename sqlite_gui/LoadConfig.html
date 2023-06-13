@@ -142,26 +142,14 @@
                 our_modal.show();
             }
         }
-            
-            // First thing, create a timout to auto-close the modal
-            // 
- //           var el = document.getElementById('current_file');
-//            var fname = el.value || el.placeholder;
-//            var fd = new FormData();
-//            fd.append('fname', fname);
-//            fd.append('verb', 'load');
-//            var options = { 'body': fd };
-//            var url = 'cgi-bin/FileBrowser.cgi';
-//            response = await Ajax('post', url, options);
-//            var ham = 'eggs';
-//        }
     </script>   
-<!--# include file='modals.html' --> <!-- This gets us CGI -->   
+<!--# include file='modals.html' --> <!-- This gets us the CGI functions -->   
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script src="/js/json5.min.js"></script>
     <script src="config.js"></script>
     <script src='head.html.js'></script>
     <script src='websocket.js'></script>
+<!-- Way too much code to make CodeMirror work.  Maybe switch to ace? -->
     <script src='js/js-yaml.min.js'></script>
     <link rel='stylesheet' href='js/codemirror5/codemirror.css'>
     <link rel='stylesheet' href='js/codemirror5/lint/lint.css'>
