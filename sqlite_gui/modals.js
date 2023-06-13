@@ -25,7 +25,7 @@ var LoggerButton = (function() {
     var shown = async function(element_id) {
         // auto_close after timeout
         function auto_close() {
-            var el = document.getElementById('LoggerModal')
+            var el = document.getElementById('LoggerModal');
             var modal = bootstrap.Modal.getOrCreateInstance(el);
             if (modal) {
                 modal.hide();
@@ -38,14 +38,14 @@ var LoggerButton = (function() {
             title_el.innerHTML = "Change " + logger_id + " mode";
         }
         // fill in modal body
-        url = '/cgi-bin/LoggerMode.cgi?' + logger_id
+        url = '/cgi-bin/LoggerMode.cgi?' + logger_id;
         var result = await CGI.AjaxGet(url);
         setTimeout(auto_close, 30000);
         var dest = document.getElementById('LoggerModeModalBody');
         if (dest) {
             dest.innerHTML = result;
         } 
-    }
+    };
 
     // Event handler called when the button is clicked
     //   Get the modal, attach listener, and show it.
@@ -155,7 +155,7 @@ var LoggerButton = (function() {
         create: create,
         update: update,
         mode_update: mode_update,
-    }
+    };
 })();
 
 
@@ -172,14 +172,14 @@ var CruiseModeModal = (function() {
 
     async function show_CruiseMode_modal(CruiseMode_el) {
         function auto_close() {
-            var el = document.getElementById('CruiseModeModal')
+            var el = document.getElementById('CruiseModeModal');
             var modal = bootstrap.Modal.getOrCreateInstance(el);
             if (modal) {
                 modal.hide();
             }
         }
         var result = await CGI.AjaxGet("/cgi-bin/CruiseMode.cgi");
-        setTimeout(auto_close, 30000)
+        setTimeout(auto_close, 30000);
         var dest = document.getElementById('CruiseModeModalBody');
         if (dest) {
             dest.innerHTML = result;
@@ -190,21 +190,15 @@ var CruiseModeModal = (function() {
         // Attach events to buttons
         const CruiseMode_el = document.getElementById('CruiseModeModal');
         if (CruiseMode_el) {
-            CruiseMode_el.addEventListener('show.bs.modal', () => {
-                // 'show' triggered by clicking the button
-                show_CruiseMode_modal(CruiseMode_el);
-             })
+            // 'show' triggered by clicking the button
+            CruiseMode_el.addEventListener('show.bs.modal',
+                show_CruiseMode_modal(CruiseMode_el));
         }
-    }
+    };
 
     init();
 
 })();
-
-
-    
-// FIXME:  Package these into a Class for the logger_manager button
-//         Why? Namespace pollution, style consistency, etc....
 
 var CGI = (function() {
     var AjaxGet = async function(url) {
@@ -214,7 +208,7 @@ var CGI = (function() {
             return { ok: false, error: error };
         }
         return response;
-    }
+    };
 
     var AjaxPost = async function(evt, form, parentModal) {
         // Don't do typical "submit" action, do this instead
@@ -224,19 +218,9 @@ var CGI = (function() {
             method: 'post',
               body: new FormData(form),
            headers: { 'Authorization': 'Bearer ' + jwt }
-        }
+        };
         url = form.action;
-        try {
-            var post = await fetch(form.action, post_options);
-        } catch (error) {
-            iziToast.error({
-                title: 'Post failed',
-                message: error,
-            });
-            // console.error(error);
-            // Paste the error message somewhere in the form
-            return false;
-        }
+        var post = await fetch(form.action, post_options);
         if (!post.ok) {
             // console.error("Post of form not OK");
             var t = await post.text();
@@ -256,11 +240,11 @@ var CGI = (function() {
             }
         }
         return false;
-    }
+    };
 
     return {
         AjaxGet: AjaxGet,
         AjaxPost: AjaxPost
-    }
+    };
 
 })();
