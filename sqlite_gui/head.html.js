@@ -51,7 +51,8 @@
 //  On page load checks for expired auth.  We won't check again until
 //  next page load, but the CGI's may (or may not) worry about expired
 //  auth, and even (roadmap) provide updated auth tokens.
-//  FIXME:  Look into WebAuthn (fingerprint, etc)
+//
+//  NOTE:  Look into WebAuthn (fingerprint, etc)
 //  
 var LoginButton = (function() {
 
@@ -173,8 +174,10 @@ var LoginButton = (function() {
                 logged_in(username);
             } catch (error) {
                 logged_out();
-                // FIXME: something cooler than 'alert'
-                alert(error);
+                iziToast.error({
+                    title: 'Token Error',
+                    message: error,
+                });
             }
         }
     }

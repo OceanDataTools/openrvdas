@@ -214,7 +214,6 @@ var CruiseDef = (function() {
             var txtNode = el.childNodes[0];
             txtNode.nodeValue = cruise_id;
         }
-        // FIXME;  Put this on the 'reload' element, not 'load new'
         el = document.getElementById('reload_config_link');
         if (el) {
             el.setAttribute('data-bs-toggle', 'tooltip');
@@ -371,10 +370,7 @@ function process_data_message(message) {
         var value_list = message[field_name];
         // Get the [timestamp, value] pair at the end of the list.
         // That should be the most recent.
-        // FIXME:  Faster to pop??
-        var [ timestamp, values ] = value_list[value_list.length - 1];
-        // Do we want to make a dispatch table for these?
-        // if (key) { func['field_name'] }
+        var [ timestamp, values ] = value_list.pop();
         switch (field_name) {
             // Cruise definition updatee
             case 'status:cruise_definition':
@@ -397,9 +393,15 @@ function process_data_message(message) {
             // authenticated, this element will not exist.
             // File_update update
             case 'status:file_update':
-                // FIXME:  This needs to be a badge. on CruiseID
-               var reload_span = document.getElementById('reload_span');
-               if (reload_span) { reload_span.style.display = 'inline' }
+               var o = odas || {};
+               var oA = o.api || {};
+               config_timestamp = oA.config_timestamp || 0;
+               if (values > config_timestamp) {
+                   var staleSpan = document.getElementById('stale_span');
+                   if (staleSpan) {
+                       staleSpan.classList.remove('d-none');
+                   }
+               }
                break;
 
             case 'stderr:logger_manager':
