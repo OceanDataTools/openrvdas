@@ -65,11 +65,11 @@ var status_td = (function() {
             el.innerHTML = Date().substring(0,24);
             el.className = '';
         }
-    }
+    };
 
     return {
         update: update
-    }
+    };
 })();
 
 ////////////////////////////////////////////////////////////////////
@@ -104,11 +104,11 @@ var server_td = (function() {
             el.innerHTML = Date().substring(0, 24);
             el.className = '';
         }
-    }
+    };
 
     return {
         update: update
-    }
+    };
 })();
 
 
@@ -145,20 +145,18 @@ function process_message(message_str) {
         case 'subscribe':
             break;
         case undefined:
-            Q = "Error: meesage has no type field: "
+            Q = "Error: meesage has no type field:";
             iziToast.warning({
                 title: 'CDS message has no type field',
                 message: message_str,
             });
-            // console.warn(Q, message_str);
             break;
         default:
-            Q = "Error: unknown message type (";
+            Q = "Error: unknown message type";
             iziToast.warning({
                 title: 'CDS message has unknown type',
                 message: Q,
             });
-            // console.warn(Q, message.type, ')');
     }
 }
 
@@ -168,7 +166,7 @@ var CruiseDef = (function() {
     var our_timestamp = 0;
     var el_empty =  document.getElementById('empty_loggers');
     var el_populated = document.getElementById('status_and_loggers');
-    var loggers = {}
+    var loggers = {};
 
     function diff_loggers(config_loggers) {
         var new_loggers = [];   // new loggers we don't have
@@ -192,7 +190,7 @@ var CruiseDef = (function() {
             new: new_loggers,
             old: old_loggers,
             size: new_loggers.length + old_loggers.length,
-        }
+        };
     }
 
     function show_correct_divs(config) {
@@ -238,11 +236,11 @@ var CruiseDef = (function() {
         // The API sorts these, but the code exists in the Django
         // GUI, supposedly for a reason....
         var keys = ['modes', 'active_mode', 'loggers'];
-        for (index in keys) {
+        for (var index in keys) {
             if (keys[index] in config) {
                 continue;
             }
-            msg = 'Cruise def has no ' + keys[index] + ' - ignoring.'
+            msg = 'Cruise def has no ' + keys[index] + ' - ignoring.';
             console.warn(msg);
             return;
         }
@@ -264,9 +262,10 @@ var CruiseDef = (function() {
         // but that would change the order.  I think we care...
         var diff = diff_loggers(config.loggers);
         loggers = config.loggers;
+        var logger_name;
         if (diff.size == 0) {
            // Set the logger button texts
-           for (var logger_name in loggers) {
+           for (logger_name in loggers) {
                var mode = loggers[logger_name].active;
                LoggerButton.mode_update(logger_name, mode);
            }
@@ -293,7 +292,7 @@ var CruiseDef = (function() {
 
         // Stash our new logger list in the globals, then update the
         // loggers, creating one new row for each.
-        for (var logger_name in loggers) {
+        for (logger_name in loggers) {
             //console.log('setting up logger ' + logger_name);
             var logger = loggers[logger_name];
 
@@ -322,9 +321,9 @@ var CruiseDef = (function() {
             // subscribe to stderr updates for it.  Send each logger
             // window with at greatest of one hour past log messges or
             // most recent 100 messages
-            var name = 'stderr:logger:' + logger_name
-            new_fields[name] = time_window;
+            var name = 'stderr:logger:' + logger_name;
             var time_window = {'seconds':6*60*60, 'back_records': 100};
+            new_fields[name] = time_window;
             new_fields['stderr:logger:' + logger_name] = time_window;
         }
 
@@ -338,12 +337,12 @@ var CruiseDef = (function() {
             var subscribe_message = {'type':'subscribe', 'fields':new_fields};
             WS.write(subscribe_message);
         }
-    }
+    };
         
 
     return {
         status_message: status_message,
-    }   
+    };   
 
 })()
 
@@ -415,7 +414,7 @@ function process_data_message(message) {
                 if (field_name.startsWith(LOGGER_STDERR_PREFIX)) {
                     var logger_name = field_name.split(':')[2];
                     // Defined in stderr_log_utils.js
-                    var target = logger_name + '_stderr'
+                    var target = logger_name + '_stderr';
                     STDERR.process(target, value_list);
                 }
         }
@@ -469,6 +468,6 @@ var cruise_mode = (function() {
         update: update,
         get_mode: get_mode,
         status_update: status_update,
-    }
+    };
 })();
 
