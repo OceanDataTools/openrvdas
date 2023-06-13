@@ -43,8 +43,8 @@ async function Ajax(method, url, options = {}) {
         fetch_options['body'] = options.body;
         fetch_options['headers'] = auth_header;
     }
-    // FIXME:  Add a timeout (AbortController)
-    //         Wrap fetch in try/catch (in case server is down)
+    // NOTE:  Add a timeout (AbortController)
+    //        Wrap fetch in try/catch (in case server is down)
     const response = await fetch(url, fetch_options);
     if (!response.ok) {
         e = { error: response.status,
@@ -55,12 +55,6 @@ async function Ajax(method, url, options = {}) {
             title: 'fetch error',
             message: JSON.stringify(e, null, "  "),
         });
-        // console.error('fetch error: ', JSON.stringify(e, null, "  "))
-        // var errobj = {};
-        // errobj.message = response.statusText;
-        // errobj.name = response.status + " error"
-        // throw (errobj)
-        // new Error(message, cause) 
         throw new Error(e);
     }
     var j = await response.text();
