@@ -79,7 +79,7 @@ var LoginButton = (function() {
         } else {
             logged_out();
         }
-    }
+    };
 
     // We only use a couple fields in our JWT payload 
     // exp: expiration time after which token is invalid
@@ -88,6 +88,7 @@ var LoginButton = (function() {
     // name: username.
     var check_jwt = function(jwt) {
         // only one part of the JWT is not encyrpted.  Get it.
+        var payload_obj;
         var s = jwt.split('.');
         if (s.length < 2) {
             throw new Error("JWT lacking dots: " + jwt);
@@ -95,7 +96,7 @@ var LoginButton = (function() {
         // We appear to have a payload.  Try it.
         var dec = atob(s[1]);
         try {
-            var payload_obj = JSON.parse(dec);
+            payload_obj = JSON.parse(dec);
         } catch(error) {
             throw new Error("JWT payload indeciferable: " + dec);
         }
@@ -112,7 +113,7 @@ var LoginButton = (function() {
             throw new Error("No name in JWT auth token.  Assuming invalid");
         }
         return payload_obj.name;
-    }
+    };
 
     // No JWT or JWT invalid (so not logged in)
     var logged_out = function() {
@@ -132,7 +133,7 @@ var LoginButton = (function() {
         if (el) {
             el.classList.add('disabled');
         }
-    }
+    };
 
     // The submit button was pressed (to log in, or log otu)
     var pressed = async function(evt, form) {
@@ -146,7 +147,7 @@ var LoginButton = (function() {
         }
         options = {
             body: new FormData(form)
-        }
+        };
         try {
             response = await Ajax('post', form.action, options);
         } catch (error) {
@@ -180,7 +181,7 @@ var LoginButton = (function() {
                 });
             }
         }
-    }
+    };
 
     var logged_in = function(name) {
         var el = document.getElementById('login_action');
@@ -198,14 +199,14 @@ var LoginButton = (function() {
         if (el) {
             el.classList.remove('disabled');
         }
-    }
+    };
 
     // Execute this when object loaded
     on_load();
 
     return {
         pressed: pressed,
-    }
+    };
 
 })();
 
@@ -237,7 +238,7 @@ var Theme = (function() {
             var el = document.getElementById('theme_dropdown');
             el.classList.add('d-none');
         }
-    }
+    };
 
     var change = function(theme) {
         if (!css_el) { return; }
@@ -245,13 +246,13 @@ var Theme = (function() {
         url += '?' + Date.now();
         css_el.setAttribute('href', url);
         localStorage.setItem('theme', theme);
-    }
+    };
 
     on_load();
 
     return {
         change: change
-    }
+    };
 
 })();
 
