@@ -66,3 +66,28 @@
 </div>
 <!-- Logger Mode Modal -->
 
+
+<!-- Load Button Modal -->
+<div class="modal fade"
+     id="LoadButton_Modal"
+     tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Load Config File</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post"
+            action="/cgi-bin/FileBrowser.cgi"
+            onsubmit="CGI.AjaxPost(event, this, 'LoadButton_Modal')">
+      <div class="modal_body" id="LoadButtonModeModalBody"></div>
+      <div id="LoadButton_mb" class="modal-body"></div>
+      <div id="LoadButton_modalfooter" class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Confirm?</button>
+      </div>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>

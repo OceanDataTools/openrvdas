@@ -81,32 +81,14 @@
         </textarea>
       </div>
     </div>
-
+<!--# inclulde file="modals.html" -->
 <!-- Load Button Modal -->
-<div class="modal fade"
-     id="LoadButton_Modal"
-     tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Load Config File</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form method="post"
-            action="/cgi-bin/FileBrowser.cgi"
-            onsubmit="CGI.AjaxPost(event, this, 'LoadButton_Modal')">
-      <div class="modal_body" id="LoadButtonModeModalBody"></div>
-      <div id="LoadButton_mb" class="modal-body"></div>
-      <div id="LoadButton_modalfooter" class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Confirm?</button>
-      </div>
-      </form>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Load Button Modal -->
+<!-- FIXME:  Move the modal and modal code to modals.html/modals.js
+             That way 'reload config' can take advantage
+             Streamline the code.  It's a nightmare right now..
+             Better graphics for file list
+             allow/enforce safedir
+-->
 
     <script>
         async function LoadButton_shown() {
@@ -143,11 +125,12 @@
             }
         }
     </script>   
-<!--# include file='modals.html' --> <!-- This gets us the CGI functions -->   
+    <script src="/js/iziToast/js/iziToast.js"></script>
+    <script src="config.js"></script>
+    <script src="modals.js"></script>
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script src="/js/json5.min.js"></script>
-    <script src="config.js"></script>
-    <script src='head.html.js'></script>
+    <script src='navbar.js'></script>
     <script src='websocket.js'></script>
 <!-- Way too much code to make CodeMirror work.  Maybe switch to ace? -->
     <script src='js/js-yaml.min.js'></script>
