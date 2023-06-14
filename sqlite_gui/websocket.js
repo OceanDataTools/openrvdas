@@ -25,7 +25,7 @@
 
 var WS = (function() {
     // Start by chastising people with sucky browsers
-    if (! "WebSocket" in window) {
+    if (!("WebSocket" in window)) {
         alert("Warning: websockets not supported by your browser!");
         return false;
     }
@@ -48,7 +48,7 @@ var WS = (function() {
 	    // Get logger manager stderr, too.
 	    'stderr:logger_manager':{'seconds': 60*60}
         }
-    }
+    };
 
 
     function connect_websocket() {
@@ -70,18 +70,18 @@ var WS = (function() {
                 url = proto + document.location.host + port + '/cds-ws';
             } 
             sock = new WebSocket(url);
-        } catch {}
+        } catch (err) {}
 
         sock.onopen = function() {
             clearTimeout(rwc);
             write(initial_send_message);
-        }
+        };
 
         sock.onclose = function() { 
             // Set up an alarm to sleep, then try re-opening websocket
             console.warn("Websocket closed, trying to reconnect");
             rwc = setTimeout(connect_websocket, retry_interval);
-        }
+        };
 
         // Some socket errors won't quickly close the connection,
         // To speed things up, close it ourselves.  If the error
@@ -89,13 +89,13 @@ var WS = (function() {
         sock.onerror = function(event) {
             console.error("Websocket error received", event);
             sock.close(1000, "Due to client receiving an error");
-        }
+        };
 
         sock.onmessage = function (received_message) { 
             var data = received_message.data;
             parser_queue.forEach(function(func){ func(data); } );
-            write({'type':'ready'})
-        }
+            write({'type':'ready'});
+        };
 
         // If we're deliberately closing, don't set a timer to
         // autoreconnect.  That would just be silly.
@@ -103,7 +103,7 @@ var WS = (function() {
             console.debug("Closing websocket");
             sock.onclose = {};
             sock.close();
-        }
+        };
     }
     connect_websocket();
 
@@ -113,7 +113,7 @@ var WS = (function() {
     var add_parser = function(parser) {
         if (parser_queue.includes(parser)) { return; }
         parser_queue.push(parser);
-    }
+    };
 
     // This is our default function name for the message parser.
     // If it's defined, add it automatically.
@@ -128,12 +128,12 @@ var WS = (function() {
     // when seen elsewhere to someone not familiar with the code.
     var write = function(msg) {
         sock.send(JSON.stringify(msg));
-    }
+    };
 
     return {
         ws: sock,
         add_parser: add_parser,
         write: write
-    }
+    };
 })();
 
