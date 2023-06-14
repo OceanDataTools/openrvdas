@@ -244,10 +244,14 @@ var CruiseDef = (function() {
             console.warn(msg);
             return;
         }
-        iziToast.success({
-            title: 'Loaded new configuration file',
-            message: config.filename,
-        });
+        // we always get two messages at page startup.  This is a hack
+        // to not report on the first one.
+        if (odas.api) {
+            iziToast.success({
+                title: 'Loaded new configuration file',
+                message: config.filename,
+            });
+        }
         // console.info('Loaded new configuration');
         odas.api = config;
         // update cruise name on navbar
