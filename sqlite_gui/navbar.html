@@ -1,3 +1,11 @@
+<!--
+
+    @/navbar.html
+
+    Contains the html for the navbar found on all/most pages
+    written for the SQLiteGui.
+
+-->
     <!-- navbar -->
     <nav class="navbar navbar-expand-sm navbar-dark bg-dark py-0">
       <div class="container-fluid">
@@ -89,11 +97,6 @@
               </ul>
             </li>
 <!-- End theme selector -->
-<!--
-            <li class="nav-item">
-              <a class="nav-link disabled" href="#" tabindex="-1">Disabled</a>
-            </li>
--->
           </ul>
           <div class='btn-group dropdown'>
             <!-- Bootstrap bug?  onload function never gets called -->
@@ -102,7 +105,7 @@
                     class = 'btn btn-outline-primary'
                     data-bs-toggle = 'dropdown'>
             </button>
-            <!-- style=transform is obviously just a hack. -->
+            <!-- style=transform:translate is obviously just a hack. -->
             <div class='dropdown-menu dropdown-menu' 
                  style='transform:translateX(-120px);'>
               <form class='m-3' 
