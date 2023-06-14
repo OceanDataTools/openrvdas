@@ -39,9 +39,9 @@ async function Ajax(method, url, options={}) {
     if (method.toLowerCase() == 'post') {
         jwt = localStorage.getItem('jwt_token');
         var auth_header = {'Authorization': 'Bearer ' + jwt};
-        fetch_options['method'] = 'post';
-        fetch_options['body'] = options.body;
-        fetch_options['headers'] = auth_header;
+        fetch_options.method = 'post';
+        fetch_options.body = options.body;
+        fetch_options.headers = auth_header;
     }
     // NOTE:  Add a timeout (AbortController)
     // NOTE:  I tried wrapping fetch in try/catch (in case server
@@ -51,7 +51,7 @@ async function Ajax(method, url, options={}) {
         // this means the rquest completes poorly.
         e = {
             title: 'fetch error',
-            message: response.statusText,
+            message: response.statusText || 'Unknown error',
         };
         iziToast.error(e);
         throw new Error(e);
@@ -148,7 +148,6 @@ function Load_Config() {
                 title: 'Error in config file',
                 message: e,
             });
-            // console.error("Error in config: ", e)
         }
     } else {
         cosole.error("Unable to load config file");
