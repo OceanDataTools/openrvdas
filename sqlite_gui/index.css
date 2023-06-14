@@ -12,7 +12,7 @@
     overflow-y: auto;
     font-size: x-small;
     resize: vertical;
-    min-height: 60px;
+    min-height: 30px;
 }
 
 /* I think this is not used */
