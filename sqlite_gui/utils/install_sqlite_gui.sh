@@ -25,6 +25,7 @@ function show_help {
     echo "             processed in the order found, so command line args"
     echo "             might get over-ridden by the included config"
     echo " -makecert   Create certificates for nginx (if you don't have any)"
+    echo " -nomakecert  Don't create a certificate"
     echo " -OS_TYPE <type>  Bypass automatic detection of OS_TYPE and use the"
     echo "             supplied option.  Currently will accept:"
     echo "             Ubuntu - use for debian derived distros"
@@ -56,6 +57,9 @@ while [ $# -gt 0 ] ; do
          -makecert)
              MAKE_CERT=1
              ;;
+         -nomakecert)
+             unset MAKE_CERT
+             ;;
          -OS_TYPE)
              OS_TYPE=$2
              shift
@@ -86,12 +90,7 @@ function ask_os_type {
     echo "Cannot determine the OS Type.  Please select"
     while [ -z ${OS_TYPE} ] ; do
         read -p "(CentOS, Ubuntu, Darwin): " reply
-        [ -z "${reply}" ] && reply="Argabarg"
-        if [ ${allowed[$reply]+_} ] ; then
-            echo "found"
-        else
-            echo "not found"
-        fi
+        [ -z "${reply}" ] && reply="Argabarg"   # Blank indexes bad
         [[ ${allowed[$reply]+_} ]] && OS_TYPE=$reply
     done
 }
@@ -161,6 +160,7 @@ function get_basedir {
 
 function make_certificate {
     SAVEPWD=${PWD}
+    # FIXME:  What if we're not in the right directory to start with?
     cd ../nginx
     if [ -f openrvdas.crt ] ; then
         echo "Looks like you already have certificates."
@@ -172,8 +172,21 @@ function make_certificate {
     cd ${SAVEPWD}
 }
 
+function overwrite_logger_manager {
+    # Save the original logger_manager
+    SERVERDIR=${BASEDIR}/server
+    SQLITESRV=${BASEDIR}/sqlite_gui/server
+    /bin/cp ${SERVERDIR}/logger_manager.py ${SERVERDIR}/logger_manager.orig
+    /bin/cp ${SQLITESRV}/logger_manager.py ${SERVERDIR}/
+}
+
 get_basedir
+# FIXME:  Instead, patch so we run logger_manager from our dir
+overwrite_logger_manager
 [[ -z "${OS_TYPE}" ]] && determine_flavor
 setup_supervisor
 [[ ${MAKE_CERT} == 1 ]] && make_certificate
+# I guess make an option for http/https
+# The only change necessary is to change the "listen" line to "listen *:80"
+# on the / config, and ... we'll have to work it out for Supervisor.
 
