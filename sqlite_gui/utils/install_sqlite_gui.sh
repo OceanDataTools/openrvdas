@@ -1,8 +1,18 @@
 #!/bin/bash
 
+# Warning:  Bashism's ahead.
 ########################################
 #
-# If a config file exists, use it
+# Initial default values
+#
+########################################
+RANDOM_SECRET=0
+MAKE_CERT=0
+USE_HTTP=0
+
+########################################
+#
+# If a preferences file exists, use it
 #
 ########################################
 [ -e .sqlitegui.prefs ] && source .sqlitegui.prefs
@@ -26,21 +36,31 @@ function show_help {
     echo "             might get over-ridden by the included config"
     echo " -makecert   Create certificates for nginx (if you don't have any)"
     echo " -nomakecert  Don't create a certificate"
-    echo " -OS_TYPE <type>  Bypass automatic detection of OS_TYPE and use the"
+    echo " -OS_TYPE <type>  Override automatic detection of OS_TYPE and use the"
     echo "             supplied option.  Currently will accept:"
     echo "             Ubuntu - use for debian derived distros"
     echo "             CentOS - use for redhat derived distros"
     echo "             Darwin - use for apple products"
+    echo " -secret <\"quoted text\">   Secret for CGI's to use for auth"
+    echo " -randomsecret  Generate a random secret"
+    echo " -http       Use (non-secure) http instead of https"
     echo
     echo "On exiting the script, preferences will be written out"
 }
 
 # On exit, create prefs file
 function on_exit {
+    echo "Writing preferences file"
+    rm -f .sqlitegui.prefs
+    # Redirect all further output onto the prefs file
     exec > .sqlitegui.prefs
-    [[ -n "${OS_TYPE}" ]] && echo "OS_TYPE=${OS_TYPE}"
-    [[ -n "${MAKE_CERT}" ]] && echo "MAKE_CERT=${MAKE_CERT}"
-    [[ -n "${BASEDIR}" ]] && echo "BASEDIR=${BASEDIR}"
+    echo "OS_TYPE=${OS_TYPE}"
+    echo "MAKE_CERT=${MAKE_CERT}"
+    echo "BASEDIR=${BASEDIR}"
+    echo "USE_HTTP=${USE_HTTP}"
+    echo "RANDOM_SECRET=${RANDOM_SECRET}"
+    # For security purposes, do not save SECRET in prefs file ??
+    # [[ -n "${SECRET}" ]] && echo "SECRET=\"${SECRET}\""
 }
 trap on_exit EXIT
 
@@ -58,7 +78,7 @@ while [ $# -gt 0 ] ; do
              MAKE_CERT=1
              ;;
          -nomakecert)
-             unset MAKE_CERT
+             MAKE_CERT=0
              ;;
          -OS_TYPE)
              OS_TYPE=$2
@@ -72,8 +92,19 @@ while [ $# -gt 0 ] ; do
              fi
              shift
              ;;
+         -randomsecret)
+             RANDOM_SECRET=1
+             ;;
+         -secret)
+             SECRET=$2
+             shift
+             ;;
+         -http)
+             USE_HTTP=1
+             ;;
          -h)
              show_help
+             exit
              ;;
          *)
              echo "Ignoring unknown option: $1"
@@ -97,18 +128,22 @@ function ask_os_type {
 
 function determine_flavor {
     # We don't need to check versions because they're already
-    # running OpenRVDAS.  So just get the flavor.
+    # running OpenRVDAS.  Simplified.  Just get the flavor.
     if [ `uname -s` == 'Darwin' ] ; then
         OS_TYPE=MacOS
         return
     fi
     LIKE=`grep -i "id_like" /etc/os-release`
+    # This will work on Fedora, Rocky, RHEL, CentOS, etc.
     [[ ${LIKE} =~ 'rhel' ]] && OS_TYPE='CentOS'
+    # This will work on debian, ubuntu, RaspiOS, etc...
     [[ ${LIKE} =~ 'debian' ]] && OS_TYPE='Ubuntu'
+    # SUSE/OpenSUSE say "suse" in the id_like
 }
 
 ### Supervisor
 function setup_supervisor {
+    echo "Setting up the supervisor config for SQLite GUI"
     if [ $OS_TYPE == 'MacOS' ]; then
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
         SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
@@ -146,7 +181,7 @@ function get_basedir {
     this_dir=${0%/*}
     [[ $this_dir == $0 ]] && this_dir=${PWD}
     cd $this_dir
-    [[ -d ../sqlite_server_api.py ]] && BASEDIR=`normalize_path "${PWD}/.."`
+    [[ -f ../sqlite_server_api.py ]] && BASEDIR=`normalize_path "${PWD}/.."`
     while [ -z "${BASEDIR}" ] ; do
         echo "Enter the path to the sqlite_gui directory: "
         read reply
@@ -160,33 +195,68 @@ function get_basedir {
 
 function make_certificate {
     SAVEPWD=${PWD}
-    # FIXME:  What if we're not in the right directory to start with?
     cd ../nginx
-    if [ -f openrvdas.crt ] ; then
-        echo "Looks like you already have certificates."
+    if [ -f openrvdas.crt -a -f openrvdas.key ] ; then
+        echo "Looks like you already have required certificates."
         echo "If you want to over-write them, cd to ../nginx"
         echo "and run GenerateCert.sh"
     else
-        bash GenerateCert.sh
+        /bin/bash GenerateCert.sh
     fi
     cd ${SAVEPWD}
 }
 
 function overwrite_logger_manager {
+    # FIXME"  This needs to be obsoleted.
     # Save the original logger_manager
     SERVERDIR=${BASEDIR}/server
     SQLITESRV=${BASEDIR}/sqlite_gui/server
-    /bin/cp ${SERVERDIR}/logger_manager.py ${SERVERDIR}/logger_manager.orig
-    /bin/cp ${SQLITESRV}/logger_manager.py ${SERVERDIR}/
+    # /bin/cp ${SQLITESRV}/logger_manager.py ${SERVERDIR}/
 }
 
+function random_secret {
+    echo "Generating a random secret for CGI's"
+    x=""
+    for i in `seq 1 10` ; do 
+        x=${RANDOM}${x}${RANDOM}
+    done
+    SECRET=`echo ${x} | md5sum - | cut -b1-32`
+    echo ${SECRET}
+}
+
+function set_secret {
+    # sed the secret into secret.py
+    echo "Setting the secret used for CGI's"
+    SAVEPWD=${PED}
+    CGIDIR=../cgi-bin
+    cd ${CGIDIR}
+    /usr/bin/sed -ie "s/_SECRET = \".*\"/_SECRET = \"${SECRET}\""/ secret.py
+    /bin/rm =f secret.pye
+    unset SECRET
+    cd ${SAVEPWD}
+}
+
+function downgrade_nginx {
+    echo "Setting nginx to use (non-secure) port 80"
+    SAVEPWD=${SAVEPWD}
+    NGINXDIR=${BASEDIR}/sqlite_gui/nginx
+    SED="/usr/bin/sed -ie"
+    cd ${NGINXDIR}
+    ${SED} 's/listen.*9000.*/listen \*:9000;/' nginx_sqlite.conf
+    ${SED} 's/listen.*443.*/listen \*:80;/' nginx_sqlite.conf
+    rm -f nginx_sqlite.confe
+    :
+    cd ${SAVEPWD}
+}
+
+
 get_basedir
+setup_supervisor
 # FIXME:  Instead, patch so we run logger_manager from our dir
 overwrite_logger_manager
 [[ -z "${OS_TYPE}" ]] && determine_flavor
-setup_supervisor
 [[ ${MAKE_CERT} == 1 ]] && make_certificate
-# I guess make an option for http/https
-# The only change necessary is to change the "listen" line to "listen *:80"
-# on the / config, and ... we'll have to work it out for Supervisor.
+[ ${RANDOM_SECRET} == 1 ] && SECRET=`random_secret`
+[ -n "${SECRET}" ] && set_secret
+[[ ${USE_HTTP} == 1 ]] && downgrade_nginx
 
