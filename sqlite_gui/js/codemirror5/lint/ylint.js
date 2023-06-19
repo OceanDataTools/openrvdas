@@ -26,19 +26,25 @@ CodeMirror.registerHelper("lint", "yaml", async function(text) {
   if (!window.yproxy) {
     return found;
   }
-  var f = await yproxy(text)[0];
-      
-  var bad_stuff = f.split(',');
-  var first_err = bad_stuff[0];
-  var from = first_err.split(':')[0] + ':';
-  from  += first_err.split(':')[1];
-  var message = first_err.split(' ');
-
-  var e = {
-      'from': from,
-      'to': from,
-      'message': message
-  }
+  var f = {};
+  try {
+      var f = await yproxy(text);
+  } catch (e) {};
+  var lintErrors = f.lint;
+  if (!lintErrors) { return found; } 
+  for (var index in lintErrors) {
+      var thisError = lintErrors[index];
+      var from = CodeMirror.Pos(thisError.line - 1, thisError.column);
+      var to = from;
+      var severity = thisError.severity;
+      found.push({from: from, to: to, message: thisError.message, severity: severity });
+  }    
+  // console.log(f)
+  // var e = {
+  //    'from': from,
+  //    'to': from,
+  //    'message': message
+  //}
 
   //var loc = e.mark,
       // js-yaml YAMLException doesn't always provide an accurate lineno
@@ -48,7 +54,7 @@ CodeMirror.registerHelper("lint", "yaml", async function(text) {
       // foo:bar
   //from = loc ? CodeMirror.Pos(loc.line, loc.column) : CodeMirror.Pos(0, 0),
   //to = from;
-  found.push({ from: from, to: to, message: e.message });
+  //found.push({ from: from, to: to, message: e.message });
   return found;
 });
 
