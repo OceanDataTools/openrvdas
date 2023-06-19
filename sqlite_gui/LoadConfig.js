@@ -275,14 +275,6 @@ async function do_stuff() {
 //  Load Button   # FIXME:  Need something for reload, too
 //
 //////////////////////////////////////////////////////////////////////////
-var Reload_Config = (function() {
-    // init: get element, attach click event listener
-    // reload: get filename from api.filename
-    // call the load (to get the confirmation dialogue)
-    // FIXME:  Can we re-jigger LoadButton to take a filename?
-    //         or at least a "load/reload" parameter?
-})();
-
 var LoadButton = (function() {
     // Called by the 'clicked' mehtod
     async function shown() {

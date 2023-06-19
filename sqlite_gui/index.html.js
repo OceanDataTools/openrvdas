@@ -399,11 +399,12 @@ function process_data_message(message) {
                var o = odas || {};
                var oA = o.api || {};
                config_timestamp = oA.config_timestamp || 0;
+               var staleSpan = document.getElementById('stale_span');
+               if (! staleSpan) { return; }
                if (values > config_timestamp) {
-                   var staleSpan = document.getElementById('stale_span');
-                   if (staleSpan) {
                        staleSpan.classList.remove('d-none');
-                   }
+               } else {
+                       staleSpan.classList.add('d-none');
                }
                break;
 

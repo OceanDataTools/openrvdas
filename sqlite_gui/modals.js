@@ -64,6 +64,8 @@ var CGI = (function() {
     };
 
 })();
+
+
 var LoggerButton = (function() { 
     // Event handler called when the modal is shown on the page.
     // The modal is shown on the page when you click a logger button
@@ -245,6 +247,59 @@ var CruiseModeModal = (function() {
     };
 
     init();
+
+})();
+
+var Reload_Button = (function() {
+    // Called by the 'clicked' mehtod
+    var reload_el = document.getElementById('reload_config_link');
+ 
+    async function shown() {
+        function auto_close() {
+            var el = document.getElementById('LoadButton_Modal');
+            var modal = bootstrap.Modal.getOrCreateInstance(el);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        var fname = reload_el.title;
+        var params = 'verb=load&fname=' + fname;
+        var url = 'cgi-bin/FileBrowser.cgi?' + params;
+        // FIXME:  Can I use Ajax here?
+        var result = await CGI.AjaxGet(url);
+        // Response received, set up auto-close
+        setTimeout(auto_close, 30000); // 30 seconds is an eternity
+        // Should have token, etc
+        var dest = document.getElementById('LoadButton_mb');
+        if (dest) {
+            dest.innerHTML = result.html;
+        }
+    }
+ 
+    var clicked = function(evt) {
+        if (typeof autoClose === 'object') { 
+            autoClose.reset();
+        }
+        var el = document.getElementById('LoadButton_Modal');
+        if (el) {
+            el.addEventListener('show.bs.modal', shown());
+        }
+        var our_modal = bootstrap.Modal.getOrCreateInstance(el);
+        if (our_modal) {
+            our_modal.show();
+        }
+    }
+
+    function init() {
+        if (reload_el) {
+            reload_el.setAttribute('onclick', 'Reload_Button.clicked()');
+        }
+    }
+    init();
+
+    return {
+        clicked: clicked,
+    };
 
 })();
 
