@@ -251,6 +251,13 @@ function downgrade_nginx {
     cd ${SAVEPWD}
 }
 
+function add_python_packages {
+    packages="PyJWT yamllint"
+    echo "Installing python libraries: ${packages}"
+    for pkg in $packages ; do
+        pip -q install $pkg
+    done
+}
 
 get_basedir
 setup_supervisor
@@ -264,6 +271,7 @@ overwrite_logger_manager
 [ ${RANDOM_SECRET} == 1 ] && SECRET=`random_secret`
 # If we have a secret (supplied or random), set it
 [ -n "${SECRET}" ] && set_secret
+# Add python packages 
+add_python_packages
 # ... well... you never know... use http
 [[ ${USE_HTTP} == 1 ]] && downgrade_nginx
-
