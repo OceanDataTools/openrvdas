@@ -98,6 +98,23 @@ WS.add_parser(extra_parser);
 // end of code for handling CDS messages
 ////////////////////////////////////////////////////////////////////////
 
+// 5 minute timeout
+// If nobody clicks a significant button, then close this window
+// Significant buttons are a file/dir in the left column
+var autoClose = (function() {
+    var timer;
+    function close_me() {
+        window.close();
+    }
+    function reset() {
+        clearTimeout(timer);
+        timer = window.setTimeout(close_me, 5 * 60 * 1000);
+    }
+    reset()
+    return {
+        reset: reset,
+    }
+})();
 
 async function load_file(dir, fname) {
     var FileList;
@@ -130,6 +147,7 @@ async function yproxy() {
 window.yproxy = yproxy;
 
 async function dir_clicked(evt) {
+    autoClose.reset();
     var target = evt.target;
     var name = target.innerText;
     console.log("Clicked " + name);
@@ -155,6 +173,7 @@ async function dir_clicked(evt) {
 //         See: https://codepen.io/facka/pen/ExPrMRd
 //         Same linter, but code looks a lot lighter.
 function file_clicked(evt) {
+    autoClose.reset();
     var target = evt.target;
     var name = target.innerText;
     console.log("File Clicked " + name);
@@ -291,6 +310,7 @@ var LoadButton = (function() {
     }
 
     function clicked(evt) {
+        autoClose.reset();
         var el = document.getElementById('LoadButton_Modal');
         if (el) {
             el.addEventListener('show.bs.modal', shown());
