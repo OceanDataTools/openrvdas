@@ -34,7 +34,6 @@ if (( ${SUCCESS} == 0 )) ; then
 fi
 rm -f whereami.txt
 
-###### For generate_certs.sh script ######
 # Values for standard cert stuff
 C=${C:-'IO'}
 ST=${ST:-'Not in'}
@@ -141,7 +140,6 @@ EOF
     rm -f openrvdas.csr
     rm -f v3.ext
 
-
     echo "Converting PEM to crt"
     echo >&2
     echo "Converting PEM to crt" >&2
@@ -153,7 +151,6 @@ EOF
         return
     fi
     rm -f openrvdas.cert
-
 }
 
 function copy_certificates_to_destination() {
@@ -169,6 +166,7 @@ function update_cert_store() {
     # if ${UID} != 0 SUDO='/usr/bin/sudo'
 
     # Get OS flavor, ask if cannot determine
+    SUDO="/usr/bin/sudo"
     determine_flavor
     [ -n ${OS_TYPE} ] || ask_os_type
 
@@ -221,6 +219,16 @@ function determine_flavor {
     # SUSE/OpenSUSE say "suse" in the id_like
 }
 
+if [ -f openrvdas.crt -a -f openrvdas.key ] ; then
+    echo "************************************************************"
+    echo
+    echo "    openrvdas.key and openrvdas.crt alredy exist."
+    echo "    If you really want to generate a new cert,"
+    echo "    delete/rename the one ones"
+    echo
+    echo "************************************************************"
+    exit
+fi
 
 generate_self_signed_ca
 generate_server_certificate

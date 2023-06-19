@@ -146,17 +146,17 @@ function setup_supervisor {
     echo "Setting up the supervisor config for SQLite GUI"
     if [ $OS_TYPE == 'MacOS' ]; then
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
-        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
+        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas_sqlite.ini
 
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
         SUPERVISOR_DIR=/etc/supervisord.d
-        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
+        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas_sqlite.ini
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         SUPERVISOR_DIR=/etc/supervisor/conf.d
-        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.conf
+        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas_sqlite.conf
     fi
 
     if [ -n "${SUPERVISOR_DIR}" ] ; then
@@ -217,7 +217,8 @@ function overwrite_logger_manager {
 function random_secret {
     echo "Generating a random secret for CGI's"
     x=""
-    for i in `seq 1 10` ; do 
+    count=`echo ${RANDOM} | cut -b1-2`
+    for i in `seq 1 ${count}` ; do 
         x=${RANDOM}${x}${RANDOM}
     done
     SECRET=`echo ${x} | md5sum - | cut -b1-32`
@@ -242,6 +243,7 @@ function downgrade_nginx {
     NGINXDIR=${BASEDIR}/sqlite_gui/nginx
     SED="/usr/bin/sed -ie"
     cd ${NGINXDIR}
+    # sure, http2 is cool, but sed the sadness.
     ${SED} 's/listen.*9000.*/listen \*:9000;/' nginx_sqlite.conf
     ${SED} 's/listen.*443.*/listen \*:80;/' nginx_sqlite.conf
     rm -f nginx_sqlite.confe
@@ -254,9 +256,14 @@ get_basedir
 setup_supervisor
 # FIXME:  Instead, patch so we run logger_manager from our dir
 overwrite_logger_manager
+# We might have OS_TYPE in prefs
 [[ -z "${OS_TYPE}" ]] && determine_flavor
+# Generate cert/key for nginx if requested
 [[ ${MAKE_CERT} == 1 ]] && make_certificate
+# Generate a random secret if requested
 [ ${RANDOM_SECRET} == 1 ] && SECRET=`random_secret`
+# If we have a secret (supplied or random), set it
 [ -n "${SECRET}" ] && set_secret
+# ... well... you never know... use http
 [[ ${USE_HTTP} == 1 ]] && downgrade_nginx
 
