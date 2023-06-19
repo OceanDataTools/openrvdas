@@ -8,6 +8,7 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <link rel='stylesheet' id='theme-css' href='/js/bootstrap.min.css'>
     <link rel='stylesheet' href='/js/bootstrap-icons.min.css' />
+    <link rel='stylesheet' href='/js/iziToast/css/iziToast.css' />
     <title>OpenRVDAS Cruise Management</title>
     <meta charset="utf-8">
 <!-- FIXME:  Wrap this in a CSS file -->
@@ -44,7 +45,7 @@
           <!-- FIXME:  ToolTip "Load this into the API" -->
           <button type='button' o
                   class='btn btn-sm btn-primary'
-                  onclick="LoadButtonClicked();">
+                  onclick="LoadButton.clicked();">
             Load
           </button>
         </div>
@@ -52,19 +53,6 @@
             <input size=80 
                    id='current_file'
                    placeholder='name of current config file' />
-        </div>
-        <!-- FIXME:  Should this be tabs instead of buttons -->
-        <div class='col col-1'>
-          <button type='button' class='btn btn-sm btn-success'>
-            <!-- FIXME: Tooltip "show RAW input" -->
-            Raw
-          </button>
-        </div>
-        <div class='col col-1'>
-          <button type='button' class='btn btn-sm btn-primary'>
-            <!-- FIXME: Tooltip "show Parsed JSON" -->
-            JSON
-          </button>
         </div>
       </div>
     </div> <!-- ./container-fluid -->
@@ -81,55 +69,14 @@
         </textarea>
       </div>
     </div>
-<!--# inclulde file="modals.html" -->
+<!--# include file="modals.html" -->
 <!-- Load Button Modal -->
-<!-- FIXME:  Move the modal and modal code to modals.html/modals.js
-             That way 'reload config' can take advantage
-             Streamline the code.  It's a nightmare right now..
-             Better graphics for file list
-             allow/enforce safedir
--->
-
-    <script>
-        async function LoadButton_shown() {
-            function auto_close() {
-                var el = document.getElementById('LoadButton_Modal');
-                var modal = bootstrap.Modal.getOrCreateInstance(el);
-                if (modal) {
-                    modal.hide();
-                }
-            }
-            var el = document.getElementById('current_file');
-            var fname = el.value || el.placeholder;
-            var params = 'verb=load&fname=' + fname
-            var url = 'cgi-bin/FileBrowser.cgi?' + params;
-            var result = await CGI.AjaxGet(url);
-            // Response received, set up auto-close
-            setTimeout(auto_close, 30000); // 30 seconds is an eternity
-            // Should have token, etc
-            var dest = document.getElementById('LoadButton_mb');
-            if (dest) {
-                dest.innerHTML = result.html;
-            }
-        }
-
-        function LoadButtonClicked(rvt) {
-            var el = document.getElementById('LoadButton_Modal');
-            if (el) {
-                el.addEventListener('show.bs.modal', 
-                                    LoadButton_shown());
-            }
-            var our_modal = bootstrap.Modal.getOrCreateInstance(el);
-            if (our_modal) {
-                our_modal.show();
-            }
-        }
-    </script>   
     <script src="/js/iziToast/js/iziToast.js"></script>
+    <script src="/js/json5.min.js"></script>
+    <!-- FIXME:  Why do links get added twice ? -->
     <script src="config.js"></script>
     <script src="modals.js"></script>
     <script src="/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/json5.min.js"></script>
     <script src='navbar.js'></script>
     <script src='websocket.js'></script>
 <!-- Way too much code to make CodeMirror work.  Maybe switch to ace? -->
@@ -140,8 +87,16 @@
     <script src='js/codemirror5/codemirror.js'></script>
     <script src='js/codemirror5/mode/yaml.js'></script>
     <script src='js/codemirror5/lint/lint.js'></script>
+    <!--
     <script src='js/codemirror5/lint/yaml-lint.js'></script>
+    -->
+    <script src='js/codemirror5/lint/ylint.js'></script>
     <script src='js/codemirror5/addons/simplescrollbars.js'></script>
+<!-- Whew !! ... 9 files for codemirror.  Grrr....  -->
+<!--
+    <script src='js/js-yaml.min.js'></script>
+    <script src="/js/ace/src-noconflict/ace.js"></script>
+-->
     <script src='LoadConfig.js'></script>
     <hr>
     <p style="font-size:70%">
