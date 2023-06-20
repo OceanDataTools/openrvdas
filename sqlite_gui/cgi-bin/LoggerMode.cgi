@@ -33,6 +33,7 @@ def handle_get():
 
     # Send HTTP headers
     print("Content-Type: text/html;")
+    print("Cache-Control: no-cache")
     print()
 
     # Get QUERY_STRING for logger_id

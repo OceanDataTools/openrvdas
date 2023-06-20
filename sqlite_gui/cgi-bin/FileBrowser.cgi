@@ -63,6 +63,7 @@ def handle_get():
 
     if (content):
         headers.append('Content-Type: application/json')
+        headers.append('Cache-Control: no-cache')
 
     for header in headers:
         print(header)

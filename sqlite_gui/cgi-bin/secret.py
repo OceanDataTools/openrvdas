@@ -76,6 +76,7 @@ def validate_csrf(token):
         jwt.decode(token, _SECRET, algorithms="HS256")
     except jwt.PyJWTError as err:
         # expired tokens throw an exception, too.
+        print(err, file=sys.stderr)
         return False
     else:
         return True

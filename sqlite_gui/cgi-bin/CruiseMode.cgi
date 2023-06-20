@@ -36,7 +36,8 @@ def handle_get():
     """
 
     # Send HTTP headers
-    print("Content-Type: text/html;")
+    print("Content-Type: text/html")
+    print("Cache-Control: no-cache")
     print()
 
     # Send HTTP response body
