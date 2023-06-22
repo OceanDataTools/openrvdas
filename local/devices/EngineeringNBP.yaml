@@ -4,12 +4,15 @@
 # See README.md in this directory
 
 ######################################
+---
 EngineeringNBP:
   category: "device_type"
   description: "Aggregator of engineering data"
 
   # 12.26 19.28 507.5 568.8 234.6 -751.9 0 0 NAN NAN -11.5 -7.5
-  format: "{Voltage:g} {CaseTemp:g} {Pump1Flow:g} {Pump2Flow:g} {Pump3Flow:g} {SeismicPressure:g} {PIRCaseRes:g} {PIRCaseMv:g} {Unknown1:w} {Unknown2:w} {Freezer1Temp:g} {Freezer2Temp:g}"
+  format: "{Voltage:g} {CaseTemp:g} {Pump1Flow:g} {Pump2Flow:g} \
+    {Pump3Flow:g} {SeismicPressure:g} {PIRCaseRes:g} {PIRCaseMv:g} \
+    {Unknown1:w} {Unknown2:w} {Freezer1Temp:g} {Freezer2Temp:g}"
 
   fields:
     Voltage:
@@ -32,10 +35,12 @@ EngineeringNBP:
       description: "Seismic air pressure"
     PIRCaseRes:
       units: "kOhm"
-      description: "PIR case resistance (not currently hooked up, data is irrelevant)"
+      description: "PIR case resistance (not currently hooked up,
+        data is irrelevant)"
     PIRCaseMv:
       units: "mV"
-      description: "PIR case ratiometric output (not currently hooked up, data is irrelevant)"
+      description: "PIR case ratiometric output (not currently
+        hooked up, data is irrelevant)"
     Freezer1Temp:
       units: "degrees C"
       description: "Freezer #1 temperature"

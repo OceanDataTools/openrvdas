@@ -1,15 +1,22 @@
 ######################################
+---
 Knudsen3260:
   category: "device_type"
   description: "Knudsen Chirp 3260"
 
   format:
-    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
-    - ",,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
-    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
-    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
-    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
-    - "$PKEL99,,,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},\
+    {HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - ",,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},\
+    {Latitude:f},{Longitude:f}"
+    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},\
+    {Latitude:f},{Longitude:f}"
+    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,\
+    {HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},\
+    {Latitude:f},{Longitude:f}"
+    - "$PKEL99,,,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},\
+    {Latitude:f},{Longitude:f}"
 
   fields:
     LF:
@@ -17,7 +24,7 @@ Knudsen3260:
       description: "Frequency of low frequency transducer"
     LFDepth:
       units: "meters"
-      description:  Depth in meters from transducer"
+      description: "Depth in meters from transducer"
     LFValid:
       units: "0"
       description: "Valid if present (value may always be zero?)"
@@ -26,7 +33,7 @@ Knudsen3260:
       description: "Frequency of high frequency transducer"
     HFDepth:
       units: "meters"
-      description:  Depth in meters from transducer"
+      description: "Depth in meters from transducer"
     HFValid:
       units: "0"
       description: "Valid if present (value may always be zero?)"
@@ -39,4 +46,3 @@ Knudsen3260:
     Longitude:
       units: "degrees west"
       description: "Longitude in degrees west"
-

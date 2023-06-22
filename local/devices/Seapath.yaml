@@ -4,19 +4,26 @@
 # See README.md in this directory
 
 ######################################
+---
 Seapath200:
   category: "device_type"
 
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    GGA: "${:2l}GGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GGA: "${:2l}GGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},\
+      {EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,\
+      {GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     HDT: "${:2l}HDT,{HeadingTrue:f},T*{CheckSum:x}"
-    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
-    ZDA: "${:2l}ZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
-    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,\
+      {SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
+    ZDA: "${:2l}ZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},\
+      {LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
+    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},\
+      {RollPitchQual:d}*{CheckSum:x}"
     PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    PSXN23: "$PSXN,23,{Roll:of},{Pitch:of},{HeadingTrue:of},{Heave:of}*{CheckSum:x}"
+    PSXN23: "$PSXN,23,{Roll:of},{Pitch:of},{HeadingTrue:of},{Heave:of}\
+      *{CheckSum:x}"
 
   ########
   # Optional metadata to help make sense of the parsed values.
@@ -44,7 +51,7 @@ Seapath200:
       description: ""
     CourseTrue:
       units: "degrees"
-      description: "True course"    
+      description: "True course"
     CourseMag:
       units: "degrees"
       description: "Magnetic course"
@@ -123,15 +130,23 @@ Seapath330:
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    GGA: "${:2l}GGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GGA: "${:2l}GGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},\
+      {EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},\
+      M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     HDT: "${:2l}HDT,{HeadingTrue:f},T*{CheckSum:x}"
-    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
-    ZDA: "${:2l}ZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
-    RMC: "${:2l}RMC,{GPSTime:f},{GPSStatus:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}"
-    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,\
+      {SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
+    ZDA: "${:2l}ZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},\
+      {LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
+    RMC: "${:2l}RMC,{GPSTime:f},{GPSStatus:w},{Latitude:nlat},{NorS:w},\
+      {Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},\
+      {MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}"
+    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},\
+      {RollPitchQual:d}*{CheckSum:x}"
     PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
-    
+    PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}\
+      *{CheckSum:x}"
+
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
@@ -158,7 +173,7 @@ Seapath330:
       description: ""
     CourseTrue:
       units: "degrees"
-      description: "True course"    
+      description: "True course"
     CourseMag:
       units: "degrees"
       description: "Magnetic course"
@@ -234,7 +249,8 @@ Seapath330:
       description: "E if Longitude value is east, W otherwise"
     MagneticVar:
       units: "degrees"
-      description: "Magnetic variation in degrees; east or west depends on value of MagneticVarEorW"
+      description: "Magnetic variation in degrees; east or west depends on
+        value of MagneticVarEorW"
     MagneticVarEorW:
       description: "E if Magnetic variation value is east, W otherwise"
 
@@ -245,16 +261,24 @@ Seapath380:
   # If device type can output multiple formats, include them as a
   # list. Parser will use the first one that matches the whole line.
   format:
-    GGA: "${:2l}GGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GGA: "${:2l}GGA,{GPSTime:f},{Latitude:nlat},{NorS:w},{Longitude:nlat},\
+      {EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},\
+      M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     HDT: "${:2l}HDT,{HeadingTrue:f},T*{CheckSum:x}"
-    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
-    ZDA: "${:2l}ZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
-    RMC: "${:2l}RMC,{GPSTime:f},{GPSStatus:w},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},{MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}"
-    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,\
+      {SpeedKm:of},K,{Mode:w}*{CheckSum:x}"
+    ZDA: "${:2l}ZDA,{GPSTime:f},{GPSDay:d},{GPSMonth:d},{GPSYear:d},\
+      {LocalHours:od},{LocalZone:ow}*{CheckSum:x}"
+    RMC: "${:2l}RMC,{GPSTime:f},{GPSStatus:w},{Latitude:nlat},{NorS:w},\
+      (Longitude:nlat},{EorW:w},{SpeedKt:f},{CourseTrue:f},{GPSDate:w},\
+      {MagneticVar:of},{MagneticVarEorW:ow},{Mode:w}*{Checksum:x}"
+    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},\
+      {RollPitchQual:d}*{CheckSum:x}"
     PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
     PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
-    PSXN24: "$PSXN,24,{RollRate:f},{PitchRate:f},{YawRate:f},{VerticalVel:f}*{CheckSum:x}"
-    
+    PSXN24: "$PSXN,24,{RollRate:f},{PitchRate:f},{YawRate:f},\
+      {VerticalVel:f}*{CheckSum:x}"
+
   ########
   # Optional metadata to help make sense of the parsed values.
   fields:
@@ -281,7 +305,7 @@ Seapath380:
       description: ""
     CourseTrue:
       units: "degrees"
-      description: "True course"    
+      description: "True course"
     CourseMag:
       units: "degrees"
       description: "Magnetic course"
@@ -335,16 +359,20 @@ Seapath380:
       description: ""
     VerticalVel:
       units: "meters"
-      description: "Vertical velocity in metres per second on format d.dd. Positive when moving downwards."
+      description: "Vertical velocity in metres per second on format
+        d.dd. Positive when moving downwards."
     PitchRate:
       units: "degrees"
-      description: "Pitch rate in degrees per second on format d.dd. Positive when bow is moving upwards."
+      description: "Pitch rate in degrees per second on format d.dd.
+        Positive when bow is moving upwards."
     YawRate:
       units: "degrees"
-      description: "Yaw rate in degrees per second on format d.dd. Positive when bow is moving towards starboard."
+      description: "Yaw rate in degrees per second on format d.dd.
+         Positive when bow is moving towards starboard."
     RollRate:
       units: "degrees"
-      description: "Roll rate in degrees per second on format d.dd. Positive when port side is moving upwards."
+      description: "Roll rate in degrees per second on format d.dd.
+         Positive when port side is moving upwards."
     Roll:
       units: "degrees"
       description: "Roll in degrees on format d.dd. Positive with port side up."
@@ -369,6 +397,7 @@ Seapath380:
       description: "E if Longitude value is east, W otherwise"
     MagneticVar:
       units: "degrees"
-      description: "Magnetic variation in degrees; east or west depends on value of MagneticVarEorW"
+      description: "Magnetic variation in degrees; east or west depends on
+        value of MagneticVarEorW"
     MagneticVarEorW:
       description: "E if Magnetic variation value is east, W otherwise"
