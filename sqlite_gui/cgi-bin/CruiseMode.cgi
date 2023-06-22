@@ -37,7 +37,8 @@ def handle_get():
 
     # Send HTTP headers
     print("Content-Type: text/html")
-    print("Cache-Control: no-cache")
+    # See https://www.rfc-editor.org/rfc/rfc7234#section-5.2.1.5
+    print("Cache-Control: no-store")
     print()
 
     # Send HTTP response body
