@@ -65,68 +65,64 @@ var CGI = (function() {
 
 })();
 
+var LoggerModal = (function() {
+    var modal_el = document.getElementById("LoggerModal");
+    var title_el = document.getElementById("LoggerModalTitle");
+    var body_el  = document.getElementById("LoggerModeModalBody");
+    var bsm = bootstrap.Modal.getOrCreateInstance(modal_el);
+    var timer = null;
 
-var LoggerButton = (function() { 
-    // Event handler called when the modal is shown on the page.
-    // The modal is shown on the page when you click a logger button
-    //
-    // shown(element_id)  ==> nothing
-    //     @element_id = DOM element id of the button
-    var shown = async function(element_id) {
-        // auto_close after timeout
+    function kill_timeout() {
+        clearTimeout(timer);
+    }
+
+    async function show(evt) {
         function auto_close() {
-            var el = document.getElementById('LoggerModal');
-            var modal = bootstrap.Modal.getOrCreateInstance(el);
-            if (modal) {
-                modal.hide();
+            if (bsm) {
+                bsm.hide();
             }
         }
-        // Set modal title
-        var logger_id = element_id.attributes.for.value;
-        var title_el = document.getElementById('LoggerModalTitle');
+        bsm.show();
+        // fill in the modal title
+        var el = evt.target;
+        var logger_id = el.attributes.for.value;
         if (title_el) {
             title_el.innerHTML = "Change " + logger_id + " mode";
         }
         // fill in modal body
-        url = '/cgi-bin/LoggerMode.cgi?' + logger_id;
+        var url = '/cgi-bin/LoggerMode.cgi?' + logger_id;
         var result = await CGI.AjaxGet(url);
-        setTimeout(auto_close, 30000);
-        var dest = document.getElementById('LoggerModeModalBody');
-        if (dest) {
-            dest.innerHTML = result;
-        } 
-    };
-
-    // Event handler called when the button is clicked
-    //   Get the modal, attach listener, and show it.
-    //   We should not anonymous inline the 'shown' method, See
-    // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
-    //
-    // show(element_id)  ==> nothing
-    //     @element_id - DOM element id of the button 
-    function show(element_id) {
-        var el = document.getElementById('LoggerModal');
-        if (el) {
-            el.addEventListener('show.bs.modal', 
-                                LoggerButton.shown(element_id));
-        }
-        var our_modal = bootstrap.Modal.getOrCreateInstance(el);
-        if (our_modal) {
-            our_modal.show();
+        timer = setTimeout(auto_close, 30000);
+        if (body_el) {
+            body_el.innerHTML = result;
         }
     }
 
-    // creates a logger button to display on the GUI
-    //
-    // create(logger_id, text) ==> button element
-    //    @logger_id - ServerAPI logger id for this button
-    //    @text      - initial text shown on the button face
+    var init = function() {
+        if (modal_el) {
+            modal_el.addEventListener('hide.bs.modal', kill_timeout);
+        } else {
+            console.warn("No Cruise Mode modal dialogue found !!");
+        }
+    };
+
+    init();
+
+    return {
+        show: show,
+    }
+
+})();
+
+
+var LoggerButton = (function() { 
+
     function create(logger_id, text) {
         var b = document.createElement('button');
         b.setAttribute('id', logger_id + "_btn");
         b.setAttribute('type', 'button');
         b.setAttribute('for', logger_id);
-        b.setAttribute('onclick', 'LoggerButton.show(this)');
+        b.setAttribute('onclick', 'LoggerModal.show(event);');
         b.className = 'btn btn-secondary btn-sm';
         b.innerHTML = text;
         return b;
@@ -143,9 +139,6 @@ var LoggerButton = (function() {
             return false;
         }
         status_timestamp = timestamp;
-
-        // Update timestamp on status_td
-        status_td.update();
 
         // Bail if logger_status is empty
         if (!logger_status || Object.keys(logger_status).length == 0) {
@@ -200,8 +193,8 @@ var LoggerButton = (function() {
 
     // methods for LoggerButton
     return {
-        shown: shown,
-        show: show,
+        // shown: shown,
+        // show: show,
         create: create,
         update: update,
         mode_update: mode_update,
