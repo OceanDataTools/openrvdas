@@ -220,29 +220,39 @@ var LoggerButton = (function() {
 //        I really should have coded them at the same time...
 var CruiseModeModal = (function() {
 
-    async function show_CruiseMode_modal(CruiseMode_el) {
+    var button = document.getElementById("mode_button");
+    var modal = document.getElementById("CruiseModeModal");
+    var modal_body = document.getElementById("CruiseModeModalBody");
+    var timer = null;
+
+    function kill_timeout() {
+        clearTimeout(timer);
+    }
+
+    async function show_modal(evt) {
         function auto_close() {
-            var el = document.getElementById('CruiseModeModal');
-            var modal = bootstrap.Modal.getOrCreateInstance(el);
-            if (modal) {
-                modal.hide();
+            var bsm = bootstrap.Modal.getOrCreateInstance(modal);
+            if (bsm) {
+                bsm.hide();
             }
         }
         var result = await CGI.AjaxGet("/cgi-bin/CruiseMode.cgi");
-        setTimeout(auto_close, 30000);
-        var dest = document.getElementById('CruiseModeModalBody');
-        if (dest) {
-            dest.innerHTML = result;
+        timer = setTimeout(auto_close, 30000);
+        if (modal_body) {
+            modal_body.innerHTML = result;
         }
     }
 
     var init = function() {
-        // Attach events to buttons
-        const CruiseMode_el = document.getElementById('CruiseModeModal');
-        if (CruiseMode_el) {
-            // 'show' triggered by clicking the button
-            CruiseMode_el.addEventListener('show.bs.modal',
-                show_CruiseMode_modal(CruiseMode_el));
+        if (button) {
+            button.addEventListener('click', show_modal);
+        } else {
+            console.warn("No cruise mode button found !!");
+        }
+        if (modal) {   
+            modal.addEventListener('hide.bs.modal', kill_timeout);
+        } else {
+            console.warn("No Cruise Mode modal dialogue found !!");
         }
     };
 
