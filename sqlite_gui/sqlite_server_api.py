@@ -220,7 +220,11 @@ class SQLiteServerAPI(ServerAPI):
                    WHERE
                        highlander=1"""
             rows = self._sql_query(Q)
-            row0 = rows[0]
+            row0 = None
+            try:
+                row0 = rows[0]
+            except IndexError:
+                return None
 
             if "config" not in row0:
                 return None
