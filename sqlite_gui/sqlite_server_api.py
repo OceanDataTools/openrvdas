@@ -252,13 +252,14 @@ class SQLiteServerAPI(ServerAPI):
 
         self._do_we_need_to_reload()
         return self.config or None
-        # return self.config or None
 
     ############################
     def get_modes(self):
         """ Return list of modes defined for given cruise. """
 
         config = self.get_configuration()
+        if not config:
+            return None
         return list(config.get('modes', []))
 
     ############################
@@ -266,6 +267,8 @@ class SQLiteServerAPI(ServerAPI):
         """ Return cruise config for specified cruise id."""
 
         config = self.get_configuration()
+        if not config:
+            return None
         return config.get('active_mode', None)
 
     ############################
@@ -274,6 +277,8 @@ class SQLiteServerAPI(ServerAPI):
         from the. data store. """
 
         config = self.get_configuration()
+        if not config:
+            return None
         return config.get('default_mode', None)
 
     ############################
