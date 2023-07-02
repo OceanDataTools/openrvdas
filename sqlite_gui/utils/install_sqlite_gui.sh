@@ -252,7 +252,7 @@ function downgrade_nginx {
 }
 
 function add_python_packages {
-    packages="PyJWT yamllint"
+    packages="PyJWT yamllint  py-setproctitle"
     echo "Installing python libraries: ${packages}"
     for pkg in $packages ; do
         pip -q install $pkg
