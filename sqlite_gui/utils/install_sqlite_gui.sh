@@ -228,7 +228,7 @@ function random_secret {
 function set_secret {
     # sed the secret into secret.py
     echo "Setting the secret used for CGI's"
-    SAVEPWD=${PED}
+    SAVEPWD=${PWD}
     CGIDIR=../cgi-bin
     cd ${CGIDIR}
     /usr/bin/sed -ie "s/_SECRET = \".*\"/_SECRET = \"${SECRET}\""/ secret.py
@@ -261,7 +261,7 @@ function add_python_packages {
 
 get_basedir
 setup_supervisor
-# FIXME:  Instead, patch so we run logger_manager from our dir
+# FIXME:  Instead, patch so we run logger_manager from our dir ??
 overwrite_logger_manager
 # We might have OS_TYPE in prefs
 [[ -z "${OS_TYPE}" ]] && determine_flavor
