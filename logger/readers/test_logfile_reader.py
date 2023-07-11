@@ -129,7 +129,7 @@ class TestLogfileReader(unittest.TestCase):
             create_file(tmpfilename, sample_lines)
 
             interval = 0.2
-            reader = LogfileReader(tmpfilename, interval=interval)
+            reader = LogfileReader(tmpfilename, interval=interval)  # type: ignore
             then = 0
             for line in sample_lines:
                 self.assertEqual(line, reader.read())
