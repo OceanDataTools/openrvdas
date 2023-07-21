@@ -177,6 +177,23 @@ SANITY_RESULTS = [
         'PortTrueWindSpeed': 20
     },
 ]
+OFFSET_RESULTS = [
+    {
+        'PortApparentWindDir': 180,
+        'PortTrueWindDir': 0,
+        'PortTrueWindSpeed': 0
+    },
+    {
+        'PortApparentWindDir': 270,
+        'PortTrueWindDir': 225.0,
+        'PortTrueWindSpeed': 14.14213562373095
+    },
+    {
+        'PortApparentWindDir': 180,
+        'PortTrueWindDir': 0,
+        'PortTrueWindSpeed': 0
+    },
+]
 
 
 class TestTrueWindsTransform(unittest.TestCase):
@@ -329,6 +346,38 @@ class TestTrueWindsTransform(unittest.TestCase):
 
         return
 
+
+    ############################
+    def test_offset(self):
+        """Check that the numbers coming out make sense."""
+        check = SANITY_CHECK.copy()
+        expected_results = OFFSET_RESULTS.copy()
+
+        tw = TrueWindsTransform(course_field='CourseTrue',
+                                speed_field='Speed',
+                                heading_field='HeadingTrue',
+                                wind_dir_field='RelWindDir',
+                                wind_speed_field='RelWindSpeed',
+                                true_dir_name='PortTrueWindDir',
+                                true_speed_name='PortTrueWindSpeed',
+                                apparent_dir_name='PortApparentWindDir',
+                                wind_dir_offset=180)
+
+        while check:
+            fields = check.pop(0)
+            record = DASRecord(data_id='truw', fields=fields)
+            result = tw.transform(record)
+            if type(result) is list:
+                if len(result):
+                    result = result[0]
+                else:
+                    result is None
+            expected = expected_results.pop(0)
+            logging.info('sanity result: %s', result)
+            logging.info('sanity expected: %s', expected)
+            self.assertRecursiveAlmostEqual(result.fields, expected)
+
+        return
 
 ################################################################################
 if __name__ == '__main__':
