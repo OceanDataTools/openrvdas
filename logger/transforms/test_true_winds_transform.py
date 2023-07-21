@@ -315,7 +315,7 @@ class TestTrueWindsTransform(unittest.TestCase):
                               result.fields, expected)
                 self.assertRecursiveAlmostEqual(result.fields, expected)
 
-    # ############################
+    ############################
     def test_sanity(self):
         """Sanity check that the numbers coming out make sense."""
         check = SANITY_CHECK.copy()
