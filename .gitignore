@@ -13,6 +13,11 @@ __pycache__
 db.sqlite3
 django_gui/migrations
 
+# Files created by utils/install_openrvdas.sh
+django_gui/openrvdas_nginx.conf
+django_gui/openrvdas_uwsgi.ini
+django_gui/uwsgi_params
+
 # Files copied from their respective .dist sources
 # by utils/install_openrvdas.sh
 django_gui/settings.py
@@ -22,25 +27,24 @@ database/settings.py-e
 logger/settings.py
 display/js/widgets/settings.js
 
-# Files created by utils/install_openrvdas.sh
-django_gui/openrvdas_nginx.conf
-django_gui/openrvdas_uwsgi.ini
-django_gui/uwsgi_params
-
-static/
-
-# PyCharm
-.idea/
-
-# virtualenv
-venv/
-
 # InfluxDB
 database/influxdb/LICENSE
 database/influxdb/README.md
 database/influxdb/influx
 database/influxdb/influxd
 database/influxdb/settings.py
+database/influxdb/settings.py-e
+
+static/
+
+# PyCharm
+.idea/
+
+# Visual Studio Code
+.vscode
+
+# virtualenv
+venv/
 
 # SSH
 *.pem
@@ -51,6 +55,16 @@ database/influxdb/settings.py
 local/rcrv/settings.py
 local/rcrv/config_template.yaml
 local/rcrv/.coriolix_preferences
+
+# OceanX
+local/alucia
+
+# Stony Brook
+local/stonybrook
+
+local/unols
+
+local/usap/palmer
 
 # local for Scripps Institution of Oceanography
 #
@@ -69,6 +83,8 @@ local/starc/
 # Created by build scripts
 .install_influxdb_preferences
 .install_openrvdas_preferences
+.install_mysql_preferences
+.install_waterwall_preferences
 
 # Symlink for legacy widget paths
 widgets

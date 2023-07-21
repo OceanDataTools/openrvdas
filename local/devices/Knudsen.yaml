@@ -15,9 +15,6 @@ Knudsen3260:
     LF:
       units: "kHz"
       description: "Frequency of low frequency transducer"
-    HF:
-      units: "kHz"
-      description: "Frequency of high frequency transducer"
     LFDepth:
       units: "meters"
       description:  Depth in meters from transducer"

@@ -14,10 +14,12 @@ from logger.transforms.transform import Transform  # noqa: E402
 
 
 class TimestampTransform(Transform):
-    def __init__(self, time_format=timestamp.TIME_FORMAT, sep=' '):
+    def __init__(self, time_format=timestamp.TIME_FORMAT,
+                 time_zone=timestamp.timezone.utc, sep=' '):
         """If timestamp_format is not specified, use default format"""
         super().__init__(input_format=formats.Text, output_format=formats.Text)
         self.time_format = time_format
+        self.time_zone = time_zone
         self.sep = sep
 
     ############################
@@ -27,7 +29,8 @@ class TimestampTransform(Transform):
             return None
 
         # First off, grab a current timestamp
-        ts = ts or timestamp.time_str(time_format=self.time_format)
+        ts = ts or timestamp.time_str(time_format=self.time_format,
+                                      time_zone=self.time_zone)
 
         # If we've got a list, hope it's a list of records. Recurse,
         # calling transform() on each of the list elements in order and

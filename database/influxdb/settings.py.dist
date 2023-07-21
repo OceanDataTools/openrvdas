@@ -12,4 +12,6 @@ See below for additional database-specific install requirements
 # InfluxDB settings
 INFLUXDB_URL = 'http://localhost:8086'
 INFLUXDB_ORG = 'openrvdas'
+INFLUXDB_BUCKET = 'openrvdas'
 INFLUXDB_AUTH_TOKEN = 'DEFAULT_INFLUXDB_AUTH_TOKEN'
+INFLUXDB_VERIFY_SSL = False

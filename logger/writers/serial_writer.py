@@ -25,11 +25,15 @@ class SerialWriter(Writer):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, encoding='utf-8', encoding_errors='ignore', quiet=False):
+                 exclusive=None, eol='\n',
+                 encoding='utf-8', encoding_errors='ignore', quiet=False):
         """
         By default, the SerialWriter write records to the specified serial port encoded by UTF-8
         and will ignore non unicode characters it encounters. These defaults may be changed by
         specifying.
+
+        eol - if specified, append to end of records to signify end of line,
+                otherwise use \n
 
         encoding - 'utf-8' by default. If empty or None, will throw type error.
                 Other possible encodings are listed in online documentation here:
@@ -53,10 +57,10 @@ class SerialWriter(Writer):
                                         write_timeout=write_timeout, dsrdtr=dsrdtr,
                                         inter_byte_timeout=inter_byte_timeout,
                                         exclusive=exclusive)
-        except (serial.SerialException, serial.serialutil.SerialException) as e:
-            logging.fatal('Failed to open serial port %s: %s', port, e)
-            sys.exit(1)
+        except serial.SerialException as e:
+            raise serial.SerialException(f'Failed to open serial port {port}: {e}')
 
+        self.eol = eol
         self.encoding = encoding
         self.encoding_errors = encoding_errors
         self.quiet = quiet
@@ -66,7 +70,9 @@ class SerialWriter(Writer):
         if not record:
             return
         try:
-            written = self.serial.write(record.encode(self.encoding))
+            if self.eol:
+                record += self.eol
+            written = self.serial.write((record).encode(self.encoding))
             if not written and not self.quiet:
                 logging.error("Not all bits written")
         except KeyboardInterrupt as e:

@@ -77,6 +77,7 @@ from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E
 # Compute and emit various NMEA strings
 from logger.writers.network_writer import NetworkWriter  # noqa: E402
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
+from logger.writers.serial_writer import SerialWriter  # noqa: E402
 from logger.writers.redis_writer import RedisWriter  # noqa: E402
 from logger.writers.file_writer import FileWriter  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402, F401
@@ -486,6 +487,12 @@ if __name__ == '__main__':
                         help='UDP interface(s) and port(s) to write to. Format '
                         '[[interface:]destination:]port')
 
+    parser.add_argument('--write_serial', dest='write_serial', default=None,
+                        help='Comma-separated serial port spec containing at '
+                        'least port=[port], but also optionally baudrate, '
+                        'timeout, max_bytes and/or other SerialReader '
+                        'parameters.')
+
     parser.add_argument('--network_eol', dest='network_eol', default=None,
                         help='Optional EOL string to add to write_network '
                         'and write_udp transmissions.')
@@ -807,6 +814,16 @@ if __name__ == '__main__':
                                      'should be [[interface:]destination:]port')
                     writers.append(UDPWriter(port=port, destination=dest,
                                              interface=interface, eol=eol))
+
+            # SerialWriter is a little more complicated than other readers
+            # because it can take so many parameters. Use the kwargs trick to
+            # pass them all in.
+            if new_args.write_serial:
+                kwargs = {}
+                for pair in new_args.write_serial.split(','):
+                    (key, value) = pair.split('=')
+                    kwargs[key] = value
+                writers.append(SerialWriter(**kwargs))
 
             if new_args.write_redis:
                 for channel in new_args.write_redis.split(','):

@@ -8,7 +8,7 @@ import unittest
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
+from logger.writers.regex_logfile_writer import RegexLogfileWriter  # noqa: E402
 
 SAMPLE_DATA = """2017-11-03T17:23:04.832875Z AAA Nel mezzo del cammin di nostra vita
 2017-11-03T17:23:04.833188Z BBB mi ritrovai per una selva oscura,
@@ -25,7 +25,7 @@ SAMPLE_DATA_NO_TIMESTAMP = """Io non so ben ridir com' i' v'intrai,
 che la verace via abbandonai.
 """
 
-class TestLogfileWriter(unittest.TestCase):
+class TestRegexLogfileWriter(unittest.TestCase):
     ############################
     def test_write(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -33,7 +33,7 @@ class TestLogfileWriter(unittest.TestCase):
 
             filebase = tmpdirname + '/logfile'
 
-            writer = LogfileWriter(filebase)
+            writer = RegexLogfileWriter(filebase)
 
             with self.assertLogs(logging.getLogger(), logging.ERROR):
                 writer.write('there is no timestamp here')
@@ -64,7 +64,7 @@ class TestLogfileWriter(unittest.TestCase):
                 'BBB': tmpdirname + '/logfile_B',
                 'CCC': tmpdirname + '/logfile_C',
             }
-            writer = LogfileWriter(filebase=filebase)
+            writer = RegexLogfileWriter(filebase=filebase)
 
             bad_line = 'there is no timestamp here'
             with self.assertLogs(logging.getLogger(), logging.ERROR) as cm:

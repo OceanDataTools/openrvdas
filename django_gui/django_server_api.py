@@ -410,9 +410,10 @@ class DjangoServerAPI(ServerAPI):
                         logger_id = logger.name
 
                         # Old config is no longer the current config
-                        old_config = logger.config
-                        old_config.current_config = False
-                        old_config.save()
+                        if logger.config:
+                            old_config = logger.config
+                            old_config.current_config = False
+                            old_config.save()
 
                         new_config = self._get_logger_config_object(logger_id=logger_id,
                                                                     mode=mode)
@@ -463,9 +464,10 @@ class DjangoServerAPI(ServerAPI):
                     logger = self._get_logger_object(logger)
 
                     # Old config is no longer the current config
-                    old_config = logger.config
-                    old_config.current_config = False
-                    old_config.save()
+                    if logger.config:
+                        old_config = logger.config
+                        old_config.current_config = False
+                        old_config.save()
 
                     # Get the new config
                     new_config = self._get_logger_config_object_by_name(config_name)
@@ -710,6 +712,7 @@ class DjangoServerAPI(ServerAPI):
                 default_mode = configuration.get('default_mode', None)
                 configs = configuration.get('configs', None)
 
+                # Some sanity checking
                 if loggers is None:
                     raise ValueError('Cruise definition has no loggers')
                 if modes is None:
@@ -717,6 +720,21 @@ class DjangoServerAPI(ServerAPI):
                 if configs is None:
                     raise ValueError('Cruise definition has no configs')
 
+                # Some syntactic sugar to simplify config definitions
+                for config_name, config in configs.items():
+                    if 'name' not in config:
+                        config['name'] = config_name
+
+                for mode, mode_loggers in modes.items():
+                    for mode_logger, mode_logger_config in mode_loggers.items():
+                        if mode_logger not in loggers:
+                            raise ValueError(f'In mode \'{mode}\', logger \'{mode_logger}\' is undefined')
+                        if mode_logger_config not in configs:
+                            raise ValueError(f'In mode \'{mode}\', logger \'{mode_logger}\', ' +
+                                             f'config \'{mode_logger_config}\' is undefined')
+                if default_mode and default_mode not in modes:
+                    raise ValueError(f'Default mode \'{default_mode}\' is not in list' +
+                                     f' of valid modes: {list(modes.keys())}')
                 # We're going in - a select_for_update() locks the Logger table
                 # so no one else can mess until we're done with the transaction.
                 Logger.objects.select_for_update().all()

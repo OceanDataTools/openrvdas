@@ -126,7 +126,7 @@ A simple display page might be constructed as follows
     <!-- This is where we define location of data server. -->
     <script src="../js/widgets/settings.js"></script>
     
-    <script src="../js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="../js/jquery/jquery-3.6.3.min.js"></script>
 
     <!-- For highcharts-widget.js -->
     <script src="../js/highcharts/code/highcharts.js"></script>

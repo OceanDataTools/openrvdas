@@ -12,7 +12,7 @@ from logger.writers.writer import Writer  # noqa: E402
 from logger.writers.file_writer import FileWriter  # noqa: E402
 
 
-class LogfileWriter(Writer):
+class RegexLogfileWriter(Writer):
     """Write to the specified filebase, with datestamp appended. If filebase
     is a <regex>:<filebase> dict, write records to every filebase whose
     regex appears in the record.
@@ -124,12 +124,30 @@ class LogfileWriter(Writer):
                                 for pattern in self.filebase]
             if not True in matched_patterns:
                 if not self.quiet:
-                    logging.warning(f'No patterns matched in LogfileWriter '
-                                    f'options for record "{record}"')
+                    logging.warning(f'No patterns matched in PatternLogfileWriter '
+                                    f'for record "{record}"')
         else:
             pattern = 'fixed'  # just an arbitrary fixed pattern
             filename = self.filebase + '-' + time_str
             self.write_filename(record, pattern, filename)
+
+    ############################
+    def write_filename(self, record, pattern, filename):
+        """Write record to filename. If it's the first time we're writing to
+        this filename, create the appropriate FileWriter and insert it into
+        the map for the relevant pattern."""
+
+        # Are we currently writing to this file? If not, open/create it.
+        if not filename == self.current_filename.get(pattern, None):
+            logging.info('LogfileWriter opening new file: %s', filename)
+            self.current_filename[pattern] = filename
+            self.writer[pattern] = FileWriter(filename=filename,
+                                              header=self.header,
+                                              header_file=self.header_file,
+                                              flush=self.flush)
+        # Now, if our logic is correct, should *always* have a matching_writer
+        matching_writer = self.writer.get(pattern)
+        matching_writer.write(record)
 
     ############################
     def write_if_match(self, record, pattern, time_str):
@@ -153,22 +171,3 @@ class LogfileWriter(Writer):
         filename = filebase + '-' + time_str
         self.write_filename(record, pattern, filename)
         return True
-
-    ############################
-    def write_filename(self, record, pattern, filename):
-        """Write record to filename. If it's the first time we're writing to
-        this filename, create the appropriate FileWriter and insert it into
-        the map for the relevant pattern."""
-
-        # Are we currently writing to this file? If not, open/create it.
-        if not filename == self.current_filename.get(pattern, None):
-            logging.info('LogfileWriter opening new file: %s', filename)
-            self.current_filename[pattern] = filename
-            self.writer[pattern] = FileWriter(filename=filename,
-                                              header=self.header,
-                                              header_file=self.header_file,
-                                              flush=self.flush)
-        # Now, if our logic is correct, should *always* have a matching_writer
-        matching_writer = self.writer.get(pattern)
-        matching_writer.write(record)
-

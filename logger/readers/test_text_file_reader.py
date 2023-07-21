@@ -360,6 +360,24 @@ class TestTextFileReader(unittest.TestCase):
 
             self.assertEqual(expected_lines[1:4], reader.read_range(1, 4))
 
+    ############################
+    def test_eol(self):
+        # Check that we can recognize single and multiple eol char strings
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logging.info('created temporary directory "%s"', tmpdirname)
+
+            # Create a file slowly, one line at a time
+            target = 'f1'
+            tmpfilename = tmpdirname + '/' + target
+            create_file(tmpfilename, SAMPLE_DATA[target])
+
+            # Read, and wait for lines to come
+            for eol in ['e', 'ne', '\n']:
+                reader = TextFileReader(tmpfilename, eol=eol)
+                expect = '\n'.join(SAMPLE_DATA[target]).split(eol)
+                for i in range(len(expect)):
+                    line = reader.read()
+                    self.assertEqual(line, expect[i])
 
 if __name__ == '__main__':
     unittest.main()
