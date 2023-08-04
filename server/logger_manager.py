@@ -34,7 +34,7 @@ from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
 from logger.writers.composed_writer import ComposedWriter  # noqa: E402
 
 try:
-    from sqlite_gui.sqlite_server_api import SQLiteServerAPI  # noqa: E402
+    from server.sqlite_server_api import SQLiteServerAPI  # noqa: E402
     SQLITE_API_DEFINED = True
 except ImportError:
     SQLITE_API_DEFINED = False
@@ -507,7 +507,7 @@ if __name__ == '__main__':  # noqa: C901
         from server.in_memory_server_api import InMemoryServerAPI
         api = InMemoryServerAPI()
     elif args.database == 'sqlite':
-        from sqlite_gui.sqlite_server_api import SQLiteServerAPI
+        from server.sqlite_server_api import SQLiteServerAPI
         api = SQLiteServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
