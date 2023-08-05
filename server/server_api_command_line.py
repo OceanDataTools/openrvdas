@@ -340,7 +340,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--database', dest='database', action='store',
-                        choices=['memory', 'django'],
+                        choices=['memory', 'django', 'sqlite'],
                         default='memory', help='What backing store database '
                         'to use. Currently-implemented options are "memory" '
                         'and "django".')
@@ -379,6 +379,9 @@ if __name__ == '__main__':
     elif args.database == 'memory':
         from server.in_memory_server_api import InMemoryServerAPI
         api = InMemoryServerAPI()
+    elif args.database == 'sqlite':
+        from server.sqlite_server_api import SQLiteServerAPI
+        api = SQLiteServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
     command_line_reader = ServerAPICommandLine(api)

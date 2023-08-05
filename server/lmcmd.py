@@ -10,7 +10,7 @@ available commands, and use arrow keys to navigate command history.
 
 Args:
     --database
-        If specified, 'django'; which database to connect to for OpenRVDAS
+        Either 'django' or 'sqlite'; which database to connect to for OpenRVDAS
         state. If not specified, defaults to 'django'.
     -v
         If specified, increase verbosity of diagnostics from 'warning'
@@ -46,7 +46,7 @@ from server.server_api_command_line import ServerAPICommandLine  # noqa: E402
 if __name__ == '__main__':  # noqa: C901
     parser = argparse.ArgumentParser()
     parser.add_argument('--database', dest='database', action='store',
-                        choices=['django'],
+                        choices=['django', 'sqlite'],
                         default='django', help='Which backing store database '
                         'to connect to')
 
@@ -70,6 +70,9 @@ if __name__ == '__main__':  # noqa: C901
     if args.database == 'django':
         from django_gui.django_server_api import DjangoServerAPI
         api = DjangoServerAPI()
+    elif args.database == 'sqlite':
+        from server.sqlite_server_api import SQLiteServerAPI
+        api = SQLiteServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
 
