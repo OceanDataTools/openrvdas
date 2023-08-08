@@ -6,8 +6,8 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils import timestamp  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 from logger.writers.file_writer import FileWriter  # noqa: E402
 
@@ -23,7 +23,7 @@ class LogfileWriter(Writer):
                  split_char=' ', suffix='', header=None,
                  header_file=None, rollover_hourly=False,
                  quiet=False):
-        """Write timestamped text records to a filebase. The filebase will
+        """Write timestamped records to a filebase. The filebase will
         have the current date appended, in keeping with R2R format
         recommendations (http://www.rvdata.us/operators/directory). When the
         timestamped date on records rolls over to next day, create a new file
@@ -35,6 +35,13 @@ class LogfileWriter(Writer):
         string it matches (Note that the order of comparison is not
         guaranteed!). If no strings match, the record will be written to the
         standalone filebase provided.
+
+        Four formats of records can be written by a LogfileWriter:
+            1. A string prefixed by a timestamp
+            2. A DASRecord
+            3. A dict that has a 'timestamp' key
+            4. A list of any of the above
+
         ```
         filebase        A filebase string to write to or a dict mapping
                         <string>:<filebase>.
@@ -78,15 +85,16 @@ class LogfileWriter(Writer):
         if self.do_filebase_mapping:
             # Do our matches faster by precompiling
             self.compiled_filebase_map = {
-                pattern:re.compile(pattern) for pattern in self.filebase
+                pattern: re.compile(pattern) for pattern in self.filebase
             }
         self.current_filename = {}
         self.writer = {}
 
     ############################
     def write(self, record):
-        """Note: Assume record begins with a timestamp string."""
         if record is None:
+            return
+        if record == '':
             return
 
         # If we've got a list, hope it's a list of records. Recurse,
@@ -96,20 +104,29 @@ class LogfileWriter(Writer):
                 self.write(single_record)
             return
 
-        if not isinstance(record, str):
-            if not self.quiet:
-                logging.error(f'LogfileWriter.write() - record not '
-                              f'timestamped: {record}')
-            return
-
-        # Get the timestamp we'll be using
-        try:  # Try to extract timestamp from record
-            time_str = record.split(self.split_char)[0]
-            ts = timestamp.timestamp(time_str, time_format=self.time_format)
-        except ValueError:
-            if not self.quiet:
-                logging.error('LogfileWriter.write() - bad timestamp: %s', record)
+        # Look for the timestamp
+        if isinstance(record, DASRecord):
+            ts = record.timestamp
+            record = record.as_json()   # need to convert to JSON string to write
+        elif isinstance(record, dict):   # Perhaps it's a structured dict?
+            ts = record.get('timestamp', None)
+            if ts is None:
+                if not self.quiet:
+                    logging.error('LogfileWriter.write() - bad timestamp: "%s"', record)
                 return
+        elif isinstance(record, str):  # If str, it better begin with time string
+            try:  # Try to extract timestamp from record
+                time_str = record.split(self.split_char)[0]
+                ts = timestamp.timestamp(time_str, time_format=self.time_format)
+            except ValueError:
+                if not self.quiet:
+                    logging.error('LogfileWriter.write() - bad timestamp: "%s"', record)
+                    return
+        else:
+            if not self.quiet:
+                logging.error(f'LogfileWriter received badly formatted record. Must be DASRecord, '
+                              f'dict, or timestamp-prefixed string. Received: "{record}"')
+            return
 
         # Now parse ts into hour and date strings
         hr_str = self.rollover_hourly and \
@@ -122,7 +139,7 @@ class LogfileWriter(Writer):
         if self.do_filebase_mapping:
             matched_patterns = [self.write_if_match(record, pattern, time_str)
                                 for pattern in self.filebase]
-            if not True in matched_patterns:
+            if True not in matched_patterns:
                 if not self.quiet:
                     logging.warning(f'No patterns matched in LogfileWriter '
                                     f'options for record "{record}"')
@@ -171,4 +188,3 @@ class LogfileWriter(Writer):
         # Now, if our logic is correct, should *always* have a matching_writer
         matching_writer = self.writer.get(pattern)
         matching_writer.write(record)
-
