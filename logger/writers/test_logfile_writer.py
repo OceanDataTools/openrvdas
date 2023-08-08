@@ -31,10 +31,10 @@ SAMPLE_DATA_DICT = [
     {'timestamp': 1691410660.0, 'fields': {'F1': 6.26, 'F2': 121734.82}},
     {'timestamp': 1691410661.0, 'fields': {'F1': 7.26, 'F2': 121733.82}},
 ]
-SAMPLE_DATA_DICT_STR = """{'timestamp': 1691410658.0, 'fields': {'F1': 4.26, 'F2': 121736.82}}
-{'timestamp': 1691410659.0, 'fields': {'F1': 5.26, 'F2': 121735.82}}
-{'timestamp': 1691410660.0, 'fields': {'F1': 6.26, 'F2': 121734.82}}
-{'timestamp': 1691410661.0, 'fields': {'F1': 7.26, 'F2': 121733.82}}
+SAMPLE_DATA_DICT_STR = """{"timestamp": 1691410658.0, "fields": {"F1": 4.26, "F2": 121736.82}}
+{"timestamp": 1691410659.0, "fields": {"F1": 5.26, "F2": 121735.82}}
+{"timestamp": 1691410660.0, "fields": {"F1": 6.26, "F2": 121734.82}}
+{"timestamp": 1691410661.0, "fields": {"F1": 7.26, "F2": 121733.82}}
 """
 
 SAMPLE_DATA_DASRECORD_STR = """{"data_id": "test", "message_type": null, "timestamp": 1691410658.0, "fields": {"F1": 4.26, "F2": 121736.82}, "metadata": {}}

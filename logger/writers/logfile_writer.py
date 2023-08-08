@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 import re
 import sys
@@ -105,15 +106,18 @@ class LogfileWriter(Writer):
             return
 
         # Look for the timestamp
-        if isinstance(record, DASRecord):
-            ts = record.timestamp
-            record = record.as_json()   # need to convert to JSON string to write
-        elif isinstance(record, dict):   # Perhaps it's a structured dict?
+        if isinstance(record, DASRecord):  # If DASRecord or structured dict,
+            ts = record.timestamp          # convert to JSON before writing
+            record = record.as_json()
+
+        elif isinstance(record, dict):
             ts = record.get('timestamp', None)
             if ts is None:
                 if not self.quiet:
                     logging.error('LogfileWriter.write() - bad timestamp: "%s"', record)
                 return
+            record = json.dumps(record)
+
         elif isinstance(record, str):  # If str, it better begin with time string
             try:  # Try to extract timestamp from record
                 time_str = record.split(self.split_char)[0]
