@@ -11,6 +11,7 @@ import warnings
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import timestamp  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
 
 SAMPLE_DATA = """\
@@ -49,6 +50,11 @@ SAMPLE_DATA_2 = {
     ]
 }
 
+SAMPLE_DATA_DICT_STR = """{"timestamp": 1691410658.0, "fields": {"F1": 4.26, "F2": 121736.82}}
+{"timestamp": 1691410658.25, "fields": {"F1": 5.26, "F2": 121735.82}}
+{"timestamp": 1691410658.50, "fields": {"F1": 6.26, "F2": 121734.82}}
+{"timestamp": 1691410658.75, "fields": {"F1": 7.26, "F2": 121733.82}}"""
+
 
 def get_msec_timestamp(record):
     time_str = record.split(' ', 1)[0]
@@ -86,16 +92,19 @@ class TestLogfileReader(unittest.TestCase):
             self.assertEqual(None, reader.read())
 
     ############################
-    def test_use_timestamp(self):
+    def test_das_record(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             logging.info('created temporary directory "%s"', tmpdirname)
             tmpfilename = tmpdirname + '/mylog-2017-02-02'
-            sample_lines = SAMPLE_DATA.split('\n')
+            sample_lines = SAMPLE_DATA_DICT_STR.split('\n')
             create_file(tmpfilename, sample_lines)
 
-            reader = LogfileReader(tmpfilename, use_timestamps=True)
+            reader = LogfileReader(tmpfilename)
             for line in sample_lines:
-                self.assertEqual(line, reader.read())
+                das_record = DASRecord(line)
+                read_record = reader.read()
+                self.assertEqual(das_record, read_record)
+
             self.assertEqual(None, reader.read())
 
     ############################
@@ -113,6 +122,28 @@ class TestLogfileReader(unittest.TestCase):
             for line in sample_lines:
                 result = reader.read()
                 self.assertEqual(line, result)
+                now = time.time()
+                if then:
+                    self.assertAlmostEqual(now-then, interval, places=1)
+                then = now
+
+            self.assertEqual(None, reader.read())
+
+    ############################
+    def test_use_timestamps_das_record(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logging.info('created temporary directory "%s"', tmpdirname)
+            tmpfilename = tmpdirname + '/mylog-2017-02-02'
+            sample_lines = SAMPLE_DATA_DICT_STR.split('\n')
+            create_file(tmpfilename, sample_lines)
+
+            # Logs timestamps were created artificially with ~0.25 intervals
+            interval = 0.25
+            reader = LogfileReader(tmpfilename, use_timestamps=True)
+            then = 0
+            for line in sample_lines:
+                result = reader.read()
+                self.assertEqual(DASRecord(line), result)
                 now = time.time()
                 if then:
                     self.assertAlmostEqual(now-then, interval, places=1)
