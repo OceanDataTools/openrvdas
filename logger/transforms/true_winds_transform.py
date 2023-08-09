@@ -43,11 +43,8 @@ class TrueWindsTransform(DerivedDataTransform):
     """
 
     def __init__(self,
-                 course_field,
-                 speed_field,
-                 heading_field,
-                 wind_dir_field,
-                 wind_speed_field,
+                 course_field, speed_field, heading_field,
+                 wind_dir_field, wind_speed_field,
                  true_dir_name,
                  true_speed_name,
                  apparent_dir_name,
@@ -57,7 +54,6 @@ class TrueWindsTransform(DerivedDataTransform):
                  convert_wind_factor=1,
                  convert_speed_factor=1,
                  data_id=None,
-                 wind_dir_offset=0, 
                  metadata_interval=None):
         """
         ```
@@ -98,10 +94,6 @@ class TrueWindsTransform(DerivedDataTransform):
                  output true winds as meters/sec, we'll leave convert_wind_factor
                  as 1 and specify convert_speed_factor=0.5144
 
-        wind_dir_offset
-                 directional offset to be applied to rel wind heading prior to
-                 true wind calculation
-
         metadata_interval - how many seconds between when we attach field metadata
                      to a record we send out.
 
@@ -126,14 +118,6 @@ class TrueWindsTransform(DerivedDataTransform):
 
         self.convert_wind_factor = convert_wind_factor
         self.convert_speed_factor = convert_speed_factor
-
-        try:
-            self.wind_dir_offset = float(wind_dir_offset)
-        except:
-            raise AttributeError('wind_dir_offset must be a numeric value between 0.0 and 360.0')
-
-        if self.wind_dir_offset < 0 or self.wind_dir_offset > 360.0:
-            raise AttributeError('wind_dir_offset must be a numeric value between 0.0 and 360.0')
 
         self.metadata_interval = metadata_interval
         self.last_metadata_send = 0
@@ -282,11 +266,10 @@ class TrueWindsTransform(DerivedDataTransform):
                 continue
 
             logging.debug('Computing new true winds')
-            logging.debug('Corrected apparent wind: %s', (self.wind_dir_val+self.wind_dir_offset) % 360)
             (true_dir, true_speed, apparent_dir) = truew(crse=self.course_val,
                                                          cspd=self.speed_val,
                                                          hd=self.heading_val,
-                                                         wdir=(self.wind_dir_val + self.wind_dir_offset) % 360,
+                                                         wdir=self.wind_dir_val,
                                                          zlr=self.zero_line_reference,
                                                          wspd=self.wind_speed_val)
 
