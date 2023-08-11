@@ -73,7 +73,7 @@ class TestSQLiteServerAPI(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdirname:
             test_database = tmpdirname + '/test_database.sql'
 
-            api = SQLiteServerAPI(database_path=TEST_DATABASE_NAME)
+            api = SQLiteServerAPI(database_path=test_database)
             api.load_configuration(sample_1)
 
             self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
