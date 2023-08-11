@@ -3,11 +3,11 @@
 import logging
 import sys
 import tempfile
-import time
 import unittest
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
 
 SAMPLE_DATA = """2017-11-03T17:23:04.832875Z AAA Nel mezzo del cammin di nostra vita
@@ -24,6 +24,25 @@ SAMPLE_DATA_NO_TIMESTAMP = """Io non so ben ridir com' i' v'intrai,
 ' era pien di sonno a quel punto
 che la verace via abbandonai.
 """
+
+SAMPLE_DATA_DICT = [
+    {'timestamp': 1691410658.0, 'fields': {'F1': 4.26, 'F2': 121736.82}},
+    {'timestamp': 1691410659.0, 'fields': {'F1': 5.26, 'F2': 121735.82}},
+    {'timestamp': 1691410660.0, 'fields': {'F1': 6.26, 'F2': 121734.82}},
+    {'timestamp': 1691410661.0, 'fields': {'F1': 7.26, 'F2': 121733.82}},
+]
+SAMPLE_DATA_DICT_STR = """{"timestamp": 1691410658.0, "fields": {"F1": 4.26, "F2": 121736.82}}
+{"timestamp": 1691410659.0, "fields": {"F1": 5.26, "F2": 121735.82}}
+{"timestamp": 1691410660.0, "fields": {"F1": 6.26, "F2": 121734.82}}
+{"timestamp": 1691410661.0, "fields": {"F1": 7.26, "F2": 121733.82}}
+"""
+
+SAMPLE_DATA_DASRECORD_STR = """{"data_id": "test", "message_type": null, "timestamp": 1691410658.0, "fields": {"F1": 4.26, "F2": 121736.82}, "metadata": {}}
+{"data_id": "test", "message_type": null, "timestamp": 1691410659.0, "fields": {"F1": 5.26, "F2": 121735.82}, "metadata": {}}
+{"data_id": "test", "message_type": null, "timestamp": 1691410660.0, "fields": {"F1": 6.26, "F2": 121734.82}, "metadata": {}}
+{"data_id": "test", "message_type": null, "timestamp": 1691410661.0, "fields": {"F1": 7.26, "F2": 121733.82}, "metadata": {}}
+"""
+
 
 class TestLogfileWriter(unittest.TestCase):
     ############################
@@ -55,6 +74,37 @@ class TestLogfileWriter(unittest.TestCase):
                     self.assertEqual(lines[i], outfile.readline().rstrip())
 
     ############################
+    def test_write_dict(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = LogfileWriter(filebase)
+            writer.write(SAMPLE_DATA_DICT)
+
+            with open(filebase + '-2023-08-07', 'r') as outfile:
+                lines = outfile.read()
+                self.assertEqual(lines, SAMPLE_DATA_DICT_STR)
+
+    ############################
+    def test_write_das_record(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = LogfileWriter(filebase)
+            for record in SAMPLE_DATA_DICT:
+                writer.write(DASRecord(timestamp=record['timestamp'],
+                                       data_id='test',
+                                       fields=record['fields']))
+
+            with open(filebase + '-2023-08-07', 'r') as outfile:
+                lines = outfile.read()
+                self.assertEqual(lines, SAMPLE_DATA_DASRECORD_STR)
+
+    ############################
     def test_map_write(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             lines = SAMPLE_DATA.split('\n')
@@ -69,37 +119,34 @@ class TestLogfileWriter(unittest.TestCase):
             bad_line = 'there is no timestamp here'
             with self.assertLogs(logging.getLogger(), logging.ERROR) as cm:
                 writer.write(bad_line)
-            error = 'ERROR:root:LogfileWriter.write() - bad timestamp: ' + bad_line
+            error = f'ERROR:root:LogfileWriter.write() - bad timestamp: "{bad_line}"'
             self.assertEqual(cm.output, [error])
 
             for line in lines:
                 writer.write(line)
 
-            #logging.warning(f'Tempdirname: {tmpdirname}')
-            #time.sleep(200)
-
-            with open(tmpdirname +'/logfile_A-2017-11-03', 'r') as outfile:
+            with open(tmpdirname + '/logfile_A-2017-11-03', 'r') as outfile:
                 self.assertEqual(lines[0], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
 
-            with open(tmpdirname +'/logfile_A-2017-11-04', 'r') as outfile:
+            with open(tmpdirname + '/logfile_A-2017-11-04', 'r') as outfile:
                 self.assertEqual(lines[4], outfile.readline().rstrip())
                 self.assertEqual(lines[7], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
 
-            with open(tmpdirname +'/logfile_B-2017-11-03', 'r') as outfile:
+            with open(tmpdirname + '/logfile_B-2017-11-03', 'r') as outfile:
                 self.assertEqual(lines[1], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
-            with open(tmpdirname +'/logfile_B-2017-11-04', 'r') as outfile:
+            with open(tmpdirname + '/logfile_B-2017-11-04', 'r') as outfile:
                 self.assertEqual(lines[3], outfile.readline().rstrip())
                 self.assertEqual(lines[5], outfile.readline().rstrip())
                 self.assertEqual(lines[8], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
 
-            with open(tmpdirname +'/logfile_C-2017-11-03', 'r') as outfile:
+            with open(tmpdirname + '/logfile_C-2017-11-03', 'r') as outfile:
                 self.assertEqual(lines[2], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
-            with open(tmpdirname +'/logfile_C-2017-11-04', 'r') as outfile:
+            with open(tmpdirname + '/logfile_C-2017-11-04', 'r') as outfile:
                 self.assertEqual(lines[5], outfile.readline().rstrip())
                 self.assertEqual(lines[6], outfile.readline().rstrip())
                 self.assertEqual(lines[7], outfile.readline().rstrip())

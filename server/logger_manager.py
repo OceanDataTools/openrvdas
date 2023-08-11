@@ -33,7 +33,6 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
 from logger.writers.composed_writer import ComposedWriter  # noqa: E402
 
-
 DEFAULT_MAX_TRIES = 3
 
 SOURCE_NAME = 'LoggerManager'
@@ -400,8 +399,11 @@ if __name__ == '__main__':  # noqa: C901
     parser.add_argument('--mode', dest='mode', action='store', default=None,
                         help='Optional name of mode to start system in.')
 
+    database_choices = ['memory', 'django','sqlite']
+    if SQLITE_API_DEFINED:
+        database_choices.append('sqlite')
     parser.add_argument('--database', dest='database', action='store',
-                        choices=['memory', 'django', 'sqlite'],
+                        choices=database_choices,
                         default='memory', help='What backing store database '
                         'to use.')
 
@@ -499,7 +501,7 @@ if __name__ == '__main__':  # noqa: C901
         from server.in_memory_server_api import InMemoryServerAPI
         api = InMemoryServerAPI()
     elif args.database == 'sqlite':
-        from sqlite_gui.sqlite_server_api import SQLiteServerAPI
+        from server.sqlite_server_api import SQLiteServerAPI
         api = SQLiteServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
