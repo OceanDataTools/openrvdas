@@ -14,7 +14,7 @@ class DASRecord:
     """
     ############################
 
-    def __init__(self, json=None, data_id=None, message_type=None,
+    def __init__(self, json_str=None, data_id=None, message_type=None,
                  timestamp=0, fields=None, metadata=None):
         """
         If a json string is passed, it is parsed into a dictionary and its
@@ -25,8 +25,8 @@ class DASRecord:
 
         If timestamp is not specified, the instance will use the current time.
         """
-        if json:
-            parsed = parse(json)
+        if json_str:
+            parsed = json.loads(json_str)
             self.data_id = parsed.get('data_id', None)
             self.message_type = parsed.get('message_type', None)
             self.timestamp = parsed.get('timestamp', None)
