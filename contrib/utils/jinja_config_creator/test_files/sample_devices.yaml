@@ -1,0 +1,19 @@
+# NOTE: This is a sample only
+
+cruise:
+  id: cruise_1
+  start: 'yyyy-mm-dd'
+  end: 'yyyy-mm-dd'
+
+defaults:
+  sourceip: '224.0.36.0'
+  definition_path: /opt/openrvdas/local/devices/devices.yaml
+  file_pathbase: /home/rvdas #base path for TextFileWriter filename & LogFileWriter filebase kwargs
+  prefix: shipname
+
+devices:
+  winch: 
+    port: 50000
+
+  met:
+    port: 50012
