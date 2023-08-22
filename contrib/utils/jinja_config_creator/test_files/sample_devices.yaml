@@ -1,0 +1,31 @@
+# NOTE: This is a sample only
+
+cruise:
+  id: IN2000_V00
+  start: 'yyyy-mm-dd'
+  end: 'yyyy-mm-dd'
+
+defaults:
+  sourceip: '224.0.36.0'
+  definition_path: /opt/openrvdas/local/investigator/devices/investigator_devices.yaml
+  file_pathbase: /home/rvdas #base path for TextFileWriter filename & LogFileWriter filebase kwargs
+  prefix: investigator
+
+devices:
+  winch_vsg: #winch1 - vertical sediment
+    port: 50000
+    parse_type: xml
+    xml_tag: message
+
+  met:
+    port: 50012
+
+  dropkeel:
+    port: 50032
+    extra_transforms:
+      - class: BitMaskTransform
+        module: contrib.csiro.logger.transforms.bit_mask_transform
+        kwargs:
+          little_endian: True
+          device_type: 'DropKeel'
+          definition_path: 'local/investigator/devices/definitions/drop_keel.yaml'
