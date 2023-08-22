@@ -69,6 +69,15 @@ class Reader:
         if not self.encoding:
             return record
 
+        if self.encoding is 'hex':
+            try:
+                r = record.hex()
+                return r
+            except Exception as e:
+                logging.warning('Error decoding string "%s" from encoding "%s": %s',
+                                record, self.encoding, str(e))
+                return None
+
         try:
             return record.decode(encoding=self.encoding,
                                  errors=self.encoding_errors)
