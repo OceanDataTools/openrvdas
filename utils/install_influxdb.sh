@@ -652,6 +652,10 @@ EOF
         else
             AUTOSTART_GRAFANA=false
         fi
+
+        # Tweak data ownership so can run as $USER
+        sudo chown -R $USER ${GRAFANA_HOMEPATH}/data
+        
         cat >> $TMP_SUPERVISOR_FILE <<EOF
 
 ; Run Grafana
@@ -662,7 +666,7 @@ autostart=$AUTOSTART_GRAFANA
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/grafana.stderr
-;user=$USER
+user=$USER
 EOF
     fi
 
