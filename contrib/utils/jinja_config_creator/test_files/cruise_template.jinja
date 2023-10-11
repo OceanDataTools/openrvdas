@@ -1,0 +1,197 @@
+##NOTE: This is a sample only
+##Always use two spaces, not tabs or 4 spaces!!
+
+cruise:
+  id: '{{ cruise.id }}'
+  start: '{{ cruise.start }}'
+  end: '{{ cruise.end }}'
+
+loggers:
+  {% for device in devices %}
+  {{ device }}:
+    configs:
+    - {{ device }}->off
+    - {{ device }}->file/net
+    - {{ device }}->file/net/db
+  {% endfor %}
+
+modes:
+  'off':
+    {% for device in devices %}
+    {{ device }}:  {{ device }}->off
+    {% endfor %}
+  'log':
+    {% for device in devices %}
+    {{ device }}:  {{ device }}->file/net
+    {% endfor %}
+  'log+db':
+    {% for device in devices %}
+    {{ device }}:  {{ device }}->file/net/db
+    {% endfor %}
+
+default_mode: "off"
+
+configs:
+  {% for device in devices %}
+  {{device}}->off:
+    name: {{ device }}->off
+  {{ device }}->file/net:
+    name: {{ device }}->file/net
+    readers:
+      - class: ComposedReader
+        kwargs:
+          readers:
+          - class: UDPReader
+            kwargs:
+              port: {{ devices[device]["port"] }}
+              {% if devices[device]["sourceip"] %}
+              source: {{ devices[device]["sourceip"] }}
+              {% else %}
+              source: {{ defaults.sourceip }}
+              {% endif %}
+              {% if devices[device]["eol"] %}
+              eol: {{ devices[device]["eol"] }}
+              {% endif %}
+          {% if devices[device]["parse_type"] == 'hex' %}
+          - class: UDPReader
+            kwargs:
+              port: {{ devices[device]["port"] }}
+              {% if devices[device]["sourceip"] %}
+              source: {{ devices[device]["sourceip"] }}
+              {% else %}
+              source: {{ defaults.sourceip }}
+              {% endif %}
+              encoding: hex
+          {% endif %}
+    transforms:
+      {% if devices[device]["parse_type"] == 'xml' %}
+      - class: XMLAggregatorTransform
+        kwargs:
+          tag: '{{ devices[device]["xml_tag"] }}'
+      {% endif %}
+      - class: TimestampTransform
+    writers:
+      - class: LogfileWriter
+        kwargs:
+          filebase: {{ defaults.file_pathbase }}/data/raw/{{ cruise.id }}/{{ device }}
+      - class: ComposedWriter
+        kwargs:
+          transforms:
+            - class: PrefixTransform
+              kwargs:
+                {% if devices[device]["prefix"] %}
+                prefix: {{ devices[device]["prefix"] }}
+                {% else %}
+                prefix: {{ defaults.prefix }}_{{ device }}
+                {% endif %}
+            {% if devices[device]["parse_type"] == 'xml' %}
+            - class: WinchXMLParseTransform
+              module: contrib.csiro.logger.transforms.xml_parse_transform
+            {% elif devices[device]["parse_type"] == 'pyparse' %}
+            - class: ParseTransform
+            {% else %}
+            - class: RegexParseTransform
+              module: contrib.csiro.logger.transforms.regex_parse_transform
+            {% endif %}
+              kwargs:
+                metadata_interval: 1
+                definition_path: {{ defaults.definition_path }}
+            {% if devices[device]["extra_transforms"] %}
+                {% for transform in devices[device]["extra_transforms"] %}
+            - class: {{transform.class}}
+              module: {{transform.module}}
+              kwargs:
+                    {% for kwarg, value in transform.kwargs.items() %}
+                {{kwarg}}: {{value}}
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+          writers:
+            - class: TextFileWriter  # write parsed to logfile
+              kwargs:
+                filename: {{ defaults.file_pathbase }}/data/proc/{{ cruise.id }}/{{ device }}
+                split_by_date: True
+  {{ device }}->file/net/db:
+    name: {{ device }}->file/net/db
+    readers:
+      - class: ComposedReader
+        kwargs:
+          readers:
+          - class: UDPReader
+            kwargs:
+              port: {{ devices[device]["port"] }}
+              {% if devices[device]["sourceip"] %}
+              source: {{ devices[device]["sourceip"] }}
+              {% else %}
+              source: {{ defaults.sourceip }}
+              {% endif %}
+              {% if devices[device]["eol"] %}
+              eol: {{ devices[device]["eol"] }}
+              {% endif %}
+          {% if devices[device]["parse_type"] == 'hex' %}
+          - class: UDPReader
+            kwargs:
+              port: {{ devices[device]["port"] }}
+              {% if devices[device]["sourceip"] %}
+              source: {{ devices[device]["sourceip"] }}
+              {% else %}
+              source: {{ defaults.sourceip }}
+              {% endif %}
+              encoding: hex
+          {% endif %}
+    transforms:
+      {% if devices[device]["parse_type"] == 'xml' %}
+      - class: XMLAggregatorTransform
+        kwargs:
+          tag: '{{ devices[device]["xml_tag"] }}'
+      {% endif %}
+      - class: TimestampTransform
+    writers:
+      - class: LogfileWriter
+        kwargs:
+          filebase: {{ defaults.file_pathbase }}/data/raw/{{ cruise.id }}/{{ device }}
+      - class: ComposedWriter
+        kwargs:
+          transforms:
+            - class: PrefixTransform
+              kwargs:
+                {% if devices[device]["prefix"] %}
+                prefix: {{ devices[device]["prefix"] }}
+                {% else %}
+                prefix: {{ defaults.prefix }}_{{ device }}
+                {% endif %}
+            {% if devices[device]["parse_type"] == 'xml' %}
+            - class: WinchXMLParseTransform
+              module: contrib.csiro.logger.transforms.xml_parse_transform
+            {% elif devices[device]["parse_type"] == 'pyparse' %}
+            - class: ParseTransform
+            {% else %}
+            - class: RegexParseTransform
+              module: contrib.csiro.logger.transforms.regex_parse_transform
+            {% endif %}
+              kwargs:
+                metadata_interval: 1
+                definition_path: {{ defaults.definition_path }}
+            {% if devices[device]["extra_transforms"] %}
+                {% for transform in devices[device]["extra_transforms"] %}
+            - class: {{transform.class}}
+              module: {{transform.module}}
+              kwargs:
+                    {% for kwarg, value in transform.kwargs.items() %}
+                {{kwarg}}: {{value}}
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+          writers:
+            - class: TextFileWriter  # write parsed to logfile
+              kwargs:
+                filename: {{ defaults.file_pathbase }}/data/proc/{{ cruise.id }}/{{ device }}
+                split_by_date: True
+            - class: DatabaseWriter
+              kwargs:
+                save_source: False
+                save_metadata: True
+            #- class: CachedDataWriter
+            #  kwargs:
+            #    data_server: localhost:8766
+  {% endfor %}
