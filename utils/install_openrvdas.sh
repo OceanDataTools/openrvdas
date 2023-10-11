@@ -113,6 +113,8 @@ function get_os_type {
                 OS_VERSION=21
             elif [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
                 OS_VERSION=22
+            elif [[ ! -z `grep "VERSION_ID=\"23" /etc/os-release` ]];then
+                OS_VERSION=23
             else
                 echo "Sorry - unknown Ubuntu OS Version! - exiting."
                 exit_gracefully
@@ -152,8 +154,6 @@ function get_os_type {
         echo Unknown OS type: `uname -s`
         exit_gracefully
     fi
-    echo "#####################################################################"
-    echo "Detected OS = $OS_TYPE, Version = $OS_VERSION"
 }
 
 ###########################################################################

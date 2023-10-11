@@ -632,7 +632,7 @@ autostart=$AUTOSTART_INFLUXDB
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/influxdb.stderr
-user=$USER
+;user=$USER
 EOF
     fi
 
