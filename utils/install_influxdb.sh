@@ -356,18 +356,18 @@ EOF
     # Run setup
     echo "#################################################################"
     echo Running InfluxDB setup - killing all currently-running instances
-    pkill -x influxd || echo No processes killed
+    sudo pkill -x influxd || echo No processes killed
     echo Running server in background
     ${INFLUX_PATH}/influxd --reporting-disabled > /dev/null &
     echo Sleeping to give server time to start up
     sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
-    ${INFLUX_PATH}/influx setup \
+    sudo ${INFLUX_PATH}/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
         --org $INFLUXDB_ORGANIZATION --bucket $INFLUXDB_BUCKET --retention 0 --force # > /dev/null
 
     #    echo Killing the InfluxDB instance we started
-    pkill -x influxd || echo No processes killed
+    sudo pkill -x influxd || echo No processes killed
 
     # We're going to run Influx from supervisorctl, so disable automatic service
     sudo systemctl stop influxd || echo influxd not loaded as a service, so nothing to stop
