@@ -371,7 +371,7 @@ EOF
     echo Sleeping to give server time to start up
     sleep 20  # if script crashes at next step, increase this number a smidge
     echo Running influx setup
-    sudo ${INFLUX_PATH}/influx setup \
+    ${INFLUX_PATH}/influx setup \
         --username $INFLUXDB_USER --password $INFLUXDB_PASSWORD \
         --org $INFLUXDB_ORGANIZATION --bucket $INFLUXDB_BUCKET --retention 0 --force # > /dev/null
 
@@ -642,6 +642,7 @@ autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/influxdb.stderr
 ;user=$USER
+user=root
 EOF
     fi
 
