@@ -286,6 +286,19 @@ function install_influxdb {
     echo "#####################################################################"
     echo Installing InfluxDB...
 
+
+    # If we're on MacOS
+    if [ $OS_TYPE == 'MacOS' ]; then
+        INFLUX_PATH=/usr/local/bin
+    # If we're on Linux
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        INFLUX_PATH=/usr/bin
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        INFLUX_PATH=/usr/bin
+    else
+        exit_gracefully
+    fi
+
     # Is there already an installation?
     if [ -d ~/.influxdbv2 ];then
         echo
@@ -306,7 +319,6 @@ function install_influxdb {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        INFLUX_PATH=/usr/local/bin
         HOMEBREW_BASE='/usr/local/homebrew'
         eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
@@ -317,8 +329,6 @@ function install_influxdb {
 
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
-        INFLUX_PATH=/usr/bin
-
         # Remove old repo, if it's lying around
         if [ -e /etc/yum.repos.d/influxdb.repo ]; then
             sudo rm /etc/yum.repos.d/influxdb.repo
@@ -340,7 +350,6 @@ EOF
             sudo yum install -y --nobest influxdb2 influxdb2-cli
         fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-        INFLUX_PATH=/usr/bin
         # influxdata-archive_compat.key GPG Fingerprint: 9D539D90D3328DC7D6C8D3B9D8FF8E1F7DF8B07E
         wget -q https://repos.influxdata.com/influxdata-archive_compat.key
         echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
