@@ -672,7 +672,7 @@ autostart=$AUTOSTART_GRAFANA
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/grafana.stderr
-user=$USER
+user=root
 EOF
     fi
 
