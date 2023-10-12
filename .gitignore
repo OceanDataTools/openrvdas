@@ -96,3 +96,8 @@ mkdocs.yml
 contrib/utils/JSON_YAML_Creator/node_modules
 contrib/utils/JSON_YAML_Creator/package-lock.json
 contrib/utils/JSON_YAML_Creator/yarn.lock
+
+# For sqlite_gui
+sqlite_gui
+.install_sqlite_gui_preferences
+server/openrvdas.sql
