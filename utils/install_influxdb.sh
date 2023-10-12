@@ -653,9 +653,6 @@ EOF
             AUTOSTART_GRAFANA=false
         fi
 
-        # Tweak data ownership so can run as $USER
-        sudo chown -R $USER ${GRAFANA_HOMEPATH}/data
-        
         cat >> $TMP_SUPERVISOR_FILE <<EOF
 
 ; Run Grafana

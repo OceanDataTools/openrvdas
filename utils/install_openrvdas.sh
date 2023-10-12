@@ -192,7 +192,7 @@ function set_default_variables {
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
 
-    DEFAULT_INSTALL_DOC_MARKDOWN=yes
+    DEFAULT_INSTALL_DOC_MARKDOWN=no
 
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
