@@ -57,6 +57,7 @@ class UDPWriter(NetworkWriter):
         self.warning_limit = warning_limit
         self.num_warnings = 0
         self.eol = eol
+        self.good_writes = 0 # consecutive good writes, for detecting UDP errors
 
         self.target_str = 'interface: %s, destination: %s, port: %d' % (
             interface, destination, port)
@@ -180,13 +181,28 @@ class UDPWriter(NetworkWriter):
                 bytes_sent = self.socket.send(record.encode('utf-8'))
 
                 # If here, write at least partially succeeded. Reset warnings
-                if self.num_warnings == self.warning_limit:
-                    logging.info('UDPWriter.write() succeeded in writing after series of '
-                                 'failures; resetting warnings.')
-                self.num_warnings = 0  # we've succeeded
+                #
+                # NOTE: If the host is unreachable, every other send will fail.
+                #       Since UDP doesn't actually know it failed, the initial
+                #       send() cannot fail.  However, the network stack will
+                #       see the ICMP host unreachable message and will store
+                #       THAT as the the error message for next write, then the
+                #       next send fails and clears the error...  Then the next
+                #       "succeeds" and the next fails, etc, etc
+                #
+                #       So we look for 2 consecutive "successful" writes before
+                #       resetting num_warnings.
+                #
+                self.good_writes += 1
+                if self.good_writes >= 2:
+                    if self.num_warnings == self.warning_limit:
+                        logging.info('UDPWriter.write() succeeded in writing after series of '
+                                     'failures; resetting warnings.')
+                    self.num_warnings = 0  # we've succeeded
 
             except (OSError, ConnectionRefusedError) as e:
                 # If we failed, complain, unless we've already complained too much
+                self.good_writes = 0
                 if self.num_warnings < self.warning_limit:
                     logging.error('UDPWriter error: %s: %s', self.target_str, str(e))
                     logging.error('UDPWriter record: %s', record)
