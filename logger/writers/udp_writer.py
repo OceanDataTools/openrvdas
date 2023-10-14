@@ -18,9 +18,9 @@ class UDPWriter(Writer):
 
     def __init__(self, port, destination='',
                  interface='',  # DEPRECATED!
-                 ttl=3, num_retry=2, warning_limit=5, eol=''):
-        """
-        Write text records to a network socket.
+                 ttl=3, num_retry=2, warning_limit=5, eol='',
+                 encoding='utf-8', encoding_errors='ignore'):
+        """Write text records to a network socket.
         ```
         port         Port to which packets should be sent
 
@@ -49,9 +49,21 @@ class UDPWriter(Writer):
 
         eol          If specified, an end of line string to append to record
                      before sending.
+
+        encoding - 'utf-8' by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - 'ignore' by default. Other error strategies are
+                'strict', 'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
         ```
+
         """
-        super().__init__(input_format=Text)
+        super().__init__(input_format=Text,
+                         encoding=encoding,
+                         encoding_errors=encoding_errors)
 
         self.ttl = ttl
         self.num_retry = num_retry
@@ -180,7 +192,7 @@ class UDPWriter(Writer):
         rec_len = len(record)
         while num_tries <= self.num_retry and bytes_sent < rec_len:
             try:
-                bytes_sent = self.socket.send(record.encode('utf-8'))
+                bytes_sent = self.socket.send(self._encode_str(record))
 
                 # If here, write at least partially succeeded. Reset warnings
                 #
