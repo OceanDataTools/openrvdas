@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import json
-import ipaddress
 import logging
 import socket
 import struct
@@ -62,6 +61,21 @@ class UDPWriter(NetworkWriter):
         self.target_str = 'interface: %s, destination: %s, port: %d' % (
             interface, destination, port)
 
+        # do name resolution once in the constructor
+        #
+        # NOTE: This means the hostname must be valid when we start, otherwise
+        #       the config_check code will puke.  That's fine.  The alternative
+        #       is we let name resolution happen while we're running, but then
+        #       each failed lookup is going to block our write() routine for a
+        #       few seconds - not good.
+        #
+        # NOTE: This also catches specifying impropperly formatted IP
+        #       addresses.  The only way through gethostbyname() w/out throwing
+        #       an exception is to provide a valid hostname or IP address.
+        #       Propperly formatted IPs just get returned.
+        #
+        if destination:
+            destination = socket.gethostbyname(destination)
         if interface:
             logging.warning('DEPRECATED: UDPWriter(interface=%s). Instead of the '
                             '"interface" parameter, UDPWriters should use the'
@@ -69,10 +83,9 @@ class UDPWriter(NetworkWriter):
                             'interface, specify UDPWriter(destination=<interface '
                             'broadcast address>) address as the destination.',
                             interface)
+            interface = socket.gethostbyname(interface)
 
         if interface and destination:
-            ipaddress.ip_address(interface)  # throw a ValueError if bad addr
-            ipaddress.ip_address(destination)
             # At the moment, we don't know how to do both interface and
             # multicast/unicast. If they've specified both, then complain
             # and ignore the interface part.
@@ -96,16 +109,11 @@ class UDPWriter(NetworkWriter):
                 destination = '<broadcast>'
             else:
                 # Change interface's lowest tuple to 'broadcast' value (255)
-                ipaddress.ip_address(interface)
                 destination = interface[:interface.rfind('.')] + '.255'
-
-        # If we've been given a destination, make sure it's a valid IP
-        elif destination:
-            ipaddress.ip_address(destination)
 
         # If no destination, it's a broadcast; set flag allowing broadcast and
         # set dest to special string
-        else:
+        elif not destination:
             destination = '<broadcast>'
 
         self.destination = destination
