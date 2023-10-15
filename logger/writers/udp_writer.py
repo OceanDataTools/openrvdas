@@ -9,7 +9,6 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.network_writer import NetworkWriter  # noqa: E402
 
 
@@ -161,15 +160,7 @@ class UDPWriter(NetworkWriter):
                 self.write(single_record)
             return
 
-        # If record is not a string, try converting to JSON. If we don't know
-        # how, throw a hail Mary and force it into str format
-        if not isinstance(record, str):
-            if type(record) in [int, float, bool, list, dict]:
-                record = json.dumps(record)
-            elif isinstance(record, DASRecord):
-                record = record.as_json()
-            else:
-                record = str(record)
+        # Append eol if configured
         if self.eol:
             record += self.eol
 
