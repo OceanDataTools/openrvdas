@@ -124,7 +124,7 @@ class NetworkWriter(Writer):
 
         num_tries = bytes_sent = 0
         rec_len = len(record)
-        while num_tries < self.num_retry and bytes_sent < rec_len:
+        while num_tries <= self.num_retry and bytes_sent < rec_len:
             try:
                 bytes_sent = self.socket.send(record.encode('utf-8'))
             except OSError as e:
