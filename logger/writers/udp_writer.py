@@ -9,10 +9,11 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.writers.network_writer import NetworkWriter  # noqa: E402
+from logger.utils.formats import Text
+from logger.writers.writer import Writer
 
 
-class UDPWriter(NetworkWriter):
+class UDPWriter(Writer):
     """Write UDP packets to network."""
 
     def __init__(self, port, destination='',
@@ -50,6 +51,8 @@ class UDPWriter(NetworkWriter):
                      before sending.
         ```
         """
+        super().__init__(input_format=Text)
+
         self.ttl = ttl
         self.num_retry = num_retry
         self.warning_limit = warning_limit
