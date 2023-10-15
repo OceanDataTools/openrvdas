@@ -41,6 +41,26 @@ class NetworkWriter(Writer):
         self.num_retry = num_retry
         self.eol = eol
 
+        # split network into host, port
+        (self.host, self.port) = self.network.split(':')
+        self.port = int(self.port)
+
+        # do name resolution once in the constructor
+        #
+        # NOTE: This means the hostname must be valid when we start, otherwise
+        #       the config_check code will puke.  That's fine.  The alternative
+        #       is we let name resolution happen while we're running, but then
+        #       each failed lookup is going to block our write() routine for a
+        #       few seconds - not good.
+        #
+        # NOTE: This also catches specifying impropperly formatted IP
+        #       addresses.  The only way through gethostbyname() w/out throwing
+        #       an exception is to provide a valid hostname or IP address.
+        #       Propperly formatted IPs just get returned.
+        #
+        if self.host:
+            self.host = socket.gethostbyname(self.host)
+
         # Try opening the socket
         self.socket = self._open_socket()
 
@@ -49,9 +69,7 @@ class NetworkWriter(Writer):
         """Try to open and return the network socket.
         """
         # TCP if host is specified
-        (host, port) = self.network.split(':')
-        port = int(port)
-        if host:
+        if self.host:
             this_socket = socket.socket(family=socket.AF_INET,
                                         type=socket.SOCK_STREAM,
                                         proto=socket.IPPROTO_TCP)
@@ -72,7 +90,7 @@ class NetworkWriter(Writer):
 
         # Try connecting
         try:
-            this_socket.connect((host, port))  # should this be bind()?
+            this_socket.connect((self.host, self.port))
             return this_socket
         except OSError as e:
             logging.warning('Unable to connect to %s: %s', self.network, e)
