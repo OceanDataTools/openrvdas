@@ -45,7 +45,10 @@ class SerialWriter(Writer):
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
                 written to the serial port.
         """
-        super().__init__(input_format=Text)
+        super().__init__(input_format=Text,
+                         encoding=encoding,
+                         encoding_errors=encoding_errors)
+
         if not SERIAL_MODULE_FOUND:
             raise RuntimeError('Serial port functionality not available. Please '
                                'install Python module pyserial.')
@@ -72,7 +75,17 @@ class SerialWriter(Writer):
         try:
             if self.eol:
                 record += self.eol
-            written = self.serial.write((record).encode(self.encoding))
+            # NOTE: Have to set `unescape` to False here, otherwise
+            #       _encode_str() ends up mangling the buffer.
+            #
+            # FIXME: I don't really see any case where we would *want* to
+            #        unescape during encode other than the "probably escaped
+            #        because we read it from a config file" case... and that
+            #        really only applies to eol.  So I'd say the default
+            #        behavior should be NOT to unescape.  Will look into
+            #        that...
+            #
+            written = self.serial.write(self._encode_str(record, unescape=False))
             if not written and not self.quiet:
                 logging.error("Not all bits written")
         except KeyboardInterrupt as e:
