@@ -131,7 +131,8 @@ class UDPWriter(Writer):
             destination = '<broadcast>'
 
         self.destination = destination
-        self.port = port
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
 
         # Try opening the socket
         self.socket = self._open_socket()
