@@ -14,7 +14,8 @@ from logger.writers.writer import Writer  # noqa: E402
 class NetworkWriter(Writer):
     """Write to network."""
 
-    def __init__(self, network, num_retry=2, eol=''):
+    def __init__(self, network, num_retry=2, eol='',
+                 encoding='utf-8', encoding_errors='ignore'):
         """
         Write text records to a network socket.
 
@@ -28,10 +29,22 @@ class NetworkWriter(Writer):
 
         eol          If specified, an end of line string to append to record
                      before sending
+
+        encoding - 'utf-8' by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - 'ignore' by default. Other error strategies are
+                'strict', 'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
+
         ```
         """
 
-        super().__init__(input_format=Text)
+        super().__init__(input_format=Text,
+                         encoding=encoding,
+                         encoding_errors=encoding_errors)
 
         if network.find(':') == -1:
             raise ValueError('NetworkWriter network argument must be in \'host:port\''
@@ -126,7 +139,7 @@ class NetworkWriter(Writer):
         rec_len = len(record)
         while num_tries <= self.num_retry and bytes_sent < rec_len:
             try:
-                bytes_sent = self.socket.send(record.encode('utf-8'))
+                bytes_sent = self.socket.send(self._encode_str(record))
             except OSError as e:
                 logging.warning('Error while writing "%s": %s', record, str(e))
             num_tries += 1
