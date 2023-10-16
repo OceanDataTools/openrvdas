@@ -49,10 +49,10 @@ class Reader:
         return encoded.decode('unicode_escape')
 
     ############################
-    def _encode_str(self, the_str, unescape=True):
-        """Encode a string to bytes, unescaping things like \n and \r. Unescaping
-        requires ugly convolutions of encoding, then decoding while we escape things,
-        then encoding a second time.
+    def _encode_str(self, the_str, unescape=False):
+        """Encode a string to bytes, optionally unescaping things like \n and \r.
+        Unescaping requires ugly convolutions of encoding, then decoding while we
+        escape things, then encoding a second time.
         """
         if not self.encoding:
             return the_str

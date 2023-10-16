@@ -75,17 +75,7 @@ class SerialWriter(Writer):
         try:
             if self.eol:
                 record += self.eol
-            # NOTE: Have to set `unescape` to False here, otherwise
-            #       _encode_str() ends up mangling the buffer.
-            #
-            # FIXME: I don't really see any case where we would *want* to
-            #        unescape during encode other than the "probably escaped
-            #        because we read it from a config file" case... and that
-            #        really only applies to eol.  So I'd say the default
-            #        behavior should be NOT to unescape.  Will look into
-            #        that...
-            #
-            written = self.serial.write(self._encode_str(record, unescape=False))
+            written = self.serial.write(self._encode_str(record))
             if not written and not self.quiet:
                 logging.error("Not all bits written")
         except KeyboardInterrupt as e:

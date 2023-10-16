@@ -54,7 +54,7 @@ class PolledSerialReader(SerialReader):
             return
         if type(command) is str:
             # Do some craziness to unescape escape sequences like '\n'
-            self.serial.write(self._encode_str(command))
+            self.serial.write(self._encode_str(command, unescape=True))
             return
 
         if not type(command) is list:
@@ -81,7 +81,7 @@ class PolledSerialReader(SerialReader):
             else:
                 # If it's a normal command we're sending
                 logging.info('Sending serial command "%s"', cmd)
-                self.serial.write(self._encode_str(cmd))
+                self.serial.write(self._encode_str(cmd, unescape=True))
 
     ############################
     def read(self):

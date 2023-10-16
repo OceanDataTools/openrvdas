@@ -94,7 +94,7 @@ class SerialReader(Reader):
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
         if eol is not None and self.encoding:
-            eol = self._encode_str(eol)
+            eol = self._encode_str(eol, unescape=True)
         self.eol = eol
 
     ############################
