@@ -69,8 +69,13 @@ class UDPWriter(Writer):
         self.num_retry = num_retry
         self.warning_limit = warning_limit
         self.num_warnings = 0
-        self.eol = eol
         self.good_writes = 0 # consecutive good writes, for detecting UDP errors
+
+        # 'eol' comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if eol is not None and self.encoding:
+            eol = self._unescape_str(eol)
+        self.eol = eol
 
         self.target_str = 'interface: %s, destination: %s, port: %d' % (
             interface, destination, port)
