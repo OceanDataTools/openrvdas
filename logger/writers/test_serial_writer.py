@@ -151,7 +151,7 @@ class TestSerialWriter(unittest.TestCase):
             self.assertEqual(line, result)
 
     def _run_read_specialcase(self, port):
-        reader = SerialReader(port)
+        reader = SerialReader(port, eol="FOO\\n")
         res = reader.read()
         logging.info('data: %s, read: %s', SPECIAL_STRING, res)
         self.assertEqual(SPECIAL_STRING, res)
@@ -177,7 +177,7 @@ class TestSerialWriter(unittest.TestCase):
                 writer.write(line)
 
         def _run_write_specialcase(in_port):
-            writer = SerialWriter(in_port, quiet=True)
+            writer = SerialWriter(in_port, quiet=True, eol="FOO\\n")
             writer.write(SPECIAL_STRING)
             logging.info('wrote: %s', SPECIAL_STRING)
 
