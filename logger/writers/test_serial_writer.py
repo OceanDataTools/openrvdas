@@ -166,17 +166,17 @@ class TestSerialWriter(unittest.TestCase):
             writer = SerialWriter(port=in_port)
             for line in SAMPLE_DATA.split('\n'):
                 logging.info('wrote: %s', line)
-                writer.write(line + '\n')
+                writer.write(line)
 
         def _run_read_specialcase(port):
             reader = SerialReader(port)
             res = reader.read()
-            logging.info('data: %s', 'read: %s', '♥�♥\x00♥♥', res)
+            logging.info('data: %s, read: %s', '♥�♥\x00♥♥', res)
             self.assertEqual('♥�♥\x00♥♥', res)
 
         def _run_write_specialcase(in_port):
             writer = SerialWriter(in_port, quiet=True)
-            writer.write('♥�♥\x00♥♥' + '\n')
+            writer.write('♥�♥\x00♥♥')
             logging.info('wrote: %s', '♥�♥\x00♥♥')
 
         reader_thread = threading.Thread(target=_run_reader,
