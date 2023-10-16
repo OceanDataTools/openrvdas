@@ -16,6 +16,10 @@ SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
 
+BINARY_DATA = [b'\xff\xa1',
+               b'\xff\xa2',
+               b'\xff\xa3']
+
 
 class ReaderTimeout(StopIteration):
     """A custom exception we can raise when we hit timeout."""
@@ -33,91 +37,99 @@ class TestNetworkWriter(unittest.TestCase):
 
     ############################
     # Actually run the NetworkWriter in internal method
-    def write_network(self, addr, eol=None, data=None, interval=0, delay=0):
-        writer = NetworkWriter(addr, eol=eol)
+    def write_tcp(self, dest_ip, dest_port, eol, encoding, sample_data, interval, delay):
+        writer = NetworkWriter(dest_port, dest_ip, eol=eol, encoding=encoding)
 
         time.sleep(delay)
-        for line in data:
+        for line in sample_data:
             writer.write(line)
             time.sleep(interval)
 
     ############################
-    def test_udp(self):
-        # Main method starts here
-        addr = ':8001'
-        eol = None
-        (host, port) = addr.split(':')
-        port = int(port)
-        sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-        try:  # Raspbian doesn't recognize SO_REUSEPORT
-            pass
-            # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning('Unable to set socket REUSEPORT; system may not support it.')
+    def do_the_test(self, dest_ip=None, dest_port=None, eol=None, encoding='utf-8', sample_data=SAMPLE_DATA, interval=0.1, delay=0, alarm_timeout=3):
+        s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
 
-        sock.bind((host, port))
+        # use INADDR_ANY, but python bind() takes a string
+        s.bind((str(socket.INADDR_ANY), dest_port))
+        s.listen()
 
         # Start the writer
-        threading.Thread(target=self.write_network,
-                         args=(addr, eol, SAMPLE_DATA, 0.1)).start()
+        threading.Thread(target=self.write_tcp,
+                         args=(dest_ip, dest_port, eol, encoding, sample_data, interval, delay)).start()
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
-        signal.alarm(3)
+        signal.alarm(alarm_timeout)
         try:
+            # accept connections
+            s_connected, client_addr = s.accept()
+            logging.info('got connection from %s', client_addr)
+
             # Check that we get the lines we expect from it
-            for line in SAMPLE_DATA:
-                record = sock.recv(4096)
-                logging.info('looking for "%s", got "%s"', line.strip(), record)
-                if record:
-                    record = record.decode('utf-8')
+            for line in sample_data:
+                # FIXME: lookup page size?  hardcode 4k?  something else
+                #        reasonable?
+                record = s_connected.recv(4096)
+                if encoding:
+                    record = record.decode(encoding=encoding)
+                # add eol to expected line before comparison
+                if eol:
+                    if encoding:
+                        eol = eol.encode(encoding).decode('unicode_escape')
+                    line += eol
+                # encode line and record, if needed, so we get nice consistent
+                # b'whatever\n' output
+                if encoding:
+                    line_bytes = line.encode(encoding)
+                    record_bytes = record.encode(encoding)
+                else:
+                    line_bytes = line
+                    record_bytes = record
+                logging.info('looking for %s, got %s', line_bytes, record_bytes)
                 self.assertEqual(line, record)
         except ReaderTimeout:
             self.assertTrue(False, 'NetworkReader timed out in test - is port '
                             '%s open?' % addr)
         signal.alarm(0)
 
-############################
+
+    ############################
+    def test_text(self):
+        kwargs = { 'dest_ip': '127.0.0.1',
+                   'dest_port': 8001,
+                   'eol': None,
+        }
+        self.do_the_test(**kwargs)
 
 
-def test_udp_with_eol(self):
-    # Main method starts here
-    addr = ':8002'
-    eol = '\r\n'
+    ############################
+    def test_text_with_eol(self):
+        kwargs = { 'dest_ip': '127.0.0.1',
+                   'dest_port': 8002,
+                   'eol': '\r\n',
+        }
+        self.do_the_test(**kwargs)
 
-    (host, port) = addr.split(':')
-    port = int(port)
-    sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-    try:  # Raspbian doesn't recognize SO_REUSEPORT
-        pass
-    # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-    except AttributeError:
-        logging.warning('Unable to set socket REUSEPORT; system may not support it.')
 
-    sock.bind((host, port))
+    ############################
+    def test_text_with_crazy_eol(self):
+        kwargs = { 'dest_ip': '127.0.0.1',
+                   'dest_port': 8003,
+                   'eol': 'FOO\\r\\n',
+        }
+        self.do_the_test(**kwargs)
 
-    # Start the writer
-    threading.Thread(target=self.write_network,
-                     args=(addr, eol, SAMPLE_DATA, 0.1)).start()
 
-    # Set timeout we can catch if things are taking too long
-    signal.signal(signal.SIGALRM, self._handler)
-    signal.alarm(3)
-    try:
-        # Check that we get the lines we expect from it
-        for line in SAMPLE_DATA:
-            record = sock.recv(4096)
-            logging.info('looking for "%s", got "%s"', line.strip(), record)
-            if record:
-                record = record.decode('utf-8')
-                line += eol
-                self.assertEqual(line, record)
-    except ReaderTimeout:
-        self.assertTrue(False, 'NetworkReader timed out in test - is port '
-                        '%s open?' % addr)
-    signal.alarm(0)
+    ############################
+    def test_binary(self):
+        kwargs = { 'dest_ip': '127.0.0.1',
+                   'dest_port': 8004,
+                   'eol': None,
+                   'encoding': '',
+                   'sample_data': BINARY_DATA,
+        }
+        self.do_the_test(**kwargs)
 
 
 ################################################################################
