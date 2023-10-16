@@ -18,7 +18,7 @@ class UDPWriter(Writer):
 
     def __init__(self, port, destination='',
                  interface='',  # DEPRECATED!
-                 ttl=3, num_retry=2, warning_limit=5, eol='',
+                 mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
         """Write text records to a network socket.
         ```
@@ -37,7 +37,10 @@ class UDPWriter(Writer):
                      argument and specify the broadcast address of the desired
                      network.
 
-        ttl          For multicast, how many network hops to allow
+        mc_interface REQUIRED for multicast, the interface to send from.  Can be
+                     specified as either IP or a resolvable hostname.
+
+        mc_ttl       For multicast, how many network hops to allow.
 
         num_retry    Number of times to retry if write fails. If writer exceeds
                      this number, it will give up on writing the message and
@@ -65,7 +68,6 @@ class UDPWriter(Writer):
                          encoding=encoding,
                          encoding_errors=encoding_errors)
 
-        self.ttl = ttl
         self.num_retry = num_retry
         self.warning_limit = warning_limit
         self.num_warnings = 0
@@ -139,6 +141,13 @@ class UDPWriter(Writer):
         # make sure port gets stored as an int, even if passed in as a string
         self.port = int(port)
 
+        # multicast options
+        if mc_interface:
+            # resolve once in constructor
+            mc_interface = socket.gethostbyname(mc_interface)
+        self.mc_interface = mc_interface
+        self.mc_ttl = mc_ttl
+
         # Try opening the socket
         self.socket = self._open_socket()
 
@@ -155,10 +164,18 @@ class UDPWriter(Writer):
         except AttributeError:
             logging.warning('Unable to set socket REUSEPORT; may be unsupported')
 
-        # Set the time-to-live for messages, in case of multicast
-        udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                              struct.pack('b', self.ttl))
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+        # set multicast/broadcast options
+        if self.mc_interface:
+            # set the time-to-live for messages
+            udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+                                  struct.pack('b', self.mc_ttl))
+            # set outgoing multicast interface
+            udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                                  socket.inet_aton(self.mc_interface))
+        else:
+            # maybe broadcast, but very non-trivial to detect broadcast IP, so
+            # we set the broadcast flag anytime we're not doing multicast
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
         try:
             udp_socket.connect((self.destination, self.port))
