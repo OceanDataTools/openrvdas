@@ -51,11 +51,16 @@ class NetworkWriter(Writer):
                              ' or \':port\' format. Found "%s"' % network)
         self.network = network
         self.num_retry = num_retry
-        self.eol = eol
 
         # split network into host, port
         (self.host, self.port) = self.network.split(':')
         self.port = int(self.port)
+
+        # 'eol' comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if eol is not None and self.encoding:
+            eol = self._unescape_str(eol)
+        self.eol = eol
 
         # do name resolution once in the constructor
         #
