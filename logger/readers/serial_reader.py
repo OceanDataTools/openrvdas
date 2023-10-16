@@ -101,7 +101,7 @@ class SerialReader(Reader):
     def read(self):
         try:
             if self.eol:
-                record = self.serial.read_until(terminator=self.eol, size=self.max_bytes)
+                record = self.serial.read_until(expected=self.eol, size=self.max_bytes)
             elif self.max_bytes:
                 record = self.serial.read(size=self.max_bytes)
             else:
