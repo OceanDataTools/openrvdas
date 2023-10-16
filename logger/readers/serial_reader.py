@@ -102,14 +102,22 @@ class SerialReader(Reader):
         try:
             if self.eol:
                 record = self.serial.read_until(expected=self.eol, size=self.max_bytes)
+                # read_until()'s record includes a trialing 'eol', strip it off
+                #
+                # NOTE: But don't use rstrip which just looks explicitly for
+                #       whitespace
+                #
+                record = record.rsplit(self.eol)[0]
             elif self.max_bytes:
+                # no stripping on this one, just use exactly what we got
                 record = self.serial.read(size=self.max_bytes)
             else:
-                record = self.serial.readline()
+                # readline()'s record includes the trailing '\n', strip it off
+                record = self.serial.readline().rstrip()
 
             if not record:
                 return None
-            return self._decode_bytes(record).rstrip()
+            return self._decode_bytes(record)
 
         except KeyboardInterrupt as e:
             raise e
