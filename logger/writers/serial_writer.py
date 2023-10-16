@@ -63,10 +63,15 @@ class SerialWriter(Writer):
         except serial.SerialException as e:
             raise serial.SerialException(f'Failed to open serial port {port}: {e}')
 
-        self.eol = eol
         self.encoding = encoding
         self.encoding_errors = encoding_errors
         self.quiet = quiet
+
+        # 'eol' comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if eol is not None and self.encoding:
+            eol = self._unescape_str(eol)
+        self.eol = eol
 
     ############################
     def write(self, record):
