@@ -16,7 +16,6 @@ class UDPWriter(Writer):
     """Write UDP packets to network."""
 
     def __init__(self, port, destination='',
-                 interface='',  # DEPRECATED!
                  mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
         """Write records to a UDP network socket.
@@ -30,11 +29,6 @@ class UDPWriter(Writer):
                      Setting destination='255.255.255.255' means broadcast
                      to local network. To broadcast to a specific interface,
                      set destination to the broadcast address for that network.
-
-        interface    DEPRECATED - If specified, the network interface to
-                     send from. Preferred usage is to use the 'destination'
-                     argument and specify the broadcast address of the desired
-                     network.
 
         mc_interface REQUIRED for multicast, the interface to send from.  Can be
                      specified as either IP or a resolvable hostname.
@@ -77,8 +71,7 @@ class UDPWriter(Writer):
             eol = self._unescape_str(eol)
         self.eol = eol
 
-        self.target_str = 'interface: %s, destination: %s, port: %d' % (
-            interface, destination, port)
+        self.target_str = 'destination: %s, port: %d' % (destination, port)
 
         # do name resolution once in the constructor
         #
@@ -95,44 +88,9 @@ class UDPWriter(Writer):
         #
         if destination:
             destination = socket.gethostbyname(destination)
-        if interface:
-            logging.warning('DEPRECATED: UDPWriter(interface=%s). Instead of the '
-                            '"interface" parameter, UDPWriters should use the'
-                            '"destination" parameter. To broadcast over a specific '
-                            'interface, specify UDPWriter(destination=<interface '
-                            'broadcast address>) address as the destination.',
-                            interface)
-            interface = socket.gethostbyname(interface)
-
-        if interface and destination:
-            # At the moment, we don't know how to do both interface and
-            # multicast/unicast. If they've specified both, then complain
-            # and ignore the interface part.
-            logging.warning('UDPWriter doesn\'t yet support specifying both '
-                            'interface and destination. Ignoring interface '
-                            'specification.')
-
-        # THE FOLLOWING USE OF interface PARAMETER IS PARTIALLY BROKEN: it
-        # will fail if the netmask is not 255.255.255.0. This is why we
-        # deprecate the interface param.
-        #
-        # If they've specified the interface we're supposed to be sending
-        # via, then we have to do a little legerdemain: we're going to
-        # connect to the broadcast address of the specified interface as
-        # our destination. The broadcast address is just the normal
-        # address with the last tuple replaced by ".255".
-        elif interface:
-            if interface == '0.0.0.0':  # local network
-                destination = '255.255.255.255'
-            elif interface in ['<broadcast>', 'None']:
-                destination = '<broadcast>'
-            else:
-                # Change interface's lowest tuple to 'broadcast' value (255)
-                destination = interface[:interface.rfind('.')] + '.255'
-
-        # If no destination, it's a broadcast; set flag allowing broadcast and
-        # set dest to special string
-        elif not destination:
+        else:
+            # If no destination, it's a broadcast; set flag allowing broadcast and
+            # set dest to special string
             destination = '<broadcast>'
 
         self.destination = destination
