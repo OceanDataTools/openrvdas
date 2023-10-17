@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 import sys
 
 from os.path import dirname, realpath
@@ -14,9 +15,9 @@ class Writer:
     """
     ############################
 
-    def __init__(self, input_format=formats.Unknown):
-        """
-        Abstract base class for data Writers.
+    def __init__(self, input_format=formats.Unknown,
+                 encoding='utf-8', encoding_errors='ignore'):
+        """Abstract base class for data Writers.
 
         Concrete classes should implement the write(record) method and assign
         an input format that the writer accepts.
@@ -38,8 +39,64 @@ class Writer:
         ```
         The test will also return False if either the reader or writer have
         format specification of "Unknown".
+
+        Two additional arguments govern how records will be encoded/decoded
+        from bytes, if desired by the Reader subclass when it calls
+        _encode_str() or _decode_bytes:
+
+        encoding - 'utf-8' by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - 'ignore' by default. Other error strategies are
+                'strict', 'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
+
         """
         self.input_format(input_format)
+        self.encoding = encoding
+        self.encoding_errors = encoding_errors
+
+    ############################
+    def _unescape_str(self, the_str):
+        """Unescape a string by encoding it to bytes, then unescaping when we
+        decode it. Ugly.
+        """
+        if not self.encoding:
+            return the_str
+
+        encoded = the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+        return encoded.decode('unicode_escape')
+
+    ############################
+    def _encode_str(self, the_str, unescape=True):
+        """Encode a string to bytes, unescaping things like \n and \r. Unescaping
+        requires ugly convolutions of encoding, then decoding while we escape things,
+        then encoding a second time.
+        """
+        if not self.encoding:
+            return the_str
+        if unescape:
+            the_str = self._unescape_str(the_str)
+        return the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+
+    ############################
+    def _decode_bytes(self, record):
+        """Decode a record from bytes to str, if we have an encoding specified."""
+        if not record:
+            return None
+
+        if not self.encoding:
+            return record
+
+        try:
+            return record.decode(encoding=self.encoding,
+                                 errors=self.encoding_errors)
+        except UnicodeDecodeError as e:
+            logging.warning('Error decoding string "%s" from encoding "%s": %s',
+                            record, self.encoding, str(e))
+            return None
 
     ############################
     def input_format(self, new_format=None):
