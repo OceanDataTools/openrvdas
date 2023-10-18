@@ -284,9 +284,6 @@ class FileWriter(Writer):
             if not self.file:
                 self._set_file(self.filename)
 
-        if isinstance(record, dict):
-            record = str(record)
-
         # Write the record and flush if requested
         self.file.write(record)
         if self.delimiter is not None:
