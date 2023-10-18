@@ -45,8 +45,7 @@ class SerialWriter(Writer):
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
                 written to the serial port.
         """
-        super().__init__(input_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
@@ -69,8 +68,16 @@ class SerialWriter(Writer):
 
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
-        if eol is not None and self.encoding:
-            eol = self._unescape_str(eol)
+        if eol:
+            if self.encoding:
+                # NOTE: Technically, it's safe to call _unescape_str() with no
+                #       encoding, it just returns the str/bytes/thing
+                #       unmodified.  But why tempt fate, right?
+                eol = self._unescape_str(eol)
+            else:
+                # if encoding has been set to '' or None, we're dealing with raw/binary
+                # output.  encode eol so we can append it safely in write()
+                eol = eol.encode()
         self.eol = eol
 
     ############################
