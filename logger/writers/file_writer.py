@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 import os.path
 import sys
 import math
@@ -19,7 +20,8 @@ class FileWriter(Writer):
     def __init__(self, filename=None, mode='a', delimiter='\n', flush=True,
                  split_by_time=False, split_interval=None, header=None,
                  header_file=None, time_format='-' + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True):
+                 time_zone=timezone.utc, create_path=True,
+                 encoding='utf-8', encoding_errors='ignore'):
         """Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -57,14 +59,23 @@ class FileWriter(Writer):
         time_zone    Time zone to use for determining splits. By default UTC.
 
         create_path  Create directory path to file if it doesn't exist ```
+
+        encoding - 'utf-8' by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - 'ignore' by default. Other error strategies are
+                'strict', 'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
         ```
 
         """
-        super().__init__()
+        super().__init__(encoding=encoding,
+                         encoding_errors=encoding_errors)
 
         self.filename = filename
         self.mode = mode
-        self.delimiter = delimiter
         self.flush = flush
         self.split_by_time = split_by_time
         self.time_format = time_format
@@ -73,6 +84,21 @@ class FileWriter(Writer):
         self.split_interval_in_seconds = 0
         self.header = None
         self.next_file_split = datetime.now(self.time_zone)
+
+        # 'delimiter' comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if delimiter:
+            if self.encoding:
+                # NOTE: Technically, it's safe to call _unescape_str() with no
+                #       encoding, it just returns the str/bytes/thing
+                #       unmodified.  But why tempt fate, right?
+                delimiter = self._unescape_str(delimiter)
+            else:
+                # if encoding has been set to '' or None, we're dealing with
+                # raw/binary output.  encode delimiter so we can append it
+                # safely in write()
+                delimiter = delimiter.encode()
+        self.delimiter = delimiter
 
         if (split_by_time or split_interval) is not None and not filename:
             raise ValueError('FileWriter: filename must be specified if '
@@ -221,8 +247,9 @@ class FileWriter(Writer):
         # Check to see if file already exists
         file_is_new = not os.path.isfile(filename)
 
-        # Finally, open the specified file with the specified mode
-        self.file = open(filename, self.mode)
+        # Finally, open the specified file with the specified mode and encoding
+        logging.info("opening %s with mode=%s and encoding=%s", filename, self.mode, self.encoding)
+        self.file = open(filename, self.mode, encoding=self.encoding)
 
         # Add header record to file if a header was specified and the file was
         # just created.
