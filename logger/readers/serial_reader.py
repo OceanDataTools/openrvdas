@@ -68,8 +68,7 @@ class SerialReader(Reader):
             eol: \r
         ```
         """
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
@@ -93,23 +92,36 @@ class SerialReader(Reader):
 
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
+        #
+        # NOTE: This block is different from SerialWriter because we use
+        #       readline() in here, which already looks for trailing '\n' and
+        #       handles encoding itself.
+        #
         if eol is not None and self.encoding:
-            eol = self._encode_str(eol)
+            eol = self._encode_str(eol, unescape=True)
         self.eol = eol
 
     ############################
     def read(self):
         try:
             if self.eol:
-                record = self.serial.read_until(terminator=self.eol, size=self.max_bytes)
+                record = self.serial.read_until(expected=self.eol, size=self.max_bytes)
+                # read_until()'s record includes a trailing 'eol', strip it off
+                #
+                # NOTE: But don't use rstrip which just looks explicitly for
+                #       whitespace
+                #
+                record = record.rsplit(self.eol)[0]
             elif self.max_bytes:
+                # no stripping on this one, just use exactly what we got
                 record = self.serial.read(size=self.max_bytes)
             else:
-                record = self.serial.readline()
+                # readline()'s record includes the trailing '\n', strip it off
+                record = self.serial.readline().rstrip()
 
             if not record:
                 return None
-            return self._decode_bytes(record).rstrip()
+            return self._decode_bytes(record)
 
         except KeyboardInterrupt as e:
             raise e

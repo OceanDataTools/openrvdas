@@ -21,6 +21,12 @@ SAMPLE_DATA = """2017-11-04T05:12:19.275337Z $HEHDT,234.76,T*1b
 2017-11-04T05:12:20.035450Z $HEHDT,234.72,T*1f
 2017-11-04T05:12:22.312971Z $HEHDT,235.66,T*1b"""
 
+SPECIAL_STRING = '♥�♥\x00♥♥'
+
+BINARY_DATA = [b'\xff\xa1',
+               b'\xff\xa2',
+               b'\xff\xa3']
+
 SAMPLE_MAX_BYTES_2 = ['$H',
                       'EH',
                       'DT',
@@ -141,6 +147,26 @@ class TestSerialWriter(unittest.TestCase):
         self.tmpdirname = self.tmpdir.name
         logging.info('created temporary directory "%s"', self.tmpdirname)
 
+    def _run_reader(self, port):
+        reader = SerialReader(port)
+        for line in SAMPLE_DATA.split('\n'):
+            result = reader.read()
+            logging.info('data: %s, read: %s', line, result)
+            self.assertEqual(line, result)
+
+    def _run_read_specialcase(self, port):
+        reader = SerialReader(port, eol="FOO\\n")
+        res = reader.read()
+        logging.info('data: %s, read: %s', SPECIAL_STRING, res)
+        self.assertEqual(SPECIAL_STRING, res)
+
+    def _run_read_binary(self, port):
+        reader = SerialReader(port, encoding=None)
+        for line in BINARY_DATA:
+            result = reader.read()
+            logging.info('data: %s, read %s', line, result)
+            self.assertEqual(line, result)
+
     ############################
     # Test a couple cases and the quiet flag
     def test_write(self):
@@ -155,55 +181,47 @@ class TestSerialWriter(unittest.TestCase):
         # Give it a moment to get started
         time.sleep(0.1)
 
-        def _run_reader(port):
-            reader = SerialReader(port)
-            for line in SAMPLE_DATA.split('\n'):
-                result = reader.read()
-                logging.info('data: %s, read: %s', line, result)
-                self.assertEqual(line, result)
-
         def _run_writer(in_port):
             writer = SerialWriter(port=in_port)
             for line in SAMPLE_DATA.split('\n'):
+                writer.write(line)
                 logging.info('wrote: %s', line)
-                writer.write(line + '\n')
-
-        def _run_read_specialcase(port):
-            reader = SerialReader(port)
-            res = reader.read()
-            logging.info('data: %s', 'read: %s', '♥�♥\x00♥♥', res)
-            self.assertEqual('♥�♥\x00♥♥', res)
 
         def _run_write_specialcase(in_port):
-            writer = SerialWriter(in_port, quiet=True)
-            writer.write('♥�♥\x00♥♥' + '\n')
-            logging.info('wrote: %s', '♥�♥\x00♥♥')
+            writer = SerialWriter(in_port, quiet=True, eol="FOO\\n")
+            writer.write(SPECIAL_STRING)
+            logging.info('wrote: %s', SPECIAL_STRING)
 
-        reader_thread = threading.Thread(target=_run_reader,
-                                         kwargs={'port': temp_port})
-        reader_thread.start()
+        def _run_write_binary(in_port):
+            writer = SerialWriter(in_port, encoding=None)
+            for line in BINARY_DATA:
+                writer.write(line)
+                logging.info('wrote: %s', line)
+
         writer_thread = threading.Thread(target=_run_writer,
                                          kwargs={'in_port': temp_port_in})
         writer_thread.start()
-
-        logging.info('Started threads')
+        logging.info('Started writer thread')
+        self._run_reader(temp_port)
         writer_thread.join()
         logging.info('Writer thread completed')
-        reader_thread.join()
-        logging.info('Reader thread completed')
 
-        reader_thread = threading.Thread(target=_run_read_specialcase,
-                                         kwargs={'port': temp_port})
-        reader_thread.start()
         writer_thread = threading.Thread(target=_run_write_specialcase,
                                          kwargs={'in_port': temp_port_in})
         writer_thread.start()
-
-        logging.info('Started threads')
+        logging.info('Started special writer thread')
+        self._run_read_specialcase(temp_port)
         writer_thread.join()
-        logging.info('Writer thread completed')
-        reader_thread.join()
-        logging.info('Reader thread completed')
+        logging.info('Special writer thread completed')
+
+        writer_thread = threading.Thread(target=_run_write_binary,
+                                         kwargs={'in_port': temp_port_in})
+        writer_thread.start()
+        logging.info('Started binary writer thread')
+        self._run_read_binary(temp_port)
+        writer_thread.join()
+        logging.info('Binary writer thread completed')
+
         # Tell simulated serial port to shut down
         sim_serial.quit()
 

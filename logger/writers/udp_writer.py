@@ -9,7 +9,6 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.formats import Text
 from logger.writers.writer import Writer
 
 
@@ -20,7 +19,7 @@ class UDPWriter(Writer):
                  interface='',  # DEPRECATED!
                  mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
-        """Write text records to a network socket.
+        """Write records to a UDP network socket.
         ```
         port         Port to which packets should be sent
 
@@ -64,8 +63,7 @@ class UDPWriter(Writer):
         ```
 
         """
-        super().__init__(input_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.num_retry = num_retry
