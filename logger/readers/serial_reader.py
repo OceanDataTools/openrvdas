@@ -106,7 +106,7 @@ class SerialReader(Reader):
         try:
             if self.eol:
                 record = self.serial.read_until(expected=self.eol, size=self.max_bytes)
-                # read_until()'s record includes a trialing 'eol', strip it off
+                # read_until()'s record includes a trailing 'eol', strip it off
                 #
                 # NOTE: But don't use rstrip which just looks explicitly for
                 #       whitespace

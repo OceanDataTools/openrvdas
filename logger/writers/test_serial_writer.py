@@ -184,8 +184,8 @@ class TestSerialWriter(unittest.TestCase):
         def _run_writer(in_port):
             writer = SerialWriter(port=in_port)
             for line in SAMPLE_DATA.split('\n'):
-                logging.info('wrote: %s', line)
                 writer.write(line)
+                logging.info('wrote: %s', line)
 
         def _run_write_specialcase(in_port):
             writer = SerialWriter(in_port, quiet=True, eol="FOO\\n")
@@ -195,8 +195,8 @@ class TestSerialWriter(unittest.TestCase):
         def _run_write_binary(in_port):
             writer = SerialWriter(in_port, encoding=None)
             for line in BINARY_DATA:
-                logging.info('wrote: %s', line)
                 writer.write(line)
+                logging.info('wrote: %s', line)
 
         writer_thread = threading.Thread(target=_run_writer,
                                          kwargs={'in_port': temp_port_in})
