@@ -377,7 +377,7 @@ function install_packages {
         echo Installing required packages
         sudo yum install -y wget git nginx gcc supervisor \
             zlib-devel openssl-devel readline-devel libffi-devel \
-            sqlite
+            sqlite libsqlite3x-devel
 
             #sqlite-devel \
             #python3 python3-devel python3-pip
