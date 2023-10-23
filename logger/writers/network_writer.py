@@ -12,18 +12,19 @@ from logger.writers.writer import Writer  # noqa: E402
 
 
 class NetworkWriter(Writer):
-    """Write to network."""
+    """Write TCP packtes to network."""
 
-    def __init__(self, network, num_retry=2, eol='',
+    def __init__(self, port, destination,
+                 num_retry=2, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
         """
         Write records to a TCP network socket.
 
-        NOTE: tcp is nominally implemented, but DOES NOT WORK!
         ```
-        network      Network address to write, in host:port format (e.g.
-                     'rvdas:6202'). If host is omitted (e.g. ':6202'),
-                     broadcast via UDP on specified port.
+        port         Port to which packets should be sent
+
+        destination  The destination to send TCP packets to.  Can be resolvable hostname
+                     or valid IP address.
 
         num_retry    Number of times to retry if write fails.
 
@@ -42,19 +43,10 @@ class NetworkWriter(Writer):
         ```
         """
 
-        super().__init__(input_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
-        if network.find(':') == -1:
-            raise ValueError('NetworkWriter network argument must be in \'host:port\''
-                             ' or \':port\' format. Found "%s"' % network)
-        self.network = network
         self.num_retry = num_retry
-
-        # split network into host, port
-        (self.host, self.port) = self.network.split(':')
-        self.port = int(self.port)
 
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
@@ -75,8 +67,10 @@ class NetworkWriter(Writer):
         #       an exception is to provide a valid hostname or IP address.
         #       Propperly formatted IPs just get returned.
         #
-        if self.host:
-            self.host = socket.gethostbyname(self.host)
+        self.destination = socket.gethostbyname(destination)
+
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
 
         # Try opening the socket
         self.socket = self._open_socket()
@@ -91,7 +85,7 @@ class NetworkWriter(Writer):
 
         # Try connecting
         try:
-            this_socket.connect((self.host, self.port))
+            this_socket.connect((self.destination, self.port))
             return this_socket
         except OSError as e:
             logging.warning('Unable to connect to %s: %s', self.network, e)
