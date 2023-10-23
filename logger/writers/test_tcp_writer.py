@@ -10,7 +10,7 @@ import unittest
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.writers.network_writer import NetworkWriter  # noqa: E402
+from logger.writers.tcp_writer import TCPWriter  # noqa: E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
@@ -28,7 +28,7 @@ class ReaderTimeout(StopIteration):
 ################################################################################
 
 
-class TestNetworkWriter(unittest.TestCase):
+class TestTCPWriter(unittest.TestCase):
     ############################
     def _handler(self, signum, frame):
         """If timeout fires, raise our custom exception"""
@@ -36,9 +36,9 @@ class TestNetworkWriter(unittest.TestCase):
         raise ReaderTimeout
 
     ############################
-    # Actually run the NetworkWriter in internal method
+    # Actually run the TCPWriter in internal method
     def write_tcp(self, dest_ip, dest_port, eol, encoding, sample_data, interval, delay):
-        writer = NetworkWriter(dest_port, dest_ip, eol=eol, encoding=encoding)
+        writer = TCPWriter(dest_port, dest_ip, eol=eol, encoding=encoding)
 
         time.sleep(delay)
         for line in sample_data:
