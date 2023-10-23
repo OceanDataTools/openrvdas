@@ -15,7 +15,7 @@ class NetworkWriter(Writer):
     """Write TCP packtes to network."""
 
     def __init__(self, port, destination,
-                 num_retry=2, eol='',
+                 num_retry=2, warning_limit=5, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
         """
         Write records to a TCP network socket.
@@ -27,6 +27,10 @@ class NetworkWriter(Writer):
                      or valid IP address.
 
         num_retry    Number of times to retry if write fails.
+
+        warning_limit  Number of times the writer gives up on writing a message
+                     (without any intervening successes) before it gives up complaining
+                     about failures.
 
         eol          If specified, an end of line string to append to record
                      before sending
@@ -47,6 +51,8 @@ class NetworkWriter(Writer):
                          encoding_errors=encoding_errors)
 
         self.num_retry = num_retry
+        self.warning_limit = warning_limit
+        self.num_warnings = 0
 
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
@@ -123,8 +129,18 @@ class NetworkWriter(Writer):
         while num_tries <= self.num_retry and bytes_sent < rec_len:
             try:
                 bytes_sent = self.socket.send(self._encode_str(record))
+                if self.num_warnings == self.warning_limit:
+                    logging.info('NetworkWriter.write() succeeded in writing after series of'
+                                 'failures; resetting warnings.')
+                    self.num_warnings = 0 # we've succeeded
+
             except OSError as e:
-                logging.warning('Error while writing "%s": %s', record, str(e))
+                if self.num_warnings < self.warning_limit:
+                    logging.error('NetworkWriter error: %s:%d: %s', self.destination, self.port, str(e))
+                    logging.error('NetworkWriter record: %s', record)
+                    self.num_warnings += 1
+                    if self.num_warnings == self.warning_limit:
+                        logging.error('NetworkWriter.write() - muting errors')
             num_tries += 1
 
         logging.debug('NetworkWriter.write() wrote %d/%d bytes after %d tries',
