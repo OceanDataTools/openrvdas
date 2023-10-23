@@ -17,7 +17,7 @@ class NetworkWriter(Writer):
     def __init__(self, network, num_retry=2, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
         """
-        Write text records to a network socket.
+        Write records to a TCP network socket.
 
         NOTE: tcp is nominally implemented, but DOES NOT WORK!
         ```
@@ -85,25 +85,9 @@ class NetworkWriter(Writer):
     def _open_socket(self):
         """Try to open and return the network socket.
         """
-        # TCP if host is specified
-        if self.host:
-            this_socket = socket.socket(family=socket.AF_INET,
-                                        type=socket.SOCK_STREAM,
-                                        proto=socket.IPPROTO_TCP)
-
-        # UDP broadcast if no host specified. Note that there's some
-        # dodginess I don't understand about networks: if '<broadcast>' is
-        # specified, socket tries to send on *all* interfaces. if '' is
-        # specified, it tries to send on *any* interface.
-        else:
-            this_socket = socket.socket(family=socket.AF_INET,
-                                        type=socket.SOCK_DGRAM,
-                                        proto=socket.IPPROTO_UDP)
-            this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-            try:  # Raspbian doesn't recognize SO_REUSEPORT
-                this_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-            except AttributeError:
-                logging.warning('Unable to set socket REUSEPORT; system may not support it.')
+        this_socket = socket.socket(family=socket.AF_INET,
+                                    type=socket.SOCK_STREAM,
+                                    proto=socket.IPPROTO_TCP)
 
         # Try connecting
         try:
