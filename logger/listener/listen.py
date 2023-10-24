@@ -501,8 +501,11 @@ if __name__ == '__main__':
                         'parameters.')
 
     parser.add_argument('--network_eol', dest='network_eol', default=None,
-                        help='Optional EOL string to add to write_network '
-                        'and write_udp transmissions.')
+                        help='Optional EOL string to add to writen records.')
+
+    parser.add_argument('--encoding', dest='encoding', default='utf-8',
+                        help="Optional encoding of records.  Default is utf-8, "
+                        "specify '' for raw/binary.")
 
     parser.add_argument('--write_redis', dest='write_redis', default=None,
                         help='Redis pubsub channel[@host[:port]] to write to. '
@@ -668,11 +671,13 @@ if __name__ == '__main__':
                         refresh_file_spec=all_args.refresh_file_spec))
 
             if new_args.network:
+                encoding = all_args.encoding
                 for addr in new_args.network.split(','):
-                    readers.append(NetworkReader(network=addr))
+                    readers.append(NetworkReader(network=addr, encoding=encoding))
 
             if new_args.udp:
                 eol = all_args.network_eol
+                encoding = all_args.encoding
                 for addr_str in new_args.udp.split(','):
                     addr = addr_str.split(':')
                     if len(addr) > 2:
@@ -680,7 +685,7 @@ if __name__ == '__main__':
                                      'should be [source]:port[,...]')
                     source = addr[0]
                     port = addr[1]
-                    readers.append(UDPReader(port=port, source=source, eol=eol))
+                    readers.append(UDPReader(port=port, source=source, eol=eol, encoding=encoding))
 
             if new_args.redis:
                 for channel in new_args.redis.split(','):
@@ -790,21 +795,24 @@ if __name__ == '__main__':
             ##########################
             # Writers
             if new_args.write_file:
+                encoding = all_args.encoding
                 for filename in new_args.write_file.split(','):
                     if filename == '-':
                         filename = None
-                    writers.append(FileWriter(filename=filename))
+                    writers.append(FileWriter(filename=filename, encoding=encoding))
 
             if new_args.write_logfile:
                 writers.append(LogfileWriter(filebase=new_args.write_logfile))
 
             if new_args.write_network:
                 eol = all_args.network_eol
+                encoding = all_args.encoding
                 for addr in new_args.write_network.split(','):
-                    writers.append(NetworkWriter(network=addr, eol=eol))
+                    writers.append(NetworkWriter(network=addr, eol=eol, encoding=encoding))
 
             if new_args.write_tcp:
                 eol = all_args.network_eol
+                encoding = all_args.encoding
                 for addr_str in new_args.write_tcp.split(','):
                     addr = addr_str.split(':')
                     if len(addr) > 2:
@@ -813,10 +821,11 @@ if __name__ == '__main__':
                     dest = addr[0]
                     port = int(addr[1])
                     writers.append(TCPWriter(port=port, destination=dest,
-                                             eol=eol))
+                                             eol=eol, encoding=encoding))
 
             if new_args.write_udp:
                 eol = all_args.network_eol
+                encoding = all_args.encoding
                 for addr_str in new_args.write_udp.split(','):
                     addr = addr_str.split(':')
                     if len(addr) > 2:
@@ -825,7 +834,7 @@ if __name__ == '__main__':
                     dest = addr[0]
                     port = int(addr[1])
                     writers.append(UDPWriter(port=port, destination=dest,
-                                             eol=eol))
+                                             eol=eol, encoding=encoding))
 
             # SerialWriter is a little more complicated than other readers
             # because it can take so many parameters. Use the kwargs trick to
