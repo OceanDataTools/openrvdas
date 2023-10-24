@@ -76,6 +76,7 @@ from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E
 
 # Compute and emit various NMEA strings
 from logger.writers.network_writer import NetworkWriter  # noqa: E402
+from logger.writers.tcp_writer import TCPWriter
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
 from logger.writers.serial_writer import SerialWriter  # noqa: E402
 from logger.writers.redis_writer import RedisWriter  # noqa: E402
@@ -485,6 +486,10 @@ if __name__ == '__main__':
     parser.add_argument('--write_network', dest='write_network', default=None,
                         help='Network address(es) to write to')
 
+    parser.add_argument('--write_tcp', dest='write_tcp', default=None,
+                        help='TCP destination host/IP(s) and port(s) to write '
+                        'to. Format destination:port[,...]')
+
     parser.add_argument('--write_udp', dest='write_udp', default=None,
                         help='UDP interface(s) and port(s) to write to. Format '
                         '[destination]:port[,...]')
@@ -797,6 +802,18 @@ if __name__ == '__main__':
                 eol = all_args.network_eol
                 for addr in new_args.write_network.split(','):
                     writers.append(NetworkWriter(network=addr, eol=eol))
+
+            if new_args.write_tcp:
+                eol = all_args.network_eol
+                for addr_str in new_args.write_tcp.split(','):
+                    addr = addr_str.split(':')
+                    if len(addr) > 2:
+                        parser.error('Format err for --write_tcp argument. Format '
+                                     'should be [destination]:port[,...]')
+                    dest = addr[0]
+                    port = int(addr[1])
+                    writers.append(TCPWriter(port=port, destination=dest,
+                                             eol=eol))
 
             if new_args.write_udp:
                 eol = all_args.network_eol
