@@ -54,7 +54,9 @@ class FileWriter(Writer):
                      e.g. '-%Y-%m' is used, files will be split by month;
                      if -%y-%m-%d:%H' is specified, splits will be
                      hourly. If '%y+%j' is specified, splits will be
-                     daily, but named via Julian date.
+                     daily, but named via Julian date.  Putting '-' or '.' on
+                     the left indicates timestamp suffix, putting it on the
+                     right indicates timestamp prefix.
 
         time_zone    Time zone to use for determining splits. By default UTC.
 
@@ -276,7 +278,13 @@ class FileWriter(Writer):
             new_file_suffix = self._get_file_suffix()
             if new_file_suffix != self.file_suffix:
                 self.file_suffix = new_file_suffix
-                self._set_file(self.filename + new_file_suffix)
+                if new_file_suffix.endswith('-') or new_file_suffix.endswith('.'):
+                    # make it a prefix even though we've called it a suffix
+                    # this whole time.
+                    self._set_file(os.path.join(os.path.dirname(self.filename),
+                                                new_file_suffix + os.path.basename(self.filename)))
+                else:
+                    self._set_file(self.filename + new_file_suffix)
 
         # If we're not splitting by intervals, still check that we've got
         # a file open we can write to. If not, open it.
