@@ -146,8 +146,8 @@ class UDPWriter(Writer):
         self.mc_interface = mc_interface
         self.mc_ttl = mc_ttl
 
-        # Try opening the socket
-        self.socket = self._open_socket()
+        # socket get's initialized on-demand in write()
+        self.socket = None
 
     ############################
     def _open_socket(self):
@@ -239,8 +239,7 @@ class UDPWriter(Writer):
                 # If we failed, complain, unless we've already complained too much
                 self.good_writes = 0
                 if self.num_warnings < self.warning_limit:
-                    logging.error('UDPWriter error: %s: %s', self.target_str, str(e))
-                    logging.error('UDPWriter record: %s', record)
+                    logging.error('UDPWriter: send() error: %s: %s', self.target_str, str(e))
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error('UDPWriter.write() - muting errors')
