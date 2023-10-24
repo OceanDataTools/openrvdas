@@ -15,18 +15,18 @@ from logger.writers.writer import Writer
 class UDPWriter(Writer):
     """Write UDP packets to network."""
 
-    def __init__(self, port, destination='',
+    def __init__(self, destination, port,
                  mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
         """Write records to a UDP network socket.
         ```
-        port         Port to which packets should be sent
-
-        destination  The destination to send UDP packets to. If omitted (or None)
+        destination  The destination to send UDP packets to. If '' or None,
                      the UDPWriter will broadcast to 255.255.255.255.  On a
                      system connected to more than one subnet, you'll want to
                      specify the broadcast address of the network you're trying
                      to send to (e.g., 192.168.1.255).
+
+        port         Port to which packets should be sent
 
         mc_interface REQUIRED for multicast, the interface to send from.  Can be
                      specified as either IP or a resolvable hostname.
@@ -87,8 +87,7 @@ class UDPWriter(Writer):
         if destination:
             destination = socket.gethostbyname(destination)
         else:
-            # If no destination, it's a broadcast; set flag allowing broadcast and
-            # set dest to special string
+            # If no destination, it's a broadcast; set dest to special string
             destination = '<broadcast>'
 
         self.destination = destination
