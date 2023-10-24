@@ -8,7 +8,6 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 
 # The UDP header's `length` field sets a theoretical limit of 65,535 bytes
 # (8-byte header + 65,527 bytes of data) for a UDP datagram.  Technically, IPV4
@@ -23,11 +22,8 @@ READ_BUFFER_SIZE = 65535
 
 
 ################################################################################
-# Read to the specified file. If filename is empty, read to stdout.
 class UDPReader(Reader):
-    """
-    Read UDP broadcast and multicast records from a socket.
-    """
+    """Read UDP packets from network."""
     ############################
     def __init__(self, port, source='', eol=None,
                  encoding='utf-8', encoding_errors='ignore'):
@@ -57,8 +53,7 @@ class UDPReader(Reader):
 
         ```
         """
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
         # 'eol' comes in as a (probably escaped) string. We need to
