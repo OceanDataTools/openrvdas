@@ -292,8 +292,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--udp', dest='udp', default=None,
                         help='Comma-separated udp addresses to read from, '
-                        'where an address is of format [source:]port and '
-                        'source, when provided, is a multicast group.')
+                        'where an address is of format [source]:port and '
+                        'source, when provided, is either the address of the '
+                        'interface you want to listen on, or a multicast '
+                        'group.')
 
     parser.add_argument('--database', dest='database', default=None,
                         help='Format: user@host:database:field1,field2,... '
@@ -485,7 +487,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--write_udp', dest='write_udp', default=None,
                         help='UDP interface(s) and port(s) to write to. Format '
-                        '[[interface:]destination:]port')
+                        '[destination]:port[,...]')
 
     parser.add_argument('--write_serial', dest='write_serial', default=None,
                         help='Comma-separated serial port spec containing at '
@@ -668,13 +670,11 @@ if __name__ == '__main__':
                 eol = all_args.network_eol
                 for addr_str in new_args.udp.split(','):
                     addr = addr_str.split(':')
-                    source = ''
-                    port = int(addr[-1])  # port is last arg
-                    if len(addr) > 1:
-                        source = addr[-2]  # source (multi/broadcast) is prev arg
                     if len(addr) > 2:
                         parser.error('Format error for --udp argument. Format '
-                                     'should be [source:]port')
+                                     'should be [source]:port[,...]')
+                    source = addr[0]
+                    port = addr[1]
                     readers.append(UDPReader(port=port, source=source, eol=eol))
 
             if new_args.redis:
@@ -802,18 +802,13 @@ if __name__ == '__main__':
                 eol = all_args.network_eol
                 for addr_str in new_args.write_udp.split(','):
                     addr = addr_str.split(':')
-                    dest = ''
-                    interface = ''
-                    port = int(addr[-1])  # port is last arg
-                    if len(addr) > 1:
-                        dest = addr[-2]  # destination (multi/broadcast) is prev arg
                     if len(addr) > 2:
-                        interface = addr[-3]  # interface is first arg
-                    if len(addr) > 3:
                         parser.error('Format error for --write_udp argument. Format '
-                                     'should be [[interface:]destination:]port')
+                                     'should be [destination]:port[,...]')
+                    dest = addr[0]
+                    port = int(addr[1])
                     writers.append(UDPWriter(port=port, destination=dest,
-                                             interface=interface, eol=eol))
+                                             eol=eol))
 
             # SerialWriter is a little more complicated than other readers
             # because it can take so many parameters. Use the kwargs trick to
