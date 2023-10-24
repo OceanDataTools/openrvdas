@@ -16,17 +16,17 @@ from logger.writers.writer import Writer  # noqa: E402
 class TCPWriter(Writer):
     """Write TCP packtes to network."""
 
-    def __init__(self, port, destination,
+    def __init__(self, destination, port,
                  num_retry=2, warning_limit=5, eol='',
                  encoding='utf-8', encoding_errors='ignore'):
         """
         Write records to a TCP network socket.
 
         ```
-        port         Port to which packets should be sent
-
         destination  The destination to send TCP packets to.  Can be resolvable hostname
                      or valid IP address.
+
+        port         Port to which packets should be sent
 
         num_retry    Number of times to retry if write fails.
 

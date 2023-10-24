@@ -38,7 +38,7 @@ class TestTCPWriter(unittest.TestCase):
     ############################
     # Actually run the TCPWriter in internal method
     def write_tcp(self, dest_ip, dest_port, eol, encoding, sample_data, interval, delay):
-        writer = TCPWriter(dest_port, dest_ip, eol=eol, encoding=encoding)
+        writer = TCPWriter(dest_ip, dest_port, eol=eol, encoding=encoding)
 
         time.sleep(delay)
         for line in sample_data:
