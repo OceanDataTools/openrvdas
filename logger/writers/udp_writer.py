@@ -146,7 +146,7 @@ class UDPWriter(Writer):
         self.mc_interface = mc_interface
         self.mc_ttl = mc_ttl
 
-        # socket get's initialized on-demand in write()
+        # socket gets initialized on-demand in write()
         self.socket = None
 
     ############################

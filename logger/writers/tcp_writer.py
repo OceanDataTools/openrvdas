@@ -80,7 +80,7 @@ class TCPWriter(Writer):
         # make sure port gets stored as an int, even if passed in as a string
         self.port = int(port)
 
-        # socket get's initialized on-demand in write()
+        # socket gets initialized on-demand in write()
         #
         # NOTE: Since connect() can actually fail w/ a TCP socket, we don't try
         #       that here.  Let's just do safe things.
