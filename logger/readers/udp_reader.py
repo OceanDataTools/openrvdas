@@ -25,13 +25,21 @@ READ_BUFFER_SIZE = 65535
 class UDPReader(Reader):
     """Read UDP packets from network."""
     ############################
-    def __init__(self, port, source='', eol=None,
+    def __init__(self, interface, port,
+                 mc_group=None, eol=None,
                  encoding='utf-8', encoding_errors='ignore'):
         """
         ```
+        interface    IP (or resolvable name) of interface to listen on.  None or ''
+                     will listen on INADDR_ANY (all interfaces).  If joining a
+                     multicast group and None or '' specified, this will default
+                     to whatever the system's hostname resolves to.  This IP should
+                     not be on the loopback network (OK for testing, but won't work
+                     in the real world).
+
         port         Port to listen to for packets
 
-        source       If specified, multicast group id to listen for
+        mc_group     If specified, IP address of multicast group id to subscribe to.
 
         eol          If not specified, assume one record per network packet.  If
                      specified, buffer network reads until the eol
@@ -62,33 +70,98 @@ class UDPReader(Reader):
             eol = self._unescape_str(eol)
         self.eol = eol
 
+        if interface:
+            # resolve once in constructor
+            interface = socket.gethostbyname(interface)
+        self.interface = interface
+
+        # prep multicast parameters
+        if mc_group:
+            # resolve once in constructor
+            mc_group = socket.gethostbyname(mc_group)
+            if not interface:
+                # multicast needs to specify interface to use, so let's pick a
+                # sane default
+                #
+                # NOTE: This means hostname cannot be an alias to localhost, or
+                #       you won't be able to send IGMP packets correctly.
+                #
+                self.interface = socket.gethostbyname(socket.gethostname())
+
+        self.mc_group = mc_group
+
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
+
         # Where we'll aggregate incomplete records if an eol char is specified
         self.record_buffer = ''
 
-        self.socket = socket.socket(family=socket.AF_INET,
-                                    type=socket.SOCK_DGRAM,
-                                    proto=socket.IPPROTO_UDP)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+        # socket gets initialized on-demand in read()
+        self.socket = None
 
-        # If source is specified, subscribe to it as a multicast group
-        if source:
-            mreq = struct.pack("4sl", socket.inet_aton(source), socket.INADDR_ANY)
-            self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-
+    ############################
+    def _open_socket(self):
+        """Do socket prep so we're ready to read().  Returns socket object or None on
+        failure.
+        """
+        sock = socket.socket(family=socket.AF_INET,
+                             type=socket.SOCK_DGRAM,
+                             proto=socket.IPPROTO_UDP)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
         try:  # Raspbian doesn't recognize SO_REUSEPORT
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
         except AttributeError:
             logging.warning('Unable to set socket REUSEPORT; may be unsupported.')
 
-        # If source is empty, we're listening for broadcasts, otherwise
-        # listening for multicast on IP 'source'
-        self.socket.bind((source, port))
+        # If mc_group is specified, subscribe to it as a multicast group
+        if self.mc_group:
+            # set outgoing multicast interface
+            #
+            # NOTE: Can't use loopback device for this, otherwise IGMP packets
+            #       never leave the system, and you never actually join the
+            #       group.
+            #
+            if self.interface.startswith('127.'):
+                logging.warning("Can't use loopback device for joining multicast groups.  Make "
+                                "sure your system's hostname does NOT resolve to something in "
+                                "the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or "
+                                "specify the interface to use by passing its IP address as the "
+                                "`interface` parameter.  (You can ignore this message if you're "
+                                "actually just doing loopback testing.)")
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                                  socket.inet_aton(self.interface))
+
+            # join the group via IGMP
+            #
+            # NOTE: Since these are both already encoded as binary by
+            #       inet_aton(), we can just concatenate them.  Alternatively,
+            #       could use struct.pack("4s4s", ...) to create a struct to
+            #       pass into setsockopt()
+            #
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                            socket.inet_aton(self.mc_group) + socket.inet_aton(self.interface))
+
+            # bind to mc_group:port
+            sock.bind((self.mc_group, self.port))
+
+        else:
+            # broadcast or unicast, bind to specificed interface
+            sock.bind((self.interface, self.port))
+
+        return sock
 
     ############################
     def read(self):
         """
         Read the next UDP packet.
         """
+        # If socket isn't ready, set it up.  If something fails, return w/out reading.
+        if not self.socket:
+            self.socket = self._open_socket()
+        if not self.socket:
+            logging.error('Unable to read record')
+            return
+
         # If no eol character/string specified, just read a packet and
         # return it as the next record.
         if not self.eol:
