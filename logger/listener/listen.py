@@ -293,7 +293,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--udp', dest='udp', default=None,
                         help='Comma-separated udp addresses to read from, '
-                        'where an address is of format [source]:port and '
+                        'where an address is of format [source:]port[,...] and '
                         'source, when provided, is either the address of the '
                         'interface you want to listen on, or a multicast '
                         'group.')
@@ -484,15 +484,18 @@ if __name__ == '__main__':
                         'Will be appended to filename, with one file per date.')
 
     parser.add_argument('--write_network', dest='write_network', default=None,
-                        help='Network address(es) to write to')
+                        help='Network address(es) to write to.  NOTE: This has '
+                        'been REPLACED by --write_udp and --write_tcp.')
 
     parser.add_argument('--write_tcp', dest='write_tcp', default=None,
                         help='TCP destination host/IP(s) and port(s) to write '
-                        'to. Format destination:port[,...]')
+                        'to. Format destination:port[,...].  NOTE: This replaces '
+                        'the old --write_network argument.')
 
     parser.add_argument('--write_udp', dest='write_udp', default=None,
                         help='UDP interface(s) and port(s) to write to. Format '
-                        '[destination]:port[,...]')
+                        '[destination:]port[,...].  NOTE: This replaces the old '
+                        '--write_network argument.')
 
     parser.add_argument('--write_serial', dest='write_serial', default=None,
                         help='Comma-separated serial port spec containing at '
@@ -682,9 +685,11 @@ if __name__ == '__main__':
                     addr = addr_str.split(':')
                     if len(addr) > 2:
                         parser.error('Format error for --udp argument. Format '
-                                     'should be [source]:port[,...]')
+                                     'should be [source:]port[,...]')
+                    if len(addr) < 2:
+                        addr.insert(0, '')
                     source = addr[0]
-                    port = addr[1]
+                    port = int(addr[1])
                     readers.append(UDPReader(port=port, source=source, eol=eol, encoding=encoding))
 
             if new_args.redis:
@@ -817,7 +822,9 @@ if __name__ == '__main__':
                     addr = addr_str.split(':')
                     if len(addr) > 2:
                         parser.error('Format err for --write_tcp argument. Format '
-                                     'should be [destination]:port[,...]')
+                                     'should be [destination:]port[,...]')
+                    if len(addr) < 2:
+                        addr.insert(0, '')
                     dest = addr[0]
                     port = int(addr[1])
                     writers.append(TCPWriter(port=port, destination=dest,
@@ -830,7 +837,9 @@ if __name__ == '__main__':
                     addr = addr_str.split(':')
                     if len(addr) > 2:
                         parser.error('Format error for --write_udp argument. Format '
-                                     'should be [destination]:port[,...]')
+                                     'should be [destination:]port[,...]')
+                    if len(addr) < 2:
+                        addr.insert(0, '')
                     dest = addr[0]
                     port = int(addr[1])
                     writers.append(UDPWriter(port=port, destination=dest,
