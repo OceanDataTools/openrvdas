@@ -17,6 +17,10 @@ SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
 
+BINARY_DATA = [b'\xff\xa1',
+               b'\xff\xa2',
+               b'\xff\xa3']
+
 
 ##############################
 class ReaderTimeout(StopIteration):
@@ -49,11 +53,72 @@ class TestUDPReader(unittest.TestCase):
                 time.sleep(delay)
                 logging.debug('UDPReader reading...')
                 result = reader.read()
-                logging.info('network wrote "%s", read "%s"', line, result)
+                # encode line and result, if needed, so we get nice consistent
+                # b'whatever\n' output
+                if encoding:
+                    line_bytes = line.encode(encoding)
+                    result_bytes = result.encode(encoding)
+                else:
+                    line_bytes = line
+                    result_bytes = result
+                logging.info('network wrote %s, read %s', line_bytes, result_bytes)
                 self.assertEqual(line, result)
         except ReaderTimeout:
             self.assertTrue(False, 'UDPReader timed out in test - is port '
                             '%s:%s open?' % (interface, port))
+
+    ############################
+    # UNICAST
+    def test_unicast(self):
+        port = 8000
+        dest = 'localhost'
+
+        w_thread = threading.Thread(target=self.write_udp, name='write_thread',
+                                    args=(dest, port, SAMPLE_DATA),
+                                    kwargs={'interval': 0.1, 'delay': 0.2})
+        r1_thread = threading.Thread(target=self.read_udp, name='read_thread_1',
+                                     args=(dest, port, SAMPLE_DATA))
+
+        # Set timeout we can catch if things are taking too long
+        signal.signal(signal.SIGALRM, self._handler)
+        signal.alarm(1)
+
+        w_thread.start()
+        r1_thread.start()
+
+        # Make sure everyone has terminated
+        w_thread.join()
+        r1_thread.join()
+
+        # Silence the alarm
+        signal.alarm(0)
+
+    ############################
+    # UNICAST raw/binary
+    def test_unicast_binary(self):
+        port = 8000
+        dest = 'localhost'
+
+        w_thread = threading.Thread(target=self.write_udp, name='write_thread',
+                                    args=(dest, port, BINARY_DATA),
+                                    kwargs={'encoding': None, 'interval': 0.1, 'delay': 0.2})
+        r1_thread = threading.Thread(target=self.read_udp, name='read_thread_1',
+                                     args=(dest, port, BINARY_DATA),
+                                     kwargs={'encoding': None})
+
+        # Set timeout we can catch if things are taking too long
+        signal.signal(signal.SIGALRM, self._handler)
+        signal.alarm(1)
+
+        w_thread.start()
+        r1_thread.start()
+
+        # Make sure everyone has terminated
+        w_thread.join()
+        r1_thread.join()
+
+        # Silence the alarm
+        signal.alarm(0)
 
     ############################
     # BROADCAST
