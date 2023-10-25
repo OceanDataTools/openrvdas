@@ -25,8 +25,7 @@ READ_BUFFER_SIZE = 65535
 class UDPReader(Reader):
     """Read UDP packets from network."""
     ############################
-    def __init__(self, interface, port,
-                 mc_group=None, eol=None,
+    def __init__(self, interface, port, mc_group=None,
                  encoding='utf-8', encoding_errors='ignore'):
         """
         ```
@@ -41,15 +40,6 @@ class UDPReader(Reader):
 
         mc_group     If specified, IP address of multicast group id to subscribe to.
 
-        eol          If not specified, assume one record per network packet.  If
-                     specified, buffer network reads until the eol
-                     character has been seen, and return the entire record
-                     at once, retaining everything after the eol for the
-                     start of the subsequent record. If multiple eol characters
-                     are encountered in a packet, split the packet and return
-                     the first of them, buffering the remainder for subsequent
-                     calls.
-
         encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
                 documentation here:
@@ -63,12 +53,6 @@ class UDPReader(Reader):
         """
         super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
-
-        # 'eol' comes in as a (probably escaped) string. We need to
-        # unescape it, which means converting to bytes and back.
-        if eol is not None:
-            eol = self._unescape_str(eol)
-        self.eol = eol
 
         if interface:
             # resolve once in constructor
@@ -92,9 +76,6 @@ class UDPReader(Reader):
 
         # make sure port gets stored as an int, even if passed in as a string
         self.port = int(port)
-
-        # Where we'll aggregate incomplete records if an eol char is specified
-        self.record_buffer = ''
 
         # socket gets initialized on-demand in read()
         self.socket = None
@@ -162,32 +143,10 @@ class UDPReader(Reader):
             logging.error('Unable to read record')
             return
 
-        # If no eol character/string specified, just read a packet and
-        # return it as the next record.
-        if not self.eol:
-            try:
-                record = self.socket.recv(READ_BUFFER_SIZE)
-            except OSError as e:
-                logging.error('UDPReader error: %s', str(e))
-                return None
-            logging.debug('UDPReader.read() received %d bytes', len(record))
-            return self._decode_bytes(record)
-
-        # If an eol character/string has been specified, we may have to
-        # loop our reads until we see an eol.
-        while True:
-            eol_pos = self.record_buffer.find(self.eol)
-            if eol_pos > -1:
-                # We have an eol string somewhere in our buffer. Return
-                # everything up to it.
-                record_end = eol_pos + len(self.eol)
-                record = self.record_buffer[0:record_end-1]
-                logging.debug('UDPReader found eol; returning record')
-                self.record_buffer = self.record_buffer[record_end:]
-                return record
-
-            # If no eol string, read, append, and try again.
+        try:
             record = self.socket.recv(READ_BUFFER_SIZE)
-            logging.debug('UDPReader.read() received %d bytes', len(record))
-            if record:
-                self.record_buffer += self._decode_bytes(record)
+        except OSError as e:
+            logging.error('UDPReader error: %s', str(e))
+            return None
+        logging.debug('UDPReader.read() received %d bytes', len(record))
+        return self._decode_bytes(record)

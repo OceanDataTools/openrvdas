@@ -16,10 +16,6 @@ from logger.readers.udp_reader import UDPReader  # noqa: E402
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
-EOL_SAMPLE_DATA = ['f1 line 1\nf1 line 1a\nf1 line 1b\n',
-                   'f1 line 2',
-                   '\nf1 line 3',
-                   '\n']
 
 
 ##############################
@@ -37,18 +33,18 @@ class TestUDPReader(unittest.TestCase):
         raise ReaderTimeout
 
     ############################
-    def write_udp(self, dest, port, data, mc_interface=None, eol=None, encoding='utf-8', interval=0, delay=0):
-        writer = UDPWriter(destination=dest, port=port, mc_interface=mc_interface, eol=eol, encoding=encoding)
+    def write_udp(self, dest, port, data, mc_interface=None, encoding='utf-8', interval=0, delay=0):
+        writer = UDPWriter(destination=dest, port=port, mc_interface=mc_interface, encoding=encoding)
         time.sleep(delay)
         for line in data:
             writer.write(line)
             time.sleep(interval)
 
     ############################
-    def read_udp(self, interface, port, data, mc_group=None, eol=None, encoding='utf-8', delay=0):
+    def read_udp(self, interface, port, data, mc_group=None, encoding='utf-8', delay=0):
         time.sleep(delay)
         try:
-            reader = UDPReader(interface=interface, port=port, mc_group=mc_group, eol=eol, encoding=encoding)
+            reader = UDPReader(interface=interface, port=port, mc_group=mc_group, encoding=encoding)
             for line in data:
                 time.sleep(delay)
                 logging.debug('UDPReader reading...')
@@ -142,36 +138,6 @@ class TestUDPReader(unittest.TestCase):
 
         # Make sure everyone has terminated
         w_thread.join()
-
-        # Silence the alarm
-        signal.alarm(0)
-
-    ############################
-    # Unicast w/ EOL
-    def test_udp_eol(self):
-        port = 8001
-        dest = ''
-
-        w_thread = threading.Thread(target=self.write_udp, name='eol_write_thread',
-                                    args=(dest, port, EOL_SAMPLE_DATA),
-                                    kwargs={'interval': 0.1, 'delay': 0.2})
-        r1_thread = threading.Thread(target=self.read_udp, name='eol_read_thread_1',
-                                     args=(dest, port, EOL_SAMPLE_DATA))
-        r2_thread = threading.Thread(target=self.read_udp, name='eol_read_thread_2',
-                                     args=(dest, port, EOL_SAMPLE_DATA))
-
-        # Set timeout we can catch if things are taking too long
-        signal.signal(signal.SIGALRM, self._handler)
-        signal.alarm(1)
-
-        w_thread.start()
-        r1_thread.start()
-        r2_thread.start()
-
-        # Make sure everyone has terminated
-        w_thread.join()
-        r1_thread.join()
-        r2_thread.join()
 
         # Silence the alarm
         signal.alarm(0)
