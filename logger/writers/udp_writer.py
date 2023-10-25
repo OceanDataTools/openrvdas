@@ -106,7 +106,8 @@ class UDPWriter(Writer):
 
     ############################
     def _open_socket(self):
-        """Try to open and return the network socket.
+        """Do socket prep so we're ready to write().  Returns socket object or None on
+        failure.
         """
         udp_socket = socket.socket(family=socket.AF_INET,
                                    type=socket.SOCK_DGRAM,
