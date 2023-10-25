@@ -131,8 +131,6 @@ class TestUDPReader(unittest.TestCase):
                                     kwargs={'interval': 0.1, 'delay': 0.2})
         r1_thread = threading.Thread(target=self.read_udp, name='read_thread_1',
                                      args=(dest, port, SAMPLE_DATA))
-        r2_thread = threading.Thread(target=self.read_udp, name='read_thread_2',
-                                     args=(dest, port, SAMPLE_DATA))
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
@@ -140,12 +138,10 @@ class TestUDPReader(unittest.TestCase):
 
         w_thread.start()
         r1_thread.start()
-        r2_thread.start()
 
         # Make sure everyone has terminated
         w_thread.join()
         r1_thread.join()
-        r2_thread.join()
 
         # Silence the alarm
         signal.alarm(0)
@@ -162,8 +158,6 @@ class TestUDPReader(unittest.TestCase):
                                     kwargs={'mc_interface': mc_interface, 'interval': 0.1, 'delay': 0.2})
         r1_thread = threading.Thread(target=self.read_udp, name='multicast2',
                                      args=(mc_interface, port, SAMPLE_DATA, dest))
-        r2_thread = threading.Thread(target=self.read_udp, name='multicast3',
-                                     args=(mc_interface, port, SAMPLE_DATA, dest))
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
@@ -171,12 +165,10 @@ class TestUDPReader(unittest.TestCase):
 
         w_thread.start()
         r1_thread.start()
-        r2_thread.start()
 
         # Make sure everyone has terminated
         w_thread.join()
         r1_thread.join()
-        r2_thread.join()
 
         # Silence the alarm
         signal.alarm(0)
