@@ -59,6 +59,10 @@ class TestUDPReader(unittest.TestCase):
                     line_bytes = line.encode(encoding)
                     result_bytes = result.encode(encoding)
                 else:
+                    # want to break this one, and test exception handling?
+                    # uncomment the next line.  i dare you.
+                    #
+                    #result += b'FOOO'
                     line_bytes = line
                     result_bytes = result
                 logging.info('network wrote %s, read %s', line_bytes, result_bytes)
@@ -76,19 +80,16 @@ class TestUDPReader(unittest.TestCase):
         w_thread = threading.Thread(target=self.write_udp, name='write_thread',
                                     args=(dest, port, SAMPLE_DATA),
                                     kwargs={'interval': 0.1, 'delay': 0.2})
-        r1_thread = threading.Thread(target=self.read_udp, name='read_thread_1',
-                                     args=(dest, port, SAMPLE_DATA))
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
         signal.alarm(1)
 
         w_thread.start()
-        r1_thread.start()
+        self.read_udp(dest, port, SAMPLE_DATA)
 
         # Make sure everyone has terminated
         w_thread.join()
-        r1_thread.join()
 
         # Silence the alarm
         signal.alarm(0)
@@ -96,26 +97,22 @@ class TestUDPReader(unittest.TestCase):
     ############################
     # UNICAST raw/binary
     def test_unicast_binary(self):
-        port = 8000
+        port = 8001
         dest = 'localhost'
 
         w_thread = threading.Thread(target=self.write_udp, name='write_thread',
                                     args=(dest, port, BINARY_DATA),
                                     kwargs={'encoding': None, 'interval': 0.1, 'delay': 0.2})
-        r1_thread = threading.Thread(target=self.read_udp, name='read_thread_1',
-                                     args=(dest, port, BINARY_DATA),
-                                     kwargs={'encoding': None})
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
         signal.alarm(1)
 
         w_thread.start()
-        r1_thread.start()
+        self.read_udp(dest, port, BINARY_DATA, encoding=None)
 
         # Make sure everyone has terminated
         w_thread.join()
-        r1_thread.join()
 
         # Silence the alarm
         signal.alarm(0)
@@ -123,25 +120,21 @@ class TestUDPReader(unittest.TestCase):
     ############################
     # BROADCAST
     def test_broadcast(self):
-        port = 8000
+        port = 8002
         dest = ''
-
         w_thread = threading.Thread(target=self.write_udp, name='write_thread',
                                     args=(dest, port, SAMPLE_DATA),
                                     kwargs={'interval': 0.1, 'delay': 0.2})
-        r1_thread = threading.Thread(target=self.read_udp, name='read_thread_1',
-                                     args=(dest, port, SAMPLE_DATA))
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
         signal.alarm(1)
 
         w_thread.start()
-        r1_thread.start()
+        self.read_udp(dest, port, SAMPLE_DATA)
 
         # Make sure everyone has terminated
         w_thread.join()
-        r1_thread.join()
 
         # Silence the alarm
         signal.alarm(0)
@@ -149,26 +142,23 @@ class TestUDPReader(unittest.TestCase):
     ############################
     # MULTICAST
     def test_multicast(self):
-        port = 8000
+        port = 8003
         dest = '224.1.1.1'
         mc_interface = socket.gethostbyname(socket.gethostname())
 
         w_thread = threading.Thread(target=self.write_udp, name='multicast1',
                                     args=(dest, port, SAMPLE_DATA),
                                     kwargs={'mc_interface': mc_interface, 'interval': 0.1, 'delay': 0.2})
-        r1_thread = threading.Thread(target=self.read_udp, name='multicast2',
-                                     args=(mc_interface, port, SAMPLE_DATA, dest))
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
         signal.alarm(1)
 
         w_thread.start()
-        r1_thread.start()
+        self.read_udp(mc_interface, port, SAMPLE_DATA, dest)
 
         # Make sure everyone has terminated
         w_thread.join()
-        r1_thread.join()
 
         # Silence the alarm
         signal.alarm(0)
@@ -176,7 +166,7 @@ class TestUDPReader(unittest.TestCase):
     ############################
     # MULTICAST listening to the wrong group
     def test_multicast_wrong(self):
-        port = 8000
+        port = 8004
         dest = '224.1.1.1'
         mc_interface = socket.gethostbyname(socket.gethostname())
 
