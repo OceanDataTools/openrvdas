@@ -10,17 +10,16 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 from logger.utils.formats import Text  # noqa: E402
 
-# The maximum length of UDP record we can receive. Records will be
-# truncated at this length. Note that the effective maximum value for
-# this parameter is the underlying system's Maximum Transmission Unit
-# (MTU). If read_buffer_size is set larger than the MTU and a packet
-# longer than the MTU is received, the system will throw an
-#    [Errno 40] Message too long
-# (caught by this Reader) and the entire packet will be discarded. On
-# Linux machines, it appears that the MTU may be up to 65k; on MacOS,
-# the default is 4096. See
-#     https://stackoverflow.com/questions/22819214/udp-message-too-long
-READ_BUFFER_SIZE = 4096  # max number of characters to read in one call
+# The UDP header's `length` field sets a theoretical limit of 65,535 bytes
+# (8-byte header + 65,527 bytes of data) for a UDP datagram.  Technically, IPV4
+# or IPv6 headers use up some of that size, so actual maximum data sent per
+# datagram is slightly less.
+#
+# UDP receivers should always request the max, though, because if you request
+# less than what's on the wire, you get what you asked for and the rest gets
+# tossed on the floor.  There's no built-in error detection/correction in UDP,
+# so that would mess things up pretty good.
+READ_BUFFER_SIZE = 65535
 
 
 ################################################################################
@@ -30,9 +29,7 @@ class UDPReader(Reader):
     Read UDP broadcast and multicast records from a socket.
     """
     ############################
-
     def __init__(self, port, source='', eol=None,
-                 read_buffer_size=READ_BUFFER_SIZE,
                  encoding='utf-8', encoding_errors='ignore'):
         """
         ```
@@ -48,16 +45,6 @@ class UDPReader(Reader):
                      are encountered in a packet, split the packet and return
                      the first of them, buffering the remainder for subsequent
                      calls.
-
-        read_buffer_size
-                The maximum length of UDP record we can receive. Records will be
-                truncated at this length. Note that the effective maximum value for
-                this parameter is the underlying system's Maximum Transmission Unit
-                (MTU). If read_buffer_size is set larger than the MTU and a packet
-                longer than the MTU is received, the system will throw an "[Errno 40]
-                Message too long" (caught by this Reader) and the entire packet will
-                be discarded. On Linux machines, it appears that the MTU may be up to
-                65k; on MacOS, the default is 4096.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
@@ -79,7 +66,6 @@ class UDPReader(Reader):
         if eol is not None:
             eol = self._unescape_str(eol)
         self.eol = eol
-        self.read_buffer_size = read_buffer_size
 
         # Where we'll aggregate incomplete records if an eol char is specified
         self.record_buffer = ''
@@ -112,7 +98,7 @@ class UDPReader(Reader):
         # return it as the next record.
         if not self.eol:
             try:
-                record = self.socket.recv(self.read_buffer_size)
+                record = self.socket.recv(READ_BUFFER_SIZE)
             except OSError as e:
                 logging.error('UDPReader error: %s', str(e))
                 return None
@@ -133,7 +119,7 @@ class UDPReader(Reader):
                 return record
 
             # If no eol string, read, append, and try again.
-            record = self.socket.recv(self.read_buffer_size)
+            record = self.socket.recv(READ_BUFFER_SIZE)
             logging.debug('UDPReader.read() received %d bytes', len(record))
             if record:
                 self.record_buffer += self._decode_bytes(record)
