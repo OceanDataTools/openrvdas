@@ -10,8 +10,6 @@ import unittest
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.writers.udp_writer import UDPWriter  # noqa: E402
-from logger.readers.udp_reader import UDPReader  # noqa: E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
@@ -20,6 +18,17 @@ SAMPLE_DATA = ['f1 line 1',
 BINARY_DATA = [b'\xff\xa1',
                b'\xff\xa2',
                b'\xff\xa3']
+
+# We're going to set MAXSIZE to 1K before writing this, and the fragmentation
+# marker is 10 bytes long.  The first record here should fragment cleanly into
+# all a's, all b's, and all c's, then get reassembled by the reader
+# transparently.
+BIG_DATA = ['a'*1014 + 'b'*1014 + 'c'*512,
+            'all that is gold does not glitter',
+            'not all who wsnder are lost',
+            'the old that is strong does not wither',
+            'deep roots are not reached by the frost',
+            ]
 
 
 ##############################
@@ -189,6 +198,27 @@ class TestUDPReader(unittest.TestCase):
         # Silence the alarm
         signal.alarm(0)
 
+    def test_fragmentation(self):
+        port = 8005
+        dest = 'localhost'
+
+        w_thread = threading.Thread(target=self.write_udp, name='write_thread',
+                                    args=(dest, port, BIG_DATA),
+                                    kwargs={'interval': 0.1, 'delay': 0.2})
+
+        # Set timeout we can catch if things are taking too long
+        signal.signal(signal.SIGALRM, self._handler)
+        signal.alarm(1)
+
+        w_thread.start()
+        self.read_udp(dest, port, BIG_DATA)
+
+        # Make sure everyone has terminated
+        w_thread.join()
+
+        # Silence the alarm
+        signal.alarm(0)
+
 
 ################################################################################
 if __name__ == '__main__':
@@ -205,5 +235,13 @@ if __name__ == '__main__':
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
     args.verbosity = min(args.verbosity, max(LOG_LEVELS))
     logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+
+    # import these down here so logger is already setup
+    from logger.writers.udp_writer import UDPWriter
+    from logger.readers.udp_reader import UDPReader
+
+    # import the whole udp_reader module so we can override MAXSIZE
+    import logger.writers.udp_writer as udp_writer
+    udp_writer.MAXSIZE = 1024
 
     unittest.main(warnings='ignore')
