@@ -17,6 +17,7 @@ class UDPWriter(Writer):
 
     def __init__(self, destination, port,
                  mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
+                 reuseaddr=False, reuseport=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """Write records to a UDP network socket.
         ```
@@ -43,6 +44,12 @@ class UDPWriter(Writer):
 
         eol          If specified, an end of line string to append to record
                      before sending.
+
+        reuseaddr    Specifies wether to set SO_REUSEADDR on the created socket.  If
+                     you don't know you need this, don't enable it.
+
+        reuseport    Specifies wether to set SO_REUSEPORT on the created socket.  If
+                     you don't know you need this, don't enable it.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any
                 decoding and return raw bytes. Other possible encodings are
@@ -101,6 +108,9 @@ class UDPWriter(Writer):
         self.mc_interface = mc_interface
         self.mc_ttl = mc_ttl
 
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
+
         # socket gets initialized on-demand in write()
         self.socket = None
 
@@ -112,11 +122,13 @@ class UDPWriter(Writer):
         udp_socket = socket.socket(family=socket.AF_INET,
                                    type=socket.SOCK_DGRAM,
                                    proto=socket.IPPROTO_UDP)
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-        try:  # Raspbian doesn't recognize SO_REUSEPORT
-            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning('Unable to set socket REUSEPORT; may be unsupported')
+        if self.reuseaddr:
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn't recognize SO_REUSEPORT
+                udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning('Unable to set socket REUSEPORT; may be unsupported')
 
         # set multicast/broadcast options
         if self.mc_interface:

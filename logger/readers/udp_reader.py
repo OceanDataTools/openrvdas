@@ -26,6 +26,7 @@ class UDPReader(Reader):
     """Read UDP packets from network."""
     ############################
     def __init__(self, interface, port, mc_group=None,
+                 reuseaddr=False, reuseport=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """
         ```
@@ -39,6 +40,12 @@ class UDPReader(Reader):
         port         Port to listen to for packets
 
         mc_group     If specified, IP address of multicast group id to subscribe to.
+
+        reuseaddr    Specifies wether we set SO_REUSEADDR on the created socket.  If
+                     you don't know you need this, don't enable it.
+
+        reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
+                     you don't know you need this, don't enable it.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
@@ -77,6 +84,9 @@ class UDPReader(Reader):
         # make sure port gets stored as an int, even if passed in as a string
         self.port = int(port)
 
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
+
         # socket gets initialized on-demand in read()
         self.socket = None
 
@@ -88,11 +98,13 @@ class UDPReader(Reader):
         sock = socket.socket(family=socket.AF_INET,
                              type=socket.SOCK_DGRAM,
                              proto=socket.IPPROTO_UDP)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-        try:  # Raspbian doesn't recognize SO_REUSEPORT
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning('Unable to set socket REUSEPORT; may be unsupported.')
+        if self.reuseaddr:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn't recognize SO_REUSEPORT
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning('Unable to set socket REUSEPORT; may be unsupported.')
 
         # If mc_group is specified, subscribe to it as a multicast group
         if self.mc_group:
