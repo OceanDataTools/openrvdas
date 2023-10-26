@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import json
+import errno
 import logging
 import socket
 import struct
@@ -10,6 +10,63 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.writers.writer import Writer
+
+# So that we can write the user's record no matter how silly big it is, we
+# autodetect the system's maximum datagram size and write() fragments the
+# record into smaller packets if needed.  Each fragmented packet is marked with
+# FRAGMENT_MARKER so that UDPReader can notice and reassemble the record.
+FRAGMENT_MARKER = b'\xff\xffTOOBIG\xff\xff'
+
+# Maximum allowable size of a UDP datagram on this system, autodetect once at
+# module load
+#
+# NOTE: You can test/debug the fragmentation code by loading the udp_writer
+#       module and than manually setting udp_writer.MAXSIZE after autodetection
+#       has happened.
+#
+MAXSIZE = None
+
+
+def __detect_maxsize():
+    """Autodetect the maximum datagram size we can send"""
+    global MAXSIZE
+    if MAXSIZE:
+        return
+
+    s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM,
+                      proto=socket.IPPROTO_UDP)
+
+    # start with the maximum allowable size of a UDP packet, and work our way
+    # down one byte at a time.
+    #
+    # FIXME: I know, I know.  Lame, slow, etc, a binary search would be "most
+    #        correct", but I don't feel like making this go faster right now.
+    #        And it's only done once, so whatever.
+    #
+    trysize=65535
+    while trysize > 0:
+        logging.debug("__detect_maxsize: trying %d", trysize)
+        try:
+            s.sendto(b'a'*trysize, ('127.0.0.1', 9999))
+        except OSError as e:
+            if e.errno == errno.EMSGSIZE:
+                trysize -= 1
+                continue
+            else:
+                # For whatever reason, this won't work... print a warning
+                logging.warning("__detect_maxsize: send() failed: %s", str(e))
+                break
+        # outstanding!
+        break
+
+    if not trysize:
+        logging.warning("Failed to autodetect maximum UDP datagram size.  Record fragmentation disabled")
+    else:
+        logging.info("Detected maximum UDP datagram size %d", trysize)
+        MAXSIZE = trysize
+
+# attempt to detect maximum datagram size when module is loaded
+__detect_maxsize()
 
 
 class UDPWriter(Writer):
@@ -179,6 +236,36 @@ class UDPWriter(Writer):
         if self.eol:
             record += self.eol
 
+        # Encode the record, so we're dealing with bytes from here on out
+        record = self._encode_str(record)
+
+        # Fragment record if needed, and recurse.
+        if len(record) > MAXSIZE:
+            record_list=[]
+            max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
+            fragment_sizes = []
+            while len(record) > max_fragment_size:
+                r = record[:max_fragment_size]+FRAGMENT_MARKER
+                record_list.append(r)
+                fragment_sizes.append(str(len(r)))
+                record = record[max_fragment_size:]
+            # last record doesn't get FRAGMENT_MARKER
+            record_list.append(record)
+            fragment_sizes.append("{} bytes".format(len(record)))
+            fragment_sizes = ', '.join(fragment_sizes)
+            logging.info("write: fragmented record into %d datagrams: %s", len(record_list), fragment_sizes)
+            logging.debug(str(record_list))
+
+            # change our encoding to binary temporarily, because we've already
+            # encoded to binary and added our marker (which has non-utf chars
+            # in it)
+            old_encoding = self.encoding
+            self.encoding = None
+            self.write(record_list)
+            # restore old encoding
+            self.encoding = old_encoding
+            return
+
         # If socket isn't connected, try reconnecting. If we can't
         # reconnect, complain and return without writing.
         if not self.socket:
@@ -192,9 +279,9 @@ class UDPWriter(Writer):
         rec_len = len(record)
         while num_tries <= self.num_retry and bytes_sent < rec_len:
             try:
-                bytes_sent = self.socket.send(self._encode_str(record))
+                bytes_sent = self.socket.send(record)
 
-                # If here, write at least partially succeeded. Reset warnings
+                # If here, write succeeded. Reset warnings
                 #
                 # NOTE: If the host is unreachable, every other send will fail.
                 #       Since UDP doesn't actually know it failed, the initial
