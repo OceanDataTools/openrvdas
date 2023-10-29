@@ -10,9 +10,6 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 
 
-# FIXME: implement tcp, remove udp entirely, maybe rename TCPWriter?  could
-#        make an issue for this.
-#
 class TCPWriter(Writer):
     """Write TCP packtes to network."""
     def __init__(self, destination, port,
