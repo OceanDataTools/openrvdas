@@ -550,6 +550,7 @@ if __name__ == '__main__':
 
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
     log_level = LOG_LEVELS[min(parsed_args.verbosity, max(LOG_LEVELS))]
+    logging.getLogger().setLevel(log_level)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(STDERR_FORMATTER)
