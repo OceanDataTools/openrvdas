@@ -152,7 +152,7 @@ class UDPReader(Reader):
         if not self.socket:
             self.socket = self._open_socket()
         if not self.socket:
-            logging.error('Unable to read record')
+            logging.error('UDPReader.read: unable to open UDP socket')
             return
 
         try:
