@@ -15,8 +15,9 @@ from logger.writers.writer import Writer
 class UDPWriter(Writer):
     """Write UDP packets to network."""
 
-    def __init__(self, destination, port,
+    def __init__(self, destination=None, port=None,
                  mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
+                 reuseaddr=False, reuseport=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """Write records to a UDP network socket.
         ```
@@ -26,7 +27,7 @@ class UDPWriter(Writer):
                      specify the broadcast address of the network you're trying
                      to send to (e.g., 192.168.1.255).
 
-        port         Port to which packets should be sent
+        port         Port to which packets should be sent.  REQUIRED
 
         mc_interface REQUIRED for multicast, the interface to send from.  Can be
                      specified as either IP or a resolvable hostname.
@@ -43,6 +44,12 @@ class UDPWriter(Writer):
 
         eol          If specified, an end of line string to append to record
                      before sending.
+
+        reuseaddr    Specifies wether to set SO_REUSEADDR on the created socket.  If
+                     you don't know you need this, don't enable it.
+
+        reuseport    Specifies wether to set SO_REUSEPORT on the created socket.  If
+                     you don't know you need this, don't enable it.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any
                 decoding and return raw bytes. Other possible encodings are
@@ -91,6 +98,17 @@ class UDPWriter(Writer):
             destination = '<broadcast>'
 
         self.destination = destination
+
+        # make sure user passed in `port`
+        #
+        # NOTE: We want the order of the arguments to consistently be (ip,
+        #       port, ...) across all the network readers/writers... but we
+        #       want `destination` to be optional.  All kwargs need to come
+        #       after all regular args, so we've assigned a default value of
+        #       None to `port`.  But don't be confused, it is REQUIRED.
+        #
+        if not port:
+            raise TypeError('must specify `port`')
         # make sure port gets stored as an int, even if passed in as a string
         self.port = int(port)
 
@@ -100,6 +118,9 @@ class UDPWriter(Writer):
             mc_interface = socket.gethostbyname(mc_interface)
         self.mc_interface = mc_interface
         self.mc_ttl = mc_ttl
+
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
 
         # socket gets initialized on-demand in write()
         self.socket = None
@@ -112,11 +133,13 @@ class UDPWriter(Writer):
         udp_socket = socket.socket(family=socket.AF_INET,
                                    type=socket.SOCK_DGRAM,
                                    proto=socket.IPPROTO_UDP)
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-        try:  # Raspbian doesn't recognize SO_REUSEPORT
-            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning('Unable to set socket REUSEPORT; may be unsupported')
+        if self.reuseaddr:
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn't recognize SO_REUSEPORT
+                udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning('Unable to set socket REUSEPORT; may be unsupported')
 
         # set multicast/broadcast options
         if self.mc_interface:
