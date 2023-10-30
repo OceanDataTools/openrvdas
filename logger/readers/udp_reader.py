@@ -64,6 +64,8 @@ class UDPReader(Reader):
         if interface:
             # resolve once in constructor
             interface = socket.gethostbyname(interface)
+        else:
+            interface = ''
         self.interface = interface
 
         # make sure user passed in `port`
