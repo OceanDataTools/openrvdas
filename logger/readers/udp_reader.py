@@ -25,7 +25,7 @@ READ_BUFFER_SIZE = 65535
 class UDPReader(Reader):
     """Read UDP packets from network."""
     ############################
-    def __init__(self, interface, port, mc_group=None,
+    def __init__(self, interface=None, port=None, mc_group=None,
                  reuseaddr=False, reuseport=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """
@@ -37,7 +37,7 @@ class UDPReader(Reader):
                      not be on the loopback network (OK for testing, but won't work
                      in the real world).
 
-        port         Port to listen to for packets
+        port         Port to listen to for packets.  REQUIRED
 
         mc_group     If specified, IP address of multicast group id to subscribe to.
 
@@ -66,6 +66,19 @@ class UDPReader(Reader):
             interface = socket.gethostbyname(interface)
         self.interface = interface
 
+        # make sure user passed in `port`
+        #
+        # NOTE: We want the order of the arguments to consistently be (ip,
+        #       port, ...) across all the network readers/writers... but we
+        #       want `interface` to be optional.  All kwargs need to come after
+        #       all regular args, so we've assigned a default value of None to
+        #       `port`.  But don't be confused, it is REQUIRED.
+        #
+        if not port:
+            raise TypeError('must specify `port`')
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
+
         # prep multicast parameters
         if mc_group:
             # resolve once in constructor
@@ -80,9 +93,6 @@ class UDPReader(Reader):
                 self.interface = socket.gethostbyname(socket.gethostname())
 
         self.mc_group = mc_group
-
-        # make sure port gets stored as an int, even if passed in as a string
-        self.port = int(port)
 
         self.reuseaddr = reuseaddr
         self.reuseport = reuseport
