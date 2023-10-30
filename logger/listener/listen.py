@@ -690,7 +690,6 @@ if __name__ == '__main__':
                         addr.insert(0, '')
                     source = addr[0]
                     port = int(addr[1])
-                    print("encoding:", encoding)
                     readers.append(UDPReader(source, port, encoding=encoding))
 
             if new_args.redis:
