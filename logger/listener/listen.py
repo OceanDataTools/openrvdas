@@ -679,7 +679,6 @@ if __name__ == '__main__':
                     readers.append(NetworkReader(network=addr, encoding=encoding))
 
             if new_args.udp:
-                eol = all_args.network_eol
                 encoding = all_args.encoding
                 for addr_str in new_args.udp.split(','):
                     addr = addr_str.split(':')
@@ -690,7 +689,8 @@ if __name__ == '__main__':
                         addr.insert(0, '')
                     source = addr[0]
                     port = int(addr[1])
-                    readers.append(UDPReader(port=port, source=source, eol=eol, encoding=encoding))
+                    print("encoding:", encoding)
+                    readers.append(UDPReader(source, port, encoding=encoding))
 
             if new_args.redis:
                 for channel in new_args.redis.split(','):
@@ -827,8 +827,7 @@ if __name__ == '__main__':
                         addr.insert(0, '')
                     dest = addr[0]
                     port = int(addr[1])
-                    writers.append(TCPWriter(port=port, destination=dest,
-                                             eol=eol, encoding=encoding))
+                    writers.append(TCPWriter(dest, port, eol=eol, encoding=encoding))
 
             if new_args.write_udp:
                 eol = all_args.network_eol
@@ -842,8 +841,7 @@ if __name__ == '__main__':
                         addr.insert(0, '')
                     dest = addr[0]
                     port = int(addr[1])
-                    writers.append(UDPWriter(port=port, destination=dest,
-                                             eol=eol, encoding=encoding))
+                    writers.append(UDPWriter(dest, port, eol=eol, encoding=encoding))
 
             # SerialWriter is a little more complicated than other readers
             # because it can take so many parameters. Use the kwargs trick to
