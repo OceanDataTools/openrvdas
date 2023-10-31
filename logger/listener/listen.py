@@ -49,6 +49,7 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.cached_data_reader import CachedDataReader  # noqa: E402
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
 from logger.readers.network_reader import NetworkReader  # noqa: E402
+from logger.readers.tcp_reader import TCPReader
 from logger.readers.udp_reader import UDPReader  # noqa: E402
 from logger.readers.redis_reader import RedisReader  # noqa: E402
 from logger.readers.serial_reader import SerialReader  # noqa: E402
@@ -289,14 +290,22 @@ if __name__ == '__main__':
     ############################
     # Readers
     parser.add_argument('--network', dest='network', default=None,
-                        help='Comma-separated network addresses to read from')
+                        help='Comma-separated network addresses to read from.  '
+                        'NOTE: This has been REPLACED by --udp and --tcp.')
+
+    parser.add_argument('--tcp', dest='tcp', default=None,
+                        help='Comma-separated tcp address to read from, '
+                        'where an address is of format [source:]port[,...] and '
+                        'source, when provided, is the address of the '
+                        'interface you want to listen on.  NOTE: This replaces '
+                        'the old --network argument.')
 
     parser.add_argument('--udp', dest='udp', default=None,
                         help='Comma-separated udp addresses to read from, '
                         'where an address is of format [source:]port[,...] and '
                         'source, when provided, is either the address of the '
                         'interface you want to listen on, or a multicast '
-                        'group.')
+                        'group.  NOTE: This replaces the old --network argument.')
 
     parser.add_argument('--database', dest='database', default=None,
                         help='Format: user@host:database:field1,field2,... '
@@ -678,6 +687,20 @@ if __name__ == '__main__':
                 encoding = all_args.encoding
                 for addr in new_args.network.split(','):
                     readers.append(NetworkReader(network=addr, encoding=encoding))
+
+            if new_args.tcp:
+                eol = all_args.network_eol
+                encoding = all_args.encoding
+                for addr_str in new_args.tcp.split(','):
+                    addr = addr_str.split(':')
+                    if len(addr) > 2:
+                        parser.error('Format error for --tcp argument. Format '
+                                     'should be [source:]port,[,...]')
+                    if len(addr) < 2:
+                        addr.insert(0, '')
+                    source = addr[0]
+                    port = int(addr[1])
+                    readers.append(TCPReader(source, port, eol=eol, encoding=encoding))
 
             if new_args.udp:
                 encoding = all_args.encoding

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import mmap
 import signal
 import socket
 import sys
@@ -68,9 +69,7 @@ class TestTCPWriter(unittest.TestCase):
 
             # Check that we get the lines we expect from it
             for line in sample_data:
-                # FIXME: lookup page size?  hardcode 4k?  something else
-                #        reasonable?
-                record = s_connected.recv(4096)
+                record = s_connected.recv(mmap.PAGESIZE)
                 if encoding:
                     record = record.decode(encoding=encoding)
                 # add eol to expected line before comparison

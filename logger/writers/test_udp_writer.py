@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import mmap
 import signal
 import socket
 import sys
@@ -73,7 +74,7 @@ class TestUDPWriter(unittest.TestCase):
         try:
             # Check that we get the lines we expect from it
             for line in SAMPLE_DATA:
-                record = sock.recv(4096)
+                record = sock.recv(mmap.PAGESIZE)
                 logging.info('looking for "%s", got "%s"', line, record)
                 if record:
                     record = record.decode('utf-8')
@@ -108,7 +109,7 @@ class TestUDPWriter(unittest.TestCase):
         try:
             # Check that we get the lines we expect from it
             for line in SAMPLE_DATA:
-                record = sock.recv(4096)
+                record = sock.recv(mmap.PAGESIZE)
                 if record:
                     record = record.decode('utf-8')
                     line += eol.encode().decode('unicode_escape')
@@ -139,7 +140,7 @@ class TestUDPWriter(unittest.TestCase):
         try:
             # Check that we get the lines we expect from it
             for line in BINARY_DATA:
-                record = sock.recv(4096)
+                record = sock.recv(mmap.PAGESIZE)
                 logging.info('looking for "%s", got "%s"', line, record)
                 self.assertEqual(line, record)
         except ReaderTimeout:
@@ -187,7 +188,7 @@ class TestUDPWriter(unittest.TestCase):
         try:
             # Check that we get the lines we expect from it
             for line in SAMPLE_DATA:
-                record = sock.recv(4096)
+                record = sock.recv(mmap.PAGESIZE)
                 logging.info('looking for "%s", got "%s"', line, record)
                 if record:
                     record = record.decode('utf-8')

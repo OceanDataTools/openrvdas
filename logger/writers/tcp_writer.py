@@ -10,12 +10,8 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 
 
-# FIXME: implement tcp, remove udp entirely, maybe rename TCPWriter?  could
-#        make an issue for this.
-#
 class TCPWriter(Writer):
     """Write TCP packtes to network."""
-
     def __init__(self, destination, port,
                  num_retry=2, warning_limit=5, eol='',
                  reuseaddr=False, reuseport=False,
@@ -98,6 +94,12 @@ class TCPWriter(Writer):
         self.socket = None
 
     ############################
+    def __del__(self):
+        if self.socket:
+            logging.debug('__del__: closing socket')
+            self._close_socket(self.socket)
+
+    ############################
     def _open_socket(self):
         """Do socket prep so we're ready to write().  Returns socket object or None on
         failure.
@@ -130,6 +132,11 @@ class TCPWriter(Writer):
                          'failures; restting warnings.')
         self.num_warnings = 0
         return this_socket
+
+    ############################
+    def _close_socket(self, s):
+        s.shutdown(socket.SHUT_RDWR)
+        s.close()
 
     ############################
     def write(self, record):
@@ -170,6 +177,56 @@ class TCPWriter(Writer):
                 # already complained sufficiently
                 continue
 
+            # attempt to verify we're really connected
+            #
+            # NOTE: This is because the only way to detect a closed TCP socket
+            #       is via recv(), which is awkward when we're trying to
+            #       guarantee a write was successful.
+            #
+            #         https://stackoverflow.com/questions/49457631/c-server-socket-closed-but-client-socket-still-able-send-two-more-packages
+            #
+            #         "send() just puts the data in the kernel socket buffer,
+            #         it doesn't wait for the data to be transmitted or the
+            #         server to acknowledge receipt of it.
+            #
+            #         You don't get SIGPIPE until the data is transmitted and
+            #         the server rejects it by sending a RST segment.
+            #
+            #         It works this way because each direction of a TCP
+            #         connection is treated independently. When the server
+            #         closes the socket, it sends a FIN segment. This just
+            #         tells the client that the server is done sending data, it
+            #         doesn't mean that the server cannot receive data. There's
+            #         nothing in the TCP protocol that allows the server to
+            #         inform the client of this. So the only way to find out
+            #         that it's not accepting any more data is when the client
+            #         gets that RST response.
+            #
+            #         Informing the client that they shouldn't send anything
+            #         more is usually done in the application protocol, since
+            #         it's not available in TCP."
+            #
+            #       So it might take a couple "successful" send() calls before
+            #       the socket layer notices nobody's home on the other end.
+            #
+            #       Fine then, let's do a 1 byte recv() w/ flags arranged so we
+            #       don't really read off the socket forcing it to raise
+            #       BlockingIOError if the socket is still connected.  Not
+            #       perfect, because the remote side could still close after
+            #       this call but before our send() below, but it's something.
+            #
+            try:
+                # If the socket is still connected, this will raise
+                # BlockingIOError.  If it's not, it returns 0 bytes.
+                msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)
+                logging.error('TCPWriter: connection closed')
+                self.num_warnings += 1
+                self._close_socket(self.socket)
+                self.socket = None
+                continue
+            except BlockingIOError as e:
+                pass
+
             # we're connected, try sending
             try:
                 bytes_sent = self.socket.send(self._encode_str(record))
@@ -181,6 +238,7 @@ class TCPWriter(Writer):
                 #
                 logging.error('TCPWriter: send() error: %s:%d: %s', self.destination, self.port, str(e))
                 self.num_warnings += 1
+                self._close_socket(self.socket)
                 self.socket = None
                 continue
 
