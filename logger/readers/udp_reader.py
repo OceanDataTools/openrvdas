@@ -20,6 +20,22 @@ from logger.readers.reader import Reader  # noqa: E402
 # so that would mess things up pretty good.
 READ_BUFFER_SIZE = 65535
 
+# On the send side of things, we can (and do) detect when a write has failed
+# because the user's `record` was too big.  This is usually because the user is
+# trying to send huge datagrams after looking up the "theoretical max size of a
+# datagram" on wikipedia.  Well, it's called "theoretical" for a reason.  It's
+# really the maximum size of the data portion of a UDP datagram, but that
+# doesn't take into account extra header for IPv4/IPv6 or seemingly random
+# system-level caps (e.g., Mac's socket implementation set maximum udp send
+# size to 9K).
+#
+# When UDPWriter detects this condition, it fragments the record into smaller
+# records and appends each fragment with this FRAGMENT_MARKER.  Inside
+# UDPReader.read(), we check to see if a received datagram ends with this
+# marker, and if it does, we read another datagram and combine the results
+# (over and over until we get a datagram that doesn't end with the marker).
+FRAGMENT_MARKER = b'\xff\xffTOOBIG\xff\xff'
+
 
 ################################################################################
 class UDPReader(Reader):
@@ -64,6 +80,8 @@ class UDPReader(Reader):
         if interface:
             # resolve once in constructor
             interface = socket.gethostbyname(interface)
+        else:
+            interface = ''
         self.interface = interface
 
         # make sure user passed in `port`
@@ -165,10 +183,25 @@ class UDPReader(Reader):
             logging.error('UDPReader.read: unable to open UDP socket')
             return
 
-        try:
-            record = self.socket.recv(READ_BUFFER_SIZE)
-        except OSError as e:
-            logging.error('UDPReader error: %s', str(e))
-            return None
-        logging.debug('UDPReader.read() received %d bytes', len(record))
-        return self._decode_bytes(record)
+        # Read datagrams until we get one that doesn't end with a FRAGMENT_MARKER
+        record_buffer=b''
+        while True:
+            try:
+                record = self.socket.recv(READ_BUFFER_SIZE)
+            except OSError as e:
+                logging.error('UDPReader error: %s', str(e))
+                return None
+            logging.debug('UDPReader.read: received %d bytes', len(record))
+
+            if record.endswith(FRAGMENT_MARKER):
+                # UDPWriter fragmented this record because it was too large to
+                # send as a single datagram
+                logging.info('UDPrader.read: detected fragmented packet')
+                record_buffer += record.rsplit(FRAGMENT_MARKER, maxsplit=1)[0]
+                logging.debug('record_buffer: %s', record_buffer)
+            else:
+                record_buffer += record
+                break
+
+        # we've got a whole record in our record_buffer, decode it
+        return self._decode_bytes(record_buffer)
