@@ -128,6 +128,8 @@ function get_os_type {
                 OS_VERSION=18
             elif [[ ! -z `grep "VERSION_ID=\"11" /etc/os-release` ]];then
                 OS_VERSION=20
+            elif [[ ! -z `grep "VERSION_ID=\"12" /etc/os-release` ]];then
+                OS_VERSION=22
             else
                 echo "Sorry - unknown Debian OS Version! - exiting."
                 exit_gracefully
@@ -316,6 +318,7 @@ function create_user {
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
           sudo usermod -a -G tty $RVDAS_USER
+          sudo usermod -a -G dialout $RVDAS_USER
           sudo usermod -a -G sudo $RVDAS_USER
     fi
 }
