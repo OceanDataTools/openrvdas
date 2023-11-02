@@ -517,7 +517,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--encoding', dest='encoding', default='utf-8',
                         help="Optional encoding of records.  Default is utf-8, "
-                        "specify '' for raw/binary.")
+                        "specify '' for raw/binary.  NOTE: This applies to ALL "
+                        "readers/writers/transforms, as you need to have one "
+                        "consistent encoding from start to finish.")
 
     parser.add_argument('--write_redis', dest='write_redis', default=None,
                         help='Redis pubsub channel[@host[:port]] to write to. '
@@ -684,13 +686,13 @@ if __name__ == '__main__':
                         refresh_file_spec=all_args.refresh_file_spec))
 
             if new_args.network:
-                encoding = all_args.encoding
+                encoding = parsed_args.encoding
                 for addr in new_args.network.split(','):
                     readers.append(NetworkReader(network=addr, encoding=encoding))
 
             if new_args.tcp:
                 eol = all_args.network_eol
-                encoding = all_args.encoding
+                encoding = parsed_args.encoding
                 for addr_str in new_args.tcp.split(','):
                     addr = addr_str.split(':')
                     if len(addr) > 2:
@@ -703,7 +705,7 @@ if __name__ == '__main__':
                     readers.append(TCPReader(source, port, eol=eol, encoding=encoding))
 
             if new_args.udp:
-                encoding = all_args.encoding
+                encoding = parsed_args.encoding
                 for addr_str in new_args.udp.split(','):
                     addr = addr_str.split(':')
                     if len(addr) > 2:
@@ -823,7 +825,7 @@ if __name__ == '__main__':
             ##########################
             # Writers
             if new_args.write_file:
-                encoding = all_args.encoding
+                encoding = parsed_args.encoding
                 for filename in new_args.write_file.split(','):
                     if filename == '-':
                         filename = None
@@ -834,13 +836,13 @@ if __name__ == '__main__':
 
             if new_args.write_network:
                 eol = all_args.network_eol
-                encoding = all_args.encoding
+                encoding = parsed_args.encoding
                 for addr in new_args.write_network.split(','):
                     writers.append(NetworkWriter(network=addr, eol=eol, encoding=encoding))
 
             if new_args.write_tcp:
                 eol = all_args.network_eol
-                encoding = all_args.encoding
+                encoding = parsed_args.encoding
                 for addr_str in new_args.write_tcp.split(','):
                     addr = addr_str.split(':')
                     if len(addr) > 2:
@@ -854,7 +856,7 @@ if __name__ == '__main__':
 
             if new_args.write_udp:
                 eol = all_args.network_eol
-                encoding = all_args.encoding
+                encoding = parsed_args.encoding
                 for addr_str in new_args.write_udp.split(','):
                     addr = addr_str.split(':')
                     if len(addr) > 2:
