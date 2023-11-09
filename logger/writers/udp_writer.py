@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import json
+import errno
 import logging
 import socket
 import struct
@@ -11,30 +11,80 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.writers.writer import Writer
 
+# So that we can write the user's record no matter how silly big it is, we
+# autodetect the system's maximum datagram size and write() fragments the
+# record into smaller packets if needed.  Each fragmented packet is marked with
+# FRAGMENT_MARKER so that UDPReader can notice and reassemble the record.
+FRAGMENT_MARKER = b'\xff\xffTOOBIG\xff\xff'
+
+# Maximum allowable size of a UDP datagram on this system, autodetect once at
+# module load
+#
+# NOTE: You can test/debug the fragmentation code by loading the udp_writer
+#       module and than manually setting udp_writer.MAXSIZE after autodetection
+#       has happened.
+#
+MAXSIZE = None
+
+
+def __detect_maxsize():
+    """Autodetect the maximum datagram size we can send"""
+    global MAXSIZE
+    if MAXSIZE:
+        return
+
+    s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM,
+                      proto=socket.IPPROTO_UDP)
+
+    # start with the maximum allowable size of a UDP packet, and work our way
+    # down one byte at a time.
+    #
+    # FIXME: I know, I know.  Lame, slow, etc, a binary search would be "most
+    #        correct", but I don't feel like making this go faster right now.
+    #        And it's only done once, so whatever.
+    #
+    trysize=65535
+    while trysize > 0:
+        logging.debug("__detect_maxsize: trying %d", trysize)
+        try:
+            s.sendto(b'a'*trysize, ('127.0.0.1', 9999))
+        except OSError as e:
+            if e.errno == errno.EMSGSIZE:
+                trysize -= 1
+                continue
+            else:
+                # For whatever reason, this won't work... print a warning
+                logging.warning("__detect_maxsize: send() failed: %s", str(e))
+                break
+        # outstanding!
+        break
+
+    if not trysize:
+        logging.warning("Failed to autodetect maximum UDP datagram size.  Record fragmentation disabled")
+    else:
+        logging.info("Detected maximum UDP datagram size %d", trysize)
+        MAXSIZE = trysize
+
+# attempt to detect maximum datagram size when module is loaded
+__detect_maxsize()
+
 
 class UDPWriter(Writer):
     """Write UDP packets to network."""
 
-    def __init__(self, port, destination='',
-                 interface='',  # DEPRECATED!
+    def __init__(self, destination=None, port=None,
                  mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
+                 reuseaddr=False, reuseport=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """Write records to a UDP network socket.
         ```
-        port         Port to which packets should be sent
+        destination  The destination to send UDP packets to. If '' or None,
+                     the UDPWriter will broadcast to 255.255.255.255.  On a
+                     system connected to more than one subnet, you'll want to
+                     specify the broadcast address of the network you're trying
+                     to send to (e.g., 192.168.1.255).
 
-        destination  The destination to send UDP packets to. If omitted (or None)
-                     is equivalent to specifying destination='<broadcast>',
-                     which will send to all available interfaces.
-
-                     Setting destination='255.255.255.255' means broadcast
-                     to local network. To broadcast to a specific interface,
-                     set destination to the broadcast address for that network.
-
-        interface    DEPRECATED - If specified, the network interface to
-                     send from. Preferred usage is to use the 'destination'
-                     argument and specify the broadcast address of the desired
-                     network.
+        port         Port to which packets should be sent.  REQUIRED
 
         mc_interface REQUIRED for multicast, the interface to send from.  Can be
                      specified as either IP or a resolvable hostname.
@@ -51,6 +101,12 @@ class UDPWriter(Writer):
 
         eol          If specified, an end of line string to append to record
                      before sending.
+
+        reuseaddr    Specifies wether to set SO_REUSEADDR on the created socket.  If
+                     you don't know you need this, don't enable it.
+
+        reuseport    Specifies wether to set SO_REUSEPORT on the created socket.  If
+                     you don't know you need this, don't enable it.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any
                 decoding and return raw bytes. Other possible encodings are
@@ -77,8 +133,7 @@ class UDPWriter(Writer):
             eol = self._unescape_str(eol)
         self.eol = eol
 
-        self.target_str = 'interface: %s, destination: %s, port: %d' % (
-            interface, destination, port)
+        self.target_str = 'destination: %s, port: %d' % (destination, port)
 
         # do name resolution once in the constructor
         #
@@ -95,47 +150,22 @@ class UDPWriter(Writer):
         #
         if destination:
             destination = socket.gethostbyname(destination)
-        if interface:
-            logging.warning('DEPRECATED: UDPWriter(interface=%s). Instead of the '
-                            '"interface" parameter, UDPWriters should use the'
-                            '"destination" parameter. To broadcast over a specific '
-                            'interface, specify UDPWriter(destination=<interface '
-                            'broadcast address>) address as the destination.',
-                            interface)
-            interface = socket.gethostbyname(interface)
-
-        if interface and destination:
-            # At the moment, we don't know how to do both interface and
-            # multicast/unicast. If they've specified both, then complain
-            # and ignore the interface part.
-            logging.warning('UDPWriter doesn\'t yet support specifying both '
-                            'interface and destination. Ignoring interface '
-                            'specification.')
-
-        # THE FOLLOWING USE OF interface PARAMETER IS PARTIALLY BROKEN: it
-        # will fail if the netmask is not 255.255.255.0. This is why we
-        # deprecate the interface param.
-        #
-        # If they've specified the interface we're supposed to be sending
-        # via, then we have to do a little legerdemain: we're going to
-        # connect to the broadcast address of the specified interface as
-        # our destination. The broadcast address is just the normal
-        # address with the last tuple replaced by ".255".
-        elif interface:
-            if interface == '0.0.0.0':  # local network
-                destination = '255.255.255.255'
-            elif interface in ['<broadcast>', 'None']:
-                destination = '<broadcast>'
-            else:
-                # Change interface's lowest tuple to 'broadcast' value (255)
-                destination = interface[:interface.rfind('.')] + '.255'
-
-        # If no destination, it's a broadcast; set flag allowing broadcast and
-        # set dest to special string
-        elif not destination:
+        else:
+            # If no destination, it's a broadcast; set dest to special string
             destination = '<broadcast>'
 
         self.destination = destination
+
+        # make sure user passed in `port`
+        #
+        # NOTE: We want the order of the arguments to consistently be (ip,
+        #       port, ...) across all the network readers/writers... but we
+        #       want `destination` to be optional.  All kwargs need to come
+        #       after all regular args, so we've assigned a default value of
+        #       None to `port`.  But don't be confused, it is REQUIRED.
+        #
+        if not port:
+            raise TypeError('must specify `port`')
         # make sure port gets stored as an int, even if passed in as a string
         self.port = int(port)
 
@@ -146,21 +176,27 @@ class UDPWriter(Writer):
         self.mc_interface = mc_interface
         self.mc_ttl = mc_ttl
 
-        # Try opening the socket
-        self.socket = self._open_socket()
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
+
+        # socket gets initialized on-demand in write()
+        self.socket = None
 
     ############################
     def _open_socket(self):
-        """Try to open and return the network socket.
+        """Do socket prep so we're ready to write().  Returns socket object or None on
+        failure.
         """
         udp_socket = socket.socket(family=socket.AF_INET,
                                    type=socket.SOCK_DGRAM,
                                    proto=socket.IPPROTO_UDP)
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-        try:  # Raspbian doesn't recognize SO_REUSEPORT
-            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning('Unable to set socket REUSEPORT; may be unsupported')
+        if self.reuseaddr:
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn't recognize SO_REUSEPORT
+                udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning('Unable to set socket REUSEPORT; may be unsupported')
 
         # set multicast/broadcast options
         if self.mc_interface:
@@ -200,6 +236,36 @@ class UDPWriter(Writer):
         if self.eol:
             record += self.eol
 
+        # Encode the record, so we're dealing with bytes from here on out
+        record = self._encode_str(record)
+
+        # Fragment record if needed, and recurse.
+        if len(record) > MAXSIZE:
+            record_list=[]
+            max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
+            fragment_sizes = []
+            while len(record) > max_fragment_size:
+                r = record[:max_fragment_size]+FRAGMENT_MARKER
+                record_list.append(r)
+                fragment_sizes.append(str(len(r)))
+                record = record[max_fragment_size:]
+            # last record doesn't get FRAGMENT_MARKER
+            record_list.append(record)
+            fragment_sizes.append("{} bytes".format(len(record)))
+            fragment_sizes = ', '.join(fragment_sizes)
+            logging.info("write: fragmented record into %d datagrams: %s", len(record_list), fragment_sizes)
+            logging.debug(str(record_list))
+
+            # change our encoding to binary temporarily, because we've already
+            # encoded to binary and added our marker (which has non-utf chars
+            # in it)
+            old_encoding = self.encoding
+            self.encoding = None
+            self.write(record_list)
+            # restore old encoding
+            self.encoding = old_encoding
+            return
+
         # If socket isn't connected, try reconnecting. If we can't
         # reconnect, complain and return without writing.
         if not self.socket:
@@ -213,9 +279,9 @@ class UDPWriter(Writer):
         rec_len = len(record)
         while num_tries <= self.num_retry and bytes_sent < rec_len:
             try:
-                bytes_sent = self.socket.send(self._encode_str(record))
+                bytes_sent = self.socket.send(record)
 
-                # If here, write at least partially succeeded. Reset warnings
+                # If here, write succeeded. Reset warnings
                 #
                 # NOTE: If the host is unreachable, every other send will fail.
                 #       Since UDP doesn't actually know it failed, the initial
@@ -239,8 +305,7 @@ class UDPWriter(Writer):
                 # If we failed, complain, unless we've already complained too much
                 self.good_writes = 0
                 if self.num_warnings < self.warning_limit:
-                    logging.error('UDPWriter error: %s: %s', self.target_str, str(e))
-                    logging.error('UDPWriter record: %s', record)
+                    logging.error('UDPWriter: send() error: %s: %s', self.target_str, str(e))
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error('UDPWriter.write() - muting errors')

@@ -34,6 +34,12 @@ class Reader:
     def __init__(self, output_format=formats.Unknown,
                  encoding='utf-8', encoding_errors='ignore'):
         self.output_format(output_format)
+        # make sure '' behaves the same as None, which is what all the
+        # docstrings say, and would be logical... but then certain things treat
+        # them differently (e.g., file.open(mode='ab', encoding='') throws
+        # ValueError: binary mode doesn't take an encoding argument)
+        if encoding == '':
+            encoding = None
         self.encoding = encoding
         self.encoding_errors = encoding_errors
 
