@@ -8,9 +8,8 @@ Some questions:
   first fires up, should it send the "entering_boundary_message" if the first record
   it receives indicates it's inside?
 
-NOTE on buffer in degrees: the coordinate reference system code is incomplete and
-commented out for simplicity. Using a CRS would allow specifying buffers in meters
-or such, but would require figuring out the right UTM projection for each location
+NOTE: distance_from_boundary is in degrees. Computing the appropriate value in km/nm
+is nontrivial and requires figuring out the right UTM projection for each location
 and recomputing it for each point and switching when lat/lon moved to a new UTM
 projection area, possibly resulting in discontinuities. Simpler and less error-prone
 to just require degrees.
@@ -45,13 +44,10 @@ class GeofenceTransform():
                  latitude_field_name,
                  longitude_field_name,
                  boundary_file_name,
-                 country_name=None,
-                 #coordinate_reference_system=None,
                  distance_from_boundary_in_degrees=0,
                  leaving_boundary_message=None,
                  entering_boundary_message=None,
-                 seconds_between_checks=0,
-                 metadata_interval=10):
+                 seconds_between_checks=0):
         """
         ```
         latitude_field_name
@@ -61,14 +57,7 @@ class GeofenceTransform():
                 negative values representing south latitude and west longitude.
 
         boundary_file_name
-        country_name
-                Path to file from which to load GML boundary definition, and
-                optional country name, if the file contains definitions for
-                more than one country.
-
-        #coordinate_reference_system
-        #       Optional coordinate reference system to convert to.
-        #       See note in file heading.
+                Path to file from which to load GML boundary definition..
 
         distance_from_boundary_in_degrees
                 Optional distance from boundary to place the fence, in degrees.
@@ -82,10 +71,6 @@ class GeofenceTransform():
         seconds_between_checks
                 Optional number of seconds to wait between doing checks,
                 computation overhead
-
-        #data_points_before_message
-        #        Optional number of sequential data points to wait inside/outside
-        #        boundary before sending message
         ```
         """
         # Only throw this error if user tries to actually use this code
@@ -96,52 +81,20 @@ class GeofenceTransform():
 
         self.latitude_field_name = latitude_field_name
         self.longitude_field_name = longitude_field_name
-        #self.coordinate_reference_system = coordinate_reference_system
         self.leaving_boundary_message = leaving_boundary_message
         self.entering_boundary_message = entering_boundary_message
         self.seconds_between_checks = seconds_between_checks
-        self.metadata_interval = metadata_interval
 
         # Once we start receiving data, this will either be True or False
         self.last_position_inside = None
 
         self.last_check = 0  # timestamp: the last time we checked
-        self.last_metadata_send = 0  # timestamp: last time we sent metadata
-
-        # Load the transform-specific packages we need
-        #import_errors = False
-        #try:
-        #    import geopandas
-        #except ImportError:
-        #    import_errors = True
-        #try:
-        #    from shapely.geometry import Point
-        #except ImportError:
-        #    import_errors = True
-        #if import_errors:
-        #    raise ImportError('GeofenceTransform requires installation of geopandas and '
-        #                      'shapely packages. Please run "pip install geopandas shapely" '
-        #                      'and retry.')
 
         # Load the EEZ data from the GML file
         eez_data = geopandas.read_file(boundary_file_name)
 
-        # Filter the EEZ for a specific country if necessary
-        if country_name:
-            eez_data = eez_data[eez_data['SOVEREIGNT'] == country_name]
-
-        # Convert the GeoDataFrame to a UTM projection suitable for the area
-        # Note: You might need to adjust the zone and/or hemisphere based on your EEZ's location
-        #if coordinate_reference_system is not None:
-        #    eez_data = eez_data.to_crs(coordinate_reference_system)  # Replace XX with UTM zone
-
-        # Buffer the country's EEZ by m meters
+        # Buffer the country's EEZ by distance in degrees
         self.buffered_eez = eez_data.buffer(distance_from_boundary_in_degrees)
-
-    ############################
-    @classmethod
-    def UTMProjection(cls, lat, lon):
-        """Given a latitude and longitude, compute which UTM projection to use"""
 
     ############################
     def _get_lat_lon(self, record):
@@ -178,8 +131,6 @@ class GeofenceTransform():
     def _is_inside_boundary(self, lat, lon):
         # Note that Point() takes longitude as first arg, not latitude
         point = Point(lon, lat)
-        #if self.coordinate_reference_system:
-        #    point = point.to_crs(self.coordinate_reference_system)  # Convert point to same UTM CRS
         return self.buffered_eez.contains(point).any()
 
     ############################
