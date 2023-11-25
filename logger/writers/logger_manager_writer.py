@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 
 import logging
-import os.path
 import sys
-import math
-
-from datetime import datetime, timedelta, timezone
+import time
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.timestamp import time_str, DATE_FORMAT  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
-from server.server_api_command_line import ServerAPICommandLine
+from server.server_api_command_line import ServerAPICommandLine  # noqa: E402
+
 
 class LoggerManagerWriter(Writer):
     """Write received text records to the LoggerManager."""
@@ -74,7 +71,7 @@ class LoggerManagerWriter(Writer):
             return
 
         # Can we find our command in any of the allowed prefixes?
-        approved = True in [record.find(prefix) for prefix in self.allowed_prefixes]
+        approved = True in [record.find(prefix) == 0 for prefix in self.allowed_prefixes]
 
         if not approved:
             logging.error(f'Command does not match any allowed prefixes: "{record}"')
@@ -84,7 +81,7 @@ class LoggerManagerWriter(Writer):
             try:
                 cmd, interval_str = record.split(' ')
                 interval = float(interval_str)
-            except:
+            except ValueError:
                 logging.error(f'Could not parse command into "sleep [seconds]": {record}')
                 return
             logging.info(f'Sleeping {interval} seconds')
@@ -92,4 +89,4 @@ class LoggerManagerWriter(Writer):
 
         else:
             logging.info(f'Writing command: {record}')
-            self.command_parser(record)
+            self.command_parser.process_command(record)

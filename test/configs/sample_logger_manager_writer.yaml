@@ -19,7 +19,7 @@ writers:
   - class: LoggerManagerWriter
     module: logger.writers.logger_manager_writer
     kwargs:
-      api: django
+      database: django
       allowed_prefixes:
         - 'set_active_mode '
         - 'set_active_logger_config '
