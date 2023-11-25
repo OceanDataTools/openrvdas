@@ -30,8 +30,8 @@ transforms:
       latitude_field_name: s330Latitude,
       longitude_field_name: s330Longitude
       boundary_file_name: /tmp/eez.gml
-      leaving_boundary_message: set_active_mode no_write+influx
-      entering_boundary_message: set_active_mode write+influx
+      leaving_boundary_message: set_active_mode write+influx
+      entering_boundary_message: set_active_mode no_write+influx
 # Send the messages that we get from geofence to the LoggerManager
 writers:
   - class: LoggerManagerWriter
@@ -57,15 +57,20 @@ from server.server_api_command_line import ServerAPICommandLine  # noqa: E402
 class LoggerManagerWriter(Writer):
     """Write received text records to the LoggerManager."""
 
-    def __init__(self, database='django', allowed_prefixes=[]):
+    def __init__(self, database=None, api=None, allowed_prefixes=[]):
         """Write received text records as commands to the LoggerManager.
         ```
         database
-                Which database the LoggerManager is using: django, sqlite, memory
+                String indicating which database the LoggerManager is using: django,
+                sqlite, memory. Either this or 'api', but not both, must be specified.
+
+        api
+                An instance of server_api.ServerAPI to use to communicate with the
+                LoggerManager. Either this or 'database', but not both, must be specified.
 
         allowed_prefixes
-                List of strings. Only records whose prefixes match something in this
-                list will be passed on as commands.
+                Optional list of strings. If specified, only records whose prefixes match
+                something in this list will be passed on as commands.
 
         See server/server_api_command_line.py for recognized commands.
 
@@ -78,18 +83,28 @@ class LoggerManagerWriter(Writer):
         of prior commands to settle.
         ```
         """
-        if database == 'django':
-            from django_gui.django_server_api import DjangoServerAPI
-            api = DjangoServerAPI()
-        elif database == 'memory':
-            from server.in_memory_server_api import InMemoryServerAPI
-            api = InMemoryServerAPI()
-        elif database == 'sqlite':
-            from server.sqlite_server_api import SQLiteServerAPI
-            api = SQLiteServerAPI()
-        else:
-            raise ValueError(f'Parameter "database" must be one of [django, memory, sqlite], '
-                             f'found "{database}"')
+        if database and api:
+            raise ValueError(f'Must specify either "database" or "api" but not both.')
+
+        # If database specified, create appropriate api instance
+        if database:
+            if database == 'django':
+                from django_gui.django_server_api import DjangoServerAPI
+                api = DjangoServerAPI()
+            elif database == 'memory':
+                from server.in_memory_server_api import InMemoryServerAPI
+                api = InMemoryServerAPI()
+            elif database == 'sqlite':
+                from server.sqlite_server_api import SQLiteServerAPI
+                api = SQLiteServerAPI()
+            else:
+                raise ValueError(f'Parameter "database" must be one of [django, memory, sqlite], '
+                                 f'found "{database}"')
+
+        # If not database, we'd better have an api specified
+        elif not api:
+            raise ValueError(f'Must specify one of "database" or "api".')
+
         self.command_parser = ServerAPICommandLine(api=api)
 
         if not type(allowed_prefixes) is list:
@@ -124,8 +139,7 @@ class LoggerManagerWriter(Writer):
 
         # Can we find our command in any of the allowed prefixes?
         approved = True in [record.find(prefix) == 0 for prefix in self.allowed_prefixes]
-
-        if not approved:
+        if self.allowed_prefixes and not approved:
             logging.error(f'Command does not match any allowed prefixes: "{record}"')
 
         # If it's our special "sleep" command

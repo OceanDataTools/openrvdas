@@ -12,7 +12,9 @@ readers:
   class: UDPReader
   kwargs:
     port: 6224
-# EEZ files in GML format can be downloaded from https://marineregions.org/eezsearch.php
+# Look for lat/lon values in the DASRecords and emit appropriate commands
+# when entering/leaving EEZ. Note that EEZ files in GML format can be
+# downloaded from https://marineregions.org/eezsearch.php.
 transforms:
   - class: GeofenceTransform
     module: loggers.transforms.geofence_transform
@@ -20,9 +22,9 @@ transforms:
       latitude_field_name: s330Latitude,
       longitude_field_name: s330Longitude
       boundary_file_name: /tmp/eez.gml
-      leaving_boundary_message: set_active_mode no_write+influx
-      entering_boundary_message: set_active_mode write+influx
-# Send messages that we get to the LoggerManager
+      leaving_boundary_message: set_active_mode write+influx
+      entering_boundary_message: set_active_mode no_write+influx
+# Send the messages that we get from geofence to the LoggerManager
 writers:
   - class: LoggerManagerWriter
     module: logger.writers.logger_manager_writer
