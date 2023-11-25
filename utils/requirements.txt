@@ -17,7 +17,9 @@ setproctitle
 influxdb_client
 pyModbusTCP
 
-#supervisor  # For MacOS only - install separately
+# For Geofencing
+geopandas
+shapely
 
 # Version-restricted packages
 Django==3.1.14
