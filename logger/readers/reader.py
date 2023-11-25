@@ -75,7 +75,7 @@ class Reader:
         if not self.encoding:
             return record
 
-        if self.encoding is 'hex':
+        if self.encoding == 'hex':
             try:
                 r = record.hex()
                 return r
