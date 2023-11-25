@@ -1,5 +1,48 @@
 #!/usr/bin/env python3
+"""
+Writer that sends records it receives to the LoggerManager as commands. Can
+be used in conjunction with GeofenceTransform for automatically switching
+modes when entering/exiting an EEZ, or with a QCFilterTransform to turn off
+loggers when conditions are violated.
 
+Multiple commands may be sent in a single record by separating them with
+semicolons.
+
+In addition to the normally-accepted LoggerManager commands, an additional
+one: "sleep N" is recognized, which will pause the writer N seconds before
+writing the subsequent command. This allows time, if needed, for the effects
+of prior commands to settle.
+
+Sample logger that switches modes when entering/exiting EEZ:
+```
+# Read parsed DASRecords from UDP
+readers:
+  class: UDPReader
+  kwargs:
+    port: 6224
+# Look for lat/lon values in the DASRecords and emit appropriate commands
+# when entering/leaving EEZ. Note that EEZ files in GML format can be
+# downloaded from https://marineregions.org/eezsearch.php.
+transforms:
+  - class: GeofenceTransform
+    module: loggers.transforms.geofence_transform
+    kwargs:
+      latitude_field_name: s330Latitude,
+      longitude_field_name: s330Longitude
+      boundary_file_name: /tmp/eez.gml
+      leaving_boundary_message: set_active_mode no_write+influx
+      entering_boundary_message: set_active_mode write+influx
+# Send the messages that we get from geofence to the LoggerManager
+writers:
+  - class: LoggerManagerWriter
+    module: logger.writers.logger_manager_writer
+    kwargs:
+      database: django
+      allowed_prefixes:
+        - 'set_active_mode '
+        - 'sleep '
+```
+"""
 import logging
 import sys
 import time
@@ -25,6 +68,9 @@ class LoggerManagerWriter(Writer):
                 list will be passed on as commands.
 
         See server/server_api_command_line.py for recognized commands.
+
+        Multiple commands may be sent in a single record by separating them with
+        semicolons.
 
         In addition to the normally-accepted LoggerManager commands, an additional
         one: "sleep N" is recognized, which will pause the writer N seconds before
@@ -68,6 +114,12 @@ class LoggerManagerWriter(Writer):
         if type(record) is not str:
             logging.warning(f'Received non-string command for LoggerManager '
                             f'(type {type(record)}): "{record}"')
+            return
+
+        # If there are semicolons, split into list and process sequentially
+        if record.find(';') > -1:
+            for single_record in record.split(';'):
+                self.write(single_record)
             return
 
         # Can we find our command in any of the allowed prefixes?

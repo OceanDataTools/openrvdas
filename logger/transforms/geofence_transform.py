@@ -3,14 +3,43 @@
 time. Emit pre-defined messages if lat/lon transition between inside and outside of
 fence.
 
+EEZ files in GML format can be downloaded from https://marineregions.org/eezsearch.php
+
+Sample logger that switches modes when entering/exiting EEZ:
+```
+# Read parsed DASRecords from UDP
+readers:
+  class: UDPReader
+  kwargs:
+    port: 6224
+# EEZ files in GML format can be downloaded from https://marineregions.org/eezsearch.php
+transforms:
+  - class: GeofenceTransform
+    module: loggers.transforms.geofence_transform
+    kwargs:
+      latitude_field_name: s330Latitude,
+      longitude_field_name: s330Longitude
+      boundary_file_name: /tmp/eez.gml
+      leaving_boundary_message: set_active_mode no_write+influx
+      entering_boundary_message: set_active_mode write+influx
+# Send messages that we get to the LoggerManager
+writers:
+  - class: LoggerManagerWriter
+    module: logger.writers.logger_manager_writer
+    kwargs:
+      database: django
+      allowed_prefixes:
+        - 'set_active_mode '
+        - 'sleep '
+```
 Some questions:
 - Should messages be emitted when first record is received? That is, when transform
   first fires up, should it send the "entering_boundary_message" if the first record
-  it receives indicates it's inside?
+  it receives indicates it's inside? DECISION: Yes.
 
-NOTE: distance_from_boundary is in degrees. Computing the appropriate value in km/nm
-is nontrivial and requires figuring out the right UTM projection for each location
-and recomputing it for each point and switching when lat/lon moved to a new UTM
+NOTE: optional parameter distance_from_boundary is in degrees. Computing the appropriate
+value in km/nm is nontrivial and requires figuring out the right UTM projection for each
+location and recomputing it for each point and switching when lat/lon moved to a new UTM
 projection area, possibly resulting in discontinuities. Simpler and less error-prone
 to just require degrees.
 """
