@@ -330,7 +330,8 @@ function install_packages {
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         # Install Homebrew - note: reinstalling is idempotent
-        xcode-select --install
+        echo 'Installing XCode Tools'
+        xcode-select --install || echo "XCode Tools already installed"
         pushd /tmp
         HOMEBREW_VERSION=4.1.21
         HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
@@ -342,7 +343,7 @@ function install_packages {
         sudo installer -pkg ${HOMEBREW_TARGET} -target /
         popd
 
-        brew install python git nginx supervisorctl
+        brew install python git nginx supervisor
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -508,9 +509,9 @@ function setup_python_packages {
     #    exit_gracefully
     #fi
 
-    echo "Creating virtual environment using $PYTHON_PATH"
+    echo "Creating virtual environment"
     cd $INSTALL_ROOT/openrvdas
-    ${PYTHON_PATH} -m venv $VENV_PATH
+    python3 -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."

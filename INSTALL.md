@@ -7,7 +7,7 @@ You will need to be able to run the ``sudo`` command. To begin installation, gra
 ```
 OPENRVDAS_REPO=raw.githubusercontent.com/oceandatatools/openrvdas
 BRANCH=master
-wget https://$OPENRVDAS_REPO/$BRANCH/utils/install_openrvdas.sh
+curl -O -L https://$OPENRVDAS_REPO/$BRANCH/utils/install_openrvdas.sh
 chmod +x install_openrvdas.sh
 sudo ./install_openrvdas.sh
 ```
