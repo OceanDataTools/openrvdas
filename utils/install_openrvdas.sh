@@ -330,41 +330,20 @@ function install_packages {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        # Install homebrew:
-        echo Checking for homebrew
-        if [ ! -f ${HOMEBREW_BASE}/bin/brew ];then
-            echo "Installing homebrew"
+        # Install Homebrew - note: reinstalling is idempotent
+        xcode-select --install
+        pushd /tmp
+        HOMEBREW_VERSION=4.1.21
+        HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
+        HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
 
-            if [ ! -d ${HOMEBREW_BASE} ];then
-                sudo mkdir $HOMEBREW_BASE
-            fi
-            sudo chown $RVDAS_USER $HOMEBREW_BASE
-            curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C $HOMEBREW_BASE
-        fi
+        curl -O -L ${HOMEBREW_PATH}
 
-        # Put brew in path for now
-        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+        # The -target / specifies that the package should be installed on the root volume.
+        sudo installer -pkg ${HOMEBREW_TARGET} -target /
+        popd
 
-        brew update --force --quiet
-        brew upgrade
-        chmod -R go-w "$(brew --prefix)/share/zsh"
-
-        # Install system packages we need
-        #PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
-        #if [ -n "$PYTHON_PATH" ];then
-        #    echo "Using python at $PYTHON_PATH"
-        #else
-        echo Installing python from Homebrew
-        [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
-        brew link python3
-        #fi
-        #brew install python #uwsgi
-
-        echo Installing supporting packages from Homebrew
-        #[ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
-        [ -e ${HOMEBREW_BASE}/bin/git ]    || brew install git
-        [ -e ${HOMEBREW_BASE}/bin/nginx ]  || brew install nginx
-        #[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
+        brew install python git nginx supervisorctl
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
