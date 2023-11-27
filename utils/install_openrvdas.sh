@@ -41,7 +41,6 @@ PREFERENCES_FILE='.install_openrvdas_preferences'
 # Define this here, even though it's just for MacOS, so that it's defined
 # when it's referenced down in install_packages, and doesn't have to
 # be defined twice.
-HOMEBREW_BASE='/usr/local/homebrew'
 
 ###########################################################################
 ###########################################################################
@@ -496,17 +495,18 @@ function setup_python_packages {
     #if [ -d $VENV_PATH ];then
     #    mv $VENV_PATH ${VENV_PATH}.bak.$$
     #fi
-    if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
-        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
-        PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
-    elif [ -e '/usr/local/bin/python3' ];then
-        PYTHON_PATH=/usr/local/bin/python3
-    elif [ -e '/usr/bin/python3' ];then
-        PYTHON_PATH=/usr/bin/python3
-    else
-        echo 'No python3 found?!?'
-        exit_gracefully
-    fi
+
+    #if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
+    #    eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+    #    PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
+    #elif [ -e '/usr/local/bin/python3' ];then
+    #    PYTHON_PATH=/usr/local/bin/python3
+    #elif [ -e '/usr/bin/python3' ];then
+    #    PYTHON_PATH=/usr/bin/python3
+    #else
+    #    echo 'No python3 found?!?'
+    #    exit_gracefully
+    #fi
 
     echo "Creating virtual environment using $PYTHON_PATH"
     cd $INSTALL_ROOT/openrvdas
@@ -797,7 +797,7 @@ function setup_supervisor {
     if [ $OS_TYPE == 'MacOS' ]; then
         ETC_HOME=/usr/local/etc
         HTTP_HOST=127.0.0.1
-        NGINX_BIN=${HOMEBREW_BASE}/bin/nginx
+        NGINX_BIN=/usr/local/bin/nginx
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
         SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
         SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
