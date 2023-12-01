@@ -444,11 +444,11 @@ EOF
     fi
 
     pushd $GRAFANA_HOMEPATH
-    sudo ${GRAFANA_PATH}/grafana cli admin reset-admin-password $INFLUXDB_PASSWORD
+    sudo ${GRAFANA_PATH}/grafana-cli admin reset-admin-password $INFLUXDB_PASSWORD
 
     echo Downloading plugins
-    sudo ${GRAFANA_PATH}/grafana cli plugins install grafana-influxdb-flux-datasource
-    sudo ${GRAFANA_PATH}/grafana cli plugins install briangann-gauge-panel
+    sudo ${GRAFANA_PATH}/grafana-cli plugins install grafana-influxdb-flux-datasource
+    sudo ${GRAFANA_PATH}/grafana-cli plugins install briangann-gauge-panel
     popd
 
     # If we're using SSL, change any "http" reference to "https"; if not
@@ -658,7 +658,7 @@ EOF
 
 ; Run Grafana
 [program:grafana]
-command=${GRAFANA_PATH}/grafana server --homepath $GRAFANA_HOMEPATH
+command=${GRAFANA_PATH}/grafana-server --homepath $GRAFANA_HOMEPATH
 directory=$GRAFANA_HOMEPATH
 autostart=$AUTOSTART_GRAFANA
 autorestart=true
