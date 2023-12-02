@@ -319,13 +319,9 @@ function install_influxdb {
 
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        HOMEBREW_BASE='/usr/local/homebrew'
-        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
         brew upgrade
         brew install --overwrite influxdb influxdb-cli
-        ln -sf ${HOMEBREW_BASE}/bin/influxd $INFLUX_PATH
-        ln -sf ${HOMEBREW_BASE}/bin/influx $INFLUX_PATH
 
     # If we're on Linux
     elif [ $OS_TYPE == 'CentOS' ]; then
@@ -404,12 +400,10 @@ function install_grafana {
     echo Installing Grafana...
 
     if [ $OS_TYPE == 'MacOS' ]; then
-        GRAFANA_PATH=/usr/local/homebrew/bin
-        GRAFANA_CONFIG=/usr/local/homebrew/share/grafana/conf/defaults.ini
-        GRAFANA_HOMEPATH=/usr/local/homebrew/share/grafana
+        GRAFANA_PATH=/usr/local/bin
+        GRAFANA_HOMEPATH=/usr/local/share/grafana
+        GRAFANA_CONFIG=/usr/local/share/grafana/conf/defaults.ini
 
-        HOMEBREW_BASE='/usr/local/homebrew'
-        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
         brew upgrade
         brew install --overwrite grafana
@@ -417,8 +411,8 @@ function install_grafana {
     # If we're on CentOS
     elif [ $OS_TYPE == 'CentOS' ]; then
         GRAFANA_PATH=/usr/sbin
-        GRAFANA_CONFIG=/usr/share/grafana/conf/defaults.ini
         GRAFANA_HOMEPATH=/usr/share/grafana
+        GRAFANA_CONFIG=/usr/share/grafana/conf/defaults.ini
 
         cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
 [grafana]
@@ -436,8 +430,8 @@ EOF
     # If we're on Ubuntu
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         GRAFANA_PATH=/usr/sbin
-        GRAFANA_CONFIG=/usr/share/grafana/conf/defaults.ini
         GRAFANA_HOMEPATH=/usr/share/grafana
+        GRAFANA_CONFIG=/usr/share/grafana/conf/defaults.ini
 
         sudo apt-get install -y apt-transport-https
         sudo apt-get install -y software-properties-common wget
@@ -482,12 +476,10 @@ function install_telegraf {
     echo Installing Telegraf...
 
     if [ $OS_TYPE == 'MacOS' ]; then
-        TELEGRAF_CONF_FILE=openrvdas.conf
-        TELEGRAF_CONF_DIR=/usr/local/homebrew/etc/telegraf.d
-        TELEGRAF_BIN=/usr/local/homebrew/bin/telegraf
+        TELEGRAF_CONF_FILE=telegraf.conf
+        TELEGRAF_CONF_DIR=/usr/local/etc/
+        TELEGRAF_BIN=/usr/local/bin/telegraf
 
-        HOMEBREW_BASE='/usr/local/homebrew'
-        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
         brew update
         brew upgrade
         brew install --overwrite telegraf
@@ -635,7 +627,7 @@ EOF
 ; Run InfluxDB
 [program:influxdb]
 command=${INFLUX_PATH}/influxd --reporting-disabled $INFLUX_SSL_OPTIONS
-directory=/opt/openrvdas
+directory=${INSTALL_ROOT}/openrvdas
 ;environment=INFLUXD_CONFIG_PATH=/etc/influxdb
 autostart=$AUTOSTART_INFLUXDB
 autorestart=true
@@ -672,7 +664,7 @@ autostart=$AUTOSTART_GRAFANA
 autorestart=true
 startretries=3
 stderr_logfile=/var/log/openrvdas/grafana.stderr
-user=root
+;user=$USER
 EOF
     fi
 
@@ -695,7 +687,7 @@ EOF
 ; Run Telegraf
 [program:telegraf]
 command=${TELEGRAF_BIN} --config=${TELEGRAF_CONF}
-directory=/opt/openrvdas
+directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART_TELEGRAF
 autorestart=true
 startretries=3

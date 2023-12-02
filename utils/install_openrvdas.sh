@@ -41,7 +41,6 @@ PREFERENCES_FILE='.install_openrvdas_preferences'
 # Define this here, even though it's just for MacOS, so that it's defined
 # when it's referenced down in install_packages, and doesn't have to
 # be defined twice.
-HOMEBREW_BASE='/usr/local/homebrew'
 
 ###########################################################################
 ###########################################################################
@@ -330,41 +329,21 @@ function install_packages {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        # Install homebrew:
-        echo Checking for homebrew
-        if [ ! -f ${HOMEBREW_BASE}/bin/brew ];then
-            echo "Installing homebrew"
+        # Install Homebrew - note: reinstalling is idempotent
+        echo 'Installing XCode Tools'
+        xcode-select --install || echo "XCode Tools already installed"
+        pushd /tmp
+        HOMEBREW_VERSION=4.1.21
+        HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
+        HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
 
-            if [ ! -d ${HOMEBREW_BASE} ];then
-                sudo mkdir $HOMEBREW_BASE
-            fi
-            sudo chown $RVDAS_USER $HOMEBREW_BASE
-            curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C $HOMEBREW_BASE
-        fi
+        curl -O -L ${HOMEBREW_PATH}
 
-        # Put brew in path for now
-        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+        # The -target / specifies that the package should be installed on the root volume.
+        sudo installer -pkg ${HOMEBREW_TARGET} -target /
+        popd
 
-        brew update --force --quiet
-        brew upgrade
-        chmod -R go-w "$(brew --prefix)/share/zsh"
-
-        # Install system packages we need
-        #PYTHON_PATH=$(which python3) || echo "Python3 not on default path; looking..."
-        #if [ -n "$PYTHON_PATH" ];then
-        #    echo "Using python at $PYTHON_PATH"
-        #else
-        echo Installing python from Homebrew
-        [ -e ${HOMEBREW_BASE}/bin/python ] || brew install python
-        brew link python3
-        #fi
-        #brew install python #uwsgi
-
-        echo Installing supporting packages from Homebrew
-        #[ -e ${HOMEBREW_BASE}/bin/ssh ]    || brew install openssh
-        [ -e ${HOMEBREW_BASE}/bin/git ]    || brew install git
-        [ -e ${HOMEBREW_BASE}/bin/nginx ]  || brew install nginx
-        #[ -e /usr/local/bin/supervisorctl ] || brew install supervisor
+        brew install python git nginx supervisor
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -517,21 +496,22 @@ function setup_python_packages {
     #if [ -d $VENV_PATH ];then
     #    mv $VENV_PATH ${VENV_PATH}.bak.$$
     #fi
-    if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
-        eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
-        PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
-    elif [ -e '/usr/local/bin/python3' ];then
-        PYTHON_PATH=/usr/local/bin/python3
-    elif [ -e '/usr/bin/python3' ];then
-        PYTHON_PATH=/usr/bin/python3
-    else
-        echo 'No python3 found?!?'
-        exit_gracefully
-    fi
 
-    echo "Creating virtual environment using $PYTHON_PATH"
+    #if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
+    #    eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+    #    PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
+    #elif [ -e '/usr/local/bin/python3' ];then
+    #    PYTHON_PATH=/usr/local/bin/python3
+    #elif [ -e '/usr/bin/python3' ];then
+    #    PYTHON_PATH=/usr/bin/python3
+    #else
+    #    echo 'No python3 found?!?'
+    #    exit_gracefully
+    #fi
+
+    echo "Creating virtual environment"
     cd $INSTALL_ROOT/openrvdas
-    ${PYTHON_PATH} -m venv $VENV_PATH
+    python3 -m venv $VENV_PATH
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
@@ -818,7 +798,7 @@ function setup_supervisor {
     if [ $OS_TYPE == 'MacOS' ]; then
         ETC_HOME=/usr/local/etc
         HTTP_HOST=127.0.0.1
-        NGINX_BIN=${HOMEBREW_BASE}/bin/nginx
+        NGINX_BIN=/usr/local/bin/nginx
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
         SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
         SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
