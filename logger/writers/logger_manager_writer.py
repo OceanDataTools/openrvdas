@@ -15,11 +15,17 @@ of prior commands to settle.
 
 Sample logger that switches modes when entering/exiting EEZ:
 ```
-# Read parsed DASRecords from UDP
+# Read the latest lat/lon from the Cached Data Server
 readers:
-  class: UDPReader
+  class: CachedDataReader
   kwargs:
-    port: 6224
+    data_server: localhost:8766
+    subscription:
+      fields:
+        s330Latitude:
+          seconds: 0
+        s330Longitude:
+          seconds: 0
 # Look for lat/lon values in the DASRecords and emit appropriate commands
 # when entering/leaving EEZ. Note that EEZ files in GML format can be
 # downloaded from https://marineregions.org/eezsearch.php.
