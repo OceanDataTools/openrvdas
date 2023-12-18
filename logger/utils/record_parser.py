@@ -189,7 +189,8 @@ class RecordParser:
         if not record:
             return None
         if not isinstance(record, str):
-            logging.info('Record is not a string: "%s"', record)
+            if not self.quiet:
+                logging.info('Record is not a string: "%s"', record)
             return None
         try:
             # Break record into (by default) data_id, timestamp and field_string
@@ -212,12 +213,16 @@ class RecordParser:
 
         # If we don't have fields, there's nothing to parse
         if field_string is None:
+            if not self.quiet:
+                logging.warning('No field_string found in record "%s"', record)
             return None
 
         if self.strip_unprintable:
             field_string = ''.join([c for c in field_string if c.isprintable()])
         field_string = field_string.strip()
         if not field_string:
+            if not self.quiet:
+                logging.warning('No field_string found in record "%s"', record)
             return None
 
         fields = {}
