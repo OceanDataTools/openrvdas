@@ -135,13 +135,20 @@ function get_os_type {
             fi
 
         # CentOS/RHEL
-        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]];then
+        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Rocky Linux\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
             elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
                 OS_VERSION=8
             elif [[ ! -z `grep "VERSION_ID=\"9" /etc/os-release` ]];then
+                OS_VERSION=9
+            # Rocky Linux uses different format in /etc/os-release
+            elif [[ ! -z `grep "VERSION=\"7" /etc/os-release` ]];then
+                OS_VERSION=7
+            elif [[ ! -z `grep "VERSION=\"8" /etc/os-release` ]];then
+                OS_VERSION=8
+            elif [[ ! -z `grep "VERSION=\"9" /etc/os-release` ]];then
                 OS_VERSION=9
             else
                 echo "Sorry - unknown CentOS/RHEL Version! - exiting."
@@ -415,6 +422,7 @@ function install_packages {
             sudo yum install -y python3 python3-devel
         else
             echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
+            echo "OS_VERSION = \"$OS_VERSION\""
             exit_gracefully
         fi
 
