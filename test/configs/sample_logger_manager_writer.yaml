@@ -1,0 +1,26 @@
+# A sample file for logger/listener/listen.py
+##
+# To run, type:
+#
+#    logger/listener/listen.py --config_file test/configs/sample_logger_manager_writer.yaml
+#
+# Dictionary key/value pairs are used as keyword arguments for creating a
+# Listener. The keys "reader", "transform" and "writer" are special-cased to
+# indicate that the respective entities should be instantiated (recursively,
+# if necessary).
+
+# One reader. If we had multiple readers, we'd list them sequentially
+# in a list, and they would be executed in parallel.
+
+readers:
+  class: TextFileReader
+
+writers:
+  - class: LoggerManagerWriter
+    module: logger.writers.logger_manager_writer
+    kwargs:
+      database: django
+      allowed_prefixes:
+        - 'set_active_mode '
+        - 'sleep '
+
