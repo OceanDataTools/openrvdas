@@ -127,3 +127,31 @@ If you are planning to run the test cruise definition in ``test/NBP1406/NBP1406_
 
 You may also use broader acting commands with supervisorctl, such as
 ``start all``, ``stop all`` and ``restart all``.
+
+## Manually running scripts
+
+In addition to controlling the scripts through the ``supervisor`` daemon, all OpenRVDAS scripts can be run
+from the command line. To do so, you will need to activate the virtual environment that they were configured to run
+under, or some of the Python packages they depend on may not be available.
+
+The OpenRVDAS virtual environment may be activated for a shell by running
+
+```source venv/bin/activate```
+
+from the OpenRVDAS home directory. The primary effect of this activation is to modify the default path searched for binaries
+so that invoking ``python`` uses the version at ``venv/bin/python`` rather than the default system path. Once activated,
+OpenRVDAS scripts may be run by invoking their location, e.g.:
+```
+logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
+```
+To deactivate the virtual environment, run the ``deactivate`` command.
+
+OpenRVDAS scripts may be run outside the virtual environment by specifying the path to the executable to be use on the
+command line. E.g.
+
+```
+venv/bin/python logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
+```
+This latter method is how the servers are configured to run inside the supervisor's config file at
+``/etc/supervisor.d/openrvdas.ini`` (Ubuntu: ``/etc/supervisor/conf.d/openrvdas.conf``,
+MacOS: ``/usr/local/etc/supervisor.d/openrvdas.ini``).
