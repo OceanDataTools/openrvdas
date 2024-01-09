@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.readers.serial_reader API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -96,8 +96,7 @@ class SerialReader(Reader):
             eol: \r
         ```
         &#34;&#34;&#34;
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
@@ -113,7 +112,7 @@ class SerialReader(Reader):
                                         exclusive=exclusive)
         except (serial.SerialException, serial.serialutil.SerialException) as e:
             logging.fatal(&#39;Failed to open serial port %s: %s&#39;, port, e)
-            sys.exit(1)
+            raise
 
         self.max_bytes = max_bytes
         self.encoding = encoding
@@ -121,23 +120,36 @@ class SerialReader(Reader):
 
         # &#39;eol&#39; comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
+        #
+        # NOTE: This block is different from SerialWriter because we use
+        #       readline() in here, which already looks for trailing &#39;\n&#39; and
+        #       handles encoding itself.
+        #
         if eol is not None and self.encoding:
-            eol = self._encode_str(eol)
+            eol = self._encode_str(eol, unescape=True)
         self.eol = eol
 
     ############################
     def read(self):
         try:
             if self.eol:
-                record = self.serial.read_until(terminator=self.eol, size=self.max_bytes)
+                record = self.serial.read_until(expected=self.eol, size=self.max_bytes)
+                # read_until()&#39;s record includes a trailing &#39;eol&#39;, strip it off
+                #
+                # NOTE: But don&#39;t use rstrip which just looks explicitly for
+                #       whitespace
+                #
+                record = record.rsplit(self.eol)[0]
             elif self.max_bytes:
+                # no stripping on this one, just use exactly what we got
                 record = self.serial.read(size=self.max_bytes)
             else:
-                record = self.serial.readline()
+                # readline()&#39;s record includes the trailing &#39;\n&#39;, strip it off
+                record = self.serial.readline().rstrip()
 
             if not record:
                 return None
-            return self._decode_bytes(record).rstrip()
+            return self._decode_bytes(record)
 
         except KeyboardInterrupt as e:
             raise e
@@ -246,8 +258,7 @@ documentation here:
             eol: \r
         ```
         &#34;&#34;&#34;
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
@@ -263,7 +274,7 @@ documentation here:
                                         exclusive=exclusive)
         except (serial.SerialException, serial.serialutil.SerialException) as e:
             logging.fatal(&#39;Failed to open serial port %s: %s&#39;, port, e)
-            sys.exit(1)
+            raise
 
         self.max_bytes = max_bytes
         self.encoding = encoding
@@ -271,23 +282,36 @@ documentation here:
 
         # &#39;eol&#39; comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
+        #
+        # NOTE: This block is different from SerialWriter because we use
+        #       readline() in here, which already looks for trailing &#39;\n&#39; and
+        #       handles encoding itself.
+        #
         if eol is not None and self.encoding:
-            eol = self._encode_str(eol)
+            eol = self._encode_str(eol, unescape=True)
         self.eol = eol
 
     ############################
     def read(self):
         try:
             if self.eol:
-                record = self.serial.read_until(terminator=self.eol, size=self.max_bytes)
+                record = self.serial.read_until(expected=self.eol, size=self.max_bytes)
+                # read_until()&#39;s record includes a trailing &#39;eol&#39;, strip it off
+                #
+                # NOTE: But don&#39;t use rstrip which just looks explicitly for
+                #       whitespace
+                #
+                record = record.rsplit(self.eol)[0]
             elif self.max_bytes:
+                # no stripping on this one, just use exactly what we got
                 record = self.serial.read(size=self.max_bytes)
             else:
-                record = self.serial.readline()
+                # readline()&#39;s record includes the trailing &#39;\n&#39;, strip it off
+                record = self.serial.readline().rstrip()
 
             if not record:
                 return None
-            return self._decode_bytes(record).rstrip()
+            return self._decode_bytes(record)
 
         except KeyboardInterrupt as e:
             raise e
@@ -338,7 +362,7 @@ documentation here:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

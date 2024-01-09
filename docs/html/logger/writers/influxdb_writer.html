@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.writers.influxdb_writer API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -31,6 +31,7 @@
 import time
 import logging
 import sys
+import urllib3
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -39,12 +40,15 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
-INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = None
+INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = INFLUXDB_BUCKET = None
 try:
-    from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG, INFLUXDB_URL  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_AUTH_TOKEN, INFLUXDB_ORG  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_BUCKET  # noqa: E402
+    from database.influxdb.settings import INFLUXDB_URL, INFLUXDB_VERIFY_SSL  # noqa: E402
     INFLUXDB_SETTINGS_FOUND = True
 except (ModuleNotFoundError, ImportError):
     INFLUXDB_SETTINGS_FOUND = False
+    INFLUXDB_VERIFY_SSL = False
 
 try:
     from influxdb_client import InfluxDBClient  # noqa: E402
@@ -57,9 +61,10 @@ except (ModuleNotFoundError, ImportError):
 class InfluxDBWriter(Writer):
     &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
 
-    def __init__(self, bucket_name, measurement_name=None,
+    def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
                  auth_token=INFLUXDB_AUTH_TOKEN,
-                 org=INFLUXDB_ORG, url=INFLUXDB_URL):
+                 org=INFLUXDB_ORG, url=INFLUXDB_URL,
+                 verify_ssl=INFLUXDB_VERIFY_SSL):
         &#34;&#34;&#34;Write data records to the InfluxDB.
         ```
         bucket_name - the name of the bucket in InfluxDB.  If the bucket does
@@ -79,9 +84,13 @@ class InfluxDBWriter(Writer):
         url - The URL at which to connect with the InfluxDB instance. If
                   omitted, will look for value in imported INFLUXDB_ORG
                   and throw an exception if it is not found.
+
+        verify_ssl - If the URL begins with &#39;https&#39;, SSL will be used for the
+                  connection. If so, and verify_ssl is true, the writer will
+                  attempt to verify the validity of the relevant SSL certificate.
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
+        super().__init__(input_format=Text)  # type: ignore
         if not auth_token:
             raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
                                &#39;none found in database/influxdb/settings.py. Have &#39;
@@ -115,9 +124,15 @@ class InfluxDBWriter(Writer):
         self.auth_token = auth_token
         self.org = org
         self.url = url
+        self.use_ssl = url.find(&#39;https:&#39;) == 0
+        self.verify_ssl = verify_ssl
         self.bucket_name = bucket_name
         self.measurement_name = measurement_name
         self.write_api = None
+
+        # If we&#39;ve chosen not to verify SSL, urllib3 will complain
+        # mightily in the logs each time we make a call.
+        urllib3.disable_warnings()
 
         # TODO: retry connecting if connection dies while writing.
         self._connect()
@@ -126,8 +141,8 @@ class InfluxDBWriter(Writer):
     def _connect(self):
 
         while not self.write_api:
-            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org)
-
+            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org,
+                                    ssl=self.use_ssl, verify_ssl=self.verify_ssl)  # type: ignore
             # get the orgID from the name:
             try:
                 organizations_api = client.organizations_api()
@@ -204,7 +219,7 @@ class InfluxDBWriter(Writer):
                             &#39;list or DASRecord format. Type %s: %s&#39;,
                             type(record), str(record))
         try:
-            if type(record) in [list, DASRecord]:
+            if isinstance(record, list):
                 influxDB_record = [record_to_influx(r) for r in record]
             else:
                 influxDB_record = record_to_influx(record)
@@ -229,7 +244,7 @@ class InfluxDBWriter(Writer):
 <dl>
 <dt id="logger.writers.influxdb_writer.InfluxDBWriter"><code class="flex name class">
 <span>class <span class="ident">InfluxDBWriter</span></span>
-<span>(</span><span>bucket_name, measurement_name=None, auth_token=None, org=None, url=None)</span>
+<span>(</span><span>bucket_name='openrvdas', measurement_name=None, auth_token='qctIRsZulATUECEOyrnbP0-5qdmYvt4H5S1ESAN7doEb2KV5IRUnnQNYnAslkL-n-JzrAp7FmymcU9KMIud-ug==', org='openrvdas', url='http://localhost:8086', verify_ssl=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
@@ -251,6 +266,10 @@ org - The organization to associate with in the InfluxDB
 url - The URL at which to connect with the InfluxDB instance. If
           omitted, will look for value in imported INFLUXDB_ORG
           and throw an exception if it is not found.
+
+verify_ssl - If the URL begins with 'https', SSL will be used for the
+          connection. If so, and verify_ssl is true, the writer will
+          attempt to verify the validity of the relevant SSL certificate.
 </code></pre></div>
 <details class="source">
 <summary>
@@ -259,9 +278,10 @@ url - The URL at which to connect with the InfluxDB instance. If
 <pre><code class="python">class InfluxDBWriter(Writer):
     &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
 
-    def __init__(self, bucket_name, measurement_name=None,
+    def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
                  auth_token=INFLUXDB_AUTH_TOKEN,
-                 org=INFLUXDB_ORG, url=INFLUXDB_URL):
+                 org=INFLUXDB_ORG, url=INFLUXDB_URL,
+                 verify_ssl=INFLUXDB_VERIFY_SSL):
         &#34;&#34;&#34;Write data records to the InfluxDB.
         ```
         bucket_name - the name of the bucket in InfluxDB.  If the bucket does
@@ -281,9 +301,13 @@ url - The URL at which to connect with the InfluxDB instance. If
         url - The URL at which to connect with the InfluxDB instance. If
                   omitted, will look for value in imported INFLUXDB_ORG
                   and throw an exception if it is not found.
+
+        verify_ssl - If the URL begins with &#39;https&#39;, SSL will be used for the
+                  connection. If so, and verify_ssl is true, the writer will
+                  attempt to verify the validity of the relevant SSL certificate.
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
+        super().__init__(input_format=Text)  # type: ignore
         if not auth_token:
             raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
                                &#39;none found in database/influxdb/settings.py. Have &#39;
@@ -317,9 +341,15 @@ url - The URL at which to connect with the InfluxDB instance. If
         self.auth_token = auth_token
         self.org = org
         self.url = url
+        self.use_ssl = url.find(&#39;https:&#39;) == 0
+        self.verify_ssl = verify_ssl
         self.bucket_name = bucket_name
         self.measurement_name = measurement_name
         self.write_api = None
+
+        # If we&#39;ve chosen not to verify SSL, urllib3 will complain
+        # mightily in the logs each time we make a call.
+        urllib3.disable_warnings()
 
         # TODO: retry connecting if connection dies while writing.
         self._connect()
@@ -328,8 +358,8 @@ url - The URL at which to connect with the InfluxDB instance. If
     def _connect(self):
 
         while not self.write_api:
-            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org)
-
+            client = InfluxDBClient(url=self.url, token=self.auth_token, org=self.org,
+                                    ssl=self.use_ssl, verify_ssl=self.verify_ssl)  # type: ignore
             # get the orgID from the name:
             try:
                 organizations_api = client.organizations_api()
@@ -406,7 +436,7 @@ url - The URL at which to connect with the InfluxDB instance. If
                             &#39;list or DASRecord format. Type %s: %s&#39;,
                             type(record), str(record))
         try:
-            if type(record) in [list, DASRecord]:
+            if isinstance(record, list):
                 influxDB_record = [record_to_influx(r) for r in record]
             else:
                 influxDB_record = record_to_influx(record)
@@ -472,7 +502,7 @@ bucket_name we were initialized with.</p></div>
                         &#39;list or DASRecord format. Type %s: %s&#39;,
                         type(record), str(record))
     try:
-        if type(record) in [list, DASRecord]:
+        if isinstance(record, list):
             influxDB_record = [record_to_influx(r) for r in record]
         else:
             influxDB_record = record_to_influx(record)
@@ -525,7 +555,7 @@ bucket_name we were initialized with.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

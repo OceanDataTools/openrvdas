@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.writers.writer API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,6 +28,7 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
+import logging
 import sys
 
 from os.path import dirname, realpath
@@ -42,9 +43,9 @@ class Writer:
     &#34;&#34;&#34;
     ############################
 
-    def __init__(self, input_format=formats.Unknown):
-        &#34;&#34;&#34;
-        Abstract base class for data Writers.
+    def __init__(self, input_format=formats.Unknown,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
+        &#34;&#34;&#34;Abstract base class for data Writers.
 
         Concrete classes should implement the write(record) method and assign
         an input format that the writer accepts.
@@ -66,8 +67,70 @@ class Writer:
         ```
         The test will also return False if either the reader or writer have
         format specification of &#34;Unknown&#34;.
+
+        Two additional arguments govern how records will be encoded/decoded
+        from bytes, if desired by the Reader subclass when it calls
+        _encode_str() or _decode_bytes:
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - &#39;ignore&#39; by default. Other error strategies are
+                &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
+
         &#34;&#34;&#34;
         self.input_format(input_format)
+        # make sure &#39;&#39; behaves the same as None, which is what all the
+        # docstrings say, and would be logical... but then certain things treat
+        # them differently (e.g., file.open(mode=&#39;ab&#39;, encoding=&#39;&#39;) throws
+        # ValueError: binary mode doesn&#39;t take an encoding argument)
+        if encoding == &#39;&#39;:
+            encoding = None
+        self.encoding = encoding
+        self.encoding_errors = encoding_errors
+
+    ############################
+    def _unescape_str(self, the_str):
+        &#34;&#34;&#34;Unescape a string by encoding it to bytes, then unescaping when we
+        decode it. Ugly.
+        &#34;&#34;&#34;
+        if not self.encoding:
+            return the_str
+
+        encoded = the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+        return encoded.decode(&#39;unicode_escape&#39;)
+
+    ############################
+    def _encode_str(self, the_str, unescape=False):
+        &#34;&#34;&#34;Encode a string to bytes, optionally unescaping things like \n and \r.
+        Unescaping requires ugly convolutions of encoding, then decoding while we
+        escape things, then encoding a second time.
+        &#34;&#34;&#34;
+        if not self.encoding:
+            return the_str
+        if unescape:
+            the_str = self._unescape_str(the_str)
+        return the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+
+    ############################
+    def _decode_bytes(self, record):
+        &#34;&#34;&#34;Decode a record from bytes to str, if we have an encoding specified.&#34;&#34;&#34;
+        if not record:
+            return None
+
+        if not self.encoding:
+            return record
+
+        try:
+            return record.decode(encoding=self.encoding,
+                                 errors=self.encoding_errors)
+        except UnicodeDecodeError as e:
+            logging.warning(&#39;Error decoding string &#34;%s&#34; from encoding &#34;%s&#34;: %s&#39;,
+                            record, self.encoding, str(e))
+            return None
 
     ############################
     def input_format(self, new_format=None):
@@ -148,7 +211,17 @@ from a reader, call</p>
 <pre><code>  writer.can_accept(reader)
 </code></pre>
 <p>The test will also return False if either the reader or writer have
-format specification of "Unknown".</p></div>
+format specification of "Unknown".</p>
+<p>Two additional arguments govern how records will be encoded/decoded
+from bytes, if desired by the Reader subclass when it calls
+_encode_str() or _decode_bytes:</p>
+<p>encoding - 'utf-8' by default. If empty or None, do not attempt any
+decoding and return raw bytes. Other possible encodings are
+listed in online documentation here:
+<a href="https://docs.python.org/3/library/codecs.html#standard-encodings">https://docs.python.org/3/library/codecs.html#standard-encodings</a></p>
+<p>encoding_errors - 'ignore' by default. Other error strategies are
+'strict', 'replace', and 'backslashreplace', described here:
+<a href="https://docs.python.org/3/howto/unicode.html#encodings">https://docs.python.org/3/howto/unicode.html#encodings</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -201,7 +274,7 @@ format specification of "Unknown".</p></div>
 </dd>
 <dt id="logger.writers.writer.Writer"><code class="flex name class">
 <span>class <span class="ident">Writer</span></span>
-<span>(</span><span>input_format=logger.utils.formats.Unknown)</span>
+<span>(</span><span>input_format=logger.utils.formats.Unknown, encoding='utf-8', encoding_errors='ignore')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class Writer about which we know nothing else. By default the
@@ -223,7 +296,17 @@ from a reader, call</p>
 <pre><code>  writer.can_accept(reader)
 </code></pre>
 <p>The test will also return False if either the reader or writer have
-format specification of "Unknown".</p></div>
+format specification of "Unknown".</p>
+<p>Two additional arguments govern how records will be encoded/decoded
+from bytes, if desired by the Reader subclass when it calls
+_encode_str() or _decode_bytes:</p>
+<p>encoding - 'utf-8' by default. If empty or None, do not attempt any
+decoding and return raw bytes. Other possible encodings are
+listed in online documentation here:
+<a href="https://docs.python.org/3/library/codecs.html#standard-encodings">https://docs.python.org/3/library/codecs.html#standard-encodings</a></p>
+<p>encoding_errors - 'ignore' by default. Other error strategies are
+'strict', 'replace', and 'backslashreplace', described here:
+<a href="https://docs.python.org/3/howto/unicode.html#encodings">https://docs.python.org/3/howto/unicode.html#encodings</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -235,9 +318,9 @@ format specification of "Unknown".</p></div>
     &#34;&#34;&#34;
     ############################
 
-    def __init__(self, input_format=formats.Unknown):
-        &#34;&#34;&#34;
-        Abstract base class for data Writers.
+    def __init__(self, input_format=formats.Unknown,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
+        &#34;&#34;&#34;Abstract base class for data Writers.
 
         Concrete classes should implement the write(record) method and assign
         an input format that the writer accepts.
@@ -259,8 +342,70 @@ format specification of "Unknown".</p></div>
         ```
         The test will also return False if either the reader or writer have
         format specification of &#34;Unknown&#34;.
+
+        Two additional arguments govern how records will be encoded/decoded
+        from bytes, if desired by the Reader subclass when it calls
+        _encode_str() or _decode_bytes:
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - &#39;ignore&#39; by default. Other error strategies are
+                &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
+
         &#34;&#34;&#34;
         self.input_format(input_format)
+        # make sure &#39;&#39; behaves the same as None, which is what all the
+        # docstrings say, and would be logical... but then certain things treat
+        # them differently (e.g., file.open(mode=&#39;ab&#39;, encoding=&#39;&#39;) throws
+        # ValueError: binary mode doesn&#39;t take an encoding argument)
+        if encoding == &#39;&#39;:
+            encoding = None
+        self.encoding = encoding
+        self.encoding_errors = encoding_errors
+
+    ############################
+    def _unescape_str(self, the_str):
+        &#34;&#34;&#34;Unescape a string by encoding it to bytes, then unescaping when we
+        decode it. Ugly.
+        &#34;&#34;&#34;
+        if not self.encoding:
+            return the_str
+
+        encoded = the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+        return encoded.decode(&#39;unicode_escape&#39;)
+
+    ############################
+    def _encode_str(self, the_str, unescape=False):
+        &#34;&#34;&#34;Encode a string to bytes, optionally unescaping things like \n and \r.
+        Unescaping requires ugly convolutions of encoding, then decoding while we
+        escape things, then encoding a second time.
+        &#34;&#34;&#34;
+        if not self.encoding:
+            return the_str
+        if unescape:
+            the_str = self._unescape_str(the_str)
+        return the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+
+    ############################
+    def _decode_bytes(self, record):
+        &#34;&#34;&#34;Decode a record from bytes to str, if we have an encoding specified.&#34;&#34;&#34;
+        if not record:
+            return None
+
+        if not self.encoding:
+            return record
+
+        try:
+            return record.decode(encoding=self.encoding,
+                                 errors=self.encoding_errors)
+        except UnicodeDecodeError as e:
+            logging.warning(&#39;Error decoding string &#34;%s&#34; from encoding &#34;%s&#34;: %s&#39;,
+                            record, self.encoding, str(e))
+            return None
 
     ############################
     def input_format(self, new_format=None):
@@ -299,13 +444,17 @@ format specification of "Unknown".</p></div>
 <li><a title="logger.writers.file_writer.FileWriter" href="file_writer.html#logger.writers.file_writer.FileWriter">FileWriter</a></li>
 <li><a title="logger.writers.influxdb_writer.InfluxDBWriter" href="influxdb_writer.html#logger.writers.influxdb_writer.InfluxDBWriter">InfluxDBWriter</a></li>
 <li><a title="logger.writers.logfile_writer.LogfileWriter" href="logfile_writer.html#logger.writers.logfile_writer.LogfileWriter">LogfileWriter</a></li>
+<li><a title="logger.writers.logger_manager_writer.LoggerManagerWriter" href="logger_manager_writer.html#logger.writers.logger_manager_writer.LoggerManagerWriter">LoggerManagerWriter</a></li>
 <li><a title="logger.writers.mqtt_writer.MQTTWriter" href="mqtt_writer.html#logger.writers.mqtt_writer.MQTTWriter">MQTTWriter</a></li>
 <li><a title="logger.writers.network_writer.NetworkWriter" href="network_writer.html#logger.writers.network_writer.NetworkWriter">NetworkWriter</a></li>
 <li><a title="logger.writers.record_screen_writer.RecordScreenWriter" href="record_screen_writer.html#logger.writers.record_screen_writer.RecordScreenWriter">RecordScreenWriter</a></li>
 <li><a title="logger.writers.redis_writer.RedisWriter" href="redis_writer.html#logger.writers.redis_writer.RedisWriter">RedisWriter</a></li>
+<li><a title="logger.writers.regex_logfile_writer.RegexLogfileWriter" href="regex_logfile_writer.html#logger.writers.regex_logfile_writer.RegexLogfileWriter">RegexLogfileWriter</a></li>
 <li><a title="logger.writers.serial_writer.SerialWriter" href="serial_writer.html#logger.writers.serial_writer.SerialWriter">SerialWriter</a></li>
+<li><a title="logger.writers.tcp_writer.TCPWriter" href="tcp_writer.html#logger.writers.tcp_writer.TCPWriter">TCPWriter</a></li>
 <li><a title="logger.writers.text_file_writer.TextFileWriter" href="text_file_writer.html#logger.writers.text_file_writer.TextFileWriter">TextFileWriter</a></li>
 <li><a title="logger.writers.timeout_writer.TimeoutWriter" href="timeout_writer.html#logger.writers.timeout_writer.TimeoutWriter">TimeoutWriter</a></li>
+<li><a title="logger.writers.udp_writer.UDPWriter" href="udp_writer.html#logger.writers.udp_writer.UDPWriter">UDPWriter</a></li>
 <li><a title="logger.writers.writer.TimestampedWriter" href="#logger.writers.writer.TimestampedWriter">TimestampedWriter</a></li>
 </ul>
 <h3>Methods</h3>
@@ -403,7 +552,7 @@ format specification of "Unknown".</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

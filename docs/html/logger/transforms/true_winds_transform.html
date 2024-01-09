@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.transforms.true_winds_transform API documentation</title>
 <meta name="description" content="Compute true winds by processing and aggregating vessel
 course/speed/heading and relative wind dir/speed records …" />
@@ -100,6 +100,7 @@ class TrueWindsTransform(DerivedDataTransform):
                  zero_line_reference=0,
                  convert_wind_factor=1,
                  convert_speed_factor=1,
+                 data_id=None,
                  metadata_interval=None):
         &#34;&#34;&#34;
         ```
@@ -142,6 +143,8 @@ class TrueWindsTransform(DerivedDataTransform):
 
         metadata_interval - how many seconds between when we attach field metadata
                      to a record we send out.
+
+        data_id  Optional name that will be attached to the resulting DASRecord
         ```
         &#34;&#34;&#34;
         self.course_field = course_field
@@ -165,6 +168,8 @@ class TrueWindsTransform(DerivedDataTransform):
 
         self.metadata_interval = metadata_interval
         self.last_metadata_send = 0
+
+        self.data_id = data_id
 
         # TODO: It may make sense for us to cache most recent values so
         # that, for example, we can take single DASRecords in the
@@ -338,8 +343,9 @@ class TrueWindsTransform(DerivedDataTransform):
                 metadata = None
 
             results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
-                                     metadata=metadata))
+                                     metadata=metadata, data_id=self.data_id))
 
+        logging.debug(&#39;Sending %d true wind results.&#39;, len(results))
         return results
 
     ############################
@@ -367,9 +373,9 @@ class TrueWindsTransform(DerivedDataTransform):
         speed_max_age = self.max_field_age.get(self.speed_field, None)
         if speed_max_age:
             if timestamp - self.speed_val_time &gt; speed_max_age:
-                  logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
-                                speed_max_age, timestamp - self.speed_val_time)
-                  return True
+                logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
+                              speed_max_age, timestamp - self.speed_val_time)
+                return True
 
         heading_max_age = self.max_field_age.get(self.heading_field, None)
         if heading_max_age:
@@ -407,7 +413,7 @@ class TrueWindsTransform(DerivedDataTransform):
 <dl>
 <dt id="logger.transforms.true_winds_transform.TrueWindsTransform"><code class="flex name class">
 <span>class <span class="ident">TrueWindsTransform</span></span>
-<span>(</span><span>course_field, speed_field, heading_field, wind_dir_field, wind_speed_field, true_dir_name, true_speed_name, apparent_dir_name, update_on_fields=[], max_field_age={}, zero_line_reference=0, convert_wind_factor=1, convert_speed_factor=1, metadata_interval=None)</span>
+<span>(</span><span>course_field, speed_field, heading_field, wind_dir_field, wind_speed_field, true_dir_name, true_speed_name, apparent_dir_name, update_on_fields=[], max_field_age={}, zero_line_reference=0, convert_wind_factor=1, convert_speed_factor=1, data_id=None, metadata_interval=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Transform that computes true winds from vessel
@@ -451,6 +457,8 @@ convert_speed_factor
 
 metadata_interval - how many seconds between when we attach field metadata
              to a record we send out.
+
+data_id  Optional name that will be attached to the resulting DASRecord
 </code></pre></div>
 <details class="source">
 <summary>
@@ -472,6 +480,7 @@ metadata_interval - how many seconds between when we attach field metadata
                  zero_line_reference=0,
                  convert_wind_factor=1,
                  convert_speed_factor=1,
+                 data_id=None,
                  metadata_interval=None):
         &#34;&#34;&#34;
         ```
@@ -514,6 +523,8 @@ metadata_interval - how many seconds between when we attach field metadata
 
         metadata_interval - how many seconds between when we attach field metadata
                      to a record we send out.
+
+        data_id  Optional name that will be attached to the resulting DASRecord
         ```
         &#34;&#34;&#34;
         self.course_field = course_field
@@ -537,6 +548,8 @@ metadata_interval - how many seconds between when we attach field metadata
 
         self.metadata_interval = metadata_interval
         self.last_metadata_send = 0
+
+        self.data_id = data_id
 
         # TODO: It may make sense for us to cache most recent values so
         # that, for example, we can take single DASRecords in the
@@ -710,8 +723,9 @@ metadata_interval - how many seconds between when we attach field metadata
                 metadata = None
 
             results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
-                                     metadata=metadata))
+                                     metadata=metadata, data_id=self.data_id))
 
+        logging.debug(&#39;Sending %d true wind results.&#39;, len(results))
         return results
 
     ############################
@@ -739,9 +753,9 @@ metadata_interval - how many seconds between when we attach field metadata
         speed_max_age = self.max_field_age.get(self.speed_field, None)
         if speed_max_age:
             if timestamp - self.speed_val_time &gt; speed_max_age:
-                  logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
-                                speed_max_age, timestamp - self.speed_val_time)
-                  return True
+                logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
+                              speed_max_age, timestamp - self.speed_val_time)
+                return True
 
         heading_max_age = self.max_field_age.get(self.heading_field, None)
         if heading_max_age:
@@ -911,8 +925,9 @@ us a new true wind value, return the results.</p></div>
             metadata = None
 
         results.append(DASRecord(timestamp=timestamp, fields=true_wind_fields,
-                                 metadata=metadata))
+                                 metadata=metadata, data_id=self.data_id))
 
+    logging.debug(&#39;Sending %d true wind results.&#39;, len(results))
     return results</code></pre>
 </details>
 </dd>
@@ -956,7 +971,7 @@ us a new true wind value, return the results.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

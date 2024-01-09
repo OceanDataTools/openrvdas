@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.readers.text_file_reader API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -48,7 +48,7 @@ class TextFileReader(StorageReader):
     ############################
 
     def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-                 retry_interval=0.1, interval=0):
+                 retry_interval=0.1, interval=0, eol=None):
         &#34;&#34;&#34;
         ```
         file_spec    Possibly wildcarded string speficying files to be opened.
@@ -71,6 +71,8 @@ class TextFileReader(StorageReader):
         interval
                      How long to sleep between returning records. In general
                      this should be zero except for debugging purposes.
+
+        eol          Optional character by which to recognize the end of a record
         ```
         Note that the order in which files are opened will probably be in
         alphanumeric by filename, but this is not strictly enforced and
@@ -84,6 +86,7 @@ class TextFileReader(StorageReader):
         self.refresh_file_spec = refresh_file_spec
         self.retry_interval = retry_interval
         self.interval = interval
+        self.eol = eol
 
         # If interval != 0, we need to keep track of our last_read to know
         # how long to sleep
@@ -170,7 +173,10 @@ class TextFileReader(StorageReader):
             # If we&#39;ve got a current file, or if _get_next_file() gets one
             # for us, try to read a record.
             if self.current_file or self._get_next_file():
-                record = self.current_file.readline()
+                if not self.eol:
+                    record = self.current_file.readline()
+                else:
+                    record = self._read_until_eol()
                 if record:
                     self.last_read = time.time()
                     record = record.rstrip(&#39;\n&#39;)
@@ -197,6 +203,35 @@ class TextFileReader(StorageReader):
             logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
                           &#39;%f seconds before trying again&#39;, self.retry_interval)
             time.sleep(self.retry_interval)
+
+    ############################
+    # If self.eol is a string instead of None, read until we&#39;ve consumed that
+    # string or reached eof, and return that as a record.
+    def _read_until_eol(self):
+        if not self.eol:
+            logging.fatal(&#39;Code error: called _read_until_eof, but no eof string specified&#39;)
+            return
+
+        record = &#39;&#39;
+        eol_index = 0  # we&#39;re going to count our way through eol characters
+        while eol_index &lt; len(self.eol):
+            # read by character
+            char = self.current_file.read(1)
+            if char == &#39;&#39;:
+                break
+            elif char == self.eol[eol_index]:
+                eol_index += 1
+                record += char
+            else:
+                eol_index = 0
+                record += char
+
+        # If we&#39;re here because we did in fact get a full eol string,
+        # retroactively snip it from our record.
+        if eol_index == len(self.eol):
+            record = record[:-eol_index]
+
+        return record
 
     ############################
     # Current behavior is to just go to the end if we run out of records,
@@ -356,7 +391,7 @@ class TextFileReader(StorageReader):
 <dl>
 <dt id="logger.readers.text_file_reader.TextFileReader"><code class="flex name class">
 <span>class <span class="ident">TextFileReader</span></span>
-<span>(</span><span>file_spec=None, tail=False, refresh_file_spec=False, retry_interval=0.1, interval=0)</span>
+<span>(</span><span>file_spec=None, tail=False, refresh_file_spec=False, retry_interval=0.1, interval=0, eol=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read lines from one or more text files. Sequentially open all
@@ -381,6 +416,8 @@ retry_interval
 interval
              How long to sleep between returning records. In general
              this should be zero except for debugging purposes.
+
+eol          Optional character by which to recognize the end of a record
 </code></pre>
 <p>Note that the order in which files are opened will probably be in
 alphanumeric by filename, but this is not strictly enforced and
@@ -396,7 +433,7 @@ depends on how glob returns them.</p></div>
     ############################
 
     def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-                 retry_interval=0.1, interval=0):
+                 retry_interval=0.1, interval=0, eol=None):
         &#34;&#34;&#34;
         ```
         file_spec    Possibly wildcarded string speficying files to be opened.
@@ -419,6 +456,8 @@ depends on how glob returns them.</p></div>
         interval
                      How long to sleep between returning records. In general
                      this should be zero except for debugging purposes.
+
+        eol          Optional character by which to recognize the end of a record
         ```
         Note that the order in which files are opened will probably be in
         alphanumeric by filename, but this is not strictly enforced and
@@ -432,6 +471,7 @@ depends on how glob returns them.</p></div>
         self.refresh_file_spec = refresh_file_spec
         self.retry_interval = retry_interval
         self.interval = interval
+        self.eol = eol
 
         # If interval != 0, we need to keep track of our last_read to know
         # how long to sleep
@@ -518,7 +558,10 @@ depends on how glob returns them.</p></div>
             # If we&#39;ve got a current file, or if _get_next_file() gets one
             # for us, try to read a record.
             if self.current_file or self._get_next_file():
-                record = self.current_file.readline()
+                if not self.eol:
+                    record = self.current_file.readline()
+                else:
+                    record = self._read_until_eol()
                 if record:
                     self.last_read = time.time()
                     record = record.rstrip(&#39;\n&#39;)
@@ -545,6 +588,35 @@ depends on how glob returns them.</p></div>
             logging.debug(&#39;TextFileReader - tail/refresh specified, so sleeping &#39;
                           &#39;%f seconds before trying again&#39;, self.retry_interval)
             time.sleep(self.retry_interval)
+
+    ############################
+    # If self.eol is a string instead of None, read until we&#39;ve consumed that
+    # string or reached eof, and return that as a record.
+    def _read_until_eol(self):
+        if not self.eol:
+            logging.fatal(&#39;Code error: called _read_until_eof, but no eof string specified&#39;)
+            return
+
+        record = &#39;&#39;
+        eol_index = 0  # we&#39;re going to count our way through eol characters
+        while eol_index &lt; len(self.eol):
+            # read by character
+            char = self.current_file.read(1)
+            if char == &#39;&#39;:
+                break
+            elif char == self.eol[eol_index]:
+                eol_index += 1
+                record += char
+            else:
+                eol_index = 0
+                record += char
+
+        # If we&#39;re here because we did in fact get a full eol string,
+        # retroactively snip it from our record.
+        if eol_index == len(self.eol):
+            record = record[:-eol_index]
+
+        return record
 
     ############################
     # Current behavior is to just go to the end if we run out of records,
@@ -739,7 +811,10 @@ could be EOF or simply an empty next line</p></div>
         # If we&#39;ve got a current file, or if _get_next_file() gets one
         # for us, try to read a record.
         if self.current_file or self._get_next_file():
-            record = self.current_file.readline()
+            if not self.eol:
+                record = self.current_file.readline()
+            else:
+                record = self._read_until_eol()
             if record:
                 self.last_read = time.time()
                 record = record.rstrip(&#39;\n&#39;)
@@ -871,7 +946,7 @@ could be EOF or simply an empty next line</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

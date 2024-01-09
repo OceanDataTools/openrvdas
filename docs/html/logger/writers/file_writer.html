@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.writers.file_writer API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,10 +28,12 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
+import logging
 import os.path
 import sys
+import math
 
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -44,8 +46,10 @@ class FileWriter(Writer):
     &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
 
     def __init__(self, filename=None, mode=&#39;a&#39;, delimiter=&#39;\n&#39;, flush=True,
-                 split_by_time=False, time_format=&#39;-&#39; + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True):
+                 split_by_time=False, split_interval=None, header=None,
+                 header_file=None, time_format=&#39;-&#39; + DATE_FORMAT,
+                 time_zone=timezone.utc, create_path=True,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -66,31 +70,111 @@ class FileWriter(Writer):
                      filename. By overridding time_format, other split
                      intervals, such as hourly or monthly, may be imposed.
 
+        split_interval Splits files based on a defined hour (H) or minute (M)
+                     time interval such as every 2 hours (2H) or 15 minutes
+                     (15M). Currently H and M are the only options. 
+
+        header       Add the specified header string to each file.
+
+        header_file  Add the content of the specified file to each file.
+
         time_format  By default ISO 8601-compliant &#39;-%Y-%m-%d&#39;. If,
                      e.g. &#39;-%Y-%m&#39; is used, files will be split by month;
                      if -%y-%m-%d:%H&#39; is specified, splits will be
                      hourly. If &#39;%y+%j&#39; is specified, splits will be
-                     daily, but named via Julian date.
+                     daily, but named via Julian date.  Putting &#39;-&#39; or &#39;.&#39; on
+                     the left indicates timestamp suffix, putting it on the
+                     right indicates timestamp prefix.  If you put &#39;-&#39; or &#39;.&#39;
+                     on both sides, it&#39;s handled as a suffix.
 
         time_zone    Time zone to use for determining splits. By default UTC.
 
-        create_path Create directory path to file if it doesn&#39;t exist ```
+        create_path  Create directory path to file if it doesn&#39;t exist ```
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - &#39;ignore&#39; by default. Other error strategies are
+                &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
         ```
 
         &#34;&#34;&#34;
-        super().__init__()
+        super().__init__(encoding=encoding,
+                         encoding_errors=encoding_errors)
 
         self.filename = filename
         self.mode = mode
-        self.delimiter = delimiter
         self.flush = flush
         self.split_by_time = split_by_time
         self.time_format = time_format
         self.time_zone = time_zone
+        self.split_interval = None
+        self.split_interval_in_seconds = 0
+        self.header = None
+        self.next_file_split = datetime.now(self.time_zone)
 
-        if split_by_time and not filename:
+        # &#39;delimiter&#39; comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if delimiter:
+            if self.encoding:
+                # NOTE: Technically, it&#39;s safe to call _unescape_str() with no
+                #       encoding, it just returns the str/bytes/thing
+                #       unmodified.  But why tempt fate, right?
+                delimiter = self._unescape_str(delimiter)
+            else:
+                # if encoding has been set to &#39;&#39; or None, we&#39;re dealing with
+                # raw/binary output.  encode delimiter so we can append it
+                # safely in write()
+                delimiter = delimiter.encode()
+        self.delimiter = delimiter
+
+        if (split_by_time or split_interval) is not None and not filename:
             raise ValueError(&#39;FileWriter: filename must be specified if &#39;
-                             &#39;split_by_time is True.&#39;)
+                             &#39;split_by_time is specified or split_interval &#39;
+                             &#39;is True.&#39;)
+
+        if split_interval is not None:
+            # Verify the split_interval argument is valid be confirming
+            # the last charater is &#39;H&#39; or &#39;M&#39; and the preceding characters
+            # parse as an integer
+
+            if split_interval[-1] not in [&#39;H&#39;,&#39;M&#39;]:
+                raise ValueError(&#39;FileWriter: split_interval must be an integer &#39;
+                                 &#39;followed by \&#39;H\&#39; or \&#39;M\&#39;.&#39;)
+            try:
+                self.split_interval = (int(split_interval[:-1]), split_interval[-1])
+                self.split_interval_in_seconds = self._get_split_interval_in_seconds(split_interval)
+            except ValueError:
+                raise ValueError(&#39;FileWriter: split_interval must be an integer &#39;
+                                 &#39;followed by \&#39;H\&#39; or \&#39;M\&#39;.&#39;)
+
+        if header is not None and header_file is not None:
+            raise ValueError(&#39;FileWriter: cannot specify the header and &#39;
+                             &#39;header_file arguments.&#39;)
+
+        if header is not None:
+            if isinstance(header, str):
+                self.header = header + &#39;\n&#39;
+            else:
+                raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
+                                 &#39;file. header argument must be a string: %s&#39;,
+                                 header)
+
+        if header_file is not None:
+            try:
+                with open(header_file, &#39;r&#39;) as file:
+                    self.header = file.read()
+            except:
+                raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
+                                 &#39;file. header_file argument must be a valid &#39;
+                                 &#39;filepath: %s&#39;, header_file)
+
+        if self.header is not None and &#39;b&#39; in mode:
+            raise ValueError(&#39;FileWriter: Unable to add header to a binary &#39;
+                             &#39;data file&#39;)
 
         # If we&#39;re splitting by time, keep track of current file suffix so
         # we know when to roll over.
@@ -106,6 +190,42 @@ class FileWriter(Writer):
             if file_dir:
                 os.makedirs(file_dir, exist_ok=True)
 
+
+    ############################
+    @staticmethod
+    def _get_split_interval_in_seconds(split_interval):
+        if split_interval[1] == &#39;H&#39;:
+
+            # automatically update default time_format
+            if time_format == &#39;-&#39; + DATE_FORMAT:
+                self.time_format = &#39;-&#39; + DATE_FORMAT + &#39;T%H00&#39;
+
+            # raise error if the custom time_format does not contain
+            # an hour designation
+            elif &#34;%H&#34; not in self.time_format:
+                 raise ValueError(&#39;FileWriter: time_format must contain a &#39;
+                                  &#39;hour designation (%H).&#39;)
+
+            return split_interval[0] * 3600
+
+        if split_interval[1] == &#39;M&#39;:
+
+            # automatically update default time_format
+            if time_format == &#39;-&#39; + DATE_FORMAT:
+                self.time_format = &#39;-&#39; + DATE_FORMAT + &#39;T%H%M&#39;
+
+            # raise error if the custom time_format does not contain
+            # an hour designation
+            elif &#34;%H&#34; not in self.time_format or &#34;%M&#34; not in self.time_format:
+                 raise ValueError(&#39;FileWriter: time_format must contain a &#39;
+                                  &#39;hour designation (%H) and minute &#39;
+                                  &#39;designation (%M).&#39;)
+
+            return split_interval[0] * 60
+
+        return 0
+
+
     ############################
     def _get_file_suffix(self):
         &#34;&#34;&#34;Return a string to be used for the file suffix.&#34;&#34;&#34;
@@ -113,16 +233,41 @@ class FileWriter(Writer):
         # Note: the self.timestamp variable exists for debugging, and
         # should be left as None in actual use, which tells the time_str
         # method to use current system time.
-        return time_str(timestamp=self.timestamp, time_zone=self.time_zone,
-                        time_format=self.time_format)
+
+        # if there is no split interval
+        if self.split_interval is None:
+            return time_str(timestamp=self.timestamp, time_zone=self.time_zone,
+                            time_format=self.time_format)
+
+        # if the data is being split by N hours
+        elif self.split_interval[1] == &#39;H&#39;: # hour
+            timestamp_raw = datetime.now(self.time_zone)
+            timestamp_proc = timestamp_raw.replace(hour=self.split_interval[0] * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
+            self.next_file_split = timestamp_proc + timedelta(seconds=self.split_interval_in_seconds)
+
+            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
+                            time_format=self.time_format)
+
+        # if the data is being split by N minutes
+        elif self.split_interval[1] == &#39;M&#39;: # minute
+            timestamp_raw = datetime.now(self.time_zone)
+            timestamp_proc = timestamp_raw.replace(minute=self.split_interval[0] * math.floor(timestamp_raw.minute/self.split_interval[0]), second=0)
+            self.next_file_split = timestamp_proc + timedelta(seconds=self.split_interval_in_seconds)
+
+            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
+                            time_format=self.time_format)
 
     ############################
     def _set_file(self, filename):
         &#34;&#34;&#34;Set the current file to the specified filename.&#34;&#34;&#34;
 
         # If they haven&#39;t given us a filename, we&#39;ll write to stdout
-        if self.filename is None:
+        if filename is None:
             self.file = sys.stdout
+
+            if self.header is not None:
+                self.file.write(self.header)
+
             return
 
         # If here, we have a filename. If we already have a file open,
@@ -130,8 +275,17 @@ class FileWriter(Writer):
         if self.file:
             self.file.close()
 
-        # Finally, open the specified file with the specified mode
-        self.file = open(filename, self.mode)
+        # Check to see if file already exists
+        file_is_new = not os.path.isfile(filename)
+
+        # Finally, open the specified file with the specified mode and encoding
+        logging.info(&#34;opening %s with mode=%s and encoding=%s&#34;, filename, self.mode, self.encoding)
+        self.file = open(filename, self.mode, encoding=self.encoding)
+
+        # Add header record to file if a header was specified and the file was
+        # just created.
+        if file_is_new and self.header is not None:
+            self.file.write(self.header)
 
     ############################
     def write(self, record):
@@ -148,20 +302,29 @@ class FileWriter(Writer):
 
         # If we&#39;re splitting by some time interval, see if it&#39;s time to
         # roll over to a new file.
-        if self.split_by_time:
+        # if self.split_by_time or self.split_interval is not None:
+        if self.split_by_time or (self.split_interval and datetime.now(self.time_zone) &gt; self.next_file_split):
             new_file_suffix = self._get_file_suffix()
             if new_file_suffix != self.file_suffix:
                 self.file_suffix = new_file_suffix
-                self._set_file(self.filename + new_file_suffix)
+                if new_file_suffix.startswith(&#39;-&#39;) or new_file_suffix.startswith(&#39;.&#39;):
+                    # it&#39;s a suffix
+                    self._set_file(self.filename + new_file_suffix)
+                elif new_file_suffix.endswith(&#39;-&#39;) or new_file_suffix.endswith(&#39;.&#39;):
+                    # make it a prefix even though we&#39;ve called it a suffix
+                    # this whole time.
+                    self._set_file(os.path.join(os.path.dirname(self.filename),
+                                                new_file_suffix + os.path.basename(self.filename)))
+                else:
+                    # well, this is probably gonna look ugly w/out a separator
+                    # character, but go ahead and treat it as a suffix
+                    self._set_file(self.filename + new_file_suffix)
 
         # If we&#39;re not splitting by intervals, still check that we&#39;ve got
         # a file open we can write to. If not, open it.
         else:
             if not self.file:
                 self._set_file(self.filename)
-
-        if isinstance(record, dict):
-            record = str(record)
 
         # Write the record and flush if requested
         self.file.write(record)
@@ -182,7 +345,7 @@ class FileWriter(Writer):
 <dl>
 <dt id="logger.writers.file_writer.FileWriter"><code class="flex name class">
 <span>class <span class="ident">FileWriter</span></span>
-<span>(</span><span>filename=None, mode='a', delimiter='\n', flush=True, split_by_time=False, time_format='-%Y-%m-%d', time_zone=datetime.timezone.utc, create_path=True)</span>
+<span>(</span><span>filename=None, mode='a', delimiter='\n', flush=True, split_by_time=False, split_interval=None, header=None, header_file=None, time_format='-%Y-%m-%d', time_zone=datetime.timezone.utc, create_path=True, encoding='utf-8', encoding_errors='ignore')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
@@ -205,15 +368,35 @@ split_by_time Create a separate text file for each (by default)
              filename. By overridding time_format, other split
              intervals, such as hourly or monthly, may be imposed.
 
+split_interval Splits files based on a defined hour (H) or minute (M)
+             time interval such as every 2 hours (2H) or 15 minutes
+             (15M). Currently H and M are the only options. 
+
+header       Add the specified header string to each file.
+
+header_file  Add the content of the specified file to each file.
+
 time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
              e.g. '-%Y-%m' is used, files will be split by month;
              if -%y-%m-%d:%H' is specified, splits will be
              hourly. If '%y+%j' is specified, splits will be
-             daily, but named via Julian date.
+             daily, but named via Julian date.  Putting '-' or '.' on
+             the left indicates timestamp suffix, putting it on the
+             right indicates timestamp prefix.  If you put '-' or '.'
+             on both sides, it's handled as a suffix.
 
 time_zone    Time zone to use for determining splits. By default UTC.
 
-create_path Create directory path to file if it doesn't exist ```
+create_path  Create directory path to file if it doesn't exist ```
+
+encoding - 'utf-8' by default. If empty or None, do not attempt any
+        decoding and return raw bytes. Other possible encodings are
+        listed in online documentation here:
+        https://docs.python.org/3/library/codecs.html#standard-encodings
+
+encoding_errors - 'ignore' by default. Other error strategies are
+        'strict', 'replace', and 'backslashreplace', described here:
+        https://docs.python.org/3/howto/unicode.html#encodings
 </code></pre></div>
 <details class="source">
 <summary>
@@ -223,8 +406,10 @@ create_path Create directory path to file if it doesn't exist ```
     &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
 
     def __init__(self, filename=None, mode=&#39;a&#39;, delimiter=&#39;\n&#39;, flush=True,
-                 split_by_time=False, time_format=&#39;-&#39; + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True):
+                 split_by_time=False, split_interval=None, header=None,
+                 header_file=None, time_format=&#39;-&#39; + DATE_FORMAT,
+                 time_zone=timezone.utc, create_path=True,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -245,31 +430,111 @@ create_path Create directory path to file if it doesn't exist ```
                      filename. By overridding time_format, other split
                      intervals, such as hourly or monthly, may be imposed.
 
+        split_interval Splits files based on a defined hour (H) or minute (M)
+                     time interval such as every 2 hours (2H) or 15 minutes
+                     (15M). Currently H and M are the only options. 
+
+        header       Add the specified header string to each file.
+
+        header_file  Add the content of the specified file to each file.
+
         time_format  By default ISO 8601-compliant &#39;-%Y-%m-%d&#39;. If,
                      e.g. &#39;-%Y-%m&#39; is used, files will be split by month;
                      if -%y-%m-%d:%H&#39; is specified, splits will be
                      hourly. If &#39;%y+%j&#39; is specified, splits will be
-                     daily, but named via Julian date.
+                     daily, but named via Julian date.  Putting &#39;-&#39; or &#39;.&#39; on
+                     the left indicates timestamp suffix, putting it on the
+                     right indicates timestamp prefix.  If you put &#39;-&#39; or &#39;.&#39;
+                     on both sides, it&#39;s handled as a suffix.
 
         time_zone    Time zone to use for determining splits. By default UTC.
 
-        create_path Create directory path to file if it doesn&#39;t exist ```
+        create_path  Create directory path to file if it doesn&#39;t exist ```
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - &#39;ignore&#39; by default. Other error strategies are
+                &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
         ```
 
         &#34;&#34;&#34;
-        super().__init__()
+        super().__init__(encoding=encoding,
+                         encoding_errors=encoding_errors)
 
         self.filename = filename
         self.mode = mode
-        self.delimiter = delimiter
         self.flush = flush
         self.split_by_time = split_by_time
         self.time_format = time_format
         self.time_zone = time_zone
+        self.split_interval = None
+        self.split_interval_in_seconds = 0
+        self.header = None
+        self.next_file_split = datetime.now(self.time_zone)
 
-        if split_by_time and not filename:
+        # &#39;delimiter&#39; comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if delimiter:
+            if self.encoding:
+                # NOTE: Technically, it&#39;s safe to call _unescape_str() with no
+                #       encoding, it just returns the str/bytes/thing
+                #       unmodified.  But why tempt fate, right?
+                delimiter = self._unescape_str(delimiter)
+            else:
+                # if encoding has been set to &#39;&#39; or None, we&#39;re dealing with
+                # raw/binary output.  encode delimiter so we can append it
+                # safely in write()
+                delimiter = delimiter.encode()
+        self.delimiter = delimiter
+
+        if (split_by_time or split_interval) is not None and not filename:
             raise ValueError(&#39;FileWriter: filename must be specified if &#39;
-                             &#39;split_by_time is True.&#39;)
+                             &#39;split_by_time is specified or split_interval &#39;
+                             &#39;is True.&#39;)
+
+        if split_interval is not None:
+            # Verify the split_interval argument is valid be confirming
+            # the last charater is &#39;H&#39; or &#39;M&#39; and the preceding characters
+            # parse as an integer
+
+            if split_interval[-1] not in [&#39;H&#39;,&#39;M&#39;]:
+                raise ValueError(&#39;FileWriter: split_interval must be an integer &#39;
+                                 &#39;followed by \&#39;H\&#39; or \&#39;M\&#39;.&#39;)
+            try:
+                self.split_interval = (int(split_interval[:-1]), split_interval[-1])
+                self.split_interval_in_seconds = self._get_split_interval_in_seconds(split_interval)
+            except ValueError:
+                raise ValueError(&#39;FileWriter: split_interval must be an integer &#39;
+                                 &#39;followed by \&#39;H\&#39; or \&#39;M\&#39;.&#39;)
+
+        if header is not None and header_file is not None:
+            raise ValueError(&#39;FileWriter: cannot specify the header and &#39;
+                             &#39;header_file arguments.&#39;)
+
+        if header is not None:
+            if isinstance(header, str):
+                self.header = header + &#39;\n&#39;
+            else:
+                raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
+                                 &#39;file. header argument must be a string: %s&#39;,
+                                 header)
+
+        if header_file is not None:
+            try:
+                with open(header_file, &#39;r&#39;) as file:
+                    self.header = file.read()
+            except:
+                raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
+                                 &#39;file. header_file argument must be a valid &#39;
+                                 &#39;filepath: %s&#39;, header_file)
+
+        if self.header is not None and &#39;b&#39; in mode:
+            raise ValueError(&#39;FileWriter: Unable to add header to a binary &#39;
+                             &#39;data file&#39;)
 
         # If we&#39;re splitting by time, keep track of current file suffix so
         # we know when to roll over.
@@ -285,6 +550,42 @@ create_path Create directory path to file if it doesn't exist ```
             if file_dir:
                 os.makedirs(file_dir, exist_ok=True)
 
+
+    ############################
+    @staticmethod
+    def _get_split_interval_in_seconds(split_interval):
+        if split_interval[1] == &#39;H&#39;:
+
+            # automatically update default time_format
+            if time_format == &#39;-&#39; + DATE_FORMAT:
+                self.time_format = &#39;-&#39; + DATE_FORMAT + &#39;T%H00&#39;
+
+            # raise error if the custom time_format does not contain
+            # an hour designation
+            elif &#34;%H&#34; not in self.time_format:
+                 raise ValueError(&#39;FileWriter: time_format must contain a &#39;
+                                  &#39;hour designation (%H).&#39;)
+
+            return split_interval[0] * 3600
+
+        if split_interval[1] == &#39;M&#39;:
+
+            # automatically update default time_format
+            if time_format == &#39;-&#39; + DATE_FORMAT:
+                self.time_format = &#39;-&#39; + DATE_FORMAT + &#39;T%H%M&#39;
+
+            # raise error if the custom time_format does not contain
+            # an hour designation
+            elif &#34;%H&#34; not in self.time_format or &#34;%M&#34; not in self.time_format:
+                 raise ValueError(&#39;FileWriter: time_format must contain a &#39;
+                                  &#39;hour designation (%H) and minute &#39;
+                                  &#39;designation (%M).&#39;)
+
+            return split_interval[0] * 60
+
+        return 0
+
+
     ############################
     def _get_file_suffix(self):
         &#34;&#34;&#34;Return a string to be used for the file suffix.&#34;&#34;&#34;
@@ -292,16 +593,41 @@ create_path Create directory path to file if it doesn't exist ```
         # Note: the self.timestamp variable exists for debugging, and
         # should be left as None in actual use, which tells the time_str
         # method to use current system time.
-        return time_str(timestamp=self.timestamp, time_zone=self.time_zone,
-                        time_format=self.time_format)
+
+        # if there is no split interval
+        if self.split_interval is None:
+            return time_str(timestamp=self.timestamp, time_zone=self.time_zone,
+                            time_format=self.time_format)
+
+        # if the data is being split by N hours
+        elif self.split_interval[1] == &#39;H&#39;: # hour
+            timestamp_raw = datetime.now(self.time_zone)
+            timestamp_proc = timestamp_raw.replace(hour=self.split_interval[0] * math.floor(timestamp_raw.hour/self.split_interval[0]), minute=0, second=0)
+            self.next_file_split = timestamp_proc + timedelta(seconds=self.split_interval_in_seconds)
+
+            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
+                            time_format=self.time_format)
+
+        # if the data is being split by N minutes
+        elif self.split_interval[1] == &#39;M&#39;: # minute
+            timestamp_raw = datetime.now(self.time_zone)
+            timestamp_proc = timestamp_raw.replace(minute=self.split_interval[0] * math.floor(timestamp_raw.minute/self.split_interval[0]), second=0)
+            self.next_file_split = timestamp_proc + timedelta(seconds=self.split_interval_in_seconds)
+
+            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
+                            time_format=self.time_format)
 
     ############################
     def _set_file(self, filename):
         &#34;&#34;&#34;Set the current file to the specified filename.&#34;&#34;&#34;
 
         # If they haven&#39;t given us a filename, we&#39;ll write to stdout
-        if self.filename is None:
+        if filename is None:
             self.file = sys.stdout
+
+            if self.header is not None:
+                self.file.write(self.header)
+
             return
 
         # If here, we have a filename. If we already have a file open,
@@ -309,8 +635,17 @@ create_path Create directory path to file if it doesn't exist ```
         if self.file:
             self.file.close()
 
-        # Finally, open the specified file with the specified mode
-        self.file = open(filename, self.mode)
+        # Check to see if file already exists
+        file_is_new = not os.path.isfile(filename)
+
+        # Finally, open the specified file with the specified mode and encoding
+        logging.info(&#34;opening %s with mode=%s and encoding=%s&#34;, filename, self.mode, self.encoding)
+        self.file = open(filename, self.mode, encoding=self.encoding)
+
+        # Add header record to file if a header was specified and the file was
+        # just created.
+        if file_is_new and self.header is not None:
+            self.file.write(self.header)
 
     ############################
     def write(self, record):
@@ -327,20 +662,29 @@ create_path Create directory path to file if it doesn't exist ```
 
         # If we&#39;re splitting by some time interval, see if it&#39;s time to
         # roll over to a new file.
-        if self.split_by_time:
+        # if self.split_by_time or self.split_interval is not None:
+        if self.split_by_time or (self.split_interval and datetime.now(self.time_zone) &gt; self.next_file_split):
             new_file_suffix = self._get_file_suffix()
             if new_file_suffix != self.file_suffix:
                 self.file_suffix = new_file_suffix
-                self._set_file(self.filename + new_file_suffix)
+                if new_file_suffix.startswith(&#39;-&#39;) or new_file_suffix.startswith(&#39;.&#39;):
+                    # it&#39;s a suffix
+                    self._set_file(self.filename + new_file_suffix)
+                elif new_file_suffix.endswith(&#39;-&#39;) or new_file_suffix.endswith(&#39;.&#39;):
+                    # make it a prefix even though we&#39;ve called it a suffix
+                    # this whole time.
+                    self._set_file(os.path.join(os.path.dirname(self.filename),
+                                                new_file_suffix + os.path.basename(self.filename)))
+                else:
+                    # well, this is probably gonna look ugly w/out a separator
+                    # character, but go ahead and treat it as a suffix
+                    self._set_file(self.filename + new_file_suffix)
 
         # If we&#39;re not splitting by intervals, still check that we&#39;ve got
         # a file open we can write to. If not, open it.
         else:
             if not self.file:
                 self._set_file(self.filename)
-
-        if isinstance(record, dict):
-            record = str(record)
 
         # Write the record and flush if requested
         self.file.write(record)
@@ -378,20 +722,29 @@ create_path Create directory path to file if it doesn't exist ```
 
     # If we&#39;re splitting by some time interval, see if it&#39;s time to
     # roll over to a new file.
-    if self.split_by_time:
+    # if self.split_by_time or self.split_interval is not None:
+    if self.split_by_time or (self.split_interval and datetime.now(self.time_zone) &gt; self.next_file_split):
         new_file_suffix = self._get_file_suffix()
         if new_file_suffix != self.file_suffix:
             self.file_suffix = new_file_suffix
-            self._set_file(self.filename + new_file_suffix)
+            if new_file_suffix.startswith(&#39;-&#39;) or new_file_suffix.startswith(&#39;.&#39;):
+                # it&#39;s a suffix
+                self._set_file(self.filename + new_file_suffix)
+            elif new_file_suffix.endswith(&#39;-&#39;) or new_file_suffix.endswith(&#39;.&#39;):
+                # make it a prefix even though we&#39;ve called it a suffix
+                # this whole time.
+                self._set_file(os.path.join(os.path.dirname(self.filename),
+                                            new_file_suffix + os.path.basename(self.filename)))
+            else:
+                # well, this is probably gonna look ugly w/out a separator
+                # character, but go ahead and treat it as a suffix
+                self._set_file(self.filename + new_file_suffix)
 
     # If we&#39;re not splitting by intervals, still check that we&#39;ve got
     # a file open we can write to. If not, open it.
     else:
         if not self.file:
             self._set_file(self.filename)
-
-    if isinstance(record, dict):
-        record = str(record)
 
     # Write the record and flush if requested
     self.file.write(record)
@@ -440,7 +793,7 @@ create_path Create directory path to file if it doesn't exist ```
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

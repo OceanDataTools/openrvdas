@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.readers.mqtt_reader API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -30,6 +30,7 @@
 
 import logging
 import sys
+from queue import Queue
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -100,34 +101,41 @@ class MQTTReader(Reader):
             raise ModuleNotFoundError(&#39;MQTTReader(): paho-mqtt is not installed. Please &#39;
                                       &#39;try &#34;pip install paho-mqtt&#34; prior to use.&#39;)
 
+        def on_connect(client, userdata, flags, rc):
+            logging.warn(&#34;Connected With Result Code: {}&#34;.format(rc))
+
+        def on_message(client, userdata, message):
+            self.queue.put(message)
+
         self.broker = broker
         self.channel = channel
         self.client_name = client_name
+        self.queue = Queue()
 
         try:
             self.paho = mqtt.Client(client_name)
-            self.paho.connect(broker)
+            self.paho.on_connect = on_connect
+            self.paho.on_message = on_message
+
+            self.paho.connect(broker, 1883)
             self.paho.subscribe(channel)
-
-            while self.paho.loop() == 0:
-                pass
-
+            
         except mqtt.WebsocketConnectionError as e:
             logging.error(&#39;Unable to connect to broker at %s:%s&#39;,
                           self.broker, self.channel)
             raise e
-
+    
     ############################
     def read(self):
         while True:
             try:
-                self.paho.loop_forever()
-                message = next(iter(self.paho.listen()))
-                logging.debug(&#39;Got message &#34;%s&#34;&#39;, message)
-                if message.get(&#39;type&#39;, None) == &#39;message&#39;:
-                    data = message.get(&#39;data&#39;, None)
-                    if data:
-                        return data
+                self.paho.loop()
+                while not self.queue.empty():
+                    message = self.queue.get()
+                    if message is None:
+                        continue
+                    logging.debug(&#39;Got message &#34;%s&#34;&#39;, message.payload)
+                    return message.payload
             except KeyboardInterrupt:
                 self.paho.disconnect()
                 exit(0)</code></pre>
@@ -239,34 +247,41 @@ folder</li>
             raise ModuleNotFoundError(&#39;MQTTReader(): paho-mqtt is not installed. Please &#39;
                                       &#39;try &#34;pip install paho-mqtt&#34; prior to use.&#39;)
 
+        def on_connect(client, userdata, flags, rc):
+            logging.warn(&#34;Connected With Result Code: {}&#34;.format(rc))
+
+        def on_message(client, userdata, message):
+            self.queue.put(message)
+
         self.broker = broker
         self.channel = channel
         self.client_name = client_name
+        self.queue = Queue()
 
         try:
             self.paho = mqtt.Client(client_name)
-            self.paho.connect(broker)
+            self.paho.on_connect = on_connect
+            self.paho.on_message = on_message
+
+            self.paho.connect(broker, 1883)
             self.paho.subscribe(channel)
-
-            while self.paho.loop() == 0:
-                pass
-
+            
         except mqtt.WebsocketConnectionError as e:
             logging.error(&#39;Unable to connect to broker at %s:%s&#39;,
                           self.broker, self.channel)
             raise e
-
+    
     ############################
     def read(self):
         while True:
             try:
-                self.paho.loop_forever()
-                message = next(iter(self.paho.listen()))
-                logging.debug(&#39;Got message &#34;%s&#34;&#39;, message)
-                if message.get(&#39;type&#39;, None) == &#39;message&#39;:
-                    data = message.get(&#39;data&#39;, None)
-                    if data:
-                        return data
+                self.paho.loop()
+                while not self.queue.empty():
+                    message = self.queue.get()
+                    if message is None:
+                        continue
+                    logging.debug(&#39;Got message &#34;%s&#34;&#39;, message.payload)
+                    return message.payload
             except KeyboardInterrupt:
                 self.paho.disconnect()
                 exit(0)</code></pre>
@@ -310,7 +325,7 @@ folder</li>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
