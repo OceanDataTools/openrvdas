@@ -173,8 +173,9 @@ class GeofenceTransform():
         None.
 
         record
-                A dict of field_name: field_value pairs in which to look for the
-                specified latitude_field_name and longitude_field_name.
+                A DASRecord, dict of {field_name: field_value} pairs, or a list of
+                DASRecords/dicts in which to look for the specified latitude_field_name
+                and longitude_field_name.
         """
         if record is None:
             return None

@@ -243,8 +243,9 @@ class GeofenceTransform():
         None.
 
         record
-                A dict of field_name: field_value pairs in which to look for the
-                specified latitude_field_name and longitude_field_name.
+                A DASRecord, dict of {field_name: field_value} pairs, or a list of
+                DASRecords/dicts in which to look for the specified latitude_field_name
+                and longitude_field_name.
         &#34;&#34;&#34;
         if record is None:
             return None
@@ -437,8 +438,9 @@ seconds_between_checks
         None.
 
         record
-                A dict of field_name: field_value pairs in which to look for the
-                specified latitude_field_name and longitude_field_name.
+                A DASRecord, dict of {field_name: field_value} pairs, or a list of
+                DASRecords/dicts in which to look for the specified latitude_field_name
+                and longitude_field_name.
         &#34;&#34;&#34;
         if record is None:
             return None
@@ -492,8 +494,9 @@ the other, return the appropriate string defined in either
 leaving_boundary_message or entering_boundary_message. Otherwise, return
 None.</p>
 <p>record
-A dict of field_name: field_value pairs in which to look for the
-specified latitude_field_name and longitude_field_name.</p></div>
+A DASRecord, dict of {field_name: field_value} pairs, or a list of
+DASRecords/dicts in which to look for the specified latitude_field_name
+and longitude_field_name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -506,8 +509,9 @@ specified latitude_field_name and longitude_field_name.</p></div>
     None.
 
     record
-            A dict of field_name: field_value pairs in which to look for the
-            specified latitude_field_name and longitude_field_name.
+            A DASRecord, dict of {field_name: field_value} pairs, or a list of
+            DASRecords/dicts in which to look for the specified latitude_field_name
+            and longitude_field_name.
     &#34;&#34;&#34;
     if record is None:
         return None
