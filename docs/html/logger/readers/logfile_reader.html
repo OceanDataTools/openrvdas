@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.readers.logfile_reader API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -27,7 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
-
+import json
 import logging
 import parse
 import sys
@@ -36,6 +36,7 @@ import time
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import timestamp  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.formats import Text  # noqa: E402
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.readers.reader import TimestampedReader  # noqa: E402
@@ -47,6 +48,13 @@ class LogfileReader(TimestampedReader):
     &#34;&#34;&#34;
     Read lines from one or more text files. Sequentially open all
     files that match the file_spec.
+
+    Expect that each line will either be a string prefixed by a timestamp that
+    follows the time_format parameter (ISO8601 by default) or a line of JSON
+    encoding a DASRecord.
+
+    If line is a string prefixed by a timestamp, return the string. If JSON,
+    return the DASRecord encoded by the JSON string.
     &#34;&#34;&#34;
     ############################
 
@@ -55,7 +63,7 @@ class LogfileReader(TimestampedReader):
                  record_format=None,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
-                 quiet=False):
+                 eol=None, quiet=False):
         &#34;&#34;&#34;
         ```
         filebase     Possibly wildcarded string specifying files to be opened.
@@ -87,6 +95,8 @@ class LogfileReader(TimestampedReader):
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;.
 
+        eol          Optional character by which to recognize the end of a record
+
         quiet - if not False, don&#39;t complain when unable to parse a record.
 
         ```
@@ -107,6 +117,7 @@ class LogfileReader(TimestampedReader):
         self.time_format = time_format
         self.tail = tail
         self.refresh_file_spec = refresh_file_spec
+        self.eol = eol
         self.quiet = quiet
 
         # If use_timestamps, we need to keep track of our last_read to
@@ -127,7 +138,7 @@ class LogfileReader(TimestampedReader):
                                      tail=tail,
                                      refresh_file_spec=refresh_file_spec,
                                      retry_interval=retry_interval,
-                                     interval=interval)
+                                     interval=interval, eol=eol)
 
     ############################
     def read(self):
@@ -149,8 +160,8 @@ class LogfileReader(TimestampedReader):
         # current file really does match our logfile name format...
         while True:
             record = self.reader.read()
-            if not record:  # None means we&#39;re out of records
-                return None
+            if record is None:  # None means we&#39;re out of records
+                return record
 
             # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
             # done - just return it.
@@ -162,23 +173,45 @@ class LogfileReader(TimestampedReader):
                 # alternative might be to implement read_previous(), which
                 # would be expensive but which could be called only when
                 # actually needed.
-                return record
 
-            # If we are using timestamps, make sure we can parse the
-            # timestamp off the front. If we can&#39;t, complain and try getting
-            # the next record.
+                # Check whether this is a JSON-encoded DASRecord. If so, return
+                # as a DASRecord; otherwise, just return as string. Yes, this
+                # adds overhead, but our assumption is that the throughput on
+                # a LogfileReader is going to be pretty low.
+                try:
+                    das_record = DASRecord(record)
+                    return das_record
+                except json.JSONDecodeError:
+                    return record
+
+            # If we&#39;re here, we&#39;re going to be doling out records according to the
+            # differences in their timestamps.
+
+            # Try to parse the timestamp off the front. If we succeed, grab the
+            # timestamp and break out of loop.
             try:
                 parsed_record = self.compiled_record_format.parse(record).named
                 ts = parsed_record[&#39;timestamp&#39;].timestamp()
                 break
-
-            # We had a problem parsing. Discard record and try reading next one.
-            # Complain if appropriate.
+            # We had a problem parsing as a timestamped string.
             except (KeyError, ValueError, AttributeError):
-                if not self.quiet:
-                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                    logging.warning(&#39;Record: %s&#39;, record)
-                continue
+                pass
+
+            # Try parsing as JSON DASRecord. If we succeed, grab the
+            # timestamp and break out of loop.
+            try:
+                record = DASRecord(record)
+                ts = record.timestamp
+                break
+            except json.JSONDecodeError:
+                pass
+
+            # If we&#39;re here, we failed to parse the record. Complain, if appropriate,
+            # then discard, and go back to loop to try the next record.
+            if not self.quiet:
+                logging.warning(&#39;Unable to parse record into DASRecord&#39;)
+                logging.warning(f&#39;Unable to parse record into &#34;{self.record_format}&#34;&#39;)
+                logging.warning(f&#39;Record: &#34;{record}&#34;&#39;)
 
         # If here, we&#39;ve got a record and a timestamp and are intending to
         # use it. Figure out how long we should sleep before returning it.
@@ -357,11 +390,16 @@ class LogfileReader(TimestampedReader):
 <dl>
 <dt id="logger.readers.logfile_reader.LogfileReader"><code class="flex name class">
 <span>class <span class="ident">LogfileReader</span></span>
-<span>(</span><span>filebase=None, tail=False, refresh_file_spec=False, retry_interval=0.1, interval=0, use_timestamps=False, record_format=None, time_format='%Y-%m-%dT%H:%M:%S.%fZ', date_format='%Y-%m-%d', quiet=False)</span>
+<span>(</span><span>filebase=None, tail=False, refresh_file_spec=False, retry_interval=0.1, interval=0, use_timestamps=False, record_format=None, time_format='%Y-%m-%dT%H:%M:%S.%fZ', date_format='%Y-%m-%d', eol=None, quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read lines from one or more text files. Sequentially open all
 files that match the file_spec.</p>
+<p>Expect that each line will either be a string prefixed by a timestamp that
+follows the time_format parameter (ISO8601 by default) or a line of JSON
+encoding a DASRecord.</p>
+<p>If line is a string prefixed by a timestamp, return the string. If JSON,
+return the DASRecord encoded by the JSON string.</p>
 <pre><code>filebase     Possibly wildcarded string specifying files to be opened.
              Special case: if file_spec is None, read from stdin.
 
@@ -391,6 +429,8 @@ record_format
              If specified, a custom record format to use for extracting
              timestamp and record. The default is '{timestamp:ti} {record}'.
 
+eol          Optional character by which to recognize the end of a record
+
 quiet - if not False, don't complain when unable to parse a record.
 
 </code></pre>
@@ -405,6 +445,13 @@ depends on how glob returns them.</p></div>
     &#34;&#34;&#34;
     Read lines from one or more text files. Sequentially open all
     files that match the file_spec.
+
+    Expect that each line will either be a string prefixed by a timestamp that
+    follows the time_format parameter (ISO8601 by default) or a line of JSON
+    encoding a DASRecord.
+
+    If line is a string prefixed by a timestamp, return the string. If JSON,
+    return the DASRecord encoded by the JSON string.
     &#34;&#34;&#34;
     ############################
 
@@ -413,7 +460,7 @@ depends on how glob returns them.</p></div>
                  record_format=None,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
-                 quiet=False):
+                 eol=None, quiet=False):
         &#34;&#34;&#34;
         ```
         filebase     Possibly wildcarded string specifying files to be opened.
@@ -445,6 +492,8 @@ depends on how glob returns them.</p></div>
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;.
 
+        eol          Optional character by which to recognize the end of a record
+
         quiet - if not False, don&#39;t complain when unable to parse a record.
 
         ```
@@ -465,6 +514,7 @@ depends on how glob returns them.</p></div>
         self.time_format = time_format
         self.tail = tail
         self.refresh_file_spec = refresh_file_spec
+        self.eol = eol
         self.quiet = quiet
 
         # If use_timestamps, we need to keep track of our last_read to
@@ -485,7 +535,7 @@ depends on how glob returns them.</p></div>
                                      tail=tail,
                                      refresh_file_spec=refresh_file_spec,
                                      retry_interval=retry_interval,
-                                     interval=interval)
+                                     interval=interval, eol=eol)
 
     ############################
     def read(self):
@@ -507,8 +557,8 @@ depends on how glob returns them.</p></div>
         # current file really does match our logfile name format...
         while True:
             record = self.reader.read()
-            if not record:  # None means we&#39;re out of records
-                return None
+            if record is None:  # None means we&#39;re out of records
+                return record
 
             # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
             # done - just return it.
@@ -520,23 +570,45 @@ depends on how glob returns them.</p></div>
                 # alternative might be to implement read_previous(), which
                 # would be expensive but which could be called only when
                 # actually needed.
-                return record
 
-            # If we are using timestamps, make sure we can parse the
-            # timestamp off the front. If we can&#39;t, complain and try getting
-            # the next record.
+                # Check whether this is a JSON-encoded DASRecord. If so, return
+                # as a DASRecord; otherwise, just return as string. Yes, this
+                # adds overhead, but our assumption is that the throughput on
+                # a LogfileReader is going to be pretty low.
+                try:
+                    das_record = DASRecord(record)
+                    return das_record
+                except json.JSONDecodeError:
+                    return record
+
+            # If we&#39;re here, we&#39;re going to be doling out records according to the
+            # differences in their timestamps.
+
+            # Try to parse the timestamp off the front. If we succeed, grab the
+            # timestamp and break out of loop.
             try:
                 parsed_record = self.compiled_record_format.parse(record).named
                 ts = parsed_record[&#39;timestamp&#39;].timestamp()
                 break
-
-            # We had a problem parsing. Discard record and try reading next one.
-            # Complain if appropriate.
+            # We had a problem parsing as a timestamped string.
             except (KeyError, ValueError, AttributeError):
-                if not self.quiet:
-                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                    logging.warning(&#39;Record: %s&#39;, record)
-                continue
+                pass
+
+            # Try parsing as JSON DASRecord. If we succeed, grab the
+            # timestamp and break out of loop.
+            try:
+                record = DASRecord(record)
+                ts = record.timestamp
+                break
+            except json.JSONDecodeError:
+                pass
+
+            # If we&#39;re here, we failed to parse the record. Complain, if appropriate,
+            # then discard, and go back to loop to try the next record.
+            if not self.quiet:
+                logging.warning(&#39;Unable to parse record into DASRecord&#39;)
+                logging.warning(f&#39;Unable to parse record into &#34;{self.record_format}&#34;&#39;)
+                logging.warning(f&#39;Record: &#34;{record}&#34;&#39;)
 
         # If here, we&#39;ve got a record and a timestamp and are intending to
         # use it. Figure out how long we should sleep before returning it.
@@ -746,8 +818,8 @@ could be EOF or simply an empty next line</p></div>
     # current file really does match our logfile name format...
     while True:
         record = self.reader.read()
-        if not record:  # None means we&#39;re out of records
-            return None
+        if record is None:  # None means we&#39;re out of records
+            return record
 
         # If we&#39;ve got a record and we&#39;re not using timestamps, we&#39;re
         # done - just return it.
@@ -759,23 +831,45 @@ could be EOF or simply an empty next line</p></div>
             # alternative might be to implement read_previous(), which
             # would be expensive but which could be called only when
             # actually needed.
-            return record
 
-        # If we are using timestamps, make sure we can parse the
-        # timestamp off the front. If we can&#39;t, complain and try getting
-        # the next record.
+            # Check whether this is a JSON-encoded DASRecord. If so, return
+            # as a DASRecord; otherwise, just return as string. Yes, this
+            # adds overhead, but our assumption is that the throughput on
+            # a LogfileReader is going to be pretty low.
+            try:
+                das_record = DASRecord(record)
+                return das_record
+            except json.JSONDecodeError:
+                return record
+
+        # If we&#39;re here, we&#39;re going to be doling out records according to the
+        # differences in their timestamps.
+
+        # Try to parse the timestamp off the front. If we succeed, grab the
+        # timestamp and break out of loop.
         try:
             parsed_record = self.compiled_record_format.parse(record).named
             ts = parsed_record[&#39;timestamp&#39;].timestamp()
             break
-
-        # We had a problem parsing. Discard record and try reading next one.
-        # Complain if appropriate.
+        # We had a problem parsing as a timestamped string.
         except (KeyError, ValueError, AttributeError):
-            if not self.quiet:
-                logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                logging.warning(&#39;Record: %s&#39;, record)
-            continue
+            pass
+
+        # Try parsing as JSON DASRecord. If we succeed, grab the
+        # timestamp and break out of loop.
+        try:
+            record = DASRecord(record)
+            ts = record.timestamp
+            break
+        except json.JSONDecodeError:
+            pass
+
+        # If we&#39;re here, we failed to parse the record. Complain, if appropriate,
+        # then discard, and go back to loop to try the next record.
+        if not self.quiet:
+            logging.warning(&#39;Unable to parse record into DASRecord&#39;)
+            logging.warning(f&#39;Unable to parse record into &#34;{self.record_format}&#34;&#39;)
+            logging.warning(f&#39;Record: &#34;{record}&#34;&#39;)
 
     # If here, we&#39;ve got a record and a timestamp and are intending to
     # use it. Figure out how long we should sleep before returning it.
@@ -981,7 +1075,7 @@ Returns None if no timestamps were found</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

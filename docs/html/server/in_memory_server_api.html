@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>server.in_memory_server_api API documentation</title>
 <meta name="description" content="API implementation for interacting with an in-memory data store …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -112,11 +112,13 @@ class InMemoryServerAPI(ServerAPI):
         &#34;&#34;&#34;
         config = self.get_configuration()
         if not config:
-            return None
+            return {}
 
         if &#39;loggers&#39; not in config:
             raise ValueError(&#39;No loggers found&#39;)
-        logger_configs = config[&#39;loggers&#39;]
+        logger_configs = config.get(&#39;loggers&#39;, None)
+        if not logger_configs:
+            raise ValueError(&#39;No logger configurations found&#39;)
 
         # Fetch and insert the currently active config for each logger
         for logger in logger_configs:
@@ -126,24 +128,22 @@ class InMemoryServerAPI(ServerAPI):
     ############################
     def get_logger_config(self, config_name):
         &#34;&#34;&#34;Retrieve the config associated with the specified name.&#34;&#34;&#34;
-        config = self.get_configuration()
-        # if not cruise_id:
-        #   raise ValueError(&#39;No cruise config defined that would allow &#39;
-        #                    &#39;setting logger config by name&#39;)
-        configs = config.get(&#39;configs&#39;, None)
-        if configs is None:
+        cruise_config = self.get_configuration()
+        if cruise_config is None:
+            return {}
+        logger_configs = cruise_config.get(&#39;configs&#39;, None)
+        if logger_configs is None:
             raise ValueError(&#39;No &#34;config&#34; found&#39;)
-        config2 = configs.get(config_name, None)
-        if config2 is None:
-            raise ValueError(&#39;No config &#34;%s&#34; in config&#39; % config_name)
-        return config2
+        logger_config = logger_configs.get(config_name, None)
+        if logger_config is None:
+            raise ValueError(&#39;No logger config &#34;%s&#34; in config&#39; % config_name)
+        return logger_config
 
     ############################
     def get_logger_configs(self, mode=None):
         &#34;&#34;&#34;Retrieve the configs associated with a cruise id and mode from the
         data store. If mode is omitted, retrieve configs associated with
-        the cruise&#39;s current logger configs. If cruise_id is omitted,
-        return configs for *all* cruises.&#34;&#34;&#34;
+        the cruise&#39;s current logger configs.&#34;&#34;&#34;
         loggers = self.get_loggers()
         if not loggers:
             return None
@@ -166,7 +166,12 @@ class InMemoryServerAPI(ServerAPI):
 
         # If mode is not specified, get logger&#39;s current config name
         if mode is None:
-            mode = self.get_active_mode()
+            config_name = self.logger_config.get(logger_id, None)
+            if config_name is None:
+                raise ValueError(f&#39;Logger id &#34;{logger_id}&#34; has no mode!&#39;)
+            return config_name
+
+        # Otherwise, we return the config_name for the specifed mode
         modes = self.config.get(&#39;modes&#39;)
         mode_configs = modes.get(mode, None)
         if mode_configs is None:
@@ -493,11 +498,13 @@ cruise_config as follows:</p>
         &#34;&#34;&#34;
         config = self.get_configuration()
         if not config:
-            return None
+            return {}
 
         if &#39;loggers&#39; not in config:
             raise ValueError(&#39;No loggers found&#39;)
-        logger_configs = config[&#39;loggers&#39;]
+        logger_configs = config.get(&#39;loggers&#39;, None)
+        if not logger_configs:
+            raise ValueError(&#39;No logger configurations found&#39;)
 
         # Fetch and insert the currently active config for each logger
         for logger in logger_configs:
@@ -507,24 +514,22 @@ cruise_config as follows:</p>
     ############################
     def get_logger_config(self, config_name):
         &#34;&#34;&#34;Retrieve the config associated with the specified name.&#34;&#34;&#34;
-        config = self.get_configuration()
-        # if not cruise_id:
-        #   raise ValueError(&#39;No cruise config defined that would allow &#39;
-        #                    &#39;setting logger config by name&#39;)
-        configs = config.get(&#39;configs&#39;, None)
-        if configs is None:
+        cruise_config = self.get_configuration()
+        if cruise_config is None:
+            return {}
+        logger_configs = cruise_config.get(&#39;configs&#39;, None)
+        if logger_configs is None:
             raise ValueError(&#39;No &#34;config&#34; found&#39;)
-        config2 = configs.get(config_name, None)
-        if config2 is None:
-            raise ValueError(&#39;No config &#34;%s&#34; in config&#39; % config_name)
-        return config2
+        logger_config = logger_configs.get(config_name, None)
+        if logger_config is None:
+            raise ValueError(&#39;No logger config &#34;%s&#34; in config&#39; % config_name)
+        return logger_config
 
     ############################
     def get_logger_configs(self, mode=None):
         &#34;&#34;&#34;Retrieve the configs associated with a cruise id and mode from the
         data store. If mode is omitted, retrieve configs associated with
-        the cruise&#39;s current logger configs. If cruise_id is omitted,
-        return configs for *all* cruises.&#34;&#34;&#34;
+        the cruise&#39;s current logger configs.&#34;&#34;&#34;
         loggers = self.get_loggers()
         if not loggers:
             return None
@@ -547,7 +552,12 @@ cruise_config as follows:</p>
 
         # If mode is not specified, get logger&#39;s current config name
         if mode is None:
-            mode = self.get_active_mode()
+            config_name = self.logger_config.get(logger_id, None)
+            if config_name is None:
+                raise ValueError(f&#39;Logger id &#34;{logger_id}&#34; has no mode!&#39;)
+            return config_name
+
+        # Otherwise, we return the config_name for the specifed mode
         modes = self.config.get(&#39;modes&#39;)
         mode_configs = modes.get(mode, None)
         if mode_configs is None:
@@ -741,7 +751,19 @@ cruise_config as follows:</p>
         self.mode = &#34;n/a&#34;
         self.logger_config = {}
         self.callbacks = []
-        self.status = []</code></pre>
+        self.status = []
+
+    ############################
+    # Methods for manually constructing/modifying a cruise spec via API
+    # def add_cruise(self, cruise_id, start=None, end=None)
+    # def add_mode(self, cruise_id, mode)
+    # def delete_mode(self, cruise_id, mode)
+    # def add_logger(self, cruise_id, logger_id, logger_spec)
+    # def delete_logger(self, cruise_id, logger_id)
+    # def add_config(self, cruise_id, config, config_spec)
+    # def add_config_to_logger(self, cruise_id, config, logger_id)
+    # def add_config_to_mode(self, cruise_id, config, logger_id, mode)
+    # def delete_config(self, cruise_id, config_id)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -840,17 +862,16 @@ from the data store.</p></div>
 </summary>
 <pre><code class="python">def get_logger_config(self, config_name):
     &#34;&#34;&#34;Retrieve the config associated with the specified name.&#34;&#34;&#34;
-    config = self.get_configuration()
-    # if not cruise_id:
-    #   raise ValueError(&#39;No cruise config defined that would allow &#39;
-    #                    &#39;setting logger config by name&#39;)
-    configs = config.get(&#39;configs&#39;, None)
-    if configs is None:
+    cruise_config = self.get_configuration()
+    if cruise_config is None:
+        return {}
+    logger_configs = cruise_config.get(&#39;configs&#39;, None)
+    if logger_configs is None:
         raise ValueError(&#39;No &#34;config&#34; found&#39;)
-    config2 = configs.get(config_name, None)
-    if config2 is None:
-        raise ValueError(&#39;No config &#34;%s&#34; in config&#39; % config_name)
-    return config2</code></pre>
+    logger_config = logger_configs.get(config_name, None)
+    if logger_config is None:
+        raise ValueError(&#39;No logger config &#34;%s&#34; in config&#39; % config_name)
+    return logger_config</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.get_logger_config_name"><code class="name flex">
@@ -874,7 +895,12 @@ current config.</p></div>
 
     # If mode is not specified, get logger&#39;s current config name
     if mode is None:
-        mode = self.get_active_mode()
+        config_name = self.logger_config.get(logger_id, None)
+        if config_name is None:
+            raise ValueError(f&#39;Logger id &#34;{logger_id}&#34; has no mode!&#39;)
+        return config_name
+
+    # Otherwise, we return the config_name for the specifed mode
     modes = self.config.get(&#39;modes&#39;)
     mode_configs = modes.get(mode, None)
     if mode_configs is None:
@@ -915,8 +941,7 @@ current config.</p></div>
 <dd>
 <div class="desc"><p>Retrieve the configs associated with a cruise id and mode from the
 data store. If mode is omitted, retrieve configs associated with
-the cruise's current logger configs. If cruise_id is omitted,
-return configs for <em>all</em> cruises.</p></div>
+the cruise's current logger configs.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -924,8 +949,7 @@ return configs for <em>all</em> cruises.</p></div>
 <pre><code class="python">def get_logger_configs(self, mode=None):
     &#34;&#34;&#34;Retrieve the configs associated with a cruise id and mode from the
     data store. If mode is omitted, retrieve configs associated with
-    the cruise&#39;s current logger configs. If cruise_id is omitted,
-    return configs for *all* cruises.&#34;&#34;&#34;
+    the cruise&#39;s current logger configs.&#34;&#34;&#34;
     loggers = self.get_loggers()
     if not loggers:
         return None
@@ -956,11 +980,13 @@ for all loggers.</p></div>
     &#34;&#34;&#34;
     config = self.get_configuration()
     if not config:
-        return None
+        return {}
 
     if &#39;loggers&#39; not in config:
         raise ValueError(&#39;No loggers found&#39;)
-    logger_configs = config[&#39;loggers&#39;]
+    logger_configs = config.get(&#39;loggers&#39;, None)
+    if not logger_configs:
+        raise ValueError(&#39;No logger configurations found&#39;)
 
     # Fetch and insert the currently active config for each logger
     for logger in logger_configs:
@@ -1147,7 +1173,7 @@ calling us to have made that determination.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

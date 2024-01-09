@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.transforms.prefix_transform API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,11 +28,12 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
+import logging
+import re
 import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
@@ -40,10 +41,37 @@ from logger.transforms.transform import Transform  # noqa: E402
 class PrefixTransform(Transform):
     &#34;&#34;&#34;Prepend a prefix to a text record.&#34;&#34;&#34;
 
-    def __init__(self, prefix, sep=&#39; &#39;):
-        &#34;&#34;&#34;Use space as default separator.&#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.Text)
-        self.prefix = prefix + sep
+    def __init__(self, prefix, sep=&#39; &#39;, quiet=False):
+        &#34;&#34;&#34;Prepend the specified prefix to the record, using space as the default
+        separator. If prefix is a &lt;regex&gt;:prefix map, go through in order and use
+        the prefix of the first regex that matches. If no prefix matches, raise a
+        warning (if quiet != True) and return None.
+
+        Note: order of map evaluation is supposed to be guaranteed as of Python 3.7,
+        but trust at your own risk.
+
+        Note: the empty string &#39;&#39; as a regex will match all non-empty strings, so
+        if you trust Python ordering, it can be used as a backstop default match for
+        all records that don&#39;t match other strings.
+
+        prefix    Either a simple string prefix or a dict mapping. If a string, it
+                  will be used as the prefix. If a dict, it will be interpreted as
+                  a &lt;regex&gt;:prefix mapping, and the prefix corresponding to the
+                  first matching regex will be used. If no regex matches, None will
+                  be returned.
+
+        sep       A separator to be used between prefix and record.
+
+        quiet     If true, do not log a warning if no regex matches.
+        &#34;&#34;&#34;
+        if type(prefix) is str:
+            self.prefix = prefix + sep
+        elif type(prefix) is dict:
+            self.prefix = {re.compile(regex): pre + sep for regex, pre in prefix.items()}
+        else:
+            raise TypeError(f&#39;prefix argument in PrefixTransform must be either a str or &#39;
+                            f&#39;dict. Received type &#34;{type(prefix)}&#34;: {prefix}&#39;)
+        self.quiet = quiet
 
     ############################
     def transform(self, record):
@@ -60,7 +88,18 @@ class PrefixTransform(Transform):
                 results.append(self.transform(single_record))
             return results
 
-        return self.prefix + record</code></pre>
+        if type(self.prefix) is str:
+            return self.prefix + record
+
+        # If here, we&#39;ve got a dict
+        for regex, pre in self.prefix.items():
+            if regex.search(record) is not None:
+                return pre + record
+
+        # If here, nothing matched
+        if not self.quiet:
+            logging.warning(f&#39;PrefixTransform: no prefix pattern matched record &#34;{record}&#34;&#39;)
+        return None</code></pre>
 </details>
 </section>
 <section>
@@ -74,11 +113,29 @@ class PrefixTransform(Transform):
 <dl>
 <dt id="logger.transforms.prefix_transform.PrefixTransform"><code class="flex name class">
 <span>class <span class="ident">PrefixTransform</span></span>
-<span>(</span><span>prefix, sep=' ')</span>
+<span>(</span><span>prefix, sep=' ', quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Prepend a prefix to a text record.</p>
-<p>Use space as default separator.</p></div>
+<p>Prepend the specified prefix to the record, using space as the default
+separator. If prefix is a <regex>:prefix map, go through in order and use
+the prefix of the first regex that matches. If no prefix matches, raise a
+warning (if quiet != True) and return None.</p>
+<p>Note: order of map evaluation is supposed to be guaranteed as of Python 3.7,
+but trust at your own risk.</p>
+<p>Note: the empty string '' as a regex will match all non-empty strings, so
+if you trust Python ordering, it can be used as a backstop default match for
+all records that don't match other strings.</p>
+<p>prefix
+Either a simple string prefix or a dict mapping. If a string, it
+will be used as the prefix. If a dict, it will be interpreted as
+a <regex>:prefix mapping, and the prefix corresponding to the
+first matching regex will be used. If no regex matches, None will
+be returned.</p>
+<p>sep
+A separator to be used between prefix and record.</p>
+<p>quiet
+If true, do not log a warning if no regex matches.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -86,10 +143,37 @@ class PrefixTransform(Transform):
 <pre><code class="python">class PrefixTransform(Transform):
     &#34;&#34;&#34;Prepend a prefix to a text record.&#34;&#34;&#34;
 
-    def __init__(self, prefix, sep=&#39; &#39;):
-        &#34;&#34;&#34;Use space as default separator.&#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.Text)
-        self.prefix = prefix + sep
+    def __init__(self, prefix, sep=&#39; &#39;, quiet=False):
+        &#34;&#34;&#34;Prepend the specified prefix to the record, using space as the default
+        separator. If prefix is a &lt;regex&gt;:prefix map, go through in order and use
+        the prefix of the first regex that matches. If no prefix matches, raise a
+        warning (if quiet != True) and return None.
+
+        Note: order of map evaluation is supposed to be guaranteed as of Python 3.7,
+        but trust at your own risk.
+
+        Note: the empty string &#39;&#39; as a regex will match all non-empty strings, so
+        if you trust Python ordering, it can be used as a backstop default match for
+        all records that don&#39;t match other strings.
+
+        prefix    Either a simple string prefix or a dict mapping. If a string, it
+                  will be used as the prefix. If a dict, it will be interpreted as
+                  a &lt;regex&gt;:prefix mapping, and the prefix corresponding to the
+                  first matching regex will be used. If no regex matches, None will
+                  be returned.
+
+        sep       A separator to be used between prefix and record.
+
+        quiet     If true, do not log a warning if no regex matches.
+        &#34;&#34;&#34;
+        if type(prefix) is str:
+            self.prefix = prefix + sep
+        elif type(prefix) is dict:
+            self.prefix = {re.compile(regex): pre + sep for regex, pre in prefix.items()}
+        else:
+            raise TypeError(f&#39;prefix argument in PrefixTransform must be either a str or &#39;
+                            f&#39;dict. Received type &#34;{type(prefix)}&#34;: {prefix}&#39;)
+        self.quiet = quiet
 
     ############################
     def transform(self, record):
@@ -106,7 +190,18 @@ class PrefixTransform(Transform):
                 results.append(self.transform(single_record))
             return results
 
-        return self.prefix + record</code></pre>
+        if type(self.prefix) is str:
+            return self.prefix + record
+
+        # If here, we&#39;ve got a dict
+        for regex, pre in self.prefix.items():
+            if regex.search(record) is not None:
+                return pre + record
+
+        # If here, nothing matched
+        if not self.quiet:
+            logging.warning(f&#39;PrefixTransform: no prefix pattern matched record &#34;{record}&#34;&#39;)
+        return None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -137,7 +232,18 @@ class PrefixTransform(Transform):
             results.append(self.transform(single_record))
         return results
 
-    return self.prefix + record</code></pre>
+    if type(self.prefix) is str:
+        return self.prefix + record
+
+    # If here, we&#39;ve got a dict
+    for regex, pre in self.prefix.items():
+        if regex.search(record) is not None:
+            return pre + record
+
+    # If here, nothing matched
+    if not self.quiet:
+        logging.warning(f&#39;PrefixTransform: no prefix pattern matched record &#34;{record}&#34;&#39;)
+    return None</code></pre>
 </details>
 </dd>
 </dl>
@@ -179,7 +285,7 @@ class PrefixTransform(Transform):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

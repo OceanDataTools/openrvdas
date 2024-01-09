@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>server.logger_supervisor API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -48,7 +48,7 @@ class LoggerSupervisor:
    they keep running.
     &#34;&#34;&#34;
 
-    def __init__(self, configs=None, stderr_file_pattern=None,
+    def __init__(self, configs=None, stderr_file_pattern=None, stderr_data_server=None,
                  max_tries=3, min_uptime=10, interval=1,
                  logger_log_level=logging.WARNING):
         &#34;&#34;&#34;
@@ -58,6 +58,9 @@ class LoggerSupervisor:
         stderr_file_pattern - Pattern into which logger name will be interpolated
                    to create the file path/name to which the logger&#39;s stderr
                    will be written. E.g. &#39;/var/log/openrvdas/{logger}.stderr&#39;
+
+        stderr_data_server  - If not None, host:port of cached data server to
+                send stderr messages to.
 
         max_tries - number of times to try a dead logger config. If zero, then
                     never stop retrying.
@@ -73,6 +76,7 @@ class LoggerSupervisor:
         &#34;&#34;&#34;
         self.configs = configs or {}
         self.stderr_file_pattern = stderr_file_pattern
+        self.stderr_data_server = stderr_data_server
         self.max_tries = max_tries
         self.min_uptime = min_uptime
         self.interval = interval
@@ -161,10 +165,11 @@ class LoggerSupervisor:
         logging.info(&#39;Called start_logger for %s: %s&#39;, logger, config_name)
 
         self.logger_config_map[logger] = config
-        stderr_file = self.stderr_file_pattern.format(logger=logger)
+        stderr_filename = self.stderr_file_pattern.format(logger=logger)
 
         runner = LoggerRunner(config=config, name=logger,
-                              stderr_file=stderr_file,
+                              stderr_filename=stderr_filename,
+                              stderr_data_server=self.stderr_data_server,
                               logger_log_level=self.logger_log_level)
         self.logger_runner_map[logger] = runner
         self.logger_runner_map[logger].start()
@@ -278,6 +283,10 @@ if __name__ == &#39;__main__&#39;:
                         &#39;the logger\&#39;s stderr will be written. E.g. &#39;
                         &#39;\&#39;/var/log/openrvdas/{logger}.stderr\&#39;&#39;)
 
+    parser.add_argument(&#39;--stderr_data_server&#39;, dest=&#39;stderr_data_server&#39;, default=None,
+                        help=&#39;Optional host:port of a cached data server to which &#39;
+                        &#39; stderr messages should be written.&#39;)
+
     parser.add_argument(&#39;--max_tries&#39;, dest=&#39;max_tries&#39;, action=&#39;store&#39;,
                         type=int, default=3, help=&#39;How many times to try a &#39;
                         &#39;crashing config before giving up on it as failed. If &#39;
@@ -322,6 +331,7 @@ if __name__ == &#39;__main__&#39;:
                     for logger in mode_config_names}
     sup = LoggerSupervisor(configs=mode_configs,
                            stderr_file_pattern=args.stderr_file_pattern,
+                           stderr_data_server=args.stderr_data_server,
                            max_tries=args.max_tries,
                            min_uptime=args.min_uptime,
                            interval=args.interval,
@@ -341,7 +351,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="server.logger_supervisor.LoggerSupervisor"><code class="flex name class">
 <span>class <span class="ident">LoggerSupervisor</span></span>
-<span>(</span><span>configs=None, stderr_file_pattern=None, max_tries=3, min_uptime=10, interval=1, logger_log_level=30)</span>
+<span>(</span><span>configs=None, stderr_file_pattern=None, stderr_data_server=None, max_tries=3, min_uptime=10, interval=1, logger_log_level=30)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Given a map of {logger:config}, start the configs and make sure
@@ -351,6 +361,9 @@ they keep running.</p>
 stderr_file_pattern - Pattern into which logger name will be interpolated
            to create the file path/name to which the logger's stderr
            will be written. E.g. '/var/log/openrvdas/{logger}.stderr'
+
+stderr_data_server  - If not None, host:port of cached data server to
+        send stderr messages to.
 
 max_tries - number of times to try a dead logger config. If zero, then
             never stop retrying.
@@ -372,7 +385,7 @@ logger_log_level - at what system log level the logger should log (if
    they keep running.
     &#34;&#34;&#34;
 
-    def __init__(self, configs=None, stderr_file_pattern=None,
+    def __init__(self, configs=None, stderr_file_pattern=None, stderr_data_server=None,
                  max_tries=3, min_uptime=10, interval=1,
                  logger_log_level=logging.WARNING):
         &#34;&#34;&#34;
@@ -382,6 +395,9 @@ logger_log_level - at what system log level the logger should log (if
         stderr_file_pattern - Pattern into which logger name will be interpolated
                    to create the file path/name to which the logger&#39;s stderr
                    will be written. E.g. &#39;/var/log/openrvdas/{logger}.stderr&#39;
+
+        stderr_data_server  - If not None, host:port of cached data server to
+                send stderr messages to.
 
         max_tries - number of times to try a dead logger config. If zero, then
                     never stop retrying.
@@ -397,6 +413,7 @@ logger_log_level - at what system log level the logger should log (if
         &#34;&#34;&#34;
         self.configs = configs or {}
         self.stderr_file_pattern = stderr_file_pattern
+        self.stderr_data_server = stderr_data_server
         self.max_tries = max_tries
         self.min_uptime = min_uptime
         self.interval = interval
@@ -485,10 +502,11 @@ logger_log_level - at what system log level the logger should log (if
         logging.info(&#39;Called start_logger for %s: %s&#39;, logger, config_name)
 
         self.logger_config_map[logger] = config
-        stderr_file = self.stderr_file_pattern.format(logger=logger)
+        stderr_filename = self.stderr_file_pattern.format(logger=logger)
 
         runner = LoggerRunner(config=config, name=logger,
-                              stderr_file=stderr_file,
+                              stderr_filename=stderr_filename,
+                              stderr_data_server=self.stderr_data_server,
                               logger_log_level=self.logger_log_level)
         self.logger_runner_map[logger] = runner
         self.logger_runner_map[logger].start()
@@ -765,7 +783,7 @@ necessary.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

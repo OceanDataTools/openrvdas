@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.writers.cached_data_writer API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -87,10 +87,13 @@ class CachedDataWriter(Writer):
         self.cleanup_interval = cleanup_interval
         self.use_wss = use_wss
         self.check_cert = check_cert
-
-        # Event loop we&#39;ll use to asynchronously manage writes to websocket
         self.event_loop = asyncio.new_event_loop()
-        self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
+
+        # &#34;loop&#34; parameter removed in Ubuntu 22, but needed in earlier releases
+        try:
+            self.send_queue = asyncio.Queue(maxsize=max_backup)
+        except RuntimeError:
+            self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
 
         # Start the thread that will asynchronously pull stuff from the
         # queue and send to the websocket. Also will, if we&#39;ve got our oue
@@ -113,8 +116,8 @@ class CachedDataWriter(Writer):
             and cleanups.
             &#34;&#34;&#34;
             while True:
-                logging.info(&#39;CachedDataWriter trying to connect to &#39;
-                                + self.data_server)
+                logging.debug(&#39;CachedDataWriter trying to connect to &#39;
+                              + self.data_server)
                 try:
                     if self.use_wss:
                         # If check_cert is a str, take it as the location of the
@@ -134,9 +137,9 @@ class CachedDataWriter(Writer):
                         ws_data_server = &#39;ws://&#39; + self.data_server
                         ssl_context = None
 
-                    logging.info(f&#39;CachedDataWriter connecting to {ws_data_server}&#39;)
+                    logging.debug(f&#39;CachedDataWriter connecting to {ws_data_server}&#39;)
                     async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
-                        logging.info(f&#39;Connected to data server {ws_data_server}&#39;)
+                        logging.debug(f&#39;Connected to data server {ws_data_server}&#39;)
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
@@ -150,6 +153,9 @@ class CachedDataWriter(Writer):
 
                 except BrokenPipeError:
                     pass
+                except AttributeError as e:
+                    logging.warning(&#39;CachedDataWriter websocket loop error: %s&#39;, e)
+                    await asyncio.sleep(0.1)
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning(&#39;CachedDataWriter lost websocket connection to &#39;
                                     &#39;data server; trying to reconnect.&#39;)
@@ -334,10 +340,13 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
         self.cleanup_interval = cleanup_interval
         self.use_wss = use_wss
         self.check_cert = check_cert
-
-        # Event loop we&#39;ll use to asynchronously manage writes to websocket
         self.event_loop = asyncio.new_event_loop()
-        self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
+
+        # &#34;loop&#34; parameter removed in Ubuntu 22, but needed in earlier releases
+        try:
+            self.send_queue = asyncio.Queue(maxsize=max_backup)
+        except RuntimeError:
+            self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
 
         # Start the thread that will asynchronously pull stuff from the
         # queue and send to the websocket. Also will, if we&#39;ve got our oue
@@ -360,8 +369,8 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
             and cleanups.
             &#34;&#34;&#34;
             while True:
-                logging.info(&#39;CachedDataWriter trying to connect to &#39;
-                                + self.data_server)
+                logging.debug(&#39;CachedDataWriter trying to connect to &#39;
+                              + self.data_server)
                 try:
                     if self.use_wss:
                         # If check_cert is a str, take it as the location of the
@@ -381,9 +390,9 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
                         ws_data_server = &#39;ws://&#39; + self.data_server
                         ssl_context = None
 
-                    logging.info(f&#39;CachedDataWriter connecting to {ws_data_server}&#39;)
+                    logging.debug(f&#39;CachedDataWriter connecting to {ws_data_server}&#39;)
                     async with websockets.connect(ws_data_server, ssl=ssl_context) as ws:
-                        logging.info(f&#39;Connected to data server {ws_data_server}&#39;)
+                        logging.debug(f&#39;Connected to data server {ws_data_server}&#39;)
                         while True:
                             try:
                                 record = self.send_queue.get_nowait()
@@ -397,6 +406,9 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
 
                 except BrokenPipeError:
                     pass
+                except AttributeError as e:
+                    logging.warning(&#39;CachedDataWriter websocket loop error: %s&#39;, e)
+                    await asyncio.sleep(0.1)
                 except websockets.exceptions.ConnectionClosed:
                     logging.warning(&#39;CachedDataWriter lost websocket connection to &#39;
                                     &#39;data server; trying to reconnect.&#39;)
@@ -647,7 +659,7 @@ field_name: [(timestamp, value), (timestamp, value),&hellip;],
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

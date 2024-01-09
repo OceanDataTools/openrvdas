@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.utils.record_parser_formats API documentation</title>
 <meta name="description" content="Custom format definitions for RecordParser …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -48,7 +48,8 @@ ow
 os
 = optional sequence of any characters - will match everything on line</p>
 <p>nlat = NMEA-formatted latitude or longitude, converted to decimal degrees</p>
-<p>nc = any ASCII text that is not a comma</p>
+<p>nc = any ASCII text that is not a comma
+ns = any ASCII text that is not an asterisk ("star")</p>
 <p>See 'Custom Type Conversions' in <a href="https://pypi.org/project/parse/">https://pypi.org/project/parse/</a> for a
 discussion of how format types work.</p>
 <p>TODO: allow device_type definitions to hand in their own format types.</p>
@@ -90,6 +91,7 @@ The recognized format types we add are:
   nlat = NMEA-formatted latitude or longitude, converted to decimal degrees
 
   nc = any ASCII text that is not a comma
+  ns = any ASCII text that is not an asterisk (&#34;star&#34;)
 
 See &#39;Custom Type Conversions&#39; in https://pypi.org/project/parse/ for a
 discussion of how format types work.
@@ -107,7 +109,7 @@ def optional_d(text):
         return None
 
 
-optional_d.pattern = r&#39;\s*\d*&#39;
+optional_d.pattern = r&#39;\s*[-+]?\d*&#39;
 
 
 def optional_f(text):
@@ -179,7 +181,7 @@ def nmea_lat_lon(text):
         return None
 
 
-nmea_lat_lon.pattern = r&#39;(\s*(\d+(\.\d*)?|\.\d+)?|)&#39;
+nmea_lat_lon.pattern = r&#39;(\s*[-]?(\d+(\.\d*)?|\.\d+)?|)&#39;
 
 
 def nmea_lat_lon_dir(text):
@@ -201,7 +203,7 @@ def nmea_lat_lon_dir(text):
             logging.warning(&#39;Improper NMEA-style latitude/longitude: &#34;%s&#34;&#39;, text)
             return None
         decimal_degrees = degrees + fractional_degrees
-        if dir in [&#39;E&#39;, &#39;S&#39;]:
+        if dir in [&#39;W&#39;, &#39;S&#39;]:
             decimal_degrees = -decimal_degrees
         return decimal_degrees
     else:
@@ -222,6 +224,19 @@ def not_comma(text):
 
 not_comma.pattern = r&#39;[^,]*&#39;
 
+
+def not_star(text):
+    &#34;&#34;&#34;Method for parsing a string (or anything) terminated by a &#34;*&#34;
+    &#34;&#34;&#34;
+    if text:
+        return text
+    else:
+        return None
+
+
+not_star.pattern = r&#39;[^\*]*&#39;
+
+
 extra_format_types = dict(
     od=optional_d,
     of=optional_f,
@@ -232,7 +247,8 @@ extra_format_types = dict(
     nlat=nmea_lat_lon,
     nlat_dir=nmea_lat_lon_dir,
 
-    nc=not_comma)</code></pre>
+    nc=not_comma,
+    ns=not_star)</code></pre>
 </details>
 </section>
 <section>
@@ -304,7 +320,7 @@ positive.</p></div>
             logging.warning(&#39;Improper NMEA-style latitude/longitude: &#34;%s&#34;&#39;, text)
             return None
         decimal_degrees = degrees + fractional_degrees
-        if dir in [&#39;E&#39;, &#39;S&#39;]:
+        if dir in [&#39;W&#39;, &#39;S&#39;]:
             decimal_degrees = -decimal_degrees
         return decimal_degrees
     else:
@@ -324,6 +340,24 @@ string.</p></div>
 <pre><code class="python">def not_comma(text):
     &#34;&#34;&#34;Method for parsing a string (or anything) between commas
     string.&#34;&#34;&#34;
+    if text:
+        return text
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="logger.utils.record_parser_formats.not_star"><code class="name flex">
+<span>def <span class="ident">not_star</span></span>(<span>text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Method for parsing a string (or anything) terminated by a "*"</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def not_star(text):
+    &#34;&#34;&#34;Method for parsing a string (or anything) terminated by a &#34;*&#34;
+    &#34;&#34;&#34;
     if text:
         return text
     else:
@@ -445,6 +479,7 @@ string.</p></div>
 <li><code><a title="logger.utils.record_parser_formats.nmea_lat_lon" href="#logger.utils.record_parser_formats.nmea_lat_lon">nmea_lat_lon</a></code></li>
 <li><code><a title="logger.utils.record_parser_formats.nmea_lat_lon_dir" href="#logger.utils.record_parser_formats.nmea_lat_lon_dir">nmea_lat_lon_dir</a></code></li>
 <li><code><a title="logger.utils.record_parser_formats.not_comma" href="#logger.utils.record_parser_formats.not_comma">not_comma</a></code></li>
+<li><code><a title="logger.utils.record_parser_formats.not_star" href="#logger.utils.record_parser_formats.not_star">not_star</a></code></li>
 <li><code><a title="logger.utils.record_parser_formats.optional_d" href="#logger.utils.record_parser_formats.optional_d">optional_d</a></code></li>
 <li><code><a title="logger.utils.record_parser_formats.optional_f" href="#logger.utils.record_parser_formats.optional_f">optional_f</a></code></li>
 <li><code><a title="logger.utils.record_parser_formats.optional_g" href="#logger.utils.record_parser_formats.optional_g">optional_g</a></code></li>
@@ -456,7 +491,7 @@ string.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

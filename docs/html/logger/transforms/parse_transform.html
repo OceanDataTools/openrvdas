@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.transforms.parse_transform API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -35,7 +35,6 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import record_parser  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
-
 ################################################################################
 class ParseTransform(Transform):
     &#34;&#34;&#34;Parse a &#34;&lt;data_id&gt; &lt;timestamp&gt; &lt;message&gt;&#34; record and return
@@ -44,8 +43,8 @@ class ParseTransform(Transform):
     def __init__(self, record_format=None, field_patterns=None, metadata=None,
                  definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                  return_json=False, return_das_record=False,
-                 metadata_interval=None, quiet=False, prepend_data_id=False,
-                 delimiter=&#39;:&#39;):
+                 metadata_interval=None, strip_unprintable=False, quiet=False,
+                 prepend_data_id=False, delimiter=&#39;:&#39;):
         &#34;&#34;&#34;
         ```
         record_format
@@ -77,6 +76,10 @@ class ParseTransform(Transform):
                 pertaining to each field in the returned record if those data
                 haven&#39;t been returned in the last metadata_interval seconds.
 
+        strip_unprintable
+                Strip out and ignore any leading or trailing non-printable binary
+                characters in the string to be parsed.
+
         quiet - if not False, don&#39;t complain when unable to parse a record.
 
         prepend_data_id
@@ -97,6 +100,7 @@ class ParseTransform(Transform):
             return_json=return_json,
             return_das_record=return_das_record,
             metadata_interval=metadata_interval,
+            strip_unprintable=strip_unprintable,
             quiet=quiet,
             prepend_data_id=prepend_data_id,
             delimiter=delimiter)
@@ -130,7 +134,7 @@ class ParseTransform(Transform):
 <dl>
 <dt id="logger.transforms.parse_transform.ParseTransform"><code class="flex name class">
 <span>class <span class="ident">ParseTransform</span></span>
-<span>(</span><span>record_format=None, field_patterns=None, metadata=None, definition_path='local/devices/*.yaml', return_json=False, return_das_record=False, metadata_interval=None, quiet=False, prepend_data_id=False, delimiter=':')</span>
+<span>(</span><span>record_format=None, field_patterns=None, metadata=None, definition_path='local/devices/*.yaml', return_json=False, return_das_record=False, metadata_interval=None, strip_unprintable=False, quiet=False, prepend_data_id=False, delimiter=':')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse a "<data_id> <timestamp> <message>" record and return
@@ -164,6 +168,10 @@ metadata_interval
         pertaining to each field in the returned record if those data
         haven't been returned in the last metadata_interval seconds.
 
+strip_unprintable
+        Strip out and ignore any leading or trailing non-printable binary
+        characters in the string to be parsed.
+
 quiet - if not False, don't complain when unable to parse a record.
 
 prepend_data_id
@@ -186,8 +194,8 @@ delimiter
     def __init__(self, record_format=None, field_patterns=None, metadata=None,
                  definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                  return_json=False, return_das_record=False,
-                 metadata_interval=None, quiet=False, prepend_data_id=False,
-                 delimiter=&#39;:&#39;):
+                 metadata_interval=None, strip_unprintable=False, quiet=False,
+                 prepend_data_id=False, delimiter=&#39;:&#39;):
         &#34;&#34;&#34;
         ```
         record_format
@@ -219,6 +227,10 @@ delimiter
                 pertaining to each field in the returned record if those data
                 haven&#39;t been returned in the last metadata_interval seconds.
 
+        strip_unprintable
+                Strip out and ignore any leading or trailing non-printable binary
+                characters in the string to be parsed.
+
         quiet - if not False, don&#39;t complain when unable to parse a record.
 
         prepend_data_id
@@ -239,6 +251,7 @@ delimiter
             return_json=return_json,
             return_das_record=return_das_record,
             metadata_interval=metadata_interval,
+            strip_unprintable=strip_unprintable,
             quiet=quiet,
             prepend_data_id=prepend_data_id,
             delimiter=delimiter)
@@ -331,7 +344,7 @@ delimiter
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.utils.record_parser API documentation</title>
 <meta name="description" content="Tools for parsing NMEA and other text records …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -68,8 +68,8 @@ class RecordParser:
                  field_patterns=None, metadata=None,
                  definition_path=DEFAULT_DEFINITION_PATH,
                  return_das_record=False, return_json=False,
-                 metadata_interval=None, quiet=False,
-                 prepend_data_id=False, delimiter=&#39;:&#39;):
+                 metadata_interval=None, strip_unprintable=False,
+                 quiet=False, prepend_data_id=False, delimiter=&#39;:&#39;):
         &#34;&#34;&#34;Create a parser that will parse field values out of a text record
         and return either a Python dict of data_id, timestamp and fields,
         a JSON encoding of that dict, or a binary DASRecord.
@@ -100,6 +100,10 @@ class RecordParser:
             record if those data haven&#39;t been returned in the last
             metadata_interval seconds.
 
+        strip_unprintable
+                Strip out and ignore any leading or trailing non-printable binary
+                characters in the string to be parsed.
+
         quiet - if not False, don&#39;t complain when unable to parse a record.
 
         prepend_data_id - If true prepend the instrument data_id to field_names
@@ -111,6 +115,7 @@ class RecordParser:
             Not used if prepend_data_id is false.
         ```
         &#34;&#34;&#34;
+        self.strip_unprintable = strip_unprintable
         self.quiet = quiet
         self.field_patterns = field_patterns
         self.metadata = metadata or {}
@@ -217,7 +222,8 @@ class RecordParser:
         if not record:
             return None
         if not isinstance(record, str):
-            logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
+            if not self.quiet:
+                logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
             return None
         try:
             # Break record into (by default) data_id, timestamp and field_string
@@ -240,9 +246,16 @@ class RecordParser:
 
         # If we don&#39;t have fields, there&#39;s nothing to parse
         if field_string is None:
+            if not self.quiet:
+                logging.warning(&#39;No field_string found in record &#34;%s&#34;&#39;, record)
             return None
+
+        if self.strip_unprintable:
+            field_string = &#39;&#39;.join([c for c in field_string if c.isprintable()])
         field_string = field_string.strip()
         if not field_string:
+            if not self.quiet:
+                logging.warning(&#39;No field_string found in record &#34;%s&#34;&#39;, record)
             return None
 
         fields = {}
@@ -250,6 +263,7 @@ class RecordParser:
         # If we&#39;ve been given a set of field_patterns to apply, use the
         # first that matches.
         if self.field_patterns:
+            data_id = None
             fields, message_type = self._parse_field_string(field_string,
                                                             self.compiled_field_patterns)
         # If we were given no explicit field_patterns to use, we need to
@@ -264,7 +278,7 @@ class RecordParser:
             fields, message_type = self.parse_for_data_id(data_id, field_string)
 
         # We should now have a dictionary of fields. If not, go home
-        if not fields:
+        if fields is None:
             if not self.quiet:
                 logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
             return None
@@ -330,8 +344,7 @@ class RecordParser:
     ############################
     def _parse_field_string(self, field_string, compiled_field_patterns):
         # Default if we don&#39;t match anything
-        fields = {}
-        message_type = None
+        fields = message_type = None
 
         # If our pattern(s) are just a single compiled parser, try parsing and
         # return with no message type.
@@ -344,7 +357,7 @@ class RecordParser:
         elif isinstance(compiled_field_patterns, list):
             for pattern in compiled_field_patterns:
                 fields, message_type = self._parse_field_string(field_string, pattern)
-                if fields:
+                if fields is not None:
                     break
 
         # If it&#39;s a dict, try out on all values, using the key as message type.
@@ -355,7 +368,7 @@ class RecordParser:
             for message_type, pattern in compiled_field_patterns.items():
                 fields, int_message_type = self._parse_field_string(field_string, pattern)
                 message_type = int_message_type or message_type
-                if fields:
+                if fields is not None:
                     break
         else:
             raise ValueError(&#39;Unexpected pattern type in parser: %s&#39;
@@ -370,7 +383,7 @@ class RecordParser:
         (field_dict, message_type), where field_dict is a dict of
         {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
         &#34;&#34;&#34;
-        failure_values = ({}, None)
+        failure_values = (None, None)
         if not self.devices:
             logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
             return failure_values
@@ -402,8 +415,10 @@ class RecordParser:
             self._parse_field_string(field_string, compiled_format_patterns)
 
         # Did we get anything?
-        if not parsed_fields and not self.quiet:
-            logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+        if parsed_fields is None:
+            if not self.quiet:
+                logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+            return failure_values
 
         logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
@@ -578,7 +593,7 @@ class RecordParser:
 <dl>
 <dt id="logger.utils.record_parser.RecordParser"><code class="flex name class">
 <span>class <span class="ident">RecordParser</span></span>
-<span>(</span><span>record_format=None, field_patterns=None, metadata=None, definition_path='local/devices/*.yaml', return_das_record=False, return_json=False, metadata_interval=None, quiet=False, prepend_data_id=False, delimiter=':')</span>
+<span>(</span><span>record_format=None, field_patterns=None, metadata=None, definition_path='local/devices/*.yaml', return_das_record=False, return_json=False, metadata_interval=None, strip_unprintable=False, quiet=False, prepend_data_id=False, delimiter=':')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a parser that will parse field values out of a text record
@@ -610,6 +625,10 @@ metadata_interval - if not None, include the description, units
     record if those data haven't been returned in the last
     metadata_interval seconds.
 
+strip_unprintable
+        Strip out and ignore any leading or trailing non-printable binary
+        characters in the string to be parsed.
+
 quiet - if not False, don't complain when unable to parse a record.
 
 prepend_data_id - If true prepend the instrument data_id to field_names
@@ -630,8 +649,8 @@ delimiter
                  field_patterns=None, metadata=None,
                  definition_path=DEFAULT_DEFINITION_PATH,
                  return_das_record=False, return_json=False,
-                 metadata_interval=None, quiet=False,
-                 prepend_data_id=False, delimiter=&#39;:&#39;):
+                 metadata_interval=None, strip_unprintable=False,
+                 quiet=False, prepend_data_id=False, delimiter=&#39;:&#39;):
         &#34;&#34;&#34;Create a parser that will parse field values out of a text record
         and return either a Python dict of data_id, timestamp and fields,
         a JSON encoding of that dict, or a binary DASRecord.
@@ -662,6 +681,10 @@ delimiter
             record if those data haven&#39;t been returned in the last
             metadata_interval seconds.
 
+        strip_unprintable
+                Strip out and ignore any leading or trailing non-printable binary
+                characters in the string to be parsed.
+
         quiet - if not False, don&#39;t complain when unable to parse a record.
 
         prepend_data_id - If true prepend the instrument data_id to field_names
@@ -673,6 +696,7 @@ delimiter
             Not used if prepend_data_id is false.
         ```
         &#34;&#34;&#34;
+        self.strip_unprintable = strip_unprintable
         self.quiet = quiet
         self.field_patterns = field_patterns
         self.metadata = metadata or {}
@@ -779,7 +803,8 @@ delimiter
         if not record:
             return None
         if not isinstance(record, str):
-            logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
+            if not self.quiet:
+                logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
             return None
         try:
             # Break record into (by default) data_id, timestamp and field_string
@@ -802,9 +827,16 @@ delimiter
 
         # If we don&#39;t have fields, there&#39;s nothing to parse
         if field_string is None:
+            if not self.quiet:
+                logging.warning(&#39;No field_string found in record &#34;%s&#34;&#39;, record)
             return None
+
+        if self.strip_unprintable:
+            field_string = &#39;&#39;.join([c for c in field_string if c.isprintable()])
         field_string = field_string.strip()
         if not field_string:
+            if not self.quiet:
+                logging.warning(&#39;No field_string found in record &#34;%s&#34;&#39;, record)
             return None
 
         fields = {}
@@ -812,6 +844,7 @@ delimiter
         # If we&#39;ve been given a set of field_patterns to apply, use the
         # first that matches.
         if self.field_patterns:
+            data_id = None
             fields, message_type = self._parse_field_string(field_string,
                                                             self.compiled_field_patterns)
         # If we were given no explicit field_patterns to use, we need to
@@ -826,7 +859,7 @@ delimiter
             fields, message_type = self.parse_for_data_id(data_id, field_string)
 
         # We should now have a dictionary of fields. If not, go home
-        if not fields:
+        if fields is None:
             if not self.quiet:
                 logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
             return None
@@ -892,8 +925,7 @@ delimiter
     ############################
     def _parse_field_string(self, field_string, compiled_field_patterns):
         # Default if we don&#39;t match anything
-        fields = {}
-        message_type = None
+        fields = message_type = None
 
         # If our pattern(s) are just a single compiled parser, try parsing and
         # return with no message type.
@@ -906,7 +938,7 @@ delimiter
         elif isinstance(compiled_field_patterns, list):
             for pattern in compiled_field_patterns:
                 fields, message_type = self._parse_field_string(field_string, pattern)
-                if fields:
+                if fields is not None:
                     break
 
         # If it&#39;s a dict, try out on all values, using the key as message type.
@@ -917,7 +949,7 @@ delimiter
             for message_type, pattern in compiled_field_patterns.items():
                 fields, int_message_type = self._parse_field_string(field_string, pattern)
                 message_type = int_message_type or message_type
-                if fields:
+                if fields is not None:
                     break
         else:
             raise ValueError(&#39;Unexpected pattern type in parser: %s&#39;
@@ -932,7 +964,7 @@ delimiter
         (field_dict, message_type), where field_dict is a dict of
         {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
         &#34;&#34;&#34;
-        failure_values = ({}, None)
+        failure_values = (None, None)
         if not self.devices:
             logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
             return failure_values
@@ -964,8 +996,10 @@ delimiter
             self._parse_field_string(field_string, compiled_format_patterns)
 
         # Did we get anything?
-        if not parsed_fields and not self.quiet:
-            logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+        if parsed_fields is None:
+            if not self.quiet:
+                logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+            return failure_values
 
         logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
@@ -1148,7 +1182,7 @@ according to those formats. If successful, return a tuple of
     (field_dict, message_type), where field_dict is a dict of
     {field_name: field_value}. Return ({}, None) if unable to match a format pattern.
     &#34;&#34;&#34;
-    failure_values = ({}, None)
+    failure_values = (None, None)
     if not self.devices:
         logging.warning(&#39;RecordParser has no device definitions; unable to parse!&#39;)
         return failure_values
@@ -1180,8 +1214,10 @@ according to those formats. If successful, return a tuple of
         self._parse_field_string(field_string, compiled_format_patterns)
 
     # Did we get anything?
-    if not parsed_fields and not self.quiet:
-        logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+    if parsed_fields is None:
+        if not self.quiet:
+            logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
+        return failure_values
 
     logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
@@ -1228,7 +1264,8 @@ timestamp and fields.</p></div>
     if not record:
         return None
     if not isinstance(record, str):
-        logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
+        if not self.quiet:
+            logging.info(&#39;Record is not a string: &#34;%s&#34;&#39;, record)
         return None
     try:
         # Break record into (by default) data_id, timestamp and field_string
@@ -1251,9 +1288,16 @@ timestamp and fields.</p></div>
 
     # If we don&#39;t have fields, there&#39;s nothing to parse
     if field_string is None:
+        if not self.quiet:
+            logging.warning(&#39;No field_string found in record &#34;%s&#34;&#39;, record)
         return None
+
+    if self.strip_unprintable:
+        field_string = &#39;&#39;.join([c for c in field_string if c.isprintable()])
     field_string = field_string.strip()
     if not field_string:
+        if not self.quiet:
+            logging.warning(&#39;No field_string found in record &#34;%s&#34;&#39;, record)
         return None
 
     fields = {}
@@ -1261,6 +1305,7 @@ timestamp and fields.</p></div>
     # If we&#39;ve been given a set of field_patterns to apply, use the
     # first that matches.
     if self.field_patterns:
+        data_id = None
         fields, message_type = self._parse_field_string(field_string,
                                                         self.compiled_field_patterns)
     # If we were given no explicit field_patterns to use, we need to
@@ -1275,7 +1320,7 @@ timestamp and fields.</p></div>
         fields, message_type = self.parse_for_data_id(data_id, field_string)
 
     # We should now have a dictionary of fields. If not, go home
-    if not fields:
+    if fields is None:
         if not self.quiet:
             logging.warning(&#39;No formats matched field_string &#34;%s&#34;&#39;, field_string)
         return None
@@ -1370,7 +1415,7 @@ timestamp and fields.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

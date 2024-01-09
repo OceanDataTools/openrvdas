@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>server.cached_data_server API documentation</title>
 <meta name="description" content="Accept data in DASRecord or dict format via the cache_record() method,
 then serve it to anyone who connects via a websocket. A
@@ -59,7 +59,7 @@ serve_requests() for insight):</p>
          'fields' is omitted, return a dict of metadata for *all* fields
    {'type':'subscribe',
     'fields':{'field_1':{'seconds':50},
-              'field_2':{'seconds':0},
+              'field_2':{'seconds':0, 'back_records':10},
               'field_3':{'seconds':-1}}}
        - subscribe to updates for field_1, field_2 and field_3. Allowable
          values for 'seconds':
@@ -67,6 +67,11 @@ serve_requests() for insight):</p>
            -1  - provide the most recent value, and then all future new ones
            num - provide num seconds of back data, then all future new ones
          If 'seconds' is missing, use '0' as the default.
+
+         If 'back_records' is present it must be a number greater than or equal
+         to zero. If present and non-zero, the CDS will try to provide at least
+         that many &quot;back records&quot; when it first returns, even if it has to go
+         back further than the interval specified in 'seconds'.
    {'type':'ready'}
        - indicate that client is ready to receive the next set of updates
          for subscribed fields.
@@ -124,7 +129,7 @@ says to
          &#39;fields&#39; is omitted, return a dict of metadata for *all* fields
    {&#39;type&#39;:&#39;subscribe&#39;,
     &#39;fields&#39;:{&#39;field_1&#39;:{&#39;seconds&#39;:50},
-              &#39;field_2&#39;:{&#39;seconds&#39;:0},
+              &#39;field_2&#39;:{&#39;seconds&#39;:0, &#39;back_records&#39;:10},
               &#39;field_3&#39;:{&#39;seconds&#39;:-1}}}
        - subscribe to updates for field_1, field_2 and field_3. Allowable
          values for &#39;seconds&#39;:
@@ -132,6 +137,11 @@ says to
            -1  - provide the most recent value, and then all future new ones
            num - provide num seconds of back data, then all future new ones
          If &#39;seconds&#39; is missing, use &#39;0&#39; as the default.
+
+         If &#39;back_records&#39; is present it must be a number greater than or equal
+         to zero. If present and non-zero, the CDS will try to provide at least
+         that many &#34;back records&#34; when it first returns, even if it has to go
+         back further than the interval specified in &#39;seconds&#39;.
    {&#39;type&#39;:&#39;ready&#39;}
        - indicate that client is ready to receive the next set of updates
          for subscribed fields.
@@ -152,6 +162,11 @@ import sys
 import threading
 import time
 import websockets
+
+try:
+    from websockets.exceptions import ConnectionClosed
+except ImportError:
+    from websockets.connection import ConnectionClosed
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
@@ -327,11 +342,11 @@ class RecordCache:
                 return self.metadata
 
     ############################
-    def cleanup(self, oldest=0, max_records=0):
+    def cleanup(self, oldest=0, max_records=0, min_back_records=0):
         &#34;&#34;&#34;Remove any data from cache with a timestamp older than &#39;oldest&#39;
         seconds, but keep at least one (most recent) value.
         If max_records is non-zero, truncate to that many of the most
-        recent records.
+        recent records. Always, though, keep at least min_back_records.
         &#34;&#34;&#34;
         logging.debug(&#39;Cleaning up cache&#39;)
         fields = self.keys()
@@ -341,17 +356,20 @@ class RecordCache:
             with self.locks[field]:
                 value_list = self.data[field]
 
+                if len(value_list) &lt;= min_back_records:
+                    continue
+
                 # If max_records is specified, truncate to keep that many of
                 # most recent records.
-                if max_records and len(value_list) &gt; max_records:
-                    # logging.warning(&#39;Truncating %s %d-&gt;%d records&#39;, field,
-                    #                len(value_list), max_records)
+                if max_records &gt; min_back_records and len(value_list) &gt; max_records:
                     value_list = value_list[-max_records:]
 
-                for i in range(
-                        len(value_list)):  # Iterate until find value that&#39;s
-                    if value_list[i][0] &gt; oldest:  # not too old
+                # Iterate until find value that&#39;s not too old, but leave at least
+                # min_back_records.
+                for i in range(len(value_list) - min_back_records):
+                    if value_list[i][0] &gt; oldest:
                         break
+
                 # But keep at least one value
                 last_index = min(i, len(value_list) - 1)
                 self.data[field] = value_list[last_index:]
@@ -423,6 +441,7 @@ class RecordCache:
                     logging.warning(&#39;Failed to parse cache for %s&#39;, field)
         except OSError as e:
             logging.error(&#39;Unable to access disk cache at %s: %s&#39;, disk_cache, e)
+
 
 ############################
 class WebSocketConnection:
@@ -496,13 +515,14 @@ class WebSocketConnection:
         subscribe - look for a field called &#39;fields&#39; in the request whose
             value is a dict of the format
             ```
-              {field_name:{seconds:600}, field_name:{seconds:0},...}
+              {field_name:{seconds:600, back_records:10},
+               field_name:{seconds:0},...}
             ```
             The entire specification may also have a field called
             &#39;interval&#39;, specifying how often server should provide
             updates. Will default to what was specified on command line
             with --interval flag (which itself defaults to 1 second
-            intervals):
+            intervals).
             ```
             ```
             A subscription will instruct the CachedDataServer to begin
@@ -524,13 +544,13 @@ class WebSocketConnection:
         ```
         &#34;&#34;&#34;
         # The field details specified in a subscribe request
-        raw_requested_fields = {}
+        requested_fields = {}
 
-        # A map from field_name:latest_timestamp_sent. If
-        # latest_timestamp_sent is -1, then we&#39;ll always send just the
-        # most recent value we have for the field, regardless of how many
-        # there are, or whether we&#39;ve sent it before.
+        # A map from field_name:latest_timestamp_sent. If latest_timestamp_sent is -1
+        # then we&#39;ll always send just the most recent value we have for the field,
+        # regardless of how many there are, or whether we&#39;ve sent it before.
         field_timestamps = {}
+
         interval = self.interval  # Use the default interval, uh, by default
 
         while not self.quit_flag:
@@ -626,32 +646,90 @@ class WebSocketConnection:
                     # requested_fields dict.
 
                     now = time.time()
-                    field_timestamps = {}
+
+                    # Reset requested field_timestamps and field_back_records
                     requested_fields = {}
+                    field_timestamps = {}    # last timestamp seen
 
+                    logging.debug(&#39;Subscription requested&#39;)
                     for field_name, field_spec in raw_requested_fields.items():
-
-                        matching_field_names = self.get_matching_field_names(
-                            field_name)
+                        matching_field_names = self.get_matching_field_names(field_name)
 
                         for matching_field_name in matching_field_names:
                             requested_fields[matching_field_name] = field_spec
-
                             # If we don&#39;t have a field spec dict
-                            if not isinstance(field_spec, dict):
-                                back_seconds = 0
-                            else:
+                            if isinstance(field_spec, dict):
+                                back_records = field_spec.get(&#39;back_records&#39;, 0)
                                 back_seconds = field_spec.get(&#39;seconds&#39;, 0)
-
-                            if back_seconds == -1:
-                                field_timestamps[matching_field_name] = -1
                             else:
-                                field_timestamps[matching_field_name] = now - \
-                                    back_seconds
+                                back_records = 0
+                                back_seconds = 0
+
+                            # Now figure out what&#39;s the latest timestamp we have for this
+                            # field name that respects the back_records and back_seconds
+                            # specification.
+                            field_timestamps[matching_field_name] = 0  # if nothing else
+
+                            if field_name not in self.cache.locks:
+                                logging.debug(&#39;No data for requested field %s&#39;, matching_field_name)
+                                continue
+                            with self.cache.locks[field_name]:
+                                field_cache = self.cache.data.get(matching_field_name, None)
+                                if field_cache is None:
+                                    logging.debug(&#39;No cached data for %s&#39;, matching_field_name)
+                                    continue
+
+                                logging.debug(&#39;    %s: %d records available; %d requested, &#39;
+                                              &#39;%d seconds&#39;, matching_field_name, len(field_cache),
+                                              back_records, back_seconds)
+                                # If no data for requested field, skip.
+                                if not field_cache or not field_cache[-1]:
+                                    continue
+
+                                # If special case 0, they only want records that come after
+                                # this point in time. Set the  last timestamp seen as the
+                                # most-recently seen timestamp, or zero if no entries.
+                                if back_seconds == 0:
+                                    if len(field_cache) &gt; 0:
+                                        field_timestamps[matching_field_name] = field_cache[-1][0]
+                                    else:
+                                        field_timestamps[matching_field_name] = 0
+                                    continue
+
+                                # If special case -1, they want just single most recent
+                                # value. Set the last timestamp seen as the second to last
+                                # timestamp if multiple entries, or as zero, if only 1.
+                                if back_seconds == -1:
+                                    if len(field_cache) &gt; 1:
+                                        field_timestamps[matching_field_name] = field_cache[-2][0]
+                                    else:
+                                        field_timestamps[matching_field_name] = 0
+                                    continue
+
+                                # We&#39;ve been told to return at least &#39;back_records&#39; records; if
+                                # there aren&#39;t at least that many, leave field_timestamps[field]
+                                # at zero to return all we&#39;ve got.
+                                if len(field_cache) &lt;= back_records:
+                                    continue
+
+                                # If here, we&#39;ve got at least &#39;back_records&#39; records, and want to
+                                # search backward to include the last &#39;back_seconds&#39; seconds of
+                                # them. Could do more efficiently with some sort of binary search.
+                                this_record_index = len(field_cache) - back_records - 1
+                                while this_record_index &gt;= 0:
+                                    # Recall that each element is (timestamp, value)
+                                    this_timestamp = field_cache[this_record_index][0]
+
+                                    if now - this_timestamp &gt; back_seconds:
+                                        # Set our &#39;last seen&#39; timestamp as timestamp of previous
+                                        # record and stop looking.
+                                        prev_timestamp = field_cache[this_record_index-1][0]
+                                        field_timestamps[matching_field_name] = prev_timestamp
+                                        break
+                                    this_record_index -= 1
 
                     if raw_requested_fields and not requested_fields:
-                        logging.info(
-                            &#39;Request doesn\&#39;t match any existing fields&#39;)
+                        logging.info(&#39;Request doesn\&#39;t match any existing fields&#39;)
 
                     # Let client know request succeeded
                     await self.send_json_response({&#39;type&#39;: &#39;subscribe&#39;, &#39;status&#39;: 200})
@@ -677,14 +755,11 @@ class WebSocketConnection:
                     if requested_format == &#39;field_dict&#39;:
                         for field_name, field_spec in requested_fields.items():
                             if field_name not in self.cache.locks:
-                                logging.debug(
-                                    &#39;No data for requested field %s&#39;, field_name)
+                                logging.debug(&#39;No data for requested field %s&#39;, field_name)
                                 continue
+
                             with self.cache.locks[field_name]:
-                                latest_timestamp = field_timestamps.get(
-                                    field_name, 0)
-                                field_cache = self.cache.data.get(
-                                    field_name, None)
+                                field_cache = self.cache.data.get(field_name, None)
                                 if field_cache is None:
                                     logging.debug(
                                         &#39;No cached data for %s&#39;, field_name)
@@ -697,7 +772,8 @@ class WebSocketConnection:
                                 # If special case -1, they want just single most recent
                                 # value, then future results. Grab last value, then set its
                                 # timestamp as the last one we&#39;ve seen.
-                                elif latest_timestamp == -1:
+                                back_seconds = field_spec.get(&#39;back_seconds&#39;, 0)
+                                if back_seconds == -1:
                                     last_value = field_cache[-1]
                                     results[field_name] = [last_value]
                                     # ts of last value
@@ -706,18 +782,18 @@ class WebSocketConnection:
 
                                 # Otherwise - if no data newer than the latest
                                 # timestamp we&#39;ve already sent, skip,
-                                elif not field_cache[-1][0] &gt; latest_timestamp:
+                                latest_timestamp = field_timestamps.get(field_name, 0)
+                                if not field_cache[-1][0] &gt; latest_timestamp:
                                     continue
 
                                 # Otherwise, copy over records arrived since
                                 # latest_timestamp and update the latest_timestamp sent
                                 # (first element of last pair in field_cache).
-                                else:
-                                    field_results = [
-                                        pair for pair in field_cache if pair[0] &gt; latest_timestamp]
-                                    results[field_name] = field_results
-                                    if field_results:
-                                        field_timestamps[field_name] = field_results[-1][0]
+                                field_results = [
+                                    pair for pair in field_cache if pair[0] &gt; latest_timestamp]
+                                results[field_name] = field_results
+                                if field_results:
+                                    field_timestamps[field_name] = field_results[-1][0]
 
                     ##########
                     # If not outputting data as a field dict, output as a list
@@ -824,7 +900,7 @@ class WebSocketConnection:
                 logging.warning(&#39;unparseable JSON: %s&#39;, raw_request)
 
             # If our connection closed, complain and exit gracefully
-            except websockets.exceptions.ConnectionClosed:
+            except ConnectionClosed:
                 logging.info(&#39;Client closed connection&#39;)
                 self.quit()
 
@@ -872,6 +948,7 @@ class CachedDataServer:
             interval=1,
             back_seconds=60 * 60,
             max_records=60 * 24,
+            min_back_records=100,
             cleanup_interval=60,
             disk_cache=None,
             event_loop=None):
@@ -881,7 +958,9 @@ class CachedDataServer:
         back_seconds
                      How many seconds of back data to retain
         max_records
-                     Maximum number of records to store for each variable.
+                     Maximum number of records to store for each variable
+        min_back_records
+                     Minimum number of back records to keep when purging old data
         cleanup_interval
                      How many seconds between calls to cleanup old cache entries
                      and save to disk (if disk_cache is specified)
@@ -893,6 +972,7 @@ class CachedDataServer:
         self.interval = interval
         self.back_seconds = back_seconds
         self.max_records = max_records
+        self.min_back_records = min_back_records
         self.cleanup_interval = cleanup_interval
         self.event_loop = event_loop
 
@@ -951,7 +1031,8 @@ class CachedDataServer:
 
             # What&#39;s the oldest record we should retain?
             oldest = time.time() - self.back_seconds
-            self.cache.cleanup(oldest=oldest, max_records=self.max_records)
+            self.cache.cleanup(oldest=oldest, max_records=self.max_records,
+                               min_back_records=self.min_back_records)
 
             # If we&#39;re using a disk cache, save things now
             if self.disk_cache:
@@ -1034,7 +1115,7 @@ class CachedDataServer:
         # If client disconnects, tell connection to quit
         try:
             await connection.serve_requests()
-        except websockets.ConnectionClosed:
+        except ConnectionClosed:
             logging.warning(&#39;client disconnected&#39;)
         except KeyboardInterrupt:
             logging.warning(&#39;Keyboard Interrupt&#39;)
@@ -1072,13 +1153,13 @@ if __name__ == &#39;__main__&#39;:
                         help=&#39;Maximum number of seconds of old data to keep &#39;
                         &#39;for serving to new clients.&#39;)
 
-    parser.add_argument(
-        &#39;--max_records&#39;,
-        dest=&#39;max_records&#39;,
-        action=&#39;store&#39;,
-        type=int,
-        default=24 * 60 * 2,
-        help=&#39;Maximum number of records to store per variable.&#39;)
+    parser.add_argument(&#39;--max_records&#39;, dest=&#39;max_records&#39;, action=&#39;store&#39;,
+                        type=int, default=24 * 60 * 2,
+                        help=&#39;Maximum number of records to store per variable.&#39;)
+
+    parser.add_argument(&#39;--min_back_records&#39;, dest=&#39;min_back_records&#39;, action=&#39;store&#39;,
+                        type=float, default=64,
+                        help=&#39;Minimum number of back records to keep when purging old data.&#39;)
 
     parser.add_argument(&#39;--cleanup_interval&#39;, dest=&#39;cleanup_interval&#39;,
                         action=&#39;store&#39;, type=float, default=60,
@@ -1114,6 +1195,7 @@ if __name__ == &#39;__main__&#39;:
                               interval=args.interval,
                               back_seconds=args.back_seconds,
                               max_records=args.max_records,
+                              min_back_records=args.min_back_records,
                               cleanup_interval=args.cleanup_interval,
                               disk_cache=args.disk_cache)
 
@@ -1161,7 +1243,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="server.cached_data_server.CachedDataServer"><code class="flex name class">
 <span>class <span class="ident">CachedDataServer</span></span>
-<span>(</span><span>port, interval=1, back_seconds=3600, max_records=1440, cleanup_interval=60, disk_cache=None, event_loop=None)</span>
+<span>(</span><span>port, interval=1, back_seconds=3600, max_records=1440, min_back_records=100, cleanup_interval=60, disk_cache=None, event_loop=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class that caches field:value pairs passed to it in either a
@@ -1201,7 +1283,9 @@ How frequently to serve updates
 back_seconds
 How many seconds of back data to retain
 max_records
-Maximum number of records to store for each variable.
+Maximum number of records to store for each variable
+min_back_records
+Minimum number of back records to keep when purging old data
 cleanup_interval
 How many seconds between calls to cleanup old cache entries
 and save to disk (if disk_cache is specified)
@@ -1256,6 +1340,7 @@ If not None, the event loop to use for websocket events</p></div>
             interval=1,
             back_seconds=60 * 60,
             max_records=60 * 24,
+            min_back_records=100,
             cleanup_interval=60,
             disk_cache=None,
             event_loop=None):
@@ -1265,7 +1350,9 @@ If not None, the event loop to use for websocket events</p></div>
         back_seconds
                      How many seconds of back data to retain
         max_records
-                     Maximum number of records to store for each variable.
+                     Maximum number of records to store for each variable
+        min_back_records
+                     Minimum number of back records to keep when purging old data
         cleanup_interval
                      How many seconds between calls to cleanup old cache entries
                      and save to disk (if disk_cache is specified)
@@ -1277,6 +1364,7 @@ If not None, the event loop to use for websocket events</p></div>
         self.interval = interval
         self.back_seconds = back_seconds
         self.max_records = max_records
+        self.min_back_records = min_back_records
         self.cleanup_interval = cleanup_interval
         self.event_loop = event_loop
 
@@ -1335,7 +1423,8 @@ If not None, the event loop to use for websocket events</p></div>
 
             # What&#39;s the oldest record we should retain?
             oldest = time.time() - self.back_seconds
-            self.cache.cleanup(oldest=oldest, max_records=self.max_records)
+            self.cache.cleanup(oldest=oldest, max_records=self.max_records,
+                               min_back_records=self.min_back_records)
 
             # If we&#39;re using a disk cache, save things now
             if self.disk_cache:
@@ -1418,7 +1507,7 @@ If not None, the event loop to use for websocket events</p></div>
         # If client disconnects, tell connection to quit
         try:
             await connection.serve_requests()
-        except websockets.ConnectionClosed:
+        except ConnectionClosed:
             logging.warning(&#39;client disconnected&#39;)
         except KeyboardInterrupt:
             logging.warning(&#39;Keyboard Interrupt&#39;)
@@ -1458,7 +1547,8 @@ If not None, the event loop to use for websocket events</p></div>
 
         # What&#39;s the oldest record we should retain?
         oldest = time.time() - self.back_seconds
-        self.cache.cleanup(oldest=oldest, max_records=self.max_records)
+        self.cache.cleanup(oldest=oldest, max_records=self.max_records,
+                           min_back_records=self.min_back_records)
 
         # If we&#39;re using a disk cache, save things now
         if self.disk_cache:
@@ -1671,11 +1761,11 @@ If not None, the event loop to use for websocket events</p></div>
                 return self.metadata
 
     ############################
-    def cleanup(self, oldest=0, max_records=0):
+    def cleanup(self, oldest=0, max_records=0, min_back_records=0):
         &#34;&#34;&#34;Remove any data from cache with a timestamp older than &#39;oldest&#39;
         seconds, but keep at least one (most recent) value.
         If max_records is non-zero, truncate to that many of the most
-        recent records.
+        recent records. Always, though, keep at least min_back_records.
         &#34;&#34;&#34;
         logging.debug(&#39;Cleaning up cache&#39;)
         fields = self.keys()
@@ -1685,17 +1775,20 @@ If not None, the event loop to use for websocket events</p></div>
             with self.locks[field]:
                 value_list = self.data[field]
 
+                if len(value_list) &lt;= min_back_records:
+                    continue
+
                 # If max_records is specified, truncate to keep that many of
                 # most recent records.
-                if max_records and len(value_list) &gt; max_records:
-                    # logging.warning(&#39;Truncating %s %d-&gt;%d records&#39;, field,
-                    #                len(value_list), max_records)
+                if max_records &gt; min_back_records and len(value_list) &gt; max_records:
                     value_list = value_list[-max_records:]
 
-                for i in range(
-                        len(value_list)):  # Iterate until find value that&#39;s
-                    if value_list[i][0] &gt; oldest:  # not too old
+                # Iterate until find value that&#39;s not too old, but leave at least
+                # min_back_records.
+                for i in range(len(value_list) - min_back_records):
+                    if value_list[i][0] &gt; oldest:
                         break
+
                 # But keep at least one value
                 last_index = min(i, len(value_list) - 1)
                 self.data[field] = value_list[last_index:]
@@ -1958,22 +2051,22 @@ RecordParser (and its enclosing ParseTransform) if the parser's
 </details>
 </dd>
 <dt id="server.cached_data_server.RecordCache.cleanup"><code class="name flex">
-<span>def <span class="ident">cleanup</span></span>(<span>self, oldest=0, max_records=0)</span>
+<span>def <span class="ident">cleanup</span></span>(<span>self, oldest=0, max_records=0, min_back_records=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove any data from cache with a timestamp older than 'oldest'
 seconds, but keep at least one (most recent) value.
 If max_records is non-zero, truncate to that many of the most
-recent records.</p></div>
+recent records. Always, though, keep at least min_back_records.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cleanup(self, oldest=0, max_records=0):
+<pre><code class="python">def cleanup(self, oldest=0, max_records=0, min_back_records=0):
     &#34;&#34;&#34;Remove any data from cache with a timestamp older than &#39;oldest&#39;
     seconds, but keep at least one (most recent) value.
     If max_records is non-zero, truncate to that many of the most
-    recent records.
+    recent records. Always, though, keep at least min_back_records.
     &#34;&#34;&#34;
     logging.debug(&#39;Cleaning up cache&#39;)
     fields = self.keys()
@@ -1983,17 +2076,20 @@ recent records.</p></div>
         with self.locks[field]:
             value_list = self.data[field]
 
+            if len(value_list) &lt;= min_back_records:
+                continue
+
             # If max_records is specified, truncate to keep that many of
             # most recent records.
-            if max_records and len(value_list) &gt; max_records:
-                # logging.warning(&#39;Truncating %s %d-&gt;%d records&#39;, field,
-                #                len(value_list), max_records)
+            if max_records &gt; min_back_records and len(value_list) &gt; max_records:
                 value_list = value_list[-max_records:]
 
-            for i in range(
-                    len(value_list)):  # Iterate until find value that&#39;s
-                if value_list[i][0] &gt; oldest:  # not too old
+            # Iterate until find value that&#39;s not too old, but leave at least
+            # min_back_records.
+            for i in range(len(value_list) - min_back_records):
+                if value_list[i][0] &gt; oldest:
                     break
+
             # But keep at least one value
             last_index = min(i, len(value_list) - 1)
             self.data[field] = value_list[last_index:]</code></pre>
@@ -2206,13 +2302,14 @@ by disk_cache.</p></div>
         subscribe - look for a field called &#39;fields&#39; in the request whose
             value is a dict of the format
             ```
-              {field_name:{seconds:600}, field_name:{seconds:0},...}
+              {field_name:{seconds:600, back_records:10},
+               field_name:{seconds:0},...}
             ```
             The entire specification may also have a field called
             &#39;interval&#39;, specifying how often server should provide
             updates. Will default to what was specified on command line
             with --interval flag (which itself defaults to 1 second
-            intervals):
+            intervals).
             ```
             ```
             A subscription will instruct the CachedDataServer to begin
@@ -2234,13 +2331,13 @@ by disk_cache.</p></div>
         ```
         &#34;&#34;&#34;
         # The field details specified in a subscribe request
-        raw_requested_fields = {}
+        requested_fields = {}
 
-        # A map from field_name:latest_timestamp_sent. If
-        # latest_timestamp_sent is -1, then we&#39;ll always send just the
-        # most recent value we have for the field, regardless of how many
-        # there are, or whether we&#39;ve sent it before.
+        # A map from field_name:latest_timestamp_sent. If latest_timestamp_sent is -1
+        # then we&#39;ll always send just the most recent value we have for the field,
+        # regardless of how many there are, or whether we&#39;ve sent it before.
         field_timestamps = {}
+
         interval = self.interval  # Use the default interval, uh, by default
 
         while not self.quit_flag:
@@ -2336,32 +2433,90 @@ by disk_cache.</p></div>
                     # requested_fields dict.
 
                     now = time.time()
-                    field_timestamps = {}
+
+                    # Reset requested field_timestamps and field_back_records
                     requested_fields = {}
+                    field_timestamps = {}    # last timestamp seen
 
+                    logging.debug(&#39;Subscription requested&#39;)
                     for field_name, field_spec in raw_requested_fields.items():
-
-                        matching_field_names = self.get_matching_field_names(
-                            field_name)
+                        matching_field_names = self.get_matching_field_names(field_name)
 
                         for matching_field_name in matching_field_names:
                             requested_fields[matching_field_name] = field_spec
-
                             # If we don&#39;t have a field spec dict
-                            if not isinstance(field_spec, dict):
-                                back_seconds = 0
-                            else:
+                            if isinstance(field_spec, dict):
+                                back_records = field_spec.get(&#39;back_records&#39;, 0)
                                 back_seconds = field_spec.get(&#39;seconds&#39;, 0)
-
-                            if back_seconds == -1:
-                                field_timestamps[matching_field_name] = -1
                             else:
-                                field_timestamps[matching_field_name] = now - \
-                                    back_seconds
+                                back_records = 0
+                                back_seconds = 0
+
+                            # Now figure out what&#39;s the latest timestamp we have for this
+                            # field name that respects the back_records and back_seconds
+                            # specification.
+                            field_timestamps[matching_field_name] = 0  # if nothing else
+
+                            if field_name not in self.cache.locks:
+                                logging.debug(&#39;No data for requested field %s&#39;, matching_field_name)
+                                continue
+                            with self.cache.locks[field_name]:
+                                field_cache = self.cache.data.get(matching_field_name, None)
+                                if field_cache is None:
+                                    logging.debug(&#39;No cached data for %s&#39;, matching_field_name)
+                                    continue
+
+                                logging.debug(&#39;    %s: %d records available; %d requested, &#39;
+                                              &#39;%d seconds&#39;, matching_field_name, len(field_cache),
+                                              back_records, back_seconds)
+                                # If no data for requested field, skip.
+                                if not field_cache or not field_cache[-1]:
+                                    continue
+
+                                # If special case 0, they only want records that come after
+                                # this point in time. Set the  last timestamp seen as the
+                                # most-recently seen timestamp, or zero if no entries.
+                                if back_seconds == 0:
+                                    if len(field_cache) &gt; 0:
+                                        field_timestamps[matching_field_name] = field_cache[-1][0]
+                                    else:
+                                        field_timestamps[matching_field_name] = 0
+                                    continue
+
+                                # If special case -1, they want just single most recent
+                                # value. Set the last timestamp seen as the second to last
+                                # timestamp if multiple entries, or as zero, if only 1.
+                                if back_seconds == -1:
+                                    if len(field_cache) &gt; 1:
+                                        field_timestamps[matching_field_name] = field_cache[-2][0]
+                                    else:
+                                        field_timestamps[matching_field_name] = 0
+                                    continue
+
+                                # We&#39;ve been told to return at least &#39;back_records&#39; records; if
+                                # there aren&#39;t at least that many, leave field_timestamps[field]
+                                # at zero to return all we&#39;ve got.
+                                if len(field_cache) &lt;= back_records:
+                                    continue
+
+                                # If here, we&#39;ve got at least &#39;back_records&#39; records, and want to
+                                # search backward to include the last &#39;back_seconds&#39; seconds of
+                                # them. Could do more efficiently with some sort of binary search.
+                                this_record_index = len(field_cache) - back_records - 1
+                                while this_record_index &gt;= 0:
+                                    # Recall that each element is (timestamp, value)
+                                    this_timestamp = field_cache[this_record_index][0]
+
+                                    if now - this_timestamp &gt; back_seconds:
+                                        # Set our &#39;last seen&#39; timestamp as timestamp of previous
+                                        # record and stop looking.
+                                        prev_timestamp = field_cache[this_record_index-1][0]
+                                        field_timestamps[matching_field_name] = prev_timestamp
+                                        break
+                                    this_record_index -= 1
 
                     if raw_requested_fields and not requested_fields:
-                        logging.info(
-                            &#39;Request doesn\&#39;t match any existing fields&#39;)
+                        logging.info(&#39;Request doesn\&#39;t match any existing fields&#39;)
 
                     # Let client know request succeeded
                     await self.send_json_response({&#39;type&#39;: &#39;subscribe&#39;, &#39;status&#39;: 200})
@@ -2387,14 +2542,11 @@ by disk_cache.</p></div>
                     if requested_format == &#39;field_dict&#39;:
                         for field_name, field_spec in requested_fields.items():
                             if field_name not in self.cache.locks:
-                                logging.debug(
-                                    &#39;No data for requested field %s&#39;, field_name)
+                                logging.debug(&#39;No data for requested field %s&#39;, field_name)
                                 continue
+
                             with self.cache.locks[field_name]:
-                                latest_timestamp = field_timestamps.get(
-                                    field_name, 0)
-                                field_cache = self.cache.data.get(
-                                    field_name, None)
+                                field_cache = self.cache.data.get(field_name, None)
                                 if field_cache is None:
                                     logging.debug(
                                         &#39;No cached data for %s&#39;, field_name)
@@ -2407,7 +2559,8 @@ by disk_cache.</p></div>
                                 # If special case -1, they want just single most recent
                                 # value, then future results. Grab last value, then set its
                                 # timestamp as the last one we&#39;ve seen.
-                                elif latest_timestamp == -1:
+                                back_seconds = field_spec.get(&#39;back_seconds&#39;, 0)
+                                if back_seconds == -1:
                                     last_value = field_cache[-1]
                                     results[field_name] = [last_value]
                                     # ts of last value
@@ -2416,18 +2569,18 @@ by disk_cache.</p></div>
 
                                 # Otherwise - if no data newer than the latest
                                 # timestamp we&#39;ve already sent, skip,
-                                elif not field_cache[-1][0] &gt; latest_timestamp:
+                                latest_timestamp = field_timestamps.get(field_name, 0)
+                                if not field_cache[-1][0] &gt; latest_timestamp:
                                     continue
 
                                 # Otherwise, copy over records arrived since
                                 # latest_timestamp and update the latest_timestamp sent
                                 # (first element of last pair in field_cache).
-                                else:
-                                    field_results = [
-                                        pair for pair in field_cache if pair[0] &gt; latest_timestamp]
-                                    results[field_name] = field_results
-                                    if field_results:
-                                        field_timestamps[field_name] = field_results[-1][0]
+                                field_results = [
+                                    pair for pair in field_cache if pair[0] &gt; latest_timestamp]
+                                results[field_name] = field_results
+                                if field_results:
+                                    field_timestamps[field_name] = field_results[-1][0]
 
                     ##########
                     # If not outputting data as a field dict, output as a list
@@ -2534,7 +2687,7 @@ by disk_cache.</p></div>
                 logging.warning(&#39;unparseable JSON: %s&#39;, raw_request)
 
             # If our connection closed, complain and exit gracefully
-            except websockets.exceptions.ConnectionClosed:
+            except ConnectionClosed:
                 logging.info(&#39;Client closed connection&#39;)
                 self.quit()</code></pre>
 </details>
@@ -2641,13 +2794,14 @@ publish - look for a field called 'data' and expect its value to
 subscribe - look for a field called 'fields' in the request whose
     value is a dict of the format
     ```
-      {field_name:{seconds:600}, field_name:{seconds:0},...}
+      {field_name:{seconds:600, back_records:10},
+       field_name:{seconds:0},...}
     ```
     The entire specification may also have a field called
     'interval', specifying how often server should provide
     updates. Will default to what was specified on command line
     with --interval flag (which itself defaults to 1 second
-    intervals):
+    intervals).
     ```
     ```
     A subscription will instruct the CachedDataServer to begin
@@ -2686,13 +2840,14 @@ ready - client has processed the previous data message and is ready
     subscribe - look for a field called &#39;fields&#39; in the request whose
         value is a dict of the format
         ```
-          {field_name:{seconds:600}, field_name:{seconds:0},...}
+          {field_name:{seconds:600, back_records:10},
+           field_name:{seconds:0},...}
         ```
         The entire specification may also have a field called
         &#39;interval&#39;, specifying how often server should provide
         updates. Will default to what was specified on command line
         with --interval flag (which itself defaults to 1 second
-        intervals):
+        intervals).
         ```
         ```
         A subscription will instruct the CachedDataServer to begin
@@ -2714,13 +2869,13 @@ ready - client has processed the previous data message and is ready
     ```
     &#34;&#34;&#34;
     # The field details specified in a subscribe request
-    raw_requested_fields = {}
+    requested_fields = {}
 
-    # A map from field_name:latest_timestamp_sent. If
-    # latest_timestamp_sent is -1, then we&#39;ll always send just the
-    # most recent value we have for the field, regardless of how many
-    # there are, or whether we&#39;ve sent it before.
+    # A map from field_name:latest_timestamp_sent. If latest_timestamp_sent is -1
+    # then we&#39;ll always send just the most recent value we have for the field,
+    # regardless of how many there are, or whether we&#39;ve sent it before.
     field_timestamps = {}
+
     interval = self.interval  # Use the default interval, uh, by default
 
     while not self.quit_flag:
@@ -2816,32 +2971,90 @@ ready - client has processed the previous data message and is ready
                 # requested_fields dict.
 
                 now = time.time()
-                field_timestamps = {}
+
+                # Reset requested field_timestamps and field_back_records
                 requested_fields = {}
+                field_timestamps = {}    # last timestamp seen
 
+                logging.debug(&#39;Subscription requested&#39;)
                 for field_name, field_spec in raw_requested_fields.items():
-
-                    matching_field_names = self.get_matching_field_names(
-                        field_name)
+                    matching_field_names = self.get_matching_field_names(field_name)
 
                     for matching_field_name in matching_field_names:
                         requested_fields[matching_field_name] = field_spec
-
                         # If we don&#39;t have a field spec dict
-                        if not isinstance(field_spec, dict):
-                            back_seconds = 0
-                        else:
+                        if isinstance(field_spec, dict):
+                            back_records = field_spec.get(&#39;back_records&#39;, 0)
                             back_seconds = field_spec.get(&#39;seconds&#39;, 0)
-
-                        if back_seconds == -1:
-                            field_timestamps[matching_field_name] = -1
                         else:
-                            field_timestamps[matching_field_name] = now - \
-                                back_seconds
+                            back_records = 0
+                            back_seconds = 0
+
+                        # Now figure out what&#39;s the latest timestamp we have for this
+                        # field name that respects the back_records and back_seconds
+                        # specification.
+                        field_timestamps[matching_field_name] = 0  # if nothing else
+
+                        if field_name not in self.cache.locks:
+                            logging.debug(&#39;No data for requested field %s&#39;, matching_field_name)
+                            continue
+                        with self.cache.locks[field_name]:
+                            field_cache = self.cache.data.get(matching_field_name, None)
+                            if field_cache is None:
+                                logging.debug(&#39;No cached data for %s&#39;, matching_field_name)
+                                continue
+
+                            logging.debug(&#39;    %s: %d records available; %d requested, &#39;
+                                          &#39;%d seconds&#39;, matching_field_name, len(field_cache),
+                                          back_records, back_seconds)
+                            # If no data for requested field, skip.
+                            if not field_cache or not field_cache[-1]:
+                                continue
+
+                            # If special case 0, they only want records that come after
+                            # this point in time. Set the  last timestamp seen as the
+                            # most-recently seen timestamp, or zero if no entries.
+                            if back_seconds == 0:
+                                if len(field_cache) &gt; 0:
+                                    field_timestamps[matching_field_name] = field_cache[-1][0]
+                                else:
+                                    field_timestamps[matching_field_name] = 0
+                                continue
+
+                            # If special case -1, they want just single most recent
+                            # value. Set the last timestamp seen as the second to last
+                            # timestamp if multiple entries, or as zero, if only 1.
+                            if back_seconds == -1:
+                                if len(field_cache) &gt; 1:
+                                    field_timestamps[matching_field_name] = field_cache[-2][0]
+                                else:
+                                    field_timestamps[matching_field_name] = 0
+                                continue
+
+                            # We&#39;ve been told to return at least &#39;back_records&#39; records; if
+                            # there aren&#39;t at least that many, leave field_timestamps[field]
+                            # at zero to return all we&#39;ve got.
+                            if len(field_cache) &lt;= back_records:
+                                continue
+
+                            # If here, we&#39;ve got at least &#39;back_records&#39; records, and want to
+                            # search backward to include the last &#39;back_seconds&#39; seconds of
+                            # them. Could do more efficiently with some sort of binary search.
+                            this_record_index = len(field_cache) - back_records - 1
+                            while this_record_index &gt;= 0:
+                                # Recall that each element is (timestamp, value)
+                                this_timestamp = field_cache[this_record_index][0]
+
+                                if now - this_timestamp &gt; back_seconds:
+                                    # Set our &#39;last seen&#39; timestamp as timestamp of previous
+                                    # record and stop looking.
+                                    prev_timestamp = field_cache[this_record_index-1][0]
+                                    field_timestamps[matching_field_name] = prev_timestamp
+                                    break
+                                this_record_index -= 1
 
                 if raw_requested_fields and not requested_fields:
-                    logging.info(
-                        &#39;Request doesn\&#39;t match any existing fields&#39;)
+                    logging.info(&#39;Request doesn\&#39;t match any existing fields&#39;)
 
                 # Let client know request succeeded
                 await self.send_json_response({&#39;type&#39;: &#39;subscribe&#39;, &#39;status&#39;: 200})
@@ -2867,14 +3080,11 @@ ready - client has processed the previous data message and is ready
                 if requested_format == &#39;field_dict&#39;:
                     for field_name, field_spec in requested_fields.items():
                         if field_name not in self.cache.locks:
-                            logging.debug(
-                                &#39;No data for requested field %s&#39;, field_name)
+                            logging.debug(&#39;No data for requested field %s&#39;, field_name)
                             continue
+
                         with self.cache.locks[field_name]:
-                            latest_timestamp = field_timestamps.get(
-                                field_name, 0)
-                            field_cache = self.cache.data.get(
-                                field_name, None)
+                            field_cache = self.cache.data.get(field_name, None)
                             if field_cache is None:
                                 logging.debug(
                                     &#39;No cached data for %s&#39;, field_name)
@@ -2887,7 +3097,8 @@ ready - client has processed the previous data message and is ready
                             # If special case -1, they want just single most recent
                             # value, then future results. Grab last value, then set its
                             # timestamp as the last one we&#39;ve seen.
-                            elif latest_timestamp == -1:
+                            back_seconds = field_spec.get(&#39;back_seconds&#39;, 0)
+                            if back_seconds == -1:
                                 last_value = field_cache[-1]
                                 results[field_name] = [last_value]
                                 # ts of last value
@@ -2896,18 +3107,18 @@ ready - client has processed the previous data message and is ready
 
                             # Otherwise - if no data newer than the latest
                             # timestamp we&#39;ve already sent, skip,
-                            elif not field_cache[-1][0] &gt; latest_timestamp:
+                            latest_timestamp = field_timestamps.get(field_name, 0)
+                            if not field_cache[-1][0] &gt; latest_timestamp:
                                 continue
 
                             # Otherwise, copy over records arrived since
                             # latest_timestamp and update the latest_timestamp sent
                             # (first element of last pair in field_cache).
-                            else:
-                                field_results = [
-                                    pair for pair in field_cache if pair[0] &gt; latest_timestamp]
-                                results[field_name] = field_results
-                                if field_results:
-                                    field_timestamps[field_name] = field_results[-1][0]
+                            field_results = [
+                                pair for pair in field_cache if pair[0] &gt; latest_timestamp]
+                            results[field_name] = field_results
+                            if field_results:
+                                field_timestamps[field_name] = field_results[-1][0]
 
                 ##########
                 # If not outputting data as a field dict, output as a list
@@ -3014,7 +3225,7 @@ ready - client has processed the previous data message and is ready
             logging.warning(&#39;unparseable JSON: %s&#39;, raw_request)
 
         # If our connection closed, complain and exit gracefully
-        except websockets.exceptions.ConnectionClosed:
+        except ConnectionClosed:
             logging.info(&#39;Client closed connection&#39;)
             self.quit()</code></pre>
 </details>
@@ -3072,7 +3283,7 @@ ready - client has processed the previous data message and is ready
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
