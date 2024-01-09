@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.writers.serial_writer API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -41,25 +41,29 @@ except ModuleNotFoundError:
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.writers.writer import Writer
-from logger.utils.formats import Text
+from logger.writers.writer import Writer  # noqa: E402
+from logger.utils.formats import Text     # noqa: E402
+
 
 ################################################################################
 class SerialWriter(Writer):
     &#34;&#34;&#34;
     Writes records to a serial port.
     &#34;&#34;&#34;
-
     def __init__(self,  port, baudrate=9600, bytesize=8, parity=&#39;N&#39;,
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, quiet=False):
+                 exclusive=None, eol=&#39;\n&#39;,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, quiet=False):
         &#34;&#34;&#34;
-        By default, the SerialWriter write records to the specified serial port encoded by UTF-8 
-        and will ignore non unicode characters it encounters. These defaults may be changed by 
+        By default, the SerialWriter write records to the specified serial port encoded by UTF-8
+        and will ignore non unicode characters it encounters. These defaults may be changed by
         specifying.
 
-        encoding - &#39;utf-8&#39; by default. If empty or None, will throw type error. 
+        eol - if specified, append to end of records to signify end of line,
+                otherwise use \n
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, will throw type error.
                 Other possible encodings are listed in online documentation here:
                 https://docs.python.org/3/library/codecs.html#standard-encodings
 
@@ -67,9 +71,11 @@ class SerialWriter(Writer):
                 &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
-                written to the serial port. 
+                written to the serial port.
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
+        super().__init__(encoding=encoding,
+                         encoding_errors=encoding_errors)
+
         if not SERIAL_MODULE_FOUND:
             raise RuntimeError(&#39;Serial port functionality not available. Please &#39;
                                &#39;install Python module pyserial.&#39;)
@@ -81,21 +87,35 @@ class SerialWriter(Writer):
                                         write_timeout=write_timeout, dsrdtr=dsrdtr,
                                         inter_byte_timeout=inter_byte_timeout,
                                         exclusive=exclusive)
-        except (serial.SerialException, serial.serialutil.SerialException) as e:
-            logging.fatal(&#39;Failed to open serial port %s: %s&#39;, port, e)
-            sys.exit(1)
-       
+        except serial.SerialException as e:
+            raise serial.SerialException(f&#39;Failed to open serial port {port}: {e}&#39;)
+
         self.encoding = encoding
         self.encoding_errors = encoding_errors
         self.quiet = quiet
 
+        # &#39;eol&#39; comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if eol:
+            if self.encoding:
+                # NOTE: Technically, it&#39;s safe to call _unescape_str() with no
+                #       encoding, it just returns the str/bytes/thing
+                #       unmodified.  But why tempt fate, right?
+                eol = self._unescape_str(eol)
+            else:
+                # if encoding has been set to &#39;&#39; or None, we&#39;re dealing with raw/binary
+                # output.  encode eol so we can append it safely in write()
+                eol = eol.encode()
+        self.eol = eol
 
     ############################
     def write(self, record):
         if not record:
             return
         try:
-            written = self.serial.write(record.encode(self.encoding))
+            if self.eol:
+                record += self.eol
+            written = self.serial.write(self._encode_str(record))
             if not written and not self.quiet:
                 logging.error(&#34;Not all bits written&#34;)
         except KeyboardInterrupt as e:
@@ -117,13 +137,15 @@ class SerialWriter(Writer):
 <dl>
 <dt id="logger.writers.serial_writer.SerialWriter"><code class="flex name class">
 <span>class <span class="ident">SerialWriter</span></span>
-<span>(</span><span>port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None, encoding='utf-8', encoding_errors='ignore', quiet=False)</span>
+<span>(</span><span>port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None, eol='\n', encoding='utf-8', encoding_errors='ignore', quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes records to a serial port.</p>
 <p>By default, the SerialWriter write records to the specified serial port encoded by UTF-8
 and will ignore non unicode characters it encounters. These defaults may be changed by
 specifying.</p>
+<p>eol - if specified, append to end of records to signify end of line,
+otherwise use </p>
 <p>encoding - 'utf-8' by default. If empty or None, will throw type error.
 Other possible encodings are listed in online documentation here:
 <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">https://docs.python.org/3/library/codecs.html#standard-encodings</a></p>
@@ -140,17 +162,20 @@ written to the serial port.</p></div>
     &#34;&#34;&#34;
     Writes records to a serial port.
     &#34;&#34;&#34;
-
     def __init__(self,  port, baudrate=9600, bytesize=8, parity=&#39;N&#39;,
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, quiet=False):
+                 exclusive=None, eol=&#39;\n&#39;,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, quiet=False):
         &#34;&#34;&#34;
-        By default, the SerialWriter write records to the specified serial port encoded by UTF-8 
-        and will ignore non unicode characters it encounters. These defaults may be changed by 
+        By default, the SerialWriter write records to the specified serial port encoded by UTF-8
+        and will ignore non unicode characters it encounters. These defaults may be changed by
         specifying.
 
-        encoding - &#39;utf-8&#39; by default. If empty or None, will throw type error. 
+        eol - if specified, append to end of records to signify end of line,
+                otherwise use \n
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, will throw type error.
                 Other possible encodings are listed in online documentation here:
                 https://docs.python.org/3/library/codecs.html#standard-encodings
 
@@ -158,9 +183,11 @@ written to the serial port.</p></div>
                 &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
-                written to the serial port. 
+                written to the serial port.
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
+        super().__init__(encoding=encoding,
+                         encoding_errors=encoding_errors)
+
         if not SERIAL_MODULE_FOUND:
             raise RuntimeError(&#39;Serial port functionality not available. Please &#39;
                                &#39;install Python module pyserial.&#39;)
@@ -172,21 +199,35 @@ written to the serial port.</p></div>
                                         write_timeout=write_timeout, dsrdtr=dsrdtr,
                                         inter_byte_timeout=inter_byte_timeout,
                                         exclusive=exclusive)
-        except (serial.SerialException, serial.serialutil.SerialException) as e:
-            logging.fatal(&#39;Failed to open serial port %s: %s&#39;, port, e)
-            sys.exit(1)
-       
+        except serial.SerialException as e:
+            raise serial.SerialException(f&#39;Failed to open serial port {port}: {e}&#39;)
+
         self.encoding = encoding
         self.encoding_errors = encoding_errors
         self.quiet = quiet
 
+        # &#39;eol&#39; comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if eol:
+            if self.encoding:
+                # NOTE: Technically, it&#39;s safe to call _unescape_str() with no
+                #       encoding, it just returns the str/bytes/thing
+                #       unmodified.  But why tempt fate, right?
+                eol = self._unescape_str(eol)
+            else:
+                # if encoding has been set to &#39;&#39; or None, we&#39;re dealing with raw/binary
+                # output.  encode eol so we can append it safely in write()
+                eol = eol.encode()
+        self.eol = eol
 
     ############################
     def write(self, record):
         if not record:
             return
         try:
-            written = self.serial.write(record.encode(self.encoding))
+            if self.eol:
+                record += self.eol
+            written = self.serial.write(self._encode_str(record))
             if not written and not self.quiet:
                 logging.error(&#34;Not all bits written&#34;)
         except KeyboardInterrupt as e:
@@ -236,7 +277,7 @@ written to the serial port.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

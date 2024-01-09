@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.transforms API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -51,6 +51,11 @@ below to a file, say 's330_format.yaml', then run …</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="logger.transforms.geofence_transform" href="geofence_transform.html">logger.transforms.geofence_transform</a></code></dt>
+<dd>
+<div class="desc"><p>Read lat/lon from passed records and compare to a geofence loaded at initialization
+time. Emit pre-defined messages if lat/lon transition between …</p></div>
+</dd>
 <dt><code class="name"><a title="logger.transforms.interpolation_transform" href="interpolation_transform.html">logger.transforms.interpolation_transform</a></code></dt>
 <dd>
 <div class="desc"><p>Compute subsamples of input data.</p></div>
@@ -89,6 +94,10 @@ NMEA …</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="logger.transforms.regex_replace_transform" href="regex_replace_transform.html">logger.transforms.regex_replace_transform</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="logger.transforms.select_fields_transform" href="select_fields_transform.html">logger.transforms.select_fields_transform</a></code></dt>
 <dd>
 <div class="desc"><p>Compute subsamples of input data.</p></div>
@@ -97,9 +106,29 @@ NMEA …</p></div>
 <dd>
 <div class="desc"><p>Slice fields out of the specified text record.</p></div>
 </dd>
+<dt><code class="name"><a title="logger.transforms.split_transform" href="split_transform.html">logger.transforms.split_transform</a></code></dt>
+<dd>
+<div class="desc"><p>Split a single record at a delimiter string, into an array of records.</p></div>
+</dd>
+<dt><code class="name"><a title="logger.transforms.strip_transform" href="strip_transform.html">logger.transforms.strip_transform</a></code></dt>
+<dd>
+<div class="desc"><p>Strip undesired characters out of a record.</p></div>
+</dd>
 <dt><code class="name"><a title="logger.transforms.subsample_transform" href="subsample_transform.html">logger.transforms.subsample_transform</a></code></dt>
 <dd>
 <div class="desc"><p>Compute subsamples of input data.</p></div>
+</dd>
+<dd>
+<div class="desc"></div>
+</dd>
+<dd>
+<div class="desc"></div>
+</dd>
+<dd>
+<div class="desc"></div>
+</dd>
+<dd>
+<div class="desc"></div>
 </dd>
 <dd>
 <div class="desc"></div>
@@ -173,6 +202,15 @@ NMEA …</p></div>
 <div class="desc"><p>Compute true winds by processing and aggregating vessel
 course/speed/heading and relative wind dir/speed records …</p></div>
 </dd>
+<dt><code class="name"><a title="logger.transforms.unique_transform" href="unique_transform.html">logger.transforms.unique_transform</a></code></dt>
+<dd>
+<div class="desc"><p>Pass the record to the next transform/writer only if the contents of the
+record have changed from the previous value.</p></div>
+</dd>
+<dt><code class="name"><a title="logger.transforms.value_filter_transform" href="value_filter_transform.html">logger.transforms.value_filter_transform</a></code></dt>
+<dd>
+<div class="desc"><p>TODO: option to initialize with a message to be output in case of failure …</p></div>
+</dd>
 <dt><code class="name"><a title="logger.transforms.xml_aggregator_transform" href="xml_aggregator_transform.html">logger.transforms.xml_aggregator_transform</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -205,6 +243,7 @@ course/speed/heading and relative wind dir/speed records …</p></div>
 <li><code><a title="logger.transforms.extract_field_transform" href="extract_field_transform.html">logger.transforms.extract_field_transform</a></code></li>
 <li><code><a title="logger.transforms.format_transform" href="format_transform.html">logger.transforms.format_transform</a></code></li>
 <li><code><a title="logger.transforms.from_json_transform" href="from_json_transform.html">logger.transforms.from_json_transform</a></code></li>
+<li><code><a title="logger.transforms.geofence_transform" href="geofence_transform.html">logger.transforms.geofence_transform</a></code></li>
 <li><code><a title="logger.transforms.interpolation_transform" href="interpolation_transform.html">logger.transforms.interpolation_transform</a></code></li>
 <li><code><a title="logger.transforms.max_min_transform" href="max_min_transform.html">logger.transforms.max_min_transform</a></code></li>
 <li><code><a title="logger.transforms.nmea_checksum_transform" href="nmea_checksum_transform.html">logger.transforms.nmea_checksum_transform</a></code></li>
@@ -214,14 +253,19 @@ course/speed/heading and relative wind dir/speed records …</p></div>
 <li><code><a title="logger.transforms.prefix_transform" href="prefix_transform.html">logger.transforms.prefix_transform</a></code></li>
 <li><code><a title="logger.transforms.qc_filter_transform" href="qc_filter_transform.html">logger.transforms.qc_filter_transform</a></code></li>
 <li><code><a title="logger.transforms.regex_filter_transform" href="regex_filter_transform.html">logger.transforms.regex_filter_transform</a></code></li>
+<li><code><a title="logger.transforms.regex_replace_transform" href="regex_replace_transform.html">logger.transforms.regex_replace_transform</a></code></li>
 <li><code><a title="logger.transforms.select_fields_transform" href="select_fields_transform.html">logger.transforms.select_fields_transform</a></code></li>
 <li><code><a title="logger.transforms.slice_transform" href="slice_transform.html">logger.transforms.slice_transform</a></code></li>
+<li><code><a title="logger.transforms.split_transform" href="split_transform.html">logger.transforms.split_transform</a></code></li>
+<li><code><a title="logger.transforms.strip_transform" href="strip_transform.html">logger.transforms.strip_transform</a></code></li>
 <li><code><a title="logger.transforms.subsample_transform" href="subsample_transform.html">logger.transforms.subsample_transform</a></code></li>
 <li><code><a title="logger.transforms.timestamp_transform" href="timestamp_transform.html">logger.transforms.timestamp_transform</a></code></li>
 <li><code><a title="logger.transforms.to_das_record_transform" href="to_das_record_transform.html">logger.transforms.to_das_record_transform</a></code></li>
 <li><code><a title="logger.transforms.to_json_transform" href="to_json_transform.html">logger.transforms.to_json_transform</a></code></li>
 <li><code><a title="logger.transforms.transform" href="transform.html">logger.transforms.transform</a></code></li>
 <li><code><a title="logger.transforms.true_winds_transform" href="true_winds_transform.html">logger.transforms.true_winds_transform</a></code></li>
+<li><code><a title="logger.transforms.unique_transform" href="unique_transform.html">logger.transforms.unique_transform</a></code></li>
+<li><code><a title="logger.transforms.value_filter_transform" href="value_filter_transform.html">logger.transforms.value_filter_transform</a></code></li>
 <li><code><a title="logger.transforms.xml_aggregator_transform" href="xml_aggregator_transform.html">logger.transforms.xml_aggregator_transform</a></code></li>
 </ul>
 </li>
@@ -229,7 +273,7 @@ course/speed/heading and relative wind dir/speed records …</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

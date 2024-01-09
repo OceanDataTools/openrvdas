@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.listener.listen API documentation</title>
 <meta name="description" content="Instantiates and runs the Listener class. Try
 ```
@@ -104,6 +104,7 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.cached_data_reader import CachedDataReader  # noqa: E402
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
 from logger.readers.network_reader import NetworkReader  # noqa: E402
+from logger.readers.tcp_reader import TCPReader
 from logger.readers.udp_reader import UDPReader  # noqa: E402
 from logger.readers.redis_reader import RedisReader  # noqa: E402
 from logger.readers.serial_reader import SerialReader  # noqa: E402
@@ -131,7 +132,9 @@ from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E
 
 # Compute and emit various NMEA strings
 from logger.writers.network_writer import NetworkWriter  # noqa: E402
+from logger.writers.tcp_writer import TCPWriter
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
+from logger.writers.serial_writer import SerialWriter  # noqa: E402
 from logger.writers.redis_writer import RedisWriter  # noqa: E402
 from logger.writers.file_writer import FileWriter  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402, F401
@@ -342,12 +345,22 @@ if __name__ == &#39;__main__&#39;:
     ############################
     # Readers
     parser.add_argument(&#39;--network&#39;, dest=&#39;network&#39;, default=None,
-                        help=&#39;Comma-separated network addresses to read from&#39;)
+                        help=&#39;Comma-separated network addresses to read from.  &#39;
+                        &#39;NOTE: This has been REPLACED by --udp and --tcp.&#39;)
+
+    parser.add_argument(&#39;--tcp&#39;, dest=&#39;tcp&#39;, default=None,
+                        help=&#39;Comma-separated tcp address to read from, &#39;
+                        &#39;where an address is of format [source:]port[,...] and &#39;
+                        &#39;source, when provided, is the address of the &#39;
+                        &#39;interface you want to listen on.  NOTE: This replaces &#39;
+                        &#39;the old --network argument.&#39;)
 
     parser.add_argument(&#39;--udp&#39;, dest=&#39;udp&#39;, default=None,
                         help=&#39;Comma-separated udp addresses to read from, &#39;
-                        &#39;where an address is of format [source:]port and &#39;
-                        &#39;source, when provided, is a multicast group.&#39;)
+                        &#39;where an address is of format [source:]port[,...] and &#39;
+                        &#39;source, when provided, is either the address of the &#39;
+                        &#39;interface you want to listen on, or a multicast &#39;
+                        &#39;group.  NOTE: This replaces the old --network argument.&#39;)
 
     parser.add_argument(&#39;--database&#39;, dest=&#39;database&#39;, default=None,
                         help=&#39;Format: user@host:database:field1,field2,... &#39;
@@ -535,15 +548,33 @@ if __name__ == &#39;__main__&#39;:
                         &#39;Will be appended to filename, with one file per date.&#39;)
 
     parser.add_argument(&#39;--write_network&#39;, dest=&#39;write_network&#39;, default=None,
-                        help=&#39;Network address(es) to write to&#39;)
+                        help=&#39;Network address(es) to write to.  NOTE: This has &#39;
+                        &#39;been REPLACED by --write_udp and --write_tcp.&#39;)
+
+    parser.add_argument(&#39;--write_tcp&#39;, dest=&#39;write_tcp&#39;, default=None,
+                        help=&#39;TCP destination host/IP(s) and port(s) to write &#39;
+                        &#39;to. Format destination:port[,...].  NOTE: This replaces &#39;
+                        &#39;the old --write_network argument.&#39;)
 
     parser.add_argument(&#39;--write_udp&#39;, dest=&#39;write_udp&#39;, default=None,
                         help=&#39;UDP interface(s) and port(s) to write to. Format &#39;
-                        &#39;[[interface:]destination:]port&#39;)
+                        &#39;[destination:]port[,...].  NOTE: This replaces the old &#39;
+                        &#39;--write_network argument.&#39;)
+
+    parser.add_argument(&#39;--write_serial&#39;, dest=&#39;write_serial&#39;, default=None,
+                        help=&#39;Comma-separated serial port spec containing at &#39;
+                        &#39;least port=[port], but also optionally baudrate, &#39;
+                        &#39;timeout, max_bytes and/or other SerialReader &#39;
+                        &#39;parameters.&#39;)
 
     parser.add_argument(&#39;--network_eol&#39;, dest=&#39;network_eol&#39;, default=None,
-                        help=&#39;Optional EOL string to add to write_network &#39;
-                        &#39;and write_udp transmissions.&#39;)
+                        help=&#39;Optional EOL string to add to writen records.&#39;)
+
+    parser.add_argument(&#39;--encoding&#39;, dest=&#39;encoding&#39;, default=&#39;utf-8&#39;,
+                        help=&#34;Optional encoding of records.  Default is utf-8, &#34;
+                        &#34;specify &#39;&#39; for raw/binary.  NOTE: This applies to ALL &#34;
+                        &#34;readers/writers/transforms, as you need to have one &#34;
+                        &#34;consistent encoding from start to finish.&#34;)
 
     parser.add_argument(&#39;--write_redis&#39;, dest=&#39;write_redis&#39;, default=None,
                         help=&#39;Redis pubsub channel[@host[:port]] to write to. &#39;
@@ -585,6 +616,7 @@ if __name__ == &#39;__main__&#39;:
 
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
     log_level = LOG_LEVELS[min(parsed_args.verbosity, max(LOG_LEVELS))]
+    logging.getLogger().setLevel(log_level)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(STDERR_FORMATTER)
@@ -709,21 +741,36 @@ if __name__ == &#39;__main__&#39;:
                         refresh_file_spec=all_args.refresh_file_spec))
 
             if new_args.network:
+                encoding = parsed_args.encoding
                 for addr in new_args.network.split(&#39;,&#39;):
-                    readers.append(NetworkReader(network=addr))
+                    readers.append(NetworkReader(network=addr, encoding=encoding))
+
+            if new_args.tcp:
+                eol = all_args.network_eol
+                encoding = parsed_args.encoding
+                for addr_str in new_args.tcp.split(&#39;,&#39;):
+                    addr = addr_str.split(&#39;:&#39;)
+                    if len(addr) &gt; 2:
+                        parser.error(&#39;Format error for --tcp argument. Format &#39;
+                                     &#39;should be [source:]port,[,...]&#39;)
+                    if len(addr) &lt; 2:
+                        addr.insert(0, &#39;&#39;)
+                    source = addr[0]
+                    port = int(addr[1])
+                    readers.append(TCPReader(source, port, eol=eol, encoding=encoding))
 
             if new_args.udp:
-                eol = all_args.network_eol
+                encoding = parsed_args.encoding
                 for addr_str in new_args.udp.split(&#39;,&#39;):
                     addr = addr_str.split(&#39;:&#39;)
-                    source = &#39;&#39;
-                    port = int(addr[-1])  # port is last arg
-                    if len(addr) &gt; 1:
-                        source = addr[-2]  # source (multi/broadcast) is prev arg
                     if len(addr) &gt; 2:
                         parser.error(&#39;Format error for --udp argument. Format &#39;
-                                     &#39;should be [source:]port&#39;)
-                    readers.append(UDPReader(port=port, source=source, eol=eol))
+                                     &#39;should be [source:]port[,...]&#39;)
+                    if len(addr) &lt; 2:
+                        addr.insert(0, &#39;&#39;)
+                    source = addr[0]
+                    port = int(addr[1])
+                    readers.append(UDPReader(source, port, encoding=encoding))
 
             if new_args.redis:
                 for channel in new_args.redis.split(&#39;,&#39;):
@@ -833,35 +880,58 @@ if __name__ == &#39;__main__&#39;:
             ##########################
             # Writers
             if new_args.write_file:
+                encoding = parsed_args.encoding
                 for filename in new_args.write_file.split(&#39;,&#39;):
                     if filename == &#39;-&#39;:
                         filename = None
-                    writers.append(FileWriter(filename=filename))
+                    writers.append(FileWriter(filename=filename, encoding=encoding))
 
             if new_args.write_logfile:
                 writers.append(LogfileWriter(filebase=new_args.write_logfile))
 
             if new_args.write_network:
                 eol = all_args.network_eol
+                encoding = parsed_args.encoding
                 for addr in new_args.write_network.split(&#39;,&#39;):
-                    writers.append(NetworkWriter(network=addr, eol=eol))
+                    writers.append(NetworkWriter(network=addr, eol=eol, encoding=encoding))
+
+            if new_args.write_tcp:
+                eol = all_args.network_eol
+                encoding = parsed_args.encoding
+                for addr_str in new_args.write_tcp.split(&#39;,&#39;):
+                    addr = addr_str.split(&#39;:&#39;)
+                    if len(addr) &gt; 2:
+                        parser.error(&#39;Format err for --write_tcp argument. Format &#39;
+                                     &#39;should be [destination:]port[,...]&#39;)
+                    if len(addr) &lt; 2:
+                        addr.insert(0, &#39;&#39;)
+                    dest = addr[0]
+                    port = int(addr[1])
+                    writers.append(TCPWriter(dest, port, eol=eol, encoding=encoding))
 
             if new_args.write_udp:
                 eol = all_args.network_eol
+                encoding = parsed_args.encoding
                 for addr_str in new_args.write_udp.split(&#39;,&#39;):
                     addr = addr_str.split(&#39;:&#39;)
-                    dest = &#39;&#39;
-                    interface = &#39;&#39;
-                    port = int(addr[-1])  # port is last arg
-                    if len(addr) &gt; 1:
-                        dest = addr[-2]  # destination (multi/broadcast) is prev arg
                     if len(addr) &gt; 2:
-                        interface = addr[-3]  # interface is first arg
-                    if len(addr) &gt; 3:
                         parser.error(&#39;Format error for --write_udp argument. Format &#39;
-                                     &#39;should be [[interface:]destination:]port&#39;)
-                    writers.append(UDPWriter(port=port, destination=dest,
-                                             interface=interface, eol=eol))
+                                     &#39;should be [destination:]port[,...]&#39;)
+                    if len(addr) &lt; 2:
+                        addr.insert(0, &#39;&#39;)
+                    dest = addr[0]
+                    port = int(addr[1])
+                    writers.append(UDPWriter(dest, port, eol=eol, encoding=encoding))
+
+            # SerialWriter is a little more complicated than other readers
+            # because it can take so many parameters. Use the kwargs trick to
+            # pass them all in.
+            if new_args.write_serial:
+                kwargs = {}
+                for pair in new_args.write_serial.split(&#39;,&#39;):
+                    (key, value) = pair.split(&#39;=&#39;)
+                    kwargs[key] = value
+                writers.append(SerialWriter(**kwargs))
 
             if new_args.write_redis:
                 for channel in new_args.write_redis.split(&#39;,&#39;):
@@ -1186,7 +1256,7 @@ cruise definition, and look for the config itself under the
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

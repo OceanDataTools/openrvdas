@@ -1,0 +1,1940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>server.sqlite_server_api API documentation</title>
+<meta name="description" content="API implementation for interacting with a SQLite3 data store,
+by Kevin Pedigo, based on in_memory_server_api.py …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>server.sqlite_server_api</code></h1>
+</header>
+<section id="section-intro">
+<p>API implementation for interacting with a SQLite3 data store,
+by Kevin Pedigo, based on in_memory_server_api.py</p>
+<p>See api_tool.py for a simple script that exercises this class.
+See also server/server_api.py for full documentation of the API.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+&#34;&#34;&#34;API implementation for interacting with a SQLite3 data store,
+   by Kevin Pedigo, based on in_memory_server_api.py
+
+   See api_tool.py for a simple script that exercises this class.
+   See also server/server_api.py for full documentation of the API.
+&#34;&#34;&#34;
+
+import logging
+import pprint
+import sys
+import sqlite3
+import os
+import yaml
+import gzip
+from datetime import datetime
+
+from os.path import dirname, realpath
+import time
+sys.path.append(dirname(dirname(realpath(__file__))))
+
+from server.server_api import ServerAPI  # noqa: E402
+
+DEFAULT_MAX_TRIES = 3
+ID_SEPARATOR = &#39;:&#39;
+
+# Not a runtime option because the API doesn&#39;t have any
+DATABASE_BACKUPS = True
+DATABASE_COMPRESS = True
+
+# Default location of SQLite database to use/create
+DIR_PATH = os.path.dirname(__file__)
+DEFAULT_DATABASE_PATH = os.path.join(DIR_PATH, &#39;openrvdas.sql&#39;)
+
+# Effectively &#34;time zero&#34; for POSIX systems.
+EPOCH_TIME_ZERO = &#39;1970-01-01 00:00:00.000000&#39;
+
+########################################################################
+# Let&#39;s trust SQLite and forget about thread locking.
+# https://www.sqlite.org/lockingv3.html
+# https://www.sqlite.org/threadsafe.html
+# SQLITE3, by default, when built from source, builds in serialized mode
+# (can be safely used by multiple threads without restriction)
+# All distros tested are good.  To test yours:
+# strings `which sqlite3` | grep THREADSAFE (should = 1)
+
+class SQLiteServerAPI(ServerAPI):
+    ############################
+
+    def __init__(self, database_path=DEFAULT_DATABASE_PATH,
+                 no_create_database=False):
+        &#34;&#34;&#34;
+        database_path  - If specified, the path to the SQLite database to use
+
+        no_create_database - If True, and database does not exist, throw an error
+                             rather than creating a new database.
+        &#34;&#34;&#34;
+        super().__init__()
+
+        # Where do we l
+        self.database_path = database_path
+        self.no_create_database = no_create_database
+
+        self.config = {}
+        self.callbacks = []
+        self.status = []
+        self.server_messages = []
+        self.cx = None
+        self.timestamp = self._get_database_timestamp()
+
+
+    def _database_exists(self):
+        &#34;&#34;&#34;Return True if SQLite database at self.database_path exists,
+        and can be read without errors.&#34;&#34;&#34;
+        read_only_database_path = &#39;&#39;.join([&#39;file:&#39;, self.database_path, &#39;?mode=ro&#39;])
+        try:
+            cx = sqlite3.connect(read_only_database_path, uri=True)
+        except sqlite3.OperationalError:
+            return False
+        except sqlite3.Error as err:
+            # Some other error
+            logging.error(f&#39;Unknown SQLite database error on read: {err}&#39;)
+            return False
+        return True
+
+    def _create_database(self):
+        &#34;&#34;&#34;Try to create the database.&#34;&#34;&#34;
+        logging.debug(f&#39;Creating SQLite database &#34;{self.database_path}&#34;&#39;)
+        cx = sqlite3.connect(self.database_path)
+        cu = cx.cursor()
+        cu.execute(&#39;CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)&#39;)
+        cu.execute(&#39;CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)&#39;)
+        cu.execute(&#39;CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)&#39;)
+
+        # We need a time or we think the database is not initialized
+        cu.execute(&#39;INSERT INTO lastupdate (highlander, timestamp) VALUES (1, CURRENT_TIMESTAMP);&#39;)
+
+        # Close, or not necessarily executed?
+        cx.close()
+
+    #############################
+    # API methods below are used in querying/modifying the API for the
+    # record of the running state of loggers.
+    ############################
+    def _get_connection(self):
+        &#34;&#34;&#34; Return SQLite connection or get one &#34;&#34;&#34;
+
+        def dict_factory(cursor, row):
+            &#34;&#34;&#34; Factory method for sqlite row as dictionary &#34;&#34;&#34;
+            d = {}
+            for idx, col in enumerate(cursor.description):
+                d[col[0]] = row[idx]
+            return d
+
+        # Return cached connection if it exists
+        if self.cx is not None:
+            return self.cx
+
+        # Otherwise establish a connection to database
+        if not self._database_exists():
+            if self.no_create_database:
+                raise OperationalError(f&#39;No database &#34;{self.database_path}&#34; found, &#39;
+                                       &#39;and flag &#34;no_create_database&#34; is set.&#39;)
+            # Otherwise, create the missing database
+            self._create_database()
+
+        # Open the database for use
+        try:
+            cx = sqlite3.connect(self.database_path,
+                                 check_same_thread=False,
+                                 detect_types=sqlite3.PARSE_DECLTYPES)
+        except sqlite3.Error as err:
+            # Some other error
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+
+        # Database exists and is now open
+        cx.row_factory = dict_factory
+        cx.isolation_level = None
+        # cx.execute(&#39;PRAGMA ... etc...&#39;);
+        # See if database is initialized
+        try:
+            cx.execute(&#39;SELECT timestamp from lastupdate&#39;)
+        except sqlite3.OperationalError:
+            # Database or table missing
+            logging.error(&#39;System error: SQLite database exists but is not initialized!&#39;)
+            raise sqlite3.OperationError
+        except sqlite3.Error as err:
+            # Some other error
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+        else:
+            self.cx = cx
+            return self.cx
+
+    ##################################################################
+    def _sql_query(self, query, *args):
+        &#34;&#34;&#34; Query the SQLite database.  Do NOT use this method
+            for INSERT, UPDATE, or DELETE as it does not
+            commit nor update the timestamp &#34;&#34;&#34;
+
+        cx = self._get_connection()
+        try:
+            res = cx.execute(query, args)
+            rows = res.fetchall()
+            return rows
+        except sqlite3.OperationalError:
+            # No such table.  We should be logging this.
+            logging.error(&#39;System error: SQLite database exists but has no tables?&#39;)
+            return None
+        except sqlite3.Error as err:
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+
+    ##################################################################
+    def _sql_cmd(self, query, *args):
+        &#34;&#34;&#34; Execute a SQL command that modifies the database &#34;&#34;&#34;
+
+        # NOTE(kped):  Consider not using the cached connection
+        # in this function to help avoid possible threading
+        # concurrency issues.
+        cx = self._get_connection()
+        try:
+            res = cx.execute(query, args)
+            rows = res.fetchall()
+            # Update the database timestamp
+            Q = &#39;INSERT OR REPLACE INTO lastupdate VALUES (1, ?)&#39;
+            now = datetime.utcnow()
+            cx.execute(Q, (now,))
+            cx.commit()
+            # Note:  If using WAL, checkpoint
+            return rows
+        except sqlite3.OperationalError:
+            # No such table
+            logging.error(f&#39;No such SQLite table for query: {query}&#39;)
+            raise sqlite3.OperationalError
+        except sqlite3.Error as err:
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+
+    ##################################################################
+    def _save_config(self):
+        &#34;&#34;&#34;Save our config object to the database&#34;&#34;&#34;
+
+        Q = &#39;INSERT OR REPLACE INTO cruise \
+             (highlander, config, compressed) \
+             VALUES (1, ?, ?)&#39;
+
+        try:
+            ydump = yaml.dump(self.config, sort_keys=False)
+            logging.debug(f&#39;YAML dump: &#34;{ydump}&#34;&#39;)
+            conf = bytes(ydump, &#39;utf-8&#39;)
+            logging.debug(f&#39;YAML conf: &#34;{conf}&#34;&#39;)
+            if DATABASE_COMPRESS:
+                conf = gzip.compress(conf)
+            self._sql_cmd(Q, conf, DATABASE_COMPRESS)
+            cx = self._get_connection()
+            # VACUUM takes a millisecond or so, but keeps the database
+            # size small, which speeds us back up.
+            cx.execute(&#39;VACUUM&#39;,)
+        except Exception as err:
+            logging.warn(f&#39;Failed to save SQLite database: {err}&#39;)
+            raise err
+        else:
+            # logging.info(&#39;Database save successful&#39;)
+            pass
+
+    ##################################################################
+    def _get_database_timestamp(self):
+        &#34;&#34;&#34;Get the timestamp from the sqlite database&#34;&#34;&#34;
+
+        Q = &#39;SELECT timestamp from lastupdate&#39;
+        cx = self._get_connection()
+        try:
+            res = cx.execute(Q)
+            row = res.fetchone()
+            if  row:
+                return row[&#39;timestamp&#39;]
+
+            # If no timestamp row, return string for &#39;time zero&#39;
+            return EPOCH_TIME_ZERO
+
+        except sqlite3.OperationalError as err:
+            # No such table
+            logging.error(&#39;System error: SQLite database exists but is not initialized!&#39;)
+            raise err
+        except sqlite3.Error as err:
+            logging.error(f&#39;Unhandled SQLite database error: {err}&#39;)
+            raise err
+
+    ##################################################################
+    def _do_we_need_to_reload(self):
+        &#34;&#34;&#34; Check database timestamp and reload config if needed &#34;&#34;&#34;
+
+        db_timestamp = self._get_database_timestamp()
+        if db_timestamp &gt; self.timestamp or self.config == {}:
+            Q = &#34;&#34;&#34;SELECT
+                       config, compressed
+                   FROM
+                       cruise
+                   WHERE
+                       highlander=1&#34;&#34;&#34;
+            rows = self._sql_query(Q)
+            row0 = None
+            try:
+                row0 = rows[0]
+            except IndexError:
+                return None
+
+            if &#39;config&#39; not in row0:
+                return None
+            conf = row0[&#39;config&#39;]
+
+            # Wanted bzip, but build problems (probably install script)
+            if row0.get(&#39;compressed&#39;, 0):
+                conf = gzip.decompress(conf)
+
+            # Wanted JSON, but datetime objects aren&#39;t JSON
+            # serializable, so went with YAML.
+            conf = yaml.load(conf, Loader=yaml.FullLoader)
+            if &#39;loggers&#39; not in conf:
+                return None
+
+            self.timestamp = db_timestamp
+            self.config = conf
+
+    # For each of the get_* function, check if the timestamp
+    # is newer than our current timestamp, pull config from
+    # the database.
+    ##################################################################
+    def get_configuration(self):
+        &#34;&#34;&#34;&#34; Return cruise config for specified cruise id. &#34;&#34;&#34;
+
+        self._do_we_need_to_reload()
+        return self.config or None
+
+    ############################
+    def get_modes(self):
+        &#34;&#34;&#34; Return list of modes defined for given cruise. &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return None
+        return list(config.get(&#39;modes&#39;, []))
+
+    ############################
+    def get_active_mode(self):
+        &#34;&#34;&#34; Return cruise config for specified cruise id.&#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return None
+        return config.get(&#39;active_mode&#39;, None)
+
+    ############################
+    def get_default_mode(self):
+        &#34;&#34;&#34; Get the name of the default mode for the specified cruise
+        from the. data store. &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return None
+        return config.get(&#39;default_mode&#39;, None)
+
+    ############################
+    def get_logger(self, logger):
+        &#34;&#34;&#34;Retrieve the logger spec for the specified logger id.&#34;&#34;&#34;
+
+        loggers = self.get_loggers()   # which calls self._get_configuration
+        if logger not in loggers:
+            raise ValueError(f&#39;No logger &#34;{logger}&#34; found&#39;)
+        return loggers.get(logger)
+
+    ############################
+    def get_loggers(self):
+        &#34;&#34;&#34;Get a dict of
+            {logger_id:{&#39;configs&#39;:[&lt;name_1&gt;,&lt;name_2&gt;,...],
+            &#39;active&#39;:&lt;name&gt;},...}
+        for all loggers.
+        &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return {}
+
+        if &#39;loggers&#39; not in config:
+            raise ValueError(&#39;No loggers found&#39;)
+        logger_configs = config.get(&#39;loggers&#39;, None)
+        if logger_configs is None:
+            raise ValueError(&#39;No logger configurations found&#39;)
+
+        # Fetch and insert the currently active config for each logger
+        # Note that this only changes our copy, not the config itself
+        for logger in logger_configs:
+            if &#39;active&#39; not in logger_configs[logger]:
+                mode = self.get_logger_config_name(logger)
+                logger_configs[logger][&#39;active&#39;] = mode
+        return logger_configs
+
+    ############################
+    def get_logger_config(self, config_name):
+        &#34;&#34;&#34;Retrieve the config associated with the specified name.&#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if config is None:
+            return {}
+        logger_configs = config.get(&#39;configs&#39;, None)
+        if logger_configs is None:
+            raise ValueError(&#39;No &#34;configs&#34; section found&#39;)
+        logger_config = logger_configs.get(config_name, None)
+        if logger_config is None:
+            raise ValueError(f&#39;No logger config &#34;{config_name}&#34; in config&#39;)
+        return logger_config
+
+    ############################
+    def get_logger_configs(self, mode=None):
+        &#34;&#34;&#34;Retrieve the configs associated with a cruise id and mode from the
+        data store. If mode is omitted, retrieve configs associated with
+        the cruise&#39;s current logger configs.&#34;&#34;&#34;
+
+        loggers = self.get_loggers()
+        if not loggers:
+            return None
+
+        output = {}
+        for logger in loggers:
+            logger_config_name = self.get_logger_config_name(logger, mode)
+            output[logger] = self.get_logger_config(logger_config_name)
+
+        return output
+
+    ############################
+    def get_logger_config_name(self, logger_id, mode=None):
+        &#34;&#34;&#34; Retrieve name of the config associated with the specified logger
+        in the specified mode.  If mode is omitted, retrieve name of logger&#39;s
+        current config. &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return {}
+        loggers = config.get(&#39;loggers&#39;, None)
+        if loggers is None:
+            raise ValueError(&#39;No loggers found in config&#39;)
+
+        # No mode, so we want the active mode
+        if mode is None:
+            logger = loggers.get(logger_id, None)
+            if logger is None:
+                raise ValueError(f&#39;Logger id {logger_id} has no mode!&#39;)
+            conf_name = logger.get(&#39;active&#39;, None)
+            if conf_name is not None:
+                return conf_name
+
+        # Mode given or no active conf, so get the default for this mode
+        modes = config.get(&#39;modes&#39;)
+        mode_configs = modes.get(mode, None)
+        if mode_configs is None:
+            raise ValueError(f&#39;Requested mode {mode} is not defined&#39;)
+        logger_config_name = mode_configs.get(logger_id, None)
+        if logger_config_name is None:
+            raise ValueError(f&#39;Logger {logger_id} has no config defined in mode {mode}&#39;)
+        return logger_config_name
+
+    #############################
+    def get_logger_config_names(self, logger_id):
+        &#34;&#34;&#34; Retrieve list of config names that are valid for the
+            specified logger .
+        &gt; api.get_logger_config_names(&#39;NBP1406&#39;, &#39;knud&#39;)
+              [&#34;off&#34;, &#34;knud-&gt;net&#34;, &#34;knud-&gt;net/file&#34;, &#34;knud-&gt;net/file/db&#34;]
+        &#34;&#34;&#34;
+        logger = self.get_logger(logger_id)
+        return logger.get(&#39;configs&#39;, [])
+
+    ############################
+    # Methods for manipulating the desired state via API to indicate
+    # current mode and which loggers should be in which configs.
+    ############################
+    def set_active_mode(self, mode):
+        &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
+
+        config = self.get_configuration()
+        modes = config.get(&#39;modes&#39;, None)
+        if not modes:
+            raise ValueError(&#39;Config has no modes&#39;)
+        if mode not in modes:
+            raise ValueError(f&#39;Config has no mode &#34;{mode}&#34;&#39;)
+
+        self.config[&#39;active_mode&#39;] = mode
+
+        # Update the API&#39;s working config&#39;s loggers
+        # to match the new mode
+        for logger, conf in modes[mode].items():
+            self.config[&#39;loggers&#39;][logger][&#39;active&#39;] = conf
+
+        self._save_config()
+        logging.info(&#39;Signaling update&#39;)
+        self.signal_update()
+
+    ############################
+    def set_active_logger_config(self, logger, config_name):
+        &#34;&#34;&#34;Set specified logger to new config. NOTE: we have no way to check
+        whether logger is compatible with config, so we rely on whoever is
+        calling us to have made that determination.&#34;&#34;&#34;
+
+        # self.logger_config[logger] = config_name
+        # NOTE: We can check that config_name is in logger[configs]
+        self.config[&#39;loggers&#39;][logger][&#39;active&#39;] = config_name
+        self._save_config()
+        logging.info(&#39;Signaling update&#39;)
+        self.signal_update()
+
+    ############################
+    # Methods for feeding data from LoggerServer back into the API
+    ############################
+    def update_status(self, status):
+        &#34;&#34;&#34;Save/register the loggers&#39; retrieved status report with the API.&#34;&#34;&#34;
+        self.status.append(((datetime.utcnow()), status))
+        # NOTE(kped) Do we need to write this to the database?
+        # logger_manager never calls this....
+
+    ############################
+    # Methods for getting status data from API
+    ############################
+
+    def get_status(self, since_timestamp=None):
+        &#34;&#34;&#34;Retrieve a dict of the most-recent status report from each
+        logger. If since_timestamp is specified, retrieve all status reports
+        since that time.&#34;&#34;&#34;
+
+        # Start by getting set of loggers for cruise. Store as
+        # cruise_id:logger for ease of lookup.
+        try:
+            logger_set = set([logger
+                              for logger in self.get_loggers()])
+        except ValueError:
+            logger_set = set()
+
+        logging.debug(f&#39;logger_set: {logger_set}&#39;)
+
+        # Step backwards through status messages until we run out of
+        # status messages or reach termination condition. If
+        # since_timestamp==None, our termination is when we have a status
+        # for each of our loggers. If since_timestamp is a number, our
+        # termination is when we&#39;ve grabbed all the statuses with a
+        # timestamp greater than the specified number.
+        status = {}
+
+        status_index = len(self.status) - 1
+        logging.debug(f&#39;starting at status index {status_index}&#39;)
+        while logger_set and status_index &gt;= 0:
+            # record is a dict of &#39;cruise_id:logger&#39; : {fields}
+            (timestamp, record) = self.status[status_index]
+            logging.debug(&#39;%d: %f: %s&#39;,
+                          status_index, timestamp, pprint.pformat(record))
+
+            # If we&#39;ve been given a numeric timestamp and we&#39;ve stepped back
+            # in time to or before that timestamp, we&#39;re done - break out.
+            if since_timestamp is not None and timestamp &lt;= since_timestamp:
+                break
+
+            # Otherwise, examine ids in this record to see if they&#39;re for
+            # the cruise in question.
+            for id, fields in record.items():
+                # If id is cruise_id:logger that we&#39;re interested in, grab it.
+                logging.debug(f&#39;Is {id} in {logger_set}?&#39;)
+                if id in logger_set:
+                    if timestamp not in status:
+                        status[timestamp] = {}
+                    status[timestamp][id] = fields
+
+                    # If since_timestamp==None, we only want the latest status
+                    # for each logger. So once we&#39;ve found it, remove the id
+                    # from the logger_set we&#39;re lookings. We&#39;ll drop out of the
+                    # loop when the set is empty.
+                    if since_timestamp is None:
+                        logger_set.discard(id)
+            status_index -= 1
+
+        return status
+
+    ############################
+    # Methods for storing/retrieving messages from servers/loggers/etc.
+    ############################
+    def message_log(self, source, user, log_level, message):
+        &#34;&#34;&#34; Timestamp and store the passed message. &#34;&#34;&#34;
+
+        now = datetime.utcnow()
+        self.server_messages.append((now, source, user,
+                                     log_level, message))
+
+        # Keep server_messages from over-eating memory
+        while len(self.server_messages) &gt; 1000:
+            self.server_messages.pop(0)
+
+        Q = &#39;INSERT INTO logmessages \
+             (timestamp, loglevel, cruise, source, user, message) \
+             VALUES(?, ?, ?, ?, ?, ?)&#39;
+
+        cruise = self.config.get(&#39;cruise&#39;, {})
+        cruise_id = cruise.get(&#39;id&#39;, &#39;none&#39;)
+
+        self._sql_cmd(Q, now, log_level, cruise_id, source, user, message)
+
+    ############################
+    def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
+                        since_timestamp=None):
+        &#34;&#34;&#34;Retrieve log messages from source at or above log_level since
+        timestamp. If source is omitted, retrieve from all sources. If
+        log_level is omitted, retrieve at all levels. If since_timestamp is
+        omitted, only retrieve most recent message.
+        &#34;&#34;&#34;
+
+        # NOTE:  Should we pull this from the database?
+        #        No... if they want more history, look directly.
+        index = len(self.server_messages) - 1
+        messages = []
+        while index &gt;= 0:
+            message = self.server_messages[index]
+            (timestamp, mesg_source, mesg_user,
+             mesg_log_level, mesg_message) = message
+            # Have we gone back too far? If so, we&#39;re done.
+            if since_timestamp is not None and timestamp &lt;= since_timestamp:
+                break
+
+            if mesg_log_level &lt; log_level:
+                continue
+            if user and not mesg_user == user:
+                continue
+            if source and not mesg_source == source:
+                continue
+
+            messages.insert(0, message)
+
+            # Are we only looking for last message, and do we have a message?
+            if since_timestamp is None and messages:
+                break
+            index -= 1
+
+        return messages
+
+    #############################
+    # Save a copy before empyting out the database
+    ##############################
+    def _backup_database(self):
+        &#34;&#34;&#34; Backup the database &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            logging.debug(&#39;No configuration to back up&#39;)
+            return
+        cruise = config.get(&#39;cruise&#39;, {})
+        cruise_id = cruise.get(&#39;id&#39;, &#39;none&#39;)
+
+        dt = datetime.utcnow().strftime(&#39;%Y%m%d%H%M%S&#39;)
+        ourpath = os.path.dirname(__file__)
+        filename = f&#39;openrvdas-{cruise_id}-{dt}.sql&#39;
+        dbfile = os.path.join(ourpath, filename)
+        try:
+            cx = self._get_connection()
+            cx.execute(&#39;VACUUM INTO ?&#39;, (dbfile,))
+        except Exception as err:
+            logging.warn(f&#39;Failed to backup SQLite database: {err}&#39;)
+            pass
+
+    #####################################
+    def load_configuration(self, config):
+        &#34;&#34;&#34;Add a complete cruise configuration (id, modes, configs,
+        default) to the data store.&#34;&#34;&#34;
+
+        # Loaded new config, (optionally) backup old one
+        if DATABASE_BACKUPS:
+            self._backup_database()
+
+        self.config = config
+        # self.config[&#39;loaded_time&#39;] = datetime.utcnow().isoformat()
+        self.config[&#39;loaded_time&#39;] = datetime.utcnow()
+
+        # Set cruise into default mode, if one is defined
+        if &#39;default_mode&#39; in config:
+            active_mode = config[&#39;default_mode&#39;]
+            self.set_active_mode(active_mode)
+        else:
+            logging.warn(&#39;Cruise has no default mode&#39;)
+        # Why not send the entire config to the CDS?  Why
+        # just *almost* all of it?  JSON issue?
+        cruise = config.get(&#39;cruise&#39;, None)
+        if cruise:
+            for key in [&#39;id&#39;, &#39;start&#39;, &#39;end&#39;]:
+                if key not in self.config:
+                    self.config[key] = cruise.get(key, None)
+        self._save_config()
+        self.signal_load()
+
+    ###############################
+    def delete_configuration(self):
+        &#34;&#34;&#34;Remove the specified cruise from the data store.&#34;&#34;&#34;
+        self.config = {}
+        # self.logger_config = {}
+        self.callbacks = []
+        self.status = []
+        self._save_config()
+
+    ############################
+    # Methods for manually constructing/modifying a cruise spec via API
+    def add_mode(self, cruise_id, mode):
+        logging.warn(&#39;Method &#34;add_mode&#34; not implemented&#39;)
+
+    def delete_mode(self, cruise_id, mode):
+        logging.warn(&#39;Method &#34;delete_mode&#34; not implemented&#39;)
+
+    def add_logger(self, cruise_id, logger_id, logger_spec):
+        logging.warn(&#39;Method &#34;add_logger&#34; not implemented&#39;)
+
+    def delete_logger(self, cruise_id, logger_id):
+        logging.warn(&#39;Method &#34;delete_logger&#34; not implemented&#39;)
+
+    def add_config(self, cruise_id, config, config_spec):
+        logging.warn(&#39;Method &#34;add_config&#34; not implemented&#39;)
+
+    def add_config_to_logger(self, cruise_id, config, logger_id):
+        logging.warn(&#39;Method &#34;add_config_to_logger&#34; not implemented&#39;)
+
+    def add_config_to_mode(self, cruise_id, config, logger_id, mode):
+        logging.warn(&#39;Method &#34;add_config_to_mode&#34; not implemented&#39;)
+
+    def delete_config(self, cruise_id, config_id):
+        logging.warn(&#39;Method &#34;delete_config&#34; not implemented&#39;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="server.sqlite_server_api.SQLiteServerAPI"><code class="flex name class">
+<span>class <span class="ident">SQLiteServerAPI</span></span>
+<span>(</span><span>database_path='/opt/openrvdas/server/openrvdas.sql', no_create_database=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Abstract base class defining an API through which a LoggerServer
+can interact with a data store.</p>
+<p>Parameters below have the following semantics:</p>
+<pre><code>configuration - dict definition of a OpenRVDAS configuration
+mode          - dict name of mode, and logger_config_names associated with that mode
+default_mode  - name of mode to use at startup or when returning to a default state
+
+logger_config_name - string name of a logger configuration, unique within configration
+logger_config - dict definition of a logger configuration
+
+logger_id     - string name of logger, unique within cruise
+logger        - dict definition of logger, including list of names of
+                valid configs and optional host restriction
+
+logger_configs - dict of {logger_config_name:logger_config,...}
+</code></pre>
+<p>For the purposes of documentation below, assume a sample
+cruise_config as follows:</p>
+<pre><code>{
+  &quot;loggers&quot;: {
+    &quot;knud&quot;: {
+      &quot;host&quot;: &quot;knud.pi&quot;,
+      &quot;configs&quot;: [&quot;off&quot;, &quot;knud-&gt;net&quot;, &quot;knud-&gt;file/net/db&quot;]
+    },
+    &quot;gyr1&quot;: {
+      &quot;configs&quot;: [&quot;off&quot;, &quot;gyr1-&gt;net&quot;, &quot;gyr1-&gt;file/net/db&quot;]
+    },
+  &quot;modes&quot;: {
+    &quot;off&quot;: {&quot;knud&quot;: &quot;off&quot;, &quot;gyr1&quot;: &quot;off&quot;},
+    &quot;port&quot;: {&quot;knud&quot;: &quot;off&quot;, &quot;gyr1&quot;: &quot;gyr1-&gt;net&quot;},
+    &quot;underway&quot;: { &quot;knud&quot;: &quot;knud-&gt;file/net/db&quot;,
+                  &quot;gyr1&quot;: &quot;gyr1-&gt;file/net/db&quot;
+                }
+  },
+  &quot;default_mode&quot;: &quot;off&quot;,
+  &quot;configs&quot;: {
+    &quot;off&quot;: {},
+    &quot;knud-&gt;net&quot;: { config_spec },
+    &quot;knud-&gt;file/net/db&quot;: { config_spec },
+    &quot;gyr1-&gt;net&quot;: { config_spec },
+    &quot;gyr1-&gt;file/net/dbnet&quot;: { config_spec }
+  }
+}
+</code></pre>
+<p>database_path
+- If specified, the path to the SQLite database to use</p>
+<p>no_create_database - If True, and database does not exist, throw an error
+rather than creating a new database.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SQLiteServerAPI(ServerAPI):
+    ############################
+
+    def __init__(self, database_path=DEFAULT_DATABASE_PATH,
+                 no_create_database=False):
+        &#34;&#34;&#34;
+        database_path  - If specified, the path to the SQLite database to use
+
+        no_create_database - If True, and database does not exist, throw an error
+                             rather than creating a new database.
+        &#34;&#34;&#34;
+        super().__init__()
+
+        # Where do we l
+        self.database_path = database_path
+        self.no_create_database = no_create_database
+
+        self.config = {}
+        self.callbacks = []
+        self.status = []
+        self.server_messages = []
+        self.cx = None
+        self.timestamp = self._get_database_timestamp()
+
+
+    def _database_exists(self):
+        &#34;&#34;&#34;Return True if SQLite database at self.database_path exists,
+        and can be read without errors.&#34;&#34;&#34;
+        read_only_database_path = &#39;&#39;.join([&#39;file:&#39;, self.database_path, &#39;?mode=ro&#39;])
+        try:
+            cx = sqlite3.connect(read_only_database_path, uri=True)
+        except sqlite3.OperationalError:
+            return False
+        except sqlite3.Error as err:
+            # Some other error
+            logging.error(f&#39;Unknown SQLite database error on read: {err}&#39;)
+            return False
+        return True
+
+    def _create_database(self):
+        &#34;&#34;&#34;Try to create the database.&#34;&#34;&#34;
+        logging.debug(f&#39;Creating SQLite database &#34;{self.database_path}&#34;&#39;)
+        cx = sqlite3.connect(self.database_path)
+        cu = cx.cursor()
+        cu.execute(&#39;CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)&#39;)
+        cu.execute(&#39;CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)&#39;)
+        cu.execute(&#39;CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)&#39;)
+
+        # We need a time or we think the database is not initialized
+        cu.execute(&#39;INSERT INTO lastupdate (highlander, timestamp) VALUES (1, CURRENT_TIMESTAMP);&#39;)
+
+        # Close, or not necessarily executed?
+        cx.close()
+
+    #############################
+    # API methods below are used in querying/modifying the API for the
+    # record of the running state of loggers.
+    ############################
+    def _get_connection(self):
+        &#34;&#34;&#34; Return SQLite connection or get one &#34;&#34;&#34;
+
+        def dict_factory(cursor, row):
+            &#34;&#34;&#34; Factory method for sqlite row as dictionary &#34;&#34;&#34;
+            d = {}
+            for idx, col in enumerate(cursor.description):
+                d[col[0]] = row[idx]
+            return d
+
+        # Return cached connection if it exists
+        if self.cx is not None:
+            return self.cx
+
+        # Otherwise establish a connection to database
+        if not self._database_exists():
+            if self.no_create_database:
+                raise OperationalError(f&#39;No database &#34;{self.database_path}&#34; found, &#39;
+                                       &#39;and flag &#34;no_create_database&#34; is set.&#39;)
+            # Otherwise, create the missing database
+            self._create_database()
+
+        # Open the database for use
+        try:
+            cx = sqlite3.connect(self.database_path,
+                                 check_same_thread=False,
+                                 detect_types=sqlite3.PARSE_DECLTYPES)
+        except sqlite3.Error as err:
+            # Some other error
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+
+        # Database exists and is now open
+        cx.row_factory = dict_factory
+        cx.isolation_level = None
+        # cx.execute(&#39;PRAGMA ... etc...&#39;);
+        # See if database is initialized
+        try:
+            cx.execute(&#39;SELECT timestamp from lastupdate&#39;)
+        except sqlite3.OperationalError:
+            # Database or table missing
+            logging.error(&#39;System error: SQLite database exists but is not initialized!&#39;)
+            raise sqlite3.OperationError
+        except sqlite3.Error as err:
+            # Some other error
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+        else:
+            self.cx = cx
+            return self.cx
+
+    ##################################################################
+    def _sql_query(self, query, *args):
+        &#34;&#34;&#34; Query the SQLite database.  Do NOT use this method
+            for INSERT, UPDATE, or DELETE as it does not
+            commit nor update the timestamp &#34;&#34;&#34;
+
+        cx = self._get_connection()
+        try:
+            res = cx.execute(query, args)
+            rows = res.fetchall()
+            return rows
+        except sqlite3.OperationalError:
+            # No such table.  We should be logging this.
+            logging.error(&#39;System error: SQLite database exists but has no tables?&#39;)
+            return None
+        except sqlite3.Error as err:
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+
+    ##################################################################
+    def _sql_cmd(self, query, *args):
+        &#34;&#34;&#34; Execute a SQL command that modifies the database &#34;&#34;&#34;
+
+        # NOTE(kped):  Consider not using the cached connection
+        # in this function to help avoid possible threading
+        # concurrency issues.
+        cx = self._get_connection()
+        try:
+            res = cx.execute(query, args)
+            rows = res.fetchall()
+            # Update the database timestamp
+            Q = &#39;INSERT OR REPLACE INTO lastupdate VALUES (1, ?)&#39;
+            now = datetime.utcnow()
+            cx.execute(Q, (now,))
+            cx.commit()
+            # Note:  If using WAL, checkpoint
+            return rows
+        except sqlite3.OperationalError:
+            # No such table
+            logging.error(f&#39;No such SQLite table for query: {query}&#39;)
+            raise sqlite3.OperationalError
+        except sqlite3.Error as err:
+            logging.error(f&#39;SQLite database error: {err}&#39;)
+            raise err
+
+    ##################################################################
+    def _save_config(self):
+        &#34;&#34;&#34;Save our config object to the database&#34;&#34;&#34;
+
+        Q = &#39;INSERT OR REPLACE INTO cruise \
+             (highlander, config, compressed) \
+             VALUES (1, ?, ?)&#39;
+
+        try:
+            ydump = yaml.dump(self.config, sort_keys=False)
+            logging.debug(f&#39;YAML dump: &#34;{ydump}&#34;&#39;)
+            conf = bytes(ydump, &#39;utf-8&#39;)
+            logging.debug(f&#39;YAML conf: &#34;{conf}&#34;&#39;)
+            if DATABASE_COMPRESS:
+                conf = gzip.compress(conf)
+            self._sql_cmd(Q, conf, DATABASE_COMPRESS)
+            cx = self._get_connection()
+            # VACUUM takes a millisecond or so, but keeps the database
+            # size small, which speeds us back up.
+            cx.execute(&#39;VACUUM&#39;,)
+        except Exception as err:
+            logging.warn(f&#39;Failed to save SQLite database: {err}&#39;)
+            raise err
+        else:
+            # logging.info(&#39;Database save successful&#39;)
+            pass
+
+    ##################################################################
+    def _get_database_timestamp(self):
+        &#34;&#34;&#34;Get the timestamp from the sqlite database&#34;&#34;&#34;
+
+        Q = &#39;SELECT timestamp from lastupdate&#39;
+        cx = self._get_connection()
+        try:
+            res = cx.execute(Q)
+            row = res.fetchone()
+            if  row:
+                return row[&#39;timestamp&#39;]
+
+            # If no timestamp row, return string for &#39;time zero&#39;
+            return EPOCH_TIME_ZERO
+
+        except sqlite3.OperationalError as err:
+            # No such table
+            logging.error(&#39;System error: SQLite database exists but is not initialized!&#39;)
+            raise err
+        except sqlite3.Error as err:
+            logging.error(f&#39;Unhandled SQLite database error: {err}&#39;)
+            raise err
+
+    ##################################################################
+    def _do_we_need_to_reload(self):
+        &#34;&#34;&#34; Check database timestamp and reload config if needed &#34;&#34;&#34;
+
+        db_timestamp = self._get_database_timestamp()
+        if db_timestamp &gt; self.timestamp or self.config == {}:
+            Q = &#34;&#34;&#34;SELECT
+                       config, compressed
+                   FROM
+                       cruise
+                   WHERE
+                       highlander=1&#34;&#34;&#34;
+            rows = self._sql_query(Q)
+            row0 = None
+            try:
+                row0 = rows[0]
+            except IndexError:
+                return None
+
+            if &#39;config&#39; not in row0:
+                return None
+            conf = row0[&#39;config&#39;]
+
+            # Wanted bzip, but build problems (probably install script)
+            if row0.get(&#39;compressed&#39;, 0):
+                conf = gzip.decompress(conf)
+
+            # Wanted JSON, but datetime objects aren&#39;t JSON
+            # serializable, so went with YAML.
+            conf = yaml.load(conf, Loader=yaml.FullLoader)
+            if &#39;loggers&#39; not in conf:
+                return None
+
+            self.timestamp = db_timestamp
+            self.config = conf
+
+    # For each of the get_* function, check if the timestamp
+    # is newer than our current timestamp, pull config from
+    # the database.
+    ##################################################################
+    def get_configuration(self):
+        &#34;&#34;&#34;&#34; Return cruise config for specified cruise id. &#34;&#34;&#34;
+
+        self._do_we_need_to_reload()
+        return self.config or None
+
+    ############################
+    def get_modes(self):
+        &#34;&#34;&#34; Return list of modes defined for given cruise. &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return None
+        return list(config.get(&#39;modes&#39;, []))
+
+    ############################
+    def get_active_mode(self):
+        &#34;&#34;&#34; Return cruise config for specified cruise id.&#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return None
+        return config.get(&#39;active_mode&#39;, None)
+
+    ############################
+    def get_default_mode(self):
+        &#34;&#34;&#34; Get the name of the default mode for the specified cruise
+        from the. data store. &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return None
+        return config.get(&#39;default_mode&#39;, None)
+
+    ############################
+    def get_logger(self, logger):
+        &#34;&#34;&#34;Retrieve the logger spec for the specified logger id.&#34;&#34;&#34;
+
+        loggers = self.get_loggers()   # which calls self._get_configuration
+        if logger not in loggers:
+            raise ValueError(f&#39;No logger &#34;{logger}&#34; found&#39;)
+        return loggers.get(logger)
+
+    ############################
+    def get_loggers(self):
+        &#34;&#34;&#34;Get a dict of
+            {logger_id:{&#39;configs&#39;:[&lt;name_1&gt;,&lt;name_2&gt;,...],
+            &#39;active&#39;:&lt;name&gt;},...}
+        for all loggers.
+        &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return {}
+
+        if &#39;loggers&#39; not in config:
+            raise ValueError(&#39;No loggers found&#39;)
+        logger_configs = config.get(&#39;loggers&#39;, None)
+        if logger_configs is None:
+            raise ValueError(&#39;No logger configurations found&#39;)
+
+        # Fetch and insert the currently active config for each logger
+        # Note that this only changes our copy, not the config itself
+        for logger in logger_configs:
+            if &#39;active&#39; not in logger_configs[logger]:
+                mode = self.get_logger_config_name(logger)
+                logger_configs[logger][&#39;active&#39;] = mode
+        return logger_configs
+
+    ############################
+    def get_logger_config(self, config_name):
+        &#34;&#34;&#34;Retrieve the config associated with the specified name.&#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if config is None:
+            return {}
+        logger_configs = config.get(&#39;configs&#39;, None)
+        if logger_configs is None:
+            raise ValueError(&#39;No &#34;configs&#34; section found&#39;)
+        logger_config = logger_configs.get(config_name, None)
+        if logger_config is None:
+            raise ValueError(f&#39;No logger config &#34;{config_name}&#34; in config&#39;)
+        return logger_config
+
+    ############################
+    def get_logger_configs(self, mode=None):
+        &#34;&#34;&#34;Retrieve the configs associated with a cruise id and mode from the
+        data store. If mode is omitted, retrieve configs associated with
+        the cruise&#39;s current logger configs.&#34;&#34;&#34;
+
+        loggers = self.get_loggers()
+        if not loggers:
+            return None
+
+        output = {}
+        for logger in loggers:
+            logger_config_name = self.get_logger_config_name(logger, mode)
+            output[logger] = self.get_logger_config(logger_config_name)
+
+        return output
+
+    ############################
+    def get_logger_config_name(self, logger_id, mode=None):
+        &#34;&#34;&#34; Retrieve name of the config associated with the specified logger
+        in the specified mode.  If mode is omitted, retrieve name of logger&#39;s
+        current config. &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            return {}
+        loggers = config.get(&#39;loggers&#39;, None)
+        if loggers is None:
+            raise ValueError(&#39;No loggers found in config&#39;)
+
+        # No mode, so we want the active mode
+        if mode is None:
+            logger = loggers.get(logger_id, None)
+            if logger is None:
+                raise ValueError(f&#39;Logger id {logger_id} has no mode!&#39;)
+            conf_name = logger.get(&#39;active&#39;, None)
+            if conf_name is not None:
+                return conf_name
+
+        # Mode given or no active conf, so get the default for this mode
+        modes = config.get(&#39;modes&#39;)
+        mode_configs = modes.get(mode, None)
+        if mode_configs is None:
+            raise ValueError(f&#39;Requested mode {mode} is not defined&#39;)
+        logger_config_name = mode_configs.get(logger_id, None)
+        if logger_config_name is None:
+            raise ValueError(f&#39;Logger {logger_id} has no config defined in mode {mode}&#39;)
+        return logger_config_name
+
+    #############################
+    def get_logger_config_names(self, logger_id):
+        &#34;&#34;&#34; Retrieve list of config names that are valid for the
+            specified logger .
+        &gt; api.get_logger_config_names(&#39;NBP1406&#39;, &#39;knud&#39;)
+              [&#34;off&#34;, &#34;knud-&gt;net&#34;, &#34;knud-&gt;net/file&#34;, &#34;knud-&gt;net/file/db&#34;]
+        &#34;&#34;&#34;
+        logger = self.get_logger(logger_id)
+        return logger.get(&#39;configs&#39;, [])
+
+    ############################
+    # Methods for manipulating the desired state via API to indicate
+    # current mode and which loggers should be in which configs.
+    ############################
+    def set_active_mode(self, mode):
+        &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
+
+        config = self.get_configuration()
+        modes = config.get(&#39;modes&#39;, None)
+        if not modes:
+            raise ValueError(&#39;Config has no modes&#39;)
+        if mode not in modes:
+            raise ValueError(f&#39;Config has no mode &#34;{mode}&#34;&#39;)
+
+        self.config[&#39;active_mode&#39;] = mode
+
+        # Update the API&#39;s working config&#39;s loggers
+        # to match the new mode
+        for logger, conf in modes[mode].items():
+            self.config[&#39;loggers&#39;][logger][&#39;active&#39;] = conf
+
+        self._save_config()
+        logging.info(&#39;Signaling update&#39;)
+        self.signal_update()
+
+    ############################
+    def set_active_logger_config(self, logger, config_name):
+        &#34;&#34;&#34;Set specified logger to new config. NOTE: we have no way to check
+        whether logger is compatible with config, so we rely on whoever is
+        calling us to have made that determination.&#34;&#34;&#34;
+
+        # self.logger_config[logger] = config_name
+        # NOTE: We can check that config_name is in logger[configs]
+        self.config[&#39;loggers&#39;][logger][&#39;active&#39;] = config_name
+        self._save_config()
+        logging.info(&#39;Signaling update&#39;)
+        self.signal_update()
+
+    ############################
+    # Methods for feeding data from LoggerServer back into the API
+    ############################
+    def update_status(self, status):
+        &#34;&#34;&#34;Save/register the loggers&#39; retrieved status report with the API.&#34;&#34;&#34;
+        self.status.append(((datetime.utcnow()), status))
+        # NOTE(kped) Do we need to write this to the database?
+        # logger_manager never calls this....
+
+    ############################
+    # Methods for getting status data from API
+    ############################
+
+    def get_status(self, since_timestamp=None):
+        &#34;&#34;&#34;Retrieve a dict of the most-recent status report from each
+        logger. If since_timestamp is specified, retrieve all status reports
+        since that time.&#34;&#34;&#34;
+
+        # Start by getting set of loggers for cruise. Store as
+        # cruise_id:logger for ease of lookup.
+        try:
+            logger_set = set([logger
+                              for logger in self.get_loggers()])
+        except ValueError:
+            logger_set = set()
+
+        logging.debug(f&#39;logger_set: {logger_set}&#39;)
+
+        # Step backwards through status messages until we run out of
+        # status messages or reach termination condition. If
+        # since_timestamp==None, our termination is when we have a status
+        # for each of our loggers. If since_timestamp is a number, our
+        # termination is when we&#39;ve grabbed all the statuses with a
+        # timestamp greater than the specified number.
+        status = {}
+
+        status_index = len(self.status) - 1
+        logging.debug(f&#39;starting at status index {status_index}&#39;)
+        while logger_set and status_index &gt;= 0:
+            # record is a dict of &#39;cruise_id:logger&#39; : {fields}
+            (timestamp, record) = self.status[status_index]
+            logging.debug(&#39;%d: %f: %s&#39;,
+                          status_index, timestamp, pprint.pformat(record))
+
+            # If we&#39;ve been given a numeric timestamp and we&#39;ve stepped back
+            # in time to or before that timestamp, we&#39;re done - break out.
+            if since_timestamp is not None and timestamp &lt;= since_timestamp:
+                break
+
+            # Otherwise, examine ids in this record to see if they&#39;re for
+            # the cruise in question.
+            for id, fields in record.items():
+                # If id is cruise_id:logger that we&#39;re interested in, grab it.
+                logging.debug(f&#39;Is {id} in {logger_set}?&#39;)
+                if id in logger_set:
+                    if timestamp not in status:
+                        status[timestamp] = {}
+                    status[timestamp][id] = fields
+
+                    # If since_timestamp==None, we only want the latest status
+                    # for each logger. So once we&#39;ve found it, remove the id
+                    # from the logger_set we&#39;re lookings. We&#39;ll drop out of the
+                    # loop when the set is empty.
+                    if since_timestamp is None:
+                        logger_set.discard(id)
+            status_index -= 1
+
+        return status
+
+    ############################
+    # Methods for storing/retrieving messages from servers/loggers/etc.
+    ############################
+    def message_log(self, source, user, log_level, message):
+        &#34;&#34;&#34; Timestamp and store the passed message. &#34;&#34;&#34;
+
+        now = datetime.utcnow()
+        self.server_messages.append((now, source, user,
+                                     log_level, message))
+
+        # Keep server_messages from over-eating memory
+        while len(self.server_messages) &gt; 1000:
+            self.server_messages.pop(0)
+
+        Q = &#39;INSERT INTO logmessages \
+             (timestamp, loglevel, cruise, source, user, message) \
+             VALUES(?, ?, ?, ?, ?, ?)&#39;
+
+        cruise = self.config.get(&#39;cruise&#39;, {})
+        cruise_id = cruise.get(&#39;id&#39;, &#39;none&#39;)
+
+        self._sql_cmd(Q, now, log_level, cruise_id, source, user, message)
+
+    ############################
+    def get_message_log(self, source=None, user=None, log_level=sys.maxsize,
+                        since_timestamp=None):
+        &#34;&#34;&#34;Retrieve log messages from source at or above log_level since
+        timestamp. If source is omitted, retrieve from all sources. If
+        log_level is omitted, retrieve at all levels. If since_timestamp is
+        omitted, only retrieve most recent message.
+        &#34;&#34;&#34;
+
+        # NOTE:  Should we pull this from the database?
+        #        No... if they want more history, look directly.
+        index = len(self.server_messages) - 1
+        messages = []
+        while index &gt;= 0:
+            message = self.server_messages[index]
+            (timestamp, mesg_source, mesg_user,
+             mesg_log_level, mesg_message) = message
+            # Have we gone back too far? If so, we&#39;re done.
+            if since_timestamp is not None and timestamp &lt;= since_timestamp:
+                break
+
+            if mesg_log_level &lt; log_level:
+                continue
+            if user and not mesg_user == user:
+                continue
+            if source and not mesg_source == source:
+                continue
+
+            messages.insert(0, message)
+
+            # Are we only looking for last message, and do we have a message?
+            if since_timestamp is None and messages:
+                break
+            index -= 1
+
+        return messages
+
+    #############################
+    # Save a copy before empyting out the database
+    ##############################
+    def _backup_database(self):
+        &#34;&#34;&#34; Backup the database &#34;&#34;&#34;
+
+        config = self.get_configuration()
+        if not config:
+            logging.debug(&#39;No configuration to back up&#39;)
+            return
+        cruise = config.get(&#39;cruise&#39;, {})
+        cruise_id = cruise.get(&#39;id&#39;, &#39;none&#39;)
+
+        dt = datetime.utcnow().strftime(&#39;%Y%m%d%H%M%S&#39;)
+        ourpath = os.path.dirname(__file__)
+        filename = f&#39;openrvdas-{cruise_id}-{dt}.sql&#39;
+        dbfile = os.path.join(ourpath, filename)
+        try:
+            cx = self._get_connection()
+            cx.execute(&#39;VACUUM INTO ?&#39;, (dbfile,))
+        except Exception as err:
+            logging.warn(f&#39;Failed to backup SQLite database: {err}&#39;)
+            pass
+
+    #####################################
+    def load_configuration(self, config):
+        &#34;&#34;&#34;Add a complete cruise configuration (id, modes, configs,
+        default) to the data store.&#34;&#34;&#34;
+
+        # Loaded new config, (optionally) backup old one
+        if DATABASE_BACKUPS:
+            self._backup_database()
+
+        self.config = config
+        # self.config[&#39;loaded_time&#39;] = datetime.utcnow().isoformat()
+        self.config[&#39;loaded_time&#39;] = datetime.utcnow()
+
+        # Set cruise into default mode, if one is defined
+        if &#39;default_mode&#39; in config:
+            active_mode = config[&#39;default_mode&#39;]
+            self.set_active_mode(active_mode)
+        else:
+            logging.warn(&#39;Cruise has no default mode&#39;)
+        # Why not send the entire config to the CDS?  Why
+        # just *almost* all of it?  JSON issue?
+        cruise = config.get(&#39;cruise&#39;, None)
+        if cruise:
+            for key in [&#39;id&#39;, &#39;start&#39;, &#39;end&#39;]:
+                if key not in self.config:
+                    self.config[key] = cruise.get(key, None)
+        self._save_config()
+        self.signal_load()
+
+    ###############################
+    def delete_configuration(self):
+        &#34;&#34;&#34;Remove the specified cruise from the data store.&#34;&#34;&#34;
+        self.config = {}
+        # self.logger_config = {}
+        self.callbacks = []
+        self.status = []
+        self._save_config()
+
+    ############################
+    # Methods for manually constructing/modifying a cruise spec via API
+    def add_mode(self, cruise_id, mode):
+        logging.warn(&#39;Method &#34;add_mode&#34; not implemented&#39;)
+
+    def delete_mode(self, cruise_id, mode):
+        logging.warn(&#39;Method &#34;delete_mode&#34; not implemented&#39;)
+
+    def add_logger(self, cruise_id, logger_id, logger_spec):
+        logging.warn(&#39;Method &#34;add_logger&#34; not implemented&#39;)
+
+    def delete_logger(self, cruise_id, logger_id):
+        logging.warn(&#39;Method &#34;delete_logger&#34; not implemented&#39;)
+
+    def add_config(self, cruise_id, config, config_spec):
+        logging.warn(&#39;Method &#34;add_config&#34; not implemented&#39;)
+
+    def add_config_to_logger(self, cruise_id, config, logger_id):
+        logging.warn(&#39;Method &#34;add_config_to_logger&#34; not implemented&#39;)
+
+    def add_config_to_mode(self, cruise_id, config, logger_id, mode):
+        logging.warn(&#39;Method &#34;add_config_to_mode&#34; not implemented&#39;)
+
+    def delete_config(self, cruise_id, config_id):
+        logging.warn(&#39;Method &#34;delete_config&#34; not implemented&#39;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="server.server_api.ServerAPI" href="server_api.html#server.server_api.ServerAPI">ServerAPI</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.add_config"><code class="name flex">
+<span>def <span class="ident">add_config</span></span>(<span>self, cruise_id, config, config_spec)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_config(self, cruise_id, config, config_spec):
+    logging.warn(&#39;Method &#34;add_config&#34; not implemented&#39;)</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.add_config_to_logger"><code class="name flex">
+<span>def <span class="ident">add_config_to_logger</span></span>(<span>self, cruise_id, config, logger_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_config_to_logger(self, cruise_id, config, logger_id):
+    logging.warn(&#39;Method &#34;add_config_to_logger&#34; not implemented&#39;)</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.add_config_to_mode"><code class="name flex">
+<span>def <span class="ident">add_config_to_mode</span></span>(<span>self, cruise_id, config, logger_id, mode)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_config_to_mode(self, cruise_id, config, logger_id, mode):
+    logging.warn(&#39;Method &#34;add_config_to_mode&#34; not implemented&#39;)</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.delete_config"><code class="name flex">
+<span>def <span class="ident">delete_config</span></span>(<span>self, cruise_id, config_id)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete_config(self, cruise_id, config_id):
+    logging.warn(&#39;Method &#34;delete_config&#34; not implemented&#39;)</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.delete_configuration"><code class="name flex">
+<span>def <span class="ident">delete_configuration</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove the specified cruise from the data store.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete_configuration(self):
+    &#34;&#34;&#34;Remove the specified cruise from the data store.&#34;&#34;&#34;
+    self.config = {}
+    # self.logger_config = {}
+    self.callbacks = []
+    self.status = []
+    self._save_config()</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_active_mode"><code class="name flex">
+<span>def <span class="ident">get_active_mode</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return cruise config for specified cruise id.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_active_mode(self):
+    &#34;&#34;&#34; Return cruise config for specified cruise id.&#34;&#34;&#34;
+
+    config = self.get_configuration()
+    if not config:
+        return None
+    return config.get(&#39;active_mode&#39;, None)</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_configuration"><code class="name flex">
+<span>def <span class="ident">get_configuration</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>" Return cruise config for specified cruise id.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_configuration(self):
+    &#34;&#34;&#34;&#34; Return cruise config for specified cruise id. &#34;&#34;&#34;
+
+    self._do_we_need_to_reload()
+    return self.config or None</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_default_mode"><code class="name flex">
+<span>def <span class="ident">get_default_mode</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the name of the default mode for the specified cruise
+from the. data store.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_default_mode(self):
+    &#34;&#34;&#34; Get the name of the default mode for the specified cruise
+    from the. data store. &#34;&#34;&#34;
+
+    config = self.get_configuration()
+    if not config:
+        return None
+    return config.get(&#39;default_mode&#39;, None)</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_logger"><code class="name flex">
+<span>def <span class="ident">get_logger</span></span>(<span>self, logger)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retrieve the logger spec for the specified logger id.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_logger(self, logger):
+    &#34;&#34;&#34;Retrieve the logger spec for the specified logger id.&#34;&#34;&#34;
+
+    loggers = self.get_loggers()   # which calls self._get_configuration
+    if logger not in loggers:
+        raise ValueError(f&#39;No logger &#34;{logger}&#34; found&#39;)
+    return loggers.get(logger)</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_logger_config"><code class="name flex">
+<span>def <span class="ident">get_logger_config</span></span>(<span>self, config_name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retrieve the config associated with the specified name.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_logger_config(self, config_name):
+    &#34;&#34;&#34;Retrieve the config associated with the specified name.&#34;&#34;&#34;
+
+    config = self.get_configuration()
+    if config is None:
+        return {}
+    logger_configs = config.get(&#39;configs&#39;, None)
+    if logger_configs is None:
+        raise ValueError(&#39;No &#34;configs&#34; section found&#39;)
+    logger_config = logger_configs.get(config_name, None)
+    if logger_config is None:
+        raise ValueError(f&#39;No logger config &#34;{config_name}&#34; in config&#39;)
+    return logger_config</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_logger_config_name"><code class="name flex">
+<span>def <span class="ident">get_logger_config_name</span></span>(<span>self, logger_id, mode=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retrieve name of the config associated with the specified logger
+in the specified mode.
+If mode is omitted, retrieve name of logger's
+current config.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_logger_config_name(self, logger_id, mode=None):
+    &#34;&#34;&#34; Retrieve name of the config associated with the specified logger
+    in the specified mode.  If mode is omitted, retrieve name of logger&#39;s
+    current config. &#34;&#34;&#34;
+
+    config = self.get_configuration()
+    if not config:
+        return {}
+    loggers = config.get(&#39;loggers&#39;, None)
+    if loggers is None:
+        raise ValueError(&#39;No loggers found in config&#39;)
+
+    # No mode, so we want the active mode
+    if mode is None:
+        logger = loggers.get(logger_id, None)
+        if logger is None:
+            raise ValueError(f&#39;Logger id {logger_id} has no mode!&#39;)
+        conf_name = logger.get(&#39;active&#39;, None)
+        if conf_name is not None:
+            return conf_name
+
+    # Mode given or no active conf, so get the default for this mode
+    modes = config.get(&#39;modes&#39;)
+    mode_configs = modes.get(mode, None)
+    if mode_configs is None:
+        raise ValueError(f&#39;Requested mode {mode} is not defined&#39;)
+    logger_config_name = mode_configs.get(logger_id, None)
+    if logger_config_name is None:
+        raise ValueError(f&#39;Logger {logger_id} has no config defined in mode {mode}&#39;)
+    return logger_config_name</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_logger_config_names"><code class="name flex">
+<span>def <span class="ident">get_logger_config_names</span></span>(<span>self, logger_id)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retrieve list of config names that are valid for the
+specified logger .</p>
+<blockquote>
+<p>api.get_logger_config_names('NBP1406', 'knud')
+["off", "knud-&gt;net", "knud-&gt;net/file", "knud-&gt;net/file/db"]</p>
+</blockquote></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_logger_config_names(self, logger_id):
+    &#34;&#34;&#34; Retrieve list of config names that are valid for the
+        specified logger .
+    &gt; api.get_logger_config_names(&#39;NBP1406&#39;, &#39;knud&#39;)
+          [&#34;off&#34;, &#34;knud-&gt;net&#34;, &#34;knud-&gt;net/file&#34;, &#34;knud-&gt;net/file/db&#34;]
+    &#34;&#34;&#34;
+    logger = self.get_logger(logger_id)
+    return logger.get(&#39;configs&#39;, [])</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_logger_configs"><code class="name flex">
+<span>def <span class="ident">get_logger_configs</span></span>(<span>self, mode=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retrieve the configs associated with a cruise id and mode from the
+data store. If mode is omitted, retrieve configs associated with
+the cruise's current logger configs.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_logger_configs(self, mode=None):
+    &#34;&#34;&#34;Retrieve the configs associated with a cruise id and mode from the
+    data store. If mode is omitted, retrieve configs associated with
+    the cruise&#39;s current logger configs.&#34;&#34;&#34;
+
+    loggers = self.get_loggers()
+    if not loggers:
+        return None
+
+    output = {}
+    for logger in loggers:
+        logger_config_name = self.get_logger_config_name(logger, mode)
+        output[logger] = self.get_logger_config(logger_config_name)
+
+    return output</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_loggers"><code class="name flex">
+<span>def <span class="ident">get_loggers</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a dict of
+{logger_id:{'configs':[<name_1>,<name_2>,&hellip;],
+'active':<name>},&hellip;}
+for all loggers.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_loggers(self):
+    &#34;&#34;&#34;Get a dict of
+        {logger_id:{&#39;configs&#39;:[&lt;name_1&gt;,&lt;name_2&gt;,...],
+        &#39;active&#39;:&lt;name&gt;},...}
+    for all loggers.
+    &#34;&#34;&#34;
+
+    config = self.get_configuration()
+    if not config:
+        return {}
+
+    if &#39;loggers&#39; not in config:
+        raise ValueError(&#39;No loggers found&#39;)
+    logger_configs = config.get(&#39;loggers&#39;, None)
+    if logger_configs is None:
+        raise ValueError(&#39;No logger configurations found&#39;)
+
+    # Fetch and insert the currently active config for each logger
+    # Note that this only changes our copy, not the config itself
+    for logger in logger_configs:
+        if &#39;active&#39; not in logger_configs[logger]:
+            mode = self.get_logger_config_name(logger)
+            logger_configs[logger][&#39;active&#39;] = mode
+    return logger_configs</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.get_modes"><code class="name flex">
+<span>def <span class="ident">get_modes</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return list of modes defined for given cruise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_modes(self):
+    &#34;&#34;&#34; Return list of modes defined for given cruise. &#34;&#34;&#34;
+
+    config = self.get_configuration()
+    if not config:
+        return None
+    return list(config.get(&#39;modes&#39;, []))</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.load_configuration"><code class="name flex">
+<span>def <span class="ident">load_configuration</span></span>(<span>self, config)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a complete cruise configuration (id, modes, configs,
+default) to the data store.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_configuration(self, config):
+    &#34;&#34;&#34;Add a complete cruise configuration (id, modes, configs,
+    default) to the data store.&#34;&#34;&#34;
+
+    # Loaded new config, (optionally) backup old one
+    if DATABASE_BACKUPS:
+        self._backup_database()
+
+    self.config = config
+    # self.config[&#39;loaded_time&#39;] = datetime.utcnow().isoformat()
+    self.config[&#39;loaded_time&#39;] = datetime.utcnow()
+
+    # Set cruise into default mode, if one is defined
+    if &#39;default_mode&#39; in config:
+        active_mode = config[&#39;default_mode&#39;]
+        self.set_active_mode(active_mode)
+    else:
+        logging.warn(&#39;Cruise has no default mode&#39;)
+    # Why not send the entire config to the CDS?  Why
+    # just *almost* all of it?  JSON issue?
+    cruise = config.get(&#39;cruise&#39;, None)
+    if cruise:
+        for key in [&#39;id&#39;, &#39;start&#39;, &#39;end&#39;]:
+            if key not in self.config:
+                self.config[key] = cruise.get(key, None)
+    self._save_config()
+    self.signal_load()</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.set_active_logger_config"><code class="name flex">
+<span>def <span class="ident">set_active_logger_config</span></span>(<span>self, logger, config_name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set specified logger to new config. NOTE: we have no way to check
+whether logger is compatible with config, so we rely on whoever is
+calling us to have made that determination.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_active_logger_config(self, logger, config_name):
+    &#34;&#34;&#34;Set specified logger to new config. NOTE: we have no way to check
+    whether logger is compatible with config, so we rely on whoever is
+    calling us to have made that determination.&#34;&#34;&#34;
+
+    # self.logger_config[logger] = config_name
+    # NOTE: We can check that config_name is in logger[configs]
+    self.config[&#39;loggers&#39;][logger][&#39;active&#39;] = config_name
+    self._save_config()
+    logging.info(&#39;Signaling update&#39;)
+    self.signal_update()</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.set_active_mode"><code class="name flex">
+<span>def <span class="ident">set_active_mode</span></span>(<span>self, mode)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the current mode of the specified cruise in the data store.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_active_mode(self, mode):
+    &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
+
+    config = self.get_configuration()
+    modes = config.get(&#39;modes&#39;, None)
+    if not modes:
+        raise ValueError(&#39;Config has no modes&#39;)
+    if mode not in modes:
+        raise ValueError(f&#39;Config has no mode &#34;{mode}&#34;&#39;)
+
+    self.config[&#39;active_mode&#39;] = mode
+
+    # Update the API&#39;s working config&#39;s loggers
+    # to match the new mode
+    for logger, conf in modes[mode].items():
+        self.config[&#39;loggers&#39;][logger][&#39;active&#39;] = conf
+
+    self._save_config()
+    logging.info(&#39;Signaling update&#39;)
+    self.signal_update()</code></pre>
+</details>
+</dd>
+<dt id="server.sqlite_server_api.SQLiteServerAPI.update_status"><code class="name flex">
+<span>def <span class="ident">update_status</span></span>(<span>self, status)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save/register the loggers' retrieved status report with the API.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_status(self, status):
+    &#34;&#34;&#34;Save/register the loggers&#39; retrieved status report with the API.&#34;&#34;&#34;
+    self.status.append(((datetime.utcnow()), status))
+    # NOTE(kped) Do we need to write this to the database?
+    # logger_manager never calls this....</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="server.server_api.ServerAPI" href="server_api.html#server.server_api.ServerAPI">ServerAPI</a></b></code>:
+<ul class="hlist">
+<li><code><a title="server.server_api.ServerAPI.add_logger" href="server_api.html#server.server_api.ServerAPI.add_logger">add_logger</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.add_logger_config" href="server_api.html#server.server_api.ServerAPI.add_logger_config">add_logger_config</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.add_logger_config_to_logger" href="server_api.html#server.server_api.ServerAPI.add_logger_config_to_logger">add_logger_config_to_logger</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.add_logger_config_to_mode" href="server_api.html#server.server_api.ServerAPI.add_logger_config_to_mode">add_logger_config_to_mode</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.add_mode" href="server_api.html#server.server_api.ServerAPI.add_mode">add_mode</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.delete_logger" href="server_api.html#server.server_api.ServerAPI.delete_logger">delete_logger</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.delete_logger_config" href="server_api.html#server.server_api.ServerAPI.delete_logger_config">delete_logger_config</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.delete_mode" href="server_api.html#server.server_api.ServerAPI.delete_mode">delete_mode</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.get_message_log" href="server_api.html#server.server_api.ServerAPI.get_message_log">get_message_log</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.get_status" href="server_api.html#server.server_api.ServerAPI.get_status">get_status</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.message_log" href="server_api.html#server.server_api.ServerAPI.message_log">message_log</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.on_load" href="server_api.html#server.server_api.ServerAPI.on_load">on_load</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.on_quit" href="server_api.html#server.server_api.ServerAPI.on_quit">on_quit</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.on_update" href="server_api.html#server.server_api.ServerAPI.on_update">on_update</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.quit" href="server_api.html#server.server_api.ServerAPI.quit">quit</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.signal_load" href="server_api.html#server.server_api.ServerAPI.signal_load">signal_load</a></code></li>
+<li><code><a title="server.server_api.ServerAPI.signal_update" href="server_api.html#server.server_api.ServerAPI.signal_update">signal_update</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="server" href="index.html">server</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="server.sqlite_server_api.SQLiteServerAPI" href="#server.sqlite_server_api.SQLiteServerAPI">SQLiteServerAPI</a></code></h4>
+<ul class="">
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.add_config" href="#server.sqlite_server_api.SQLiteServerAPI.add_config">add_config</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.add_config_to_logger" href="#server.sqlite_server_api.SQLiteServerAPI.add_config_to_logger">add_config_to_logger</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.add_config_to_mode" href="#server.sqlite_server_api.SQLiteServerAPI.add_config_to_mode">add_config_to_mode</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.delete_config" href="#server.sqlite_server_api.SQLiteServerAPI.delete_config">delete_config</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.delete_configuration" href="#server.sqlite_server_api.SQLiteServerAPI.delete_configuration">delete_configuration</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_active_mode" href="#server.sqlite_server_api.SQLiteServerAPI.get_active_mode">get_active_mode</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_configuration" href="#server.sqlite_server_api.SQLiteServerAPI.get_configuration">get_configuration</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_default_mode" href="#server.sqlite_server_api.SQLiteServerAPI.get_default_mode">get_default_mode</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_logger" href="#server.sqlite_server_api.SQLiteServerAPI.get_logger">get_logger</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_logger_config" href="#server.sqlite_server_api.SQLiteServerAPI.get_logger_config">get_logger_config</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_logger_config_name" href="#server.sqlite_server_api.SQLiteServerAPI.get_logger_config_name">get_logger_config_name</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_logger_config_names" href="#server.sqlite_server_api.SQLiteServerAPI.get_logger_config_names">get_logger_config_names</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_logger_configs" href="#server.sqlite_server_api.SQLiteServerAPI.get_logger_configs">get_logger_configs</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_loggers" href="#server.sqlite_server_api.SQLiteServerAPI.get_loggers">get_loggers</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.get_modes" href="#server.sqlite_server_api.SQLiteServerAPI.get_modes">get_modes</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.load_configuration" href="#server.sqlite_server_api.SQLiteServerAPI.load_configuration">load_configuration</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.set_active_logger_config" href="#server.sqlite_server_api.SQLiteServerAPI.set_active_logger_config">set_active_logger_config</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.set_active_mode" href="#server.sqlite_server_api.SQLiteServerAPI.set_active_mode">set_active_mode</a></code></li>
+<li><code><a title="server.sqlite_server_api.SQLiteServerAPI.update_status" href="#server.sqlite_server_api.SQLiteServerAPI.update_status">update_status</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

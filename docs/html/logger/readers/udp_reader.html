@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.readers.udp_reader API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -36,41 +36,60 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 
-READ_BUFFER_SIZE = 4096  # max number of characters to read in one call
+# The UDP header&#39;s `length` field sets a theoretical limit of 65,535 bytes
+# (8-byte header + 65,527 bytes of data) for a UDP datagram.  Technically, IPV4
+# or IPv6 headers use up some of that size, so actual maximum data sent per
+# datagram is slightly less.
+#
+# UDP receivers should always request the max, though, because if you request
+# less than what&#39;s on the wire, you get what you asked for and the rest gets
+# tossed on the floor.  There&#39;s no built-in error detection/correction in UDP,
+# so that would mess things up pretty good.
+READ_BUFFER_SIZE = 65535
+
+# On the send side of things, we can (and do) detect when a write has failed
+# because the user&#39;s `record` was too big.  This is usually because the user is
+# trying to send huge datagrams after looking up the &#34;theoretical max size of a
+# datagram&#34; on wikipedia.  Well, it&#39;s called &#34;theoretical&#34; for a reason.  It&#39;s
+# really the maximum size of the data portion of a UDP datagram, but that
+# doesn&#39;t take into account extra header for IPv4/IPv6 or seemingly random
+# system-level caps (e.g., Mac&#39;s socket implementation set maximum udp send
+# size to 9K).
+#
+# When UDPWriter detects this condition, it fragments the record into smaller
+# records and appends each fragment with this FRAGMENT_MARKER.  Inside
+# UDPReader.read(), we check to see if a received datagram ends with this
+# marker, and if it does, we read another datagram and combine the results
+# (over and over until we get a datagram that doesn&#39;t end with the marker).
+FRAGMENT_MARKER = b&#39;\xff\xffTOOBIG\xff\xff&#39;
 
 
 ################################################################################
-# Read to the specified file. If filename is empty, read to stdout.
 class UDPReader(Reader):
-    &#34;&#34;&#34;
-    Read UDP broadcast and multicast records from a socket.
-
-    TODO: code won&#39;t handle records that are larger than 4K right now,
-    which, if we start getting into Toby Martin&#39;s Total Metadata Ingestion
-    (TMI), may not be enough. We&#39;ll need to implement something that will
-    aggregate recv()&#39;s and know when it&#39;s got an entire record?
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Read UDP packets from network.&#34;&#34;&#34;
     ############################
-
-    def __init__(self, port, source=&#39;&#39;, eol=None,
-                 read_buffer_size=READ_BUFFER_SIZE,
+    def __init__(self, interface=None, port=None, mc_group=None,
+                 reuseaddr=False, reuseport=False,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;
         ```
-        port         Port to listen to for packets
+        interface    IP (or resolvable name) of interface to listen on.  None or &#39;&#39;
+                     will listen on INADDR_ANY (all interfaces).  If joining a
+                     multicast group and None or &#39;&#39; specified, this will default
+                     to whatever the system&#39;s hostname resolves to.  This IP should
+                     not be on the loopback network (OK for testing, but won&#39;t work
+                     in the real world).
 
-        source       If specified, multicast group id to listen for
+        port         Port to listen to for packets.  REQUIRED
 
-        eol          If not specified, assume one record per network packet.  If
-                     specified, buffer network reads until the eol
-                     character has been seen, and return the entire record
-                     at once, retaining everything after the eol for the
-                     start of the subsequent record. If multiple eol characters
-                     are encountered in a packet, split the packet and return
-                     the first of them, buffering the remainder for subsequent
-                     calls.
+        mc_group     If specified, IP address of multicast group id to subscribe to.
+
+        reuseaddr    Specifies wether we set SO_REUSEADDR on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
+
+        reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
 
         encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
@@ -83,69 +102,137 @@ class UDPReader(Reader):
 
         ```
         &#34;&#34;&#34;
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
-        # &#39;eol&#39; comes in as a (probably escaped) string. We need to
-        # unescape it, which means converting to bytes and back.
-        if eol is not None:
-            eol = self._unescape_str(eol)
-        self.eol = eol
-        self.read_buffer_size = read_buffer_size
+        if interface:
+            # resolve once in constructor
+            interface = socket.gethostbyname(interface)
+        else:
+            interface = &#39;&#39;
+        self.interface = interface
 
-        # Where we&#39;ll aggregate incomplete records if an eol char is specified
-        self.record_buffer = &#39;&#39;
+        # make sure user passed in `port`
+        #
+        # NOTE: We want the order of the arguments to consistently be (ip,
+        #       port, ...) across all the network readers/writers... but we
+        #       want `interface` to be optional.  All kwargs need to come after
+        #       all regular args, so we&#39;ve assigned a default value of None to
+        #       `port`.  But don&#39;t be confused, it is REQUIRED.
+        #
+        if not port:
+            raise TypeError(&#39;must specify `port`&#39;)
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
 
-        self.socket = socket.socket(family=socket.AF_INET,
-                                    type=socket.SOCK_DGRAM,
-                                    proto=socket.IPPROTO_UDP)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+        # prep multicast parameters
+        if mc_group:
+            # resolve once in constructor
+            mc_group = socket.gethostbyname(mc_group)
+            if not interface:
+                # multicast needs to specify interface to use, so let&#39;s pick a
+                # sane default
+                #
+                # NOTE: This means hostname cannot be an alias to localhost, or
+                #       you won&#39;t be able to send IGMP packets correctly.
+                #
+                self.interface = socket.gethostbyname(socket.gethostname())
 
-        # If source is specified, subscribe to it as a multicast group
-        if source:
-            mreq = struct.pack(&#34;4sl&#34;, socket.inet_aton(source), socket.INADDR_ANY)
-            self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        self.mc_group = mc_group
 
-        try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported.&#39;)
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
 
-        # If source is empty, we&#39;re listening for broadcasts, otherwise
-        # listening for multicast on IP &#39;source&#39;
-        self.socket.bind((source, port))
+        # socket gets initialized on-demand in read()
+        self.socket = None
+
+    ############################
+    def _open_socket(self):
+        &#34;&#34;&#34;Do socket prep so we&#39;re ready to read().  Returns socket object or None on
+        failure.
+        &#34;&#34;&#34;
+        sock = socket.socket(family=socket.AF_INET,
+                             type=socket.SOCK_DGRAM,
+                             proto=socket.IPPROTO_UDP)
+        if self.reuseaddr:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported.&#39;)
+
+        # If mc_group is specified, subscribe to it as a multicast group
+        if self.mc_group:
+            # set outgoing multicast interface
+            #
+            # NOTE: Can&#39;t use loopback device for this, otherwise IGMP packets
+            #       never leave the system, and you never actually join the
+            #       group.
+            #
+            if self.interface.startswith(&#39;127.&#39;):
+                logging.warning(&#34;Can&#39;t use loopback device for joining multicast groups.  Make &#34;
+                                &#34;sure your system&#39;s hostname does NOT resolve to something in &#34;
+                                &#34;the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or &#34;
+                                &#34;specify the interface to use by passing its IP address as the &#34;
+                                &#34;`interface` parameter.  (You can ignore this message if you&#39;re &#34;
+                                &#34;actually just doing loopback testing.)&#34;)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                                  socket.inet_aton(self.interface))
+
+            # join the group via IGMP
+            #
+            # NOTE: Since these are both already encoded as binary by
+            #       inet_aton(), we can just concatenate them.  Alternatively,
+            #       could use struct.pack(&#34;4s4s&#34;, ...) to create a struct to
+            #       pass into setsockopt()
+            #
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                            socket.inet_aton(self.mc_group) + socket.inet_aton(self.interface))
+
+            # bind to mc_group:port
+            sock.bind((self.mc_group, self.port))
+
+        else:
+            # broadcast or unicast, bind to specificed interface
+            sock.bind((self.interface, self.port))
+
+        return sock
 
     ############################
     def read(self):
         &#34;&#34;&#34;
         Read the next UDP packet.
         &#34;&#34;&#34;
-        # If no eol character/string specified, just read a packet and
-        # return it as the next record.
-        if not self.eol:
-            record = self.socket.recv(self.read_buffer_size)
-            logging.debug(&#39;UDPReader.read() received %d bytes&#39;, len(record))
-            return self._decode_bytes(record)
+        # If socket isn&#39;t ready, set it up.  If something fails, return w/out reading.
+        if not self.socket:
+            self.socket = self._open_socket()
+        if not self.socket:
+            logging.error(&#39;UDPReader.read: unable to open UDP socket&#39;)
+            return
 
-        # If an eol character/string has been specified, we may have to
-        # loop our reads until we see an eol.
+        # Read datagrams until we get one that doesn&#39;t end with a FRAGMENT_MARKER
+        record_buffer=b&#39;&#39;
         while True:
-            eol_pos = self.record_buffer.find(self.eol)
-            if eol_pos &gt; -1:
-                # We have an eol string somewhere in our buffer. Return
-                # everything up to it.
-                record_end = eol_pos + len(self.eol)
-                record = self.record_buffer[0:record_end-1]
-                logging.debug(&#39;UDPReader found eol; returning record&#39;)
-                self.record_buffer = self.record_buffer[record_end:]
-                return record
+            try:
+                record = self.socket.recv(READ_BUFFER_SIZE)
+            except OSError as e:
+                logging.error(&#39;UDPReader error: %s&#39;, str(e))
+                return None
+            logging.debug(&#39;UDPReader.read: received %d bytes&#39;, len(record))
 
-            # If no eol string, read, append, and try again.
-            record = self.socket.recv(self.read_buffer_size)
-            logging.debug(&#39;UDPReader.read() received %d bytes&#39;, len(record))
-            if record:
-                self.record_buffer += self._decode_bytes(record)</code></pre>
+            if record.endswith(FRAGMENT_MARKER):
+                # UDPWriter fragmented this record because it was too large to
+                # send as a single datagram
+                logging.info(&#39;UDPrader.read: detected fragmented packet&#39;)
+                record_buffer += record.rsplit(FRAGMENT_MARKER, maxsplit=1)[0]
+                logging.debug(&#39;record_buffer: %s&#39;, record_buffer)
+            else:
+                record_buffer += record
+                break
+
+        # we&#39;ve got a whole record in our record_buffer, decode it
+        return self._decode_bytes(record_buffer)</code></pre>
 </details>
 </section>
 <section>
@@ -159,26 +246,26 @@ class UDPReader(Reader):
 <dl>
 <dt id="logger.readers.udp_reader.UDPReader"><code class="flex name class">
 <span>class <span class="ident">UDPReader</span></span>
-<span>(</span><span>port, source='', eol=None, read_buffer_size=4096, encoding='utf-8', encoding_errors='ignore')</span>
+<span>(</span><span>interface=None, port=None, mc_group=None, reuseaddr=False, reuseport=False, encoding='utf-8', encoding_errors='ignore')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Read UDP broadcast and multicast records from a socket.</p>
-<p>TODO: code won't handle records that are larger than 4K right now,
-which, if we start getting into Toby Martin's Total Metadata Ingestion
-(TMI), may not be enough. We'll need to implement something that will
-aggregate recv()'s and know when it's got an entire record?</p>
-<pre><code>port         Port to listen to for packets
+<div class="desc"><p>Read UDP packets from network.</p>
+<pre><code>interface    IP (or resolvable name) of interface to listen on.  None or ''
+             will listen on INADDR_ANY (all interfaces).  If joining a
+             multicast group and None or '' specified, this will default
+             to whatever the system's hostname resolves to.  This IP should
+             not be on the loopback network (OK for testing, but won't work
+             in the real world).
 
-source       If specified, multicast group id to listen for
+port         Port to listen to for packets.  REQUIRED
 
-eol          If not specified, assume one record per network packet.  If
-             specified, buffer network reads until the eol
-             character has been seen, and return the entire record
-             at once, retaining everything after the eol for the
-             start of the subsequent record. If multiple eol characters
-             are encountered in a packet, split the packet and return
-             the first of them, buffering the remainder for subsequent
-             calls.
+mc_group     If specified, IP address of multicast group id to subscribe to.
+
+reuseaddr    Specifies wether we set SO_REUSEADDR on the created socket.  If
+             you don't know you need this, don't enable it.
+
+reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
+             you don't know you need this, don't enable it.
 
 encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
         and return raw bytes. Other possible encodings are listed in online
@@ -195,33 +282,29 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UDPReader(Reader):
-    &#34;&#34;&#34;
-    Read UDP broadcast and multicast records from a socket.
-
-    TODO: code won&#39;t handle records that are larger than 4K right now,
-    which, if we start getting into Toby Martin&#39;s Total Metadata Ingestion
-    (TMI), may not be enough. We&#39;ll need to implement something that will
-    aggregate recv()&#39;s and know when it&#39;s got an entire record?
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Read UDP packets from network.&#34;&#34;&#34;
     ############################
-
-    def __init__(self, port, source=&#39;&#39;, eol=None,
-                 read_buffer_size=READ_BUFFER_SIZE,
+    def __init__(self, interface=None, port=None, mc_group=None,
+                 reuseaddr=False, reuseport=False,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;
         ```
-        port         Port to listen to for packets
+        interface    IP (or resolvable name) of interface to listen on.  None or &#39;&#39;
+                     will listen on INADDR_ANY (all interfaces).  If joining a
+                     multicast group and None or &#39;&#39; specified, this will default
+                     to whatever the system&#39;s hostname resolves to.  This IP should
+                     not be on the loopback network (OK for testing, but won&#39;t work
+                     in the real world).
 
-        source       If specified, multicast group id to listen for
+        port         Port to listen to for packets.  REQUIRED
 
-        eol          If not specified, assume one record per network packet.  If
-                     specified, buffer network reads until the eol
-                     character has been seen, and return the entire record
-                     at once, retaining everything after the eol for the
-                     start of the subsequent record. If multiple eol characters
-                     are encountered in a packet, split the packet and return
-                     the first of them, buffering the remainder for subsequent
-                     calls.
+        mc_group     If specified, IP address of multicast group id to subscribe to.
+
+        reuseaddr    Specifies wether we set SO_REUSEADDR on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
+
+        reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
 
         encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
@@ -234,69 +317,137 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
 
         ```
         &#34;&#34;&#34;
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
-        # &#39;eol&#39; comes in as a (probably escaped) string. We need to
-        # unescape it, which means converting to bytes and back.
-        if eol is not None:
-            eol = self._unescape_str(eol)
-        self.eol = eol
-        self.read_buffer_size = read_buffer_size
+        if interface:
+            # resolve once in constructor
+            interface = socket.gethostbyname(interface)
+        else:
+            interface = &#39;&#39;
+        self.interface = interface
 
-        # Where we&#39;ll aggregate incomplete records if an eol char is specified
-        self.record_buffer = &#39;&#39;
+        # make sure user passed in `port`
+        #
+        # NOTE: We want the order of the arguments to consistently be (ip,
+        #       port, ...) across all the network readers/writers... but we
+        #       want `interface` to be optional.  All kwargs need to come after
+        #       all regular args, so we&#39;ve assigned a default value of None to
+        #       `port`.  But don&#39;t be confused, it is REQUIRED.
+        #
+        if not port:
+            raise TypeError(&#39;must specify `port`&#39;)
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
 
-        self.socket = socket.socket(family=socket.AF_INET,
-                                    type=socket.SOCK_DGRAM,
-                                    proto=socket.IPPROTO_UDP)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+        # prep multicast parameters
+        if mc_group:
+            # resolve once in constructor
+            mc_group = socket.gethostbyname(mc_group)
+            if not interface:
+                # multicast needs to specify interface to use, so let&#39;s pick a
+                # sane default
+                #
+                # NOTE: This means hostname cannot be an alias to localhost, or
+                #       you won&#39;t be able to send IGMP packets correctly.
+                #
+                self.interface = socket.gethostbyname(socket.gethostname())
 
-        # If source is specified, subscribe to it as a multicast group
-        if source:
-            mreq = struct.pack(&#34;4sl&#34;, socket.inet_aton(source), socket.INADDR_ANY)
-            self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        self.mc_group = mc_group
 
-        try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported.&#39;)
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
 
-        # If source is empty, we&#39;re listening for broadcasts, otherwise
-        # listening for multicast on IP &#39;source&#39;
-        self.socket.bind((source, port))
+        # socket gets initialized on-demand in read()
+        self.socket = None
+
+    ############################
+    def _open_socket(self):
+        &#34;&#34;&#34;Do socket prep so we&#39;re ready to read().  Returns socket object or None on
+        failure.
+        &#34;&#34;&#34;
+        sock = socket.socket(family=socket.AF_INET,
+                             type=socket.SOCK_DGRAM,
+                             proto=socket.IPPROTO_UDP)
+        if self.reuseaddr:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported.&#39;)
+
+        # If mc_group is specified, subscribe to it as a multicast group
+        if self.mc_group:
+            # set outgoing multicast interface
+            #
+            # NOTE: Can&#39;t use loopback device for this, otherwise IGMP packets
+            #       never leave the system, and you never actually join the
+            #       group.
+            #
+            if self.interface.startswith(&#39;127.&#39;):
+                logging.warning(&#34;Can&#39;t use loopback device for joining multicast groups.  Make &#34;
+                                &#34;sure your system&#39;s hostname does NOT resolve to something in &#34;
+                                &#34;the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or &#34;
+                                &#34;specify the interface to use by passing its IP address as the &#34;
+                                &#34;`interface` parameter.  (You can ignore this message if you&#39;re &#34;
+                                &#34;actually just doing loopback testing.)&#34;)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                                  socket.inet_aton(self.interface))
+
+            # join the group via IGMP
+            #
+            # NOTE: Since these are both already encoded as binary by
+            #       inet_aton(), we can just concatenate them.  Alternatively,
+            #       could use struct.pack(&#34;4s4s&#34;, ...) to create a struct to
+            #       pass into setsockopt()
+            #
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                            socket.inet_aton(self.mc_group) + socket.inet_aton(self.interface))
+
+            # bind to mc_group:port
+            sock.bind((self.mc_group, self.port))
+
+        else:
+            # broadcast or unicast, bind to specificed interface
+            sock.bind((self.interface, self.port))
+
+        return sock
 
     ############################
     def read(self):
         &#34;&#34;&#34;
         Read the next UDP packet.
         &#34;&#34;&#34;
-        # If no eol character/string specified, just read a packet and
-        # return it as the next record.
-        if not self.eol:
-            record = self.socket.recv(self.read_buffer_size)
-            logging.debug(&#39;UDPReader.read() received %d bytes&#39;, len(record))
-            return self._decode_bytes(record)
+        # If socket isn&#39;t ready, set it up.  If something fails, return w/out reading.
+        if not self.socket:
+            self.socket = self._open_socket()
+        if not self.socket:
+            logging.error(&#39;UDPReader.read: unable to open UDP socket&#39;)
+            return
 
-        # If an eol character/string has been specified, we may have to
-        # loop our reads until we see an eol.
+        # Read datagrams until we get one that doesn&#39;t end with a FRAGMENT_MARKER
+        record_buffer=b&#39;&#39;
         while True:
-            eol_pos = self.record_buffer.find(self.eol)
-            if eol_pos &gt; -1:
-                # We have an eol string somewhere in our buffer. Return
-                # everything up to it.
-                record_end = eol_pos + len(self.eol)
-                record = self.record_buffer[0:record_end-1]
-                logging.debug(&#39;UDPReader found eol; returning record&#39;)
-                self.record_buffer = self.record_buffer[record_end:]
-                return record
+            try:
+                record = self.socket.recv(READ_BUFFER_SIZE)
+            except OSError as e:
+                logging.error(&#39;UDPReader error: %s&#39;, str(e))
+                return None
+            logging.debug(&#39;UDPReader.read: received %d bytes&#39;, len(record))
 
-            # If no eol string, read, append, and try again.
-            record = self.socket.recv(self.read_buffer_size)
-            logging.debug(&#39;UDPReader.read() received %d bytes&#39;, len(record))
-            if record:
-                self.record_buffer += self._decode_bytes(record)</code></pre>
+            if record.endswith(FRAGMENT_MARKER):
+                # UDPWriter fragmented this record because it was too large to
+                # send as a single datagram
+                logging.info(&#39;UDPrader.read: detected fragmented packet&#39;)
+                record_buffer += record.rsplit(FRAGMENT_MARKER, maxsplit=1)[0]
+                logging.debug(&#39;record_buffer: %s&#39;, record_buffer)
+            else:
+                record_buffer += record
+                break
+
+        # we&#39;ve got a whole record in our record_buffer, decode it
+        return self._decode_bytes(record_buffer)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -317,31 +468,35 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
     &#34;&#34;&#34;
     Read the next UDP packet.
     &#34;&#34;&#34;
-    # If no eol character/string specified, just read a packet and
-    # return it as the next record.
-    if not self.eol:
-        record = self.socket.recv(self.read_buffer_size)
-        logging.debug(&#39;UDPReader.read() received %d bytes&#39;, len(record))
-        return self._decode_bytes(record)
+    # If socket isn&#39;t ready, set it up.  If something fails, return w/out reading.
+    if not self.socket:
+        self.socket = self._open_socket()
+    if not self.socket:
+        logging.error(&#39;UDPReader.read: unable to open UDP socket&#39;)
+        return
 
-    # If an eol character/string has been specified, we may have to
-    # loop our reads until we see an eol.
+    # Read datagrams until we get one that doesn&#39;t end with a FRAGMENT_MARKER
+    record_buffer=b&#39;&#39;
     while True:
-        eol_pos = self.record_buffer.find(self.eol)
-        if eol_pos &gt; -1:
-            # We have an eol string somewhere in our buffer. Return
-            # everything up to it.
-            record_end = eol_pos + len(self.eol)
-            record = self.record_buffer[0:record_end-1]
-            logging.debug(&#39;UDPReader found eol; returning record&#39;)
-            self.record_buffer = self.record_buffer[record_end:]
-            return record
+        try:
+            record = self.socket.recv(READ_BUFFER_SIZE)
+        except OSError as e:
+            logging.error(&#39;UDPReader error: %s&#39;, str(e))
+            return None
+        logging.debug(&#39;UDPReader.read: received %d bytes&#39;, len(record))
 
-        # If no eol string, read, append, and try again.
-        record = self.socket.recv(self.read_buffer_size)
-        logging.debug(&#39;UDPReader.read() received %d bytes&#39;, len(record))
-        if record:
-            self.record_buffer += self._decode_bytes(record)</code></pre>
+        if record.endswith(FRAGMENT_MARKER):
+            # UDPWriter fragmented this record because it was too large to
+            # send as a single datagram
+            logging.info(&#39;UDPrader.read: detected fragmented packet&#39;)
+            record_buffer += record.rsplit(FRAGMENT_MARKER, maxsplit=1)[0]
+            logging.debug(&#39;record_buffer: %s&#39;, record_buffer)
+        else:
+            record_buffer += record
+            break
+
+    # we&#39;ve got a whole record in our record_buffer, decode it
+    return self._decode_bytes(record_buffer)</code></pre>
 </details>
 </dd>
 </dl>
@@ -382,7 +537,7 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.readers.reader API documentation</title>
 <meta name="description" content="Abstract base class for data Readers." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -63,6 +63,12 @@ class Reader:
     def __init__(self, output_format=formats.Unknown,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         self.output_format(output_format)
+        # make sure &#39;&#39; behaves the same as None, which is what all the
+        # docstrings say, and would be logical... but then certain things treat
+        # them differently (e.g., file.open(mode=&#39;ab&#39;, encoding=&#39;&#39;) throws
+        # ValueError: binary mode doesn&#39;t take an encoding argument)
+        if encoding == &#39;&#39;:
+            encoding = None
         self.encoding = encoding
         self.encoding_errors = encoding_errors
 
@@ -78,10 +84,10 @@ class Reader:
         return encoded.decode(&#39;unicode_escape&#39;)
 
     ############################
-    def _encode_str(self, the_str, unescape=True):
-        &#34;&#34;&#34;Encode a string to bytes, unescaping things like \n and \r. Unescaping
-        requires ugly convolutions of encoding, then decoding while we escape things,
-        then encoding a second time.
+    def _encode_str(self, the_str, unescape=False):
+        &#34;&#34;&#34;Encode a string to bytes, optionally unescaping things like \n and \r.
+        Unescaping requires ugly convolutions of encoding, then decoding while we
+        escape things, then encoding a second time.
         &#34;&#34;&#34;
         if not self.encoding:
             return the_str
@@ -97,6 +103,15 @@ class Reader:
 
         if not self.encoding:
             return record
+
+        if self.encoding == &#39;hex&#39;:
+            try:
+                r = record.hex()
+                return r
+            except Exception as e:
+                logging.warning(&#39;Error decoding string &#34;%s&#34; from encoding &#34;%s&#34;: %s&#39;,
+                                record, self.encoding, str(e))
+                return None
 
         try:
             return record.decode(encoding=self.encoding,
@@ -237,6 +252,12 @@ documentation here:
     def __init__(self, output_format=formats.Unknown,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         self.output_format(output_format)
+        # make sure &#39;&#39; behaves the same as None, which is what all the
+        # docstrings say, and would be logical... but then certain things treat
+        # them differently (e.g., file.open(mode=&#39;ab&#39;, encoding=&#39;&#39;) throws
+        # ValueError: binary mode doesn&#39;t take an encoding argument)
+        if encoding == &#39;&#39;:
+            encoding = None
         self.encoding = encoding
         self.encoding_errors = encoding_errors
 
@@ -252,10 +273,10 @@ documentation here:
         return encoded.decode(&#39;unicode_escape&#39;)
 
     ############################
-    def _encode_str(self, the_str, unescape=True):
-        &#34;&#34;&#34;Encode a string to bytes, unescaping things like \n and \r. Unescaping
-        requires ugly convolutions of encoding, then decoding while we escape things,
-        then encoding a second time.
+    def _encode_str(self, the_str, unescape=False):
+        &#34;&#34;&#34;Encode a string to bytes, optionally unescaping things like \n and \r.
+        Unescaping requires ugly convolutions of encoding, then decoding while we
+        escape things, then encoding a second time.
         &#34;&#34;&#34;
         if not self.encoding:
             return the_str
@@ -271,6 +292,15 @@ documentation here:
 
         if not self.encoding:
             return record
+
+        if self.encoding == &#39;hex&#39;:
+            try:
+                r = record.hex()
+                return r
+            except Exception as e:
+                logging.warning(&#39;Error decoding string &#34;%s&#34; from encoding &#34;%s&#34;: %s&#39;,
+                                record, self.encoding, str(e))
+                return None
 
         try:
             return record.decode(encoding=self.encoding,
@@ -304,11 +334,13 @@ documentation here:
 <ul class="hlist">
 <li><a title="logger.readers.cached_data_reader.CachedDataReader" href="cached_data_reader.html#logger.readers.cached_data_reader.CachedDataReader">CachedDataReader</a></li>
 <li><a title="logger.readers.composed_reader.ComposedReader" href="composed_reader.html#logger.readers.composed_reader.ComposedReader">ComposedReader</a></li>
+<li><a title="logger.readers.modbus_reader.ModBusTCPReader" href="modbus_reader.html#logger.readers.modbus_reader.ModBusTCPReader">ModBusTCPReader</a></li>
 <li><a title="logger.readers.mqtt_reader.MQTTReader" href="mqtt_reader.html#logger.readers.mqtt_reader.MQTTReader">MQTTReader</a></li>
 <li><a title="logger.readers.network_reader.NetworkReader" href="network_reader.html#logger.readers.network_reader.NetworkReader">NetworkReader</a></li>
 <li><a title="logger.readers.reader.StorageReader" href="#logger.readers.reader.StorageReader">StorageReader</a></li>
 <li><a title="logger.readers.redis_reader.RedisReader" href="redis_reader.html#logger.readers.redis_reader.RedisReader">RedisReader</a></li>
 <li><a title="logger.readers.serial_reader.SerialReader" href="serial_reader.html#logger.readers.serial_reader.SerialReader">SerialReader</a></li>
+<li><a title="logger.readers.tcp_reader.TCPReader" href="tcp_reader.html#logger.readers.tcp_reader.TCPReader">TCPReader</a></li>
 <li><a title="logger.readers.timeout_reader.TimeoutReader" href="timeout_reader.html#logger.readers.timeout_reader.TimeoutReader">TimeoutReader</a></li>
 <li><a title="logger.readers.udp_reader.UDPReader" href="udp_reader.html#logger.readers.udp_reader.UDPReader">UDPReader</a></li>
 </ul>
@@ -583,7 +615,7 @@ can seek and retrieve a range specified by timestamps.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

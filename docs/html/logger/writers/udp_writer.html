@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.writers.udp_writer API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,8 +28,7 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
-import json
-import ipaddress
+import errno
 import logging
 import socket
 import struct
@@ -38,35 +37,87 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.writers.network_writer import NetworkWriter  # noqa: E402
+from logger.writers.writer import Writer
+
+# So that we can write the user&#39;s record no matter how silly big it is, we
+# autodetect the system&#39;s maximum datagram size and write() fragments the
+# record into smaller packets if needed.  Each fragmented packet is marked with
+# FRAGMENT_MARKER so that UDPReader can notice and reassemble the record.
+FRAGMENT_MARKER = b&#39;\xff\xffTOOBIG\xff\xff&#39;
+
+# Maximum allowable size of a UDP datagram on this system, autodetect once at
+# module load
+#
+# NOTE: You can test/debug the fragmentation code by loading the udp_writer
+#       module and than manually setting udp_writer.MAXSIZE after autodetection
+#       has happened.
+#
+MAXSIZE = None
 
 
-class UDPWriter(NetworkWriter):
+def __detect_maxsize():
+    &#34;&#34;&#34;Autodetect the maximum datagram size we can send&#34;&#34;&#34;
+    global MAXSIZE
+    if MAXSIZE:
+        return
+
+    s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM,
+                      proto=socket.IPPROTO_UDP)
+
+    # start with the maximum allowable size of a UDP packet, and work our way
+    # down one byte at a time.
+    #
+    # FIXME: I know, I know.  Lame, slow, etc, a binary search would be &#34;most
+    #        correct&#34;, but I don&#39;t feel like making this go faster right now.
+    #        And it&#39;s only done once, so whatever.
+    #
+    trysize=65535
+    while trysize &gt; 0:
+        logging.debug(&#34;__detect_maxsize: trying %d&#34;, trysize)
+        try:
+            s.sendto(b&#39;a&#39;*trysize, (&#39;127.0.0.1&#39;, 9999))
+        except OSError as e:
+            if e.errno == errno.EMSGSIZE:
+                trysize -= 1
+                continue
+            else:
+                # For whatever reason, this won&#39;t work... print a warning
+                logging.warning(&#34;__detect_maxsize: send() failed: %s&#34;, str(e))
+                break
+        # outstanding!
+        break
+
+    if not trysize:
+        logging.warning(&#34;Failed to autodetect maximum UDP datagram size.  Record fragmentation disabled&#34;)
+    else:
+        logging.info(&#34;Detected maximum UDP datagram size %d&#34;, trysize)
+        MAXSIZE = trysize
+
+# attempt to detect maximum datagram size when module is loaded
+__detect_maxsize()
+
+
+class UDPWriter(Writer):
     &#34;&#34;&#34;Write UDP packets to network.&#34;&#34;&#34;
 
-    def __init__(self, port, destination=&#39;&#39;,
-                 interface=&#39;&#39;,  # DEPRECATED!
-                 ttl=3, num_retry=2, warning_limit=5, eol=&#39;&#39;):
-        &#34;&#34;&#34;
-        Write text records to a network socket.
+    def __init__(self, destination=None, port=None,
+                 mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol=&#39;&#39;,
+                 reuseaddr=False, reuseport=False,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
+        &#34;&#34;&#34;Write records to a UDP network socket.
         ```
-        port         Port to which packets should be sent
+        destination  The destination to send UDP packets to. If &#39;&#39; or None,
+                     the UDPWriter will broadcast to 255.255.255.255.  On a
+                     system connected to more than one subnet, you&#39;ll want to
+                     specify the broadcast address of the network you&#39;re trying
+                     to send to (e.g., 192.168.1.255).
 
-        destination  The destination to send UDP packets to. If omitted (or None)
-                     is equivalent to specifying destination=&#39;&lt;broadcast&gt;&#39;,
-                     which will send to all available interfaces.
+        port         Port to which packets should be sent.  REQUIRED
 
-                     Setting destination=&#39;255.255.255.255&#39; means broadcast
-                     to local network. To broadcast to a specific interface,
-                     set destination to the broadcast address for that network.
+        mc_interface REQUIRED for multicast, the interface to send from.  Can be
+                     specified as either IP or a resolvable hostname.
 
-        interface    DEPRECATED - If specified, the network interface to
-                     send from. Preferred usage is to use the &#39;destination&#39;
-                     argument and specify the broadcast address of the desired
-                     network.
-
-        ttl          For multicast, how many network hops to allow
+        mc_ttl       For multicast, how many network hops to allow.
 
         num_retry    Number of times to retry if write fails. If writer exceeds
                      this number, it will give up on writing the message and
@@ -78,86 +129,115 @@ class UDPWriter(NetworkWriter):
 
         eol          If specified, an end of line string to append to record
                      before sending.
+
+        reuseaddr    Specifies wether to set SO_REUSEADDR on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
+
+        reuseport    Specifies wether to set SO_REUSEPORT on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - &#39;ignore&#39; by default. Other error strategies are
+                &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
         ```
+
         &#34;&#34;&#34;
-        self.ttl = ttl
+        super().__init__(encoding=encoding,
+                         encoding_errors=encoding_errors)
+
         self.num_retry = num_retry
         self.warning_limit = warning_limit
         self.num_warnings = 0
+        self.good_writes = 0 # consecutive good writes, for detecting UDP errors
+
+        # &#39;eol&#39; comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if eol is not None and self.encoding:
+            eol = self._unescape_str(eol)
         self.eol = eol
 
-        self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (
-            interface, destination, port)
+        self.target_str = &#39;destination: %s, port: %d&#39; % (destination, port)
 
-        if interface:
-            logging.warning(&#39;DEPRECATED: UDPWriter(interface=%s). Instead of the &#39;
-                            &#39;&#34;interface&#34; parameter, UDPWriters should use the&#39;
-                            &#39;&#34;destination&#34; parameter. To broadcast over a specific &#39;
-                            &#39;interface, specify UDPWriter(destination=&lt;interface &#39;
-                            &#39;broadcast address&gt;) address as the destination.&#39;,
-                            interface)
-
-        if interface and destination:
-            ipaddress.ip_address(interface)  # throw a ValueError if bad addr
-            ipaddress.ip_address(destination)
-            # At the moment, we don&#39;t know how to do both interface and
-            # multicast/unicast. If they&#39;ve specified both, then complain
-            # and ignore the interface part.
-            logging.warning(&#39;UDPWriter doesn\&#39;t yet support specifying both &#39;
-                            &#39;interface and destination. Ignoring interface &#39;
-                            &#39;specification.&#39;)
-
-        # THE FOLLOWING USE OF interface PARAMETER IS PARTIALLY BROKEN: it
-        # will fail if the netmask is not 255.255.255.0. This is why we
-        # deprecate the interface param.
+        # do name resolution once in the constructor
         #
-        # If they&#39;ve specified the interface we&#39;re supposed to be sending
-        # via, then we have to do a little legerdemain: we&#39;re going to
-        # connect to the broadcast address of the specified interface as
-        # our destination. The broadcast address is just the normal
-        # address with the last tuple replaced by &#34;.255&#34;.
-        elif interface:
-            if interface == &#39;0.0.0.0&#39;:  # local network
-                destination = &#39;255.255.255.255&#39;
-            elif interface in [&#39;&lt;broadcast&gt;&#39;, &#39;None&#39;]:
-                destination = &#39;&lt;broadcast&gt;&#39;
-            else:
-                # Change interface&#39;s lowest tuple to &#39;broadcast&#39; value (255)
-                ipaddress.ip_address(interface)
-                destination = interface[:interface.rfind(&#39;.&#39;)] + &#39;.255&#39;
-
-        # If we&#39;ve been given a destination, make sure it&#39;s a valid IP
-        elif destination:
-            ipaddress.ip_address(destination)
-
-        # If no destination, it&#39;s a broadcast; set flag allowing broadcast and
-        # set dest to special string
+        # NOTE: This means the hostname must be valid when we start, otherwise
+        #       the config_check code will puke.  That&#39;s fine.  The alternative
+        #       is we let name resolution happen while we&#39;re running, but then
+        #       each failed lookup is going to block our write() routine for a
+        #       few seconds - not good.
+        #
+        # NOTE: This also catches specifying impropperly formatted IP
+        #       addresses.  The only way through gethostbyname() w/out throwing
+        #       an exception is to provide a valid hostname or IP address.
+        #       Propperly formatted IPs just get returned.
+        #
+        if destination:
+            destination = socket.gethostbyname(destination)
         else:
+            # If no destination, it&#39;s a broadcast; set dest to special string
             destination = &#39;&lt;broadcast&gt;&#39;
 
         self.destination = destination
-        self.port = port
 
-        # Try opening the socket
-        self.socket = self._open_socket()
+        # make sure user passed in `port`
+        #
+        # NOTE: We want the order of the arguments to consistently be (ip,
+        #       port, ...) across all the network readers/writers... but we
+        #       want `destination` to be optional.  All kwargs need to come
+        #       after all regular args, so we&#39;ve assigned a default value of
+        #       None to `port`.  But don&#39;t be confused, it is REQUIRED.
+        #
+        if not port:
+            raise TypeError(&#39;must specify `port`&#39;)
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
+
+        # multicast options
+        if mc_interface:
+            # resolve once in constructor
+            mc_interface = socket.gethostbyname(mc_interface)
+        self.mc_interface = mc_interface
+        self.mc_ttl = mc_ttl
+
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
+
+        # socket gets initialized on-demand in write()
+        self.socket = None
 
     ############################
     def _open_socket(self):
-        &#34;&#34;&#34;Try to open and return the network socket.
+        &#34;&#34;&#34;Do socket prep so we&#39;re ready to write().  Returns socket object or None on
+        failure.
         &#34;&#34;&#34;
         udp_socket = socket.socket(family=socket.AF_INET,
                                    type=socket.SOCK_DGRAM,
                                    proto=socket.IPPROTO_UDP)
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-        try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
-            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
+        if self.reuseaddr:
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
+                udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
 
-        # Set the time-to-live for messages, in case of multicast
-        udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                              struct.pack(&#39;b&#39;, self.ttl))
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+        # set multicast/broadcast options
+        if self.mc_interface:
+            # set the time-to-live for messages
+            udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+                                  struct.pack(&#39;b&#39;, self.mc_ttl))
+            # set outgoing multicast interface
+            udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                                  socket.inet_aton(self.mc_interface))
+        else:
+            # maybe broadcast, but very non-trivial to detect broadcast IP, so
+            # we set the broadcast flag anytime we&#39;re not doing multicast
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
         try:
             udp_socket.connect((self.destination, self.port))
@@ -180,17 +260,39 @@ class UDPWriter(NetworkWriter):
                 self.write(single_record)
             return
 
-        # If record is not a string, try converting to JSON. If we don&#39;t know
-        # how, throw a hail Mary and force it into str format
-        if not isinstance(record, str):
-            if type(record) in [int, float, bool, list, dict]:
-                record = json.dumps(record)
-            elif isinstance(record, DASRecord):
-                record = record.as_json()
-            else:
-                record = str(record)
+        # Append eol if configured
         if self.eol:
             record += self.eol
+
+        # Encode the record, so we&#39;re dealing with bytes from here on out
+        record = self._encode_str(record)
+
+        # Fragment record if needed, and recurse.
+        if len(record) &gt; MAXSIZE:
+            record_list=[]
+            max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
+            fragment_sizes = []
+            while len(record) &gt; max_fragment_size:
+                r = record[:max_fragment_size]+FRAGMENT_MARKER
+                record_list.append(r)
+                fragment_sizes.append(str(len(r)))
+                record = record[max_fragment_size:]
+            # last record doesn&#39;t get FRAGMENT_MARKER
+            record_list.append(record)
+            fragment_sizes.append(&#34;{} bytes&#34;.format(len(record)))
+            fragment_sizes = &#39;, &#39;.join(fragment_sizes)
+            logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;, len(record_list), fragment_sizes)
+            logging.debug(str(record_list))
+
+            # change our encoding to binary temporarily, because we&#39;ve already
+            # encoded to binary and added our marker (which has non-utf chars
+            # in it)
+            old_encoding = self.encoding
+            self.encoding = None
+            self.write(record_list)
+            # restore old encoding
+            self.encoding = old_encoding
+            return
 
         # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
         # reconnect, complain and return without writing.
@@ -203,20 +305,35 @@ class UDPWriter(NetworkWriter):
 
         num_tries = bytes_sent = 0
         rec_len = len(record)
-        while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
+        while num_tries &lt;= self.num_retry and bytes_sent &lt; rec_len:
             try:
-                bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+                bytes_sent = self.socket.send(record)
 
-                # If here, write at least partially succeeded. Reset warnings
-                if self.num_warnings == self.warning_limit:
-                    logging.info(&#39;UDPWriter.write() succeeded in writing after series of &#39;
-                    &#39;failures; resetting warnings.&#39;)
-                self.num_warnings = 0  # we&#39;ve succeeded
+                # If here, write succeeded. Reset warnings
+                #
+                # NOTE: If the host is unreachable, every other send will fail.
+                #       Since UDP doesn&#39;t actually know it failed, the initial
+                #       send() cannot fail.  However, the network stack will
+                #       see the ICMP host unreachable message and will store
+                #       THAT as the the error message for next write, then the
+                #       next send fails and clears the error...  Then the next
+                #       &#34;succeeds&#34; and the next fails, etc, etc
+                #
+                #       So we look for 2 consecutive &#34;successful&#34; writes before
+                #       resetting num_warnings.
+                #
+                self.good_writes += 1
+                if self.good_writes &gt;= 2:
+                    if self.num_warnings == self.warning_limit:
+                        logging.info(&#39;UDPWriter.write() succeeded in writing after series of &#39;
+                                     &#39;failures; resetting warnings.&#39;)
+                    self.num_warnings = 0  # we&#39;ve succeeded
 
             except (OSError, ConnectionRefusedError) as e:
                 # If we failed, complain, unless we&#39;ve already complained too much
+                self.good_writes = 0
                 if self.num_warnings &lt; self.warning_limit:
-                    logging.error(&#39;UDPWriter error: %s: %s&#39;, self.target_str, str(e))
+                    logging.error(&#39;UDPWriter: send() error: %s: %s&#39;, self.target_str, str(e))
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error(&#39;UDPWriter.write() - muting errors&#39;)
@@ -237,27 +354,23 @@ class UDPWriter(NetworkWriter):
 <dl>
 <dt id="logger.writers.udp_writer.UDPWriter"><code class="flex name class">
 <span>class <span class="ident">UDPWriter</span></span>
-<span>(</span><span>port, destination='', interface='', ttl=3, num_retry=2, warning_limit=5, eol='')</span>
+<span>(</span><span>destination=None, port=None, mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='', reuseaddr=False, reuseport=False, encoding='utf-8', encoding_errors='ignore')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write UDP packets to network.</p>
-<p>Write text records to a network socket.</p>
-<pre><code>port         Port to which packets should be sent
+<p>Write records to a UDP network socket.</p>
+<pre><code>destination  The destination to send UDP packets to. If '' or None,
+             the UDPWriter will broadcast to 255.255.255.255.  On a
+             system connected to more than one subnet, you'll want to
+             specify the broadcast address of the network you're trying
+             to send to (e.g., 192.168.1.255).
 
-destination  The destination to send UDP packets to. If omitted (or None)
-             is equivalent to specifying destination='&lt;broadcast&gt;',
-             which will send to all available interfaces.
+port         Port to which packets should be sent.  REQUIRED
 
-             Setting destination='255.255.255.255' means broadcast
-             to local network. To broadcast to a specific interface,
-             set destination to the broadcast address for that network.
+mc_interface REQUIRED for multicast, the interface to send from.  Can be
+             specified as either IP or a resolvable hostname.
 
-interface    DEPRECATED - If specified, the network interface to
-             send from. Preferred usage is to use the 'destination'
-             argument and specify the broadcast address of the desired
-             network.
-
-ttl          For multicast, how many network hops to allow
+mc_ttl       For multicast, how many network hops to allow.
 
 num_retry    Number of times to retry if write fails. If writer exceeds
              this number, it will give up on writing the message and
@@ -269,36 +382,47 @@ warning_limit  Number of times the writer gives up on writing a message
 
 eol          If specified, an end of line string to append to record
              before sending.
+
+reuseaddr    Specifies wether to set SO_REUSEADDR on the created socket.  If
+             you don't know you need this, don't enable it.
+
+reuseport    Specifies wether to set SO_REUSEPORT on the created socket.  If
+             you don't know you need this, don't enable it.
+
+encoding - 'utf-8' by default. If empty or None, do not attempt any
+        decoding and return raw bytes. Other possible encodings are
+        listed in online documentation here:
+        https://docs.python.org/3/library/codecs.html#standard-encodings
+
+encoding_errors - 'ignore' by default. Other error strategies are
+        'strict', 'replace', and 'backslashreplace', described here:
+        https://docs.python.org/3/howto/unicode.html#encodings
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UDPWriter(NetworkWriter):
+<pre><code class="python">class UDPWriter(Writer):
     &#34;&#34;&#34;Write UDP packets to network.&#34;&#34;&#34;
 
-    def __init__(self, port, destination=&#39;&#39;,
-                 interface=&#39;&#39;,  # DEPRECATED!
-                 ttl=3, num_retry=2, warning_limit=5, eol=&#39;&#39;):
-        &#34;&#34;&#34;
-        Write text records to a network socket.
+    def __init__(self, destination=None, port=None,
+                 mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol=&#39;&#39;,
+                 reuseaddr=False, reuseport=False,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
+        &#34;&#34;&#34;Write records to a UDP network socket.
         ```
-        port         Port to which packets should be sent
+        destination  The destination to send UDP packets to. If &#39;&#39; or None,
+                     the UDPWriter will broadcast to 255.255.255.255.  On a
+                     system connected to more than one subnet, you&#39;ll want to
+                     specify the broadcast address of the network you&#39;re trying
+                     to send to (e.g., 192.168.1.255).
 
-        destination  The destination to send UDP packets to. If omitted (or None)
-                     is equivalent to specifying destination=&#39;&lt;broadcast&gt;&#39;,
-                     which will send to all available interfaces.
+        port         Port to which packets should be sent.  REQUIRED
 
-                     Setting destination=&#39;255.255.255.255&#39; means broadcast
-                     to local network. To broadcast to a specific interface,
-                     set destination to the broadcast address for that network.
+        mc_interface REQUIRED for multicast, the interface to send from.  Can be
+                     specified as either IP or a resolvable hostname.
 
-        interface    DEPRECATED - If specified, the network interface to
-                     send from. Preferred usage is to use the &#39;destination&#39;
-                     argument and specify the broadcast address of the desired
-                     network.
-
-        ttl          For multicast, how many network hops to allow
+        mc_ttl       For multicast, how many network hops to allow.
 
         num_retry    Number of times to retry if write fails. If writer exceeds
                      this number, it will give up on writing the message and
@@ -310,86 +434,115 @@ eol          If specified, an end of line string to append to record
 
         eol          If specified, an end of line string to append to record
                      before sending.
+
+        reuseaddr    Specifies wether to set SO_REUSEADDR on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
+
+        reuseport    Specifies wether to set SO_REUSEPORT on the created socket.  If
+                     you don&#39;t know you need this, don&#39;t enable it.
+
+        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - &#39;ignore&#39; by default. Other error strategies are
+                &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
         ```
+
         &#34;&#34;&#34;
-        self.ttl = ttl
+        super().__init__(encoding=encoding,
+                         encoding_errors=encoding_errors)
+
         self.num_retry = num_retry
         self.warning_limit = warning_limit
         self.num_warnings = 0
+        self.good_writes = 0 # consecutive good writes, for detecting UDP errors
+
+        # &#39;eol&#39; comes in as a (probably escaped) string. We need to
+        # unescape it, which means converting to bytes and back.
+        if eol is not None and self.encoding:
+            eol = self._unescape_str(eol)
         self.eol = eol
 
-        self.target_str = &#39;interface: %s, destination: %s, port: %d&#39; % (
-            interface, destination, port)
+        self.target_str = &#39;destination: %s, port: %d&#39; % (destination, port)
 
-        if interface:
-            logging.warning(&#39;DEPRECATED: UDPWriter(interface=%s). Instead of the &#39;
-                            &#39;&#34;interface&#34; parameter, UDPWriters should use the&#39;
-                            &#39;&#34;destination&#34; parameter. To broadcast over a specific &#39;
-                            &#39;interface, specify UDPWriter(destination=&lt;interface &#39;
-                            &#39;broadcast address&gt;) address as the destination.&#39;,
-                            interface)
-
-        if interface and destination:
-            ipaddress.ip_address(interface)  # throw a ValueError if bad addr
-            ipaddress.ip_address(destination)
-            # At the moment, we don&#39;t know how to do both interface and
-            # multicast/unicast. If they&#39;ve specified both, then complain
-            # and ignore the interface part.
-            logging.warning(&#39;UDPWriter doesn\&#39;t yet support specifying both &#39;
-                            &#39;interface and destination. Ignoring interface &#39;
-                            &#39;specification.&#39;)
-
-        # THE FOLLOWING USE OF interface PARAMETER IS PARTIALLY BROKEN: it
-        # will fail if the netmask is not 255.255.255.0. This is why we
-        # deprecate the interface param.
+        # do name resolution once in the constructor
         #
-        # If they&#39;ve specified the interface we&#39;re supposed to be sending
-        # via, then we have to do a little legerdemain: we&#39;re going to
-        # connect to the broadcast address of the specified interface as
-        # our destination. The broadcast address is just the normal
-        # address with the last tuple replaced by &#34;.255&#34;.
-        elif interface:
-            if interface == &#39;0.0.0.0&#39;:  # local network
-                destination = &#39;255.255.255.255&#39;
-            elif interface in [&#39;&lt;broadcast&gt;&#39;, &#39;None&#39;]:
-                destination = &#39;&lt;broadcast&gt;&#39;
-            else:
-                # Change interface&#39;s lowest tuple to &#39;broadcast&#39; value (255)
-                ipaddress.ip_address(interface)
-                destination = interface[:interface.rfind(&#39;.&#39;)] + &#39;.255&#39;
-
-        # If we&#39;ve been given a destination, make sure it&#39;s a valid IP
-        elif destination:
-            ipaddress.ip_address(destination)
-
-        # If no destination, it&#39;s a broadcast; set flag allowing broadcast and
-        # set dest to special string
+        # NOTE: This means the hostname must be valid when we start, otherwise
+        #       the config_check code will puke.  That&#39;s fine.  The alternative
+        #       is we let name resolution happen while we&#39;re running, but then
+        #       each failed lookup is going to block our write() routine for a
+        #       few seconds - not good.
+        #
+        # NOTE: This also catches specifying impropperly formatted IP
+        #       addresses.  The only way through gethostbyname() w/out throwing
+        #       an exception is to provide a valid hostname or IP address.
+        #       Propperly formatted IPs just get returned.
+        #
+        if destination:
+            destination = socket.gethostbyname(destination)
         else:
+            # If no destination, it&#39;s a broadcast; set dest to special string
             destination = &#39;&lt;broadcast&gt;&#39;
 
         self.destination = destination
-        self.port = port
 
-        # Try opening the socket
-        self.socket = self._open_socket()
+        # make sure user passed in `port`
+        #
+        # NOTE: We want the order of the arguments to consistently be (ip,
+        #       port, ...) across all the network readers/writers... but we
+        #       want `destination` to be optional.  All kwargs need to come
+        #       after all regular args, so we&#39;ve assigned a default value of
+        #       None to `port`.  But don&#39;t be confused, it is REQUIRED.
+        #
+        if not port:
+            raise TypeError(&#39;must specify `port`&#39;)
+        # make sure port gets stored as an int, even if passed in as a string
+        self.port = int(port)
+
+        # multicast options
+        if mc_interface:
+            # resolve once in constructor
+            mc_interface = socket.gethostbyname(mc_interface)
+        self.mc_interface = mc_interface
+        self.mc_ttl = mc_ttl
+
+        self.reuseaddr = reuseaddr
+        self.reuseport = reuseport
+
+        # socket gets initialized on-demand in write()
+        self.socket = None
 
     ############################
     def _open_socket(self):
-        &#34;&#34;&#34;Try to open and return the network socket.
+        &#34;&#34;&#34;Do socket prep so we&#39;re ready to write().  Returns socket object or None on
+        failure.
         &#34;&#34;&#34;
         udp_socket = socket.socket(family=socket.AF_INET,
                                    type=socket.SOCK_DGRAM,
                                    proto=socket.IPPROTO_UDP)
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-        try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
-            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-        except AttributeError:
-            logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
+        if self.reuseaddr:
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        if self.reuseport:
+            try:  # Raspbian doesn&#39;t recognize SO_REUSEPORT
+                udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+            except AttributeError:
+                logging.warning(&#39;Unable to set socket REUSEPORT; may be unsupported&#39;)
 
-        # Set the time-to-live for messages, in case of multicast
-        udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                              struct.pack(&#39;b&#39;, self.ttl))
-        udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+        # set multicast/broadcast options
+        if self.mc_interface:
+            # set the time-to-live for messages
+            udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+                                  struct.pack(&#39;b&#39;, self.mc_ttl))
+            # set outgoing multicast interface
+            udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                                  socket.inet_aton(self.mc_interface))
+        else:
+            # maybe broadcast, but very non-trivial to detect broadcast IP, so
+            # we set the broadcast flag anytime we&#39;re not doing multicast
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
         try:
             udp_socket.connect((self.destination, self.port))
@@ -412,17 +565,39 @@ eol          If specified, an end of line string to append to record
                 self.write(single_record)
             return
 
-        # If record is not a string, try converting to JSON. If we don&#39;t know
-        # how, throw a hail Mary and force it into str format
-        if not isinstance(record, str):
-            if type(record) in [int, float, bool, list, dict]:
-                record = json.dumps(record)
-            elif isinstance(record, DASRecord):
-                record = record.as_json()
-            else:
-                record = str(record)
+        # Append eol if configured
         if self.eol:
             record += self.eol
+
+        # Encode the record, so we&#39;re dealing with bytes from here on out
+        record = self._encode_str(record)
+
+        # Fragment record if needed, and recurse.
+        if len(record) &gt; MAXSIZE:
+            record_list=[]
+            max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
+            fragment_sizes = []
+            while len(record) &gt; max_fragment_size:
+                r = record[:max_fragment_size]+FRAGMENT_MARKER
+                record_list.append(r)
+                fragment_sizes.append(str(len(r)))
+                record = record[max_fragment_size:]
+            # last record doesn&#39;t get FRAGMENT_MARKER
+            record_list.append(record)
+            fragment_sizes.append(&#34;{} bytes&#34;.format(len(record)))
+            fragment_sizes = &#39;, &#39;.join(fragment_sizes)
+            logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;, len(record_list), fragment_sizes)
+            logging.debug(str(record_list))
+
+            # change our encoding to binary temporarily, because we&#39;ve already
+            # encoded to binary and added our marker (which has non-utf chars
+            # in it)
+            old_encoding = self.encoding
+            self.encoding = None
+            self.write(record_list)
+            # restore old encoding
+            self.encoding = old_encoding
+            return
 
         # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
         # reconnect, complain and return without writing.
@@ -435,20 +610,35 @@ eol          If specified, an end of line string to append to record
 
         num_tries = bytes_sent = 0
         rec_len = len(record)
-        while num_tries &lt; self.num_retry and bytes_sent &lt; rec_len:
+        while num_tries &lt;= self.num_retry and bytes_sent &lt; rec_len:
             try:
-                bytes_sent = self.socket.send(record.encode(&#39;utf-8&#39;))
+                bytes_sent = self.socket.send(record)
 
-                # If here, write at least partially succeeded. Reset warnings
-                if self.num_warnings == self.warning_limit:
-                    logging.info(&#39;UDPWriter.write() succeeded in writing after series of &#39;
-                    &#39;failures; resetting warnings.&#39;)
-                self.num_warnings = 0  # we&#39;ve succeeded
+                # If here, write succeeded. Reset warnings
+                #
+                # NOTE: If the host is unreachable, every other send will fail.
+                #       Since UDP doesn&#39;t actually know it failed, the initial
+                #       send() cannot fail.  However, the network stack will
+                #       see the ICMP host unreachable message and will store
+                #       THAT as the the error message for next write, then the
+                #       next send fails and clears the error...  Then the next
+                #       &#34;succeeds&#34; and the next fails, etc, etc
+                #
+                #       So we look for 2 consecutive &#34;successful&#34; writes before
+                #       resetting num_warnings.
+                #
+                self.good_writes += 1
+                if self.good_writes &gt;= 2:
+                    if self.num_warnings == self.warning_limit:
+                        logging.info(&#39;UDPWriter.write() succeeded in writing after series of &#39;
+                                     &#39;failures; resetting warnings.&#39;)
+                    self.num_warnings = 0  # we&#39;ve succeeded
 
             except (OSError, ConnectionRefusedError) as e:
                 # If we failed, complain, unless we&#39;ve already complained too much
+                self.good_writes = 0
                 if self.num_warnings &lt; self.warning_limit:
-                    logging.error(&#39;UDPWriter error: %s: %s&#39;, self.target_str, str(e))
+                    logging.error(&#39;UDPWriter: send() error: %s: %s&#39;, self.target_str, str(e))
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error(&#39;UDPWriter.write() - muting errors&#39;)
@@ -459,16 +649,122 @@ eol          If specified, an end of line string to append to record
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="logger.writers.network_writer.NetworkWriter" href="network_writer.html#logger.writers.network_writer.NetworkWriter">NetworkWriter</a></li>
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="logger.writers.udp_writer.UDPWriter.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write the record to the network.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write(self, record):
+    &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
+    # If we don&#39;t have a record, there&#39;s nothing to do
+    if not record:
+        return
+
+    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+    # calling write() on each of the list elements in order.
+    if isinstance(record, list):
+        for single_record in record:
+            self.write(single_record)
+        return
+
+    # Append eol if configured
+    if self.eol:
+        record += self.eol
+
+    # Encode the record, so we&#39;re dealing with bytes from here on out
+    record = self._encode_str(record)
+
+    # Fragment record if needed, and recurse.
+    if len(record) &gt; MAXSIZE:
+        record_list=[]
+        max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
+        fragment_sizes = []
+        while len(record) &gt; max_fragment_size:
+            r = record[:max_fragment_size]+FRAGMENT_MARKER
+            record_list.append(r)
+            fragment_sizes.append(str(len(r)))
+            record = record[max_fragment_size:]
+        # last record doesn&#39;t get FRAGMENT_MARKER
+        record_list.append(record)
+        fragment_sizes.append(&#34;{} bytes&#34;.format(len(record)))
+        fragment_sizes = &#39;, &#39;.join(fragment_sizes)
+        logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;, len(record_list), fragment_sizes)
+        logging.debug(str(record_list))
+
+        # change our encoding to binary temporarily, because we&#39;ve already
+        # encoded to binary and added our marker (which has non-utf chars
+        # in it)
+        old_encoding = self.encoding
+        self.encoding = None
+        self.write(record_list)
+        # restore old encoding
+        self.encoding = old_encoding
+        return
+
+    # If socket isn&#39;t connected, try reconnecting. If we can&#39;t
+    # reconnect, complain and return without writing.
+    if not self.socket:
+        self.socket = self._open_socket()
+    if not self.socket:
+        logging.error(&#39;Unable to write record to %s:%d&#39;,
+                      self.destination, self.port)
+        return
+
+    num_tries = bytes_sent = 0
+    rec_len = len(record)
+    while num_tries &lt;= self.num_retry and bytes_sent &lt; rec_len:
+        try:
+            bytes_sent = self.socket.send(record)
+
+            # If here, write succeeded. Reset warnings
+            #
+            # NOTE: If the host is unreachable, every other send will fail.
+            #       Since UDP doesn&#39;t actually know it failed, the initial
+            #       send() cannot fail.  However, the network stack will
+            #       see the ICMP host unreachable message and will store
+            #       THAT as the the error message for next write, then the
+            #       next send fails and clears the error...  Then the next
+            #       &#34;succeeds&#34; and the next fails, etc, etc
+            #
+            #       So we look for 2 consecutive &#34;successful&#34; writes before
+            #       resetting num_warnings.
+            #
+            self.good_writes += 1
+            if self.good_writes &gt;= 2:
+                if self.num_warnings == self.warning_limit:
+                    logging.info(&#39;UDPWriter.write() succeeded in writing after series of &#39;
+                                 &#39;failures; resetting warnings.&#39;)
+                self.num_warnings = 0  # we&#39;ve succeeded
+
+        except (OSError, ConnectionRefusedError) as e:
+            # If we failed, complain, unless we&#39;ve already complained too much
+            self.good_writes = 0
+            if self.num_warnings &lt; self.warning_limit:
+                logging.error(&#39;UDPWriter: send() error: %s: %s&#39;, self.target_str, str(e))
+                self.num_warnings += 1
+                if self.num_warnings == self.warning_limit:
+                    logging.error(&#39;UDPWriter.write() - muting errors&#39;)
+        num_tries += 1
+
+    logging.debug(&#39;UDPWriter.write() wrote %d/%d bytes after %d tries&#39;,
+                  bytes_sent, rec_len, num_tries)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="logger.writers.network_writer.NetworkWriter" href="network_writer.html#logger.writers.network_writer.NetworkWriter">NetworkWriter</a></b></code>:
+<li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.network_writer.NetworkWriter.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.network_writer.NetworkWriter.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
-<li><code><a title="logger.writers.network_writer.NetworkWriter.write" href="network_writer.html#logger.writers.network_writer.NetworkWriter.write">write</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
 </ul>
 </li>
 </ul>
@@ -491,6 +787,9 @@ eol          If specified, an end of line string to append to record
 <ul>
 <li>
 <h4><code><a title="logger.writers.udp_writer.UDPWriter" href="#logger.writers.udp_writer.UDPWriter">UDPWriter</a></code></h4>
+<ul class="">
+<li><code><a title="logger.writers.udp_writer.UDPWriter.write" href="#logger.writers.udp_writer.UDPWriter.write">write</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
@@ -498,7 +797,7 @@ eol          If specified, an end of line string to append to record
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

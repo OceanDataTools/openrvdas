@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>logger.utils.simulate_data API documentation</title>
 <meta name="description" content="Simulate a live data feed by sending stored logger data to
 specified UDP ports and/or simulated (temporary) serial ports …" />
@@ -58,13 +58,12 @@ its input.</p>
 <p>the script will expect a YAML file keyed by instrument names, where
 each instrument name references a dict including keys 'class' (Serial
 or UDP), 'port' (e.g. 5501 or /tmp/ttyr05) and 'filebase'. It may
-optionally include 'prefix', 'eol', 'timestamp' and 'time_format'
+optionally include 'eol', 'timestamp' and 'time_format'
 keys:</p>
 <h6 id="gyro">####### Gyro</h6>
 <p>gyro:
 class: UDP
 timestamp: true
-prefix: gyro
 eol:
 port: 56332
 filebase: /data/2019-05-11/raw/GYRO</p>
@@ -112,7 +111,6 @@ $HEHDT,087.1,T*21
 $HEHDT,087.1,T*21
 $HEHDT,087.1,T*21
 
-
 By default, the reader assumes that the log file record format is
 &#34;{timestamp:ti} {record}&#34; but if, for example, the timestamp has a different
 format, or a different separator is used between the timestamp and record,
@@ -144,14 +142,13 @@ If --config is specified
 the script will expect a YAML file keyed by instrument names, where
 each instrument name references a dict including keys &#39;class&#39; (Serial
 or UDP), &#39;port&#39; (e.g. 5501 or /tmp/ttyr05) and &#39;filebase&#39;. It may
-optionally include &#39;prefix&#39;, &#39;eol&#39;, &#39;timestamp&#39; and &#39;time_format&#39;
+optionally include &#39;eol&#39;, &#39;timestamp&#39; and &#39;time_format&#39;
 keys:
 
 ############# Gyro ###############
   gyro:
     class: UDP
     timestamp: true
-    prefix: gyro
     eol: \r
     port: 56332
     filebase: /data/2019-05-11/raw/GYRO
@@ -183,14 +180,12 @@ import glob
 import logging
 import os.path
 import parse
-import subprocess
+import pty
 import sys
 import threading
-import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
-from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
 
 from logger.utils.read_config import read_config  # noqa: E402
@@ -201,13 +196,13 @@ class SimUDP:
     &#34;&#34;&#34;Open a network port and feed stored logfile data to it.&#34;&#34;&#34;
     ############################
 
-    def __init__(self, port, filebase=None, record_format=None,
-                 time_format=TIME_FORMAT, eol=&#39;\n&#39;):
+    def __init__(self, port, name=None, filebase=None, record_format=None,
+                 time_format=TIME_FORMAT, eol=&#39;\n&#39;, input_eol=None, quiet=False):
         &#34;&#34;&#34;
         ```
         port -  UDP port on which to write records.
 
-        time_format - What format to use for timestamp
+        name -  Optional user-friendly name to display on warning messages
 
         filebase - Prefix string to be matched (with a following &#34;*&#34;) to find
                    files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
@@ -215,13 +210,23 @@ class SimUDP:
         record_format
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;
+
+        time_format - What format to use for timestamp
+
+        eol - String to append to end of an output record
+
+        input_eol - Optional string by which to recognize the end of a record
         ```
         &#34;&#34;&#34;
         self.port = port
+        self.name = name
         self.time_format = time_format
         self.filebase = filebase
         self.record_format = record_format or &#39;{timestamp:ti} {record}&#39;
         self.compiled_record_format = parse.compile(self.record_format)
+        self.eol = eol
+        self.input_eol = input_eol
+        self.quiet=quiet
 
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + &#39;*&#39;):
@@ -231,7 +236,8 @@ class SimUDP:
 
         self.reader = LogfileReader(filebase=filebase, use_timestamps=True,
                                     record_format=self.record_format,
-                                    time_format=self.time_format)
+                                    time_format=self.time_format,
+                                    eol=self.input_eol, quiet=self.quiet)
         self.writer = UDPWriter(port=port, eol=eol)
 
         self.first_time = True
@@ -253,13 +259,15 @@ class SimUDP:
                 # (if we&#39;re not looping, or if we don&#39;t have a usable file),
                 # or start reading from the beginning (if we are looping and
                 # have a usable file).
-                if not record:
+                if record is None:
                     if not loop or self.first_time:
                         break
-                    logging.info(&#39;Looping instrument %s&#39;, self.prefix)
+                    logging.info(&#39;Looping instrument %s&#39;, self.filebase)
                     self.reader = LogfileReader(filebase=self.filebase,
                                                 record_format=self.record_format,
-                                                use_timestamps=True)
+                                                use_timestamps=True,
+                                                eol=self.input_eol,
+                                                quiet=self.quiet)
                     continue
 
                 # We&#39;ve now got a record. Try parsing timestamp off it
@@ -269,8 +277,9 @@ class SimUDP:
 
                 # We had a problem parsing. Discard record and try reading next one.
                 except (KeyError, ValueError, AttributeError):
-                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                    logging.warning(&#39;Record: %s&#39;, record)
+                    logging.warning(&#39;%s: Unable to parse record into &#34;%s&#34;&#39;,
+                                    self.name, self.record_format)
+                    logging.warning(&#39;Record: &#34;%s&#34;&#39;, record)
                     continue
 
                 if not record:
@@ -282,20 +291,20 @@ class SimUDP:
         except (OSError, KeyboardInterrupt):
             self.quit_flag = True
 
-        logging.info(&#39;Finished %s&#39;, self.prefix)
+        logging.info(&#39;Finished %s&#39;, self.filebase)
+
 
 ################################################################################
-
-
 class SimSerial:
     &#34;&#34;&#34;Create a virtual serial port and feed stored logfile data to it.&#34;&#34;&#34;
     ############################
 
-    def __init__(self, port, time_format=TIME_FORMAT, filebase=None,
-                 record_format=None, eol=&#39;\n&#39;,
+    def __init__(self, port, name=None, time_format=TIME_FORMAT, filebase=None,
+                 record_format=None, eol=&#39;\n&#39;, input_eol=None,
                  baudrate=9600, bytesize=8, parity=&#39;N&#39;, stopbits=1,
                  timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
-                 dsrdtr=False, inter_byte_timeout=None, exclusive=None):
+                 dsrdtr=False, inter_byte_timeout=None, exclusive=None,
+                 quiet=False):
         &#34;&#34;&#34;
         Simulate a serial port, feeding it data from the specified file.
 
@@ -303,24 +312,34 @@ class SimSerial:
         port - Temporary serial port to create and make available for reading
                records.
 
+        name -  Optional user-friendly name to display on warning messages
+
+        time_format - What format to use for timestamp
+
         filebase     Possibly wildcarded string specifying files to be opened.
 
         record_format
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;.
 
-        time_format - What format to use for timestamp
+        eol - String by which to recognize the end of a record
+
+        input_eol - Optional string by which to recognize the end of a record
         ```
         &#34;&#34;&#34;
         # We&#39;ll create two virtual ports: &#39;port&#39; and &#39;port_in&#39;; we will write
         # to port_in and read the values back out from port
         self.read_port = port
         self.write_port = port + &#39;_in&#39;
+        self.name = name
         self.time_format = time_format
         self.filebase = filebase
         self.record_format = record_format or &#39;{timestamp:ti} {record}&#39;
         self.compiled_record_format = parse.compile(self.record_format)
+        self.eol = eol
+        self.input_eol = input_eol
         self.serial_params = None
+        self.quiet = quiet
 
         # Complain, but go ahead if read_port or write_port exist.
         for path in [self.read_port, self.write_port]:
@@ -346,51 +365,6 @@ class SimSerial:
                               &#39;exclusive&#39;: exclusive}
         self.quit = False
 
-        # Finally, find path to socat executable
-        self.socat_path = None
-        for socat_path in [&#39;/usr/bin/socat&#39;, &#39;/usr/local/bin/socat&#39;]:
-            if os.path.exists(socat_path) and os.path.isfile(socat_path):
-                self.socat_path = socat_path
-        if not self.socat_path:
-            raise NameError(&#39;Executable &#34;socat&#34; not found on path. Please refer &#39;
-                            &#39;to installation guide to install socat.&#39;)
-
-    ############################
-    def _run_socat(self):
-        &#34;&#34;&#34;Internal: run the actual command.&#34;&#34;&#34;
-        verbose = &#39;-d&#39;
-        write_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.write_port
-        read_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.read_port
-
-        cmd = [self.socat_path,
-               verbose,
-               # verbose,   # repeating makes it more verbose
-               read_port_params,
-               write_port_params,
-               ]
-        try:
-            # Run socat process using Popen, checking every second or so whether
-            # it&#39;s died (poll() != None) or we&#39;ve gotten a quit signal.
-            logging.info(&#39;Calling: %s&#39;, &#39; &#39;.join(cmd))
-            socat_process = subprocess.Popen(cmd)
-            while not self.quit and not socat_process.poll():
-                try:
-                    socat_process.wait(1)
-                except subprocess.TimeoutExpired:
-                    pass
-
-        except Exception as e:
-            logging.error(&#39;ERROR: socat command: %s&#39;, e)
-
-        # If here, process has terminated, or we&#39;ve seen self.quit. We
-        # want both to be true: if we&#39;ve terminated, set self.quit so that
-        # &#39;run&#39; loop can exit. If self.quit, terminate process.
-        if self.quit:
-            socat_process.kill()
-        else:
-            self.quit = True
-        logging.info(&#39;Finished: %s&#39;, &#39; &#39;.join(cmd))
-
     ############################
     def run(self, loop=False):
         # If self.serial_params is None, it means that either read or
@@ -399,54 +373,69 @@ class SimSerial:
         if not self.serial_params:
             return
 
-        &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
-        the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-        self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
-        self.socat_thread.start()
-        time.sleep(0.2)
+        try:
+            # Create simulated serial port (something like /dev/ttys2), and link
+            # it to the port they want to connect to (like /tmp/tty_s330).
+            write_fd, read_fd = pty.openpty()     # open the pseudoterminal
+            true_read_port = os.ttyname(read_fd)  # this is the true filename of port
 
-        self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
-                                    record_format=self.record_format, time_format=self.time_format)
-
-        self.writer = TextFileWriter(self.write_port, truncate=True)
-
-        logging.info(&#39;Starting %s: %s&#39;, self.read_port, self.filebase)
-        while not self.quit:
+            # Get rid of any previous symlink if it exists, and symlink the new pty
             try:
-                record = self.reader.read()  # get the next record
-                logging.debug(&#39;SimSerial got: %s&#39;, record)
+                os.unlink(self.read_port)
+            except FileNotFoundError:
+                pass
+            os.symlink(true_read_port, self.read_port)
 
-                # End of input? If loop==True, re-open the logfile from the start
-                if record is None:
-                    if not loop:
-                        break
-                    self.reader = LogfileReader(filebase=self.filebase,
-                                                use_timestamps=True,
-                                                record_format=self.record_format,
-                                                time_format=self.time_format)
-
-                # We&#39;ve now got a record. Try parsing timestamp off it
+            self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
+                                        record_format=self.record_format,
+                                        time_format=self.time_format,
+                                        eol=self.input_eol, quiet=self.quiet)
+            logging.info(&#39;Starting %s: %s&#39;, self.read_port, self.filebase)
+            while not self.quit:
                 try:
-                    parsed_record = self.compiled_record_format.parse(record).named
-                    record = parsed_record[&#39;record&#39;]
+                    record = self.reader.read()  # get the next record
+                    logging.debug(&#39;SimSerial got: %s&#39;, record)
 
-                # We had a problem parsing. Discard record and try reading next one.
-                except (KeyError, ValueError, AttributeError):
-                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                    logging.warning(&#39;Record: %s&#39;, record)
-                    continue
+                    # End of input? If loop==True, re-open the logfile from the start
+                    if record is None:
+                        if not loop:
+                            break
 
-                if not record:
-                    continue
+                        self.reader = LogfileReader(filebase=self.filebase,
+                                                    use_timestamps=True,
+                                                    record_format=self.record_format,
+                                                    time_format=self.time_format,
+                                                    eol=self.input_eol, quiet=self.quiet)
 
-                logging.debug(&#39;SimSerial writing: %s&#39;, record)
-                self.writer.write(record)   # and write it to the virtual port
-            except (OSError, KeyboardInterrupt):
-                break
+                    # We&#39;ve now got a record. Try parsing timestamp off it
+                    logging.debug(f&#39;Read record: &#34;{record}&#34;&#39;)
+                    try:
+                        parsed_record = self.compiled_record_format.parse(record).named
+                        record = parsed_record[&#39;record&#39;]
 
-        # If we&#39;re here, we got None from our input, and are done. Signal
-        # for run_socat to exit
-        self.quit = True
+                    # We had a problem parsing. Discard record and try reading next one.
+                    except (KeyError, ValueError, TypeError, AttributeError):
+                        logging.warning(&#39;%s: Unable to parse record into &#34;%s&#34;&#39;,
+                                        self.name, self.record_format)
+                        logging.warning(&#39;Record: &#34;%s&#34;&#39;, record)
+                        continue
+
+                    if not record:
+                        continue
+
+                    logging.debug(&#39;SimSerial writing: %s&#39;, record)
+                    os.write(write_fd, (record + self.eol).encode(&#39;utf8&#39;))
+
+                except (OSError, KeyboardInterrupt):
+                    break
+
+            # If we&#39;re here, we got None from our input, and are done. Signal
+            # for run_socat to exit
+            self.quit = True
+
+        finally:
+            # Get rid of the symlink we&#39;ve created
+            os.unlink(self.read_port)
 
 
 ################################################################################
@@ -481,6 +470,9 @@ if __name__ == &#39;__main__&#39;:
     parser.add_argument(&#39;--loop&#39;, dest=&#39;loop&#39;, action=&#39;store_true&#39;, default=True,
                         help=&#39;If True, loop when reaching end of sample data&#39;)
 
+    parser.add_argument(&#39;--quiet&#39;, dest=&#39;quiet&#39;, action=&#39;store_true&#39;, default=True,
+                        help=&#39;If True, silently ignore unparseable records&#39;)
+
     parser.add_argument(&#39;--no_loop&#39;, dest=&#39;no_loop&#39;, action=&#39;store_true&#39;,
                         help=&#39;If True, don\&#39;t loop when reaching end of &#39;
                         &#39;sample data&#39;)
@@ -490,7 +482,7 @@ if __name__ == &#39;__main__&#39;:
                         help=&#39;Increase output verbosity&#39;)
     args = parser.parse_args()
 
-    LOGGING_FORMAT = &#39;%(asctime)-15s %(message)s&#39;
+    LOGGING_FORMAT = &#39;%(asctime)-15s %(lineno)d %(message)s&#39;
     logging.basicConfig(format=LOGGING_FORMAT)
 
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
@@ -510,9 +502,20 @@ if __name__ == &#39;__main__&#39;:
                 logging.warning(&#39;No class definition for config &#34;%s&#34;&#39;, inst)
                 continue
 
+            # Stash name of config
+            config[&#39;name&#39;] = inst
             # Save class of simulator, and remove it from the config dict
             inst_class = config[&#39;class&#39;]
             del config[&#39;class&#39;]
+
+            # Fold in some things from the command line, if they&#39;re
+            # not specified in the config itself.
+            if &#39;time_format&#39; not in config:
+                config[&#39;time_format&#39;] = args.time_format
+            if &#39;record_format&#39; not in config:
+                config[&#39;record_format&#39;] = args.record_format
+            if &#39;quiet&#39; not in config:
+                config[&#39;quiet&#39;] = args.quiet
 
             # Create the appropriate simulator with the config
             if inst_class == &#39;Serial&#39;:
@@ -529,7 +532,7 @@ if __name__ == &#39;__main__&#39;:
             writer_thread.start()
             thread_list.append(writer_thread)
 
-        logging.warning(&#39;Running simulated ports for %s&#39;, &#39;, &#39;.join(configs.keys()))
+        logging.info(&#39;Running simulated ports for %s&#39;, &#39;, &#39;.join(configs.keys()))
 
         try:
             for thread in thread_list:
@@ -551,13 +554,15 @@ if __name__ == &#39;__main__&#39;:
                                   time_format=args.time_format,
                                   baudrate=args.baud,
                                   filebase=args.filebase,
-                                  record_format=args.record_format)
+                                  record_format=args.record_format,
+                                  quiet=args.quiet)
         # Is it a UDP port?
         elif args.udp:
             simulator = SimUDP(port=args.udp,
                                time_format=args.time_format,
                                filebase=args.filebase,
-                               record_format=args.record_format)
+                               record_format=args.record_format,
+                               quiet=args.quiet)
         else:
             parser.error(&#39;If --filebase specified, must also specify either --serial &#39;
                          &#39;or --udp.&#39;)
@@ -577,7 +582,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="logger.utils.simulate_data.SimSerial"><code class="flex name class">
 <span>class <span class="ident">SimSerial</span></span>
-<span>(</span><span>port, time_format='%Y-%m-%dT%H:%M:%S.%fZ', filebase=None, record_format=None, eol='\n', baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None)</span>
+<span>(</span><span>port, name=None, time_format='%Y-%m-%dT%H:%M:%S.%fZ', filebase=None, record_format=None, eol='\n', input_eol=None, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None, quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a virtual serial port and feed stored logfile data to it.</p>
@@ -585,13 +590,19 @@ if __name__ == &#39;__main__&#39;:
 <pre><code>port - Temporary serial port to create and make available for reading
        records.
 
+name -  Optional user-friendly name to display on warning messages
+
+time_format - What format to use for timestamp
+
 filebase     Possibly wildcarded string specifying files to be opened.
 
 record_format
              If specified, a custom record format to use for extracting
              timestamp and record. The default is '{timestamp:ti} {record}'.
 
-time_format - What format to use for timestamp
+eol - String by which to recognize the end of a record
+
+input_eol - Optional string by which to recognize the end of a record
 </code></pre></div>
 <details class="source">
 <summary>
@@ -601,11 +612,12 @@ time_format - What format to use for timestamp
     &#34;&#34;&#34;Create a virtual serial port and feed stored logfile data to it.&#34;&#34;&#34;
     ############################
 
-    def __init__(self, port, time_format=TIME_FORMAT, filebase=None,
-                 record_format=None, eol=&#39;\n&#39;,
+    def __init__(self, port, name=None, time_format=TIME_FORMAT, filebase=None,
+                 record_format=None, eol=&#39;\n&#39;, input_eol=None,
                  baudrate=9600, bytesize=8, parity=&#39;N&#39;, stopbits=1,
                  timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
-                 dsrdtr=False, inter_byte_timeout=None, exclusive=None):
+                 dsrdtr=False, inter_byte_timeout=None, exclusive=None,
+                 quiet=False):
         &#34;&#34;&#34;
         Simulate a serial port, feeding it data from the specified file.
 
@@ -613,24 +625,34 @@ time_format - What format to use for timestamp
         port - Temporary serial port to create and make available for reading
                records.
 
+        name -  Optional user-friendly name to display on warning messages
+
+        time_format - What format to use for timestamp
+
         filebase     Possibly wildcarded string specifying files to be opened.
 
         record_format
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;.
 
-        time_format - What format to use for timestamp
+        eol - String by which to recognize the end of a record
+
+        input_eol - Optional string by which to recognize the end of a record
         ```
         &#34;&#34;&#34;
         # We&#39;ll create two virtual ports: &#39;port&#39; and &#39;port_in&#39;; we will write
         # to port_in and read the values back out from port
         self.read_port = port
         self.write_port = port + &#39;_in&#39;
+        self.name = name
         self.time_format = time_format
         self.filebase = filebase
         self.record_format = record_format or &#39;{timestamp:ti} {record}&#39;
         self.compiled_record_format = parse.compile(self.record_format)
+        self.eol = eol
+        self.input_eol = input_eol
         self.serial_params = None
+        self.quiet = quiet
 
         # Complain, but go ahead if read_port or write_port exist.
         for path in [self.read_port, self.write_port]:
@@ -656,51 +678,6 @@ time_format - What format to use for timestamp
                               &#39;exclusive&#39;: exclusive}
         self.quit = False
 
-        # Finally, find path to socat executable
-        self.socat_path = None
-        for socat_path in [&#39;/usr/bin/socat&#39;, &#39;/usr/local/bin/socat&#39;]:
-            if os.path.exists(socat_path) and os.path.isfile(socat_path):
-                self.socat_path = socat_path
-        if not self.socat_path:
-            raise NameError(&#39;Executable &#34;socat&#34; not found on path. Please refer &#39;
-                            &#39;to installation guide to install socat.&#39;)
-
-    ############################
-    def _run_socat(self):
-        &#34;&#34;&#34;Internal: run the actual command.&#34;&#34;&#34;
-        verbose = &#39;-d&#39;
-        write_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.write_port
-        read_port_params = &#39;pty,link=%s,raw,echo=0&#39; % self.read_port
-
-        cmd = [self.socat_path,
-               verbose,
-               # verbose,   # repeating makes it more verbose
-               read_port_params,
-               write_port_params,
-               ]
-        try:
-            # Run socat process using Popen, checking every second or so whether
-            # it&#39;s died (poll() != None) or we&#39;ve gotten a quit signal.
-            logging.info(&#39;Calling: %s&#39;, &#39; &#39;.join(cmd))
-            socat_process = subprocess.Popen(cmd)
-            while not self.quit and not socat_process.poll():
-                try:
-                    socat_process.wait(1)
-                except subprocess.TimeoutExpired:
-                    pass
-
-        except Exception as e:
-            logging.error(&#39;ERROR: socat command: %s&#39;, e)
-
-        # If here, process has terminated, or we&#39;ve seen self.quit. We
-        # want both to be true: if we&#39;ve terminated, set self.quit so that
-        # &#39;run&#39; loop can exit. If self.quit, terminate process.
-        if self.quit:
-            socat_process.kill()
-        else:
-            self.quit = True
-        logging.info(&#39;Finished: %s&#39;, &#39; &#39;.join(cmd))
-
     ############################
     def run(self, loop=False):
         # If self.serial_params is None, it means that either read or
@@ -709,54 +686,69 @@ time_format - What format to use for timestamp
         if not self.serial_params:
             return
 
-        &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
-        the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-        self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
-        self.socat_thread.start()
-        time.sleep(0.2)
+        try:
+            # Create simulated serial port (something like /dev/ttys2), and link
+            # it to the port they want to connect to (like /tmp/tty_s330).
+            write_fd, read_fd = pty.openpty()     # open the pseudoterminal
+            true_read_port = os.ttyname(read_fd)  # this is the true filename of port
 
-        self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
-                                    record_format=self.record_format, time_format=self.time_format)
-
-        self.writer = TextFileWriter(self.write_port, truncate=True)
-
-        logging.info(&#39;Starting %s: %s&#39;, self.read_port, self.filebase)
-        while not self.quit:
+            # Get rid of any previous symlink if it exists, and symlink the new pty
             try:
-                record = self.reader.read()  # get the next record
-                logging.debug(&#39;SimSerial got: %s&#39;, record)
+                os.unlink(self.read_port)
+            except FileNotFoundError:
+                pass
+            os.symlink(true_read_port, self.read_port)
 
-                # End of input? If loop==True, re-open the logfile from the start
-                if record is None:
-                    if not loop:
-                        break
-                    self.reader = LogfileReader(filebase=self.filebase,
-                                                use_timestamps=True,
-                                                record_format=self.record_format,
-                                                time_format=self.time_format)
-
-                # We&#39;ve now got a record. Try parsing timestamp off it
+            self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
+                                        record_format=self.record_format,
+                                        time_format=self.time_format,
+                                        eol=self.input_eol, quiet=self.quiet)
+            logging.info(&#39;Starting %s: %s&#39;, self.read_port, self.filebase)
+            while not self.quit:
                 try:
-                    parsed_record = self.compiled_record_format.parse(record).named
-                    record = parsed_record[&#39;record&#39;]
+                    record = self.reader.read()  # get the next record
+                    logging.debug(&#39;SimSerial got: %s&#39;, record)
 
-                # We had a problem parsing. Discard record and try reading next one.
-                except (KeyError, ValueError, AttributeError):
-                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                    logging.warning(&#39;Record: %s&#39;, record)
-                    continue
+                    # End of input? If loop==True, re-open the logfile from the start
+                    if record is None:
+                        if not loop:
+                            break
 
-                if not record:
-                    continue
+                        self.reader = LogfileReader(filebase=self.filebase,
+                                                    use_timestamps=True,
+                                                    record_format=self.record_format,
+                                                    time_format=self.time_format,
+                                                    eol=self.input_eol, quiet=self.quiet)
 
-                logging.debug(&#39;SimSerial writing: %s&#39;, record)
-                self.writer.write(record)   # and write it to the virtual port
-            except (OSError, KeyboardInterrupt):
-                break
+                    # We&#39;ve now got a record. Try parsing timestamp off it
+                    logging.debug(f&#39;Read record: &#34;{record}&#34;&#39;)
+                    try:
+                        parsed_record = self.compiled_record_format.parse(record).named
+                        record = parsed_record[&#39;record&#39;]
 
-        # If we&#39;re here, we got None from our input, and are done. Signal
-        # for run_socat to exit
-        self.quit = True</code></pre>
+                    # We had a problem parsing. Discard record and try reading next one.
+                    except (KeyError, ValueError, TypeError, AttributeError):
+                        logging.warning(&#39;%s: Unable to parse record into &#34;%s&#34;&#39;,
+                                        self.name, self.record_format)
+                        logging.warning(&#39;Record: &#34;%s&#34;&#39;, record)
+                        continue
+
+                    if not record:
+                        continue
+
+                    logging.debug(&#39;SimSerial writing: %s&#39;, record)
+                    os.write(write_fd, (record + self.eol).encode(&#39;utf8&#39;))
+
+                except (OSError, KeyboardInterrupt):
+                    break
+
+            # If we&#39;re here, we got None from our input, and are done. Signal
+            # for run_socat to exit
+            self.quit = True
+
+        finally:
+            # Get rid of the symlink we&#39;ve created
+            os.unlink(self.read_port)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -776,67 +768,82 @@ time_format - What format to use for timestamp
     if not self.serial_params:
         return
 
-    &#34;&#34;&#34;Create the virtual port with socat and start feeding it records from
-    the designated logfile. If loop==True, loop when reaching end of input.&#34;&#34;&#34;
-    self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
-    self.socat_thread.start()
-    time.sleep(0.2)
+    try:
+        # Create simulated serial port (something like /dev/ttys2), and link
+        # it to the port they want to connect to (like /tmp/tty_s330).
+        write_fd, read_fd = pty.openpty()     # open the pseudoterminal
+        true_read_port = os.ttyname(read_fd)  # this is the true filename of port
 
-    self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
-                                record_format=self.record_format, time_format=self.time_format)
-
-    self.writer = TextFileWriter(self.write_port, truncate=True)
-
-    logging.info(&#39;Starting %s: %s&#39;, self.read_port, self.filebase)
-    while not self.quit:
+        # Get rid of any previous symlink if it exists, and symlink the new pty
         try:
-            record = self.reader.read()  # get the next record
-            logging.debug(&#39;SimSerial got: %s&#39;, record)
+            os.unlink(self.read_port)
+        except FileNotFoundError:
+            pass
+        os.symlink(true_read_port, self.read_port)
 
-            # End of input? If loop==True, re-open the logfile from the start
-            if record is None:
-                if not loop:
-                    break
-                self.reader = LogfileReader(filebase=self.filebase,
-                                            use_timestamps=True,
-                                            record_format=self.record_format,
-                                            time_format=self.time_format)
-
-            # We&#39;ve now got a record. Try parsing timestamp off it
+        self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
+                                    record_format=self.record_format,
+                                    time_format=self.time_format,
+                                    eol=self.input_eol, quiet=self.quiet)
+        logging.info(&#39;Starting %s: %s&#39;, self.read_port, self.filebase)
+        while not self.quit:
             try:
-                parsed_record = self.compiled_record_format.parse(record).named
-                record = parsed_record[&#39;record&#39;]
+                record = self.reader.read()  # get the next record
+                logging.debug(&#39;SimSerial got: %s&#39;, record)
 
-            # We had a problem parsing. Discard record and try reading next one.
-            except (KeyError, ValueError, AttributeError):
-                logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                logging.warning(&#39;Record: %s&#39;, record)
-                continue
+                # End of input? If loop==True, re-open the logfile from the start
+                if record is None:
+                    if not loop:
+                        break
 
-            if not record:
-                continue
+                    self.reader = LogfileReader(filebase=self.filebase,
+                                                use_timestamps=True,
+                                                record_format=self.record_format,
+                                                time_format=self.time_format,
+                                                eol=self.input_eol, quiet=self.quiet)
 
-            logging.debug(&#39;SimSerial writing: %s&#39;, record)
-            self.writer.write(record)   # and write it to the virtual port
-        except (OSError, KeyboardInterrupt):
-            break
+                # We&#39;ve now got a record. Try parsing timestamp off it
+                logging.debug(f&#39;Read record: &#34;{record}&#34;&#39;)
+                try:
+                    parsed_record = self.compiled_record_format.parse(record).named
+                    record = parsed_record[&#39;record&#39;]
 
-    # If we&#39;re here, we got None from our input, and are done. Signal
-    # for run_socat to exit
-    self.quit = True</code></pre>
+                # We had a problem parsing. Discard record and try reading next one.
+                except (KeyError, ValueError, TypeError, AttributeError):
+                    logging.warning(&#39;%s: Unable to parse record into &#34;%s&#34;&#39;,
+                                    self.name, self.record_format)
+                    logging.warning(&#39;Record: &#34;%s&#34;&#39;, record)
+                    continue
+
+                if not record:
+                    continue
+
+                logging.debug(&#39;SimSerial writing: %s&#39;, record)
+                os.write(write_fd, (record + self.eol).encode(&#39;utf8&#39;))
+
+            except (OSError, KeyboardInterrupt):
+                break
+
+        # If we&#39;re here, we got None from our input, and are done. Signal
+        # for run_socat to exit
+        self.quit = True
+
+    finally:
+        # Get rid of the symlink we&#39;ve created
+        os.unlink(self.read_port)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="logger.utils.simulate_data.SimUDP"><code class="flex name class">
 <span>class <span class="ident">SimUDP</span></span>
-<span>(</span><span>port, filebase=None, record_format=None, time_format='%Y-%m-%dT%H:%M:%S.%fZ', eol='\n')</span>
+<span>(</span><span>port, name=None, filebase=None, record_format=None, time_format='%Y-%m-%dT%H:%M:%S.%fZ', eol='\n', input_eol=None, quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Open a network port and feed stored logfile data to it.</p>
 <pre><code>port -  UDP port on which to write records.
 
-time_format - What format to use for timestamp
+name -  Optional user-friendly name to display on warning messages
 
 filebase - Prefix string to be matched (with a following &quot;*&quot;) to find
            files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
@@ -844,6 +851,12 @@ filebase - Prefix string to be matched (with a following &quot;*&quot;) to find
 record_format
              If specified, a custom record format to use for extracting
              timestamp and record. The default is '{timestamp:ti} {record}'
+
+time_format - What format to use for timestamp
+
+eol - String to append to end of an output record
+
+input_eol - Optional string by which to recognize the end of a record
 </code></pre></div>
 <details class="source">
 <summary>
@@ -853,13 +866,13 @@ record_format
     &#34;&#34;&#34;Open a network port and feed stored logfile data to it.&#34;&#34;&#34;
     ############################
 
-    def __init__(self, port, filebase=None, record_format=None,
-                 time_format=TIME_FORMAT, eol=&#39;\n&#39;):
+    def __init__(self, port, name=None, filebase=None, record_format=None,
+                 time_format=TIME_FORMAT, eol=&#39;\n&#39;, input_eol=None, quiet=False):
         &#34;&#34;&#34;
         ```
         port -  UDP port on which to write records.
 
-        time_format - What format to use for timestamp
+        name -  Optional user-friendly name to display on warning messages
 
         filebase - Prefix string to be matched (with a following &#34;*&#34;) to find
                    files to be used. e.g. /tmp/log/NBP1406/knud/raw/NBP1406_knud
@@ -867,13 +880,23 @@ record_format
         record_format
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is &#39;{timestamp:ti} {record}&#39;
+
+        time_format - What format to use for timestamp
+
+        eol - String to append to end of an output record
+
+        input_eol - Optional string by which to recognize the end of a record
         ```
         &#34;&#34;&#34;
         self.port = port
+        self.name = name
         self.time_format = time_format
         self.filebase = filebase
         self.record_format = record_format or &#39;{timestamp:ti} {record}&#39;
         self.compiled_record_format = parse.compile(self.record_format)
+        self.eol = eol
+        self.input_eol = input_eol
+        self.quiet=quiet
 
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + &#39;*&#39;):
@@ -883,7 +906,8 @@ record_format
 
         self.reader = LogfileReader(filebase=filebase, use_timestamps=True,
                                     record_format=self.record_format,
-                                    time_format=self.time_format)
+                                    time_format=self.time_format,
+                                    eol=self.input_eol, quiet=self.quiet)
         self.writer = UDPWriter(port=port, eol=eol)
 
         self.first_time = True
@@ -905,13 +929,15 @@ record_format
                 # (if we&#39;re not looping, or if we don&#39;t have a usable file),
                 # or start reading from the beginning (if we are looping and
                 # have a usable file).
-                if not record:
+                if record is None:
                     if not loop or self.first_time:
                         break
-                    logging.info(&#39;Looping instrument %s&#39;, self.prefix)
+                    logging.info(&#39;Looping instrument %s&#39;, self.filebase)
                     self.reader = LogfileReader(filebase=self.filebase,
                                                 record_format=self.record_format,
-                                                use_timestamps=True)
+                                                use_timestamps=True,
+                                                eol=self.input_eol,
+                                                quiet=self.quiet)
                     continue
 
                 # We&#39;ve now got a record. Try parsing timestamp off it
@@ -921,8 +947,9 @@ record_format
 
                 # We had a problem parsing. Discard record and try reading next one.
                 except (KeyError, ValueError, AttributeError):
-                    logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                    logging.warning(&#39;Record: %s&#39;, record)
+                    logging.warning(&#39;%s: Unable to parse record into &#34;%s&#34;&#39;,
+                                    self.name, self.record_format)
+                    logging.warning(&#39;Record: &#34;%s&#34;&#39;, record)
                     continue
 
                 if not record:
@@ -934,7 +961,7 @@ record_format
         except (OSError, KeyboardInterrupt):
             self.quit_flag = True
 
-        logging.info(&#39;Finished %s&#39;, self.prefix)</code></pre>
+        logging.info(&#39;Finished %s&#39;, self.filebase)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -963,13 +990,15 @@ end of input.</p></div>
             # (if we&#39;re not looping, or if we don&#39;t have a usable file),
             # or start reading from the beginning (if we are looping and
             # have a usable file).
-            if not record:
+            if record is None:
                 if not loop or self.first_time:
                     break
-                logging.info(&#39;Looping instrument %s&#39;, self.prefix)
+                logging.info(&#39;Looping instrument %s&#39;, self.filebase)
                 self.reader = LogfileReader(filebase=self.filebase,
                                             record_format=self.record_format,
-                                            use_timestamps=True)
+                                            use_timestamps=True,
+                                            eol=self.input_eol,
+                                            quiet=self.quiet)
                 continue
 
             # We&#39;ve now got a record. Try parsing timestamp off it
@@ -979,8 +1008,9 @@ end of input.</p></div>
 
             # We had a problem parsing. Discard record and try reading next one.
             except (KeyError, ValueError, AttributeError):
-                logging.warning(&#39;Unable to parse record into &#34;%s&#34;&#39;, self.record_format)
-                logging.warning(&#39;Record: %s&#39;, record)
+                logging.warning(&#39;%s: Unable to parse record into &#34;%s&#34;&#39;,
+                                self.name, self.record_format)
+                logging.warning(&#39;Record: &#34;%s&#34;&#39;, record)
                 continue
 
             if not record:
@@ -992,7 +1022,7 @@ end of input.</p></div>
     except (OSError, KeyboardInterrupt):
         self.quit_flag = True
 
-    logging.info(&#39;Finished %s&#39;, self.prefix)</code></pre>
+    logging.info(&#39;Finished %s&#39;, self.filebase)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1034,7 +1064,7 @@ end of input.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
