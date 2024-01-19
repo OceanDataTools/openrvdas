@@ -808,7 +808,7 @@ function setup_supervisor {
         HTTP_HOST=127.0.0.1
         NGINX_BIN=/usr/local/bin/nginx
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
-        SUPERVISOR_SUFFIX='.ini'
+        SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
 
@@ -818,7 +818,7 @@ function setup_supervisor {
         HTTP_HOST='*'
         NGINX_BIN=/usr/sbin/nginx
         SUPERVISOR_DIR=/etc/supervisord.d
-        SUPERVISOR_SUFFIX='.ini'
+        SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
         COMMENT_SOCK_OWNER=''
 
@@ -828,7 +828,7 @@ function setup_supervisor {
         HTTP_HOST='*'
         NGINX_BIN=/usr/sbin/nginx
         SUPERVISOR_DIR=/etc/supervisor/conf.d
-        SUPERVISOR_SUFFIX='.conf'
+        SUPERVISOR_SUFFIX='conf'
         SUPERVISOR_SOCK=/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=''
     fi
