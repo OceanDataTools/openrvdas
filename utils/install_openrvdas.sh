@@ -808,7 +808,7 @@ function setup_supervisor {
         HTTP_HOST=127.0.0.1
         NGINX_BIN=/usr/local/bin/nginx
         SUPERVISOR_DIR=/usr/local/etc/supervisor.d/
-        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
+        SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
 
@@ -818,7 +818,7 @@ function setup_supervisor {
         HTTP_HOST='*'
         NGINX_BIN=/usr/sbin/nginx
         SUPERVISOR_DIR=/etc/supervisord.d
-        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.ini
+        SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
         COMMENT_SOCK_OWNER=''
 
@@ -828,14 +828,23 @@ function setup_supervisor {
         HTTP_HOST='*'
         NGINX_BIN=/usr/sbin/nginx
         SUPERVISOR_DIR=/etc/supervisor/conf.d
-        SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.conf
+        SUPERVISOR_SUFFIX='conf'
         SUPERVISOR_SOCK=/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=''
-
     fi
 
-    # Write out supervisor file, filling in variables
-    cat > /tmp/openrvdas.ini <<EOF
+    SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.${SUPERVISOR_SUFFIX}
+    LOGGER_MANAGER_FILE=$SUPERVISOR_DIR/openrvdas_logger_manager.${SUPERVISOR_SUFFIX}
+    CACHED_DATA_FILE=$SUPERVISOR_DIR/openrvdas_cached_data.${SUPERVISOR_SUFFIX}
+    DJANGO_FILE=$SUPERVISOR_DIR/openrvdas_django.${SUPERVISOR_SUFFIX}
+    SIMULATE_FILE=$SUPERVISOR_DIR/openrvdas_simulate.${SUPERVISOR_SUFFIX}
+
+    sudo mkdir -p $SUPERVISOR_DIR
+
+    #######################################################
+    # Write out the overall supervisor file, filling in variables
+    TEMP_FILE=/tmp/openrvdas_tmp.ini
+    cat > $TEMP_FILE <<EOF
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
 [unix_http_server]
@@ -845,23 +854,63 @@ ${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
 EOF
 
     if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
-        cat >> /tmp/openrvdas.ini <<EOF
+        cat >> $TEMP_FILE <<EOF
 
 [inet_http_server]
 port=${SUPERVISORD_WEBINTERFACE_PORT}
 EOF
         if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
             SUPERVISORD_WEBINTERFACE_HASH=`echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{printf("{SHA}%s",$1)}'`
-            cat >> /tmp/openrvdas.ini <<EOF
+            cat >> $TEMP_FILE <<EOF
 username=${SUPERVISORD_WEBINTERFACE_USER}
 password=${SUPERVISORD_WEBINTERFACE_HASH} ; echo -n "<password>" | sha1sum | awk '{printf("{SHA}%s",\$1)}'
 EOF
         fi
     fi
+    sudo mv $TEMP_FILE $SUPERVISOR_FILE
 
-    cat >> /tmp/openrvdas.ini <<EOF
+    #######################################################
+    # Write out the Logger Manager file
+    cat > $TEMP_FILE <<EOF
+; Supervisor configurations for LoggerManager
+[program:logger_manager]
+command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :8766 -v -V --no-console
+environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$AUTOSTART
+autorestart=true
+startretries=3
+killasgroup=true
+stderr_logfile=/var/log/openrvdas/logger_manager.stderr
+stderr_logfile_maxbytes=10000000 ; 10M
+stderr_logfile_maxbackups=100
+user=$RVDAS_USER
+EOF
+    sudo mv $TEMP_FILE $LOGGER_MANAGER_FILE
 
-; The scripts we're going to run
+    #######################################################
+    # Write out the Cached Data Server file
+    cat > $TEMP_FILE <<EOF
+; Supervisor configurations for LoggerManager and CachedDataServer
+[program:cached_data_server]
+command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+directory=${INSTALL_ROOT}/openrvdas
+autostart=$AUTOSTART
+autorestart=true
+startretries=3
+killasgroup=true
+stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
+stderr_logfile_maxbytes=10000000 ; 10M
+stderr_logfile_maxbackups=100
+user=$RVDAS_USER
+EOF
+    sudo mv $TEMP_FILE $CACHED_DATA_FILE
+
+
+    #######################################################
+    # Write out the Django GUI files, filling in variables
+    cat > $TEMP_FILE <<EOF
+; Supervisor configurations for Django GUI
 ${GUI_COMMENT}[program:nginx]
 ${GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
 ${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
@@ -887,31 +936,15 @@ ${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
 ${GUI_COMMENT}stderr_logfile_maxbackups=100
 ${GUI_COMMENT}user=$RVDAS_USER
 
-[program:cached_data_server]
-command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
-directory=${INSTALL_ROOT}/openrvdas
-autostart=$AUTOSTART
-autorestart=true
-startretries=3
-killasgroup=true
-stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
-user=$RVDAS_USER
+${GUI_COMMENT}[group:django]
+${GUI_COMMENT}programs=nginx,uwsgi
+EOF
+    sudo mv $TEMP_FILE $DJANGO_FILE
 
-[program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :8766 -v -V --no-console
-environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
-directory=${INSTALL_ROOT}/openrvdas
-autostart=$AUTOSTART
-autorestart=true
-startretries=3
-killasgroup=true
-stderr_logfile=/var/log/openrvdas/logger_manager.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
-user=$RVDAS_USER
-
+    #######################################################
+    # Write out the simulator commands, filling in variables
+    cat > $TEMP_FILE <<EOF
+; Supervisor configurations for OpenRVDAS data simulator
 ${SIMULATE_NBP_COMMENT}[program:simulate_nbp]
 ${SIMULATE_NBP_COMMENT}command=${VENV_BIN}/python logger/utils/simulate_data.py --config test/NBP1406/simulate_NBP1406.yaml
 ${SIMULATE_NBP_COMMENT}directory=${INSTALL_ROOT}/openrvdas
@@ -924,19 +957,10 @@ ${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
 ${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=100
 ${SIMULATE_NBP_COMMENT}user=$RVDAS_USER
 
-${GUI_COMMENT}[group:web]
-${GUI_COMMENT}programs=nginx,uwsgi
-
-[group:openrvdas]
-programs=logger_manager,cached_data_server
-
 ${SIMULATE_NBP_COMMENT}[group:simulate]
 ${SIMULATE_NBP_COMMENT}programs=simulate_nbp
 EOF
-
-    # Copy supervisor file into place
-    sudo mkdir -p $SUPERVISOR_DIR
-    sudo cp /tmp/openrvdas.ini $SUPERVISOR_FILE
+    sudo cp $TEMP_FILE $SIMULATE_FILE
 }
 
 ###########################################################################
