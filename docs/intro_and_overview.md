@@ -82,15 +82,22 @@ Do you see data? Hurrah!
  ![NBP Sample Cruise, Change Mode](images/nbp_change_mode.png)
 
  Select "no_write" from the pull-down menu and press "Change mode." After a few seconds of startup, the loggers should turn green and switch to "net" configuration, indicating that they are reading from their
- respective ports and writing UDP to the network (in this case, to port 6224), but not writing data to file. 
+ respective ports and writing UDP to the network (in this case, to port 6224), but not writing data to file.
 
- ![NBP Sample Cruise, Change Mode](images/nbp_running.png)
+ ![NBP Sample Cruise, no_write mode](images/nbp_running.png)
+
+ Selecting the "write" cruise mode will set the loggers to write their data both to UDP and to log files in 
+ `/var/tmp/log/`. The two additional cruise modes - `no_write+influx` and `write+influx` - perform the same functions as `no_write` and `write`, but also send the parsed values to an InfluxDB database (if installed), where they can be
+ read and displayed in Grafana graphs. InfluxDB and Grafana can be installed using the `utils/install_influxdb.sh`
+script, as described on the [Grafana/InfluxDB](grafana_displays.md) page.
 
  6. To verify that data are getting read and parsed, open a second browser window and direct it to [http://openrvdas/display/nbp_dashboard.html](http://openrvdas/display/nbp_dashboard.html) (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
 
  ![NBP Widget Demo](images/nbp_dashboard.png)
  
- What is going on here is that, in addition to writing raw data to port 6224, the loggers are also configured to send parsed data to a CachedDataServer via websocket (using a CachedDataWriter). The web console and display widgets connect to the CachedDataServer via websockets and request data to display.
+ What is going on here is that, in addition to writing raw data to port 6224, the loggers are also configured to send
+ parsed data to a CachedDataServer via websocket (using a CachedDataWriter). The web console and some Highcharts-based
+ and D3-based display widgets connect to the CachedDataServer via websockets and request data to display.
 
 The sections below describe the architecture and control scripts in greater detail.
 
