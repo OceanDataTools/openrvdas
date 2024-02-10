@@ -274,7 +274,7 @@ function set_hostname {
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        sudo echo $HOSTNAME > /etc/hostname
+        sudo echo $HOSTNAME > /etc/hostname || echo "Unable to update /etc/hostname"
     fi
 
     ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
