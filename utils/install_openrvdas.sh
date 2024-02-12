@@ -763,7 +763,7 @@ EOF
 
     # Make vassal directory and copy symlink in
     [ -e $ETC_HOME/uwsgi/vassals ] || mkdir -p $ETC_HOME/uwsgi/vassals
-    ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
+    sudo ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
           $ETC_HOME/uwsgi/vassals/
 }
 
