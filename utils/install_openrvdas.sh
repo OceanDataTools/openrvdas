@@ -844,6 +844,8 @@ function setup_supervisor {
     #######################################################
     # Write out the overall supervisor file, filling in variables
     TEMP_FILE=/tmp/openrvdas_tmp.ini
+    sudo rm $TEMP_FILE
+
     cat > $TEMP_FILE <<EOF
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
