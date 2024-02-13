@@ -274,7 +274,7 @@ function set_hostname {
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        sudo echo $HOSTNAME > /etc/hostname
+        sudo echo $HOSTNAME > /etc/hostname || echo "Unable to update /etc/hostname"
     fi
 
     ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
@@ -763,7 +763,7 @@ EOF
 
     # Make vassal directory and copy symlink in
     [ -e $ETC_HOME/uwsgi/vassals ] || mkdir -p $ETC_HOME/uwsgi/vassals
-    ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
+    sudo ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
           $ETC_HOME/uwsgi/vassals/
 }
 
@@ -844,6 +844,8 @@ function setup_supervisor {
     #######################################################
     # Write out the overall supervisor file, filling in variables
     TEMP_FILE=/tmp/openrvdas_tmp.ini
+    sudo rm $TEMP_FILE
+
     cat > $TEMP_FILE <<EOF
 ; First, override the default socket permissions to allow user
 ; $RVDAS_USER to run supervisorctl
