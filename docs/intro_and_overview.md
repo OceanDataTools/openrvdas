@@ -127,11 +127,12 @@ What is going on here is that, in addition to writing raw data to port 6224, the
  parsed data to a CachedDataServer via websocket (using a CachedDataWriter). The web console and some Highcharts-based
  and D3-based display widgets connect to the CachedDataServer via websockets and request data to display.
 
-The sections below describe the architecture and control scripts in greater detail.
+The sections below describe the architecture and the nature of logger configurations and control scripts in greater detail.
 
 ## Architecture
 
-The core logger architecture is made up of three basic classes of components: Readers, Transforms, and Writers, that can be "snapped together" to produce the necessary functionality. We have specified a simple API for these components and implemented a handful of the most useful ones in Python.[^1]
+At the heart of OpenRVDAS is the idea of a "logger configuration" - a definition that specifies
+what a logger should do. The "architecture" on which these definitions are built is made up of three basic classes of components: Readers, Transforms, and Writers, that can be "snapped together" to produce the necessary functionality. We have specified a simple API for these components and implemented a handful of the most useful ones in Python.[^1]
 
 ![Reader, Transform and Writer](images/read_transform_write.png)
 
