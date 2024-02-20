@@ -1,5 +1,5 @@
 # OpenRVDAS Introduction and Overview
-© 2018-2019 David Pablo Cohn - DRAFT 2019-06-26
+© 2018-2024 David Pablo Cohn - DRAFT 2024-02-20
 
 ## Table of Contents
 
