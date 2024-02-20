@@ -30,7 +30,7 @@ transforms:
   - class: GeofenceTransform
     module: loggers.transforms.geofence_transform
     kwargs:
-      latitude_field_name: s330Latitude,
+      latitude_field_name: s330Latitude
       longitude_field_name: s330Longitude
       boundary_file_name: /tmp/eez.gml
       leaving_boundary_message: set_active_mode underway_mode
@@ -136,7 +136,7 @@ writers:
 ```
 
 * The `bounds` parameter takes a string of comma-separated triplets of the form `<field_name>:<lower_bound>:<upper_bound>`
-  * `<field_name>` (in this case `s300SpeedKts`) says to look for values of that field in the incoming records
+  * `<field_name>` (in this case `s330SpeedKts`) says to look for values of that field in the incoming records
   * `<lower_bound>:<upper_bound>` (in this case `0.0:0.5`), specify the "normal" range of values of this field. In this case,
      "normal" would be when the ship is moving less than 0.5 knots, or approximately at rest.
 * When the tested condition is no longer met (i.e. the ship is moving), the transform will output the string specified
