@@ -54,6 +54,12 @@ class TestNMEATransform(unittest.TestCase):
             logging.info('expected: %s, result: %s', expected, result)
             self.assertEqual(expected, result)
 
+    def test_bad_nmea_list(self):
+        with self.assertLogs(logging.getLogger(), level='INFO') as cm:
+            t = NMEATransform(nmea_list=['BADTransform'])
+        # Check that the first log message in the output is the one we want
+        self.assertIn('BADTransform is not in classes', cm.output[0])
+
 
 ################################################################################
 if __name__ == '__main__':

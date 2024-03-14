@@ -48,13 +48,25 @@ class NMEATransform:
         **kwargs
                 Arugments needed for the nmea transforms, see transforms below for what will be included.
         """
+        # If nmea_list is not given as list, force it into one
+        if not isinstance(nmea_list, list):
+            nmea_list = [nmea_list]
+
         class_module_name = 'logger.transforms.nmea_transform'
         module = importlib.import_module(class_module_name)
 
+        # Get all classes within this file
+        classes = [cls_name for cls_name, cls_obj in inspect.getmembers(module) if
+                   inspect.isclass(cls_obj)]
+
         self.transforms = []
+
         for transform in nmea_list:
-            class_const = getattr(module, transform)
-            self.transforms.append(class_const(kwargs))
+            if transform in classes:
+                class_const = getattr(module, transform)
+                self.transforms.append(class_const(kwargs))
+            else:
+                logging.error('%s is not in classes %s', transform, classes)
 
 
     ############################
