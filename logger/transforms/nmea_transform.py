@@ -23,6 +23,8 @@ used elsewhere.
 # flake8: noqa E501  - ignore long comment lines that describe formats
 
 import logging
+import importlib
+import inspect
 
 # For efficient checksum code
 from functools import reduce
@@ -40,8 +42,33 @@ class NMEATransform:
     """Call our various component transforms and generate NMEA strings from them.
     """
 
-    def __init__(self, **kwargs):
-        self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+    def __init__(self, nmea_list: list, **kwargs):
+        """
+        nmea_list
+                List of the nmea transforms that will be used.
+        **kwargs
+                Arugments needed for the nmea transforms, see transforms below for what will be included.
+        """
+        # If nmea_list is not given as list, force it into one
+        if not isinstance(nmea_list, list):
+            nmea_list = [nmea_list]
+
+        class_module_name = 'logger.transforms.nmea_transform'
+        module = importlib.import_module(class_module_name)
+
+        # Get all classes within this file
+        classes = [cls_name for cls_name, cls_obj in inspect.getmembers(module) if
+                   inspect.isclass(cls_obj)]
+
+        self.transforms = []
+
+        for transform in nmea_list:
+            if transform in classes:
+                class_const = getattr(module, transform)
+                self.transforms.append(class_const(kwargs))
+            else:
+                logging.error('%s is not in classes %s', transform, classes)
+
 
     ############################
     def transform(self, record):
@@ -306,3 +333,119 @@ class XDRTransform:
             results.append(sea_temp_str)
 
         return results
+
+################################################################################
+
+class DPTTransform:
+    """Take in records and emit a NMEA DPT string, as per format:
+      $--DPT,x.x,x.x,*nn<CR><LF> \\
+    Field Number:
+    1) Depth in meters
+    2) Offset from transducer: Positive - distance from transducer to water line,
+        or Negative - distance from transducer to keel
+    n) Checksum
+
+    e.g. $GPDPT,200.3,0.0*46
+    """
+
+    def __init__(self, kwargs):
+        """
+        Look for these keys in the kwargs dict:
+        ```
+        depth_field
+                 name of field that contains Depth
+        offset_field
+                 Name of field that contains Offset
+        position_source_field
+                 Name of field that contains position source
+        dpt_talker_id
+                 Should be format '--DPT' to identify the instrument
+                 that's creating the message.
+        ```
+        """
+
+        self.depth_field = kwargs.get('depth_field', None)
+        self.offset_field = kwargs.get('offset_field', None)
+
+        self.dpt_talker_id = kwargs.get('dpt_talker_id', None)
+
+    ############################
+    def transform(self, record):
+        """Incorporate any useable fields in this record, and if it gives us a
+        new true wind value, return the results.
+        """
+        # Check that we've got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning('Improper type for record: %s', type(record))
+            return None
+        fields = record.get('fields', None)
+        if not fields:
+            logging.debug('MWDTransform got record with no fields: %s', record)
+            return None
+
+        depth = fields.get(self.depth_field)
+        offset = fields.get(self.offset_field)
+
+        if depth:
+            data = f'{self.dpt_talker_id},{depth},{offset}'
+            string = f'${data}*{checksum(data)}'
+            return string
+
+        return None
+
+
+################################################################################
+
+class STNTransform:
+    """This sentence is transmitted before each individual sentence where there is a need for the
+    Listener to determine the exact source of data in the system. Examples might include
+    dual-frequency depth sounding equipment or equipment that integrates data from a
+    number of sources and produces a single output.
+
+    Take in records and emit a NMEA STN string, as per format:
+      $--STN,x.x*hh<CR><LF>
+    Field Number:
+    1) Talker ID Number/Name
+    2) Checksum
+
+    e.g. $
+    """
+
+    def __init__(self, kwargs):
+        """
+        Look for these keys in the kwargs dict:
+        ```
+        id_field
+                 name of field that contains id
+        stn_talker_id
+                Should be format '--STN' to identify the instrument
+                 that's creating the message.
+        ```
+        """
+        self.id_field = kwargs.get('id_field', None)
+
+        self.stn_talker_id = kwargs.get('stn_talker_id', None)
+
+    ############################
+    def transform(self, record):
+        """Incorporate any useable fields in this record.
+        """
+        # Check that we've got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning('Improper type for record: %s', type(record))
+            return None
+        fields = record.get('fields', None)
+        if not fields:
+            logging.debug('MWDTransform got record with no fields: %s', record)
+            return None
+
+        id = fields.get(self.id_field)
+
+        if id:
+            data = f'{self.stn_talker_id},{id}'
+            string = f'${data}*{checksum(data)}'
+            return string
+
+        return None
