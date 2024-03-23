@@ -22,4 +22,4 @@ geopandas
 shapely
 
 # Version-restricted packages
-Django==3.2.24
+Django==3.2.25
