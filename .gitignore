@@ -45,6 +45,8 @@ static/
 
 # virtualenv
 venv/
+.venv 
+
 
 # SSH
 *.pem
