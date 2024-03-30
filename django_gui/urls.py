@@ -18,10 +18,20 @@ from django.urls import include, path
 
 from django.conf import settings
 from django.conf.urls.static import static
-
+from rest_framework import routers
 from . import views
+from . import api_views
+
+##
+## API ROUTER CONFIG
+##
+router = routers.DefaultRouter()
+# router.register(r'cruise_list', api_views.CruiseListViewSet)
+router.register(r'loggers', api_views.LoggerViewSet)
+router.register('cruise', api_views.CruiseDetailView, basename='cruise')
 
 urlpatterns = [
+    path('', views.index, name='index'),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     # path('login/', auth_views.login, name='login'),
@@ -40,6 +50,12 @@ urlpatterns = [
     path('widget/', views.widget, name='widget'),
 
     path('fields/', views.fields, name='fields'),
+    #API Views
+    path('api/', include(router.urls)),
+    path('api/', include('rest_framework.urls', namespace='rest_framework')),
+  
 
-    path('', views.index, name='index'),
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+
