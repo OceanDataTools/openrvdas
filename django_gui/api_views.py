@@ -6,73 +6,58 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 #RVDAS Models + Serializers
-from django_gui.models import Cruise, Logger
-from django_gui.serializers import CruiseSerializer, LoggerSerializer
 
-# class CruiseListViewSet(viewsets.ModelViewSet):
-#     """
-#     API endpoint that allows Cruise to be viewed or edited.
-#     """
-#     queryset = Cruise.objects.all().order_by('-id')
-#     
-#     permission_classes = [permissions.IsAuthenticated]
+#       index.post
+#           index.delete_cruise
+#           index.select_mode
+#           index.reload_current_config
 
+#       index.get
+#           index.get_configuration
 
-class CruiseDetailView(viewsets.ModelViewSet):
-    """
-    API endpoint that allows updating and deleting a Model instance.
-    """
-    serializer_class = CruiseSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def list(self, request):
-        queryset = Cruise.objects.all().order_by('-id')
-        self.queryset = queryset
-        serializer = CruiseSerializer(queryset, many=True)
-        return Response(serializer.data)
-    
-    def retrieve(self, request, pk=None):
-        queryset = Cruise.objects.all()
-        cruise = get_object_or_404(queryset, pk=pk)
-        serializer = CruiseSerializer(cruise)
-        return Response(serializer.data)
-    
-    def create(self, request):
-        serializer = CruiseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def update(self, request, pk=None):
-        cruise = Cruise.objects.get(pk=pk)
-        serializer = CruiseSerializer(cruise, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def partial_update(self, request, pk=None):
-        cruise = Cruise.objects.get(pk=pk)
-        serializer = CruiseSerializer(cruise, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def destroy(self, request, pk=None):
-        try:
-            cruise = Cruise.objects.get(pk=pk)
-        except Cruise.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        cruise.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+#       cruise.get
+#           cruise.get_modes()
+#           cruise.get_active_modes()
+#       cruise.post
+#           cruise.select_mode(mode_name)
+
+#
+#       logger.post
+#           logger.edit_config(logger_id)
+#           logger.new_config(logger_id)
+#           logger.update_config(logger_id, config)
+#                set_active_logger_config
+
+#   Note, refer to line #211 in views.py
+#       logger.get_logger_info()
+#           logger.get_active_mode()
+#           logger.config_options()
+#           logger.default_config()
+#           logger.current_config()
 
 
-class LoggerViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Logger to be viewed or edited.
-    """
-    queryset = Logger.objects.all().order_by('-id')
-    serializer_class = LoggerSerializer
-    permission_classes = [permissions.IsAuthenticated]
+#       lost.post
+#           load.load_configuration(selection,config_data as json)
+#               this needs to be implemented pretty close to the existing code
+#               views.py 227 with creating files system locations like the main ui view. 
+#               
+#               What is complicated here is the free form YAML config. 
+#               Especially when things get big.
+#               And being able to define a 'selection'
+#               No need to display anything here.
+#               API Response should be the loaded config.
+#
+
+# Websockets + # Streaming data api. 
+
+
+# widget api - not sure if this needs an api.
+
+
+
+
+
+
+
+
+
