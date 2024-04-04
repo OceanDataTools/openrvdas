@@ -1,16 +1,83 @@
 #DJANGO CORE Models
-from django.contrib.auth.models import Group, User
-from rest_framework import permissions, viewsets,  status, views
 from rest_framework.response import Response
-from django.http import Http404
-from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
 
+import logging
+from rest_framework import authentication
+from .views import log_request
+from rest_framework.decorators import api_view
+from rest_framework.reverse import reverse
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+
+from rest_framework.settings import api_settings
 #RVDAS Models + Serializers
 
 #       index.post
 #           index.delete_cruise
 #           index.select_mode
 #           index.reload_current_config
+
+
+# In DRF, request data is typically accessed through request.data, 
+# which is a parsed representation of the request body. This is 
+# designed to work with various content types like JSON, form 
+# data, etc. In Django, request.POST is used for form data, and 
+# request.body contains the raw request payload.
+
+
+#Interacting with the Django DB via its API class 
+#As per the standard view.
+api = None
+
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response({
+        'login': reverse('rest_framework:login', request=request, format=format),
+        'logout': reverse('rest_framework:logout', request=request, format=format),
+        'obtain_auth_token': reverse('obtain_auth_token', request=request, format=format),
+        'delete_cruise': reverse('delete_cruise', request=request, format=format),
+     
+    })
+
+class CustomAuthToken(ObtainAuthToken):
+
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        
+    
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.pk,
+            'create': created,
+        })
+
+class DeleteCruiseAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        log_request(request, 'index')
+
+        # Are they deleting a cruise?(!)
+        if 'delete_cruise' in request.data:
+            logging.info('deleting cruise')
+            api.delete_cruise()
+            logging.info('cruise deleted')
+            return Response({'status': 'cruise deleted'}, 200)
+        
+        return Response({'status': 'Invalid Request'},400)
+
+class ConfigurationAPIView(APIView):
+    # authentication_classes = [authentication.TokenAuthentication]\
+    pass
 
 #       index.get
 #           index.get_configuration

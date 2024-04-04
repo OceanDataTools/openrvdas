@@ -21,15 +21,16 @@ from django.conf.urls.static import static
 from rest_framework import routers
 from . import views
 from . import api_views
-
+from rest_framework.authtoken.views import obtain_auth_token
 ##
 ## API ROUTER CONFIG
 ##
-router = routers.DefaultRouter()
-# router.register(r'cruise_list', api_views.CruiseListViewSet)
-router.register(r'loggers', api_views.LoggerViewSet)
-router.register('cruise', api_views.CruiseDetailView, basename='cruise')
-
+# router = routers.DefaultRouter()
+router = routers.DefaultRouter(trailing_slash=False)
+# router.register(r'delete_cruise', api_views.DeleteCruiseAPIView, basename="delete_cruise")
+# router.register(r'loggers', api_views.LoggerViewSet)
+# router.register('cruise', api_views.CruiseDetailView, basename='cruise')
+  
 urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
@@ -50,10 +51,14 @@ urlpatterns = [
     path('widget/', views.widget, name='widget'),
 
     path('fields/', views.fields, name='fields'),
-    #API Views
-    path('api/', include(router.urls)),
+    #API Viewsets
+   
+    # path('api/', include(views_api.urls)),
     path('api/', include('rest_framework.urls', namespace='rest_framework')),
-  
+    path('api/obtain_auth_token/', api_views.CustomAuthToken.as_view(), name="obtain_auth_token"),
+    path('api/', api_views.api_root),
+    path('api/delete-cruise/', api_views.DeleteCruiseAPIView.as_view(), name='delete_cruise')
+
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
