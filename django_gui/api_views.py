@@ -39,9 +39,9 @@ def api_root(request, format=None):
     return Response({
         'login': reverse('rest_framework:login', request=request, format=format),
         'logout': reverse('rest_framework:logout', request=request, format=format),
-        'obtain_auth_token': reverse('obtain_auth_token', request=request, format=format),
-        'delete_cruise': reverse('delete_cruise', request=request, format=format),
-        'configuration': reverse('configuration', request=request, format=format),
+        'obtain-auth-token': reverse('obtain-auth-token', request=request, format=format),
+        'delete-cruise': reverse('delete-cruise', request=request, format=format),
+        'cruise-configuration': reverse('cruise-configuration', request=request, format=format),
      
     })
 
@@ -90,7 +90,7 @@ class DeleteCruiseAPIView(APIView):
         
         return Response({'status': 'Invalid Request'},400)
 
-class ConfigurationAPIView(APIView):
+class CruiseConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
