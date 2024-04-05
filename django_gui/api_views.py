@@ -1,7 +1,9 @@
 #DJANGO CORE Models
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from .django_server_api import DjangoServerAPI
+from django_gui.settings import FILECHOOSER_DIRS
+from django_gui.settings import WEBSOCKET_DATA_SERVER
 import logging
 from rest_framework import authentication
 from .views import log_request
@@ -39,8 +41,18 @@ def api_root(request, format=None):
         'logout': reverse('rest_framework:logout', request=request, format=format),
         'obtain_auth_token': reverse('obtain_auth_token', request=request, format=format),
         'delete_cruise': reverse('delete_cruise', request=request, format=format),
+        'configuration': reverse('configuration', request=request, format=format),
      
     })
+
+def _get_api():
+    
+    global api
+    if api is None:
+        api = DjangoServerAPI()
+        logging.info("API initialized")
+
+    return api
 
 class CustomAuthToken(ObtainAuthToken):
 
@@ -64,7 +76,10 @@ class DeleteCruiseAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        log_request(request, 'index')
+        api = _get_api()
+        
+
+        log_request(request, 'delete_cruise')
 
         # Are they deleting a cruise?(!)
         if 'delete_cruise' in request.data:
@@ -76,8 +91,33 @@ class DeleteCruiseAPIView(APIView):
         return Response({'status': 'Invalid Request'},400)
 
 class ConfigurationAPIView(APIView):
-    # authentication_classes = [authentication.TokenAuthentication]\
-    pass
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        api = _get_api()
+
+        log_request(request, 'get_configuration')
+        errors = []
+        template_vars = {
+        'websocket_server': WEBSOCKET_DATA_SERVER,
+        'errors': {'django': errors},
+        }
+        try:
+            configuration = api.get_configuration()
+            template_vars['cruise_id'] = configuration.get('id', 'Cruise')
+            template_vars['filename'] = configuration.get('config_filename', '-none-')
+            template_vars['loggers'] = api.get_loggers()
+            template_vars['modes'] = api.get_modes()
+            template_vars['active_mode'] = api.get_active_mode()
+            template_vars['errors'] = errors
+        except (ValueError, AttributeError):
+            logging.info('No configuration loaded')
+    
+        return Response({'status': 'cruise deleted', "configuration": template_vars}, 200)
+  
+
+
 
 #       index.get
 #           index.get_configuration

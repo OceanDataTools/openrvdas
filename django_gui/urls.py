@@ -57,7 +57,8 @@ urlpatterns = [
     path('api/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/obtain_auth_token/', api_views.CustomAuthToken.as_view(), name="obtain_auth_token"),
     path('api/', api_views.api_root),
-    path('api/delete-cruise/', api_views.DeleteCruiseAPIView.as_view(), name='delete_cruise')
+    path('api/delete-cruise/', api_views.DeleteCruiseAPIView.as_view(), name='delete_cruise'),
+    path('api/configuration/', api_views.ConfigurationAPIView.as_view(), name='configuration')
 
 
 
