@@ -42,16 +42,23 @@ class NMEATransform:
     """Call our various component transforms and generate NMEA strings from them.
     """
 
-    def __init__(self, nmea_list: list, **kwargs):
+    def __init__(self, nmea_list: list = [], **kwargs):
         """
         nmea_list
                 List of the nmea transforms that will be used.
         **kwargs
                 Arugments needed for the nmea transforms, see transforms below for what will be included.
         """
+
+        self.transforms = []
+
         # If nmea_list is not given as list, force it into one
         if not isinstance(nmea_list, list):
             nmea_list = [nmea_list]
+
+        if not nmea_list:
+            self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+            return
 
         class_module_name = 'logger.transforms.nmea_transform'
         module = importlib.import_module(class_module_name)
@@ -59,8 +66,6 @@ class NMEATransform:
         # Get all classes within this file
         classes = [cls_name for cls_name, cls_obj in inspect.getmembers(module) if
                    inspect.isclass(cls_obj)]
-
-        self.transforms = []
 
         for transform in nmea_list:
             if transform in classes:
