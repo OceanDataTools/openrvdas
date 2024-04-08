@@ -243,6 +243,8 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
         return Response({'status': 'ok', "configuration": template_vars}, 200)
 
 
+
+
     
 
 #       cruise.get
