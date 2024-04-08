@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from rest_framework import routers
 from . import views
 from . import api_views
-from rest_framework.authtoken.views import obtain_auth_token
+
 ##
 ## API ROUTER CONFIG
 ##
@@ -51,14 +51,13 @@ urlpatterns = [
     path('widget/', views.widget, name='widget'),
 
     path('fields/', views.fields, name='fields'),
-    #API Viewsets
-   
-    # path('api/', include(views_api.urls)),
+    #API DRF Views       
     path('api/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/obtain-auth-token/', api_views.CustomAuthToken.as_view(), name="obtain-auth-token"),
     path('api/', api_views.api_root),
     path('api/delete-cruise/', api_views.DeleteCruiseAPIView.as_view(), name='delete-cruise'),
-    path('api/cruise-configuration/', api_views.CruiseConfigurationAPIView.as_view(), name='cruise-configuration')
+    path('api/cruise-configuration/', api_views.CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
+    path('api/select-cruise-mode/', api_views.CruiseSelectModeAPIView.as_view(), name='select-cruise-mode')
 
 
 

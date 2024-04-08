@@ -15,12 +15,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 
 from rest_framework.settings import api_settings
-#RVDAS Models + Serializers
+# Read in JSON with comments
+from logger.utils.read_config import parse, read_config  # noqa: E402
 
-#       index.post
-#           index.delete_cruise
-#           index.select_mode
-#           index.reload_current_config
+#RVDAS Models + Serializers
 
 
 # In DRF, request data is typically accessed through request.data, 
@@ -40,8 +38,11 @@ def api_root(request, format=None):
         'login': reverse('rest_framework:login', request=request, format=format),
         'logout': reverse('rest_framework:logout', request=request, format=format),
         'obtain-auth-token': reverse('obtain-auth-token', request=request, format=format),
-        'delete-cruise': reverse('delete-cruise', request=request, format=format),
         'cruise-configuration': reverse('cruise-configuration', request=request, format=format),
+        'delete-cruise': reverse('delete-cruise', request=request, format=format),
+        'select-cruise-mode': reverse('select-cruise-mode', request=request, format=format),
+        'reload-current-configuration': reverse('reload-current-configuration', request=request, format=format)
+        
      
     })
 
@@ -72,13 +73,68 @@ class CustomAuthToken(ObtainAuthToken):
             'create': created,
         })
 
+#
+#
+# CRUISE ACTIONS
+#
+#
+
+#       index.get
+#           index.get_configuration
+class CruiseConfigurationAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):        
+        log_request(request, 'get_configuration')        
+        template_vars = _get_cruise_config()    
+        return Response({'status': 'ok', "configuration": template_vars}, 200)
+  
+def _get_cruise_config():
+
+    errors = []
+    
+    template_vars = {
+        'websocket_server': WEBSOCKET_DATA_SERVER,
+        'errors': {'django': errors},
+        }
+    
+    try:        
+        api = _get_api()
+        configuration = api.get_configuration()
+        template_vars['cruise_id'] = configuration.get('id', 'Cruise')
+        template_vars['filename'] = configuration.get('config_filename', '-none-')
+        template_vars['loggers'] = api.get_loggers()
+        template_vars['modes'] = api.get_modes()
+        template_vars['active_mode'] = api.get_active_mode()
+        template_vars['errors'] = errors
+    except (ValueError, AttributeError):
+            logging.info('No configuration loaded')
+    
+    return template_vars
+
 class DeleteCruiseAPIView(APIView):
+    """
+    API endpoint to delete a cruise.
+
+    Request Payload:
+    POST
+    {
+        "delete_cruise": true,
+        "cruise_id": 123
+    }
+
+    Response Payload:
+    {
+        "status": "cruise deleted"
+    }
+    
+    """
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def post(self, request):
         api = _get_api()
         
-
         log_request(request, 'delete_cruise')
 
         # Are they deleting a cruise?(!)
@@ -89,38 +145,105 @@ class DeleteCruiseAPIView(APIView):
             return Response({'status': 'cruise deleted'}, 200)
         
         return Response({'status': 'Invalid Request'},400)
+    
+    def get(self, request):
+        try:        
+            api = _get_api()
+            configuration = api.get_configuration()
+            data = {}
+            data['cruise_id'] = configuration.get('id', 'Cruise')
+        except (ValueError, AttributeError):
+            logging.info('No configuration loaded')
+            data = {'cruise': 'no cruise loaded'}
 
-class CruiseConfigurationAPIView(APIView):
+        return Response({'status': 'ok', "data": data}, 200)
+    
+class CruiseSelectModeAPIView(APIView):
+
+    """
+    API endpoint to Select a Cruise Mode.
+
+    Request Payload:
+    POST
+    {
+        "select_mode": mode_id,        
+    }
+
+    Response Payload:
+    {
+        "status": "Cruise mode set: new cruise"
+    }
+    
+    """
+
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def post(self, request):
         api = _get_api()
+        log_request(request, 'select_mode')
 
-        log_request(request, 'get_configuration')
-        errors = []
-        template_vars = {
-        'websocket_server': WEBSOCKET_DATA_SERVER,
-        'errors': {'django': errors},
-        }
-        try:
-            configuration = api.get_configuration()
-            template_vars['cruise_id'] = configuration.get('id', 'Cruise')
-            template_vars['filename'] = configuration.get('config_filename', '-none-')
-            template_vars['loggers'] = api.get_loggers()
-            template_vars['modes'] = api.get_modes()
-            template_vars['active_mode'] = api.get_active_mode()
-            template_vars['errors'] = errors
+        # Are they deleting a cruise?(!)
+        if 'select_mode' in request.data:
+            try:
+                new_mode_name = request.data['select_mode']
+                logging.info('switching to mode "%s"', new_mode_name)
+                api.set_active_mode(new_mode_name)
+                return Response({'status': f'Cruise mode set: {new_mode_name}'}, 200)
+
+            except ValueError as e:
+                logging.warning('Error trying to set mode to "%s": %s',
+                                new_mode_name, str(e))
+                return Response({'status': f'Invalid Request. Error trying to set mode to {new_mode_name}'},400)        
+        return Response({'status': 'Invalid Request'},400)
+    
+    def get(self, request):
+        try:        
+            api = _get_api()            
+            data = {}
+            data['modes'] = api.get_modes()
+            data['active_mode'] = api.get_active_mode()
         except (ValueError, AttributeError):
             logging.info('No configuration loaded')
+            data = {'modes': 'no cruise loaded'}
+
+        return Response({'status': 'ok', "data": data}, 200)
+
+
+
+
+class CruiseReloadCurrentConfigurationAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        api = _get_api()
+        log_request(request, "reload current cruise configuration")
+
+        if 'reload' in request.data:            
+            logging.info('reloading current configuration file')
+            try:
+                cruise = api.get_configuration()
+                filename = cruise['config_filename']
+                # Load the file to memory and parse to a dict. Add the name
+                # of the file we've just loaded to the dict.
+                config = read_config(filename)
+                if 'cruise' in config:
+                    config['cruise']['config_filename'] = filename
+                api.load_configuration(config)
+
+                return Response({'status': 'Current config reloaded'},200)
+            except ValueError as e:
+                logging.warning('Error reloading current configuration: %s', str(e))
     
-        return Response({'status': 'cruise deleted', "configuration": template_vars}, 200)
-  
+        return Response({'status': 'Invalid Request'},400)
+    
+    def get(self, request):        
+        log_request(request, 'get_configuration')        
+        template_vars = _get_cruise_config()    
+        return Response({'status': 'ok', "configuration": template_vars}, 200)
 
 
-
-#       index.get
-#           index.get_configuration
+    
 
 #       cruise.get
 #           cruise.get_modes()
