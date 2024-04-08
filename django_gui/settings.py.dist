@@ -45,7 +45,7 @@ import socket  # noqa: E402
 # your own hostname in its place.
 HOSTNAME = socket.gethostname()
 
-ALLOWED_HOSTS = [HOSTNAME, 'localhost']
+ALLOWED_HOSTS = [HOSTNAME, 'localhost', "*"]
 
 # Host name may be a fully-qualified domain. Also allow just the basic
 # name.
@@ -105,6 +105,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_gui',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -196,10 +198,18 @@ USE_L10N = True
 
 USE_TZ = True
 
+
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
 #DJANGO REST FRAMEWORK SETTINGS
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+
+
 }
