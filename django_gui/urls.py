@@ -57,8 +57,10 @@ urlpatterns = [
     path('api/', api_views.api_root),
     path('api/delete-cruise/', api_views.DeleteCruiseAPIView.as_view(), name='delete-cruise'),
     path('api/cruise-configuration/', api_views.CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
-    path('api/select-cruise-mode/', api_views.CruiseSelectModeAPIView.as_view(), name='select-cruise-mode')
-
+    path('api/select-cruise-mode/', api_views.CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
+    path('api/reload-current-configuration/', api_views.CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
+    path('api/edit-logger-config/', api_views.EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
+    path('api/load-configuration-file/', api_views.LoadConfigurationFile.as_view(), name='load-configuration-file')
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

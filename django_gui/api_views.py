@@ -13,6 +13,10 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
+import json
+import yaml
+import os
+from os.path import dirname, realpath, isfile, isdir, abspath
 
 from rest_framework.settings import api_settings
 # Read in JSON with comments
@@ -41,8 +45,9 @@ def api_root(request, format=None):
         'cruise-configuration': reverse('cruise-configuration', request=request, format=format),
         'delete-cruise': reverse('delete-cruise', request=request, format=format),
         'select-cruise-mode': reverse('select-cruise-mode', request=request, format=format),
-        'reload-current-configuration': reverse('reload-current-configuration', request=request, format=format)
-        
+        'reload-current-configuration': reverse('reload-current-configuration', request=request, format=format),
+        'edit-logger-config': reverse('edit-logger-config', request=request, format=format),
+        'load-configuration-file': reverse('load-configuration-file', request=request, format=format),
      
     })
 
@@ -209,9 +214,6 @@ class CruiseSelectModeAPIView(APIView):
 
         return Response({'status': 'ok', "data": data}, 200)
 
-
-
-
 class CruiseReloadCurrentConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -238,45 +240,157 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
         return Response({'status': 'Invalid Request'},400)
     
     def get(self, request):        
-        log_request(request, 'get_configuration')        
+        log_request(request, 'reload_configuration')        
         template_vars = _get_cruise_config()    
         return Response({'status': 'ok', "configuration": template_vars}, 200)
 
+class EditLoggerConfigAPIView(APIView):
+    """
+    API endpoint for editing logger configurations.
 
+    This endpoint supports both POST and GET requests.
+    POST request allows updating logger configurations.
+    GET request retrieves the list of loggers.
+
+    Authentication:
+    - BasicAuthentication
+    - TokenAuthentication
+
+    Permissions:
+    - IsAuthenticated
+
+    """
+
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Update logger configuration.
+
+        POST Parameters:
+        - logger_id: The ID of the logger to be updated.
+        - select_config: The new configuration to be set.
+        {
+        "update": true,
+        "logger_id": "<logger_id>",
+        "select_config": "<config_id>"
+        }
+
+        Returns:
+        - Response with status and message.
+
+        """
+        api = _get_api()
+        if 'update' in request.data:
+            logger_id = request.data['logger_id']
+            # First things first: log the request
+            log_request(request, '%s edit_config' % logger_id)
+
+            # Now figure out what they selected
+            new_config = request.data['select_config']
+            logging.warning('selected config: %s', new_config)
+            api.set_active_logger_config(logger_id, new_config)
+            
+            return Response({'status': f'Logger {logger_id} updated.'}, status=200)
+        return Response({'status': 'Invalid Request'}, status=400)
     
+    def get(self, request):
+        """
+        Retrieve list of loggers.
 
-#       cruise.get
-#           cruise.get_modes()
-#           cruise.get_active_modes()
-#       cruise.post
-#           cruise.select_mode(mode_name)
+        Returns:
+        - Response with status and list of loggers.
 
-#
-#       logger.post
-#           logger.edit_config(logger_id)
-#           logger.new_config(logger_id)
-#           logger.update_config(logger_id, config)
-#                set_active_logger_config
-
-#   Note, refer to line #211 in views.py
-#       logger.get_logger_info()
-#           logger.get_active_mode()
-#           logger.config_options()
-#           logger.default_config()
-#           logger.current_config()
+        """
+        api = _get_api()
+        log_request(request, 'get_loggers')               
+        loggers = None
+        try:
+            loggers = api.get_loggers()
+            msg = None
+        except Exception as e:     
+            msg = str(e)
+        
+        return Response({'status': 'ok', "loggers": loggers, 'msg': msg}, status=200)
 
 
-#       lost.post
-#           load.load_configuration(selection,config_data as json)
-#               this needs to be implemented pretty close to the existing code
-#               views.py 227 with creating files system locations like the main ui view. 
-#               
-#               What is complicated here is the free form YAML config. 
-#               Especially when things get big.
-#               And being able to define a 'selection'
-#               No need to display anything here.
-#               API Response should be the loaded config.
-#
+class LoadConfigurationFile(APIView):
+    """
+        Load Configuration File
+
+        Get:
+            returns a json object containing a tree of files in your files folder.
+        
+        POST:
+        {
+            
+            'target_file': '<a file path string>'
+
+        }
+
+        Returns:
+        - Response with status and message.
+
+    """
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+
+
+    def get(self, request):
+        # list all files in a tree
+        files = self._list_files_in_folder()
+        return Response({'status': 'ok', "files": files}, status=200)
+        
+    def _list_files_in_folder(self):
+
+        config_files = {}
+        for file_dir in FILECHOOSER_DIRS:
+            folder_dict = {}
+            for root, dirs, files in os.walk(file_dir):
+                current_dir = os.path.relpath(root, file_dir)
+                if current_dir == '.':
+                    current_dir = ''
+                    continue
+                current_dir_dict = folder_dict
+                for dir_name in current_dir.split(os.path.sep):
+                    current_dir_dict = current_dir_dict.setdefault(dir_name, {})
+                current_dir_dict.update({file_name: os.path.join(root, file_name) for file_name in files})
+            
+            config_files[file_dir] = folder_dict
+
+        return config_files
+        
+
+
+    def post(self, request):
+        api = _get_api()
+        if 'target_file' in request.data:
+            #try to load it.
+            load_errors = []
+            target_file = request.data.get('target_file', None)
+            if target_file is None:
+                return Response({'status': f'File not found. {target_file}'},404)
+            try:
+                with open(target_file, 'r') as config_file:                    
+                    configuration = parse(config_file.read())                    
+                    if 'cruise' in configuration:
+                        configuration['cruise']['config_filename'] = target_file                    
+                    # Load the config and set to the default mode
+                    api.load_configuration(configuration)
+                    default_mode = api.get_default_mode()
+                    if default_mode:
+                        api.set_active_mode(default_mode)                    
+                    return Response({'status': f'target_file loaded {target_file}'}, 200)
+                
+            except (json.JSONDecodeError, yaml.scanner.ScannerError) as e:                
+                load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
+            except ValueError as e:                
+                load_errors.append(str(e))
+            
+            return Response({'status': f"Errors loading target file {target_file}", "errors": load_errors}, 400)
+            
 
 # Websockets + # Streaming data api. 
 
