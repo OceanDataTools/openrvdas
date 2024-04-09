@@ -22,15 +22,6 @@ from rest_framework import routers
 from . import views
 from . import api_views
 
-##
-## API ROUTER CONFIG
-##
-# router = routers.DefaultRouter()
-router = routers.DefaultRouter(trailing_slash=False)
-# router.register(r'delete_cruise', api_views.DeleteCruiseAPIView, basename="delete_cruise")
-# router.register(r'loggers', api_views.LoggerViewSet)
-# router.register('cruise', api_views.CruiseDetailView, basename='cruise')
-  
 urlpatterns = [
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
@@ -51,7 +42,9 @@ urlpatterns = [
     path('widget/', views.widget, name='widget'),
 
     path('fields/', views.fields, name='fields'),
+    #
     #API DRF Views       
+    #
     path('api/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/obtain-auth-token/', api_views.CustomAuthToken.as_view(), name="obtain-auth-token"),
     path('api/', api_views.api_root),
