@@ -135,8 +135,11 @@ class TCPWriter(Writer):
 
     ############################
     def _close_socket(self, s):
-        s.shutdown(socket.SHUT_RDWR)
-        s.close()
+        try:
+            s.shutdown(socket.SHUT_RDWR)
+            s.close()
+        except OSError:
+            logging.debug('Unable to close socket')
 
     ############################
     def write(self, record):

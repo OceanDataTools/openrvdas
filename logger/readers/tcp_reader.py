@@ -111,6 +111,10 @@ class TCPReader(Reader):
             logging.debug('__del__: closing s_connected')
             self._close_socket(self.s_connected)
 
+        if self.s_listening:
+            logging.debug('__del__: closing s_listening')
+            self._close_socket(self.s_listening)
+
     ############################
     def _open_socket(self):
         # create TCP socket
@@ -135,8 +139,11 @@ class TCPReader(Reader):
 
     ############################
     def _close_socket(self, s):
-        s.shutdown(socket.SHUT_RDWR)
-        s.close()
+        try:
+            s.shutdown(socket.SHUT_RDWR)
+            s.close()
+        except OSError:
+            logging.debug('Unable to close socket')
 
     ############################
     def _get_connected_socket(self):

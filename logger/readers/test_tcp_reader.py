@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import mmap
 import signal
 import socket
 import sys
@@ -51,7 +50,12 @@ class TestTCPReader(unittest.TestCase):
         writer = TCPWriter(destination=dest, port=port, eol=eol, encoding=encoding)
         time.sleep(delay)
         while not self.time_to_die:
+            # Suppress stochastic complaints about failure to connect
+            current_log_level = logging.getLogger().getEffectiveLevel()
+            logging.getLogger().setLevel(logging.CRITICAL)
             writer.write(line)
+            logging.getLogger().setLevel(current_log_level)
+
             time.sleep(interval)
 
     def test_wonky_disconnect(self):
