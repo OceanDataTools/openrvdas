@@ -11,6 +11,9 @@ import unittest
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
+from logger.readers.udp_reader import UDPReader
+from logger.writers.udp_writer import UDPWriter
+
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']

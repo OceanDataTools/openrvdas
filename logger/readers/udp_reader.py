@@ -2,7 +2,6 @@
 
 import logging
 import socket
-import struct
 import sys
 
 from os.path import dirname, realpath
@@ -117,6 +116,11 @@ class UDPReader(Reader):
 
         # socket gets initialized on-demand in read()
         self.socket = None
+
+    ############################
+    def __del__(self):
+        if self.socket:
+            self.socket.close()
 
     ############################
     def _open_socket(self):

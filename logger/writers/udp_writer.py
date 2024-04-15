@@ -183,6 +183,11 @@ class UDPWriter(Writer):
         self.socket = None
 
     ############################
+    def __del__(self):
+        if self.socket:
+            self.socket.close()
+
+    ############################
     def _open_socket(self):
         """Do socket prep so we're ready to write().  Returns socket object or None on
         failure.
