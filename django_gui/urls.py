@@ -19,7 +19,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 
     
-
+from rest_framework import routers
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -52,13 +52,12 @@ urlpatterns = [
     #
     #API DRF Views       
     #
-    # path('api/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/obtain-auth-token/', api_views.CustomAuthToken.as_view(), name="obtain-auth-token"),
-    path('api/', api_views.api_root),
-    path('api/delete-cruise/', api_views.DeleteCruiseAPIView.as_view(), name='delete-cruise'),
+    path('api/', api_views.api_root),    
     path('api/cruise-configuration/', api_views.CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('api/select-cruise-mode/', api_views.CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
     path('api/reload-current-configuration/', api_views.CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),

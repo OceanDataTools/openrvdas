@@ -15,6 +15,8 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
+from rest_framework.schemas import ManualSchema
+from rest_framework.compat import coreapi, coreschema
 import json
 import yaml
 import os
@@ -45,7 +47,6 @@ def api_root(request, format=None):
         'logout': reverse('rest_framework:logout', request=request, format=format),
         'obtain-auth-token': reverse('obtain-auth-token', request=request, format=format),
         'cruise-configuration': reverse('cruise-configuration', request=request, format=format),
-        'delete-cruise': reverse('delete-cruise', request=request, format=format),
         'select-cruise-mode': reverse('select-cruise-mode', request=request, format=format),
         'reload-current-configuration': reverse('reload-current-configuration', request=request, format=format),
         'edit-logger-config': reverse('edit-logger-config', request=request, format=format),
@@ -120,6 +121,15 @@ def _get_cruise_config():
     
     return template_vars
 
+class CruiseSelectModeSerializer(serializers.Serializer):
+    select_mode = serializers.CharField(required=True)
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
 class CruiseSelectModeAPIView(APIView):
 
     """
@@ -127,9 +137,9 @@ class CruiseSelectModeAPIView(APIView):
 
     Request Payload:
     POST
-    {
-        "select_mode": mode_id,        
-    }
+       {
+                "select_mode": mode_id,        
+            }
 
     Response Payload:
     {
@@ -138,26 +148,47 @@ class CruiseSelectModeAPIView(APIView):
     
     """
 
+
+    schema = ManualSchema(
+            fields=[
+                coreapi.Field(
+                    name="select_mode",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="select_mode",
+                        description="Valid mode_id for configuartion.",
+                    ),
+                ),          
+            ],
+            encoding="application/json",
+        )
+
+
+
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    serializer_class =CruiseSelectModeSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         api = _get_api()
         log_request(request, 'select_mode')
+        serializer = CruiseSelectModeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # Are they deleting a cruise?(!)
-        if 'select_mode' in request.data:
+        if serializer.validated_data.get('select_mode'):
             try:
-                new_mode_name = request.data['select_mode']
+                new_mode_name = serializer.validated_data['select_mode']
                 logging.info('switching to mode "%s"', new_mode_name)
                 api.set_active_mode(new_mode_name)
-                return Response({'status': f'Cruise mode set: {new_mode_name}'}, 200)
+                return Response({'status': f'Cruise mode set: {new_mode_name}'}, status=200)
 
             except ValueError as e:
                 logging.warning('Error trying to set mode to "%s": %s',
                                 new_mode_name, str(e))
-                return Response({'status': f'Invalid Request. Error trying to set mode to {new_mode_name}'},400)        
-        return Response({'status': 'Invalid Request'},400)
+                return Response({'status': f'Invalid Request. Error trying to set mode to {new_mode_name}'}, status=400)
+        return Response({'status': 'Invalid Request'}, status=400)
     
     def get(self, request):
         try:        
