@@ -104,7 +104,8 @@ class SimUDP:
     ############################
 
     def __init__(self, port, name=None, filebase=None, record_format=None,
-                 time_format=TIME_FORMAT, eol='\n', input_eol=None, quiet=False):
+                 time_format=TIME_FORMAT, eol='\n', input_eol=None, quiet=False,
+                 use_timestamps=True):
         """
         ```
         port -  UDP port on which to write records.
@@ -123,6 +124,9 @@ class SimUDP:
         eol - String to append to end of an output record
 
         input_eol - Optional string by which to recognize the end of a record
+
+        use_timestamps - If true, emit records at delays corresponding to the
+                         differences in their timestamps
         ```
         """
         self.port = port
@@ -134,6 +138,7 @@ class SimUDP:
         self.eol = eol
         self.input_eol = input_eol
         self.quiet=quiet
+        self.use_timestamps = use_timestamps
 
         # Do we have any files we can actually read from?
         if not glob.glob(filebase + '*'):
@@ -141,7 +146,8 @@ class SimUDP:
             self.quit_flag = True
             return
 
-        self.reader = LogfileReader(filebase=filebase, use_timestamps=True,
+        self.reader = LogfileReader(filebase=filebase,
+                                    use_timestamps=self.use_timestamps,
                                     record_format=self.record_format,
                                     time_format=self.time_format,
                                     eol=self.input_eol, quiet=self.quiet)
@@ -211,7 +217,7 @@ class SimSerial:
                  baudrate=9600, bytesize=8, parity='N', stopbits=1,
                  timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
                  dsrdtr=False, inter_byte_timeout=None, exclusive=None,
-                 quiet=False):
+                 quiet=False, use_timestamps=True):
         """
         Simulate a serial port, feeding it data from the specified file.
 
@@ -232,6 +238,9 @@ class SimSerial:
         eol - String by which to recognize the end of a record
 
         input_eol - Optional string by which to recognize the end of a record
+
+        use_timestamps - If true, emit records at delays corresponding to the
+                         differences in their timestamps
         ```
         """
         # We'll create two virtual ports: 'port' and 'port_in'; we will write
@@ -247,6 +256,7 @@ class SimSerial:
         self.input_eol = input_eol
         self.serial_params = None
         self.quiet = quiet
+        self.use_timestamps = use_timestamps
 
         # Complain, but go ahead if read_port or write_port exist.
         for path in [self.read_port, self.write_port]:
@@ -272,6 +282,32 @@ class SimSerial:
                               'exclusive': exclusive}
         self.quit = False
 
+        # Create simulated serial port (something like /dev/ttys2), and link
+        # it to the port they want to connect to (like /tmp/tty_s330).
+        self.write_fd, self.read_fd = pty.openpty()  # open the pseudoterminal
+        true_read_port = os.ttyname(self.read_fd)  # this is the true filename of port
+
+        # Get rid of any previous symlink if it exists, and symlink the new pty
+        try:
+            os.unlink(self.read_port)
+        except FileNotFoundError:
+            pass
+        os.symlink(true_read_port, self.read_port)
+
+        self.reader = LogfileReader(filebase=self.filebase,
+                                    use_timestamps=self.use_timestamps,
+                                    record_format=self.record_format,
+                                    time_format=self.time_format,
+                                    eol=self.input_eol, quiet=self.quiet)
+
+    ############################
+    def __del__(self):
+        # Get rid of the symlink we've created
+        try:
+            os.unlink(self.read_port)
+        except FileNotFoundError:
+            pass
+
     ############################
     def run(self, loop=False):
         # If self.serial_params is None, it means that either read or
@@ -280,69 +316,48 @@ class SimSerial:
         if not self.serial_params:
             return
 
-        try:
-            # Create simulated serial port (something like /dev/ttys2), and link
-            # it to the port they want to connect to (like /tmp/tty_s330).
-            write_fd, read_fd = pty.openpty()     # open the pseudoterminal
-            true_read_port = os.ttyname(read_fd)  # this is the true filename of port
-
-            # Get rid of any previous symlink if it exists, and symlink the new pty
+        logging.info('Starting %s: %s', self.read_port, self.filebase)
+        while not self.quit:
             try:
-                os.unlink(self.read_port)
-            except FileNotFoundError:
-                pass
-            os.symlink(true_read_port, self.read_port)
+                record = self.reader.read()  # get the next record
+                logging.debug('SimSerial got: %s', record)
 
-            self.reader = LogfileReader(filebase=self.filebase, use_timestamps=True,
-                                        record_format=self.record_format,
-                                        time_format=self.time_format,
-                                        eol=self.input_eol, quiet=self.quiet)
-            logging.info('Starting %s: %s', self.read_port, self.filebase)
-            while not self.quit:
+                # End of input? If loop==True, re-open the logfile from the start
+                if record is None:
+                    if not loop:
+                        break
+
+                    self.reader = LogfileReader(filebase=self.filebase,
+                                                use_timestamps=True,
+                                                record_format=self.record_format,
+                                                time_format=self.time_format,
+                                                eol=self.input_eol, quiet=self.quiet)
+
+                # We've now got a record. Try parsing timestamp off it
+                logging.debug(f'Read record: "{record}"')
                 try:
-                    record = self.reader.read()  # get the next record
-                    logging.debug('SimSerial got: %s', record)
+                    parsed_record = self.compiled_record_format.parse(record).named
+                    record = parsed_record['record']
 
-                    # End of input? If loop==True, re-open the logfile from the start
-                    if record is None:
-                        if not loop:
-                            break
+                # We had a problem parsing. Discard record and try reading next one.
+                except (KeyError, ValueError, TypeError, AttributeError):
+                    logging.warning('%s: Unable to parse record into "%s"',
+                                    self.name, self.record_format)
+                    logging.warning('Record: "%s"', record)
+                    continue
 
-                        self.reader = LogfileReader(filebase=self.filebase,
-                                                    use_timestamps=True,
-                                                    record_format=self.record_format,
-                                                    time_format=self.time_format,
-                                                    eol=self.input_eol, quiet=self.quiet)
+                if not record:
+                    continue
 
-                    # We've now got a record. Try parsing timestamp off it
-                    logging.debug(f'Read record: "{record}"')
-                    try:
-                        parsed_record = self.compiled_record_format.parse(record).named
-                        record = parsed_record['record']
+                logging.debug('SimSerial writing: %s', record)
+                os.write(self.write_fd, (record + self.eol).encode('utf8'))
 
-                    # We had a problem parsing. Discard record and try reading next one.
-                    except (KeyError, ValueError, TypeError, AttributeError):
-                        logging.warning('%s: Unable to parse record into "%s"',
-                                        self.name, self.record_format)
-                        logging.warning('Record: "%s"', record)
-                        continue
+            except (OSError, KeyboardInterrupt):
+                break
 
-                    if not record:
-                        continue
-
-                    logging.debug('SimSerial writing: %s', record)
-                    os.write(write_fd, (record + self.eol).encode('utf8'))
-
-                except (OSError, KeyboardInterrupt):
-                    break
-
-            # If we're here, we got None from our input, and are done. Signal
-            # for run_socat to exit
-            self.quit = True
-
-        finally:
-            # Get rid of the symlink we've created
-            os.unlink(self.read_port)
+        # If we're here, we got None from our input, and are done. Signal
+        # for run_socat to exit
+        self.quit = True
 
 
 ################################################################################
