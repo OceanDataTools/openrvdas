@@ -38,16 +38,19 @@ SAMPLE_MAX_BYTES_2 = ['$H',
                       'T*',
                       '1b']
 
-SAMPLE_TIMEOUT = [None,
-                  '$HEHDT,234.76,T*1b',
-                  None, None,
-                  '$HEHDT,234.73,T*1e',
-                  None, None,
-                  '$HEHDT,234.72,T*1f',
-                  None, None,
-                  '$HEHDT,234.72,T*1f',
-                  None, None]
-
+SAMPLE_TIMEOUT = ['$HEHDT,234.76,T*1b',
+                None,
+                None,
+                '$HEHDT,234.73,T*1e',
+                None,
+                None,
+                '$HEHDT,234.72,T*1f',
+                None,
+                None,
+                '$HEHDT,234.72,T*1f',
+                None,
+                None,
+                '$HEHDT,234.73,T*1e']
 
 ################################################################################
 class TestSerialReader(unittest.TestCase):
@@ -76,9 +79,6 @@ class TestSerialReader(unittest.TestCase):
         sim_thread = threading.Thread(target=sim.run)
         sim_thread.start()
 
-        # Give it a moment to get started
-        #time.sleep(0.1)
-
         slice = SliceTransform('1:')  # we'll want to strip out timestamp
 
         # Then read from serial port
@@ -97,9 +97,6 @@ class TestSerialReader(unittest.TestCase):
         sim_thread = threading.Thread(target=sim.run)
         sim_thread.start()
 
-        # Give it a moment to get started
-        #time.sleep(0.1)
-
         # Then read from serial port
         s = SerialReader(port=port, max_bytes=2)
         for data in SAMPLE_MAX_BYTES_2:
@@ -114,9 +111,6 @@ class TestSerialReader(unittest.TestCase):
         sim = SimSerial(port=port, filebase=self.logfile_filename)
         sim_thread = threading.Thread(target=sim.run)
         sim_thread.start()
-
-        # Give it a moment to get started
-        #time.sleep(0.1)
 
         # For some reason, the test complains unless we actually read
         # from the port. This first SerialReader is here just to get
@@ -163,9 +157,6 @@ class TestSerialReader(unittest.TestCase):
         sim = SimSerial(port=port, filebase=self.logfile_filename)
         sim_thread = threading.Thread(target=sim.run)
         sim_thread.start()
-
-        # Give it a moment to get started
-        #time.sleep(0.05)
 
         # Then read from serial port
         s = SerialReader(port=port, timeout=0.1)

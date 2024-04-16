@@ -90,6 +90,7 @@ import parse
 import pty
 import sys
 import threading
+import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
@@ -315,6 +316,8 @@ class SimSerial:
         # we'll destroy them.
         if not self.serial_params:
             return
+
+        time.sleep(0.05)
 
         logging.info('Starting %s: %s', self.read_port, self.filebase)
         while not self.quit:
