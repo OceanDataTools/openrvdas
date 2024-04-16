@@ -27,6 +27,9 @@ class SimSerial:
                  dsrdtr=False, inter_byte_timeout=None, exclusive=None):
         """Takes source file, whether to deliver data at rate indicated by
         timestamps, and the standard parameters that a serial port takes."""
+
+        logging.warning('simulate_serial.SimSerial is deprecated in favor of simulate_data.SimSerial')
+
         self.source_file = source_file
         self.use_timestamps = use_timestamps
         self.time_format = time_format

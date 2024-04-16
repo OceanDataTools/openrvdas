@@ -17,7 +17,7 @@ except ModuleNotFoundError:
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.transforms.slice_transform import SliceTransform  # noqa: E402
-from logger.utils.simulate_serial import SimSerial  # noqa: E402
+from logger.utils.simulate_data import SimSerial  # noqa: E402
 
 
 PORT = '%DIR%/tty_gyr1'
@@ -70,18 +70,15 @@ class TestSimulateSerial(unittest.TestCase):
     ############################
     def test_use_timestamps(self):
         port = PORT.replace('%DIR%', self.tmpdirname)
-        sim = SimSerial(port=port, source_file=self.logfile_filename)
+        sim = SimSerial(port=port, filebase=self.logfile_filename)
         sim_thread = threading.Thread(target=sim.run)
         sim_thread.start()
-
-        # Give it a moment to get started
-        time.sleep(0.1)
 
         slice = SliceTransform('1:')  # we'll want to strip out timestamp
 
         # Then read from serial port
         s = serial.Serial(port=port)
-        last_read = time.time() - 0.15
+        last_read = time.time() - 0.25
         for line in SAMPLE_DATA.split('\n'):
             data = slice.transform(line)
             record = s.readline().strip().decode('utf-8')
@@ -94,13 +91,10 @@ class TestSimulateSerial(unittest.TestCase):
     ############################
     def test_fast(self):
         port = PORT.replace('%DIR%', self.tmpdirname)
-        sim = SimSerial(port=port, source_file=self.logfile_filename,
+        sim = SimSerial(port=port, filebase=self.logfile_filename,
                         use_timestamps=False)
         sim_thread = threading.Thread(target=sim.run)
         sim_thread.start()
-
-        # Give it a moment to get started
-        time.sleep(0.1)
 
         slice = SliceTransform('1:')  # we'll want to strip out timestamp
 
