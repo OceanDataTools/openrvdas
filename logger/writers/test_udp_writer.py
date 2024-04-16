@@ -56,12 +56,19 @@ class TestUDPWriter(unittest.TestCase):
     #
     def test_broadcast(self):
         # Main method starts here
-        host = "<broadcast>"
+        host = '<broadcast>'
         port = 8001
 
         sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-        sock.bind((host, port))
+        try:
+            sock.bind((host, port))
+        except OSError as e:
+            if e.errno == 49:  # MacOS may not let us bind to '<broadcast>'
+                host = '0.0.0.0'
+                sock.bind((host, port))
+            else:
+                raise e
 
         # Start the writer
         threading.Thread(target=self.write,
