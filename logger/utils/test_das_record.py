@@ -40,7 +40,7 @@ class TestDASRecord(unittest.TestCase):
         self.assertEqual(dr.metadata, {})
 
     def test_json(self):
-        dr = DASRecord(json=JSON_IN)
+        dr = DASRecord(json_str=JSON_IN)
         self.assertEqual(dr.timestamp, 1510265335)
         self.assertEqual(dr.data_id, 'gyr1')
         self.assertEqual(dr.fields['GYR_Heading'], 314.15)
