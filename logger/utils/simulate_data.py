@@ -358,8 +358,7 @@ class SimSerial:
             except (OSError, KeyboardInterrupt):
                 break
 
-        # If we're here, we got None from our input, and are done. Signal
-        # for run_socat to exit
+        # If we're here, we got None from our input, and are done.
         self.quit = True
 
 
