@@ -19,7 +19,7 @@ CONFIG = {
     "readers": {
         "class": "TextFileReader",
         "kwargs": {
-            "interval": 0.1,
+            "interval": 0.01,
             "tail": True
         }  # we'll fill in filespec once we have tmpdir
     },

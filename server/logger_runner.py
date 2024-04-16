@@ -130,11 +130,15 @@ def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
     """
     # Reset logging to its freshly-imported state
     reload(logging)
-    stderr_handler = RotatingFileHandler(stderr_filename,
-                                         maxBytes=STDERR_MAX_BYTES,
-                                         backupCount=STDERR_BACKUP_COUNT)
+
+    if stderr_filename:
+        stderr_handlers = [RotatingFileHandler(stderr_filename,
+                                               maxBytes=STDERR_MAX_BYTES,
+                                               backupCount=STDERR_BACKUP_COUNT)]
+    else:
+        stderr_handlers = []
     logging.basicConfig(
-        handlers=[stderr_handler],
+        handlers=stderr_handlers,
         level=log_level,
         format=DEFAULT_LOGGING_FORMAT)
 
